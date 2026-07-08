@@ -19,6 +19,7 @@ import {
   type CreateAssetTagDraft,
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
+import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
 import {
   assetEditContext,
   canSaveEditAsset,
@@ -188,23 +189,31 @@ function EditTagPicker({
     <View style={styles.tagPicker}>
       <Text style={styles.inputLabel}>Tags</Text>
       <View style={styles.tagOptions}>
-        {newTags.map((tag, index) => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled, selected: true }}
-            disabled={disabled}
-            key={`${tag.displayName}-${index.toString()}`}
-            onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
-            style={[styles.tagOption, styles.tagOptionSelected, disabled ? styles.disabledAction : null]}
-          >
-            {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
-            <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
-              {tag.displayName}
-            </Text>
-          </Pressable>
-        ))}
+        {newTags.map((tag, index) => {
+          const colorStyle = assetTagChipStylePresentation(tag);
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled, selected: true }}
+              disabled={disabled}
+              key={`${tag.displayName}-${index.toString()}`}
+              onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+              style={[
+                styles.tagOption,
+                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
+                styles.tagOptionSelected,
+                disabled ? styles.disabledAction : null
+              ]}
+            >
+              <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
+                {tag.displayName}
+              </Text>
+            </Pressable>
+          );
+        })}
         {tags.map((tag) => {
           const isSelected = selected.has(tag.id);
+          const colorStyle = assetTagChipStylePresentation(tag);
           return (
             <Pressable
               accessibilityRole="button"
@@ -212,9 +221,13 @@ function EditTagPicker({
               disabled={disabled}
               key={tag.id}
               onPress={() => toggleTag(tag.id)}
-              style={[styles.tagOption, isSelected ? styles.tagOptionSelected : null, disabled ? styles.disabledAction : null]}
+              style={[
+                styles.tagOption,
+                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
+                isSelected ? styles.tagOptionSelected : null,
+                disabled ? styles.disabledAction : null
+              ]}
             >
-              {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
               <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
                 {tag.label}
               </Text>
@@ -634,13 +647,6 @@ const styles = StyleSheet.create({
   },
   tagOptionSelected: {
     borderColor: colors.action
-  },
-  tagSwatch: {
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 10,
-    width: 10
   },
   tagOptionText: {
     color: colors.textMuted,

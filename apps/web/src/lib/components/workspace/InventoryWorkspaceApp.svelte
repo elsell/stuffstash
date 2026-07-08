@@ -58,6 +58,7 @@
     type AssetCheckout,
     type AssetKind,
     type AssetLifecycleFilter,
+    type AssetTag,
     type CustomAssetType,
     type CustomFieldDefinition,
     type LocationAsset,
@@ -400,6 +401,11 @@
     } finally {
       busy = false;
     }
+  }
+
+  async function searchForTag(tag: AssetTag): Promise<void> {
+    searchQuery = tag.displayName;
+    await search();
   }
 
   async function selectAssetLifecycle(lifecycleState: AssetLifecycleFilter): Promise<void> {
@@ -1491,6 +1497,7 @@
       onAttachmentDeleteOpen: openAttachmentDeleteRoute,
       onAttachmentDeleteClose: closeAttachmentDeleteRoute,
       onAssetDeleteAttachment: deleteSelectedAttachment,
+      onAssetTagSearch: searchForTag,
       onSearch: search,
       onOpenSearchAsset: openSearchAsset,
       onImportSourceChange: openImportSource,

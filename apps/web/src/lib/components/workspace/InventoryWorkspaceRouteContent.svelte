@@ -4,6 +4,7 @@
 	    AssetAttachment,
 	    AssetCheckout,
     AssetKind,
+    AssetTag,
     CustomAssetType,
     CustomFieldDefinition,
     Inventory,
@@ -99,6 +100,7 @@
     onAttachmentDeleteOpen: (attachmentId: string) => void;
     onAttachmentDeleteClose: () => void;
     onAssetDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
+    onAssetTagSearch?: (tag: AssetTag) => Promise<void>;
     onSearch: () => Promise<void>;
     onOpenSearchAsset: (asset: Asset) => void;
     onImportSourceChange: (source: ImportSourceRoute) => void;
@@ -224,6 +226,7 @@
     onAttachmentDeleteOpen={handlers.onAttachmentDeleteOpen}
     onAttachmentDeleteClose={handlers.onAttachmentDeleteClose}
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
+    onTagSearch={handlers.onAssetTagSearch}
   />
 {:else if route.mode === 'search'}
   <SearchPanel

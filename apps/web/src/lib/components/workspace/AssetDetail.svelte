@@ -75,7 +75,8 @@
     onArchiveAttachment,
     onAttachmentDeleteOpen,
     onAttachmentDeleteClose,
-    onDeleteAttachment
+    onDeleteAttachment,
+    onTagSearch
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
@@ -104,6 +105,7 @@
     onAttachmentDeleteOpen: (attachmentId: string) => void;
     onAttachmentDeleteClose: () => void;
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
+    onTagSearch?: (tag: AssetTag) => Promise<void>;
   } = $props();
 
   let panel = $state<AssetDetailPanel>('none');
@@ -576,7 +578,7 @@
           <div>
             <h1 id="asset-title">{asset.title}</h1>
             <p>{asset.containmentTrail}</p>
-            <AssetTagChips tags={asset.tags ?? []} />
+            <AssetTagChips tags={asset.tags ?? []} onTagSelect={onTagSearch} />
           </div>
 	          <span class="detail-title-badges">
 	            {#if asset.currentCheckout}

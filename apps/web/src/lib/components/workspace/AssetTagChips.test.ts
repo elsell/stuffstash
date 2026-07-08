@@ -61,6 +61,36 @@ describe('AssetTagChips', () => {
     expect(document.body.querySelector('.tag-chip-overflow')?.textContent).toBe('+2');
     expect(document.body.querySelector('.tag-chip-overflow')?.getAttribute('aria-label')).toBe('2 more tags');
   });
+
+  it('uses the tag color as the chip color treatment when present', () => {
+    component = mount(AssetTagChips, {
+      target: document.body,
+      props: {
+        tags: [tag('tools', 'Tools')]
+      }
+    });
+
+    const chip = document.body.querySelector<HTMLElement>('.tag-chip');
+    expect(chip?.getAttribute('style')).toContain('--tag-color: #2F80ED');
+    expect(chip?.classList.contains('tag-chip-colored')).toBe(true);
+  });
+
+  it('can make visible tag chips search actions', () => {
+    const selected: AssetTag[] = [];
+    component = mount(AssetTagChips, {
+      target: document.body,
+      props: {
+        tags: [tag('tools', 'Tools')],
+        onTagSelect: (tag) => selected.push(tag)
+      }
+    });
+
+    const chip = document.body.querySelector<HTMLButtonElement>('button.tag-chip');
+    expect(chip?.getAttribute('aria-label')).toBe('Search for tag Tools');
+    chip?.click();
+
+    expect(selected).toEqual([tag('tools', 'Tools')]);
+  });
 });
 
 function tag(key: string, displayName: string): AssetTag {

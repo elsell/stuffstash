@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assetTagChipLayoutPresentation, assetTagChipPresentation } from './AssetTagChipsPresentation';
+import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
 
 describe('assetTagChipPresentation', () => {
   it('shows every tag in full detail contexts', () => {
@@ -50,6 +50,30 @@ describe('assetTagChipPresentation', () => {
     expect(assetTagChipLayoutPresentation(true)).toEqual({
       compactRow: true,
       shrinkVisibleChips: true
+    });
+  });
+
+  it('uses the tag color as the chip color treatment when present', () => {
+    expect(assetTagChipStylePresentation(tag('tools'))).toEqual({
+      colored: true,
+      backgroundColor: 'rgba(47, 128, 237, 0.14)',
+      borderColor: '#2F80ED'
+    });
+    expect(assetTagChipStylePresentation({})).toEqual({
+      colored: false
+    });
+  });
+
+  it('keeps very light tag colors readable against the surface', () => {
+    expect(assetTagChipStylePresentation({ color: '#FFFFFF' })).toEqual({
+      colored: true,
+      backgroundColor: 'rgba(255, 255, 255, 0.14)',
+      borderColor: '#D9E1E6'
+    });
+    expect(assetTagChipStylePresentation({ color: '#FFF7B0' })).toEqual({
+      colored: true,
+      backgroundColor: 'rgba(255, 247, 176, 0.14)',
+      borderColor: '#D9E1E6'
     });
   });
 });

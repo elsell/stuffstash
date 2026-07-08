@@ -33,6 +33,7 @@
   let selectedExistingTags = $derived(tags.filter((tag) => selected.has(tag.id)));
   let hasSelection = $derived(selectedExistingTags.length > 0 || newTags.length > 0);
   let normalizedNewTagColor = $derived(normalizeColor(newTagColor));
+  let colorPickerValue = $derived(normalizedNewTagColor ?? '#2F80ED');
   let newTagKey = $derived(assetTagKeyFromDisplayName(newTagName));
   let newTagDisplayNameByteLength = $derived(assetTagDisplayNameByteLength(newTagName));
   let matchingExistingTag = $derived(tags.find((tag) => tag.key === newTagKey));
@@ -106,6 +107,14 @@
     onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index));
   }
 
+  function chooseColor(event: Event): void {
+    const input = event.currentTarget instanceof HTMLInputElement ? event.currentTarget : null;
+    if (!input) {
+      return;
+    }
+    newTagColor = input.value.toUpperCase();
+  }
+
   function normalizeColor(value: string): string | undefined {
     const raw = value.trim();
     if (!raw) {
@@ -123,10 +132,7 @@
     <div class="selected-tag-summary">
       <AssetTagChips tags={selectedExistingTags} compact />
       {#each newTags as tag, index}
-        <span class="tag-chip pending-tag">
-          {#if tag.color}
-            <span class="tag-swatch" style={`--tag-color: ${tag.color}`} aria-hidden="true"></span>
-          {/if}
+        <span class={`tag-chip pending-tag${tag.color ? ' tag-chip-colored' : ''}`} style={tag.color ? `--tag-color: ${tag.color}` : undefined}>
           <span>{tag.displayName}</span>
           <Button.Root type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${tag.displayName}`} onclick={() => removeNewTag(index)}>
             <X />
@@ -142,13 +148,11 @@
         <Button.Root
           type="button"
           variant={selected.has(tag.id) ? 'default' : 'outline'}
-          class="tag-option"
+          class={`tag-option${tag.color ? ' tag-chip-colored' : ''}`}
+          style={tag.color ? `--tag-color: ${tag.color}` : undefined}
           aria-pressed={selected.has(tag.id)}
           onclick={() => toggleTag(tag.id)}
         >
-          {#if tag.color}
-            <span class="tag-swatch" style={`--tag-color: ${tag.color}`} aria-hidden="true"></span>
-          {/if}
           {tag.displayName}
         </Button.Root>
       {/each}
@@ -162,7 +166,16 @@
     </div>
     <div class="field-stack color-field">
       <Label for="new-tag-color">Color</Label>
-      <Input id="new-tag-color" bind:value={newTagColor} placeholder="#2F80ED" />
+      <div class="tag-color-controls">
+        <Input id="new-tag-color" bind:value={newTagColor} placeholder="#2F80ED" />
+        <Input
+          id="new-tag-color-picker"
+          type="color"
+          value={colorPickerValue}
+          aria-label="Pick new tag color"
+          onchange={chooseColor}
+        />
+      </div>
     </div>
     <Button.Root type="button" variant="outline" disabled={!canAddTag} onclick={addTag}><Plus /> Add</Button.Root>
   </div>

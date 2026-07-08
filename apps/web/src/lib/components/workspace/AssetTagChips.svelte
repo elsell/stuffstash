@@ -1,7 +1,18 @@
 <script lang="ts">
+  import * as Button from '$lib/components/ui/button/index.js';
   import type { AssetTag } from '$lib/domain/inventory';
 
-  let { tags = [], compact = false, overflowLimit }: { tags?: AssetTag[]; compact?: boolean; overflowLimit?: number } = $props();
+  let {
+    tags = [],
+    compact = false,
+    overflowLimit,
+    onTagSelect
+  }: {
+    tags?: AssetTag[];
+    compact?: boolean;
+    overflowLimit?: number;
+    onTagSelect?: (tag: AssetTag) => void;
+  } = $props();
   let visibleLimit = $derived(overflowLimit ?? tags.length);
   let visibleTags = $derived(tags.slice(0, visibleLimit));
   let hiddenCount = $derived(Math.max(0, tags.length - visibleTags.length));
@@ -15,12 +26,22 @@
     aria-label="Asset tags"
   >
     {#each visibleTags as tag}
-      <span class="tag-chip">
-        {#if tag.color}
-          <span class="tag-swatch" style={`--tag-color: ${tag.color}`} aria-hidden="true"></span>
-        {/if}
-        <span>{tag.displayName}</span>
-      </span>
+      {#if onTagSelect}
+        <Button.Root
+          type="button"
+          variant="ghost"
+          class={`tag-chip${tag.color ? ' tag-chip-colored' : ''}`}
+          style={tag.color ? `--tag-color: ${tag.color}` : undefined}
+          aria-label={`Search for tag ${tag.displayName}`}
+          onclick={() => onTagSelect?.(tag)}
+        >
+          <span>{tag.displayName}</span>
+        </Button.Root>
+      {:else}
+        <span class={`tag-chip${tag.color ? ' tag-chip-colored' : ''}`} style={tag.color ? `--tag-color: ${tag.color}` : undefined}>
+          <span>{tag.displayName}</span>
+        </span>
+      {/if}
     {/each}
     {#if hiddenCount > 0}
       <span class="tag-chip tag-chip-overflow" aria-label={`${hiddenCount} more tags`}>+{hiddenCount}</span>

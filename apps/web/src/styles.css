@@ -1945,6 +1945,7 @@ dd {
 }
 
 .tag-chip {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1957,9 +1958,35 @@ dd {
   font-size: 0.78rem;
   font-weight: 650;
   line-height: 1.2;
+  text-decoration: none;
 }
 
-.tag-chip span:last-child {
+.tag-chip-colored {
+  border-color: color-mix(in oklab, var(--tag-color) 42%, var(--foreground));
+  background: color-mix(in oklab, var(--tag-color) 15%, white);
+  color: var(--foreground);
+}
+
+button.tag-chip,
+.tag-option {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button.tag-chip:hover,
+.tag-option.tag-chip-colored:hover {
+  border-color: color-mix(in oklab, var(--tag-color, var(--primary)) 70%, var(--border));
+  background: color-mix(in oklab, var(--tag-color, var(--primary)) 20%, white);
+}
+
+button.tag-chip:focus-visible,
+.tag-option.tag-chip-colored:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--tag-color, var(--ring)) 70%, var(--ring));
+  outline-offset: 2px;
+}
+
+.tag-chip span:last-child,
+.tag-chip span:first-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2021,6 +2048,18 @@ dd {
 .color-field input {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   text-transform: uppercase;
+}
+
+.tag-color-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 6px;
+}
+
+.tag-color-controls input[type="color"] {
+  min-width: 40px;
+  padding: 3px;
+  cursor: pointer;
 }
 
 .access-form > [data-slot="button"]:disabled,

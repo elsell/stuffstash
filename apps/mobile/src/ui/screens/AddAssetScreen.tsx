@@ -30,6 +30,7 @@ import {
   reconcileCreatedAssetTags,
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
+import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import {
   ParentLookupQuery,
@@ -1055,31 +1056,41 @@ function AssetTagPicker({
     <View style={styles.tagPicker}>
       <Text style={styles.tagPickerTitle}>Tags</Text>
       <View style={styles.tagOptions}>
-        {newTags.map((tag, index) => (
-          <Pressable
-            accessibilityRole="button"
-            key={`${tag.displayName}-${index.toString()}`}
-            onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
-            style={[styles.tagOption, styles.tagOptionSelected]}
-          >
-            {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
-            <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
-              {tag.displayName}
-            </Text>
-            <X color={colors.action} size={14} strokeWidth={2.4} />
-          </Pressable>
-        ))}
+        {newTags.map((tag, index) => {
+          const colorStyle = assetTagChipStylePresentation(tag);
+          return (
+            <Pressable
+              accessibilityRole="button"
+              key={`${tag.displayName}-${index.toString()}`}
+              onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+              style={[
+                styles.tagOption,
+                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
+                styles.tagOptionSelected
+              ]}
+            >
+              <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
+                {tag.displayName}
+              </Text>
+              <X color={colors.action} size={14} strokeWidth={2.4} />
+            </Pressable>
+          );
+        })}
         {tags.map((tag) => {
           const isSelected = selected.has(tag.id);
+          const colorStyle = assetTagChipStylePresentation(tag);
           return (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               key={tag.id}
               onPress={() => toggleTag(tag.id)}
-              style={[styles.tagOption, isSelected ? styles.tagOptionSelected : null]}
+              style={[
+                styles.tagOption,
+                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
+                isSelected ? styles.tagOptionSelected : null
+              ]}
             >
-              {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color }]} /> : null}
               <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
                 {tag.displayName}
               </Text>
@@ -1556,13 +1567,6 @@ const styles = StyleSheet.create({
   },
   tagOptionSelected: {
     borderColor: colors.action
-  },
-  tagSwatch: {
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 10,
-    width: 10
   },
   tagOptionText: {
     color: colors.textMuted,

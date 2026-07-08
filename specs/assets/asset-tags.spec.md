@@ -152,16 +152,18 @@ When a search result matched because of a tag display name or tag key, web and m
 Tag chips must:
 
 - Show the display name.
-- Use the tag color as a small swatch when a color is present.
+- Use the tag color as the chip's visible color treatment when a color is present, not only as a tiny swatch. The chip must remain readable and accessible against user-provided colors.
 - Keep the asset title, photo, kind, parent/location, checkout state, and lifecycle state visually higher priority than tags.
 - Collapse gracefully on narrow screens without causing row height jumps or text overlap.
 - In compact list and card contexts, clients may show the first few assigned tags plus a `+N` overflow chip instead of rendering every tag.
+- In contexts where the tag chip is not nested inside another interactive row or control, clicking or tapping a tag chip must search or browse the current inventory for that tag. The first implementation may use the tag display name as the search query so the existing tag-backed search path returns matching assets.
 
 Asset create and edit flows must let users:
 
 - Select existing active tags.
 - Remove assigned tags.
 - Create a new tag inline with display name and optional color where the UI already supports editing asset metadata.
+- Choose the optional tag color with a color-picker affordance on clients that support native color input; text entry may remain as a fallback for platforms without a native picker.
 
 Web and mobile clients must load active inventory tags through client adapter boundaries, map API tag DTOs into client domain models, and submit complete `tagIds` lists on asset create and update. Clients must not treat generated API DTOs as UI domain models.
 

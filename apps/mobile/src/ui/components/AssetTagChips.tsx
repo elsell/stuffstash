@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import type { AssetTagViewModel } from '../../application/assets/AssetViewModels';
 import { colors, radius, spacing } from '../theme/tokens';
-import { assetTagChipLayoutPresentation, assetTagChipPresentation } from './AssetTagChipsPresentation';
+import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
 
 type AssetTagChipsProps = {
   readonly tags?: readonly AssetTagViewModel[];
@@ -18,12 +18,21 @@ export function AssetTagChips({ tags, compact = false, overflowLimit }: AssetTag
 
   return (
     <View accessibilityLabel="Asset tags" style={[styles.tagRow, layout.compactRow ? styles.compactTagRow : null]}>
-      {presentation.visibleTags.map((tag) => (
-        <View key={tag.id} style={[styles.tagChip, layout.shrinkVisibleChips ? styles.compactTagChip : null]}>
-          {tag.color ? <View style={[styles.tagSwatch, { backgroundColor: tag.color, borderColor: tag.color }]} /> : null}
-          <Text numberOfLines={1} style={styles.tagLabel}>{tag.label}</Text>
-        </View>
-      ))}
+      {presentation.visibleTags.map((tag) => {
+        const colorStyle = assetTagChipStylePresentation(tag);
+        return (
+          <View
+            key={tag.id}
+            style={[
+              styles.tagChip,
+              colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
+              layout.shrinkVisibleChips ? styles.compactTagChip : null
+            ]}
+          >
+            <Text numberOfLines={1} style={styles.tagLabel}>{tag.label}</Text>
+          </View>
+        );
+      })}
       {presentation.hiddenCount > 0 ? (
         <View accessibilityLabel={`${presentation.hiddenCount} more tags`} style={[styles.tagChip, styles.overflowChip]}>
           <Text numberOfLines={1} style={[styles.tagLabel, styles.overflowLabel]}>+{presentation.hiddenCount}</Text>
@@ -60,12 +69,6 @@ const styles = StyleSheet.create({
   compactTagChip: {
     flexShrink: 1,
     minWidth: 0
-  },
-  tagSwatch: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    height: 8,
-    width: 8
   },
   tagLabel: {
     color: colors.text,
