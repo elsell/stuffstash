@@ -16,8 +16,15 @@ development loops.
   path.
 - Published API and web image references used by the self-host env example must
   be immutable digest references.
-- The release workflow must update a tracked self-host release env artifact with
-  the newly published API and web image digests before creating the release.
+- The release workflow must create or refresh a branch-protected pull request
+  that updates the tracked self-host release env artifact with the newly
+  published API and web image digests before creating the release.
+- The release workflow must explicitly dispatch and require success from the
+  required CI workflow for that digest-update branch when the automation token
+  would otherwise suppress normal pull request checks.
+- The release workflow must merge the validated digest-update pull request
+  before creating the GitHub release, while keeping the release tag on the
+  source commit that produced the published image attestations.
 - Postgres services in self-host Compose must set `PGDATA` inside the mounted
   data volume so database rows survive `docker compose down` and a later
   `docker compose up`.
