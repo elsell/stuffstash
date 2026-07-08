@@ -209,7 +209,7 @@ describe('AssetDetailQuery', () => {
     });
   });
 
-  it('falls back to the selected active map tree when the summary page is missing a visible map row', async () => {
+  it('loads details from the selected active map tree when Map opens a visible row', async () => {
     const repository = new FakeInventorySummaryRepository();
     const query = new AssetDetailQuery(
       repository,
@@ -228,7 +228,7 @@ describe('AssetDetailQuery', () => {
       ])
     );
 
-    await expect(query.execute('asset-living-room-table')).resolves.toMatchObject({
+    await expect(query.execute('asset-living-room-table', { source: 'map' })).resolves.toMatchObject({
       id: 'asset-living-room-table',
       title: 'Living room table',
       kind: 'location',
@@ -236,7 +236,7 @@ describe('AssetDetailQuery', () => {
     });
   });
 
-  it('uses the detail asset photo list for map-only assets', async () => {
+  it('uses the complete detail photo list for map-sourced assets', async () => {
     const repository = new FakeInventorySummaryRepository();
     repository.setDetailAsset({
       id: assetId('asset-living-room-table'),
@@ -269,10 +269,50 @@ describe('AssetDetailQuery', () => {
       ])
     );
 
-    await expect(query.execute('asset-living-room-table')).resolves.toMatchObject({
+    await expect(query.execute('asset-living-room-table', { source: 'map' })).resolves.toMatchObject({
       id: 'asset-living-room-table',
       photos: [
         { id: 'attachment-table', label: 'table.jpg' }
+      ]
+    });
+  });
+
+  it('prefers the selected active map tree when Map opens an asset that also appears in the recent summary', async () => {
+    const query = new AssetDetailQuery(
+      new FakeInventorySummaryRepository(),
+      new FakeInventoryMapAssetRepository([
+        {
+          id: assetId('asset-passport'),
+          title: 'Passport folder',
+          kind: 'container',
+          lifecycleState: 'active',
+          locationLabel: 'Inventory root',
+          locationTrail: ['Home', 'Map workspace', 'Passport folder'],
+          description: 'Map source description.',
+          updatedAtLabel: 'Updated from map',
+          hasPhoto: false
+        },
+        {
+          id: assetId('asset-map-child'),
+          title: 'Map child',
+          kind: 'item',
+          lifecycleState: 'active',
+          parentAssetId: assetId('asset-passport'),
+          locationLabel: 'Passport folder',
+          locationTrail: ['Home', 'Map workspace', 'Passport folder', 'Map child'],
+          description: '',
+          updatedAtLabel: 'Updated from map',
+          hasPhoto: false
+        }
+      ])
+    );
+
+    await expect(query.execute('asset-passport', { source: 'map' })).resolves.toMatchObject({
+      id: 'asset-passport',
+      description: 'Map source description.',
+      locationTrailLabel: 'Map workspace / Passport folder',
+      containedAssets: [
+        { id: 'asset-map-child', title: 'Map child' }
       ]
     });
   });

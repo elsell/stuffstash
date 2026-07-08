@@ -1279,7 +1279,7 @@ function InventoryMapInfoSheet({
     let isCurrent = true;
     setDetailState({ status: 'loading' });
     assetDetailQuery
-      .execute(asset.id)
+      .execute(asset.id, { source: 'map' })
       .then((detail) => {
         if (isCurrent) {
           setDetailState({ status: 'ready', asset: detail });
@@ -1304,7 +1304,7 @@ function InventoryMapInfoSheet({
       throw new Error('No asset selected.');
     }
 
-    const detail = await assetDetailQuery.execute(activeDetailAssetId);
+    const detail = await assetDetailQuery.execute(activeDetailAssetId, { source: 'map' });
     setDetailState({ status: 'ready', asset: detail });
     return detail;
   }
