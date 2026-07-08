@@ -187,6 +187,9 @@ function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | unde
   if (code === 'language_inference_failed') {
     return diagnosticsEnabled ? 'Open diagnostics or check Voice providers.' : 'Check Voice providers and try again.';
   }
+  if (code === 'clarification_turn_limit') {
+    return 'Start a fresh voice request.';
+  }
   return realtime?.status === 'failed' ? 'Open for details.' : undefined;
 }
 

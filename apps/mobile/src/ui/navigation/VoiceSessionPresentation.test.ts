@@ -226,6 +226,24 @@ describe('VoiceSessionPresentation', () => {
         status: 'failed',
         tenantName: 'Main tenant',
         inventoryName: 'Home',
+        progressLabel: 'Voice needs a fresh start',
+        failureCode: 'clarification_turn_limit',
+        errorMessage: 'That thread needs a fresh voice request. Start again with the missing detail included.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Voice needs a fresh start',
+      subtitle: 'Start a fresh voice request.'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
         progressLabel: 'Speech output failed',
         failureCode: 'text_to_speech_failed',
         errorMessage: 'Speech output failed after Stuff Stash prepared the answer. Check Voice providers and try again.',
