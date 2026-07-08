@@ -205,6 +205,7 @@ type realtimeClientMessage struct {
 	TenantID              string                           `json:"tenantId"`
 	InventoryID           string                           `json:"inventoryId"`
 	Source                string                           `json:"source"`
+	ClientCorrelationID   string                           `json:"clientCorrelationId,omitempty"`
 	RequestedCapabilities []string                         `json:"requestedCapabilities"`
 	InputAudio            realtimeInputAudio               `json:"inputAudio"`
 	OutputAudio           realtimeOutputAudio              `json:"outputAudio"`

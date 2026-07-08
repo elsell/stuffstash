@@ -100,6 +100,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       tenantId: 'tenant-home',
       inventoryId: 'inventory-home',
       source: 'mobile_voice',
+      clientCorrelationId: 'mobile-voice-1',
       inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
       outputAudioMimeTypes: ['audio/mpeg'],
       audioChunksBase64: ['YXVkaW8=']
@@ -193,7 +194,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       seq: 1,
       tenantId: 'tenant-home',
       inventoryId: 'inventory-home',
-      source: 'mobile_voice'
+      source: 'mobile_voice',
+      clientCorrelationId: 'mobile-voice-1'
     });
     expect(socket.sent[1]).toMatchObject({
       seq: 2,

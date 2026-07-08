@@ -63,6 +63,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(transport.lastInput).toMatchObject({
       tenantId: 'tenant-home',
       inventoryId: 'inventory-home',
+      clientCorrelationId: 'mobile-voice-1',
       inputAudio: {
         mimeType: 'audio/mp4',
         sampleRate: 44100,

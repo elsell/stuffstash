@@ -199,6 +199,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           source: input.source,
           requestedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech'],
           developerDiagnostics: this.diagnosticsEnabled,
+          ...(input.clientCorrelationId ? { clientCorrelationId: input.clientCorrelationId } : {}),
           inputAudio: input.inputAudio,
           outputAudio: { mimeTypes: input.outputAudioMimeTypes }
         }));

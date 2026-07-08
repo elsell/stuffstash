@@ -26,6 +26,7 @@ export type RealtimeVoiceTransportInput = {
   readonly tenantId: string;
   readonly inventoryId: string;
   readonly source: 'mobile_voice';
+  readonly clientCorrelationId?: string;
   readonly inputAudio: {
     readonly mimeType: string;
     readonly sampleRate: number;
@@ -305,6 +306,7 @@ export class RealtimeVoiceSessionController {
         tenantId: context.tenantId,
         inventoryId: context.inventoryId,
         source: 'mobile_voice',
+        clientCorrelationId: realtimeVoiceClientCorrelationId(generation),
         inputAudio: {
           mimeType: recorded.mimeType,
           sampleRate: recorded.sampleRate,
@@ -727,6 +729,10 @@ function boundedRecordingLevel(value: number): number {
     return 0;
   }
   return Math.max(0, Math.min(1, value));
+}
+
+function realtimeVoiceClientCorrelationId(generation: number): string {
+  return `mobile-voice-${Math.max(1, generation).toString(36)}`;
 }
 
 function voiceConversationPhase(status: string): VoiceConversationPhase | undefined {
