@@ -15,6 +15,7 @@ import {
 import { AssetCard } from '../components/AssetCard';
 import { IdentityLabel } from '../components/IdentityIcon';
 import { assetDetailHref } from './AssetDetailNavigation';
+import { assetTagSearchHref } from './AssetTagSearchNavigation';
 import { colors, spacing } from '../theme/tokens';
 
 type InventoryAssetsRouteScreenProps = {
@@ -87,7 +88,7 @@ export function InventoryAssetsRouteScreen({
   );
 }
 
-function InventoryAssetList({
+export function InventoryAssetList({
   inventoryAssets,
   isRefreshing,
   onRefresh
@@ -121,7 +122,11 @@ function InventoryAssetList({
         }
         ListEmptyComponent={<Text style={styles.emptyText}>No assets yet.</Text>}
         renderItem={({ item }) => (
-          <AssetCard asset={item} onPress={() => router.push(assetDetailHref(item.id))} />
+          <AssetCard
+            asset={item}
+            onPress={() => router.push(assetDetailHref(item.id))}
+            onTagPress={(tag) => router.push(assetTagSearchHref(tag.label))}
+          />
         )}
       />
     </>

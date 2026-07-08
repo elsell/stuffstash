@@ -113,6 +113,11 @@ func TestAssetSearchFiltersByInventoryScope(t *testing.T) {
 		t.Fatalf("expected inventory-scoped search to include tools only, got %+v", toolsSearch.Data)
 	}
 
+	wrongInventoryTagSearch := searchAssetsInInventory(t, fixture.server, fixture.tenantID, fixture.medicineInventoryID, "Bearer dev:owner", "shop-tools", "exact", "", "")
+	if len(wrongInventoryTagSearch.Data) != 0 {
+		t.Fatalf("expected inventory-scoped tag key search not to leak tools inventory result, got %+v", wrongInventoryTagSearch.Data)
+	}
+
 	firstScopedPage := searchAssetsInInventoryWithLimit(
 		t,
 		fixture.server,
@@ -161,6 +166,10 @@ func TestAssetSearchFiltersByAuthorization(t *testing.T) {
 	if len(viewerDrillSearch.Data) != 0 {
 		t.Fatalf("expected viewer not to see hidden inventory result, got %+v", viewerDrillSearch.Data)
 	}
+	viewerTagSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:viewer", "Workshop", "exact", "", "")
+	if len(viewerTagSearch.Data) != 0 {
+		t.Fatalf("expected viewer not to see hidden inventory tag result, got %+v", viewerTagSearch.Data)
+	}
 	viewerAspirinSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:viewer", "Aspirin", "", "", "")
 	if len(viewerAspirinSearch.Data) != 1 || viewerAspirinSearch.Data[0].Asset.Title != "Aspirin" {
 		t.Fatalf("expected viewer to see granted inventory result, got %+v", viewerAspirinSearch.Data)
@@ -171,6 +180,11 @@ func TestAssetSearchFiltersByAuthorization(t *testing.T) {
 		t.Fatalf("expected cross-tenant search status %d, got %d with body %s", http.StatusForbidden, crossTenantSearch.Code, crossTenantSearch.Body.String())
 	}
 	assertSafeError(t, crossTenantSearch, "forbidden", "Forbidden.")
+
+	otherOwnerTagSearch := searchAssets(t, fixture.server, fixture.otherTenantID, "Bearer dev:other-owner", "other-secret", "exact", "", "")
+	if len(otherOwnerTagSearch.Data) != 1 || otherOwnerTagSearch.Data[0].Asset.Title != "Cordless Drill" || otherOwnerTagSearch.Data[0].Matches[0].Field != "tag_key" {
+		t.Fatalf("expected other tenant owner to find own tag-backed result, got %+v", otherOwnerTagSearch.Data)
+	}
 }
 
 func TestAssetSearchFiltersLifecycle(t *testing.T) {
@@ -227,6 +241,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"drill-bits-asset", "audit-drill-bits-asset",
 			"aspirin-asset", "audit-aspirin-asset",
 			"other-asset", "audit-other-asset",
+			"other-secret-tag", "audit-other-secret-tag", "audit-other-secret-assignment",
 			"drill-attachment", "audit-drill-attachment",
 			"drill-checkout", "op-drill-checkout", "audit-drill-checkout",
 			"viewer-grant-event", "audit-viewer-grant", "viewer-claim",
@@ -315,6 +330,22 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 	})
 	if createOther.Code != http.StatusCreated {
 		t.Fatalf("expected other asset status %d, got %d with body %s", http.StatusCreated, createOther.Code, createOther.Body.String())
+	}
+	otherAsset := decodeAsset(t, createOther)
+
+	createOtherTag := performRequest(server, http.MethodPost, "/tenants/"+otherTenantID+"/inventories/"+otherInventoryID+"/tags", "Bearer dev:other-owner", map[string]any{
+		"key":         "other-secret",
+		"displayName": "Other Secret",
+	})
+	if createOtherTag.Code != http.StatusCreated {
+		t.Fatalf("expected other tag status %d, got %d with body %s", http.StatusCreated, createOtherTag.Code, createOtherTag.Body.String())
+	}
+	otherTag := decodeScenarioTag(t, createOtherTag)
+	updateOtherAssetTags := performRequest(server, http.MethodPatch, "/tenants/"+otherTenantID+"/inventories/"+otherInventoryID+"/assets/"+otherAsset.Data.ID, "Bearer dev:other-owner", map[string]any{
+		"tagIds": []string{otherTag.Data.ID},
+	})
+	if updateOtherAssetTags.Code != http.StatusOK {
+		t.Fatalf("expected other asset tag assignment status %d, got %d with body %s", http.StatusOK, updateOtherAssetTags.Code, updateOtherAssetTags.Body.String())
 	}
 
 	createAttachment := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/assets/"+drill.Data.ID+"/attachments", "Bearer dev:owner", map[string]any{
