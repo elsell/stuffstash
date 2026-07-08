@@ -286,6 +286,64 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     ]);
   });
 
+  it('rejects unsafe photo approval fields before sending a review decision', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'action.plan.proposed',
+      seq: 2,
+      sessionId: 'session-1',
+      actionPlan: {
+        planId: 'plan-1',
+        confirmationSummary: 'Create item water bottle?',
+        commands: [{ id: 'cmd-water-bottle', kind: 'create_asset', summary: 'Create item water bottle' }],
+        risks: []
+      }
+    });
+    await waitForSentMessageCount(socket, 3);
+    await waitForEventType(events, 'action.plan.proposed');
+
+    await expect(transport.approveActionPlan('plan-1', [{
+      commandId: 'cmd-water-bottle',
+      photoIndex: 0,
+      fileName: 'water-bottle.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 123,
+      localUri: 'file:///private/mobile/water-bottle.jpg',
+      contentBase64: 'cGhvdG8='
+    } as unknown as {
+      readonly commandId: string;
+      readonly photoIndex: number;
+      readonly fileName: string;
+      readonly contentType: 'image/jpeg';
+      readonly sizeBytes: number;
+    }])).rejects.toThrow('Voice photo approval metadata may only include reviewed metadata.');
+
+    expect(socket.sent).toHaveLength(3);
+    await transport.cancelActionPlan('plan-1');
+    expect(socket.sent[3]).toMatchObject({ type: 'action.plan.cancel', planId: 'plan-1' });
+    socket.receive({ type: 'action.plan.cancelled', seq: 3, sessionId: 'session-1', planId: 'plan-1', status: 'cancelled' });
+    await run;
+  });
+
   it('rejects session starts that do not accept the required voice capabilities', async () => {
     const malformedCapabilities = [
       undefined,

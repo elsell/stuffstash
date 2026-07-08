@@ -161,6 +161,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         if (decisionSent) {
           throw new Error('Voice review decision has already been sent.');
         }
+        const safePhotos = type === voiceClientMessage.actionPlanApprove
+          ? safePhotoApprovalRequests(photos)
+          : [];
         decisionSent = true;
         thisTransport.activeReviewSession = null;
         socket.send(JSON.stringify({
@@ -168,7 +171,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           seq: seq++,
           sessionId,
           planId,
-          ...(type === voiceClientMessage.actionPlanApprove && photos.length > 0 ? { photoAttachments: photos } : {})
+          ...(safePhotos.length > 0 ? { photoAttachments: safePhotos } : {})
         }));
       };
       const cancelSocketForUser = () => {
@@ -439,6 +442,49 @@ function createReactNativeWebSocket(url: string, headers: Record<string, string>
     options?: { readonly headers?: Record<string, string> }
   ) => VoiceWebSocket;
   return new WebSocketConstructor(url, [], { headers });
+}
+
+function safePhotoApprovalRequests(photos: readonly VoiceActionPlanPhotoApprovalRequest[]): readonly VoiceActionPlanPhotoApprovalRequest[] {
+  return photos.map((photo) => {
+    const raw = photo as unknown as Record<string, unknown>;
+    for (const key of Object.keys(raw)) {
+      if (!voicePhotoApprovalRequestFieldAllowed(key)) {
+        throw new Error('Voice photo approval metadata may only include reviewed metadata.');
+      }
+    }
+    if (
+      typeof raw.commandId !== 'string' ||
+      typeof raw.photoIndex !== 'number' ||
+      !Number.isInteger(raw.photoIndex) ||
+      raw.photoIndex < 0 ||
+      typeof raw.fileName !== 'string' ||
+      !voicePhotoApprovalContentTypeAllowed(raw.contentType) ||
+      typeof raw.sizeBytes !== 'number' ||
+      !Number.isInteger(raw.sizeBytes) ||
+      raw.sizeBytes <= 0
+    ) {
+      throw new Error('Voice photo approval metadata may only include reviewed metadata.');
+    }
+    return {
+      commandId: raw.commandId,
+      photoIndex: raw.photoIndex,
+      fileName: raw.fileName,
+      contentType: raw.contentType,
+      sizeBytes: raw.sizeBytes
+    };
+  });
+}
+
+function voicePhotoApprovalRequestFieldAllowed(key: string): boolean {
+  return key === 'commandId' ||
+    key === 'photoIndex' ||
+    key === 'fileName' ||
+    key === 'contentType' ||
+    key === 'sizeBytes';
+}
+
+function voicePhotoApprovalContentTypeAllowed(value: unknown): value is VoiceActionPlanPhotoApprovalRequest['contentType'] {
+  return value === 'image/jpeg' || value === 'image/png' || value === 'image/webp';
 }
 
 function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetPolicy): VoiceRealtimeEvent {
