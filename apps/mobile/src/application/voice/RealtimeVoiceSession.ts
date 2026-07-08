@@ -476,7 +476,7 @@ export class RealtimeVoiceSessionController {
   }
 
   private async reduceEvent(state: VoiceRealtimeState, event: VoiceRealtimeEvent): Promise<VoiceRealtimeState> {
-    if (state.status === 'failed' || state.status === 'cancelled') {
+    if (state.status === 'completed' || state.status === 'failed' || state.status === 'cancelled') {
       return state;
     }
 

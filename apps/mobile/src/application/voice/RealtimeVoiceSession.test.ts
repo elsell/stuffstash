@@ -1348,6 +1348,53 @@ describe('RealtimeVoiceSessionController', () => {
     expect(player.played).toEqual([]);
   });
 
+  it('keeps completion terminal and ignores late queued events after completion', async () => {
+    const player = new FakePlayer();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'assistant.response.completed',
+          seq: 1,
+          sessionId: 'session-1',
+          response: {
+            kind: 'answer',
+            spokenResponse: 'Your tools are in the garage.',
+            displayResponse: 'Your tools are in the garage.'
+          }
+        },
+        { type: 'session.completed', seq: 2, sessionId: 'session-1' },
+        { type: 'tts.audio.started', seq: 3, sessionId: 'session-1', mimeType: 'audio/pcm' },
+        { type: 'tts.audio.chunk', seq: 4, sessionId: 'session-1', chunkId: 'tts-late', audioBase64: 'ZmFrZS1hdWRpbw==', isFinalChunk: true },
+        {
+          type: 'action.plan.proposed',
+          seq: 5,
+          sessionId: 'session-1',
+          actionPlan: {
+            planId: 'plan-late',
+            status: 'proposed',
+            confirmationSummary: 'Create late item?',
+            commands: [{ kind: 'create_asset', summary: 'Create late item' }],
+            risks: []
+          }
+        }
+      ]),
+      player
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      progressLabel: 'Done',
+      spokenResponse: 'Your tools are in the garage.'
+    });
+    expect(states.at(-1)?.actionPlan).toBeUndefined();
+    expect(player.played).toEqual([]);
+  });
+
   it('maps provider stage failures to safe actionable mobile state', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),

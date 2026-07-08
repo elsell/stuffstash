@@ -352,7 +352,7 @@ All server messages must include session ID and safe sequence metadata so the mo
 
 The mobile transport must validate server event sequence monotonicity and session binding before forwarding events to application state. `session.failed` may omit `sessionId` only before `session.started`; after a session is established, server events with missing, stale, or mismatched session metadata must fail the local session safely and must not update UI or play audio.
 
-Once mobile enters a terminal `failed` or `cancelled` state, later queued server events from the same transport turn must not move the visible session back into processing, speaking, review, or completed state. This preserves the safe terminal outcome when WebSocket delivery races leave already-buffered messages behind a failure or cancellation event.
+Once mobile enters a terminal `completed`, `failed`, or `cancelled` state for the current transport turn, later queued server events from that same turn must not move the visible session back into processing, speaking, review, or another terminal state. This preserves the safe terminal outcome when WebSocket delivery races leave already-buffered messages behind a terminal event. Same-session clarification follow-up turns are separate user-initiated transport turns and must start from a fresh active state before their events are reduced.
 
 Every client message after `session.start` must be bound to the authenticated WebSocket connection and server-created session. The server must reject forged session IDs, stale client sequence numbers, replayed audio chunks, messages from cancelled sessions, messages from completed sessions, and any attempt to change tenant or inventory scope after session authorization.
 
