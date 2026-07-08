@@ -218,7 +218,7 @@ Both endpoints require tenant configuration permission. The response must includ
 - Selection source per slot: `explicit`, `implicit`, or `missing`.
 - Slot readiness: `ready`, `missing`, `disabled`, `archived`, `credential_missing`, `untested`, `duplicate_candidates`, or `invalid_selection`.
 - Safe selected profile summaries using the same redacted metadata as provider profile responses.
-- Safe issue messages and recommended action keys for UI routing.
+- Safe issue messages and recommended action keys for UI routing. Recommended action keys are bounded to `none`, `add_profile`, `choose_profile`, `replace_credential`, `enable_profile`, and `test_profile`.
 - Duplicate eligible profile summaries by capability.
 
 The response must never include raw credentials, sealed credential material, raw provider errors, raw prompts rendered with server instructions, raw transcripts, raw audio, generated speech bytes, provider account details, provider session tokens, or internal stack details.

@@ -40,6 +40,14 @@ export type VoiceProviderSlotReadiness =
   | 'duplicate_candidates'
   | 'invalid_selection'
   | string;
+export type VoiceProviderRecommendedAction =
+  | 'none'
+  | 'add_profile'
+  | 'choose_profile'
+  | 'replace_credential'
+  | 'enable_profile'
+  | 'test_profile'
+  | string;
 
 export type VoiceProviderSlot = {
   readonly capability: ProviderProfileCapability;
@@ -49,7 +57,7 @@ export type VoiceProviderSlot = {
   readonly selectionSource: VoiceProviderSelectionSource;
   readonly readiness: VoiceProviderSlotReadiness;
   readonly issues: readonly string[];
-  readonly recommendedAction: string;
+  readonly recommendedAction: VoiceProviderRecommendedAction;
   readonly duplicateProfiles: readonly ProviderProfileSummary[];
 };
 
