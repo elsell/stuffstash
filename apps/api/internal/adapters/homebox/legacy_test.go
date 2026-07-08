@@ -39,8 +39,15 @@ func TestLegacyHomeboxCSVBuildsNormalizedPlan(t *testing.T) {
 	if got := plan.Counts().Tags; got != 3 {
 		t.Fatalf("tags = %d, tags = %#v", got, plan.Tags)
 	}
-	if _, ok := plan.Assets[1].CustomFields["homebox-tags"]; ok {
-		t.Fatalf("legacy tags custom field should not be created: %#v", plan.Assets[1].CustomFields)
+	for _, field := range plan.Fields {
+		if field.Key == "homebox-tags" {
+			t.Fatalf("legacy tags custom field definition should not be created: %#v", plan.Fields)
+		}
+	}
+	for _, asset := range plan.Assets {
+		if _, ok := asset.CustomFields["homebox-tags"]; ok {
+			t.Fatalf("legacy tags custom field should not be created: %#v", asset.CustomFields)
+		}
 	}
 	if got := plan.Assets[1].TagKeys; len(got) != 2 || got[0] != "clothing" || got[1] != "storage" {
 		t.Fatalf("first item tag keys = %#v", got)
