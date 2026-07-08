@@ -1220,6 +1220,40 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
   });
 
+  it('keeps a safe failure terminal when late buffered events arrive after session failure', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        { type: 'session.failed', seq: 1, code: 'invalid_request', message: 'Voice is not configured.' },
+        {
+          type: 'action.plan.proposed',
+          seq: 2,
+          actionPlan: {
+            planId: 'plan-1',
+            status: 'proposed',
+            confirmationSummary: 'Create a new item.',
+            commands: [{ kind: 'create_asset', summary: 'Create item' }],
+            risks: []
+          }
+        },
+        { type: 'assistant.response.started', seq: 3, responseId: 'response-1' },
+        { type: 'session.completed', seq: 4 }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      errorMessage: 'Voice is not configured.',
+      progressLabel: 'Voice failed'
+    });
+    expect(states.at(-1)?.actionPlan).toBeUndefined();
+  });
+
   it('redacts unsafe generic server failure messages before visible state', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
