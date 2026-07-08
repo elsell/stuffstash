@@ -758,7 +758,7 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
-  it('allows photo drafts on reviewed move rows for concrete assets', () => {
+  it('uses neutral row titles for existing-asset changes without verified asset titles', () => {
     const session = buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
       diagnosticsExpanded: false,
@@ -777,7 +777,6 @@ describe('VoiceSessionPresentation', () => {
             id: 'cmd-move-shed',
             kind: 'move_asset',
             operation: 'move',
-            title: 'Move the shed to the backyard.',
             assetKind: 'item',
             summary: 'Move the shed to the backyard.'
           }],
@@ -789,7 +788,8 @@ describe('VoiceSessionPresentation', () => {
     });
 
     expect(session.actionPlan?.commands[0]).toMatchObject({
-      title: 'Move the shed to the backyard.',
+      title: 'Selected item',
+      subtitle: 'Move the shed to the backyard.',
       photoDraftEligible: true,
       tone: 'update'
     });

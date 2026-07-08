@@ -405,11 +405,13 @@ function formatExistingParentUseCommand(command: VoiceActionPlanCommand): VoiceS
 }
 
 function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: ReadonlyMap<string, string>): VoiceSessionActionPlanCommand {
-  const title = command.title || command.summary;
-  const assetKind = friendlyAssetKind(command.assetKind || command.kind);
   const tone = command.operation === 'create' || command.kind === 'create_asset' || command.kind === 'create_location'
     ? 'create'
     : 'update';
+  const assetKind = friendlyAssetKind(command.assetKind || command.kind);
+  const title = tone === 'create'
+    ? command.title || command.summary
+    : command.title || neutralExistingAssetTitle(command.assetKind);
   return {
     id: command.id,
     title,
@@ -418,6 +420,19 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     photoDraftEligible: isPhotoDraftEligible(command),
     tone
   };
+}
+
+function neutralExistingAssetTitle(value: string | undefined): string {
+  switch (value) {
+    case 'item':
+      return 'Selected item';
+    case 'container':
+      return 'Selected container';
+    case 'location':
+      return 'Selected location';
+    default:
+      return 'Selected asset';
+  }
 }
 
 function isPhotoDraftEligible(command: VoiceActionPlanCommand): boolean {
