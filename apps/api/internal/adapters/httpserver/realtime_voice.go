@@ -33,6 +33,35 @@ var requiredRealtimeVoiceCapabilities = map[string]struct{}{
 	"text_to_speech":     {},
 }
 
+type realtimeVoiceAudioReadResult struct {
+	message realtimeClientMessage
+	err     error
+}
+
+type realtimeVoiceIdleTimeoutError struct {
+	done <-chan realtimeVoiceAudioReadResult
+}
+
+func (e realtimeVoiceIdleTimeoutError) Error() string {
+	return "realtime voice audio input timed out"
+}
+
+func (e realtimeVoiceIdleTimeoutError) Unwrap() error {
+	return ports.ErrInvalidProviderInput
+}
+
+func (e realtimeVoiceIdleTimeoutError) wait() {
+	if e.done == nil {
+		return
+	}
+	timer := time.NewTimer(time.Second)
+	defer timer.Stop()
+	select {
+	case <-e.done:
+	case <-timer.C:
+	}
+}
+
 type realtimeVoiceTimeouts struct {
 	session time.Duration
 	idle    time.Duration
@@ -115,6 +144,14 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 					_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
 					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
 					_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
+					return
+				}
+				var idleErr realtimeVoiceIdleTimeoutError
+				if errors.As(err, &idleErr) {
+					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
+					_ = connection.Close(websocket.StatusPolicyViolation, "voice session failed")
+					idleErr.wait()
 					return
 				} else {
 					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
@@ -488,14 +525,10 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 }
 
 func readRealtimeAudioMessageWithIdle(ctx context.Context, connection *websocket.Conn, idleTimeout time.Duration) (realtimeClientMessage, error) {
-	type readResult struct {
-		message realtimeClientMessage
-		err     error
-	}
-	results := make(chan readResult, 1)
+	results := make(chan realtimeVoiceAudioReadResult, 1)
 	go func() {
 		message, err := readRealtimeAudioMessage(ctx, connection)
-		results <- readResult{message: message, err: err}
+		results <- realtimeVoiceAudioReadResult{message: message, err: err}
 	}()
 
 	timer := time.NewTimer(idleTimeout)
@@ -505,7 +538,7 @@ func readRealtimeAudioMessageWithIdle(ctx context.Context, connection *websocket
 	case result := <-results:
 		return result.message, result.err
 	case <-timer.C:
-		return realtimeClientMessage{}, ports.ErrInvalidProviderInput
+		return realtimeClientMessage{}, realtimeVoiceIdleTimeoutError{done: results}
 	case <-ctx.Done():
 		return realtimeClientMessage{}, ctx.Err()
 	}
