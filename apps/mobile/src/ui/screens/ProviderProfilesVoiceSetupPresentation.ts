@@ -70,3 +70,30 @@ export function formatProviderProfileLifecycleLabel(lifecycleState: string): str
       return 'Unknown';
   }
 }
+
+export function formatProviderProfileTestStatusLabel(lastTestedAt?: string): string {
+  return lastTestedAt ? 'Tested' : 'Needs test';
+}
+
+export function voiceProviderSetupIssueLabels(readiness: string): readonly string[] {
+  switch (readiness) {
+    case 'ready':
+      return [];
+    case 'missing':
+      return ['Choose a provider profile for this slot.'];
+    case 'disabled':
+      return ['Enable the selected provider profile.'];
+    case 'archived':
+      return ['Choose an active provider profile.'];
+    case 'credential_missing':
+      return ['Add a credential for the selected profile.'];
+    case 'untested':
+      return ['Test the selected profile before using voice.'];
+    case 'duplicate_candidates':
+      return ['Choose which ready profile this voice slot should use.'];
+    case 'invalid_selection':
+      return ['Choose a valid profile for this slot.'];
+    default:
+      return ['Review this voice provider slot.'];
+  }
+}

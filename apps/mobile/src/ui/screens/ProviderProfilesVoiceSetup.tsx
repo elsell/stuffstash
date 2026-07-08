@@ -8,9 +8,11 @@ import { colors, radius, spacing } from '../theme/tokens';
 import {
   formatProviderProfileCredentialStatusLabel,
   formatProviderProfileLifecycleLabel,
+  formatProviderProfileTestStatusLabel,
   formatVoiceProviderCapabilityLabel,
   formatVoiceProviderReadinessLabel,
-  formatVoiceProviderSelectionSourceLabel
+  formatVoiceProviderSelectionSourceLabel,
+  voiceProviderSetupIssueLabels
 } from './ProviderProfilesVoiceSetupPresentation';
 
 export function VoiceSetupPanel({
@@ -76,6 +78,7 @@ function VoiceSlotCard({
 }) {
   const selectedProfile = slot.selectedProfile;
   const alternatives = profiles.filter((profile) => profile.id !== slot.selectedProfileId);
+  const issueLabels = voiceProviderSetupIssueLabels(slot.readiness);
 
   return (
     <View style={styles.slotCard}>
@@ -98,7 +101,7 @@ function VoiceSlotCard({
           <Text style={styles.selectedProfileMeta}>{selectedProfile.providerKind} / {selectedProfile.modelName || 'No model'}</Text>
           <View style={styles.slotFacts}>
             <InfoRow label="Credential" value={formatProviderProfileCredentialStatusLabel(selectedProfile.credentialStatus)} />
-            <InfoRow label="Last tested" value={selectedProfile.lastTestedAt ?? 'Not tested'} />
+            <InfoRow label="Last tested" value={formatProviderProfileTestStatusLabel(selectedProfile.lastTestedAt)} />
           </View>
         </View>
       ) : (
@@ -108,9 +111,9 @@ function VoiceSlotCard({
         </View>
       )}
 
-      {slot.issues.length > 0 ? (
+      {issueLabels.length > 0 ? (
         <View style={styles.issueList}>
-          {slot.issues.map((issue) => (
+          {issueLabels.map((issue) => (
             <Text key={issue} style={styles.issueText}>{issue}</Text>
           ))}
         </View>
@@ -175,7 +178,7 @@ function ChoiceRow({
       <View style={styles.choiceTextGroup}>
         <Text style={styles.choiceName}>{profile.displayName}</Text>
         <Text style={styles.choiceMeta}>
-          {formatProviderProfileLifecycleLabel(profile.lifecycleState)} / {formatProviderProfileCredentialStatusLabel(profile.credentialStatus)} / {profile.lastTestedAt ? 'Tested' : 'Needs test'}
+          {formatProviderProfileLifecycleLabel(profile.lifecycleState)} / {formatProviderProfileCredentialStatusLabel(profile.credentialStatus)} / {formatProviderProfileTestStatusLabel(profile.lastTestedAt)}
         </Text>
       </View>
       {workingAction ? (

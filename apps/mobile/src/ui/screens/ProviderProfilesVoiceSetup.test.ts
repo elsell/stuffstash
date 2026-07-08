@@ -4,9 +4,11 @@ import { VoiceSetupPanel } from './ProviderProfilesVoiceSetup';
 import {
   formatProviderProfileCredentialStatusLabel,
   formatProviderProfileLifecycleLabel,
+  formatProviderProfileTestStatusLabel,
   formatVoiceProviderCapabilityLabel,
   formatVoiceProviderReadinessLabel,
-  formatVoiceProviderSelectionSourceLabel
+  formatVoiceProviderSelectionSourceLabel,
+  voiceProviderSetupIssueLabels
 } from './ProviderProfilesVoiceSetupPresentation';
 
 vi.mock('react-native', () => ({
@@ -52,11 +54,12 @@ describe('VoiceSetupPanel', () => {
               id: 'profile-speech',
               capability: 'speech_to_text',
               credentialStatus: 'apiKey:secret',
+              lastTestedAt: 'providerSessionId:last-test',
               lifecycleState: 'stack_trace_here'
             }),
             selectionSource: 'providerSessionId:abc123',
             readiness: 'raw_prompt_injected',
-            issues: [],
+            issues: ['bearer secret stack_trace_here'],
             recommendedAction: 'none',
             duplicateProfiles: []
           }
@@ -73,7 +76,9 @@ describe('VoiceSetupPanel', () => {
     expect(textContent(tree)).toContain('Unknown');
     expect(textContent(tree)).not.toContain('raw_prompt_injected');
     expect(textContent(tree)).not.toContain('providerSessionId:abc123');
+    expect(textContent(tree)).not.toContain('providerSessionId:last-test');
     expect(textContent(tree)).not.toContain('apiKey:secret');
+    expect(textContent(tree)).not.toContain('bearer secret stack_trace_here');
     expect(textContent(tree)).not.toContain('stack_trace_here');
   });
 });
@@ -163,6 +168,25 @@ describe('voice provider setup labels', () => {
     ['archived', 'Archived']
   ])('maps lifecycle state %s to a product-owned setup label', (lifecycleState, label) => {
     expect(formatProviderProfileLifecycleLabel(lifecycleState)).toBe(label);
+  });
+
+  it('maps test timestamps to bounded status labels without rendering timestamp text', () => {
+    expect(formatProviderProfileTestStatusLabel('providerSessionId:last-test')).toBe('Tested');
+    expect(formatProviderProfileTestStatusLabel(undefined)).toBe('Needs test');
+  });
+
+  it.each([
+    ['ready', []],
+    ['missing', ['Choose a provider profile for this slot.']],
+    ['disabled', ['Enable the selected provider profile.']],
+    ['archived', ['Choose an active provider profile.']],
+    ['credential_missing', ['Add a credential for the selected profile.']],
+    ['untested', ['Test the selected profile before using voice.']],
+    ['duplicate_candidates', ['Choose which ready profile this voice slot should use.']],
+    ['invalid_selection', ['Choose a valid profile for this slot.']],
+    ['raw_prompt_injected', ['Review this voice provider slot.']]
+  ])('derives safe issue labels from readiness %s', (readiness, labels) => {
+    expect(voiceProviderSetupIssueLabels(readiness)).toEqual(labels);
   });
 
   it('uses safe fallbacks for unknown setup metadata', () => {
