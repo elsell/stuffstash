@@ -20,6 +20,7 @@ import {
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
 import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
+import { TagColorPicker } from '../components/TagColorPicker';
 import {
   assetEditContext,
   canSaveEditAsset,
@@ -265,6 +266,7 @@ function EditTagPicker({
           <Text style={styles.newTagButtonText}>Add</Text>
         </Pressable>
       </View>
+      <TagColorPicker disabled={disabled} value={newTagColor} onChange={setNewTagColor} />
     </View>
   );
 }

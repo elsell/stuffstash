@@ -31,6 +31,7 @@ import {
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
 import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
+import { TagColorPicker } from '../components/TagColorPicker';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import {
   ParentLookupQuery,
@@ -1126,6 +1127,7 @@ function AssetTagPicker({
           <Text style={styles.newTagButtonText}>Add</Text>
         </Pressable>
       </View>
+      <TagColorPicker value={newTagColor} onChange={setNewTagColor} />
     </View>
   );
 }
