@@ -44,17 +44,19 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		}
 		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureTextToSpeech, err: err}
 	}
-	if speech.MimeType == "" || len(speech.Chunks) == 0 {
-		return ports.ErrInvalidProviderInput
+	speechChunks := realtimeVoicePlayableSpeechChunks(speech.Chunks)
+	if speech.MimeType == "" || len(speechChunks) == 0 {
+		err := ports.ErrInvalidProviderInput
+		if diagnosticErr := emitRealtimeVoiceTextToSpeechFailureDiagnostic(session, toolResults, realtimeVoiceFailureTextToSpeech, err, emit); diagnosticErr != nil {
+			return diagnosticErr
+		}
+		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureTextToSpeech, err: err}
 	}
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioStarted, SessionID: session.ID, AudioMime: speech.MimeType}); err != nil {
 		return err
 	}
-	for index, chunk := range speech.Chunks {
-		if len(chunk) == 0 {
-			continue
-		}
-		if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioChunk, SessionID: session.ID, ChunkID: fmt.Sprintf("tts-%d", index+1), Audio: chunk, FinalChunk: index == len(speech.Chunks)-1}); err != nil {
+	for index, chunk := range speechChunks {
+		if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioChunk, SessionID: session.ID, ChunkID: fmt.Sprintf("tts-%d", index+1), Audio: chunk, FinalChunk: index == len(speechChunks)-1}); err != nil {
 			return err
 		}
 	}
@@ -67,6 +69,16 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		}
 	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
+}
+
+func realtimeVoicePlayableSpeechChunks(chunks [][]byte) [][]byte {
+	playable := make([][]byte, 0, len(chunks))
+	for _, chunk := range chunks {
+		if len(chunk) > 0 {
+			playable = append(playable, chunk)
+		}
+	}
+	return playable
 }
 
 func (a App) recoverRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, toolCallIDs []string, toolResults []ports.AgentToolResult, emit RealtimeVoiceEventSink) error {

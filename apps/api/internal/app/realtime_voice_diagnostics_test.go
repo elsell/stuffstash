@@ -555,6 +555,87 @@ func TestRealtimeVoiceTextToSpeechFailureDiagnosticKeepsToolWorkDuringRecovery(t
 	}
 }
 
+func TestRealtimeVoiceTreatsMalformedTextToSpeechOutputAsSpeechOutputFailure(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "The tools are in the garage.",
+				DisplayResponse: "The tools are in the garage.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are my tools?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = malformedResolvedTextToSpeech{}
+	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+
+	sessionInput := defaultRealtimeVoiceSessionInput()
+	sessionInput.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
+		t.Fatalf("expected malformed text-to-speech output to be stage failure, got %v", err)
+	}
+	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
+	for _, required := range []string{`"stage": "text_to_speech"`, `"safeCode": "text_to_speech_failed"`, `"safeError": "invalid_provider_output"`} {
+		if !strings.Contains(diagnostic.Detail, required) {
+			t.Fatalf("expected malformed output diagnostic to contain %q, got %s", required, diagnostic.Detail)
+		}
+	}
+}
+
+func TestRealtimeVoiceCompactsTextToSpeechChunksBeforeMarkingFinalChunk(t *testing.T) {
+	t.Parallel()
+
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindAnswer,
+				SpokenResponse:  "The tools are in the garage.",
+				DisplayResponse: "The tools are in the garage.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are my tools?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = resolvedTextToSpeechWithChunks{chunks: [][]byte{[]byte("speech"), nil}}
+	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+	audioChunks := []RealtimeVoiceEvent{}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventTextToSpeechAudioChunk {
+			audioChunks = append(audioChunks, event)
+		}
+	}
+	if len(audioChunks) != 1 || !audioChunks[0].FinalChunk {
+		t.Fatalf("expected one compacted final audio chunk, got %+v", audioChunks)
+	}
+}
+
 func findRealtimeVoiceDiagnosticEvent(t *testing.T, events []RealtimeVoiceEvent, message string) RealtimeVoiceEvent {
 	t.Helper()
 
@@ -585,4 +666,18 @@ type failingResolvedTextToSpeech struct {
 
 func (f failingResolvedTextToSpeech) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
 	return ports.TextToSpeechResult{}, f.err
+}
+
+type malformedResolvedTextToSpeech struct{}
+
+func (malformedResolvedTextToSpeech) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
+	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: [][]byte{nil}}, nil
+}
+
+type resolvedTextToSpeechWithChunks struct {
+	chunks [][]byte
+}
+
+func (r resolvedTextToSpeechWithChunks) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
+	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: r.chunks}, nil
 }

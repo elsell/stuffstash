@@ -62,6 +62,9 @@ type realtimeVoiceSafeDiagnosticError interface {
 }
 
 func safeRealtimeVoiceProviderDiagnosticError(err error) string {
+	if errors.Is(err, ports.ErrInvalidProviderInput) {
+		return "invalid_provider_output"
+	}
 	var safeErr realtimeVoiceSafeDiagnosticError
 	if errors.As(err, &safeErr) {
 		value := strings.TrimSpace(safeErr.SafeRealtimeVoiceDiagnostic())
@@ -73,7 +76,7 @@ func safeRealtimeVoiceProviderDiagnosticError(err error) string {
 }
 
 func safeRealtimeVoiceProviderDiagnosticCategory(value string) bool {
-	if value == "provider_request_failed" || value == "provider_timeout" || value == "provider_auth_failed" || value == "provider_rate_limited" {
+	if value == "provider_request_failed" || value == "provider_timeout" || value == "provider_auth_failed" || value == "provider_rate_limited" || value == "invalid_provider_output" {
 		return true
 	}
 	if !strings.HasPrefix(value, "provider_http_status_") {
