@@ -11,7 +11,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-var realtimeVoicePlannerPlacementNowPattern = regexp.MustCompile(`\b(?:is|are|was|were)\b(?:\s+\S+){0,8}\s+in(?:\s+\S+){0,8}\s+now\b`)
+var realtimeVoicePlannerPlacementNowPattern = regexp.MustCompile(`\b(?:is|are|was|were|s)\b(?:\s+\S+){0,8}\s+in(?:\s+\S+){0,8}\s+now\b`)
 
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {
 	a.speechToText = stt
