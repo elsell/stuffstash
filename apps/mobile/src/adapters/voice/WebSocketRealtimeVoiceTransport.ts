@@ -23,6 +23,8 @@ type VoiceWebSocket = {
 
 type VoiceWebSocketFactory = (url: string, headers: Record<string, string>) => VoiceWebSocket;
 
+const requiredRealtimeVoiceCapabilities = ['speech_to_text', 'language_inference', 'text_to_speech'] as const;
+
 type ActiveRealtimeReviewSession = {
   readonly sendDecision: (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]) => void;
 };
@@ -197,7 +199,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           tenantId: input.tenantId,
           inventoryId: input.inventoryId,
           source: input.source,
-          requestedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech'],
+          requestedCapabilities: [...requiredRealtimeVoiceCapabilities],
           developerDiagnostics: this.diagnosticsEnabled,
           ...(input.clientCorrelationId ? { clientCorrelationId: input.clientCorrelationId } : {}),
           inputAudio: input.inputAudio,
@@ -354,7 +356,7 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         sessionId: stringField(message, 'sessionId'),
         acceptedInputAudio: acceptedInputAudioField(message),
         acceptedOutputAudio: acceptedOutputAudioField(message),
-        ...optionalStringArrayObjectField(message, 'acceptedCapabilities')
+        acceptedCapabilities: acceptedCapabilitiesField(message)
       };
     case 'session.failed':
       return {
@@ -567,14 +569,6 @@ function optionalObjectField<T extends string>(field: T, value: string | undefin
   return value ? { [field]: value } as { readonly [key in T]?: string } : {};
 }
 
-function optionalStringArrayObjectField<T extends string>(message: Record<string, unknown>, field: T): { readonly [key in T]?: readonly string[] } {
-  const raw = message[field];
-  if (raw === undefined) {
-    return {};
-  }
-  return { [field]: stringArrayField(message, field) } as { readonly [key in T]?: readonly string[] };
-}
-
 function acceptedInputAudioField(message: Record<string, unknown>) {
   const acceptedInputAudio = objectField(message, 'acceptedInputAudio');
   return {
@@ -589,6 +583,21 @@ function acceptedOutputAudioField(message: Record<string, unknown>) {
   return {
     mimeTypes: stringArrayField(acceptedOutputAudio, 'mimeTypes')
   };
+}
+
+function acceptedCapabilitiesField(message: Record<string, unknown>): readonly string[] {
+  let capabilities: readonly string[];
+  try {
+    capabilities = stringArrayField(message, 'acceptedCapabilities');
+  } catch {
+    throw new Error('Voice event field acceptedCapabilities must match requested voice capabilities.');
+  }
+  const matchesRequested = capabilities.length === requiredRealtimeVoiceCapabilities.length &&
+    requiredRealtimeVoiceCapabilities.every((capability, index) => capabilities[index] === capability);
+  if (!matchesRequested) {
+    throw new Error('Voice event field acceptedCapabilities must match requested voice capabilities.');
+  }
+  return capabilities;
 }
 
 function actionPlanCommandResultsField(message: Record<string, unknown>) {

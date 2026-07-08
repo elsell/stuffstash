@@ -78,7 +78,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
       readonly acceptedOutputAudio: {
         readonly mimeTypes: readonly string[];
       };
-      readonly acceptedCapabilities?: readonly string[];
+      readonly acceptedCapabilities: readonly string[];
     }
   | { readonly type: 'session.failed'; readonly code: string; readonly message: string }
   | { readonly type: 'transcript.delta'; readonly text: string }

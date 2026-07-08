@@ -195,7 +195,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       tenantId: 'tenant-home',
       inventoryId: 'inventory-home',
       source: 'mobile_voice',
-      clientCorrelationId: 'mobile-voice-1'
+      clientCorrelationId: 'mobile-voice-1',
+      requestedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
     });
     expect(socket.sent[1]).toMatchObject({
       seq: 2,
@@ -283,6 +284,47 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         }]
       }
     ]);
+  });
+
+  it('rejects session starts that do not accept the required voice capabilities', async () => {
+    const malformedCapabilities = [
+      undefined,
+      ['speech_to_text', 'text_to_speech'],
+      ['speech_to_text', 'language_inference', 'raw_provider'],
+      ['speech_to_text', 'language_inference', 'language_inference'],
+      [' speech_to_text ', 'language_inference', 'text_to_speech']
+    ];
+
+    for (const acceptedCapabilities of malformedCapabilities) {
+      const socket = new FakeWebSocket();
+      const transport = new WebSocketRealtimeVoiceTransport({
+        apiBaseUrl: 'http://127.0.0.1:8080/',
+        tokenProvider: () => 'dev:user-1',
+        webSocketFactory: () => socket
+      });
+
+      const run = transport.run({
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        source: 'mobile_voice',
+        inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+        outputAudioMimeTypes: ['audio/mpeg'],
+        audioChunksBase64: ['YXVkaW8=']
+      }, async () => {});
+
+      socket.open();
+      const started = sessionStarted();
+      if (acceptedCapabilities === undefined) {
+        delete (started as Record<string, unknown>).acceptedCapabilities;
+      } else {
+        (started as Record<string, unknown>).acceptedCapabilities = acceptedCapabilities;
+      }
+      socket.receive(started);
+      socket.closeFromServer(1000);
+
+      await expect(run).rejects.toThrow('Voice event field acceptedCapabilities must match requested voice capabilities.');
+      expect(socket.sent.map((message) => message.type)).toEqual(['session.start']);
+    }
   });
 
   it('rejects stale or cross-session server events before forwarding them', async () => {
