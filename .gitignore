@@ -1,4 +1,7 @@
 .cache/
+.env
+.env.*
+!.env.example
 .DS_Store
 .stuffstash/
 apps/api/.stuffstash/

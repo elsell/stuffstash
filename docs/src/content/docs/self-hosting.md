@@ -55,7 +55,7 @@ Change these before a household relies on the deployment:
 | `STUFF_STASH_PROVIDER_CREDENTIAL_KEY_ID` | Labels the active credential encryption key. |
 | `STUFF_STASH_PROVIDER_CREDENTIAL_KEY` | Base64-encoded 32-byte AES-GCM key for provider credentials and temporary import material. |
 | OIDC clients and users | Local Dex users are fixtures, not household accounts. |
-| SpiceDB credentials and datastore | `serve-testing` is local-only and not durable. |
+| Evaluation SpiceDB credentials and datastore | `serve-testing` is local-only and not durable. |
 | Public origins and callback URLs | OIDC fails when issuer, redirect URI, API origin, or web origin disagree. |
 
 Generate the provider credential key with:
@@ -66,6 +66,11 @@ openssl rand -base64 32
 
 Store secrets in a private `.env` file or your secret manager. Do not commit
 household secrets.
+
+The self-host Compose file builds Postgres connection strings from the database
+password variables. Use URL-safe password characters, or update the Compose file
+with a percent-encoded connection string if your database password contains URI
+reserved characters such as `@`, `/`, `:`, or `?`.
 
 ## Production-Like Compose
 
@@ -322,17 +327,35 @@ public HTTPS storage endpoint in `STUFF_STASH_S3_PUBLIC_ENDPOINT`.
 
 ## Verify The Stack
 
-Check API health:
+For the production-like Compose path, check API health:
 
 ```sh
 curl http://localhost:8080/healthz
 ```
 
-Check OIDC/API authorization:
+Then sign in through your configured OIDC provider, create a household, create
+an inventory, add a location, add an item, upload a small JPEG or PNG, reload
+the page, and restart the stack:
+
+```sh
+docker compose -f compose.selfhost.yaml down
+docker compose -f compose.selfhost.yaml up --build
+```
+
+The inventory and uploaded media should still be available after sign-in. The
+production-like path uses datastore-backed SpiceDB and durable Postgres/Garage
+volumes, so restart durability is expected unless volumes are removed.
+
+For the Compose evaluation path with local Dex fixtures, check OIDC/API
+authorization with:
 
 ```sh
 scripts/verify-dex-oidc-api.sh
 ```
+
+Do not use the evaluation path as restart-durability proof. It uses SpiceDB
+`serve-testing`, so a full restart can make previously created inventories
+inaccessible to the same user.
 
 Check browser behavior. These commands are contributor checks for the web app;
 they are useful before treating a local setup guide change as verified, but they
@@ -345,14 +368,7 @@ corepack pnpm --dir apps/web check
 corepack pnpm --dir apps/web build
 ```
 
-After signing in, create a household, create an inventory, add a location, add
-an item, and upload a small JPEG or PNG. Then reload the page.
-
-Do not use a successful page reload as proof of restart durability. Until the
-Compose stack uses persistent SpiceDB storage, a full stack restart can make
-previously created inventories inaccessible to the same user.
-
-## Stop And Clean Up
+## Stop And Clean Up Evaluation Stack
 
 Stop containers but keep volumes:
 

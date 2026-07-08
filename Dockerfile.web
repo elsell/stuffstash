@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 ARG NODE_BUILDER_IMAGE=registry.access.redhat.com/ubi9/nodejs-24@sha256:27dbb10d06365cc4627e4abb589780b3603feaac2577a231f95c193abfa0c04b
 ARG WEB_RUNTIME_IMAGE=registry.access.redhat.com/ubi9/nginx-124@sha256:da5615d3613867c87aefc2cfdfcc8bb5e3c5e1f778d91e26ef72ae5a7824e386
 ARG PNPM_VERSION=11.0.7
@@ -14,6 +16,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/api-client packages/api-client
 COPY apps/web apps/web
 COPY deploy/web/nginx.conf deploy/web/nginx.conf
+COPY deploy/web/start-web-runtime.sh deploy/web/start-web-runtime.sh
 COPY scripts/render-web-nginx-config.mjs scripts/render-web-nginx-config.mjs
 RUN pnpm --dir apps/web build
 RUN node scripts/render-web-nginx-config.mjs apps/web/build/index.html deploy/web/nginx.conf /tmp/stuffstash-nginx.conf
@@ -22,5 +25,9 @@ FROM ${WEB_RUNTIME_IMAGE}
 
 COPY --from=builder /tmp/stuffstash-nginx.conf /opt/app-root/etc/nginx.default.d/stuffstash.conf
 COPY --from=builder /src/apps/web/build /opt/app-root/src
+COPY --from=builder /src/deploy/web/start-web-runtime.sh /usr/local/bin/start-web-runtime
+USER 0
+RUN chmod 0755 /usr/local/bin/start-web-runtime
+USER 1001
 EXPOSE 8080
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/usr/local/bin/start-web-runtime"]
