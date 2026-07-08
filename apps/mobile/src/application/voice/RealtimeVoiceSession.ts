@@ -43,7 +43,11 @@ export interface RealtimeVoiceTransport {
     options?: RealtimeVoiceTransportRunOptions
   ): Promise<void>;
   canSendFollowUpAudio(): boolean;
-  sendFollowUpAudio(audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void>;
+  sendFollowUpAudio(
+    audioChunksBase64: readonly string[],
+    onEvent?: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: RealtimeVoiceTransportRunOptions
+  ): Promise<void>;
   approveActionPlan(planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]): Promise<void>;
   cancelActionPlan(planId: string): Promise<void>;
 }
@@ -241,6 +245,7 @@ export class RealtimeVoiceSessionController {
   private currentContext: { readonly tenantId: TenantId; readonly inventoryId: InventoryId; readonly tenantName: string; readonly inventoryName: string } | null = null;
   private recordingStarted = false;
   private activeRunAbortController: AbortController | null = null;
+  private activeFollowUpAbortController: AbortController | null = null;
   private activeSessionGeneration = 0;
   private cancelledThroughSessionGeneration = 0;
   private pendingPhotoDraftsByPlanId = new Map<string, VoiceActionPlanPhotoDrafts>();
@@ -343,6 +348,8 @@ export class RealtimeVoiceSessionController {
     }
     const context = this.currentContext ?? (await this.selectedInventoryContext());
     await this.options.readinessChecker?.assertReady();
+    this.activeSessionGeneration++;
+    this.currentContext = context;
     await this.player.stop();
     await this.recorder.start();
     this.recordingStarted = true;
@@ -362,9 +369,13 @@ export class RealtimeVoiceSessionController {
     if (!this.recordingStarted) {
       throw new Error('Voice recording has not started.');
     }
+    const generation = this.activeSessionGeneration;
     const context = this.currentContext ?? (await this.selectedInventoryContext());
     const recorded = await this.recorder.stop();
     this.recordingStarted = false;
+    if (this.isSessionGenerationCancelled(generation)) {
+      throw new VoiceRealtimeCancelledError();
+    }
     const states: VoiceRealtimeState[] = [{
       status: 'processing',
       tenantName: context.tenantName,
@@ -374,12 +385,26 @@ export class RealtimeVoiceSessionController {
       debugEvents: []
     }];
     onState?.(states[0]);
-    await this.transport.sendFollowUpAudio(recorded.chunksBase64, async (event) => {
-      const previous = states[states.length - 1];
-      const next = await this.reduceEvent(previous, event);
-      states.push(next);
-      onState?.(next);
-    });
+    const abortController = new AbortController();
+    this.activeFollowUpAbortController = abortController;
+    try {
+      await this.transport.sendFollowUpAudio(recorded.chunksBase64, async (event) => {
+        if (this.isSessionGenerationCancelled(generation)) {
+          throw new VoiceRealtimeCancelledError();
+        }
+        const previous = states[states.length - 1];
+        const next = await this.reduceEvent(previous, event);
+        states.push(next);
+        onState?.(next);
+      }, { signal: abortController.signal });
+    } finally {
+      if (this.activeFollowUpAbortController === abortController) {
+        this.activeFollowUpAbortController = null;
+      }
+    }
+    if (this.isSessionGenerationCancelled(generation)) {
+      throw new VoiceRealtimeCancelledError();
+    }
     if (states.length === 1) {
       states.push(withProgressStep(states[0], 'Done', { status: 'completed' }));
       onState?.(states[1]);
@@ -399,6 +424,7 @@ export class RealtimeVoiceSessionController {
       await this.recorder.cancel();
     }
     this.activeRunAbortController?.abort();
+    this.activeFollowUpAbortController?.abort();
     await this.player.stop();
     return {
       status: 'cancelled',

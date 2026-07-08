@@ -30,7 +30,11 @@ type ActiveRealtimeReviewSession = {
 };
 
 type ActiveRealtimeFollowUpSession = {
-  readonly sendAudio: (audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>) => Promise<void>;
+  readonly sendAudio: (
+    audioChunksBase64: readonly string[],
+    onEvent?: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: RealtimeVoiceTransportRunOptions
+  ) => Promise<void>;
   readonly close: () => void;
 };
 
@@ -88,8 +92,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let settled = false;
       let decisionSent = false;
       let messageChain = Promise.resolve();
-      const sendAudioTurn = (audioChunksBase64: readonly string[]) => {
+      const sendAudioTurn = (audioChunksBase64: readonly string[], signal?: AbortSignal) => {
         audioChunksBase64.forEach((audioBase64, index) => {
+          if (signal?.aborted) {
+            throw new VoiceRealtimeCancelledError();
+          }
           socket.send(JSON.stringify({
             type: 'audio.chunk',
             seq: seq++,
@@ -99,6 +106,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             isFinalChunk: index === audioChunksBase64.length - 1
           }));
         });
+        if (signal?.aborted) {
+          throw new VoiceRealtimeCancelledError();
+        }
         socket.send(JSON.stringify({ type: 'audio.end', seq: seq++, sessionId }));
       };
       const sendDecision = (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []) => {
@@ -118,10 +128,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           ...(type === 'action.plan.approve' && photos.length > 0 ? { photoAttachments: photos } : {})
         }));
       };
-      const abortHandler = () => {
-        if (settled) {
-          return;
-        }
+      const cancelSocketForUser = () => {
         completed = true;
         try {
           if (sessionId) {
@@ -136,8 +143,14 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           // Cancellation is best effort once the socket is already closing.
         } finally {
           socket.close();
-          settleReject(new VoiceRealtimeCancelledError());
         }
+      };
+      const abortHandler = () => {
+        if (settled) {
+          return;
+        }
+        cancelSocketForUser();
+        settleReject(new VoiceRealtimeCancelledError());
       };
 
       function settleResolve(): void {
@@ -241,14 +254,46 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
               followUpResolve = null;
               followUpReject = null;
               this.activeFollowUpSession = {
-                sendAudio: (audioChunksBase64, followUpOnEvent) => {
+                sendAudio: (audioChunksBase64, followUpOnEvent, followUpOptions) => {
+                  if (followUpOptions?.signal?.aborted) {
+                    thisTransport.activeFollowUpSession = null;
+                    cancelSocketForUser();
+                    return Promise.reject(new VoiceRealtimeCancelledError());
+                  }
                   currentOnEvent = followUpOnEvent ?? onEvent;
                   followUpPending = true;
+                  const abortFollowUpHandler = () => {
+                    if (!followUpPending) {
+                      return;
+                    }
+                    followUpPending = false;
+                    thisTransport.activeFollowUpSession = null;
+                    cancelSocketForUser();
+                    const rejectFollowUp = followUpReject;
+                    followUpResolve = null;
+                    followUpReject = null;
+                    rejectFollowUp?.(new VoiceRealtimeCancelledError());
+                  };
                   const promise = new Promise<void>((resolveFollowUp, rejectFollowUp) => {
-                    followUpResolve = resolveFollowUp;
-                    followUpReject = rejectFollowUp;
+                    followUpResolve = () => {
+                      followUpOptions?.signal?.removeEventListener('abort', abortFollowUpHandler);
+                      resolveFollowUp();
+                    };
+                    followUpReject = (error) => {
+                      followUpOptions?.signal?.removeEventListener('abort', abortFollowUpHandler);
+                      rejectFollowUp(error);
+                    };
                   });
-                  sendAudioTurn(audioChunksBase64);
+                  followUpOptions?.signal?.addEventListener('abort', abortFollowUpHandler, { once: true });
+                  try {
+                    sendAudioTurn(audioChunksBase64, followUpOptions?.signal);
+                  } catch (error) {
+                    followUpOptions?.signal?.removeEventListener('abort', abortFollowUpHandler);
+                    followUpPending = false;
+                    followUpResolve = null;
+                    followUpReject = null;
+                    return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+                  }
                   return promise;
                 },
                 close: closeFollowUpSession
@@ -302,11 +347,15 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     return this.activeFollowUpSession !== null;
   }
 
-  async sendFollowUpAudio(audioChunksBase64: readonly string[], onEvent?: (event: VoiceRealtimeEvent) => Promise<void>): Promise<void> {
+  async sendFollowUpAudio(
+    audioChunksBase64: readonly string[],
+    onEvent?: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: RealtimeVoiceTransportRunOptions
+  ): Promise<void> {
     if (!this.activeFollowUpSession) {
       throw new Error('Voice follow-up session is not active.');
     }
-    await this.activeFollowUpSession.sendAudio(audioChunksBase64, onEvent);
+    await this.activeFollowUpSession.sendAudio(audioChunksBase64, onEvent, options);
   }
 
   async approveActionPlan(planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []): Promise<void> {

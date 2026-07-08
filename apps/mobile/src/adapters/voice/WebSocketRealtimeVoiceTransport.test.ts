@@ -538,6 +538,56 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(transport.canSendFollowUpAudio()).toBe(false);
   });
 
+  it('cancels the existing conversation socket when follow-up audio is aborted before send', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+    const controller = new AbortController();
+
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['Zmlyc3Q=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'clarification', spokenResponse: 'Which item?', displayResponse: 'Which item?' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    await waitForEventType(events, 'session.completed');
+    await run;
+
+    controller.abort();
+    await expect(transport.sendFollowUpAudio(['c2Vjb25k'], undefined, { signal: controller.signal })).rejects.toMatchObject({ code: 'voice_cancelled' });
+
+    expect(socket.sent.map((message) => message.type)).toEqual([
+      'session.start',
+      'audio.chunk',
+      'audio.end',
+      'session.cancel'
+    ]);
+    expect(socket.sent.at(-1)).toMatchObject({
+      sessionId: 'session-1',
+      reason: 'user_cancelled'
+    });
+    expect(socket.closedByClient).toBe(true);
+    expect(transport.canSendFollowUpAudio()).toBe(false);
+  });
+
   it('settles each repeated clarification follow-up while keeping the socket open', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({

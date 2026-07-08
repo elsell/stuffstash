@@ -1271,6 +1271,62 @@ describe('RealtimeVoiceSessionController', () => {
     expect(transport.followUpAudio).toEqual([]);
   });
 
+  it('does not send follow-up audio when cancellation races with recorder stop', async () => {
+    const recorder = new DelayedStopRecorder();
+    const transport = new FakeTransport([], { followUpAvailable: true });
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      recorder,
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.startFollowUp();
+    const stop = controller.stopFollowUp();
+    await recorder.stopStarted;
+
+    await controller.cancel();
+    recorder.finishStop();
+
+    await expect(stop).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(transport.followUpAudio).toEqual([]);
+  });
+
+  it('cancels an in-flight follow-up send without applying later events', async () => {
+    const transport = new DelayedFollowUpSendTransport();
+    const player = new FakePlayer();
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      transport,
+      player
+    );
+    const observed: string[] = [];
+
+    await controller.startFollowUp();
+    const stop = controller.stopFollowUp((state) => {
+      observed.push(state.status);
+    });
+    await transport.started;
+
+    await controller.cancel();
+    transport.emit({
+      type: 'assistant.response.completed',
+      seq: 1,
+      sessionId: 'session-1',
+      response: {
+        kind: 'answer',
+        spokenResponse: 'Late answer',
+        displayResponse: 'Late answer'
+      }
+    });
+
+    await expect(stop).rejects.toMatchObject({ code: 'voice_cancelled' });
+    expect(transport.cancelled).toBe(true);
+    expect(observed).toEqual(['processing']);
+    expect(player.played).toEqual([]);
+  });
+
   it('sanitizes diagnostic tool events before they reach mobile UI state', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
@@ -1630,6 +1686,46 @@ class CancellableTransport implements RealtimeVoiceTransport {
 
   async sendFollowUpAudio(): Promise<void> {
     throw new Error('Voice follow-up session is not active.');
+  }
+}
+
+class DelayedFollowUpSendTransport implements RealtimeVoiceTransport {
+  cancelled = false;
+  private startedResolve: (() => void) | undefined;
+  private emitEvent: ((event: VoiceRealtimeEvent) => void) | undefined;
+  readonly started = new Promise<void>((resolve) => {
+    this.startedResolve = resolve;
+  });
+
+  async run(): Promise<void> {}
+
+  async approveActionPlan(_planId: string): Promise<void> {}
+
+  async cancelActionPlan(_planId: string): Promise<void> {}
+
+  canSendFollowUpAudio(): boolean {
+    return true;
+  }
+
+  async sendFollowUpAudio(
+    _audioChunksBase64: readonly string[],
+    onEvent?: (event: VoiceRealtimeEvent) => Promise<void>,
+    options?: Parameters<RealtimeVoiceTransport['sendFollowUpAudio']>[2]
+  ): Promise<void> {
+    this.startedResolve?.();
+    await new Promise<void>((resolve, reject) => {
+      options?.signal?.addEventListener('abort', () => {
+        this.cancelled = true;
+        reject(Object.assign(new Error('Voice session cancelled.'), { code: 'voice_cancelled' }));
+      }, { once: true });
+      this.emitEvent = (event) => {
+        onEvent?.(event).then(resolve, reject);
+      };
+    });
+  }
+
+  emit(event: VoiceRealtimeEvent): void {
+    this.emitEvent?.(event);
   }
 }
 
