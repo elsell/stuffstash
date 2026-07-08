@@ -217,6 +217,18 @@ func TestRealtimeVoiceParentTitleRequiresFullMeaningfulCoverage(t *testing.T) {
 			want:       true,
 		},
 		{
+			name:       "singular transcript for pluralized title",
+			title:      "Boxes shelf",
+			transcript: "Move my drill to the box shelf.",
+			want:       true,
+		},
+		{
+			name:       "singular y transcript for pluralized title",
+			title:      "Batteries drawer",
+			transcript: "Move my drill to the battery drawer.",
+			want:       true,
+		},
+		{
 			name:       "shared adjective different container",
 			title:      "Big cabinet",
 			transcript: "Move my drill to the big box.",

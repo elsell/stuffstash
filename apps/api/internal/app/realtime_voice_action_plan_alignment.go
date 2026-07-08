@@ -285,18 +285,40 @@ func realtimeVoiceWordForms(word string) []string {
 	if word == "" {
 		return nil
 	}
-	forms := []string{word, word + "s"}
+	formSet := map[string]struct{}{
+		word:       {},
+		word + "s": {},
+	}
 	if strings.HasSuffix(word, "x") || strings.HasSuffix(word, "s") || strings.HasSuffix(word, "ch") || strings.HasSuffix(word, "sh") {
-		forms = append(forms, word+"es")
+		formSet[word+"es"] = struct{}{}
 	}
 	if strings.HasSuffix(word, "y") && len(word) > 1 {
-		forms = append(forms, strings.TrimSuffix(word, "y")+"ies")
+		formSet[strings.TrimSuffix(word, "y")+"ies"] = struct{}{}
 	}
 	if strings.HasSuffix(word, "f") && len(word) > 1 {
-		forms = append(forms, strings.TrimSuffix(word, "f")+"ves")
+		formSet[strings.TrimSuffix(word, "f")+"ves"] = struct{}{}
 	}
 	if strings.HasSuffix(word, "fe") && len(word) > 2 {
-		forms = append(forms, strings.TrimSuffix(word, "fe")+"ves")
+		formSet[strings.TrimSuffix(word, "fe")+"ves"] = struct{}{}
+	}
+	if strings.HasSuffix(word, "ies") && len(word) > 3 {
+		formSet[strings.TrimSuffix(word, "ies")+"y"] = struct{}{}
+	}
+	if strings.HasSuffix(word, "ves") && len(word) > 3 {
+		formSet[strings.TrimSuffix(word, "ves")+"f"] = struct{}{}
+		formSet[strings.TrimSuffix(word, "ves")+"fe"] = struct{}{}
+	}
+	if strings.HasSuffix(word, "es") && len(word) > 2 {
+		formSet[strings.TrimSuffix(word, "es")] = struct{}{}
+	}
+	if strings.HasSuffix(word, "s") && len(word) > 1 {
+		formSet[strings.TrimSuffix(word, "s")] = struct{}{}
+	}
+	forms := make([]string, 0, len(formSet))
+	for form := range formSet {
+		if form != "" {
+			forms = append(forms, form)
+		}
 	}
 	return forms
 }
