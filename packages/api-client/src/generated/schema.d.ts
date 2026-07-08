@@ -2428,7 +2428,8 @@ export interface components {
         };
         VoiceProviderConfigurationResponse: {
             profileIds: components["schemas"]["VoiceProviderConfigurationProfileID"];
-            readiness: string;
+            /** @enum {string} */
+            readiness: "ready" | "needs_attention";
             slots: components["schemas"]["VoiceProviderSlotResponse"][] | null;
             tenantId: string;
             updatedAt?: string;
@@ -2438,11 +2439,14 @@ export interface components {
             duplicateProfiles: components["schemas"]["ProviderProfileSummaryResponse"][] | null;
             issues: string[] | null;
             label: string;
-            readiness: string;
-            recommendedAction: string;
+            /** @enum {string} */
+            readiness: "ready" | "missing" | "disabled" | "archived" | "credential_missing" | "untested" | "duplicate_candidates" | "invalid_selection";
+            /** @enum {string} */
+            recommendedAction: "none" | "add_profile" | "choose_profile" | "replace_credential" | "enable_profile" | "test_profile";
             selectedProfile?: components["schemas"]["ProviderProfileSummaryResponse"];
             selectedProfileId?: string;
-            selectionSource: string;
+            /** @enum {string} */
+            selectionSource: "explicit" | "implicit" | "missing";
         };
     };
     responses: never;

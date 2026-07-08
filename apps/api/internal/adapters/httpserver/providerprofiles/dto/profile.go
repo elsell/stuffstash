@@ -60,7 +60,7 @@ type VoiceProviderConfigurationOutput struct {
 
 type VoiceProviderConfigurationResponse struct {
 	TenantID   string                              `json:"tenantId"`
-	Readiness  string                              `json:"readiness"`
+	Readiness  string                              `json:"readiness" enum:"ready,needs_attention"`
 	UpdatedAt  string                              `json:"updatedAt,omitempty"`
 	ProfileIDs VoiceProviderConfigurationProfileID `json:"profileIds"`
 	Slots      []VoiceProviderSlotResponse         `json:"slots"`
@@ -77,10 +77,10 @@ type VoiceProviderSlotResponse struct {
 	Label             string                           `json:"label"`
 	SelectedProfileID string                           `json:"selectedProfileId,omitempty"`
 	SelectedProfile   *ProviderProfileSummaryResponse  `json:"selectedProfile,omitempty"`
-	SelectionSource   string                           `json:"selectionSource"`
-	Readiness         string                           `json:"readiness"`
+	SelectionSource   string                           `json:"selectionSource" enum:"explicit,implicit,missing"`
+	Readiness         string                           `json:"readiness" enum:"ready,missing,disabled,archived,credential_missing,untested,duplicate_candidates,invalid_selection"`
 	Issues            []string                         `json:"issues"`
-	RecommendedAction string                           `json:"recommendedAction"`
+	RecommendedAction string                           `json:"recommendedAction" enum:"none,add_profile,choose_profile,replace_credential,enable_profile,test_profile"`
 	DuplicateProfiles []ProviderProfileSummaryResponse `json:"duplicateProfiles"`
 }
 

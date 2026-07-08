@@ -214,7 +214,7 @@ describe('ApiProviderProfileRepository', () => {
           selectionSource: 'explicit',
           readiness: 'ready',
           issues: ['providerSessionId:abc123'],
-          recommendedAction: 'providerSessionId:action',
+          recommendedAction: 'providerSessionId:action' as VoiceProviderConfiguration['slots'][number]['recommendedAction'],
           duplicateProfiles: []
         }
       ]

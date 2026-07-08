@@ -541,21 +541,27 @@ export interface ProviderProfileSummary {
   lastTestedAt?: string;
 }
 
+export type VoiceProviderReadiness = VoiceProviderConfigurationResponse['readiness'];
+export type VoiceProviderSlotResponseContract = components['schemas']['VoiceProviderSlotResponse'];
+export type VoiceProviderSelectionSource = VoiceProviderSlotResponseContract['selectionSource'];
+export type VoiceProviderSlotReadiness = VoiceProviderSlotResponseContract['readiness'];
+export type VoiceProviderRecommendedAction = VoiceProviderSlotResponseContract['recommendedAction'];
+
 export interface VoiceProviderSlot {
   capability: string;
   label: string;
   selectedProfileId?: string;
   selectedProfile?: ProviderProfileSummary;
-  selectionSource: string;
-  readiness: string;
+  selectionSource: VoiceProviderSelectionSource;
+  readiness: VoiceProviderSlotReadiness;
   issues: string[];
-  recommendedAction: string;
+  recommendedAction: VoiceProviderRecommendedAction;
   duplicateProfiles: ProviderProfileSummary[];
 }
 
 export interface VoiceProviderConfiguration {
   tenantId: string;
-  readiness: string;
+  readiness: VoiceProviderReadiness;
   updatedAt?: string;
   profileIds: {
     speechToText?: string;
