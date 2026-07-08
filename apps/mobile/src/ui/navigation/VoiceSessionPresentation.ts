@@ -409,9 +409,10 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     ? 'create'
     : 'update';
   const assetKind = friendlyAssetKind(command.assetKind || command.kind);
+  const verifiedTitle = command.title?.trim() ?? '';
   const title = tone === 'create'
-    ? command.title || command.summary
-    : command.title || neutralExistingAssetTitle(command.assetKind);
+    ? verifiedTitle || command.summary
+    : verifiedTitle || neutralExistingAssetTitle(command.assetKind);
   return {
     id: command.id,
     title,
@@ -441,7 +442,7 @@ function isPhotoDraftEligible(command: VoiceActionPlanCommand, title: string): b
   }
   const assetKind = command.assetKind || command.kind;
   if (command.kind === 'move_asset' || command.operation === 'move') {
-    const hasVerifiedTitle = Boolean(command.title && command.title === title);
+    const hasVerifiedTitle = Boolean(command.title?.trim() && command.title.trim() === title);
     return hasVerifiedTitle && (assetKind === 'item' || assetKind === 'container' || assetKind === 'location');
   }
   if (command.kind === 'create_asset' || command.kind === 'create_location' || command.operation === 'create') {

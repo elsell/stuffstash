@@ -833,6 +833,44 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('does not treat blank existing-asset command titles as verified display context', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Move the shed to the backyard?',
+          commands: [{
+            id: 'cmd-move-shed',
+            kind: 'move_asset',
+            operation: 'move',
+            title: '   ',
+            assetKind: 'item',
+            summary: 'Move the shed to the backyard.'
+          }],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan?.commands[0]).toMatchObject({
+      title: 'Selected item',
+      subtitle: 'Move the shed to the backyard.',
+      photoDraftEligible: false,
+      tone: 'update'
+    });
+  });
+
   it('does not offer photo drafts on lifecycle or checkout review rows', () => {
     const session = buildVoiceSessionPresentation({
       diagnosticsEnabled: false,
