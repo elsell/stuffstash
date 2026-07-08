@@ -109,3 +109,21 @@ func TestRealtimeVoiceActionPlanDecisionRejectsUnsafeMessages(t *testing.T) {
 		})
 	}
 }
+
+func TestRealtimeVoiceActionPlanDecisionAcceptsClientAckBeforeDecision(t *testing.T) {
+	t.Parallel()
+
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSession(t)
+	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "client.ack", "seq": 4, "sessionId": sessionID, "ackSeq": 3})
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type":      "action.plan.cancel",
+		"seq":       5,
+		"sessionId": sessionID,
+		"planId":    planID,
+	})
+
+	cancelled := readRealtimeMessage(t, ctx, connection)
+	if cancelled["type"] != "action.plan.cancelled" {
+		t.Fatalf("expected action.plan.cancelled after ack and decision, got %+v", cancelled)
+	}
+}

@@ -243,7 +243,7 @@ Client message fields:
 - `audio.end`: `seq`, `sessionId`.
 - Follow-up audio after a same-session clarification uses the same `audio.chunk` and `audio.end` messages with the existing `sessionId`; it must not start a new realtime session unless the prior session reached a terminal non-clarification outcome. Each completed clarification turn must settle back to the mobile UI even when the server keeps the socket open for another bounded clarification follow-up. If that open socket closes before the user sends follow-up audio, the mobile transport must stop advertising same-session follow-up availability so the next microphone action cannot write to a stale session.
 - `session.cancel`: `seq`, `sessionId`, optional safe `reason`.
-- `client.ack`: `seq`, `sessionId`, `ackSeq`.
+- `client.ack`: `seq`, `sessionId`, `ackSeq`. Until explicit server-side flow control is implemented, the API may accept valid acknowledgement messages as no-op protocol metadata after applying the same sequence and session-binding checks as other client messages.
 
 Server message fields:
 

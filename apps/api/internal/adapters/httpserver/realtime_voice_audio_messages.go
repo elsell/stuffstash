@@ -47,6 +47,7 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 		AudioBase64  string `json:"audioBase64"`
 		IsFinalChunk bool   `json:"isFinalChunk"`
 		Reason       string `json:"reason"`
+		AckSeq       int    `json:"ackSeq"`
 	}
 	if err := json.Unmarshal(payload, &message); err != nil {
 		return realtimeClientMessage{}, err
@@ -59,6 +60,7 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 		AudioBase64:  message.AudioBase64,
 		IsFinalChunk: message.IsFinalChunk,
 		Reason:       message.Reason,
+		AckSeq:       message.AckSeq,
 	}, nil
 }
 
@@ -77,6 +79,11 @@ func realtimeAudioMessageFieldAllowed(messageType string, field string) bool {
 	case "session.cancel":
 		switch field {
 		case "type", "seq", "sessionId", "reason":
+			return true
+		}
+	case "client.ack":
+		switch field {
+		case "type", "seq", "sessionId", "ackSeq":
 			return true
 		}
 	}

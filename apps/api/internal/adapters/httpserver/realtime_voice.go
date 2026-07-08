@@ -267,6 +267,7 @@ type realtimeClientMessage struct {
 	AudioBase64           string                           `json:"audioBase64"`
 	IsFinalChunk          bool                             `json:"isFinalChunk"`
 	Reason                string                           `json:"reason"`
+	AckSeq                int                              `json:"ackSeq"`
 	Arguments             map[string]interface{}           `json:"arguments"`
 	PhotoAttachments      []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
 	PhotoAttachmentsSet   bool                             `json:"-"`
@@ -409,10 +410,15 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 	if err := json.Unmarshal(payload, &raw); err != nil {
 		return realtimeClientMessage{}, err
 	}
+	var envelope struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(payload, &envelope); err != nil {
+		return realtimeClientMessage{}, err
+	}
+	messageTypeName := strings.TrimSpace(envelope.Type)
 	for field := range raw {
-		switch field {
-		case "type", "seq", "sessionId", "planId", "photoAttachments":
-		default:
+		if !realtimeActionPlanDecisionFieldAllowed(messageTypeName, field) {
 			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
 		}
 	}
@@ -421,6 +427,7 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 		Seq              int                              `json:"seq"`
 		SessionID        string                           `json:"sessionId"`
 		PlanID           string                           `json:"planId"`
+		AckSeq           int                              `json:"ackSeq"`
 		PhotoAttachments []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
 	}
 	if err := json.Unmarshal(payload, &message); err != nil {
@@ -447,9 +454,26 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 		Seq:                 message.Seq,
 		SessionID:           message.SessionID,
 		PlanID:              message.PlanID,
+		AckSeq:              message.AckSeq,
 		PhotoAttachments:    message.PhotoAttachments,
 		PhotoAttachmentsSet: photoAttachmentsSet,
 	}, nil
+}
+
+func realtimeActionPlanDecisionFieldAllowed(messageType string, field string) bool {
+	switch messageType {
+	case "action.plan.approve", "action.plan.cancel":
+		switch field {
+		case "type", "seq", "sessionId", "planId", "photoAttachments":
+			return true
+		}
+	case "client.ack":
+		switch field {
+		case "type", "seq", "sessionId", "ackSeq":
+			return true
+		}
+	}
+	return false
 }
 
 func writeRealtimeServerMessage(ctx context.Context, connection *websocket.Conn, message realtimeServerMessage) error {
@@ -493,6 +517,11 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 			return nil, lastClientSeq, ports.ErrForbidden
 		}
 		switch message.Type {
+		case "client.ack":
+			if message.AckSeq <= 0 {
+				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+			}
+			continue
 		case "audio.chunk":
 			chunkID := strings.TrimSpace(message.ChunkID)
 			if chunkID == "" {

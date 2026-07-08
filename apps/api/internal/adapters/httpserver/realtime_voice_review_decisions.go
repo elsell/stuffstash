@@ -12,16 +12,27 @@ import (
 )
 
 func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket.Conn, application app.App, session app.RealtimeVoiceSession, expectedPlanID string, lastClientSeq *int, serverSeq *int) (ports.RealtimeSessionState, error) {
-	message, err := readRealtimeActionPlanDecisionMessage(ctx, connection)
-	if err != nil {
-		return "", err
-	}
-	if message.Seq <= *lastClientSeq {
-		return "", ports.ErrInvalidProviderInput
-	}
-	*lastClientSeq = message.Seq
-	if message.SessionID != session.ID {
-		return "", ports.ErrForbidden
+	var message realtimeClientMessage
+	for {
+		next, err := readRealtimeActionPlanDecisionMessage(ctx, connection)
+		if err != nil {
+			return "", err
+		}
+		if next.Seq <= *lastClientSeq {
+			return "", ports.ErrInvalidProviderInput
+		}
+		*lastClientSeq = next.Seq
+		if next.SessionID != session.ID {
+			return "", ports.ErrForbidden
+		}
+		if next.Type == "client.ack" {
+			if next.AckSeq <= 0 {
+				return "", ports.ErrInvalidProviderInput
+			}
+			continue
+		}
+		message = next
+		break
 	}
 	planID := strings.TrimSpace(message.PlanID)
 	if planID == "" || planID != strings.TrimSpace(expectedPlanID) {
