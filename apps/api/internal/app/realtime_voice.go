@@ -456,6 +456,32 @@ func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session R
 	if modelTurn.Final == nil {
 		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
 	}
+	if realtimeVoiceShouldRepairCreateClarification(transcript, *modelTurn.Final, toolResults) {
+		result, resultErr := realtimeVoiceFinalClarificationRepairResult(a.newRealtimeVoiceID())
+		if resultErr != nil {
+			return resultErr
+		}
+		toolResults = append(toolResults, result)
+		if session.DeveloperDiagnostics {
+			if err := emitRealtimeVoiceDiagnostic(session.ID, "Final clarification repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+				return err
+			}
+		}
+		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+	}
+	if realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(transcript, *modelTurn.Final, toolResults) {
+		result, resultErr := realtimeVoiceFinalWriteClaimRepairResult(a.newRealtimeVoiceID())
+		if resultErr != nil {
+			return resultErr
+		}
+		toolResults = append(toolResults, result)
+		if session.DeveloperDiagnostics {
+			if err := emitRealtimeVoiceDiagnostic(session.ID, "Final write claim repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+				return err
+			}
+		}
+		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+	}
 	if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
 		if recoverableRealtimeVoiceToolError(err) {
 			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)

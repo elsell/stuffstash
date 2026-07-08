@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -33,6 +34,65 @@ func TestRealtimeVoiceRepairsWriteClaimAfterRejectedActionPlan(t *testing.T) {
 	}
 	if !strings.Contains(repair.Content, "No inventory change has been applied") || !strings.Contains(repair.Content, "propose_action_plan succeeds") {
 		t.Fatalf("expected safe repair guidance, got %s", repair.Content)
+	}
+}
+
+func TestRealtimeVoiceFinalOnlyFallbackDoesNotAcceptWriteClaimAfterRejectedActionPlan(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	turns := make([]ports.LanguageInferenceTurn, 0, realtimeVoiceToolTurnBudget+1)
+	for index := 0; index < realtimeVoiceToolTurnBudget; index++ {
+		turns = append(turns, ports.LanguageInferenceTurn{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-bad",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"commandKind":                "move_asset",
+					"intentSummary":              "Move the water bottle to the kitchen.",
+					"modelInterpretationSummary": "The model guessed IDs instead of using read results.",
+					"confirmationSummary":        "Move Water bottle to Kitchen?",
+					"commandSummary":             "Move Water bottle to Kitchen",
+					"arguments": map[string]any{
+						"assetId":       "water-bottle-1",
+						"parentAssetId": "kitchen-1",
+					},
+				},
+			}},
+		})
+	}
+	turns = append(turns, ports.LanguageInferenceTurn{
+		Final: &ports.StructuredAgentResponse{
+			Kind:            ports.StructuredAgentResponseKindAnswer,
+			SpokenResponse:  "I moved the water bottle to the kitchen.",
+			DisplayResponse: "Moved the water bottle to the kitchen.",
+		},
+	})
+	language := &scriptedRealtimeLanguageInference{turns: turns}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error {
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+
+	if strings.Contains(strings.ToLower(tts.lastText), "moved") {
+		t.Fatalf("expected rejected action-plan write claim to be repaired, got spoken response %q", tts.lastText)
+	}
+	if !strings.Contains(tts.lastText, "could not finish") {
+		t.Fatalf("expected safe recovery response after final-only write claim repair, got %q", tts.lastText)
+	}
+	if len(language.seenFinalOnly) != realtimeVoiceToolTurnBudget+1 || !language.seenFinalOnly[len(language.seenFinalOnly)-1] {
+		t.Fatalf("expected final-only fallback after tool budget, got final-only flags %+v", language.seenFinalOnly)
 	}
 }
 
