@@ -213,8 +213,8 @@ describe('ApiProviderProfileRepository', () => {
           },
           selectionSource: 'explicit',
           readiness: 'ready',
-          issues: [],
-          recommendedAction: 'none',
+          issues: ['providerSessionId:abc123'],
+          recommendedAction: 'providerSessionId:action',
           duplicateProfiles: []
         }
       ]
@@ -226,6 +226,8 @@ describe('ApiProviderProfileRepository', () => {
       slots: [
         {
           label: 'Speech input',
+          issues: ['providerSessionId:abc123'],
+          recommendedAction: 'none',
           selectedProfile: {
             id: 'profile-stt',
             credentialPurpose: 'server_adc',

@@ -60,7 +60,7 @@ describe('VoiceSetupPanel', () => {
             selectionSource: 'providerSessionId:abc123',
             readiness: 'raw_prompt_injected',
             issues: ['bearer secret stack_trace_here'],
-            recommendedAction: 'providerSessionId:action',
+            recommendedAction: 'none',
             duplicateProfiles: []
           }
         ]

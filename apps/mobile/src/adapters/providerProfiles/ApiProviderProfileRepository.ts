@@ -14,7 +14,8 @@ import {
   ReplaceProviderProfileCredentialInput,
   UpdateProviderProfileInput,
   UpdateVoiceProviderConfigurationInput,
-  VoiceProviderConfiguration
+  VoiceProviderConfiguration,
+  VoiceProviderRecommendedAction
 } from '../../application/providerProfiles/ProviderProfileRepository';
 
 type ProviderProfileApiClient = Pick<
@@ -157,7 +158,7 @@ function mapVoiceProviderConfiguration(
       selectionSource: slot.selectionSource,
       readiness: slot.readiness,
       issues: slot.issues,
-      recommendedAction: slot.recommendedAction,
+      recommendedAction: parseRecommendedAction(slot.recommendedAction),
       duplicateProfiles: slot.duplicateProfiles.map(mapApiProviderProfileSummary)
     }))
   };
@@ -193,5 +194,19 @@ function parseCredentialPurpose(value: string | undefined): ProviderCredentialPu
       return value;
     default:
       return undefined;
+  }
+}
+
+function parseRecommendedAction(value: string): VoiceProviderRecommendedAction {
+  switch (value) {
+    case 'none':
+    case 'add_profile':
+    case 'choose_profile':
+    case 'replace_credential':
+    case 'enable_profile':
+    case 'test_profile':
+      return value;
+    default:
+      return 'none';
   }
 }

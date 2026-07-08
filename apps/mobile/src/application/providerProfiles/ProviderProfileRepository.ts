@@ -46,8 +46,7 @@ export type VoiceProviderRecommendedAction =
   | 'choose_profile'
   | 'replace_credential'
   | 'enable_profile'
-  | 'test_profile'
-  | string;
+  | 'test_profile';
 
 export type VoiceProviderSlot = {
   readonly capability: ProviderProfileCapability;
