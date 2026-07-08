@@ -459,6 +459,38 @@ describe('VoiceSessionPresentation', () => {
     expect(session.diagnostics).toBeNull();
   });
 
+  it('redacts unsafe progress labels and timeline entries at the presentation boundary', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'processing',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'raw prompt bearer abc/def== stack trace provider session id: gemini-live-1',
+        progressSteps: [
+          'Sending audio',
+          'Authorization: tok+en/with~punctuation bearer eyJhbGciOi.test.sig== {"parentAssetId":"kitchen-1"}',
+          'Checking inventory'
+        ],
+        debugEvents: []
+      },
+      stage: 'processing',
+      tenantName: 'Main tenant'
+    });
+
+    const visibleText = `${session.progressLabel} ${session.progressSteps.join(' ')} ${session.progressTrace.join(' ')}`;
+    expect(visibleText).toContain('[redacted]');
+    expect(visibleText).not.toContain('raw prompt');
+    expect(visibleText).not.toContain('abc/def');
+    expect(visibleText).not.toContain('tok+en');
+    expect(visibleText).not.toContain('eyJhbGciOi');
+    expect(visibleText).not.toContain('kitchen-1');
+    expect(visibleText).not.toContain('stack trace');
+    expect(visibleText).not.toContain('gemini-live-1');
+  });
+
   it('bounds active progress trace and hides it behind action-plan review content', () => {
     const active = buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

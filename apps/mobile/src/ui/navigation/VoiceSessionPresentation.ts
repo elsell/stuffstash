@@ -284,7 +284,8 @@ export function buildVoiceSessionPresentation({
   readonly tenantName: string;
 }): VoiceSessionPresentation {
   const title = titleForState(stage, realtime);
-  const progressLabel = realtime?.progressLabel ?? progressForStage(stage);
+  const progressLabel = safeProgressPresentationText(realtime?.progressLabel ?? progressForStage(stage), 100) || progressForStage(stage);
+  const progressSteps = safeProgressPresentationSteps(realtime?.progressSteps ?? []);
   const diagnostics =
     diagnosticsEnabled && diagnosticsExpanded
       ? (realtime?.debugEvents ?? []).map(formatSafeDiagnosticEvent)
@@ -313,8 +314,8 @@ export function buildVoiceSessionPresentation({
     diagnostics,
     isBusy: stage === 'listening' || stage === 'processing' || stage === 'speaking',
     progressLabel,
-    progressSteps: realtime?.progressSteps ?? [],
-    progressTrace: progressTraceForState(stage, realtime),
+    progressSteps,
+    progressTrace: progressTraceForState(stage, progressSteps, realtime),
     recoveryAction: isProviderRecoveryFailure(realtime?.failureCode)
       ? { label: 'Voice providers', target: 'provider_profiles' }
       : undefined,
@@ -338,15 +339,14 @@ function activityForState(
   return { kind: 'idle' };
 }
 
-function progressTraceForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeState | null): readonly string[] {
+function progressTraceForState(stage: VoiceInteractionStage, progressSteps: readonly string[], realtime: VoiceRealtimeState | null): readonly string[] {
   if (realtime?.actionPlan) {
     return [];
   }
   if (stage !== 'processing' && stage !== 'speaking' && stage !== 'review') {
     return [];
   }
-  const steps = realtime?.progressSteps ?? [];
-  const bounded = uniqueProgressSteps(steps).slice(-5);
+  const bounded = uniqueProgressSteps(progressSteps).slice(-5);
   return bounded.length > 1 ? bounded : [];
 }
 
@@ -360,6 +360,22 @@ function uniqueProgressSteps(steps: readonly string[]): readonly string[] {
     unique.push(normalized.length <= 72 ? normalized : `${normalized.slice(0, 71).trim()}...`);
   }
   return unique;
+}
+
+function safeProgressPresentationSteps(steps: readonly string[]): readonly string[] {
+  return steps
+    .map((step) => safeProgressPresentationText(step, 100))
+    .filter((step) => step.length > 0);
+}
+
+function safeProgressPresentationText(value: string, maxLength: number): string {
+  const normalized = redactUnsafeVoiceText(value)
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return normalized.slice(0, maxLength).trim();
 }
 
 function boundedLevel(value: number | undefined): number {

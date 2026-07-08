@@ -1332,7 +1332,7 @@ describe('RealtimeVoiceSessionController', () => {
       new FakeTransport([
         { type: 'session.cancelled', seq: 1, sessionId: 'session-1' },
         { type: 'tts.audio.started', seq: 2, sessionId: 'session-1', mimeType: 'audio/pcm' },
-        { type: 'tts.audio.chunk', seq: 3, sessionId: 'session-1', audioBase64: 'ZmFrZS1hdWRpbw==' },
+        { type: 'tts.audio.chunk', seq: 3, sessionId: 'session-1', chunkId: 'tts-late', audioBase64: 'ZmFrZS1hdWRpbw==', isFinalChunk: true },
         { type: 'session.completed', seq: 4, sessionId: 'session-1' }
       ]),
       player
