@@ -186,10 +186,10 @@ function VoiceSessionSheet({
   const session = buildVoiceSessionPresentation({
     diagnosticsEnabled,
     diagnosticsExpanded,
-    inventoryName: readyState?.preview.inventoryName ?? readyState?.realtime?.inventoryName ?? 'Inventory',
+    inventoryName: readyState?.realtime?.inventoryName || readyState?.preview.inventoryName || 'Inventory',
     realtime: readyState?.realtime ?? null,
     stage: state.stage,
-    tenantName: readyState?.preview.tenantName ?? readyState?.realtime?.tenantName ?? 'Tenant'
+    tenantName: readyState?.realtime?.tenantName || readyState?.preview.tenantName || 'Tenant'
   });
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
   const bottomAction = session.bottomAction;

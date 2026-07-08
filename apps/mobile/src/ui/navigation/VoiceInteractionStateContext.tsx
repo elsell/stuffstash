@@ -11,6 +11,7 @@ import {
   VoicePhotoAttachmentStatus,
   type VoiceActionPlanPhotoDrafts
 } from '../../application/voice/RealtimeVoiceSession';
+import { redactUnsafeVoiceStructuredText } from '../../application/voice/VoiceTextSafety';
 
 export type VoiceInteractionStage = 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
 
@@ -35,6 +36,11 @@ type VoiceInteractionStateContextValue = {
   readonly retryRealtimeActionPlanPhotos: (planId: string) => Promise<void>;
   readonly cancelRealtime: () => Promise<void>;
   readonly reset: () => void;
+};
+
+type VoiceFailureContext = {
+  readonly tenantName?: string;
+  readonly inventoryName?: string;
 };
 
 const VoiceInteractionStateContext = createContext<VoiceInteractionStateContextValue | null>(null);
@@ -152,7 +158,7 @@ export function VoiceInteractionStateProvider({
           if (sessionGeneration.current !== generation) {
             return;
           }
-          setRealtime(buildFailedVoiceRealtimeState(error));
+          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
         }
       },
@@ -189,7 +195,7 @@ export function VoiceInteractionStateProvider({
             setStage('cancelled');
             return;
           }
-          setRealtime(buildFailedVoiceRealtimeState(error));
+          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
         }
       },
@@ -198,7 +204,7 @@ export function VoiceInteractionStateProvider({
         try {
           await realtimeController.approveActionPlan(planId, photoDrafts);
         } catch (error) {
-          setRealtime(buildFailedVoiceRealtimeState(error));
+          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
         }
       },
@@ -207,7 +213,7 @@ export function VoiceInteractionStateProvider({
         try {
           await realtimeController.cancelActionPlan(planId);
         } catch (error) {
-          setRealtime(buildFailedVoiceRealtimeState(error));
+          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
         }
       },
@@ -281,7 +287,7 @@ export function markPhotoRetryFailure(state: VoiceRealtimeState | null, error: u
       message: 'Photos could not be attached. Try again.',
       canRetry: true
     }
-  } : buildFailedVoiceRealtimeState(error);
+  } : buildFailedVoiceRealtimeState(error, realtimeStateContext(state));
 }
 
 export function useVoiceInteractionState(): VoiceInteractionStateContextValue {
@@ -331,7 +337,7 @@ function isVoiceCancelledError(error: unknown): boolean {
     (isObject(error) && error.code === 'voice_cancelled');
 }
 
-export function buildFailedVoiceRealtimeState(error: unknown): VoiceRealtimeState {
+export function buildFailedVoiceRealtimeState(error: unknown, context: VoiceFailureContext = {}): VoiceRealtimeState {
   const readinessFailure = providerReadinessFailure(error);
   const failureCode: VoiceRealtimeFailureCode = readinessFailure
     ? 'provider_readiness'
@@ -339,13 +345,36 @@ export function buildFailedVoiceRealtimeState(error: unknown): VoiceRealtimeStat
 
   return {
     status: 'failed',
-    tenantName: '',
-    inventoryName: '',
+    tenantName: safeContextLabel(context.tenantName),
+    inventoryName: safeContextLabel(context.inventoryName),
     progressLabel: 'Voice failed',
     debugEvents: [],
     failureCode,
     errorMessage: readinessFailure?.message ?? 'Voice failed safely.'
   };
+}
+
+function voiceFailureContext(
+  realtime: VoiceRealtimeState | null,
+  previewState: { readonly status: 'loading' } | { readonly status: 'error'; readonly message: string } | { readonly status: 'ready'; readonly preview: VoiceInteractionPreviewViewModel }
+): VoiceFailureContext {
+  const realtimeContext = realtimeStateContext(realtime);
+  if (realtimeContext.tenantName || realtimeContext.inventoryName) {
+    return realtimeContext;
+  }
+  return previewState.status === 'ready'
+    ? { tenantName: previewState.preview.tenantName, inventoryName: previewState.preview.inventoryName }
+    : {};
+}
+
+function realtimeStateContext(state: VoiceRealtimeState | null): VoiceFailureContext {
+  return state
+    ? { tenantName: state.tenantName, inventoryName: state.inventoryName }
+    : {};
+}
+
+function safeContextLabel(value: string | undefined): string {
+  return redactUnsafeVoiceStructuredText(value ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
 }
 
 function providerReadinessFailure(error: unknown): { readonly message: string } | null {

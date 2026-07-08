@@ -23,6 +23,21 @@ describe('buildFailedVoiceRealtimeState', () => {
     });
   });
 
+  it('keeps known inventory context on locally built voice failures', () => {
+    const state = buildFailedVoiceRealtimeState(
+      new VoiceProviderReadinessError(['language_inference']),
+      { tenantName: 'Main tenant', inventoryName: 'Home inventory' }
+    );
+
+    expect(state).toMatchObject({
+      status: 'failed',
+      tenantName: 'Main tenant',
+      inventoryName: 'Home inventory',
+      failureCode: 'provider_readiness',
+      errorMessage: 'Voice provider profiles are not ready: language_inference.'
+    });
+  });
+
   it('does not display raw generic voice failure details', () => {
     const state = buildFailedVoiceRealtimeState(
       new Error('raw provider transport failure with endpoint and bearer token')
