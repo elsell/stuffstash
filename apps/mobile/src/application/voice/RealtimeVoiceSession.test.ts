@@ -560,7 +560,8 @@ describe('RealtimeVoiceSessionController', () => {
             commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
             risks: []
           }
-        }
+        },
+        { type: 'session.completed', seq: 2, sessionId: 'session-1' }
       ]),
       new FakePlayer()
     );

@@ -577,6 +577,9 @@ export class RealtimeVoiceSessionController {
         return withProgressStep(state, 'Speech complete', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'session.completed':
         await this.player.stop();
+        if (state.status === 'failed') {
+          return state;
+        }
         return state.actionPlan
           ? withProgressStep(state, 'Review needed', { status: 'review' })
           : withProgressStep(state, state.responseKind === 'clarification' ? 'Needs detail' : 'Done', {
