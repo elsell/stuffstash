@@ -7,7 +7,8 @@ import {
   focusSearchInput,
   locationRowsFromAssetCards,
   parseBrowseScope,
-  searchResultSummaryLabel
+  searchResultSummaryLabel,
+  shouldAutoFocusSearchInput
 } from './SearchScreenPresentation';
 import { SearchHeader } from './SearchScreen';
 
@@ -84,6 +85,13 @@ describe('SearchScreen presentation helpers', () => {
     focusSearchInput(inputRef);
 
     expect(focusCount).toBe(1);
+  });
+
+  it('does not auto-focus search input for tag-browse navigation', () => {
+    expect(shouldAutoFocusSearchInput([])).toBe(true);
+    expect(shouldAutoFocusSearchInput([''])).toBe(true);
+    expect(shouldAutoFocusSearchInput(['tag-workshop'])).toBe(false);
+    expect(shouldAutoFocusSearchInput([' ', 'tag-camping'])).toBe(false);
   });
 
   it('offers browse scopes that collapse search and locations into one surface', () => {

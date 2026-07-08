@@ -21,6 +21,10 @@ export function focusSearchInput(inputRef: RefObject<TextInput | null>): void {
   inputRef.current?.focus();
 }
 
+export function shouldAutoFocusSearchInput(initialTagIds: readonly string[]): boolean {
+  return initialTagIds.every((tagId) => tagId.trim().length === 0);
+}
+
 export function buildBrowseScopeOptions(): readonly BrowseScopeOption[] {
   return [
     { label: 'All', value: 'all' },

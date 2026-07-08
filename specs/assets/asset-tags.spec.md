@@ -182,6 +182,7 @@ Tag controls must remain secondary to the asset title, kind, parent/location, ph
 
 Mobile search must keep the first viewport focused on the search field and results. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. Scope, lifecycle, checkout, sort, and tag browse controls must be collapsible behind a compact filter control by default. Tag browse suggestions must be sorted alphabetically by display label so the row is predictable when expanded.
 Mobile tag browse controls must behave as multi-select filters over the current result set. Selecting or clearing a tag must not change the text in the search field. Selected tags must compose with the current text query and other filters, and more than one tag may be selected at once.
+When mobile opens search from a known tag chip with selected tag IDs, the search text input must not auto-focus. Tag-driven navigation is a browse/filter entry point, not a text-entry entry point.
 Mobile filter controls must use consistent titled groups and shared option controls. The first filter groups are `Scope`, `Tags`, `Status`, `Checkout`, and `Sort`; option copy must use consistent noun or adjective labels such as `All`, `Active`, `Archived`, `Any`, `Checked out`, `Available`, `Recent`, and `Stable`.
 
 ## Tests

@@ -41,7 +41,8 @@ import {
   buildBrowseScopeOptions,
   focusSearchInput,
   locationRowsFromAssetCards,
-  searchResultSummaryLabel
+  searchResultSummaryLabel,
+  shouldAutoFocusSearchInput
 } from './SearchScreenPresentation';
 import { BrowseSurfaceControl, InventoryMapScreen } from './InventoryMapScreen';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
@@ -126,6 +127,9 @@ export function SearchScreen({
 
   useFocusEffect(
     useCallback(() => {
+      if (!shouldAutoFocusSearchInput(initialTagIds)) {
+        return undefined;
+      }
       const focusTimer = setTimeout(() => {
         focusSearchInput(searchInputRef);
       }, 120);
@@ -133,7 +137,7 @@ export function SearchScreen({
       return () => {
         clearTimeout(focusTimer);
       };
-    }, [])
+    }, [initialTagIds.join('|')])
   );
 
   useEffect(() => {
