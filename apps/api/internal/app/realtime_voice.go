@@ -674,6 +674,9 @@ func realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn ports.LanguageInferenceT
 	if turn.Final == nil {
 		return false
 	}
+	if realtimeVoicePlannerFinalClaimsMutation(*turn.Final) {
+		return false
+	}
 	switch turn.Final.Kind {
 	case ports.StructuredAgentResponseKindClarification,
 		ports.StructuredAgentResponseKindUnsupportedAction,
@@ -682,6 +685,26 @@ func realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn ports.LanguageInferenceT
 	default:
 		return false
 	}
+}
+
+func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentResponse) bool {
+	text := normalizedRealtimeVoiceVerbText(response.SpokenResponse + " " + response.DisplayResponse)
+	for _, token := range []string{
+		" added ",
+		" archived ",
+		" checked in ",
+		" checked out ",
+		" created ",
+		" moved ",
+		" restored ",
+		" returned ",
+		" updated ",
+	} {
+		if strings.Contains(text, token) {
+			return true
+		}
+	}
+	return false
 }
 
 func realtimeVoicePlannerContractRepairResult(id string) (ports.AgentToolResult, error) {
