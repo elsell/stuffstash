@@ -758,6 +758,59 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it('uses normalized display titles for dependent create placement labels', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime: {
+        status: 'review',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Review needed',
+        debugEvents: [],
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Create a box and put the remote inside it?',
+          commands: [
+            {
+              id: 'cmd-box',
+              kind: 'create_asset',
+              operation: 'create',
+              title: '   ',
+              assetKind: 'container',
+              summary: 'Box under the TV'
+            },
+            {
+              id: 'cmd-remote',
+              kind: 'create_asset',
+              operation: 'create',
+              title: 'Remote',
+              assetKind: 'item',
+              parentCommandId: 'cmd-box',
+              summary: 'Create Remote inside Box under the TV'
+            }
+          ],
+          risks: []
+        }
+      },
+      stage: 'review',
+      tenantName: 'Main tenant'
+    });
+
+    expect(session.actionPlan?.commands).toMatchObject([
+      {
+        title: 'Box under the TV',
+        subtitle: 'Create container'
+      },
+      {
+        title: 'Remote',
+        placement: 'Inside new Box under the TV'
+      }
+    ]);
+  });
+
   it('uses neutral row titles for existing-asset changes without verified asset titles', () => {
     const session = buildVoiceSessionPresentation({
       diagnosticsEnabled: false,

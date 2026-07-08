@@ -378,7 +378,7 @@ function formatActionPlanCommands(commands: readonly VoiceActionPlanCommand[]): 
   const titlesByID = new Map<string, string>();
   for (const command of commands) {
     if (command.id) {
-      titlesByID.set(command.id, command.title || command.summary);
+      titlesByID.set(command.id, displayTitleForActionPlanCommand(command));
     }
   }
   const formatted: VoiceSessionActionPlanCommand[] = [];
@@ -409,10 +409,7 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     ? 'create'
     : 'update';
   const assetKind = friendlyAssetKind(command.assetKind || command.kind);
-  const verifiedTitle = command.title?.trim() ?? '';
-  const title = tone === 'create'
-    ? verifiedTitle || command.summary
-    : verifiedTitle || neutralExistingAssetTitle(command.assetKind);
+  const title = displayTitleForActionPlanCommand(command);
   return {
     id: command.id,
     title,
@@ -421,6 +418,16 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     photoDraftEligible: isPhotoDraftEligible(command, title),
     tone
   };
+}
+
+function displayTitleForActionPlanCommand(command: VoiceActionPlanCommand): string {
+  const tone = command.operation === 'create' || command.kind === 'create_asset' || command.kind === 'create_location'
+    ? 'create'
+    : 'update';
+  const verifiedTitle = command.title?.trim() ?? '';
+  return tone === 'create'
+    ? verifiedTitle || command.summary
+    : verifiedTitle || neutralExistingAssetTitle(command.assetKind);
 }
 
 function neutralExistingAssetTitle(value: string | undefined): string {
