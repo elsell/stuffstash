@@ -25,6 +25,27 @@ const maxRealtimeAudioChunkBytes = 512 * 1024
 const maxRealtimeVoiceFrameBytes = 710 * 1024
 const maxRealtimeVoiceTurnsPerSession = 3
 
+type realtimeClientMessageType string
+
+const (
+	realtimeClientMessageSessionStart      realtimeClientMessageType = "session.start"
+	realtimeClientMessageAudioChunk        realtimeClientMessageType = "audio.chunk"
+	realtimeClientMessageAudioEnd          realtimeClientMessageType = "audio.end"
+	realtimeClientMessageSessionCancel     realtimeClientMessageType = "session.cancel"
+	realtimeClientMessageActionPlanApprove realtimeClientMessageType = "action.plan.approve"
+	realtimeClientMessageActionPlanCancel  realtimeClientMessageType = "action.plan.cancel"
+	realtimeClientMessageClientAck         realtimeClientMessageType = "client.ack"
+)
+
+type realtimeServerMessageType string
+
+const (
+	realtimeServerMessageSessionStarted   realtimeServerMessageType = "session.started"
+	realtimeServerMessageSessionFailed    realtimeServerMessageType = "session.failed"
+	realtimeServerMessageSessionCompleted realtimeServerMessageType = "session.completed"
+	realtimeServerMessageSessionCancelled realtimeServerMessageType = "session.cancelled"
+)
+
 var errRealtimeVoiceCancelled = errors.New("voice session cancelled")
 
 var requiredRealtimeVoiceCapabilities = map[string]struct{}{
@@ -93,12 +114,12 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			_ = connection.Close(websocket.StatusPolicyViolation, "invalid start message")
 			return
 		}
-		if start.Type != "session.start" {
-			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: 1, Code: "invalid_request", Message: "The voice session could not be started."})
+		if start.Type != realtimeClientMessageSessionStart {
+			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: 1, Code: "invalid_request", Message: "The voice session could not be started."})
 			return
 		}
 		if !validRealtimeVoiceRequestedCapabilities(start.RequestedCapabilities) {
-			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: 1, Code: "invalid_request", Message: "The voice session could not be started."})
+			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: 1, Code: "invalid_request", Message: "The voice session could not be started."})
 			_ = connection.Close(websocket.StatusPolicyViolation, "voice session rejected")
 			return
 		}
@@ -117,12 +138,12 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 		})
 		serverSeq := 1
 		if err != nil {
-			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not be started."})
+			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not be started."})
 			_ = connection.Close(websocket.StatusPolicyViolation, "voice session rejected")
 			return
 		}
 		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{
-			Type:                 "session.started",
+			Type:                 realtimeServerMessageSessionStarted,
 			Seq:                  serverSeq,
 			SessionID:            session.ID,
 			AcceptedInputAudio:   start.InputAudio,
@@ -142,21 +163,21 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			if err != nil {
 				if errors.Is(err, errRealtimeVoiceCancelled) {
 					_ = application.MarkRealtimeVoiceSessionCancelled(ctx, session)
-					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionCancelled, Seq: serverSeq, SessionID: session.ID})
 					_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
 					return
 				}
 				var idleErr realtimeVoiceIdleTimeoutError
 				if errors.As(err, &idleErr) {
 					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
-					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
 					_ = connection.Close(websocket.StatusPolicyViolation, "voice session failed")
 					idleErr.wait()
 					return
 				} else {
 					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
 				}
-				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
+				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session could not continue."})
 				_ = connection.Close(websocket.StatusPolicyViolation, "voice session failed")
 				return
 			}
@@ -188,11 +209,11 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			})
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
-					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.cancelled", Seq: serverSeq, SessionID: session.ID})
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionCancelled, Seq: serverSeq, SessionID: session.ID})
 					_ = connection.Close(websocket.StatusNormalClosure, "voice session cancelled")
 					return
 				}
-				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session failed safely."})
+				_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The voice session failed safely."})
 				_ = connection.Close(websocket.StatusInternalError, "voice session failed")
 				return
 			}
@@ -200,7 +221,7 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 				reviewOutcome, err := handleRealtimeActionPlanDecision(ctx, connection, application, session, reviewPlanID, &lastClientSeq, &serverSeq)
 				if err != nil {
 					_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, app.RealtimeVoiceSafeErrorCode(err))
-					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The action plan decision could not be applied safely."})
+					_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, SessionID: session.ID, Code: app.RealtimeVoiceSafeErrorCode(err), Message: "The action plan decision could not be applied safely."})
 					_ = connection.Close(websocket.StatusPolicyViolation, "voice review failed")
 					return
 				}
@@ -220,7 +241,7 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			}
 		}
 		_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, "clarification_turn_limit")
-		_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: serverSeq, SessionID: session.ID, Code: "clarification_turn_limit", Message: "The voice session needs a fresh start."})
+		_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, SessionID: session.ID, Code: "clarification_turn_limit", Message: "The voice session needs a fresh start."})
 		_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
 	}
 }
@@ -251,7 +272,7 @@ func appendRealtimeVoiceConversationTurns(turns []ports.AgentConversationTurn, t
 }
 
 type realtimeClientMessage struct {
-	Type                  string                           `json:"type"`
+	Type                  realtimeClientMessageType        `json:"type"`
 	Seq                   int                              `json:"seq"`
 	SessionID             string                           `json:"sessionId"`
 	TenantID              string                           `json:"tenantId"`
@@ -284,7 +305,7 @@ type realtimeOutputAudio struct {
 }
 
 type realtimeServerMessage struct {
-	Type                    string                            `json:"type"`
+	Type                    realtimeServerMessageType         `json:"type"`
 	Seq                     int                               `json:"seq"`
 	SessionID               string                            `json:"sessionId,omitempty"`
 	Code                    string                            `json:"code,omitempty"`
@@ -394,7 +415,7 @@ func readRealtimeClientMessage(ctx context.Context, connection *websocket.Conn) 
 	if err := json.Unmarshal(payload, &message); err != nil {
 		return realtimeClientMessage{}, err
 	}
-	message.Type = strings.TrimSpace(message.Type)
+	message.Type = realtimeClientMessageType(strings.TrimSpace(string(message.Type)))
 	return message, nil
 }
 
@@ -416,7 +437,7 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 	if err := json.Unmarshal(payload, &envelope); err != nil {
 		return realtimeClientMessage{}, err
 	}
-	messageTypeName := strings.TrimSpace(envelope.Type)
+	messageTypeName := realtimeClientMessageType(strings.TrimSpace(envelope.Type))
 	for field := range raw {
 		if !realtimeActionPlanDecisionFieldAllowed(messageTypeName, field) {
 			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
@@ -450,7 +471,7 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 		seenPhotos[key] = struct{}{}
 	}
 	return realtimeClientMessage{
-		Type:                strings.TrimSpace(message.Type),
+		Type:                realtimeClientMessageType(strings.TrimSpace(message.Type)),
 		Seq:                 message.Seq,
 		SessionID:           message.SessionID,
 		PlanID:              message.PlanID,
@@ -460,14 +481,14 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 	}, nil
 }
 
-func realtimeActionPlanDecisionFieldAllowed(messageType string, field string) bool {
+func realtimeActionPlanDecisionFieldAllowed(messageType realtimeClientMessageType, field string) bool {
 	switch messageType {
-	case "action.plan.approve", "action.plan.cancel":
+	case realtimeClientMessageActionPlanApprove, realtimeClientMessageActionPlanCancel:
 		switch field {
 		case "type", "seq", "sessionId", "planId", "photoAttachments":
 			return true
 		}
-	case "client.ack":
+	case realtimeClientMessageClientAck:
 		switch field {
 		case "type", "seq", "sessionId", "ackSeq":
 			return true
@@ -517,12 +538,12 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 			return nil, lastClientSeq, ports.ErrForbidden
 		}
 		switch message.Type {
-		case "client.ack":
+		case realtimeClientMessageClientAck:
 			if message.AckSeq <= 0 {
 				return nil, lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			continue
-		case "audio.chunk":
+		case realtimeClientMessageAudioChunk:
 			chunkID := strings.TrimSpace(message.ChunkID)
 			if chunkID == "" {
 				return nil, lastClientSeq, ports.ErrInvalidProviderInput
@@ -540,12 +561,12 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 				return nil, lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			chunks = append(chunks, chunk)
-		case "audio.end":
+		case realtimeClientMessageAudioEnd:
 			if len(chunks) == 0 {
 				return nil, lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			return chunks, lastClientSeq, nil
-		case "session.cancel":
+		case realtimeClientMessageSessionCancel:
 			return nil, lastClientSeq, errRealtimeVoiceCancelled
 		default:
 			return nil, lastClientSeq, ports.ErrInvalidProviderInput
@@ -643,7 +664,7 @@ func copyRealtimeStringMap(values map[string]string) map[string]string {
 
 func realtimeServerMessageFromEvent(event app.RealtimeVoiceEvent, seq int) realtimeServerMessage {
 	message := realtimeServerMessage{
-		Type:           event.Type,
+		Type:           realtimeServerMessageType(event.Type),
 		Seq:            seq,
 		SessionID:      event.SessionID,
 		Status:         event.Status,

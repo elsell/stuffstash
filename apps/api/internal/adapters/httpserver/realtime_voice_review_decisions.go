@@ -25,7 +25,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		if next.SessionID != session.ID {
 			return "", ports.ErrForbidden
 		}
-		if next.Type == "client.ack" {
+		if next.Type == realtimeClientMessageClientAck {
 			if next.AckSeq <= 0 {
 				return "", ports.ErrInvalidProviderInput
 			}
@@ -39,10 +39,10 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		return "", ports.ErrForbidden
 	}
 
-	var eventType string
+	var eventType realtimeServerMessageType
 	var status string
 	switch message.Type {
-	case "action.plan.approve":
+	case realtimeClientMessageActionPlanApprove:
 		if err := application.ValidateActionPlanPhotoAttachmentMetadata(ctx, app.ActionPlanPhotoAttachmentMetadataInput{
 			Decision: app.ActionPlanDecisionInput{
 				Principal:   session.Principal,
@@ -63,7 +63,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		if err != nil {
 			return "", err
 		}
-		eventType = app.RealtimeVoiceEventActionPlanApproved
+		eventType = realtimeServerMessageType(app.RealtimeVoiceEventActionPlanApproved)
 		status = string(record.State)
 		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: eventType, Seq: *serverSeq, SessionID: session.ID, PlanID: planID, Status: status}); err != nil {
 			return "", err
@@ -76,13 +76,13 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 			InventoryID: session.InventoryID,
 			PlanID:      planID,
 		})
-		outcomeType := app.RealtimeVoiceEventActionPlanExecuted
+		outcomeType := realtimeServerMessageType(app.RealtimeVoiceEventActionPlanExecuted)
 		outcomeMessage := "The approved change was applied."
 		if err != nil {
 			if executed.Record.State != actionplan.StateFailed {
 				return "", err
 			}
-			outcomeType = app.RealtimeVoiceEventActionPlanFailed
+			outcomeType = realtimeServerMessageType(app.RealtimeVoiceEventActionPlanFailed)
 			outcomeMessage = "The approved change could not be applied safely."
 		}
 		uploadIntents, err := realtimeAttachmentUploadIntentsFromDecision(ctx, application, session, message.PhotoAttachments, executed.CommandResults)
@@ -106,7 +106,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		}
 		*serverSeq = *serverSeq + 1
 		return ports.RealtimeSessionStateCompleted, nil
-	case "action.plan.cancel":
+	case realtimeClientMessageActionPlanCancel:
 		if message.PhotoAttachmentsSet {
 			return "", ports.ErrInvalidProviderInput
 		}
@@ -119,7 +119,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		if err != nil {
 			return "", err
 		}
-		eventType = app.RealtimeVoiceEventActionPlanCancelled
+		eventType = realtimeServerMessageType(app.RealtimeVoiceEventActionPlanCancelled)
 		status = string(record.State)
 	default:
 		return "", ports.ErrInvalidProviderInput

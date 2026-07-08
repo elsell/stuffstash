@@ -28,13 +28,13 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 	if err := json.Unmarshal(payload, &envelope); err != nil {
 		return realtimeClientMessage{}, err
 	}
-	messageTypeName := strings.TrimSpace(envelope.Type)
+	messageTypeName := realtimeClientMessageType(strings.TrimSpace(envelope.Type))
 	for field := range raw {
 		if !realtimeAudioMessageFieldAllowed(messageTypeName, field) {
 			return realtimeClientMessage{}, ports.ErrInvalidProviderInput
 		}
 	}
-	if messageTypeName == "audio.chunk" {
+	if messageTypeName == realtimeClientMessageAudioChunk {
 		if err := validateRealtimeAudioChunkFinalMarker(raw); err != nil {
 			return realtimeClientMessage{}, err
 		}
@@ -53,7 +53,7 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 		return realtimeClientMessage{}, err
 	}
 	return realtimeClientMessage{
-		Type:         strings.TrimSpace(message.Type),
+		Type:         realtimeClientMessageType(strings.TrimSpace(message.Type)),
 		Seq:          message.Seq,
 		SessionID:    message.SessionID,
 		ChunkID:      message.ChunkID,
@@ -64,24 +64,24 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 	}, nil
 }
 
-func realtimeAudioMessageFieldAllowed(messageType string, field string) bool {
+func realtimeAudioMessageFieldAllowed(messageType realtimeClientMessageType, field string) bool {
 	switch messageType {
-	case "audio.chunk":
+	case realtimeClientMessageAudioChunk:
 		switch field {
 		case "type", "seq", "sessionId", "chunkId", "audioBase64", "isFinalChunk":
 			return true
 		}
-	case "audio.end":
+	case realtimeClientMessageAudioEnd:
 		switch field {
 		case "type", "seq", "sessionId":
 			return true
 		}
-	case "session.cancel":
+	case realtimeClientMessageSessionCancel:
 		switch field {
 		case "type", "seq", "sessionId", "reason":
 			return true
 		}
-	case "client.ack":
+	case realtimeClientMessageClientAck:
 		switch field {
 		case "type", "seq", "sessionId", "ackSeq":
 			return true
