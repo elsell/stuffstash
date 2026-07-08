@@ -472,6 +472,8 @@ describe('VoiceSessionPresentation', () => {
         progressSteps: [
           'Sending audio',
           'Authorization: tok+en/with~punctuation bearer eyJhbGciOi.test.sig== {"parentAssetId":"kitchen-1"}',
+          'providerSessionId: gemini-live-2',
+          'provider_session_id: gemini-live-3',
           'Checking inventory'
         ],
         debugEvents: []
@@ -484,6 +486,8 @@ describe('VoiceSessionPresentation', () => {
     expect(visibleText).toContain('Working safely');
     expect(visibleText).not.toContain('Authorization');
     expect(visibleText).not.toContain('parentAssetId');
+    expect(visibleText).not.toContain('providerSessionId');
+    expect(visibleText).not.toContain('provider_session_id');
     expect(visibleText).not.toContain('bearer');
     expect(visibleText).not.toContain('raw prompt');
     expect(visibleText).not.toContain('abc/def');

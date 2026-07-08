@@ -382,7 +382,7 @@ function safeProgressPresentationText(value: string, maxLength: number): string 
 }
 
 function unsafeProgressPresentationText(value: string): boolean {
-  return /\b(raw prompt|stack trace|raw query|raw transcript|raw provider response|raw model response|provider session id|authorization|credential|password|secret|token|bearer|api[-_ ]?key|asset[-_ ]?id|parent[-_ ]?asset[-_ ]?id|inventory[-_ ]?id|tenant[-_ ]?id|tool[-_ ]?call[-_ ]?id)\b/gi.test(value);
+  return /\b(raw prompt|stack trace|raw query|raw transcript|raw provider response|raw model response|provider[-_ ]?session[-_ ]?id|authorization|credential|password|secret|token|bearer|api[-_ ]?key|asset[-_ ]?id|parent[-_ ]?asset[-_ ]?id|inventory[-_ ]?id|tenant[-_ ]?id|tool[-_ ]?call[-_ ]?id)\b/gi.test(value);
 }
 
 function boundedLevel(value: number | undefined): number {
