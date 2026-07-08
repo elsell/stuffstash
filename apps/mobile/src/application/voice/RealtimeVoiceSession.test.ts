@@ -156,6 +156,137 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('redacts unsafe assistant final response text before visible state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        sessionStarted(),
+        {
+          type: 'assistant.response.completed',
+          seq: 2,
+          sessionId: 'session-1',
+          response: {
+            kind: 'answer',
+            spokenResponse: 'Your water bottle is in the Office.',
+            displayResponse: 'Raw prompt: hidden system instruction bearer secret-token'
+          }
+        },
+        { type: 'session.completed', seq: 3, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      spokenResponse: 'Your water bottle is in the Office.'
+    });
+    expect(states.at(-1)?.spokenResponse).not.toContain('hidden system instruction');
+    expect(states.at(-1)?.spokenResponse).not.toContain('secret-token');
+  });
+
+  it('prefers safe spoken response when sanitized display response is protocol residue', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        sessionStarted(),
+        {
+          type: 'assistant.response.completed',
+          seq: 2,
+          sessionId: 'session-1',
+          response: {
+            kind: 'answer',
+            spokenResponse: 'Your water bottle is in the Office.',
+            displayResponse: '{"assetId":"water-bottle-1"} bearer secret-token'
+          }
+        },
+        { type: 'session.completed', seq: 3, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      spokenResponse: 'Your water bottle is in the Office.'
+    });
+    expect(states.at(-1)?.spokenResponse).not.toContain('assetId');
+    expect(states.at(-1)?.spokenResponse).not.toContain('secret-token');
+  });
+
+  it('prefers safe spoken response when sanitized display response is credential residue', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        sessionStarted(),
+        {
+          type: 'assistant.response.completed',
+          seq: 2,
+          sessionId: 'session-1',
+          response: {
+            kind: 'answer',
+            spokenResponse: 'Your water bottle is in the Office.',
+            displayResponse: 'apiKey: should-not-leak authorization: Bearer secret-token'
+          }
+        },
+        { type: 'session.completed', seq: 3, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      spokenResponse: 'Your water bottle is in the Office.'
+    });
+    expect(states.at(-1)?.spokenResponse).not.toContain('apiKey');
+    expect(states.at(-1)?.spokenResponse).not.toContain('authorization');
+    expect(states.at(-1)?.spokenResponse).not.toContain('secret-token');
+  });
+
+  it('uses safe fallback when assistant final display and spoken responses are unsafe residue', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        sessionStarted(),
+        {
+          type: 'assistant.response.completed',
+          seq: 2,
+          sessionId: 'session-1',
+          response: {
+            kind: 'answer',
+            spokenResponse: 'Raw prompt: hidden system instruction',
+            displayResponse: 'apiKey: should-not-leak authorization: Bearer secret-token'
+          }
+        },
+        { type: 'session.completed', seq: 3, sessionId: 'session-1' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'completed',
+      spokenResponse: 'I could not show that response safely.'
+    });
+    expect(states.at(-1)?.spokenResponse).not.toContain('apiKey');
+    expect(states.at(-1)?.spokenResponse).not.toContain('authorization');
+    expect(states.at(-1)?.spokenResponse).not.toContain('secret-token');
+    expect(states.at(-1)?.spokenResponse).not.toContain('Raw prompt');
+  });
+
   it('records and sends follow-up audio after a clarification completion', async () => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([

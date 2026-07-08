@@ -549,7 +549,7 @@ export class RealtimeVoiceSessionController {
       case 'assistant.response.completed':
         return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
           status: state.actionPlan ? 'review' : 'processing',
-          spokenResponse: event.response.displayResponse,
+          spokenResponse: safeVisibleAssistantResponseText(event.response.displayResponse, event.response.spokenResponse, 500),
           responseKind: event.response.kind,
           conversationPhase: 'answering'
         });
@@ -1062,6 +1062,44 @@ function safeVisibleProgressText(value: string, maxLength: number): string {
     return normalized;
   }
   return normalized.slice(0, maxLength).trim();
+}
+
+function safeVisibleAssistantResponseText(displayResponse: string, spokenResponse: string, maxLength: number): string {
+  const safeDisplay = safeVisibleResponseText(displayResponse, maxLength);
+  if (isMeaningfulVisibleResponseText(safeDisplay)) {
+    return safeDisplay;
+  }
+  const safeSpoken = safeVisibleResponseText(spokenResponse, maxLength);
+  if (isMeaningfulVisibleResponseText(safeSpoken)) {
+    return safeSpoken;
+  }
+  return 'I could not show that response safely.';
+}
+
+function safeVisibleResponseText(value: string, maxLength: number): string {
+  const normalized = redactUnsafeVoiceText(value)
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return normalized.slice(0, maxLength).trim();
+}
+
+function isMeaningfulVisibleResponseText(value: string): boolean {
+  if (value === '' || value === '[redacted]') {
+    return false;
+  }
+  const withoutRedactionMarkers = value
+    .replace(/\[redacted(?:-[a-z]+)?\]/gi, ' ')
+    .replace(/[{}[\]():,."'=]/g, ' ')
+    .replace(
+      /\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token|asset[-_ ]?id|parent[-_ ]?asset[-_ ]?id|inventory[-_ ]?id|tenant[-_ ]?id|tool[-_ ]?call[-_ ]?id|bearer)\b/gi,
+      ' '
+    )
+    .replace(/\s+/g, ' ')
+    .trim();
+  return withoutRedactionMarkers.length > 0;
 }
 
 function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
