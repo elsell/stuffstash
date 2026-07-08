@@ -94,6 +94,18 @@ grep -q -- "- ${STUFF_STASH_WEB_ORIGIN}" deploy/selfhost/dex/config.yaml ||
 
 if docker compose version >/dev/null 2>&1; then
   config_output="$(mktemp)"
+  created_env_file=0
+  if [ ! -f .env ]; then
+    cp .env.example .env
+    created_env_file=1
+  fi
+  cleanup_compose_config() {
+    rm -f "$config_output"
+    if [ "$created_env_file" -eq 1 ]; then
+      rm -f .env
+    fi
+  }
+  trap cleanup_compose_config EXIT
   docker compose --env-file .env.example -f "$compose_file" config >"$config_output"
   grep -q 'condition: service_healthy' "$config_output" ||
     fail "rendered Compose config must keep Dex health dependency"
@@ -101,7 +113,8 @@ if docker compose version >/dev/null 2>&1; then
     fail "rendered Compose config must include SpiceDB datastore Postgres"
   grep -q 'caddy:2.10.2@sha256:' "$config_output" ||
     fail "rendered Compose config must include pinned Caddy"
-  rm -f "$config_output"
+  cleanup_compose_config
+  trap - EXIT
 fi
 
 grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres, SpiceDB, and Garage' "$self_host_doc" ||
