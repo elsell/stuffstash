@@ -187,6 +187,9 @@ func realtimeVoiceLooksLikeWriteRequest(transcript string) bool {
 		return false
 	}
 	text := normalizedRealtimeVoiceVerbText(transcript)
+	if realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(text) {
+		return true
+	}
 	for _, token := range []string{
 		" move ", " put ", " place ", " add ", " create ", " store ", " stash ", " restore ", " archive ", " rename ", " update ",
 		" return ", " returned ", " check out ", " checked out ", " check in ", " checked in ", " borrow ", " borrowed ", " loan ", " loaned ",

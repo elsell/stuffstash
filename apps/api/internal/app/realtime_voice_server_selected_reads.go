@@ -88,6 +88,9 @@ func realtimeVoiceContentsQuestionTargetQuery(transcript string) string {
 
 func realtimeVoiceSimpleCreateDestinationQuery(transcript string) string {
 	text := normalizedRealtimeVoiceVerbText(transcript)
+	if query := realtimeVoiceCasualAcquisitionDestinationQuery(text); query != "" {
+		return query
+	}
 	for _, marker := range []string{" under ", " inside ", " within ", " beneath ", " below "} {
 		if strings.Contains(text, marker) {
 			return ""
@@ -99,6 +102,32 @@ func realtimeVoiceSimpleCreateDestinationQuery(transcript string) string {
 		if index := strings.LastIndex(text, marker); index > bestIndex {
 			bestIndex = index
 			best = text[index+len(marker):]
+		}
+	}
+	return normalizeRealtimeVoiceSourceText(best)
+}
+
+func realtimeVoiceCasualAcquisitionDestinationQuery(normalizedText string) string {
+	if !realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(normalizedText) {
+		return ""
+	}
+	best := ""
+	bestIndex := -1
+	for _, marker := range []string{
+		" put it into ",
+		" put it inside ",
+		" put it in ",
+		" put it on ",
+		" placed it into ",
+		" placed it in ",
+		" stored it inside ",
+		" stored it in ",
+		" stashed it inside ",
+		" stashed it in ",
+	} {
+		if index := strings.LastIndex(normalizedText, marker); index > bestIndex {
+			bestIndex = index
+			best = normalizedText[index+len(marker):]
 		}
 	}
 	return normalizeRealtimeVoiceSourceText(best)

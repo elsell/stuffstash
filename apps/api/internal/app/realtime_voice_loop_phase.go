@@ -94,7 +94,7 @@ func realtimeVoiceLooksLikeContentsQuestion(transcript string) bool {
 }
 
 func realtimeVoiceContentsListArgs(transcript string, toolResults []ports.AgentToolResult) (map[string]any, bool) {
-	if !realtimeVoiceLooksLikeContentsQuestion(transcript) {
+	if realtimeVoiceLooksLikeWriteRequest(transcript) || !realtimeVoiceLooksLikeContentsQuestion(transcript) {
 		return nil, false
 	}
 	best := realtimeVoiceBestContentsTarget(transcript, realtimeVoiceVisibleReadItems(toolResults))

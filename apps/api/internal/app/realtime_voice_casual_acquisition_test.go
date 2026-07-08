@@ -37,7 +37,7 @@ func TestRealtimeVoiceReadsDestinationBeforePlanningCasualAcquisition(t *testing
 		},
 	}}
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "I got a phone charger and put it in the office."}
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "I got a phone charger and put it inside the office."}
 	resolver.providers.LanguageInference = language
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
 	office := assetItem("office-1", "tenant-home", "inventory-home", asset.KindLocation, "")

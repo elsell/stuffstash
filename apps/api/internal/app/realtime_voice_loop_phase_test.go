@@ -299,6 +299,16 @@ func TestRealtimeVoiceSelectsProactiveReadOnlyCallsForUnambiguousTranscripts(t *
 	if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets || call.Arguments["query"] != "office" {
 		t.Fatalf("expected proactive casual-create destination search, got ok=%v call=%+v", ok, call)
 	}
+	for _, transcript := range []string{
+		"I got a phone charger and put it inside the toolbox.",
+		"We bought batteries and stored it inside the garage cabinet.",
+		"I picked up a remote and stashed it inside the TV box.",
+	} {
+		call, _, ok = realtimeVoiceServerSelectedReadCallWithoutModel(transcript, 0, nil, "read-casual-create-inside")
+		if !ok || call.Name != RealtimeVoiceToolSearchAuthorizedAssets {
+			t.Fatalf("expected proactive casual-create inside destination search for %q, got ok=%v call=%+v", transcript, ok, call)
+		}
+	}
 	if query := realtimeVoiceSpecificLookupObjectQuery("Where is it? Follow-up answer: Water bottle."); query != "water bottle" {
 		t.Fatalf("expected follow-up read query to use concrete answer, got %q", query)
 	}
