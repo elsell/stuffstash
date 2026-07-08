@@ -21,16 +21,9 @@ func TestRealtimeVoiceQueryStreamsSanitizedLanguageFailureDiagnosticBeforeFailur
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
 
-	events := runRealtimeVoiceQuestionUntilWithStart(t, server.URL, map[string]any{
-		"type":                 "session.start",
-		"seq":                  1,
-		"tenantId":             "tenant-home",
-		"inventoryId":          "inventory-home",
-		"source":               "mobile_voice",
-		"developerDiagnostics": true,
-		"inputAudio":           map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio":          map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	}, "user-1", "session.failed")
+	start := realtimeVoiceStartMessage("tenant-home", "inventory-home")
+	start["developerDiagnostics"] = true
+	events := runRealtimeVoiceQuestionUntilWithStart(t, server.URL, start, "user-1", "session.failed")
 
 	diagnosticIndex := -1
 	failedIndex := -1

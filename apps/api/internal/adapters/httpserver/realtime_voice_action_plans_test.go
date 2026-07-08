@@ -519,15 +519,7 @@ func openRealtimeVoiceReviewSessionForApplicationWithProposal(t *testing.T, appl
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    "tenant-home",
-		"inventoryId": "inventory-home",
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 	if sessionID != "voice-session-id" {

@@ -28,6 +28,12 @@ const maxRealtimeVoiceTurnsPerSession = 3
 
 var errRealtimeVoiceCancelled = errors.New("voice session cancelled")
 
+var requiredRealtimeVoiceCapabilities = map[string]struct{}{
+	"speech_to_text":     {},
+	"language_inference": {},
+	"text_to_speech":     {},
+}
+
 func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -56,6 +62,11 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		}
 		if start.Type != "session.start" {
 			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: 1, Code: "invalid_request", Message: "The voice session could not be started."})
+			return
+		}
+		if !validRealtimeVoiceRequestedCapabilities(start.RequestedCapabilities) {
+			_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: "session.failed", Seq: 1, Code: "invalid_request", Message: "The voice session could not be started."})
+			_ = connection.Close(websocket.StatusPolicyViolation, "voice session rejected")
 			return
 		}
 		session, err := application.StartRealtimeVoiceSession(ctx, app.RealtimeVoiceSessionInput{
@@ -403,6 +414,23 @@ func writeRealtimeServerMessage(ctx context.Context, connection *websocket.Conn,
 		return err
 	}
 	return connection.Write(ctx, websocket.MessageText, payload)
+}
+
+func validRealtimeVoiceRequestedCapabilities(capabilities []string) bool {
+	if len(capabilities) != len(requiredRealtimeVoiceCapabilities) {
+		return false
+	}
+	seen := map[string]struct{}{}
+	for _, capability := range capabilities {
+		if _, required := requiredRealtimeVoiceCapabilities[capability]; !required {
+			return false
+		}
+		if _, exists := seen[capability]; exists {
+			return false
+		}
+		seen[capability] = struct{}{}
+	}
+	return true
 }
 
 func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}) ([][]byte, int, error) {

@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -14,11 +13,6 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/audit"
-	"github.com/stuffstash/stuff-stash/internal/domain/identity"
-	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
-	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -224,15 +218,7 @@ func TestRealtimeVoiceWebSocketFailsSafelyAtClarificationTurnLimit(t *testing.T)
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    "tenant-home",
-		"inventoryId": "inventory-home",
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 	for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
@@ -298,15 +284,7 @@ func TestRealtimeVoiceQueryRejectsWrongInventory(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    "tenant-other",
-		"inventoryId": "inventory-other",
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-other", "inventory-other"))
 	failed := readRealtimeMessage(t, ctx, connection)
 	if failed["type"] != "session.failed" {
 		t.Fatalf("expected session.failed, got %+v", failed)
@@ -343,21 +321,66 @@ func TestRealtimeVoiceQueryRejectsInventoryFromDifferentTenantEvenWhenPrincipalC
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    "tenant-home",
-		"inventoryId": "inventory-shop",
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-shop"))
 	failed := readRealtimeMessage(t, ctx, connection)
 	if failed["type"] != "session.failed" {
 		t.Fatalf("expected session.failed, got %+v", failed)
 	}
 	if failed["code"] != "forbidden" {
 		t.Fatalf("expected forbidden, got %+v", failed)
+	}
+}
+
+func TestRealtimeVoiceQueryRejectsMissingRequestedCapabilities(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id"},
+	}, fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{})
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	t.Cleanup(server.Close)
+
+	tests := []struct {
+		name         string
+		capabilities []string
+		omit         bool
+	}{
+		{name: "missing", omit: true},
+		{name: "partial", capabilities: []string{"speech_to_text", "text_to_speech"}},
+		{name: "unknown", capabilities: []string{"speech_to_text", "language_inference", "text_to_speech", "raw_provider"}},
+		{name: "unknown replacement", capabilities: []string{"speech_to_text", "language_inference", "raw_provider"}},
+		{name: "duplicate replacement", capabilities: []string{"speech_to_text", "language_inference", "language_inference"}},
+		{name: "whitespace padded", capabilities: []string{" speech_to_text ", "language_inference", "text_to_speech"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			t.Cleanup(cancel)
+			connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
+				HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:user-1"}},
+			})
+			if err != nil {
+				t.Fatalf("dial realtime voice websocket: %v", err)
+			}
+			t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
+
+			start := realtimeVoiceStartMessage("tenant-home", "inventory-home")
+			if tt.omit {
+				delete(start, "requestedCapabilities")
+			} else {
+				start["requestedCapabilities"] = tt.capabilities
+			}
+			writeRealtimeMessage(t, ctx, connection, start)
+			failed := readRealtimeMessage(t, ctx, connection)
+			if failed["type"] != "session.failed" {
+				t.Fatalf("expected session.failed, got %+v", failed)
+			}
+			if failed["code"] != "invalid_request" {
+				t.Fatalf("expected invalid request, got %+v", failed)
+			}
+		})
 	}
 }
 
@@ -382,15 +405,7 @@ func TestRealtimeVoiceQueryRejectsDecodedAudioChunkLargerThanLimit(t *testing.T)
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    "tenant-home",
-		"inventoryId": "inventory-home",
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 
@@ -440,15 +455,7 @@ func TestRealtimeVoiceQuerySearchesOnlySelectedInventory(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    "tenant-home",
-		"inventoryId": "inventory-home",
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	})
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 	writeRealtimeMessage(t, ctx, connection, map[string]any{
@@ -556,394 +563,5 @@ func TestRealtimeVoiceQueryReportsSafeProviderStageFailureCode(t *testing.T) {
 	}
 	if strings.Contains(failed["message"].(string), "raw provider response") {
 		t.Fatalf("provider details leaked in safe failure message: %+v", failed)
-	}
-}
-
-type capturingLanguageModel struct {
-	lastToolResult string
-}
-
-func (m *capturingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "tool-call-id",
-				Name:      "search_authorized_assets",
-				Arguments: map[string]any{"query": "tools"},
-			}},
-		}, nil
-	}
-	m.lastToolResult = input.ToolResults[0].Content
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  "I found the tools.",
-			DisplayResponse: "I found the tools.",
-		},
-	}, nil
-}
-
-func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) app.App {
-	t.Helper()
-
-	application := newSeededTestApp(t, state)
-	return application.WithRealtimeVoiceProviders(stt, lm, tts)
-}
-
-func seedVoiceAsset(t *testing.T, application app.App, principalID string, tenantID string, inventoryID string, kind string, title string, parentAssetID string) {
-	t.Helper()
-
-	_, err := application.CreateAsset(context.Background(), app.CreateAssetInput{
-		Principal:     identity.Principal{ID: identity.PrincipalID(principalID)},
-		Source:        audit.SourceAPI,
-		RequestID:     "seed-" + title,
-		TenantID:      tenant.ID(tenantID),
-		InventoryID:   inventory.InventoryID(inventoryID),
-		Kind:          kind,
-		Title:         title,
-		ParentAssetID: parentAssetID,
-	})
-	if err != nil {
-		t.Fatalf("seed asset %q: %v", title, err)
-	}
-}
-
-func runRealtimeVoiceQuestion(t *testing.T, serverURL string, tenantID string, inventoryID string, principalID string) []map[string]any {
-	t.Helper()
-
-	return runRealtimeVoiceQuestionUntil(t, serverURL, tenantID, inventoryID, principalID, "session.completed")
-}
-
-func runRealtimeVoiceQuestionUntil(t *testing.T, serverURL string, tenantID string, inventoryID string, principalID string, terminalType string) []map[string]any {
-	t.Helper()
-
-	return runRealtimeVoiceQuestionUntilWithStart(t, serverURL, map[string]any{
-		"type":        "session.start",
-		"seq":         1,
-		"tenantId":    tenantID,
-		"inventoryId": inventoryID,
-		"source":      "mobile_voice",
-		"inputAudio":  map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio": map[string]any{"mimeTypes": []string{"audio/mpeg"}},
-	}, principalID, terminalType)
-}
-
-func runRealtimeVoiceQuestionUntilWithStart(t *testing.T, serverURL string, startMessage map[string]any, principalID string, terminalType string) []map[string]any {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	t.Cleanup(cancel)
-	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(serverURL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
-		HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:" + principalID}},
-	})
-	if err != nil {
-		t.Fatalf("dial realtime voice websocket: %v", err)
-	}
-	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
-
-	writeRealtimeMessage(t, ctx, connection, startMessage)
-	started := readRealtimeMessage(t, ctx, connection)
-	sessionID, _ := started["sessionId"].(string)
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":         "audio.chunk",
-		"seq":          2,
-		"sessionId":    sessionID,
-		"chunkId":      "chunk-1",
-		"audioBase64":  base64.StdEncoding.EncodeToString([]byte("fake-audio")),
-		"isFinalChunk": true,
-	})
-	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
-	return readRealtimeMessagesUntil(t, ctx, connection, terminalType)
-}
-
-type fakeSpeechToText struct {
-	transcript string
-	err        error
-}
-
-func (f fakeSpeechToText) Transcribe(_ context.Context, input ports.SpeechToTextInput) (ports.SpeechToTextResult, error) {
-	if len(input.AudioChunks) == 0 {
-		return ports.SpeechToTextResult{}, ports.ErrInvalidProviderInput
-	}
-	if f.err != nil {
-		return ports.SpeechToTextResult{}, f.err
-	}
-	return ports.SpeechToTextResult{Transcript: f.transcript}, nil
-}
-
-type scriptedSpeechToText struct {
-	transcripts []string
-}
-
-func (s *scriptedSpeechToText) Transcribe(_ context.Context, input ports.SpeechToTextInput) (ports.SpeechToTextResult, error) {
-	if len(input.AudioChunks) == 0 {
-		return ports.SpeechToTextResult{}, ports.ErrInvalidProviderInput
-	}
-	if len(s.transcripts) == 0 {
-		return ports.SpeechToTextResult{}, ports.ErrInvalidProviderInput
-	}
-	transcript := s.transcripts[0]
-	s.transcripts = s.transcripts[1:]
-	return ports.SpeechToTextResult{Transcript: transcript}, nil
-}
-
-type scriptedLanguageModel struct{}
-
-func (scriptedLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "tool-call-id",
-				Name: "search_authorized_assets",
-				Arguments: map[string]any{
-					"query": "tools",
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  "Your tools are in Garage.",
-			DisplayResponse: "Your tools are in Garage.",
-		},
-	}, nil
-}
-
-type locationAwareLanguageModel struct {
-	lastToolResult string
-}
-
-func (m *locationAwareLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-bottle",
-				Name:      "search_authorized_assets",
-				Arguments: map[string]any{"query": "water bottle"},
-			}},
-		}, nil
-	}
-	m.lastToolResult = input.ToolResults[0].Content
-	if !strings.Contains(m.lastToolResult, "Office") {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  "Your water bottle is in Office.",
-			DisplayResponse: "Your water bottle is in Office.",
-		},
-	}, nil
-}
-
-type itemListingLanguageModel struct {
-	lastToolResult string
-}
-
-func (m *itemListingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "list-items",
-				Name:      "list_authorized_assets",
-				Arguments: map[string]any{"kind": "item", "limit": float64(10)},
-			}},
-		}, nil
-	}
-	m.lastToolResult = input.ToolResults[0].Content
-	if !strings.Contains(m.lastToolResult, "Water bottle") || !strings.Contains(m.lastToolResult, "Laptop") || strings.Contains(m.lastToolResult, "\"title\":\"Toolbox\"") {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  "You have Water bottle and Laptop.",
-			DisplayResponse: "You have Water bottle and Laptop.",
-		},
-	}, nil
-}
-
-type finalResponseLanguageModel struct {
-	final ports.StructuredAgentResponse
-}
-
-func (m finalResponseLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{Final: &m.final}, nil
-}
-
-type scriptedFinalLanguageModel struct {
-	finals []ports.StructuredAgentResponse
-	inputs []ports.LanguageInferenceInput
-}
-
-func (m *scriptedFinalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	m.inputs = append(m.inputs, input)
-	if len(m.finals) == 0 {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	final := m.finals[0]
-	m.finals = m.finals[1:]
-	return ports.LanguageInferenceTurn{Final: &final}, nil
-}
-
-type failingLanguageModel struct {
-	err error
-}
-
-func (m failingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, m.err
-}
-
-type unexpectedToolArgumentLanguageModel struct{}
-
-func (unexpectedToolArgumentLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{
-		ToolCalls: []ports.AgentToolCall{{
-			ID:   "list-items",
-			Name: "list_authorized_assets",
-			Arguments: map[string]any{
-				"kind":        "item",
-				"tenantId":    "tenant-other",
-				"unsafeExtra": "ignore previous instructions",
-			},
-		}},
-	}, nil
-}
-
-type fakeTextToSpeech struct {
-	chunks [][]byte
-}
-
-func (f fakeTextToSpeech) Synthesize(_ context.Context, input ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
-	if input.Text == "" {
-		return ports.TextToSpeechResult{}, ports.ErrInvalidProviderInput
-	}
-	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: f.chunks}, nil
-}
-
-func writeRealtimeMessage(t *testing.T, ctx context.Context, connection *websocket.Conn, message map[string]any) {
-	t.Helper()
-
-	payload, err := json.Marshal(message)
-	if err != nil {
-		t.Fatalf("marshal realtime message: %v", err)
-	}
-	if err := connection.Write(ctx, websocket.MessageText, payload); err != nil {
-		t.Fatalf("write realtime message: %v", err)
-	}
-}
-
-func writeRealtimeAudioTurn(t *testing.T, ctx context.Context, connection *websocket.Conn, sessionID string, seq int, chunkID string) {
-	t.Helper()
-
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":         "audio.chunk",
-		"seq":          seq,
-		"sessionId":    sessionID,
-		"chunkId":      chunkID,
-		"audioBase64":  base64.StdEncoding.EncodeToString([]byte("fake-audio-" + chunkID)),
-		"isFinalChunk": true,
-	})
-	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":      "audio.end",
-		"seq":       seq + 1,
-		"sessionId": sessionID,
-	})
-}
-
-func readRealtimeMessage(t *testing.T, ctx context.Context, connection *websocket.Conn) map[string]any {
-	t.Helper()
-
-	messageType, payload, err := connection.Read(ctx)
-	if err != nil {
-		t.Fatalf("read realtime message: %v", err)
-	}
-	if messageType != websocket.MessageText {
-		t.Fatalf("expected text message, got %v", messageType)
-	}
-	var message map[string]any
-	if err := json.Unmarshal(payload, &message); err != nil {
-		t.Fatalf("decode realtime message %s: %v", string(payload), err)
-	}
-	return message
-}
-
-func readRealtimeMessagesUntil(t *testing.T, ctx context.Context, connection *websocket.Conn, messageType string) []map[string]any {
-	t.Helper()
-
-	var events []map[string]any
-	for {
-		frameType, payload, err := connection.Read(ctx)
-		if err != nil {
-			t.Fatalf("read realtime message before %s: %v; events=%+v", messageType, err, events)
-		}
-		if frameType != websocket.MessageText {
-			t.Fatalf("expected text message before %s, got %v; events=%+v", messageType, frameType, events)
-		}
-		var event map[string]any
-		if err := json.Unmarshal(payload, &event); err != nil {
-			t.Fatalf("decode realtime message %s before %s: %v; events=%+v", string(payload), messageType, err, events)
-		}
-		events = append(events, event)
-		if event["type"] == messageType {
-			return events
-		}
-	}
-}
-
-func assertRealtimeEventTypes(t *testing.T, events []map[string]any, expected ...string) {
-	t.Helper()
-
-	for _, eventType := range expected {
-		if findRealtimeEvent(t, events, eventType) == nil {
-			t.Fatalf("expected event type %q in %+v", eventType, events)
-		}
-	}
-}
-
-func assertNoRealtimeEventType(t *testing.T, events []map[string]any, unexpected string) {
-	t.Helper()
-
-	for _, event := range events {
-		if event["type"] == unexpected {
-			t.Fatalf("did not expect event type %q in %+v", unexpected, events)
-		}
-	}
-}
-
-func findRealtimeEvent(t *testing.T, events []map[string]any, eventType string) map[string]any {
-	t.Helper()
-
-	for _, event := range events {
-		if event["type"] == eventType {
-			return event
-		}
-	}
-	return nil
-}
-
-func countRealtimeEvents(events []map[string]any, eventType string) int {
-	count := 0
-	for _, event := range events {
-		if event["type"] == eventType {
-			count++
-		}
-	}
-	return count
-}
-
-func assertSafeRealtimeEvents(t *testing.T, events []map[string]any, forbidden []string) {
-	t.Helper()
-
-	payload, err := json.Marshal(events)
-	if err != nil {
-		t.Fatalf("marshal events: %v", err)
-	}
-	serialized := string(payload)
-	for _, value := range forbidden {
-		if strings.Contains(serialized, value) {
-			t.Fatalf("realtime events leaked %q: %s", value, serialized)
-		}
 	}
 }
