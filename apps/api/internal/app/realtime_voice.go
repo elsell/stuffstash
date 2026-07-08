@@ -11,6 +11,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
+var realtimeVoicePlannerPlacementNowPattern = regexp.MustCompile(`\b(?:is|are|was|were)\b(?:\s+\S+){0,8}\s+in(?:\s+\S+){0,8}\s+now\b`)
+
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {
 	a.speechToText = stt
 	a.languageInference = lm
@@ -697,7 +699,6 @@ func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentRespo
 		" created ",
 		" is now in ",
 		" moved ",
-		" now in ",
 		" placed ",
 		" put ",
 		" restored ",
@@ -710,7 +711,7 @@ func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentRespo
 			return true
 		}
 	}
-	if strings.Contains(text, " in ") && strings.Contains(text, " now ") {
+	if realtimeVoicePlannerPlacementNowPattern.MatchString(text) {
 		return true
 	}
 	return false

@@ -222,6 +222,13 @@ func TestRealtimeVoicePlannerOnlySafeFailureDoesNotClaimReversedPlacementMutatio
 	}) {
 		t.Fatalf("expected reversed placement phrasing to count as a planner mutation claim")
 	}
+	if realtimeVoicePlannerFinalClaimsMutation(ports.StructuredAgentResponse{
+		Kind:            ports.StructuredAgentResponseKindSafeFailure,
+		SpokenResponse:  "I cannot prepare that now in this voice request.",
+		DisplayResponse: "I cannot prepare that now in this voice request.",
+	}) {
+		t.Fatalf("expected harmless safe failure copy not to count as a planner mutation claim")
+	}
 
 	tts := &resolvedTextToSpeech{}
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
