@@ -695,9 +695,15 @@ func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentRespo
 		" checked in ",
 		" checked out ",
 		" created ",
+		" is now in ",
 		" moved ",
+		" now in ",
+		" placed ",
+		" put ",
 		" restored ",
 		" returned ",
+		" stashed ",
+		" stored ",
 		" updated ",
 	} {
 		if strings.Contains(text, token) {
