@@ -25,8 +25,51 @@ type VoiceWebSocketFactory = (url: string, headers: Record<string, string>) => V
 
 const requiredRealtimeVoiceCapabilities = ['speech_to_text', 'language_inference', 'text_to_speech'] as const;
 
+const voiceClientMessage = {
+  sessionStart: 'session.start',
+  audioChunk: 'audio.chunk',
+  audioEnd: 'audio.end',
+  sessionCancel: 'session.cancel',
+  actionPlanApprove: 'action.plan.approve',
+  actionPlanCancel: 'action.plan.cancel'
+} as const;
+
+type VoiceClientActionPlanDecisionMessage =
+  typeof voiceClientMessage.actionPlanApprove | typeof voiceClientMessage.actionPlanCancel;
+
+const voiceServerMessage = {
+  sessionStarted: 'session.started',
+  sessionFailed: 'session.failed',
+  transcriptDelta: 'transcript.delta',
+  transcriptFinal: 'transcript.final',
+  agentProgress: 'agent.progress',
+  agentDiagnostic: 'agent.diagnostic',
+  toolCallStarted: 'tool.call.started',
+  toolCallCompleted: 'tool.call.completed',
+  toolCallFailed: 'tool.call.failed',
+  actionPlanProposed: 'action.plan.proposed',
+  actionPlanApproved: 'action.plan.approved',
+  actionPlanCancelled: 'action.plan.cancelled',
+  actionPlanExecuted: 'action.plan.executed',
+  actionPlanFailed: 'action.plan.failed',
+  assistantResponseStarted: 'assistant.response.started',
+  assistantResponseDelta: 'assistant.response.delta',
+  assistantResponseCompleted: 'assistant.response.completed',
+  textToSpeechAudioStarted: 'tts.audio.started',
+  textToSpeechAudioChunk: 'tts.audio.chunk',
+  textToSpeechAudioCompleted: 'tts.audio.completed',
+  sessionCompleted: 'session.completed',
+  sessionCancelled: 'session.cancelled'
+} as const;
+
+type VoiceServerActionPlanTerminalMessage =
+  typeof voiceServerMessage.actionPlanApproved |
+  typeof voiceServerMessage.actionPlanCancelled |
+  typeof voiceServerMessage.actionPlanExecuted |
+  typeof voiceServerMessage.actionPlanFailed;
+
 type ActiveRealtimeReviewSession = {
-  readonly sendDecision: (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]) => void;
+  readonly sendDecision: (type: VoiceClientActionPlanDecisionMessage, planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]) => void;
 };
 
 type ActiveRealtimeFollowUpSession = {
@@ -98,7 +141,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             throw new VoiceRealtimeCancelledError();
           }
           socket.send(JSON.stringify({
-            type: 'audio.chunk',
+            type: voiceClientMessage.audioChunk,
             seq: seq++,
             sessionId,
             chunkId: `mobile-${seq}-${index + 1}`,
@@ -109,9 +152,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         if (signal?.aborted) {
           throw new VoiceRealtimeCancelledError();
         }
-        socket.send(JSON.stringify({ type: 'audio.end', seq: seq++, sessionId }));
+        socket.send(JSON.stringify({ type: voiceClientMessage.audioEnd, seq: seq++, sessionId }));
       };
-      const sendDecision = (type: 'action.plan.approve' | 'action.plan.cancel', planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []) => {
+      const sendDecision = (type: VoiceClientActionPlanDecisionMessage, planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []) => {
         if (!sessionId || settled) {
           throw new Error('Voice review session is not active.');
         }
@@ -125,7 +168,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           seq: seq++,
           sessionId,
           planId,
-          ...(type === 'action.plan.approve' && photos.length > 0 ? { photoAttachments: photos } : {})
+          ...(type === voiceClientMessage.actionPlanApprove && photos.length > 0 ? { photoAttachments: photos } : {})
         }));
       };
       const cancelSocketForUser = () => {
@@ -133,7 +176,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         try {
           if (sessionId) {
             socket.send(JSON.stringify({
-              type: 'session.cancel',
+              type: voiceClientMessage.sessionCancel,
               seq: seq++,
               sessionId,
               reason: 'user_cancelled'
@@ -207,7 +250,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       };
       socket.onopen = () => {
         socket.send(JSON.stringify({
-          type: 'session.start',
+          type: voiceClientMessage.sessionStart,
           seq: seq++,
           tenantId: input.tenantId,
           inventoryId: input.inventoryId,
@@ -229,24 +272,24 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           const message = parseServerMessage(event.data, thisTransport.directUploadPolicy);
           validateServerMessage(message, sessionId, lastServerSeq);
           lastServerSeq = message.seq;
-          if (message.type === 'session.started') {
+          if (message.type === voiceServerMessage.sessionStarted) {
             sessionId = message.sessionId;
           }
           await currentOnEvent(message);
-          if (message.type === 'session.started') {
+          if (message.type === voiceServerMessage.sessionStarted) {
             if (settled || options.signal?.aborted) {
               return;
             }
             sendAudioTurn(input.audioChunksBase64);
           }
-          if (message.type === 'assistant.response.completed') {
+          if (message.type === voiceServerMessage.assistantResponseCompleted) {
             lastResponseKind = message.response.kind;
           }
-          if (message.type === 'action.plan.proposed') {
+          if (message.type === voiceServerMessage.actionPlanProposed) {
             hasPendingActionPlan = true;
             this.activeReviewSession = { sendDecision };
           }
-          if (message.type === 'session.completed' && !hasPendingActionPlan) {
+          if (message.type === voiceServerMessage.sessionCompleted && !hasPendingActionPlan) {
             completed = true;
             if (lastResponseKind === 'clarification') {
               followUpPending = false;
@@ -308,7 +351,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             }
             settleResolve();
           }
-          if (message.type === 'action.plan.cancelled' || message.type === 'action.plan.executed' || message.type === 'action.plan.failed') {
+          if (
+            message.type === voiceServerMessage.actionPlanCancelled ||
+            message.type === voiceServerMessage.actionPlanExecuted ||
+            message.type === voiceServerMessage.actionPlanFailed
+          ) {
             completed = true;
             this.activeReviewSession = null;
             this.activeFollowUpSession = null;
@@ -318,7 +365,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             socket.close();
             settleResolve();
           }
-          if (message.type === 'session.cancelled') {
+          if (message.type === voiceServerMessage.sessionCancelled) {
             completed = true;
             this.activeReviewSession = null;
             this.activeFollowUpSession = null;
@@ -328,7 +375,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             socket.close();
             settleResolve();
           }
-          if (message.type === 'session.failed') {
+          if (message.type === voiceServerMessage.sessionFailed) {
             completed = true;
             this.activeReviewSession = null;
             this.activeFollowUpSession = null;
@@ -362,14 +409,14 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     if (!this.activeReviewSession) {
       throw new Error('Voice review session is not active.');
     }
-    this.activeReviewSession.sendDecision('action.plan.approve', planId, photos);
+    this.activeReviewSession.sendDecision(voiceClientMessage.actionPlanApprove, planId, photos);
   }
 
   async cancelActionPlan(planId: string): Promise<void> {
     if (!this.activeReviewSession) {
       throw new Error('Voice review session is not active.');
     }
-    this.activeReviewSession.sendDecision('action.plan.cancel', planId);
+    this.activeReviewSession.sendDecision(voiceClientMessage.actionPlanCancel, planId);
   }
 }
 
@@ -398,45 +445,45 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
   const message = JSON.parse(raw) as Record<string, unknown>;
   const metadata = eventMetadata(message);
   switch (message.type) {
-    case 'session.started':
+    case voiceServerMessage.sessionStarted:
       return {
         ...metadata,
-        type: 'session.started',
+        type: voiceServerMessage.sessionStarted,
         sessionId: stringField(message, 'sessionId'),
         acceptedInputAudio: acceptedInputAudioField(message),
         acceptedOutputAudio: acceptedOutputAudioField(message),
         acceptedCapabilities: acceptedCapabilitiesField(message)
       };
-    case 'session.failed':
+    case voiceServerMessage.sessionFailed:
       return {
         ...metadata,
-        type: 'session.failed',
+        type: voiceServerMessage.sessionFailed,
         sessionId: optionalStringField(message, 'sessionId'),
         code: stringField(message, 'code'),
         message: stringField(message, 'message')
       };
-    case 'transcript.delta':
-    case 'transcript.final':
+    case voiceServerMessage.transcriptDelta:
+    case voiceServerMessage.transcriptFinal:
       return { ...metadata, type: message.type, sessionId: stringField(message, 'sessionId'), text: stringField(message, 'text') };
-    case 'agent.progress':
+    case voiceServerMessage.agentProgress:
       return {
         ...metadata,
-        type: 'agent.progress',
+        type: voiceServerMessage.agentProgress,
         sessionId: stringField(message, 'sessionId'),
         status: stringField(message, 'status'),
         message: stringField(message, 'message')
       };
-    case 'agent.diagnostic':
+    case voiceServerMessage.agentDiagnostic:
       return {
         ...metadata,
-        type: 'agent.diagnostic',
+        type: voiceServerMessage.agentDiagnostic,
         sessionId: stringField(message, 'sessionId'),
         message: stringField(message, 'message'),
         detail: optionalStringField(message, 'detail')
       };
-    case 'tool.call.started':
-    case 'tool.call.completed':
-    case 'tool.call.failed':
+    case voiceServerMessage.toolCallStarted:
+    case voiceServerMessage.toolCallCompleted:
+    case voiceServerMessage.toolCallFailed:
       return {
         ...metadata,
         type: message.type,
@@ -448,17 +495,17 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         message: optionalStringField(message, 'message'),
         detail: optionalStringField(message, 'detail')
       };
-    case 'action.plan.proposed':
+    case voiceServerMessage.actionPlanProposed:
       return {
         ...metadata,
-        type: 'action.plan.proposed',
+        type: voiceServerMessage.actionPlanProposed,
         sessionId: stringField(message, 'sessionId'),
         actionPlan: actionPlanField(message)
       };
-    case 'action.plan.approved':
-    case 'action.plan.cancelled':
-    case 'action.plan.executed':
-    case 'action.plan.failed': {
+    case voiceServerMessage.actionPlanApproved:
+    case voiceServerMessage.actionPlanCancelled:
+    case voiceServerMessage.actionPlanExecuted:
+    case voiceServerMessage.actionPlanFailed: {
       const commandResults = actionPlanCommandResultsField(message);
       const attachmentUploadIntents = actionPlanAttachmentUploadIntentsField(message, directUploadPolicy);
       return {
@@ -472,15 +519,15 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         ...(attachmentUploadIntents ? { attachmentUploadIntents } : {})
       };
     }
-    case 'assistant.response.started':
-      return { ...metadata, type: 'assistant.response.started', sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
-    case 'assistant.response.delta':
+    case voiceServerMessage.assistantResponseStarted:
+      return { ...metadata, type: voiceServerMessage.assistantResponseStarted, sessionId: stringField(message, 'sessionId'), responseId: stringField(message, 'responseId') };
+    case voiceServerMessage.assistantResponseDelta:
       throw new Error('Voice server sent a reserved response delta event.');
-    case 'assistant.response.completed': {
+    case voiceServerMessage.assistantResponseCompleted: {
       const response = objectField(message, 'response');
       return {
         ...metadata,
-        type: 'assistant.response.completed',
+        type: voiceServerMessage.assistantResponseCompleted,
         sessionId: stringField(message, 'sessionId'),
         response: {
           kind: stringField(response, 'kind'),
@@ -489,25 +536,25 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         }
       };
     }
-    case 'tts.audio.started': {
+    case voiceServerMessage.textToSpeechAudioStarted: {
       const format = objectField(message, 'format');
-      return { ...metadata, type: 'tts.audio.started', sessionId: stringField(message, 'sessionId'), mimeType: stringField(format, 'mimeType') };
+      return { ...metadata, type: voiceServerMessage.textToSpeechAudioStarted, sessionId: stringField(message, 'sessionId'), mimeType: stringField(format, 'mimeType') };
     }
-    case 'tts.audio.chunk':
+    case voiceServerMessage.textToSpeechAudioChunk:
       return {
         ...metadata,
-        type: 'tts.audio.chunk',
+        type: voiceServerMessage.textToSpeechAudioChunk,
         sessionId: stringField(message, 'sessionId'),
         chunkId: stringField(message, 'chunkId'),
         audioBase64: stringField(message, 'audioBase64'),
         isFinalChunk: booleanField(message, 'isFinalChunk')
       };
-    case 'tts.audio.completed':
-      return { ...metadata, type: 'tts.audio.completed', sessionId: stringField(message, 'sessionId') };
-    case 'session.completed':
-      return { ...metadata, type: 'session.completed', sessionId: stringField(message, 'sessionId') };
-    case 'session.cancelled':
-      return { ...metadata, type: 'session.cancelled', sessionId: stringField(message, 'sessionId') };
+    case voiceServerMessage.textToSpeechAudioCompleted:
+      return { ...metadata, type: voiceServerMessage.textToSpeechAudioCompleted, sessionId: stringField(message, 'sessionId') };
+    case voiceServerMessage.sessionCompleted:
+      return { ...metadata, type: voiceServerMessage.sessionCompleted, sessionId: stringField(message, 'sessionId') };
+    case voiceServerMessage.sessionCancelled:
+      return { ...metadata, type: voiceServerMessage.sessionCancelled, sessionId: stringField(message, 'sessionId') };
     default:
       throw new Error(`Unsupported voice event: ${String(message.type)}`);
   }
@@ -524,14 +571,14 @@ function validateServerMessage(message: VoiceRealtimeEvent, currentSessionId: st
   if (message.seq <= lastServerSeq) {
     throw new Error('Voice server event sequence must be monotonic.');
   }
-  if (message.type === 'session.started') {
+  if (message.type === voiceServerMessage.sessionStarted) {
     if (currentSessionId && message.sessionId !== currentSessionId) {
       throw new Error('Voice server event changed session.');
     }
     return;
   }
   if (!currentSessionId) {
-    if (message.type !== 'session.failed') {
+    if (message.type !== voiceServerMessage.sessionFailed) {
       throw new Error('Voice server event arrived before session start.');
     }
     return;
@@ -739,26 +786,26 @@ function stringRecordField(message: Record<string, unknown>, field: string): Rea
 
 function actionPlanStatusField(
   message: Record<string, unknown>,
-  type: 'action.plan.approved' | 'action.plan.cancelled' | 'action.plan.executed' | 'action.plan.failed'
+  type: VoiceServerActionPlanTerminalMessage
 ): 'approved' | 'cancelled' | 'executed' | 'failed' {
   const status = stringField(message, 'status');
   switch (type) {
-    case 'action.plan.approved':
+    case voiceServerMessage.actionPlanApproved:
       if (status === 'approved') {
         return status;
       }
       break;
-    case 'action.plan.cancelled':
+    case voiceServerMessage.actionPlanCancelled:
       if (status === 'cancelled') {
         return status;
       }
       break;
-    case 'action.plan.executed':
+    case voiceServerMessage.actionPlanExecuted:
       if (status === 'executed') {
         return status;
       }
       break;
-    case 'action.plan.failed':
+    case voiceServerMessage.actionPlanFailed:
       if (status === 'failed') {
         return status;
       }
