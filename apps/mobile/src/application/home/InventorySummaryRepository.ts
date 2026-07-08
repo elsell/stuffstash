@@ -60,6 +60,7 @@ export type AssetBrowsePageInput = {
   readonly query: string;
   readonly cursor?: string;
   readonly limit?: number;
+  readonly tagIds?: readonly string[];
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly kind: AssetBrowseKindFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;

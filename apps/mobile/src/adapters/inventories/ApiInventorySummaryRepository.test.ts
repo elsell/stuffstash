@@ -184,6 +184,15 @@ class FakeInventoryApiClient {
     readonly details?: string;
   }> = [];
   searchedQuery: string | undefined;
+  searchAssetRequests: Array<{
+    readonly tenantId: string;
+    readonly query: string;
+    readonly cursor?: string;
+    readonly inventoryId?: string;
+    readonly tagIds?: readonly string[];
+    readonly lifecycleState?: string;
+    readonly checkoutState?: string;
+  }> = [];
   shouldFailAttachmentLookup = false;
   failedThumbnailAssetIds = new Set<string>();
 
@@ -592,11 +601,22 @@ class FakeInventoryApiClient {
     query: string,
     options?: {
       readonly cursor?: string;
+      readonly inventoryId?: string;
+      readonly tagIds?: readonly string[];
       readonly lifecycleState?: string;
       readonly checkoutState?: string;
     }
   ): Promise<Page<AssetSearchResult>> {
     this.searchedQuery = `${tenantId}:${query}`;
+    this.searchAssetRequests.push({
+      tenantId,
+      query,
+      cursor: options?.cursor,
+      inventoryId: options?.inventoryId,
+      tagIds: options?.tagIds,
+      lifecycleState: options?.lifecycleState,
+      checkoutState: options?.checkoutState
+    });
     const asset = this.assets[1];
 
     if (!asset) {
@@ -1076,6 +1096,32 @@ describe('ApiInventorySummaryRepository', () => {
       ]
     });
     expect(client.searchedQuery).toBe('tenant-home:filters');
+  });
+
+  it('searches selected-inventory assets with multi-tag filters without replacing the query', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.browseAssets({
+      query: '',
+      cursor: undefined,
+      limit: 10,
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      kind: 'item',
+      sort: 'updated_desc',
+      tagIds: ['tag-workshop', 'tag-camping']
+    });
+
+    expect(client.listAssetRequests).toHaveLength(2);
+    expect(client.searchAssetRequests[0]).toMatchObject({
+      tenantId: 'tenant-home',
+      query: '',
+      inventoryId: 'inventory-home',
+      tagIds: ['tag-workshop', 'tag-camping'],
+      lifecycleState: 'active',
+      checkoutState: 'any'
+    });
   });
 
   it('creates and searches assets through the generated client wrapper', async () => {

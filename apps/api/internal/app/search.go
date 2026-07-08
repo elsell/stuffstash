@@ -9,6 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -26,6 +27,7 @@ type SearchAssetsInput struct {
 	RequestID         string
 	Query             string
 	Mode              string
+	TagIDs            []assettag.ID
 	CustomAssetTypeID string
 	LifecycleState    string
 	CheckoutState     string
@@ -59,6 +61,10 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	if !ok {
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
+	tagIDs := normalizeSearchTagIDs(input.TagIDs)
+	if query.String() == "" && len(tagIDs) == 0 {
+		return SearchAssetsResult{}, ErrInvalidInput
+	}
 	mode, ok := search.NewMode(input.Mode)
 	if !ok {
 		return SearchAssetsResult{}, ErrInvalidInput
@@ -76,7 +82,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		return SearchAssetsResult{}, ErrInvalidInput
 	}
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
-	cursorScope := searchCursorScope(input.TenantID, input.InventoryIDs, query, mode, customAssetTypeID, lifecycleFilter, checkoutFilter)
+	cursorScope := searchCursorScope(input.TenantID, input.InventoryIDs, query, mode, tagIDs, customAssetTypeID, lifecycleFilter, checkoutFilter)
 	afterResultKey, err := decodePageCursor("search.assets", cursorScope, input.Cursor)
 	if err != nil {
 		return SearchAssetsResult{}, ErrInvalidInput
@@ -106,6 +112,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	items, err := a.search.SearchAssets(ctx, input.TenantID, inventoryIDs, ports.AssetSearchPageRequest{
 		Query:             query,
 		Mode:              mode,
+		TagIDs:            tagIDs,
 		CustomAssetTypeID: customAssetTypeID,
 		AfterResultKey:    afterResultKey,
 		Limit:             limit + 1,
@@ -135,6 +142,7 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 			"principal_id":  input.Principal.ID.String(),
 			"limit":         strconv.Itoa(limit),
 			"mode":          mode.String(),
+			"tag_filters":   strconv.Itoa(len(tagIDs)),
 			"inventory_ids": strconv.Itoa(len(inventoryIDs)),
 		},
 	})
@@ -266,6 +274,7 @@ func searchCursorScope(
 	inventoryIDs []inventory.InventoryID,
 	query search.Query,
 	mode search.Mode,
+	tagIDs []assettag.ID,
 	customAssetTypeID asset.CustomAssetTypeID,
 	lifecycleFilter ports.AssetLifecycleFilter,
 	checkoutFilter ports.AssetCheckoutStateFilter,
@@ -275,10 +284,34 @@ func searchCursorScope(
 		searchInventoryCursorScope(inventoryIDs),
 		query.String(),
 		mode.String(),
+		searchTagCursorScope(tagIDs),
 		customAssetTypeID.String(),
 		string(lifecycleFilter),
 		string(checkoutFilter),
 	}, ":")
+}
+
+func normalizeSearchTagIDs(raw []assettag.ID) []assettag.ID {
+	if len(raw) == 0 {
+		return nil
+	}
+	seen := map[assettag.ID]struct{}{}
+	ids := make([]assettag.ID, 0, len(raw))
+	for _, id := range raw {
+		trimmed := assettag.ID(strings.TrimSpace(id.String()))
+		if trimmed.String() == "" {
+			continue
+		}
+		if _, ok := seen[trimmed]; ok {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		ids = append(ids, trimmed)
+	}
+	sort.Slice(ids, func(left int, right int) bool {
+		return ids[left].String() < ids[right].String()
+	})
+	return ids
 }
 
 func searchCheckoutStateFilter(raw string) (ports.AssetCheckoutStateFilter, error) {
@@ -300,6 +333,18 @@ func searchInventoryCursorScope(inventoryIDs []inventory.InventoryID) string {
 	}
 	ids := make([]string, 0, len(inventoryIDs))
 	for _, id := range inventoryIDs {
+		ids = append(ids, id.String())
+	}
+	sort.Strings(ids)
+	return strings.Join(ids, ",")
+}
+
+func searchTagCursorScope(tagIDs []assettag.ID) string {
+	if len(tagIDs) == 0 {
+		return "*"
+	}
+	ids := make([]string, 0, len(tagIDs))
+	for _, id := range tagIDs {
 		ids = append(ids, id.String())
 	}
 	sort.Strings(ids)

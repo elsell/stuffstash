@@ -256,10 +256,11 @@ describe('SearchScreen presentation helpers', () => {
     expect(text).toContain('Showing 0 active things for "mug" · relevance order');
   });
 
-  it('renders colored tag browse filters alphabetically when filters are expanded', () => {
+  it('renders colored multi-select tag filters alphabetically when filters are expanded', () => {
     const selectedTags: string[] = [];
     const header = renderHeader({
       filtersExpanded: true,
+      selectedTagIds: ['tag-tools'],
       tagFilters: [
         { id: 'tag-tools', key: 'tools', label: 'Tools', color: '#2F80ED' },
         { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' },
@@ -267,22 +268,23 @@ describe('SearchScreen presentation helpers', () => {
         { id: 'tag-office', key: 'office', label: 'Office' },
         { id: 'tag-travel', key: 'travel', label: 'Travel' }
       ],
-      onSelectTag: (tag) => {
+      onToggleTag: (tag) => {
         selectedTags.push(tag.label);
       }
     });
 
     const text = collectText(header);
+    expect(text).toEqual(expect.arrayContaining(['Scope', 'Tags', 'Status', 'Checkout', 'Sort']));
     expect(text).toContain('Tags');
     expect(text).toContain('Tools');
     expect(text.indexOf('Camping')).toBeLessThan(text.indexOf('Kids'));
     expect(text.indexOf('Kids')).toBeLessThan(text.indexOf('Office'));
     expect(text.indexOf('Office')).toBeLessThan(text.indexOf('Tools'));
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by tag')).toBeTruthy();
     expect(findFirstByProp(header, 'accessibilityLabel', 'Tag filters')?.props?.horizontal).toBe(true);
 
-    const tools = findFirstByProp(header, 'accessibilityLabel', 'Search for tag Tools');
+    const tools = findFirstByProp(header, 'accessibilityLabel', 'Filter by tag Tools');
     expect(tools).toBeTruthy();
+    expect(tools?.props?.selected).toBe(true);
     const onPress = tools?.props?.onPress;
     if (typeof onPress !== 'function') {
       throw new Error('Missing tag filter press handler');
@@ -313,6 +315,28 @@ describe('SearchScreen presentation helpers', () => {
 
     expect(toggles).toEqual([true]);
   });
+
+  it('shows a clear filters action when expanded filters are active', () => {
+    const clears: string[] = [];
+    const header = renderHeader({
+      filtersExpanded: true,
+      scope: 'items',
+      selectedTagIds: ['tag-tools'],
+      onClearFilters: () => {
+        clears.push('filters');
+      }
+    });
+
+    const clearFilters = findFirstByProp(header, 'accessibilityLabel', 'Clear filters');
+    expect(clearFilters?.props?.disabled).toBe(false);
+    const onPress = clearFilters?.props?.onPress;
+    if (typeof onPress !== 'function') {
+      throw new Error('Missing clear filters handler');
+    }
+    onPress();
+
+    expect(clears).toEqual(['filters']);
+  });
 });
 
 function renderHeader(
@@ -326,6 +350,7 @@ function renderHeader(
     resultCount: 0,
     scope: 'all',
     selectedSurface: 'list',
+    selectedTagIds: [],
     filtersExpanded: false,
     searchInputFocused: false,
     searchInputRef: { current: null } as RefObject<TextInput | null>,
@@ -338,6 +363,8 @@ function renderHeader(
     onChangeScope: vi.fn(),
     onChangeSort: vi.fn(),
     onClearQuery: vi.fn(),
+    onClearFilters: vi.fn(),
+    onToggleTag: vi.fn(),
     onToggleFilters: vi.fn(),
     onSearchBlur: vi.fn(),
     onSearchFocus: vi.fn(),

@@ -43,18 +43,18 @@ vi.mock('../components/AssetCard', () => ({
 
 describe('asset tag search navigation', () => {
   it('builds tag-backed search route params for chip navigation', () => {
-    expect(assetTagSearchHref('Camp Kitchen')).toEqual({
+    expect(assetTagSearchHref({ id: 'tag-camp-kitchen', label: 'Camp Kitchen' })).toEqual({
       pathname: '/search',
-      params: { query: 'Camp Kitchen' }
+      params: { tagId: 'tag-camp-kitchen', tagLabel: 'Camp Kitchen' }
     });
   });
 
   it('pushes tag-backed search from shared tag chip navigation', () => {
     mocks.push.mockClear();
 
-    navigateToAssetTagSearch(router, { label: 'Emergency Kit' });
+    navigateToAssetTagSearch(router, { id: 'tag-emergency-kit', label: 'Emergency Kit' });
 
-    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref('Emergency Kit'));
+    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref({ id: 'tag-emergency-kit', label: 'Emergency Kit' }));
   });
 
   it('wires inventory asset card tag presses to tag-backed search', () => {
@@ -69,9 +69,9 @@ describe('asset tag search navigation', () => {
     }) as ElementNode;
 
     const card = renderFirstAssetCard(list);
-    (card.props?.onTagPress as (tag: { label: string }) => void)({ label: 'Camp Kitchen' });
+    (card.props?.onTagPress as (tag: { id: string; label: string }) => void)({ id: 'tag-camp-kitchen', label: 'Camp Kitchen' });
 
-    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref('Camp Kitchen'));
+    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref({ id: 'tag-camp-kitchen', label: 'Camp Kitchen' }));
   });
 
   it('wires location asset card tag presses to tag-backed search', () => {
@@ -89,9 +89,9 @@ describe('asset tag search navigation', () => {
     }) as ElementNode;
 
     const card = renderFirstAssetCard(list);
-    (card.props?.onTagPress as (tag: { label: string }) => void)({ label: 'Shop Tools' });
+    (card.props?.onTagPress as (tag: { id: string; label: string }) => void)({ id: 'tag-shop-tools', label: 'Shop Tools' });
 
-    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref('Shop Tools'));
+    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref({ id: 'tag-shop-tools', label: 'Shop Tools' }));
   });
 });
 

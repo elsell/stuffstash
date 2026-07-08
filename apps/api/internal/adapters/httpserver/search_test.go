@@ -21,7 +21,7 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 	if primaryPhoto == nil {
 		t.Fatalf("expected attachment search result to include primary photo, got %+v", attachmentSearch.Data[0].Asset)
 	}
-	if tags := attachmentSearch.Data[0].Asset.Tags; len(tags) != 1 || tags[0].DisplayName != "Workshop" || tags[0].Color != "#2F80ED" {
+	if tags := attachmentSearch.Data[0].Asset.Tags; !assetTagSummariesContain(tags, "Workshop", "#2F80ED") {
 		t.Fatalf("expected attachment search result to include assigned tags, got %+v", tags)
 	}
 	if primaryPhoto.FileName != "warranty-card.png" || primaryPhoto.ContentType != "image/png" {
@@ -49,6 +49,25 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 	exactTagKeySearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "shop-tools", "exact", "", "")
 	if len(exactTagKeySearch.Data) != 1 || exactTagKeySearch.Data[0].Asset.Title != "Cordless Drill" || exactTagKeySearch.Data[0].Matches[0].Field != "tag_key" {
 		t.Fatalf("expected exact tag key search to find drill, got %+v", exactTagKeySearch.Data)
+	}
+}
+
+func TestAssetSearchFiltersByMultipleTagIDsWithoutReplacingQuery(t *testing.T) {
+	fixture := newAssetSearchFixture(t)
+
+	campingOnly := searchAssetsWithTagIDs(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "", []string{fixture.campingTagID})
+	if !assetSearchContainsTitle(campingOnly.Data, "Cordless Drill") || !assetSearchContainsTitle(campingOnly.Data, "Drill Bits") {
+		t.Fatalf("expected single tag filter without query to browse camping assets, got %+v", campingOnly.Data)
+	}
+
+	textAndTag := searchAssetsWithTagIDs(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Drill", []string{fixture.campingTagID})
+	if !assetSearchContainsTitle(textAndTag.Data, "Cordless Drill") || !assetSearchContainsTitle(textAndTag.Data, "Drill Bits") {
+		t.Fatalf("expected tag filter to preserve and compose with text query, got %+v", textAndTag.Data)
+	}
+
+	intersection := searchAssetsWithTagIDs(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Drill", []string{fixture.workshopTagID, fixture.campingTagID})
+	if len(intersection.Data) != 1 || intersection.Data[0].Asset.Title != "Cordless Drill" {
+		t.Fatalf("expected multi-tag filter to require all selected tags, got %+v", intersection.Data)
 	}
 }
 
@@ -232,6 +251,7 @@ type assetSearchFixture struct {
 	medicineTypeID      string
 	drillAssetID        string
 	workshopTagID       string
+	campingTagID        string
 }
 
 func newAssetSearchFixture(t *testing.T) assetSearchFixture {
@@ -257,6 +277,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"serial-field", "audit-serial-field",
 			"expires-field", "audit-expires-field",
 			"workshop-tag", "audit-workshop-tag",
+			"camping-tag", "audit-camping-tag",
 			"drill-asset", "audit-drill-asset",
 			"drill-bits-asset", "audit-drill-bits-asset",
 			"aspirin-asset", "audit-aspirin-asset",
@@ -307,12 +328,21 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 		t.Fatalf("expected workshop tag status %d, got %d with body %s", http.StatusCreated, createWorkshopTag.Code, createWorkshopTag.Body.String())
 	}
 	workshopTag := decodeScenarioTag(t, createWorkshopTag)
+	createCampingTag := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/tags", "Bearer dev:owner", map[string]any{
+		"key":         "camping",
+		"displayName": "Camping",
+		"color":       "#2e7d32",
+	})
+	if createCampingTag.Code != http.StatusCreated {
+		t.Fatalf("expected camping tag status %d, got %d with body %s", http.StatusCreated, createCampingTag.Code, createCampingTag.Body.String())
+	}
+	campingTag := decodeScenarioTag(t, createCampingTag)
 
 	createDrill := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":        "item",
 		"title":       "Cordless Drill",
 		"description": "Driver kit",
-		"tagIds":      []string{workshopTag.Data.ID},
+		"tagIds":      []string{workshopTag.Data.ID, campingTag.Data.ID},
 		"customFields": map[string]any{
 			"serial": "bag-42",
 		},
@@ -323,8 +353,9 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 	drill := decodeAsset(t, createDrill)
 
 	createDrillBits := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/assets", "Bearer dev:owner", map[string]any{
-		"kind":  "item",
-		"title": "Drill Bits",
+		"kind":   "item",
+		"title":  "Drill Bits",
+		"tagIds": []string{campingTag.Data.ID},
 	})
 	if createDrillBits.Code != http.StatusCreated {
 		t.Fatalf("expected drill bits status %d, got %d with body %s", http.StatusCreated, createDrillBits.Code, createDrillBits.Body.String())
@@ -386,6 +417,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 		medicineTypeID:      medicineType.Data.ID,
 		drillAssetID:        drill.Data.ID,
 		workshopTagID:       workshopTag.Data.ID,
+		campingTagID:        campingTag.Data.ID,
 	}
 }
 
@@ -405,7 +437,7 @@ func TestAssetSearchRejectsMissingAndInvalidInput(t *testing.T) {
 		code          string
 	}{
 		{name: "missing auth", path: "/tenants/" + tenantID + "/search/assets?q=drill", status: http.StatusUnauthorized, code: "authentication_required"},
-		{name: "missing query", path: "/tenants/" + tenantID + "/search/assets", authorization: "Bearer dev:owner", status: http.StatusUnprocessableEntity, code: ""},
+		{name: "missing query", path: "/tenants/" + tenantID + "/search/assets", authorization: "Bearer dev:owner", status: http.StatusBadRequest, code: "invalid_request"},
 		{name: "invalid mode", path: "/tenants/" + tenantID + "/search/assets?q=drill&mode=wide", authorization: "Bearer dev:owner", status: http.StatusUnprocessableEntity, code: "invalid_request"},
 		{name: "invalid lifecycle", path: "/tenants/" + tenantID + "/search/assets?q=drill&lifecycleState=deleted", authorization: "Bearer dev:owner", status: http.StatusUnprocessableEntity, code: "invalid_request"},
 	}
@@ -446,6 +478,15 @@ func searchAssetsWithCheckoutState(t *testing.T, server *http.Server, tenantID s
 	return decodeAssetSearch(t, response)
 }
 
+func searchAssetsWithTagIDs(t *testing.T, server *http.Server, tenantID string, authorization string, query string, tagIDs []string) searchAssetListBody {
+	t.Helper()
+	response := searchAssetsResponseWithTagIDs(server, tenantID, "", authorization, query, "", "", "", "", tagIDs, 0, "")
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected search status %d, got %d with body %s", http.StatusOK, response.Code, response.Body.String())
+	}
+	return decodeAssetSearch(t, response)
+}
+
 func searchAssetsInInventory(t *testing.T, server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string) searchAssetListBody {
 	t.Helper()
 	return searchAssetsInInventoryWithLimit(t, server, tenantID, inventoryID, authorization, query, mode, customAssetTypeID, lifecycleState, 0, "")
@@ -465,6 +506,10 @@ func searchAssetsResponse(server *http.Server, tenantID string, inventoryID stri
 }
 
 func searchAssetsResponseWithCheckoutState(server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, checkoutState string, limit int, cursor string) *httptest.ResponseRecorder {
+	return searchAssetsResponseWithTagIDs(server, tenantID, inventoryID, authorization, query, mode, customAssetTypeID, lifecycleState, checkoutState, nil, limit, cursor)
+}
+
+func searchAssetsResponseWithTagIDs(server *http.Server, tenantID string, inventoryID string, authorization string, query string, mode string, customAssetTypeID string, lifecycleState string, checkoutState string, tagIDs []string, limit int, cursor string) *httptest.ResponseRecorder {
 	values := url.Values{}
 	if inventoryID != "" {
 		values.Set("inventoryId", inventoryID)
@@ -483,6 +528,9 @@ func searchAssetsResponseWithCheckoutState(server *http.Server, tenantID string,
 	}
 	if checkoutState != "" {
 		values.Set("checkoutState", checkoutState)
+	}
+	for _, tagID := range tagIDs {
+		values.Add("tagIds", tagID)
 	}
 	if limit > 0 {
 		values.Set("limit", strconv.Itoa(limit))

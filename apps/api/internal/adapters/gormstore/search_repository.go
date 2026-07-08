@@ -94,7 +94,10 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 			continue
 		}
 		matches := search.MatchAsset(assetDocument(item, assetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())], assignedTags[item.ID], attachments[item.ID.String()]), page.Query, page.Mode)
-		if len(matches) == 0 {
+		if !assignedTagsContainAll(assignedTags[item.ID], page.TagIDs) {
+			continue
+		}
+		if page.Query.String() != "" && len(matches) == 0 {
 			continue
 		}
 		result := ports.AssetSearchResult{
@@ -121,6 +124,22 @@ func (s Store) SearchAssets(ctx context.Context, tenantID tenant.ID, inventoryID
 		results = results[:page.Limit]
 	}
 	return results, nil
+}
+
+func assignedTagsContainAll(assignedTags []assettag.Tag, tagIDs []assettag.ID) bool {
+	if len(tagIDs) == 0 {
+		return true
+	}
+	assigned := map[assettag.ID]struct{}{}
+	for _, tag := range assignedTags {
+		assigned[tag.ID] = struct{}{}
+	}
+	for _, id := range tagIDs {
+		if _, ok := assigned[id]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (s Store) searchOpenCheckouts(ctx context.Context, tenantID tenant.ID, inventoryIDValues []string) (map[string]asset.Checkout, error) {

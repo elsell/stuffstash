@@ -1,7 +1,10 @@
-export function assetTagSearchHref(label: string) {
+export function assetTagSearchHref(tag: AssetTagSearchSource) {
+  const params = tag.id
+    ? { tagId: tag.id, tagLabel: tag.label }
+    : { query: tag.label };
   return {
     pathname: '/search',
-    params: { query: label }
+    params
   } as const;
 }
 
@@ -10,9 +13,10 @@ export type AssetTagSearchNavigator = {
 };
 
 export type AssetTagSearchSource = {
+  readonly id?: string;
   readonly label: string;
 };
 
 export function navigateToAssetTagSearch(navigator: AssetTagSearchNavigator, tag: AssetTagSearchSource): void {
-  navigator.push(assetTagSearchHref(tag.label));
+  navigator.push(assetTagSearchHref(tag));
 }

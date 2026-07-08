@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -34,7 +34,6 @@ import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQu
 import type { InventoryAssetTagsQuery, AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
-import { AssetTagChips } from '../components/AssetTagChips';
 import { colors, radius, spacing } from '../theme/tokens';
 import {
   BrowseScope,
@@ -51,6 +50,7 @@ import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 type SearchScreenProps = {
   readonly initialScope?: BrowseScope;
   readonly initialQuery?: string;
+  readonly initialTagIds?: readonly string[];
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
@@ -82,6 +82,7 @@ type BrowseListItem =
   | { readonly type: 'place'; readonly location: LocationBrowserItemViewModel };
 
 const pageSize = 20;
+const compactControlHitSlop = { top: 6, bottom: 6, left: 6, right: 6 } as const;
 
 const emptyResults: BrowseResults = {
   scope: 'all',
@@ -94,6 +95,7 @@ const emptyResults: BrowseResults = {
 export function SearchScreen({
   initialScope = 'all',
   initialQuery = '',
+  initialTagIds = [],
   addAssetPhotosCommand,
   assetCheckoutCommand,
   assetDetailQuery,
@@ -114,6 +116,7 @@ export function SearchScreen({
   const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
   const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
   const [tagFilters, setTagFilters] = useState<readonly AssetTagOptionViewModel[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(initialTagIds);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -135,10 +138,12 @@ export function SearchScreen({
 
   useEffect(() => {
     const nextQuery = initialQuery.trim();
+    const nextTagIds = uniqueTagIds(initialTagIds);
     setScope(initialScope);
     setQuery(nextQuery);
-    void loadFirstPage({ query: nextQuery, scope: initialScope });
-  }, [initialQuery, initialScope, locationsQuery, searchAssetsQuery]);
+    setSelectedTagIds(nextTagIds);
+    void loadFirstPage({ query: nextQuery, scope: initialScope, tagIds: nextTagIds });
+  }, [initialQuery, initialScope, initialTagIds.join('|'), locationsQuery, searchAssetsQuery]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -167,6 +172,7 @@ export function SearchScreen({
     readonly checkoutState?: AssetBrowseCheckoutFilter;
     readonly scope?: BrowseScope;
     readonly sort?: AssetBrowseSort;
+    readonly tagIds?: readonly string[];
   } = {}): Promise<void> {
     const requestId = nextRequestId(requestSequence);
     const nextQuery = next.query ?? query;
@@ -174,6 +180,7 @@ export function SearchScreen({
     const nextCheckoutState = next.checkoutState ?? checkoutState;
     const nextScope = next.scope ?? scope;
     const nextSort = next.sort ?? sort;
+    const nextTagIds = next.tagIds ?? selectedTagIds;
     const loadingResults: BrowseResults = {
       scope: nextScope,
       query: nextQuery.trim(),
@@ -192,7 +199,8 @@ export function SearchScreen({
         lifecycleState: nextLifecycleState,
         checkoutState: nextCheckoutState,
         scope: nextScope,
-        sort: nextSort
+        sort: nextSort,
+        tagIds: nextTagIds
       });
       if (isCurrentRequest(requestSequence, requestId)) {
         setState({ status: 'ready', results });
@@ -214,7 +222,8 @@ export function SearchScreen({
     checkoutState: nextCheckoutState,
     query: nextQuery,
     scope: nextScope,
-    sort: nextSort
+    sort: nextSort,
+    tagIds
   }: {
     readonly cursor?: string;
     readonly lifecycleState: AssetBrowseLifecycleFilter;
@@ -222,6 +231,7 @@ export function SearchScreen({
     readonly query: string;
     readonly scope: BrowseScope;
     readonly sort: AssetBrowseSort;
+    readonly tagIds: readonly string[];
   }): Promise<BrowseResults> {
     if (nextScope === 'places') {
       const [results, locations] = await Promise.all([
@@ -232,7 +242,8 @@ export function SearchScreen({
           checkoutState: nextCheckoutState,
           kind: browseScopeToKind(nextScope),
           sort: nextSort,
-          limit: pageSize
+          limit: pageSize,
+          tagIds
         }),
         locationsQuery.execute()
       ]);
@@ -253,7 +264,8 @@ export function SearchScreen({
       checkoutState: nextCheckoutState,
       kind: browseScopeToKind(nextScope),
       sort: nextSort,
-      limit: pageSize
+      limit: pageSize,
+      tagIds
     });
 
     return {
@@ -276,7 +288,8 @@ export function SearchScreen({
         lifecycleState,
         checkoutState,
         scope,
-        sort
+        sort,
+        tagIds: selectedTagIds
       });
       if (isCurrentRequest(requestSequence, requestId)) {
         setQuery(state.results.query);
@@ -318,7 +331,8 @@ export function SearchScreen({
         lifecycleState,
         checkoutState,
         scope,
-        sort
+        sort,
+        tagIds: selectedTagIds
       });
       if (isCurrentRequest(requestSequence, requestId)) {
         setState({
@@ -356,8 +370,9 @@ export function SearchScreen({
   }
 
   function searchByTag(tag: AssetTagOptionViewModel): void {
-    setQuery(tag.label);
-    void loadFirstPage({ query: tag.label });
+    const nextTagIds = toggleTagId(selectedTagIds, tag.id);
+    setSelectedTagIds(nextTagIds);
+    void loadFirstPage({ tagIds: nextTagIds });
   }
 
   function updateScope(nextScope: BrowseScope): void {
@@ -378,6 +393,21 @@ export function SearchScreen({
   function updateSort(nextSort: AssetBrowseSort): void {
     setSort(nextSort);
     void loadFirstPage({ sort: nextSort });
+  }
+
+  function clearFilters(): void {
+    setScope('all');
+    setLifecycleState('active');
+    setCheckoutState('any');
+    setSort('updated_desc');
+    setSelectedTagIds([]);
+    void loadFirstPage({
+      scope: 'all',
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      sort: 'updated_desc',
+      tagIds: []
+    });
   }
 
   const listItems = toBrowseListItems(state.results);
@@ -438,6 +468,7 @@ export function SearchScreen({
             sort={sort}
             statusMessage={state.status === 'error' ? state.message : undefined}
             submittedQuery={state.results.query}
+            selectedTagIds={selectedTagIds}
             tagFilters={tagFilters}
             onChangeSurface={setSurface}
             onChangeLifecycleState={updateLifecycleState}
@@ -446,7 +477,8 @@ export function SearchScreen({
             onChangeScope={updateScope}
             onChangeSort={updateSort}
             onClearQuery={clearSearch}
-            onSelectTag={searchByTag}
+            onClearFilters={clearFilters}
+            onToggleTag={searchByTag}
             onSearchBlur={() => setIsSearchFocused(false)}
             onSearchFocus={() => setIsSearchFocused(true)}
             onSubmit={submitSearch}
@@ -485,6 +517,7 @@ export function SearchHeader({
   resultCount,
   scope,
   selectedSurface,
+  selectedTagIds,
   searchInputRef,
   searchInputFocused,
   sort,
@@ -498,7 +531,8 @@ export function SearchHeader({
   onChangeScope,
   onChangeSort,
   onClearQuery,
-  onSelectTag,
+  onClearFilters,
+  onToggleTag,
   onSearchBlur,
   onSearchFocus,
   onSubmit,
@@ -512,6 +546,7 @@ export function SearchHeader({
   readonly resultCount: number;
   readonly scope: BrowseScope;
   readonly selectedSurface: InventoryMapSurface;
+  readonly selectedTagIds: readonly string[];
   readonly searchInputRef: RefObject<TextInput | null>;
   readonly searchInputFocused: boolean;
   readonly sort: AssetBrowseSort;
@@ -525,7 +560,8 @@ export function SearchHeader({
   readonly onChangeScope: (scope: BrowseScope) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
   readonly onClearQuery: () => void;
-  readonly onSelectTag?: (tag: AssetTagOptionViewModel) => void;
+  readonly onClearFilters: () => void;
+  readonly onToggleTag?: (tag: AssetTagOptionViewModel) => void;
   readonly onSearchBlur: () => void;
   readonly onSearchFocus: () => void;
   readonly onSubmit: () => void;
@@ -539,6 +575,8 @@ export function SearchHeader({
     sort
   });
   const sortedTagFilters = [...(tagFilters ?? [])].sort(compareTagOptions);
+  const selectedTagIdSet = new Set(selectedTagIds);
+  const filtersActive = hasActiveFilters({ checkoutState, lifecycleState, scope, sort, tagCount: selectedTagIds.length });
 
   return (
     <View>
@@ -583,6 +621,7 @@ export function SearchHeader({
           accessibilityLabel={filtersExpanded ? 'Hide filters' : 'Show filters'}
           accessibilityRole="button"
           accessibilityState={{ expanded: filtersExpanded }}
+          hitSlop={compactControlHitSlop}
           onPress={() => onToggleFilters(!filtersExpanded)}
           style={styles.filterToggle}
         >
@@ -590,38 +629,53 @@ export function SearchHeader({
           <Text style={styles.filterToggleText}>Filters</Text>
         </Pressable>
         <Text numberOfLines={1} style={styles.filterSummaryText}>
-          {filterSummary({ checkoutState, lifecycleState, scope, sort })}
+          {filterSummary({ checkoutState, lifecycleState, scope, sort, tagCount: selectedTagIds.length })}
         </Text>
       </View>
       {filtersExpanded ? (
         <View>
-          <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
-          {sortedTagFilters.length > 0 && onSelectTag ? (
-            <View style={styles.tagFilterBlock} accessibilityLabel="Browse by tag">
-              <Text style={styles.tagFilterLabel}>Tags</Text>
+          <View style={styles.filterActionsRow}>
+            <Text style={styles.filterActionsTitle}>Filters</Text>
+            <Pressable
+              accessibilityLabel="Clear filters"
+              accessibilityRole="button"
+              disabled={!filtersActive}
+              hitSlop={compactControlHitSlop}
+              onPress={onClearFilters}
+              style={[styles.clearFiltersButton, !filtersActive ? styles.clearFiltersButtonDisabled : null]}
+            >
+              <Text style={[styles.clearFiltersText, !filtersActive ? styles.clearFiltersTextDisabled : null]}>
+                Clear filters
+              </Text>
+            </Pressable>
+          </View>
+          <FilterSection title="Scope">
+            <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
+          </FilterSection>
+          {sortedTagFilters.length > 0 && onToggleTag ? (
+            <FilterSection title="Tags">
               <ScrollView
                 accessibilityLabel="Tag filters"
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.tagFilterScroller}
+                contentContainerStyle={styles.optionScroller}
               >
-                <AssetTagChips
-                  tags={sortedTagFilters.map((tag) => ({ id: tag.id, label: tag.label, color: tag.color }))}
-                  compact
-                  onTagPress={(tag) => {
-                    const selected = sortedTagFilters.find((candidate) => candidate.id === tag.id);
-                    if (selected) {
-                      onSelectTag(selected);
-                    }
-                  }}
-                />
+                {sortedTagFilters.map((tag) => (
+                  <OptionChip
+                    key={tag.id}
+                    label={tag.label}
+                    color={tag.color}
+                    selected={selectedTagIdSet.has(tag.id)}
+                    accessibilityLabel={`Filter by tag ${tag.label}`}
+                    onPress={() => onToggleTag(tag)}
+                  />
+                ))}
               </ScrollView>
-            </View>
+            </FilterSection>
           ) : null}
           <RefinementBar
             lifecycleState={lifecycleState}
             checkoutState={checkoutState}
-            scope={scope}
             searchMode={submittedQuery.trim().length > 0}
             sort={sort}
             onChangeLifecycleState={onChangeLifecycleState}
@@ -643,18 +697,47 @@ function filterSummary({
   checkoutState,
   lifecycleState,
   scope,
-  sort
+  sort,
+  tagCount
 }: {
   readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly scope: BrowseScope;
   readonly sort: AssetBrowseSort;
+  readonly tagCount: number;
 }): string {
   const scopeLabel = buildBrowseScopeOptions().find((option) => option.value === scope)?.label ?? 'All';
-  const lifecycleLabel = lifecycleState === 'active' ? 'Active' : lifecycleState === 'archived' ? 'Archived' : 'All status';
-  const checkoutLabel = checkoutState === 'checked_out' ? 'Checked out' : checkoutState === 'available' ? 'Available' : 'Any checkout';
+  const tagLabel = tagCount === 0 ? 'No tags' : tagCount === 1 ? '1 tag' : `${tagCount} tags`;
+  const lifecycleLabel = lifecycleState === 'active' ? 'Active' : lifecycleState === 'archived' ? 'Archived' : 'All';
+  const checkoutLabel = checkoutState === 'checked_out' ? 'Checked out' : checkoutState === 'available' ? 'Available' : 'Any';
   const sortLabel = sort === 'id_asc' ? 'Stable' : 'Recent';
-  return `${scopeLabel} · ${lifecycleLabel} · ${checkoutLabel} · ${sortLabel}`;
+  return `${scopeLabel} · ${tagLabel} · ${lifecycleLabel} · ${checkoutLabel} · ${sortLabel}`;
+}
+
+function hasActiveFilters({
+  checkoutState,
+  lifecycleState,
+  scope,
+  sort,
+  tagCount
+}: {
+  readonly checkoutState: AssetBrowseCheckoutFilter;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly scope: BrowseScope;
+  readonly sort: AssetBrowseSort;
+  readonly tagCount: number;
+}): boolean {
+  return scope !== 'all' || lifecycleState !== 'active' || checkoutState !== 'any' || sort !== 'updated_desc' || tagCount > 0;
+}
+
+function uniqueTagIds(tagIds: readonly string[]): readonly string[] {
+  return [...new Set(tagIds.map((id) => id.trim()).filter((id) => id.length > 0))];
+}
+
+function toggleTagId(tagIds: readonly string[], tagId: string): readonly string[] {
+  return tagIds.includes(tagId)
+    ? tagIds.filter((id) => id !== tagId)
+    : [...tagIds, tagId];
 }
 
 function ScopeControl({
@@ -665,21 +748,16 @@ function ScopeControl({
   readonly onChangeScope: (scope: BrowseScope) => void;
 }) {
   return (
-    <View style={styles.scopeControl}>
+    <View style={styles.optionGroup}>
       {buildBrowseScopeOptions().map((option) => {
         const selected = option.value === selectedScope;
         return (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
+          <OptionChip
             key={option.value}
+            label={option.label}
+            selected={selected}
             onPress={() => onChangeScope(option.value)}
-            style={[styles.scopeButton, selected ? styles.scopeButtonSelected : null]}
-          >
-            <Text style={[styles.scopeText, selected ? styles.scopeTextSelected : null]}>
-              {option.label}
-            </Text>
-          </Pressable>
+          />
         );
       })}
     </View>
@@ -690,7 +768,6 @@ function RefinementBar({
   checkoutState,
   lifecycleState,
   searchMode,
-  scope,
   sort,
   onChangeCheckoutState,
   onChangeLifecycleState,
@@ -699,7 +776,6 @@ function RefinementBar({
   readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly searchMode: boolean;
-  readonly scope: BrowseScope;
   readonly sort: AssetBrowseSort;
   readonly onChangeCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
   readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
@@ -709,76 +785,75 @@ function RefinementBar({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.refinementBar}
+      contentContainerStyle={styles.refinementSections}
     >
-      <View style={styles.refinementIcon}>
-        <SlidersHorizontal color={colors.textMuted} size={17} strokeWidth={2.5} />
-      </View>
-      <FilterChip
-        label="Active"
-        selected={lifecycleState === 'active'}
-        onPress={() => onChangeLifecycleState('active')}
-      />
-      <FilterChip
-        label="Archived"
-        selected={lifecycleState === 'archived'}
-        onPress={() => onChangeLifecycleState('archived')}
-      />
-      <FilterChip
-        label="All status"
-        selected={lifecycleState === 'all'}
-        onPress={() => onChangeLifecycleState('all')}
-      />
-      <View style={styles.refinementDivider} />
-      <FilterChip
-        label="Any checkout"
-        selected={checkoutState === 'any'}
-        onPress={() => onChangeCheckoutState('any')}
-      />
-      <FilterChip
-        label="Checked out"
-        selected={checkoutState === 'checked_out'}
-        onPress={() => onChangeCheckoutState('checked_out')}
-      />
-      <FilterChip
-        label="Available"
-        selected={checkoutState === 'available'}
-        onPress={() => onChangeCheckoutState('available')}
-      />
+      <FilterSection title="Status" horizontal>
+        <OptionChip label="Active" selected={lifecycleState === 'active'} onPress={() => onChangeLifecycleState('active')} />
+        <OptionChip label="Archived" selected={lifecycleState === 'archived'} onPress={() => onChangeLifecycleState('archived')} />
+        <OptionChip label="All" selected={lifecycleState === 'all'} onPress={() => onChangeLifecycleState('all')} />
+      </FilterSection>
+      <FilterSection title="Checkout" horizontal>
+        <OptionChip label="Any" selected={checkoutState === 'any'} onPress={() => onChangeCheckoutState('any')} />
+        <OptionChip label="Checked out" selected={checkoutState === 'checked_out'} onPress={() => onChangeCheckoutState('checked_out')} />
+        <OptionChip label="Available" selected={checkoutState === 'available'} onPress={() => onChangeCheckoutState('available')} />
+      </FilterSection>
       {!searchMode ? (
-        <>
-          <View style={styles.refinementDivider} />
-          <FilterChip
-            label="Recent"
-            selected={sort === 'updated_desc'}
-            onPress={() => onChangeSort('updated_desc')}
-          />
-          <FilterChip
-            label="Stable"
-            selected={sort === 'id_asc'}
-            onPress={() => onChangeSort('id_asc')}
-          />
-        </>
+        <FilterSection title="Sort" horizontal>
+          <OptionChip label="Recent" selected={sort === 'updated_desc'} onPress={() => onChangeSort('updated_desc')} />
+          <OptionChip label="Stable" selected={sort === 'id_asc'} onPress={() => onChangeSort('id_asc')} />
+        </FilterSection>
       ) : null}
     </ScrollView>
   );
 }
 
-function FilterChip({
+function FilterSection({
+  title,
+  children,
+  horizontal = false,
+  accessibilityLabel
+}: {
+  readonly title: string;
+  readonly children: ReactNode;
+  readonly horizontal?: boolean;
+  readonly accessibilityLabel?: string;
+}) {
+  return (
+    <View style={horizontal ? styles.filterSectionHorizontal : styles.filterSection} accessibilityLabel={accessibilityLabel}>
+      <Text style={styles.filterSectionTitle}>{title}</Text>
+      <View style={horizontal ? styles.optionGroupHorizontal : undefined}>
+        {children}
+      </View>
+    </View>
+  );
+}
+
+function OptionChip({
   label,
   selected,
+  color,
+  accessibilityLabel,
   onPress
 }: {
   readonly label: string;
   readonly selected: boolean;
+  readonly color?: string;
+  readonly accessibilityLabel?: string;
   readonly onPress: () => void;
 }) {
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      hitSlop={compactControlHitSlop}
       onPress={onPress}
-      style={[styles.filterChip, selected ? styles.filterChipSelected : null]}
+      style={[
+        styles.filterChip,
+        color ? { borderColor: color } : null,
+        selected ? styles.filterChipSelected : null,
+        selected && color ? { backgroundColor: `${color}1F`, borderColor: color } : null
+      ]}
     >
       <Text style={[styles.filterChipText, selected ? styles.filterChipTextSelected : null]}>
         {label}
@@ -934,37 +1009,28 @@ const styles = StyleSheet.create({
     minWidth: 32,
     justifyContent: 'center'
   },
-  scopeControl: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    flexDirection: 'row',
-    gap: 2,
-    marginTop: spacing.xs,
-    padding: 2
+  filterSection: {
+    gap: spacing.xs,
+    marginTop: spacing.xs
   },
-  scopeButton: {
-    alignItems: 'center',
-    borderRadius: radius.sm,
-    flex: 1,
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs
+  filterSectionHorizontal: {
+    gap: spacing.xs,
+    marginRight: spacing.md
   },
-  scopeButtonSelected: {
-    backgroundColor: colors.surface,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }
-  },
-  scopeText: {
+  filterSectionTitle: {
     color: colors.textMuted,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0
   },
-  scopeTextSelected: {
-    color: colors.text
+  optionGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs
+  },
+  optionGroupHorizontal: {
+    flexDirection: 'row',
+    gap: spacing.xs
   },
   filterSummaryRow: {
     alignItems: 'center',
@@ -980,7 +1046,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.xs,
-    minHeight: 38,
+    minHeight: 34,
     paddingHorizontal: spacing.sm
   },
   filterToggleText: {
@@ -996,37 +1062,49 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0
   },
-  refinementBar: {
+  filterActionsRow: {
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingBottom: spacing.xs,
-    paddingTop: spacing.xs
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm
   },
-  tagFilterBlock: {
-    gap: spacing.xs,
-    marginTop: spacing.xs
-  },
-  tagFilterScroller: {
-    minWidth: '100%',
-    paddingBottom: 2
-  },
-  tagFilterLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
+  filterActionsTitle: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0
   },
-  refinementIcon: {
+  clearFiltersButton: {
     alignItems: 'center',
-    height: 44,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    borderWidth: 1,
     justifyContent: 'center',
-    width: 28
+    minHeight: 32,
+    paddingHorizontal: spacing.sm
   },
-  refinementDivider: {
-    backgroundColor: colors.border,
-    height: 22,
-    marginHorizontal: spacing.xs,
-    width: 1
+  clearFiltersButtonDisabled: {
+    opacity: 0.5
+  },
+  clearFiltersText: {
+    color: colors.action,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0
+  },
+  clearFiltersTextDisabled: {
+    color: colors.textMuted
+  },
+  refinementSections: {
+    gap: spacing.sm,
+    paddingBottom: spacing.xs,
+    paddingTop: spacing.sm
+  },
+  optionScroller: {
+    gap: spacing.xs,
+    minWidth: '100%',
+    paddingBottom: 2
   },
   filterChip: {
     alignItems: 'center',
@@ -1034,7 +1112,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
-    minHeight: 44,
+    minHeight: 34,
     justifyContent: 'center',
     paddingHorizontal: spacing.sm
   },

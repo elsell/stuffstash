@@ -253,6 +253,7 @@ export interface SearchAssetsOptions {
   limit?: number;
   cursor?: string;
   inventoryId?: string;
+  tagIds?: readonly string[];
   lifecycleState?: AssetLifecycleFilter;
   mode?: SearchMode;
   checkoutState?: 'any' | 'checked_out' | 'available';
@@ -868,6 +869,7 @@ export class StuffStashClient {
             limit,
             cursor: options.cursor,
             inventoryId: options.inventoryId,
+            tagIds: options.tagIds,
             lifecycleState: options.lifecycleState ?? 'active',
             mode: options.mode ?? 'fuzzy',
             checkoutState: options.checkoutState

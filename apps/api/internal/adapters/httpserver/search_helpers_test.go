@@ -53,3 +53,12 @@ func assetSearchContainsTitle(results []searchAssetResultResponse, title string)
 	}
 	return false
 }
+
+func assetTagSummariesContain(tags []assetTagSummary, displayName string, color string) bool {
+	for _, tag := range tags {
+		if tag.DisplayName == displayName && tag.Color == color {
+			return true
+		}
+	}
+	return false
+}

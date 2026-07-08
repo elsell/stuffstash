@@ -48,8 +48,11 @@ func (s *Store) SearchAssets(_ context.Context, tenantID tenant.ID, inventoryIDs
 		}
 
 		assignedTags := s.assetTagsByAssetLocked(tenantID, inventory.InventoryID(item.InventoryID.String()), item.ID)
+		if !assignedTagsContainAll(assignedTags, page.TagIDs) {
+			continue
+		}
 		matches := search.MatchAsset(assetDocument(item, s.customAssetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())], assignedTags, searchAttachmentsForAsset(item, s.attachments)), page.Query, page.Mode)
-		if len(matches) == 0 {
+		if page.Query.String() != "" && len(matches) == 0 {
 			continue
 		}
 		result := ports.AssetSearchResult{
@@ -76,6 +79,22 @@ func (s *Store) SearchAssets(_ context.Context, tenantID tenant.ID, inventoryIDs
 		results = results[:page.Limit]
 	}
 	return results, nil
+}
+
+func assignedTagsContainAll(assignedTags []assettag.Tag, tagIDs []assettag.ID) bool {
+	if len(tagIDs) == 0 {
+		return true
+	}
+	assigned := map[assettag.ID]struct{}{}
+	for _, tag := range assignedTags {
+		assigned[tag.ID] = struct{}{}
+	}
+	for _, id := range tagIDs {
+		if _, ok := assigned[id]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Store) currentOpenCheckoutForSearch(item asset.Asset) (asset.Checkout, bool) {

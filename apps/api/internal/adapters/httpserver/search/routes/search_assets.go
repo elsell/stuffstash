@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -33,6 +34,7 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 			RequestID:         input.RequestID,
 			Query:             input.Query,
 			Mode:              input.Mode,
+			TagIDs:            searchTagIDs(input.TagIDs),
 			CustomAssetTypeID: input.CustomAssetTypeID,
 			LifecycleState:    input.LifecycleState,
 			CheckoutState:     input.CheckoutState,
@@ -50,6 +52,14 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 			},
 		}, nil
 	}, huma.OperationTags("search"), shared.SecuredOperation)
+}
+
+func searchTagIDs(values []string) []assettag.ID {
+	ids := make([]assettag.ID, 0, len(values))
+	for _, value := range values {
+		ids = append(ids, assettag.ID(value))
+	}
+	return ids
 }
 
 func Register(api huma.API, application app.App) {

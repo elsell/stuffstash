@@ -135,7 +135,8 @@ describe('SearchAssetsQuery', () => {
         checkoutState: 'checked_out',
         kind: 'item',
         sort: 'id_asc',
-        limit: 10
+        limit: 10,
+        tagIds: ['tag-workshop', 'tag-camping']
       })
     ).resolves.toMatchObject({
       query: 'ibu',
@@ -151,7 +152,8 @@ describe('SearchAssetsQuery', () => {
         checkoutState: 'checked_out',
         kind: 'item',
         sort: 'id_asc',
-        limit: 10
+        limit: 10,
+        tagIds: ['tag-workshop', 'tag-camping']
       }
     ]);
   });

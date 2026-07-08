@@ -1034,6 +1034,33 @@ describe('StuffStashClient', () => {
     );
   });
 
+  it('passes assigned tag filters to asset search', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        return Response.json({
+          data: [],
+          meta: { pagination: { limit: 20, nextCursor: null, hasMore: false } }
+        });
+      }
+    });
+
+    await client.searchAssets('tenant-one', 'drill', {
+      inventoryId: 'inventory-one',
+      tagIds: ['tag-tools', 'tag-camping']
+    });
+
+    expect(requests[0]?.url).toContain('/tenants/tenant-one/search/assets?');
+    expect(requests[0]?.url).toContain('q=drill');
+    expect(requests[0]?.url).toContain('inventoryId=inventory-one');
+    expect(requests[0]?.url).toContain('tagIds=tag-tools');
+    expect(requests[0]?.url).toContain('tagIds=tag-camping');
+  });
+
   it('manages direct inventory access grants through generated paths', async () => {
     const requests: Request[] = [];
     const grant = {

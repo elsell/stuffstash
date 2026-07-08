@@ -78,6 +78,7 @@ Required queries:
 - `AssetTagsByAsset`: active assigned tags for one asset.
 - `AssetTagsByAssets`: active assigned tags for asset list responses.
 - Asset search must match assigned active tag display names and keys for assets the caller is authorized to search.
+- Asset search must support active tag ID facets. When tag IDs are supplied, the result set must include only assets assigned to every selected active tag, while preserving any text query, inventory, lifecycle, checkout, kind, authorization, and pagination filters.
 
 ## REST API
 
@@ -103,8 +104,11 @@ Asset detail and list responses must include:
 Asset search results:
 
 - Must include assets when the search query matches an assigned active tag display name or tag key.
+- Must accept `tagIds` as a repeatable query filter. Tag filters compose with the text query and other filters; they must not replace or rewrite the text query.
+- Must return matching tagged assets when `tagIds` are supplied and the text query is empty, so clients can browse all assets by selected tags.
 - Must include the same compact assigned tag objects on each returned asset summary that asset list and detail responses expose.
 - Must not match archived tags.
+- Must not use archived tag assignments to satisfy `tagIds` filters.
 - Must preserve the existing tenant, inventory, lifecycle, checkout, and authorization filters before evaluating tag matches.
 - Web and mobile clients must present tag-backed search matches with user-facing labels such as `Tag`, not raw transport field names like `tag_display_name` or `tag_key`.
 
@@ -157,7 +161,7 @@ Tag chips must:
 - Keep the asset title, photo, kind, parent/location, checkout state, and lifecycle state visually higher priority than tags.
 - Collapse gracefully on narrow screens without causing row height jumps or text overlap.
 - In compact list and card contexts, clients may show the first few assigned tags plus a `+N` overflow chip instead of rendering every tag.
-- In contexts where the tag chip is not nested inside another interactive row or control, clicking or tapping a tag chip must search or browse the current inventory for that tag. The first implementation may use the tag display name as the search query so the existing tag-backed search path returns matching assets.
+- In contexts where the tag chip is not nested inside another interactive row or control, clicking or tapping a tag chip must search or browse the current inventory for that tag without using the tag label as replacement search text when the tag ID is known.
 
 Asset create and edit flows must let users:
 
@@ -177,6 +181,8 @@ The first inline creation behavior may create the tag immediately before saving 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.
 
 Mobile search must keep the first viewport focused on the search field and results. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. Scope, lifecycle, checkout, sort, and tag browse controls must be collapsible behind a compact filter control by default. Tag browse suggestions must be sorted alphabetically by display label so the row is predictable when expanded.
+Mobile tag browse controls must behave as multi-select filters over the current result set. Selecting or clearing a tag must not change the text in the search field. Selected tags must compose with the current text query and other filters, and more than one tag may be selected at once.
+Mobile filter controls must use consistent titled groups and shared option controls. The first filter groups are `Scope`, `Tags`, `Status`, `Checkout`, and `Sort`; option copy must use consistent noun or adjective labels such as `All`, `Active`, `Archived`, `Any`, `Checked out`, `Available`, `Recent`, and `Stable`.
 
 ## Tests
 

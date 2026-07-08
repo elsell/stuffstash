@@ -6,17 +6,18 @@ import (
 )
 
 type SearchAssetsInput struct {
-	Authorization     string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
-	RequestID         string `header:"X-Request-ID" doc:"Optional request correlation ID"`
-	TenantID          string `path:"tenantId" doc:"Tenant ID"`
-	InventoryID       string `query:"inventoryId" doc:"Optional inventory ID scope"`
-	Query             string `query:"q" required:"true" minLength:"1" maxLength:"120" doc:"Search query"`
-	Mode              string `query:"mode" enum:"fuzzy,exact" doc:"Search mode; defaults to fuzzy"`
-	CustomAssetTypeID string `query:"customAssetTypeId" doc:"Custom asset type filter"`
-	LifecycleState    string `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
-	CheckoutState     string `query:"checkoutState" enum:"any,checked_out,available" doc:"Checkout state filter; defaults to any"`
-	Limit             int    `query:"limit" minimum:"1" doc:"Requested page size"`
-	Cursor            string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	Authorization     string   `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID         string   `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID          string   `path:"tenantId" doc:"Tenant ID"`
+	InventoryID       string   `query:"inventoryId" doc:"Optional inventory ID scope"`
+	Query             string   `query:"q" maxLength:"120" doc:"Search query"`
+	Mode              string   `query:"mode" enum:"fuzzy,exact" doc:"Search mode; defaults to fuzzy"`
+	TagIDs            []string `query:"tagIds" doc:"Optional assigned tag filters"`
+	CustomAssetTypeID string   `query:"customAssetTypeId" doc:"Custom asset type filter"`
+	LifecycleState    string   `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
+	CheckoutState     string   `query:"checkoutState" enum:"any,checked_out,available" doc:"Checkout state filter; defaults to any"`
+	Limit             int      `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor            string   `query:"cursor" doc:"Opaque cursor from the previous page"`
 }
 
 type SearchAssetsOutput struct {

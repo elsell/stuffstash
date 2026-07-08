@@ -17,6 +17,7 @@ type AssetSearchRepository interface {
 type AssetSearchPageRequest struct {
 	Query             search.Query
 	Mode              search.Mode
+	TagIDs            []assettag.ID
 	CustomAssetTypeID asset.CustomAssetTypeID
 	AfterResultKey    string
 	Limit             int

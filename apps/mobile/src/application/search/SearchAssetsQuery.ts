@@ -20,6 +20,7 @@ export type SearchAssetsQueryInput = {
   readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly sort: AssetBrowseSort;
   readonly limit?: number;
+  readonly tagIds?: readonly string[];
 };
 
 export type SearchAssetsViewModel = {
@@ -29,6 +30,7 @@ export type SearchAssetsViewModel = {
   readonly kind: AssetBrowseKindFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly sort: AssetBrowseSort;
+  readonly tagIds: readonly string[];
   readonly assets: readonly AssetCardViewModel[];
   readonly nextCursor?: string;
   readonly hasMore: boolean;
@@ -54,6 +56,7 @@ export class SearchAssetsQuery {
       kind: input.kind,
       checkoutState: input.checkoutState,
       sort: input.sort,
+      tagIds: input.tagIds ?? [],
       assets: page.assets.map((asset) => {
         const card = toAssetCardViewModel(asset);
         const searchMatchLabels = searchMatchLabelsByAssetId.get(asset.id);

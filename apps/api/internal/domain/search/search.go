@@ -32,7 +32,7 @@ type Query string
 
 func NewQuery(value string) (Query, bool) {
 	value = strings.TrimSpace(value)
-	if value == "" || len(value) > 120 {
+	if len(value) > 120 {
 		return "", false
 	}
 	return Query(value), true

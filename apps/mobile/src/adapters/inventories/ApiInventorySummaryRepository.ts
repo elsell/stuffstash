@@ -268,10 +268,11 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const knownAssets = inventory.assets.map((item) =>
       summaryToApiAsset(inventory.tenantId, inventory.id, item)
     );
-    if (input.query.trim().length === 0 && input.checkoutState === 'checked_out') {
+    const hasTagFilters = (input.tagIds?.length ?? 0) > 0;
+    if (!hasTagFilters && input.query.trim().length === 0 && input.checkoutState === 'checked_out') {
       return await this.listCheckedOutInventoryAssetPage(inventory, input, knownAssets);
     }
-    return input.query.trim().length > 0
+    return input.query.trim().length > 0 || hasTagFilters
       ? await this.searchInventoryAssetPage(inventory, input, knownAssets)
       : await this.listInventoryAssetPage(inventory, input, knownAssets);
   }
@@ -690,6 +691,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       const page = await this.client.searchAssets(inventory.tenantId, input.query, {
         limit: pageSize,
         cursor,
+        inventoryId: inventory.id,
+        tagIds: input.tagIds,
         lifecycleState: input.lifecycleState,
         checkoutState: input.checkoutState
       });
