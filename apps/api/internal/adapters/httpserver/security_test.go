@@ -26,11 +26,13 @@ func TestResponsesIncludeSecurityHeaders(t *testing.T) {
 
 func TestServerOptionsConfigureTimeoutsAndBodyLimit(t *testing.T) {
 	server := NewServerWithOptions(":0", newTestApp(&fakeObserver{}, "unused-id"), Options{
-		MaxJSONBodyBytes:  8,
-		ReadHeaderTimeout: 2 * time.Second,
-		ReadTimeout:       3 * time.Second,
-		WriteTimeout:      4 * time.Second,
-		IdleTimeout:       5 * time.Second,
+		MaxJSONBodyBytes:            8,
+		ReadHeaderTimeout:           2 * time.Second,
+		ReadTimeout:                 3 * time.Second,
+		WriteTimeout:                4 * time.Second,
+		IdleTimeout:                 5 * time.Second,
+		RealtimeVoiceIdleTimeout:    6 * time.Second,
+		RealtimeVoiceSessionTimeout: 7 * time.Second,
 	})
 
 	if server.ReadHeaderTimeout != 2*time.Second || server.ReadTimeout != 3*time.Second || server.WriteTimeout != 4*time.Second || server.IdleTimeout != 5*time.Second {

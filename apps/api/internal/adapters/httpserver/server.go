@@ -34,6 +34,7 @@ type Options struct {
 	ReadTimeout                 time.Duration
 	WriteTimeout                time.Duration
 	IdleTimeout                 time.Duration
+	RealtimeVoiceIdleTimeout    time.Duration
 	RealtimeVoiceSessionTimeout time.Duration
 }
 
@@ -46,7 +47,10 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("GET /healthz", handleHealth(application))
 	mux.HandleFunc("GET /.well-known/stuff-stash/mobile-auth", handleMobileAuthMetadata(options.MobileAuth))
-	mux.HandleFunc("GET "+realtimeVoicePath, handleRealtimeVoice(application, normalizeDuration(options.RealtimeVoiceSessionTimeout, 60*time.Second)))
+	mux.HandleFunc("GET "+realtimeVoicePath, handleRealtimeVoice(application, realtimeVoiceTimeouts{
+		session: normalizeDuration(options.RealtimeVoiceSessionTimeout, 60*time.Second),
+		idle:    normalizeDuration(options.RealtimeVoiceIdleTimeout, 15*time.Second),
+	}))
 
 	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")
 	config.DocsPath = "/docs"

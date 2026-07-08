@@ -57,6 +57,45 @@ func TestRealtimeVoiceQueryRejectsScopeChangingAudioMessages(t *testing.T) {
 	assertSafeRealtimeEvents(t, []map[string]any{failed}, []string{"tenant-other", "inventory-other"})
 }
 
+func TestRealtimeVoiceQueryFailsSafelyWhenAudioInputIsIdle(t *testing.T) {
+	t.Parallel()
+
+	application := newSeededTestAppWithVoice(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
+		ids:         []string{"voice-session-id"},
+	}, fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{})
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{
+		RateLimitDisabled:        true,
+		RealtimeVoiceIdleTimeout: 10 * time.Millisecond,
+	}).Handler)
+	t.Cleanup(server.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	connection, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"/v1/realtime/voice", &websocket.DialOptions{
+		HTTPHeader: http.Header{"Authorization": []string{"Bearer dev:user-1"}},
+	})
+	if err != nil {
+		t.Fatalf("dial realtime voice websocket: %v", err)
+	}
+	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
+
+	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
+	started := readRealtimeMessage(t, ctx, connection)
+	if started["type"] != "session.started" {
+		t.Fatalf("expected session.started, got %+v", started)
+	}
+
+	failed := readRealtimeMessage(t, ctx, connection)
+	if failed["type"] != "session.failed" {
+		t.Fatalf("expected session.failed after idle timeout, got %+v", failed)
+	}
+	if failed["code"] != "invalid_request" {
+		t.Fatalf("expected safe invalid request code after idle timeout, got %+v", failed)
+	}
+}
+
 func TestRealtimeVoiceQueryRejectsMalformedAudioFinalChunkMarkers(t *testing.T) {
 	t.Parallel()
 

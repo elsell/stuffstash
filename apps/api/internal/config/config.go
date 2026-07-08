@@ -62,6 +62,7 @@ const (
 	envPrimaryThumbnailWarmTimeout        = "STUFF_STASH_PRIMARY_THUMBNAIL_WARM_TIMEOUT"
 	envVoiceDevFakeEnabled                = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
 	envVoiceGoogleEnabled                 = "STUFF_STASH_VOICE_GOOGLE_ENABLED"
+	envRealtimeVoiceIdleTimeout           = "STUFF_STASH_REALTIME_VOICE_IDLE_TIMEOUT"
 	envVoiceProviderHTTPTimeout           = "STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT"
 	envGoogleCloudProject                 = "STUFF_STASH_GOOGLE_CLOUD_PROJECT"
 	envGoogleCloudLocation                = "STUFF_STASH_GOOGLE_CLOUD_LOCATION"
@@ -111,6 +112,7 @@ const (
 	defaultSpiceDBBootstrapMode           = false
 	defaultVoiceDevFakeEnabled            = false
 	defaultVoiceGoogleEnabled             = false
+	defaultRealtimeVoiceIdleTimeout       = 15 * time.Second
 	defaultVoiceProviderHTTPTimeout       = 60 * time.Second
 	defaultGoogleCloudLocation            = "us-central1"
 	defaultGoogleGeminiModel              = "gemini-2.5-flash-lite"
@@ -180,6 +182,7 @@ type Config struct {
 	PrimaryThumbnailWarmTimeout      time.Duration
 	VoiceDevFakeEnabled              bool
 	VoiceGoogleEnabled               bool
+	RealtimeVoiceIdleTimeout         time.Duration
 	VoiceProviderHTTPTimeout         time.Duration
 	GoogleCloudProject               string
 	GoogleCloudLocation              string
@@ -248,6 +251,7 @@ func Load() Config {
 		PrimaryThumbnailWarmTimeout:      durationEnvOrDefault(envPrimaryThumbnailWarmTimeout, defaultPrimaryThumbnailWarmTimeout),
 		VoiceDevFakeEnabled:              boolEnvOrDefault(envVoiceDevFakeEnabled, defaultVoiceDevFakeEnabled),
 		VoiceGoogleEnabled:               boolEnvOrDefault(envVoiceGoogleEnabled, defaultVoiceGoogleEnabled),
+		RealtimeVoiceIdleTimeout:         durationEnvOrDefault(envRealtimeVoiceIdleTimeout, defaultRealtimeVoiceIdleTimeout),
 		VoiceProviderHTTPTimeout:         durationEnvOrDefault(envVoiceProviderHTTPTimeout, defaultVoiceProviderHTTPTimeout),
 		GoogleCloudProject:               os.Getenv(envGoogleCloudProject),
 		GoogleCloudLocation:              envOrDefault(envGoogleCloudLocation, defaultGoogleCloudLocation),

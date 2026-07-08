@@ -49,6 +49,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envPrimaryThumbnailWarmTimeout, "")
 	t.Setenv(envVoiceDevFakeEnabled, "")
 	t.Setenv(envVoiceGoogleEnabled, "")
+	t.Setenv(envRealtimeVoiceIdleTimeout, "")
 	t.Setenv(envVoiceProviderHTTPTimeout, "")
 	t.Setenv(envGoogleCloudProject, "")
 	t.Setenv(envGoogleCloudLocation, "")
@@ -158,6 +159,9 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.VoiceGoogleEnabled {
 		t.Fatalf("expected Google voice providers disabled by default")
 	}
+	if cfg.RealtimeVoiceIdleTimeout != defaultRealtimeVoiceIdleTimeout {
+		t.Fatalf("expected realtime voice idle timeout %s, got %s", defaultRealtimeVoiceIdleTimeout, cfg.RealtimeVoiceIdleTimeout)
+	}
 	if cfg.VoiceProviderHTTPTimeout != defaultVoiceProviderHTTPTimeout {
 		t.Fatalf("expected voice provider HTTP timeout %s, got %s", defaultVoiceProviderHTTPTimeout, cfg.VoiceProviderHTTPTimeout)
 	}
@@ -233,6 +237,7 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envPrimaryThumbnailWarmTimeout, "3s")
 	t.Setenv(envVoiceDevFakeEnabled, "true")
 	t.Setenv(envVoiceGoogleEnabled, "true")
+	t.Setenv(envRealtimeVoiceIdleTimeout, "12s")
 	t.Setenv(envVoiceProviderHTTPTimeout, "75s")
 	t.Setenv(envGoogleCloudProject, "pianotechpros")
 	t.Setenv(envGoogleCloudLocation, "us-east5")
@@ -343,6 +348,9 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if !cfg.VoiceDevFakeEnabled {
 		t.Fatalf("expected voice dev fake providers enabled")
+	}
+	if cfg.RealtimeVoiceIdleTimeout.String() != "12s" {
+		t.Fatalf("expected realtime voice idle timeout 12s, got %s", cfg.RealtimeVoiceIdleTimeout)
 	}
 	if cfg.VoiceProviderHTTPTimeout.String() != "1m15s" {
 		t.Fatalf("expected voice provider HTTP timeout 75s, got %s", cfg.VoiceProviderHTTPTimeout)

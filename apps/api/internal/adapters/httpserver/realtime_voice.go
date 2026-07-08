@@ -33,7 +33,12 @@ var requiredRealtimeVoiceCapabilities = map[string]struct{}{
 	"text_to_speech":     {},
 }
 
-func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http.HandlerFunc {
+type realtimeVoiceTimeouts struct {
+	session time.Duration
+	idle    time.Duration
+}
+
+func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.NotFound(w, r)
@@ -52,7 +57,7 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		defer connection.Close(websocket.StatusInternalError, "voice session ended")
 		connection.SetReadLimit(maxRealtimeVoiceFrameBytes)
 
-		ctx, cancelSession := context.WithTimeout(r.Context(), sessionTimeout)
+		ctx, cancelSession := context.WithTimeout(r.Context(), timeouts.session)
 		defer cancelSession()
 		start, err := readRealtimeClientMessage(ctx, connection)
 		if err != nil {
@@ -103,7 +108,7 @@ func handleRealtimeVoice(application app.App, sessionTimeout time.Duration) http
 		conversationTurns := []ports.AgentConversationTurn{}
 		seenAudioChunkIDs := map[string]struct{}{}
 		for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
-			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs)
+			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs, timeouts.idle)
 			lastClientSeq = nextClientSeq
 			if err != nil {
 				if errors.Is(err, errRealtimeVoiceCancelled) {
@@ -435,11 +440,11 @@ func validRealtimeVoiceRequestedCapabilities(capabilities []string) bool {
 	return true
 }
 
-func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}) ([][]byte, int, error) {
+func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}, idleTimeout time.Duration) ([][]byte, int, error) {
 	chunks := [][]byte{}
 	seenChunks := map[string]struct{}{}
 	for {
-		message, err := readRealtimeAudioMessage(ctx, connection)
+		message, err := readRealtimeAudioMessageWithIdle(ctx, connection, idleTimeout)
 		if err != nil {
 			return nil, lastClientSeq, err
 		}
@@ -479,6 +484,30 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 		default:
 			return nil, lastClientSeq, ports.ErrInvalidProviderInput
 		}
+	}
+}
+
+func readRealtimeAudioMessageWithIdle(ctx context.Context, connection *websocket.Conn, idleTimeout time.Duration) (realtimeClientMessage, error) {
+	type readResult struct {
+		message realtimeClientMessage
+		err     error
+	}
+	results := make(chan readResult, 1)
+	go func() {
+		message, err := readRealtimeAudioMessage(ctx, connection)
+		results <- readResult{message: message, err: err}
+	}()
+
+	timer := time.NewTimer(idleTimeout)
+	defer timer.Stop()
+
+	select {
+	case result := <-results:
+		return result.message, result.err
+	case <-timer.C:
+		return realtimeClientMessage{}, ports.ErrInvalidProviderInput
+	case <-ctx.Done():
+		return realtimeClientMessage{}, ctx.Err()
 	}
 }
 
