@@ -85,8 +85,7 @@ passwords, Garage keys, and SpiceDB credentials so you can start the product
 without wiring outside infrastructure first.</p>
 <p>Do not reuse those values in a deployed system.</p>
 <p>The self-host stack uses datastore-backed SpiceDB, Postgres, and Garage volumes.
-That makes normal container restarts durable when volumes are kept, but it does
-not make the example secrets safe.</p>
+That does not make the example secrets safe.</p>
 <p>Replace first-run secrets before relying on a deployment:</p>
 <ul>
 <li>Dex users and static clients.</li>
