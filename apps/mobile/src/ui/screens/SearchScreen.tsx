@@ -31,8 +31,10 @@ import {
   LocationsQuery
 } from '../../application/locations/LocationsQuery';
 import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
+import type { InventoryAssetTagsQuery, AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
+import { AssetTagChips } from '../components/AssetTagChips';
 import { colors, radius, spacing } from '../theme/tokens';
 import {
   BrowseScope,
@@ -54,6 +56,7 @@ type SearchScreenProps = {
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly inventoryMapQuery: InventoryMapQuery;
+  readonly inventoryAssetTagsQuery: InventoryAssetTagsQuery;
   readonly locationsQuery: LocationsQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly searchAssetsQuery: SearchAssetsQuery;
@@ -96,6 +99,7 @@ export function SearchScreen({
   assetLifecycleCommand,
   deleteAssetPhotoCommand,
   inventoryMapQuery,
+  inventoryAssetTagsQuery,
   locationsQuery,
   photoSelectionQuery,
   searchAssetsQuery
@@ -108,6 +112,7 @@ export function SearchScreen({
   const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>('any');
   const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
   const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
+  const [tagFilters, setTagFilters] = useState<readonly AssetTagOptionViewModel[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const requestSequence = useRef(0);
@@ -132,6 +137,27 @@ export function SearchScreen({
     setQuery(nextQuery);
     void loadFirstPage({ query: nextQuery, scope: initialScope });
   }, [initialQuery, initialScope, locationsQuery, searchAssetsQuery]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    inventoryAssetTagsQuery
+      .execute()
+      .then((tags) => {
+        if (isCurrent) {
+          setTagFilters(tags);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setTagFilters([]);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [inventoryAssetTagsQuery]);
 
   async function loadFirstPage(next: {
     readonly query?: string;
@@ -327,6 +353,11 @@ export function SearchScreen({
     void loadFirstPage({ query: '' });
   }
 
+  function searchByTag(tag: AssetTagOptionViewModel): void {
+    setQuery(tag.label);
+    void loadFirstPage({ query: tag.label });
+  }
+
   function updateScope(nextScope: BrowseScope): void {
     setScope(nextScope);
     void loadFirstPage({ scope: nextScope });
@@ -404,6 +435,7 @@ export function SearchScreen({
             sort={sort}
             statusMessage={state.status === 'error' ? state.message : undefined}
             submittedQuery={state.results.query}
+            tagFilters={tagFilters}
             onChangeSurface={setSurface}
             onChangeLifecycleState={updateLifecycleState}
             onChangeCheckoutState={updateCheckoutState}
@@ -411,6 +443,7 @@ export function SearchScreen({
             onChangeScope={updateScope}
             onChangeSort={updateSort}
             onClearQuery={clearSearch}
+            onSelectTag={searchByTag}
             onSearchBlur={() => setIsSearchFocused(false)}
             onSearchFocus={() => setIsSearchFocused(true)}
             onSubmit={submitSearch}
@@ -452,6 +485,7 @@ export function SearchHeader({
   sort,
   statusMessage,
   submittedQuery,
+  tagFilters,
   onChangeSurface,
   onChangeLifecycleState,
   onChangeCheckoutState,
@@ -459,6 +493,7 @@ export function SearchHeader({
   onChangeScope,
   onChangeSort,
   onClearQuery,
+  onSelectTag,
   onSearchBlur,
   onSearchFocus,
   onSubmit
@@ -475,6 +510,7 @@ export function SearchHeader({
   readonly sort: AssetBrowseSort;
   readonly statusMessage?: string;
   readonly submittedQuery: string;
+  readonly tagFilters?: readonly AssetTagOptionViewModel[];
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
   readonly onChangeCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
@@ -482,6 +518,7 @@ export function SearchHeader({
   readonly onChangeScope: (scope: BrowseScope) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
   readonly onClearQuery: () => void;
+  readonly onSelectTag?: (tag: AssetTagOptionViewModel) => void;
   readonly onSearchBlur: () => void;
   readonly onSearchFocus: () => void;
   readonly onSubmit: () => void;
@@ -533,6 +570,21 @@ export function SearchHeader({
         {isLoading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
       </View>
       <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
+      {tagFilters && tagFilters.length > 0 && onSelectTag ? (
+        <View style={styles.tagFilterBlock} accessibilityLabel="Browse by tag">
+          <Text style={styles.tagFilterLabel}>Tags</Text>
+          <AssetTagChips
+            tags={tagFilters.map((tag) => ({ id: tag.id, label: tag.label, color: tag.color }))}
+            compact
+            onTagPress={(tag) => {
+              const selected = tagFilters.find((candidate) => candidate.id === tag.id);
+              if (selected) {
+                onSelectTag(selected);
+              }
+            }}
+          />
+        </View>
+      ) : null}
       <RefinementBar
         lifecycleState={lifecycleState}
         checkoutState={checkoutState}
@@ -862,6 +914,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingBottom: spacing.xs,
     paddingTop: spacing.xs
+  },
+  tagFilterBlock: {
+    gap: spacing.xs,
+    marginTop: spacing.xs
+  },
+  tagFilterLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0
   },
   refinementIcon: {
     alignItems: 'center',

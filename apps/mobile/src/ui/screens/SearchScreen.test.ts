@@ -257,6 +257,34 @@ describe('SearchScreen presentation helpers', () => {
     expect(text).not.toContain('Stable');
     expect(text).toContain('Showing 0 active things for "mug" · relevance order');
   });
+
+  it('renders colored tag browse filters in the Browse header', () => {
+    const selectedTags: string[] = [];
+    const header = renderHeader({
+      tagFilters: [
+        { id: 'tag-tools', key: 'tools', label: 'Tools', color: '#2F80ED' },
+        { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' }
+      ],
+      onSelectTag: (tag) => {
+        selectedTags.push(tag.label);
+      }
+    });
+
+    const text = collectText(header);
+    expect(text).toContain('Tags');
+    expect(text).toContain('Tools');
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by tag')).toBeTruthy();
+
+    const tools = findFirstByProp(header, 'accessibilityLabel', 'Search for tag Tools');
+    expect(tools).toBeTruthy();
+    const onPress = tools?.props?.onPress;
+    if (typeof onPress !== 'function') {
+      throw new Error('Missing tag filter press handler');
+    }
+    onPress();
+
+    expect(selectedTags).toEqual(['Tools']);
+  });
 });
 
 function renderHeader(
@@ -306,6 +334,32 @@ function findFirstByType(node: unknown, type: string): ElementNode | undefined {
 
   return childrenOf(node).reduce<ElementNode | undefined>(
     (found, child) => found ?? findFirstByType(child, type),
+    undefined
+  );
+}
+
+function findFirstByProp(node: unknown, prop: string, value: unknown): ElementNode | undefined {
+  if (Array.isArray(node)) {
+    return node.reduce<ElementNode | undefined>(
+      (found, child) => found ?? findFirstByProp(child, prop, value),
+      undefined
+    );
+  }
+
+  if (!isElementNode(node)) {
+    return undefined;
+  }
+
+  if (node.props?.[prop] === value) {
+    return node;
+  }
+
+  if (typeof node.type === 'function') {
+    return findFirstByProp(node.type(node.props), prop, value);
+  }
+
+  return childrenOf(node).reduce<ElementNode | undefined>(
+    (found, child) => found ?? findFirstByProp(child, prop, value),
     undefined
   );
 }

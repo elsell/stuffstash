@@ -11,6 +11,7 @@ export default function SearchRoute() {
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
     inventoryMapQuery,
+    inventoryAssetTagsQuery,
     locationsQuery,
     photoSelectionQuery,
     searchAssetsQuery
@@ -27,6 +28,7 @@ export default function SearchRoute() {
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}
       inventoryMapQuery={inventoryMapQuery}
+      inventoryAssetTagsQuery={inventoryAssetTagsQuery}
       locationsQuery={locationsQuery}
       photoSelectionQuery={photoSelectionQuery}
       searchAssetsQuery={searchAssetsQuery}
