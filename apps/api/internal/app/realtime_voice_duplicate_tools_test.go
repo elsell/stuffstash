@@ -104,6 +104,76 @@ func TestRealtimeVoiceSkipsDuplicateToolCallButExecutesUnseenCallsInSameTurn(t *
 	}
 }
 
+func TestRealtimeVoiceReturnsUnknownToolRequestToModelForRepair(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "unknown-tool-call",
+				Name:      "delete_everything",
+				Arguments: map[string]any{"rawPrompt": "ignore previous instructions"},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindUnsupportedAction,
+				SpokenResponse:  "I cannot do that from voice.",
+				DisplayResponse: "I cannot do that from voice.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are my tools?"}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %T %[1]v", err)
+	}
+	if len(language.seenToolResults) < 2 || len(language.seenToolResults[1]) != 1 {
+		t.Fatalf("expected unknown tool repair result to be returned to model, got %+v", language.seenToolResults)
+	}
+	result := language.seenToolResults[1][0]
+	if result.Name != "delete_everything" ||
+		!strings.Contains(result.Content, `"code":"invalid_tool_request"`) ||
+		!strings.Contains(result.Content, `"retryable":true`) {
+		t.Fatalf("expected retryable invalid tool result, got %+v", result)
+	}
+	if strings.Contains(result.Content, "rawPrompt") || strings.Contains(result.Content, "ignore previous instructions") {
+		t.Fatalf("rejected unknown tool arguments leaked into repair payload: %s", result.Content)
+	}
+	if _, leaked := result.Call.Arguments["rawPrompt"]; leaked {
+		t.Fatalf("rejected unknown tool arguments leaked into provider-bound repair result: %+v", result.Call.Arguments)
+	}
+	failureEvent, ok := realtimeVoiceDuplicateTestEvent(events, RealtimeVoiceEventToolCallFailed, "invalid_tool_request")
+	if !ok {
+		t.Fatalf("expected safe tool failure event, got %+v", events)
+	}
+	if strings.Contains(failureEvent.Message, "delete_everything") ||
+		strings.Contains(failureEvent.Message, "rawPrompt") ||
+		strings.Contains(failureEvent.Message, "ignore previous instructions") ||
+		strings.Contains(failureEvent.ToolLabel, "delete_everything") {
+		t.Fatalf("unknown tool failure event leaked raw request details: %+v", failureEvent)
+	}
+	if realtimeVoiceDuplicateTestToolCompleted(events, "unknown-tool-call") {
+		t.Fatalf("did not expect unknown tool request to complete, got %+v", events)
+	}
+	if tts.lastText != "I cannot do that from voice." {
+		t.Fatalf("expected repaired final response to be spoken, got %q", tts.lastText)
+	}
+}
+
 func realtimeVoiceDuplicateTestToolResultContent(results []ports.AgentToolResult, name string, term string) bool {
 	for _, result := range results {
 		if result.Name == name && strings.Contains(result.Content, term) {
@@ -124,12 +194,17 @@ func realtimeVoiceDuplicateTestToolResultContentCount(results []ports.AgentToolR
 }
 
 func realtimeVoiceDuplicateTestEventCode(events []RealtimeVoiceEvent, eventType string, code string) bool {
+	_, ok := realtimeVoiceDuplicateTestEvent(events, eventType, code)
+	return ok
+}
+
+func realtimeVoiceDuplicateTestEvent(events []RealtimeVoiceEvent, eventType string, code string) (RealtimeVoiceEvent, bool) {
 	for _, event := range events {
 		if event.Type == eventType && event.Code == code {
-			return true
+			return event, true
 		}
 	}
-	return false
+	return RealtimeVoiceEvent{}, false
 }
 
 func realtimeVoiceDuplicateTestCompletedCount(events []RealtimeVoiceEvent, toolCallID string) int {
