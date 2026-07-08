@@ -13,7 +13,6 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/actionplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -228,6 +227,7 @@ type realtimeClientMessage struct {
 	Reason                string                           `json:"reason"`
 	Arguments             map[string]interface{}           `json:"arguments"`
 	PhotoAttachments      []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
+	PhotoAttachmentsSet   bool                             `json:"-"`
 }
 
 type realtimeInputAudio struct {
@@ -384,6 +384,7 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 	if err := json.Unmarshal(payload, &message); err != nil {
 		return realtimeClientMessage{}, err
 	}
+	_, photoAttachmentsSet := raw["photoAttachments"]
 	if len(message.PhotoAttachments) > 10 {
 		return realtimeClientMessage{}, ports.ErrInvalidProviderInput
 	}
@@ -400,11 +401,12 @@ func readRealtimeActionPlanDecisionMessage(ctx context.Context, connection *webs
 		seenPhotos[key] = struct{}{}
 	}
 	return realtimeClientMessage{
-		Type:             strings.TrimSpace(message.Type),
-		Seq:              message.Seq,
-		SessionID:        message.SessionID,
-		PlanID:           message.PlanID,
-		PhotoAttachments: message.PhotoAttachments,
+		Type:                strings.TrimSpace(message.Type),
+		Seq:                 message.Seq,
+		SessionID:           message.SessionID,
+		PlanID:              message.PlanID,
+		PhotoAttachments:    message.PhotoAttachments,
+		PhotoAttachmentsSet: photoAttachmentsSet,
 	}, nil
 }
 
@@ -478,129 +480,6 @@ func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionI
 			return nil, lastClientSeq, ports.ErrInvalidProviderInput
 		}
 	}
-}
-
-func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket.Conn, application app.App, session app.RealtimeVoiceSession, expectedPlanID string, lastClientSeq *int, serverSeq *int) (ports.RealtimeSessionState, error) {
-	message, err := readRealtimeActionPlanDecisionMessage(ctx, connection)
-	if err != nil {
-		return "", err
-	}
-	if message.Seq <= *lastClientSeq {
-		return "", ports.ErrInvalidProviderInput
-	}
-	*lastClientSeq = message.Seq
-	if message.SessionID != session.ID {
-		return "", ports.ErrForbidden
-	}
-	planID := strings.TrimSpace(message.PlanID)
-	if planID == "" || planID != strings.TrimSpace(expectedPlanID) {
-		return "", ports.ErrForbidden
-	}
-
-	var eventType string
-	var status string
-	switch message.Type {
-	case "action.plan.approve":
-		if err := application.ValidateActionPlanPhotoAttachmentMetadata(ctx, app.ActionPlanPhotoAttachmentMetadataInput{
-			Decision: app.ActionPlanDecisionInput{
-				Principal:   session.Principal,
-				TenantID:    session.TenantID,
-				InventoryID: session.InventoryID,
-				PlanID:      planID,
-			},
-			Photos: realtimePhotoAttachmentMetadataFromRequests(message.PhotoAttachments),
-		}); err != nil {
-			return "", err
-		}
-		record, err := application.ApproveActionPlan(ctx, app.ActionPlanDecisionInput{
-			Principal:   session.Principal,
-			TenantID:    session.TenantID,
-			InventoryID: session.InventoryID,
-			PlanID:      planID,
-		})
-		if err != nil {
-			return "", err
-		}
-		eventType = app.RealtimeVoiceEventActionPlanApproved
-		status = string(record.State)
-		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: eventType, Seq: *serverSeq, SessionID: session.ID, PlanID: planID, Status: status}); err != nil {
-			return "", err
-		}
-		*serverSeq = *serverSeq + 1
-
-		executed, err := application.ExecuteActionPlanDetailed(ctx, app.ActionPlanDecisionInput{
-			Principal:   session.Principal,
-			TenantID:    session.TenantID,
-			InventoryID: session.InventoryID,
-			PlanID:      planID,
-		})
-		outcomeType := app.RealtimeVoiceEventActionPlanExecuted
-		outcomeMessage := "The approved change was applied."
-		if err != nil {
-			if executed.Record.State != actionplan.StateFailed {
-				return "", err
-			}
-			outcomeType = app.RealtimeVoiceEventActionPlanFailed
-			outcomeMessage = "The approved change could not be applied safely."
-		}
-		uploadIntents, err := realtimeAttachmentUploadIntentsFromDecision(ctx, application, session, message.PhotoAttachments, executed.CommandResults)
-		if err != nil {
-			uploadIntents = nil
-			if outcomeType == app.RealtimeVoiceEventActionPlanExecuted {
-				outcomeMessage = "The approved change was applied, but photos could not be prepared for upload."
-			}
-		}
-		if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{
-			Type:                    outcomeType,
-			Seq:                     *serverSeq,
-			SessionID:               session.ID,
-			PlanID:                  planID,
-			Status:                  string(executed.Record.State),
-			Message:                 outcomeMessage,
-			CommandResults:          realtimeActionPlanCommandResultsFromApp(executed.CommandResults),
-			AttachmentUploadIntents: uploadIntents,
-		}); err != nil {
-			return "", err
-		}
-		*serverSeq = *serverSeq + 1
-		return ports.RealtimeSessionStateCompleted, nil
-	case "action.plan.cancel":
-		record, err := application.CancelActionPlan(ctx, app.ActionPlanDecisionInput{
-			Principal:   session.Principal,
-			TenantID:    session.TenantID,
-			InventoryID: session.InventoryID,
-			PlanID:      planID,
-		})
-		if err != nil {
-			return "", err
-		}
-		eventType = app.RealtimeVoiceEventActionPlanCancelled
-		status = string(record.State)
-	default:
-		return "", ports.ErrInvalidProviderInput
-	}
-
-	if err := writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: eventType, Seq: *serverSeq, SessionID: session.ID, PlanID: planID, Status: status}); err != nil {
-		return "", err
-	}
-	*serverSeq = *serverSeq + 1
-	return ports.RealtimeSessionStateCancelled, nil
-}
-
-func realtimePhotoAttachmentMetadataFromRequests(photos []realtimePhotoAttachmentRequest) []app.ActionPlanPhotoAttachmentMetadata {
-	if len(photos) == 0 {
-		return nil
-	}
-	metadata := make([]app.ActionPlanPhotoAttachmentMetadata, 0, len(photos))
-	for _, photo := range photos {
-		metadata = append(metadata, app.ActionPlanPhotoAttachmentMetadata{
-			CommandID:   photo.CommandID,
-			FileName:    photo.FileName,
-			ContentType: photo.ContentType,
-			SizeBytes:   photo.SizeBytes,
-		})
-	}
-	return metadata
 }
 
 func realtimeAttachmentUploadIntentsFromDecision(ctx context.Context, application app.App, session app.RealtimeVoiceSession, photos []realtimePhotoAttachmentRequest, results []app.ActionPlanCommandExecutionResult) ([]realtimeAttachmentUploadIntent, error) {
