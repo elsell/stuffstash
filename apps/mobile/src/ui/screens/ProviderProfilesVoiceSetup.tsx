@@ -5,7 +5,13 @@ import {
   VoiceProviderSlot
 } from '../../application/providerProfiles/ProviderProfileRepository';
 import { colors, radius, spacing } from '../theme/tokens';
-import { formatVoiceProviderReadinessLabel } from './ProviderProfilesVoiceSetupPresentation';
+import {
+  formatProviderProfileCredentialStatusLabel,
+  formatProviderProfileLifecycleLabel,
+  formatVoiceProviderCapabilityLabel,
+  formatVoiceProviderReadinessLabel,
+  formatVoiceProviderSelectionSourceLabel
+} from './ProviderProfilesVoiceSetupPresentation';
 
 export function VoiceSetupPanel({
   configuration,
@@ -79,7 +85,9 @@ function VoiceSlotCard({
         </View>
         <View style={styles.slotTitleGroup}>
           <Text style={styles.slotTitle}>{slot.label}</Text>
-          <Text style={styles.slotSubtitle}>{formatCapability(slot.capability)} / {slot.selectionSource}</Text>
+          <Text style={styles.slotSubtitle}>
+            {formatVoiceProviderCapabilityLabel(slot.capability)} / {formatVoiceProviderSelectionSourceLabel(slot.selectionSource)}
+          </Text>
         </View>
         <ReadinessPill readiness={slot.readiness} />
       </View>
@@ -89,14 +97,14 @@ function VoiceSlotCard({
           <Text style={styles.selectedProfileName}>{selectedProfile.displayName}</Text>
           <Text style={styles.selectedProfileMeta}>{selectedProfile.providerKind} / {selectedProfile.modelName || 'No model'}</Text>
           <View style={styles.slotFacts}>
-            <InfoRow label="Credential" value={selectedProfile.credentialStatus} />
+            <InfoRow label="Credential" value={formatProviderProfileCredentialStatusLabel(selectedProfile.credentialStatus)} />
             <InfoRow label="Last tested" value={selectedProfile.lastTestedAt ?? 'Not tested'} />
           </View>
         </View>
       ) : (
         <View style={styles.emptySlotBox}>
           <Text style={styles.emptyTitle}>No selected profile</Text>
-          <Text style={styles.emptyText}>Choose or add a {formatCapability(slot.capability)} profile.</Text>
+          <Text style={styles.emptyText}>Choose or add a {formatVoiceProviderCapabilityLabel(slot.capability)} profile.</Text>
         </View>
       )}
 
@@ -130,7 +138,7 @@ function VoiceSlotCard({
         </View>
       ) : alternatives.length > 0 ? (
         <View style={styles.choiceGroup}>
-          <Text style={styles.choiceTitle}>Other {formatCapability(slot.capability)} profiles</Text>
+          <Text style={styles.choiceTitle}>Other {formatVoiceProviderCapabilityLabel(slot.capability)} profiles</Text>
           {alternatives.map((profile) => (
             <ChoiceRow
               isSelected={false}
@@ -166,7 +174,9 @@ function ChoiceRow({
     >
       <View style={styles.choiceTextGroup}>
         <Text style={styles.choiceName}>{profile.displayName}</Text>
-        <Text style={styles.choiceMeta}>{profile.lifecycleState} / {profile.credentialStatus} / {profile.lastTestedAt ? 'tested' : 'not tested'}</Text>
+        <Text style={styles.choiceMeta}>
+          {formatProviderProfileLifecycleLabel(profile.lifecycleState)} / {formatProviderProfileCredentialStatusLabel(profile.credentialStatus)} / {profile.lastTestedAt ? 'Tested' : 'Needs test'}
+        </Text>
       </View>
       {workingAction ? (
         <ActivityIndicator color={colors.action} />
@@ -215,10 +225,6 @@ function InfoRow({ label, value }: { readonly label: string; readonly value: str
       <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
-}
-
-function formatCapability(value: string): string {
-  return value.replace(/_/g, ' ');
 }
 
 const styles = StyleSheet.create({
