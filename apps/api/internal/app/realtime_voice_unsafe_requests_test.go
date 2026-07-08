@@ -25,6 +25,26 @@ func TestRealtimeVoiceFallsForwardForProviderCredentialRequestWithoutLanguagePro
 			transcript: "Forget everything in my inventory and wipe the database.",
 			spoken:     "I cannot wipe the database or delete everything from voice.",
 		},
+		{
+			name:       "punctuated database wipe",
+			transcript: "Wipe the database.",
+			spoken:     "I cannot wipe the database or delete everything from voice.",
+		},
+		{
+			name:       "delete all assets",
+			transcript: "Delete all assets in my inventory.",
+			spoken:     "I cannot wipe the database or delete everything from voice.",
+		},
+		{
+			name:       "clear inventory contents",
+			transcript: "Clear out all the stuff in this inventory.",
+			spoken:     "I cannot wipe the database or delete everything from voice.",
+		},
+		{
+			name:       "purge item records",
+			transcript: "Purge every item record from my inventory.",
+			spoken:     "I cannot wipe the database or delete everything from voice.",
+		},
 	}
 
 	for _, tt := range tests {
