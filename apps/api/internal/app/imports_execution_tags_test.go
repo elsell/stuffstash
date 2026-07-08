@@ -106,4 +106,11 @@ func TestExecuteImportJobCreatesReusesAndAssignsTags(t *testing.T) {
 	if len(detail.Tags) != 2 || detail.Tags[0].Key.String() != "existing" || detail.Tags[1].Key.String() != "workshop" {
 		t.Fatalf("expected imported asset tags, got %+v", detail.Tags)
 	}
+	colorsByKey := map[string]string{}
+	for _, tag := range detail.Tags {
+		colorsByKey[tag.Key.String()] = tag.Color.String()
+	}
+	if colorsByKey["workshop"] != "#2F80ED" {
+		t.Fatalf("expected imported tag color to be preserved, got %+v", detail.Tags)
+	}
 }

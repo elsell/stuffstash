@@ -493,7 +493,8 @@ Supported live-source endpoints:
 
 Supported uploaded CSV format:
 
-- The CSV must use Homebox legacy export columns such as `HB.location`, `HB.tags`, `HB.asset_id`, `HB.name`, `HB.quantity`, `HB.description`, `HB.insured`, `HB.notes`, `HB.purchase_price`, `HB.purchase_from`, `HB.purchase_time`, `HB.manufacturer`, `HB.model_number`, `HB.serial_number`, `HB.lifetime_warranty`, `HB.warranty_expires`, `HB.warranty_details`, `HB.sold_to`, `HB.sold_price`, `HB.sold_time`, and `HB.sold_notes`.
+- The CSV must use Homebox legacy export columns such as `HB.location`, `HB.labels`, `HB.tags`, `HB.asset_id`, `HB.name`, `HB.quantity`, `HB.description`, `HB.insured`, `HB.notes`, `HB.purchase_price`, `HB.purchase_from`, `HB.purchase_time`, `HB.manufacturer`, `HB.model_number`, `HB.serial_number`, `HB.lifetime_warranty`, `HB.warranty_expires`, `HB.warranty_details`, `HB.sold_to`, `HB.sold_price`, `HB.sold_time`, and `HB.sold_notes`.
+- CSV tag import must read `HB.labels` when present and fall back to `HB.tags` for older exports.
 - CSV import cannot include binary images in the first slice because the Homebox CSV export does not contain attachment bytes.
 - CSV import must still preview image support as unavailable rather than silently claiming images will be imported.
 
