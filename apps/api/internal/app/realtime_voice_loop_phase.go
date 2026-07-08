@@ -270,7 +270,7 @@ func realtimeVoiceLooksLikeHistoryQuestion(transcript string) bool {
 
 func realtimeVoiceHasAssetAuditHistoryResult(toolResults []ports.AgentToolResult) bool {
 	for _, result := range toolResults {
-		if result.Name == RealtimeVoiceToolListAssetAuditHistory {
+		if result.Name == RealtimeVoiceToolListAssetAuditHistory && realtimeVoiceToolResultSucceeded(result) {
 			return true
 		}
 	}

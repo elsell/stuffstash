@@ -30,4 +30,21 @@ func TestRealtimeVoiceFailedReadResultsDoNotSatisfyContextGates(t *testing.T) {
 	if realtimeVoiceHasListResult(failedList) {
 		t.Fatalf("expected failed list result not to satisfy contents-list gate")
 	}
+
+	failedAuditHistory := []ports.AgentToolResult{
+		{
+			Name:    RealtimeVoiceToolSearchAuthorizedAssets,
+			Content: `{"tool":"search_authorized_assets","items":[{"assetId":"water-bottle-1","title":"Water bottle","kind":"item"}]}`,
+		},
+		{
+			Name:    RealtimeVoiceToolListAssetAuditHistory,
+			Content: `{"tool":"list_asset_audit_history","status":"error","code":"invalid_tool_request","retryable":true}`,
+		},
+	}
+	if realtimeVoiceHasAssetAuditHistoryResult(failedAuditHistory) {
+		t.Fatalf("expected failed audit history result not to satisfy history gate")
+	}
+	if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn("When did I move the water bottle?", failedAuditHistory) {
+		t.Fatalf("expected failed audit history result not to allow history finalization")
+	}
 }
