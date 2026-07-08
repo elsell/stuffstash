@@ -5,6 +5,7 @@ import {
   VoiceProviderSlot
 } from '../../application/providerProfiles/ProviderProfileRepository';
 import { colors, radius, spacing } from '../theme/tokens';
+import { formatVoiceProviderReadinessLabel } from './ProviderProfilesVoiceSetupPresentation';
 
 export function VoiceSetupPanel({
   configuration,
@@ -201,7 +202,7 @@ function ReadinessPill({ readiness }: { readonly readiness: string }) {
   return (
     <View style={[styles.readinessPill, isReady ? styles.readinessPillReady : null]}>
       <Text style={[styles.readinessPillText, isReady ? styles.readinessPillTextReady : null]}>
-        {readiness.replace(/_/g, ' ')}
+        {formatVoiceProviderReadinessLabel(readiness)}
       </Text>
     </View>
   );

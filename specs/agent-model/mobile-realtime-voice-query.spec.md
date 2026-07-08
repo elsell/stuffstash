@@ -177,7 +177,7 @@ Mobile provider management must use the voice pipeline as the primary setup mode
 - Agent brain.
 - Spoken output.
 
-Each slot must show its selected profile, readiness state, and the next best action. The setup view must distinguish selected profiles from unselected duplicates, missing credentials, disabled profiles, archived profiles, and profiles that need a fresh test. A flat list of provider profile cards may exist only as a secondary profile inventory or advanced view.
+Each slot must show its selected profile, readiness state, and the next best action. The setup view must distinguish selected profiles from unselected duplicates, missing credentials, disabled profiles, archived profiles, and profiles that need a fresh test. Readiness chips must use bounded product-owned labels and must not render raw backend readiness strings, provider session identifiers, prompts, endpoints, credentials, stack traces, or provider response material. Unknown readiness values must degrade to a safe neutral label such as `Needs attention`. A flat list of provider profile cards may exist only as a secondary profile inventory or advanced view.
 
 The setup screen must help users recover from the real failure classes that block voice:
 
