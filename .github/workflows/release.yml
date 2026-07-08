@@ -55,23 +55,10 @@ jobs:
           corepack enable
           corepack prepare pnpm@${PNPM_VERSION} --activate
 
-      - name: Check dependency age
-        run: make dependency-age-check
-
-      - name: Test release scripts
-        run: make scripts-test
-
-      - name: Test API
-        run: make test
-
-      - name: Build API release binary
-        run: make api-release-build
-
-      - name: Install web dependencies
-        run: make web-install
-
-      - name: Test web and API client
-        run: make web-test web-check api-client-test api-client-check
+      - name: Run required checks
+        run: make required-checks
+        env:
+          STUFF_STASH_STRUCTURAL_BASE: ${{ github.event.before }}
 
       - name: Report no release
         if: steps.plan.outputs.release_required != 'true'
