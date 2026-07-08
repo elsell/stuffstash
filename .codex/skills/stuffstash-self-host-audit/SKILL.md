@@ -1,6 +1,6 @@
 ---
 name: stuffstash-self-host-audit
-description: Audit the public Stuff Stash self-hosting journey from the perspective of a technically capable homeowner. Use when Codex is asked to test, critique, or report on Stuff Stash public documentation, README, durable Docker Compose setup, bundled Dex OIDC sign-in, Postgres/SpiceDB/Garage persistence, browser onboarding, image upload, and setup friction on a user-provided SSH target without inspecting source code.
+description: Audit the public Stuff Stash self-hosting journey from the perspective of a technically capable homeowner. Use when Codex is asked to test, critique, or report on Stuff Stash public documentation, README, durable Docker Compose setup, Caddy HTTPS, bundled Dex OIDC sign-in, Postgres/SpiceDB/Garage persistence, browser onboarding, image upload, and setup friction on a user-provided SSH target without inspecting source code.
 ---
 
 # Stuff Stash Self-Host Audit
@@ -31,7 +31,7 @@ Do not start local setup. All setup, execution, hosting, cloning, downloads, dep
 - Do not patch Stuff Stash, edit compose files beyond documented user configuration, or infer private repository knowledge.
 - Do not accept a development-only unauthenticated path as success.
 - Include Dex OIDC sign-in in the verification.
-- Exercise the documented Docker Compose self-host path with Postgres metadata persistence, datastore-backed SpiceDB authorization, Garage media storage, the static web container, and bundled Dex OIDC sign-in.
+- Exercise the documented Docker Compose self-host path with Caddy HTTPS, Postgres metadata persistence, datastore-backed SpiceDB authorization, Garage media storage, the static web container, and bundled Dex OIDC sign-in.
 - Do not require or invent a SQLite Compose path. Treat any public documentation that presents SQLite as the self-host happy path as a finding.
 - Use browser automation, preferably Playwright running against the remote-hosted app, for the end-user flow.
 - Return the final report in chat. Do not commit it.
@@ -96,7 +96,7 @@ Verify:
 - Required environment variables are documented and understandable.
 - Secrets and callback URLs are explained.
 - Dex OIDC is configured and reachable as the default self-host identity provider.
-- Public docs explain how to replace first-run Dex users, static clients, fixture passwords, and local HTTP origins before a household relies on the deployment.
+- Public docs explain how to replace first-run Dex users, static clients, fixture passwords, and local HTTPS origins before a household relies on the deployment.
 - API and web services start reliably.
 - Health or readiness checks are documented or discoverable from public docs.
 - Data persists after container restart.

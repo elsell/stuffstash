@@ -1,0 +1,23 @@
+{
+	auto_https disable_redirects
+}
+
+https://{$STUFF_STASH_SELFHOST_HOSTNAME}:{$STUFF_STASH_WEB_PORT} {
+	tls internal
+	reverse_proxy web:8080
+}
+
+https://{$STUFF_STASH_SELFHOST_HOSTNAME}:{$STUFF_STASH_HTTP_PORT} {
+	tls internal
+	reverse_proxy app:8080
+}
+
+https://{$STUFF_STASH_SELFHOST_HOSTNAME}:{$DEX_HTTP_PORT} {
+	tls internal
+	reverse_proxy dex:5556
+}
+
+https://{$STUFF_STASH_SELFHOST_HOSTNAME}:{$GARAGE_S3_PORT} {
+	tls internal
+	reverse_proxy garage:3900
+}
