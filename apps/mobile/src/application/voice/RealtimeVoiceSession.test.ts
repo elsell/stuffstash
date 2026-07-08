@@ -927,7 +927,7 @@ describe('RealtimeVoiceSessionController', () => {
       status: 'failed',
       failureCode: 'speech_to_text_failed',
       errorMessage: 'Speech-to-text provider failed. Check Voice providers and try again.',
-      progressLabel: 'Voice failed'
+      progressLabel: 'Speech input failed'
     });
   });
 
@@ -946,7 +946,41 @@ describe('RealtimeVoiceSessionController', () => {
       status: 'failed',
       failureCode: 'language_inference_failed',
       errorMessage: 'Language model stopped while continuing this request. Check Voice providers and try again.',
-      progressLabel: 'Voice failed'
+      progressLabel: 'Agent brain failed'
+    });
+  });
+
+  it('maps late speech output failures without discarding completed model context', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        { type: 'transcript.final', seq: 1, sessionId: 'session-1', text: 'Where is my water bottle?' },
+        {
+          type: 'assistant.response.completed',
+          seq: 2,
+          sessionId: 'session-1',
+          response: {
+            kind: 'answer',
+            spokenResponse: 'Your water bottle is in the Office.',
+            displayResponse: 'Your water bottle is in the Office.'
+          }
+        },
+        { type: 'session.failed', seq: 3, sessionId: 'session-1', code: 'text_to_speech_failed', message: 'The voice session failed safely.' }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      failureCode: 'text_to_speech_failed',
+      transcript: 'Where is my water bottle?',
+      spokenResponse: 'Your water bottle is in the Office.',
+      errorMessage: 'Speech output failed after Stuff Stash prepared the answer. Check Voice providers and try again.',
+      progressLabel: 'Speech output failed'
     });
   });
 

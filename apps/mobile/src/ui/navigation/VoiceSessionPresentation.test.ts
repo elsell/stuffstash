@@ -145,7 +145,7 @@ describe('VoiceSessionPresentation', () => {
       stage: 'failed',
       status: 'ready'
     })).toMatchObject({
-      title: 'Voice failed',
+      title: 'Speech input failed',
       subtitle: 'Check Voice providers and try again.'
     });
 
@@ -163,7 +163,7 @@ describe('VoiceSessionPresentation', () => {
       stage: 'failed',
       status: 'ready'
     })).toMatchObject({
-      title: 'Voice failed',
+      title: 'Agent brain failed',
       subtitle: 'Check Voice providers and try again.'
     });
 
@@ -182,8 +182,44 @@ describe('VoiceSessionPresentation', () => {
       stage: 'failed',
       status: 'ready'
     })).toMatchObject({
-      title: 'Voice failed',
+      title: 'Agent brain failed',
       subtitle: 'Open diagnostics or check Voice providers.'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Speech output failed',
+        failureCode: 'text_to_speech_failed',
+        errorMessage: 'Speech output failed after Stuff Stash prepared the answer. Check Voice providers and try again.',
+        spokenResponse: 'Your water bottle is in the Office.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Speech output failed',
+      subtitle: 'Check Voice providers and try again.'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'raw prompt bearer secret stack trace provider session',
+        failureCode: 'text_to_speech_failed',
+        errorMessage: 'Speech output failed after Stuff Stash prepared the answer. Check Voice providers and try again.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Speech output failed'
     });
   });
 

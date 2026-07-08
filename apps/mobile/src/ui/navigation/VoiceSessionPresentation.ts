@@ -114,7 +114,7 @@ export function buildVoiceAccessoryPresentation({
       accessibilityLabel: 'Open voice error',
       primaryAction: 'expand',
       subtitle: safeFailureAccessorySubtitle(realtime, diagnosticsEnabled) ?? context,
-      title: 'Voice failed',
+      title: safeFailureAccessoryTitle(realtime),
       tone: 'failed'
     };
   }
@@ -187,6 +187,23 @@ function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | unde
     return diagnosticsEnabled ? 'Open diagnostics or check Voice providers.' : 'Check Voice providers and try again.';
   }
   return realtime?.status === 'failed' ? 'Open for details.' : undefined;
+}
+
+function safeFailureAccessoryTitle(realtime: VoiceRealtimeState | null | undefined): string {
+  switch (realtime?.failureCode) {
+    case 'speech_to_text_failed':
+      return 'Speech input failed';
+    case 'language_inference_failed':
+      return 'Agent brain failed';
+    case 'text_to_speech_failed':
+      return 'Speech output failed';
+    case 'clarification_turn_limit':
+      return 'Voice needs a fresh start';
+    case 'provider_readiness':
+      return 'Voice providers needed';
+    default:
+      return 'Voice failed';
+  }
 }
 
 export type VoiceSessionPresentation = {
