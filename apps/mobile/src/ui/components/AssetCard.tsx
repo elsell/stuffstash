@@ -11,38 +11,42 @@ type AssetCardProps = {
 
 export function AssetCard({ asset, onPress, onTagPress }: AssetCardProps) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.card}>
-      <View style={styles.imageFrame}>
-        {asset.photo ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
-            style={styles.assetImage}
-          />
-        ) : (
-          <Text style={styles.imagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
-        )}
-      </View>
-      <View style={styles.body}>
-        <View style={styles.badgeRow}>
-          <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
-          {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
-          {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
+    <View style={styles.card}>
+      <Pressable accessibilityRole="button" onPress={onPress} style={styles.openRegion}>
+        <View style={styles.imageFrame}>
+          {asset.photo ? (
+            <Image
+              accessibilityIgnoresInvertColors
+              source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
+              style={styles.assetImage}
+            />
+          ) : (
+            <Text style={styles.imagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
+          )}
         </View>
-        <Text numberOfLines={2} style={styles.title}>
-          {asset.title}
-        </Text>
-        <Text numberOfLines={2} style={styles.description}>
-          {asset.description}
-        </Text>
-        <Text numberOfLines={1} style={styles.meta}>
-          {asset.locationTrailLabel}
-        </Text>
-        {asset.searchMatchLabels && asset.searchMatchLabels.length > 0 ? (
-          <Text numberOfLines={1} style={styles.matchMeta}>
-            Matched {asset.searchMatchLabels.join(', ')}
+      </Pressable>
+      <View style={styles.body}>
+        <Pressable accessibilityRole="button" onPress={onPress} style={styles.openTextRegion}>
+          <View style={styles.badgeRow}>
+            <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
+            {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
+            {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
+          </View>
+          <Text numberOfLines={2} style={styles.title}>
+            {asset.title}
           </Text>
-        ) : null}
+          <Text numberOfLines={2} style={styles.description}>
+            {asset.description}
+          </Text>
+          <Text numberOfLines={1} style={styles.meta}>
+            {asset.locationTrailLabel}
+          </Text>
+          {asset.searchMatchLabels && asset.searchMatchLabels.length > 0 ? (
+            <Text numberOfLines={1} style={styles.matchMeta}>
+              Matched {asset.searchMatchLabels.join(', ')}
+            </Text>
+          ) : null}
+        </Pressable>
         <AssetTagChips tags={asset.tags} compact overflowLimit={2} onTagPress={onTagPress} />
         <View style={styles.footer}>
           <Text style={asset.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
@@ -51,7 +55,7 @@ export function AssetCard({ asset, onPress, onTagPress }: AssetCardProps) {
           <Text style={styles.updated}>{asset.updatedAtLabel}</Text>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -71,6 +75,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
     justifyContent: 'center',
     width: '100%'
+  },
+  openRegion: {
+    width: '100%'
+  },
+  openTextRegion: {
+    gap: spacing.xs
   },
   imagePlaceholder: {
     color: colors.accentStrong,

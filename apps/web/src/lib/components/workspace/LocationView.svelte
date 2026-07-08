@@ -111,23 +111,25 @@
   {:else}
     <div class="asset-list">
       {#each assets as asset}
-        <Button.Root href={locationRowHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openRow(event, asset)}>
-          <AssetThumb {asset} />
-          <span class="asset-row-main">
-            <strong>{asset.title}</strong>
-            {#if asset.description}
-              <small>{asset.description}</small>
-            {/if}
-            <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
-            {#if asset.currentCheckout}
-              <CheckoutBadge checkout={asset.currentCheckout} compact />
-            {/if}
-          </span>
+        <div class="asset-row">
+          <Button.Root href={locationRowHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openRow(event, asset)}>
+            <AssetThumb {asset} />
+            <span class="asset-row-main">
+              <strong>{asset.title}</strong>
+              {#if asset.description}
+                <small>{asset.description}</small>
+              {/if}
+              {#if asset.currentCheckout}
+                <CheckoutBadge checkout={asset.currentCheckout} compact />
+              {/if}
+            </span>
+          </Button.Root>
+          <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
           <span class="asset-row-meta">
             <Badge variant="outline">{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</Badge>
             <small>{asset.containmentTrail}</small>
           </span>
-        </Button.Root>
+        </div>
       {/each}
     </div>
   {/if}

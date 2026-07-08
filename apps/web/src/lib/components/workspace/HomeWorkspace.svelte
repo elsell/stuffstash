@@ -145,18 +145,20 @@
       {:else}
         <div class="recent-rail" aria-label="Recently added assets">
           {#each recentAssets as asset}
-            <Button.Root href={browseAssetHref(asset)} variant="ghost" class="recent-card" onclick={(event) => openAsset(event, asset)}>
-              <AssetThumb {asset} size="lg" />
-              <span>
-                <strong>{asset.title}</strong>
-                <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
-                <small>{asset.containmentTrail}</small>
-                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
-                {#if asset.currentCheckout}
-                  <CheckoutBadge checkout={asset.currentCheckout} compact />
-                {/if}
-              </span>
-            </Button.Root>
+            <article class="recent-card">
+              <Button.Root href={browseAssetHref(asset)} variant="ghost" class="recent-card-open" onclick={(event) => openAsset(event, asset)}>
+                <AssetThumb {asset} size="lg" />
+                <span>
+                  <strong>{asset.title}</strong>
+                  <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
+                  <small>{asset.containmentTrail}</small>
+                  {#if asset.currentCheckout}
+                    <CheckoutBadge checkout={asset.currentCheckout} compact />
+                  {/if}
+                </span>
+              </Button.Root>
+              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
+            </article>
           {/each}
         </div>
       {/if}
@@ -168,18 +170,20 @@
         </div>
         <div class="asset-list compact-list">
           {#each checkedOutAssets as asset}
-            <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, asset)}>
-              <AssetThumb {asset} />
-              <span class="asset-row-main">
-                <strong>{asset.title}</strong>
-                <small>{asset.description || assetKindLabel(asset.kind)}</small>
-                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
-                {#if asset.currentCheckout}
-                  <CheckoutBadge checkout={asset.currentCheckout} compact />
-                {/if}
-              </span>
+            <div class="asset-row">
+              <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openAsset(event, asset)}>
+                <AssetThumb {asset} />
+                <span class="asset-row-main">
+                  <strong>{asset.title}</strong>
+                  <small>{asset.description || assetKindLabel(asset.kind)}</small>
+                  {#if asset.currentCheckout}
+                    <CheckoutBadge checkout={asset.currentCheckout} compact />
+                  {/if}
+                </span>
+              </Button.Root>
+              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
               <Badge variant="outline">{asset.lifecycleState}</Badge>
-            </Button.Root>
+            </div>
           {/each}
         </div>
       </section>
@@ -194,18 +198,20 @@
     {:else}
       <div class="asset-list">
         {#each archivedAssets as asset}
-          <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row" onclick={(event) => openAsset(event, asset)}>
-            <AssetThumb {asset} />
-            <span class="asset-row-main">
-              <strong>{asset.title}</strong>
-              <small>{asset.description || assetKindLabel(asset.kind)}</small>
-              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
-              {#if asset.currentCheckout}
-                <CheckoutBadge checkout={asset.currentCheckout} compact />
-              {/if}
-            </span>
+          <div class="asset-row">
+            <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openAsset(event, asset)}>
+              <AssetThumb {asset} />
+              <span class="asset-row-main">
+                <strong>{asset.title}</strong>
+                <small>{asset.description || assetKindLabel(asset.kind)}</small>
+                {#if asset.currentCheckout}
+                  <CheckoutBadge checkout={asset.currentCheckout} compact />
+                {/if}
+              </span>
+            </Button.Root>
+            <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
             <Badge variant="outline">{assetKindLabel(asset.kind)}</Badge>
-          </Button.Root>
+          </div>
         {/each}
       </div>
     {/if}

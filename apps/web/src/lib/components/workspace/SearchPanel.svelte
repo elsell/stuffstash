@@ -271,30 +271,35 @@
   {:else}
     <div class="asset-list">
       {#each results as result}
-        <Button.Root
-          href={searchAssetHref(result.asset)}
-          variant="ghost"
+        <div
           class="asset-row"
           aria-describedby={result.asset.photoUnavailable ? resultPhotoUnavailableId(result.asset) : undefined}
-          onclick={(event) => openAsset(event, result.asset)}
         >
-          <AssetThumb asset={result.asset} />
-          <span class="asset-row-main">
-            <strong>{result.asset.title}</strong>
-            <small>{result.inventory.name} / {result.asset.lifecycleState}</small>
-            {#if result.asset.currentCheckout}
-              <CheckoutBadge checkout={result.asset.currentCheckout} compact />
-            {/if}
-            <AssetTagChips tags={result.asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} actionMode="inline" />
-            {#if result.asset.photoUnavailable}
-              <small id={resultPhotoUnavailableId(result.asset)} class="visually-hidden">Photo unavailable</small>
-            {/if}
-          </span>
+          <Button.Root
+            href={searchAssetHref(result.asset)}
+            variant="ghost"
+            class="asset-row-open"
+            aria-describedby={result.asset.photoUnavailable ? resultPhotoUnavailableId(result.asset) : undefined}
+            onclick={(event) => openAsset(event, result.asset)}
+          >
+            <AssetThumb asset={result.asset} />
+            <span class="asset-row-main">
+              <strong>{result.asset.title}</strong>
+              <small>{result.inventory.name} / {result.asset.lifecycleState}</small>
+              {#if result.asset.currentCheckout}
+                <CheckoutBadge checkout={result.asset.currentCheckout} compact />
+              {/if}
+              {#if result.asset.photoUnavailable}
+                <small id={resultPhotoUnavailableId(result.asset)} class="visually-hidden">Photo unavailable</small>
+              {/if}
+            </span>
+          </Button.Root>
+          <AssetTagChips tags={result.asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
           <span class="asset-row-meta">
             <small>{searchMatchFieldLabel(result.matches[0]?.field)}</small>
             <small>{result.matches[0]?.value ?? ''}</small>
           </span>
-        </Button.Root>
+        </div>
       {/each}
     </div>
   {/if}
