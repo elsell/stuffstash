@@ -502,8 +502,18 @@ export class RealtimeVoiceSessionController {
             ? [...state.debugEvents, safeDiagnosticEvent(event)]
             : state.debugEvents
         };
-      case 'action.plan.proposed':
-        return withProgressStep(state, 'Review needed', { status: 'review', actionPlan: safeActionPlanProposal(event.actionPlan) });
+      case 'action.plan.proposed': {
+        const actionPlan = safeActionPlanProposal(event.actionPlan);
+        if (!actionPlan.planId) {
+          return withProgressStep(state, 'Review failed', {
+            status: 'failed',
+            actionPlan: undefined,
+            reviewDecisionPending: false,
+            errorMessage: 'The proposed change could not be reviewed safely.'
+          });
+        }
+        return withProgressStep(state, 'Review needed', { status: 'review', actionPlan });
+      }
       case 'action.plan.approved':
         if (!actionPlanEventMatchesState(state, event.planId)) {
           return state;

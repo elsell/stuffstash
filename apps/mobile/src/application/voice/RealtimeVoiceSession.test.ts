@@ -544,6 +544,38 @@ describe('RealtimeVoiceSessionController', () => {
     expect(visibleText).not.toContain('should-not-render');
   });
 
+  it('fails safely instead of entering review for a proposed action plan without a usable plan id', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'action.plan.proposed',
+          seq: 1,
+          sessionId: 'session-1',
+          actionPlan: {
+            planId: '   ',
+            status: 'proposed',
+            confirmationSummary: 'Create item water bottle?',
+            commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+            risks: []
+          }
+        }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      progressLabel: 'Review failed',
+      errorMessage: 'The proposed change could not be reviewed safely.'
+    });
+    expect(states.at(-1)?.actionPlan).toBeUndefined();
+  });
+
 
   it('approves a proposed action plan through the active realtime transport', async () => {
     const transport = new ReviewDecisionTransport();

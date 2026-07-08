@@ -360,6 +360,8 @@ Client messages must include monotonic per-session sequence metadata once a sess
 
 `action.plan.proposed` contains the safe persisted action-plan review payload for mobile. It must include plan ID, confirmation summary, command summaries, risk summaries, and no raw transcript, raw prompt, raw model response, credentials, provider session IDs, hidden resource data, or approval claims. For existing-asset commands such as move, archive, restore, checkout, and return, the API should enrich the mobile review command with the authorized visible asset title and kind instead of relying only on provider-written command summary text.
 
+Mobile must not enter review for a malformed `action.plan.proposed` event whose plan ID is missing or empty after normalization. It must fail the visible session safely instead of showing an approval surface that cannot send a valid review decision.
+
 The mobile review sheet must treat API-enriched command titles and kinds as verified display context for existing-asset changes. If an existing-asset review command is missing a verified title, mobile may show the provider-written command summary as supporting text, but it must not present that summary as the resolved asset title. The primary review row must use a neutral fallback such as `Selected item`, `Selected container`, `Selected location`, or `Selected asset` until the API supplies verified context.
 
 When the API emits `action.plan.proposed`, the mobile app must enter the `review` stage and show the proposal in the voice sheet. The first mobile slice may show disabled or not-yet-wired approval actions, but it must not silently execute the plan. The final spoken response for a proposed write may explain that the user should review the suggested change.
