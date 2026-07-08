@@ -50,8 +50,7 @@ without wiring outside infrastructure first.
 Do not reuse those values in a deployed system.
 
 The self-host stack uses datastore-backed SpiceDB, Postgres, and Garage volumes.
-That makes normal container restarts durable when volumes are kept, but it does
-not make the example secrets safe.
+That does not make the example secrets safe.
 
 Replace first-run secrets before relying on a deployment:
 
