@@ -14,6 +14,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - pnpm for documentation CI: `11.0.7`.
 - Astro: `astro 6.4.4`.
 - Starlight: `@astrojs/starlight 0.39.3`.
+- Starlight Lucode theme: `lucode-starlight 0.1.6`.
 - Geist Sans documentation font package: `@fontsource/geist-sans 5.2.5`.
 
 ## Pinned Web And Client Tooling
