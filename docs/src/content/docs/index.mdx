@@ -5,49 +5,53 @@ template: splash
 hero:
   tagline: Low friction inventory management by homeowners, for Homeowners
   actions:
-    - text: See it in action (coming soon)
-      link: product/
     - text: Run it yourself
       link: self-hosting/
 ---
 
 import { ContainerSection } from 'lucode-starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import ImageCarousel from '../../components/ImageCarousel.astro';
 
 <ContainerSection>
 
-I built Stuff Stash, a self-hosted home inventory solution with a native
-phone app, because I wanted an inventory system but I didn't have time to maintain it.
+<Aside type="caution">
+Stuff Stash is under early and active development.
 
-Stuff Stash can be maintained by clicking, tapping, and typing, but I use
+By using it, you acknowledge that you're on the bleeding edge,
+and agree to not hold me accountable for any cuts you may obtain 🩸.
+</Aside>
+
+I built Stuff Stash because I wanted an inventory system but **didn't have time to maintain it**.
+
+While Stuff Stash can be maintained by clicking, tapping, and typing, I use
 the LLM-powered voice mode because I value my time.
 
-Stuff Stash supports cloud and local models for text to speech, speech to text, and LLMs.
+**I made this for me and my home. Stuff Stash might not be a good fit for you. That's fine.** You might consider [HomeBox](https://homebox.software/), [Snipe-IT](https://snipeitapp.com/), or even [Grocy](https://grocy.info/).
 
-<div class="ss-card-grid">
-  <a class="ss-card" href="product/">
-    <span class="ss-card-kicker">See the product</span>
-    <strong>Ask, add, search, and review</strong>
-    <span>The main flows Stuff Stash is built around.</span>
-  </a>
-  <a class="ss-card" href="self-hosting/">
-    <span class="ss-card-kicker">Run it</span>
-    <strong>Pick a self-hosting path</strong>
-    <span>Start with Docker Compose or plan a split API and web deployment.</span>
-  </a>
-  <a class="ss-card" href="first-inventory/">
-    <span class="ss-card-kicker">Try it</span>
-    <strong>Create your first inventory</strong>
-    <span>Add a location, add an item, find it, then move it safely.</span>
-  </a>
-</div>
+*Stuff Stash supports cloud and local models for text to speech, speech to text, and LLMs.*
 
 </ContainerSection>
 
 <ContainerSection>
 
+## Screenshots
+
+...If you insist. 
+
+The design is subject to change (read: it absolutely will change, for the better.)
+
+But why not share where I'm at:
+
+<ImageCarousel 
+  images={[
+    { src: 'screenshots/home-web.png', alt: 'Web Client Home View' },
+  ]} 
+/>
+
 ## Why It Exists
 
-My previous inventory solution was invaluable when I needed to find something 
+My previous inventory solution (shoutout [HomeBox](https://homebox.software/) ❤️) was invaluable when I needed to find something 
 I had in storage. 
 
 But when I needed to move things around, add new items, or lend something to a friend,
@@ -62,12 +66,12 @@ It wasn't for lack of _functionality_, but rather the friction was too high.
 ## Core Tenets
 
 - **Low-friction upkeep:** inventory lifecycle must be manageable with native voice
-  control
-- **Local control:** the app is designed for self-hosting with separate API and
-  web deployables.
-- **Native SSO:** authentication uses OIDC from the beginning.
-- **Scoped sharing:** tenants and inventories protect household boundaries.
-- **Portable data:** import and export are core trust promises.
+  control.
+- **Mobile App:** the inventory must be manageable via a cross-platform native mobile app _from day one._
+- **Local control:** everything (even "AI" stuff) must work offline and be self-hostable.
+- **Native SSO (OIDC) Support:** OIDC support must be natively integrated from the start.
+- **Multi-tenancy and sharing:** a multi-tenant, inventory, and user model must be natively supported.
+- **Portable data:** data must be easily imported and exported.
 
 </ContainerSection>
 
@@ -75,7 +79,31 @@ It wasn't for lack of _functionality_, but rather the friction was too high.
 
 ## Start Here
 
-If you are evaluating Stuff Stash, start with [Run Stuff Stash](self-hosting/).
-If you want the product shape first, start with [What It Does](product/).
+If you want to see how to run Stuff Stash, start with [Run Stuff Stash](self-hosting/).
 
+If you want to learn more about the internals, see [What It Does](product/).
+</ContainerSection>
+
+<ContainerSection>
+  <Aside>
+  **A note on the use of AI**
+
+  I <del>imagine</del> hope we'll look back on this time in history and laugh one day.
+
+  But as of 2026, the use of AI in software development is still quite
+  polarizing, and developers are often praised or hanged for their transparency
+  about the use of AI.
+
+  Here are a few things I want you to know: 
+  - I value your time, so I spent my time writing this entire page (how can I prove that? I can use any emoji I want 🙈 🍘 🪘 ⛓️ 🪥 🆗 🅱️0️⃣0️⃣Ⓜ️𝓮®️)
+  - Most of the documentation is generated at this time. This is likely to change as the product matures and 
+    I shift my effort towards the new user experience. For now, you'll have to deal with AI docs. At least there are docs :)
+  - Stuff Stash's code was 100% generated by an LLM (primarily gpt5.5 via Codex), driven by spec-driven development.
+  - Good security and architecture design are a primary concern and are where I spend most of my mental effort. For example:
+      - I enforce a **minimum age for packages and libraries** via a commit hook.
+      - All package, library, base image, and GitHub Action **use pinned versions**.
+      - All **container images are signed** and come with build provenance attestations.
+  - Without the use of "AI" coding tools, this project would never have come to be. I think it's better
+    that this project exists. You have the right to disagree, but I find this useful.
+  </Aside>
 </ContainerSection>
