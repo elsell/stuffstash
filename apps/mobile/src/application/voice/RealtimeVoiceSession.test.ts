@@ -887,6 +887,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       progressLabel: 'Change cancelled',
+      reviewDecisionPending: false,
       actionPlan: {
         planId: 'plan-1',
         status: 'cancelled'

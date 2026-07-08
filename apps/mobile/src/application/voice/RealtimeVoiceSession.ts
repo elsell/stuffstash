@@ -516,7 +516,8 @@ export class RealtimeVoiceSessionController {
           status: 'completed',
           actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
             ? { ...state.actionPlan, status: 'cancelled' }
-            : state.actionPlan
+            : state.actionPlan,
+          reviewDecisionPending: false
         });
       case 'action.plan.executed':
         const photoAttachmentStatus = await this.attachApprovedPlanPhotos({
