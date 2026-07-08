@@ -495,6 +495,55 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('redacts unsafe structured action plan review text before visible state', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'action.plan.proposed',
+          seq: 1,
+          sessionId: 'session-1',
+          actionPlan: {
+            planId: 'plan-1',
+            status: 'proposed',
+            confirmationSummary: 'Raw prompt: hidden system instruction bearer secret-token',
+            commands: [{
+              id: 'cmd-1',
+              kind: 'create_asset',
+              summary: 'Create item apiKey: bearer should-not-leak',
+              title: 'Stack Trace book',
+              parentTitle: 'providerSessionId: live-1'
+            }],
+            risks: ['Authorization: Bearer secret-token', 'credential: bearer credential-token', 'Raw provider response: should-not-render']
+          }
+        }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+    const actionPlan = states.at(-1)?.actionPlan;
+    const visibleText = JSON.stringify(actionPlan);
+
+    expect(actionPlan).toMatchObject({
+      confirmationSummary: '[redacted]',
+      commands: [{
+        summary: 'Create item apiKey: [redacted]',
+        title: 'Stack Trace book',
+        parentTitle: 'providerSessionId: [redacted]'
+      }],
+      risks: ['Authorization: [redacted]', 'credential: [redacted]', '[redacted]']
+    });
+    expect(visibleText).not.toContain('hidden system instruction');
+    expect(visibleText).not.toContain('should-not-leak');
+    expect(visibleText).not.toContain('secret-token');
+    expect(visibleText).not.toContain('credential-token');
+    expect(visibleText).not.toContain('live-1');
+    expect(visibleText).not.toContain('should-not-render');
+  });
+
 
   it('approves a proposed action plan through the active realtime transport', async () => {
     const transport = new ReviewDecisionTransport();

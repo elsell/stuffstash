@@ -2,7 +2,7 @@ import type { InventorySummaryRepository } from '../home/InventorySummaryReposit
 import type { CreateInventoryAssetPhotoInput } from '../home/InventorySummaryRepository';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
-import { redactUnsafeVoiceText } from './VoiceTextSafety';
+import { redactUnsafeVoiceStructuredText, redactUnsafeVoiceText } from './VoiceTextSafety';
 
 export type RecordedVoiceAudio = {
   readonly mimeType: 'audio/mp4';
@@ -931,20 +931,20 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
   return {
     planId: safeBoundedText(proposal.planId, 80),
     status: safeStatus,
-    confirmationSummary: safeBoundedText(proposal.confirmationSummary, 180),
+    confirmationSummary: safeBoundedActionPlanText(proposal.confirmationSummary, 180),
     commands: proposal.commands.map((command) => ({
       id: command.id ? safeBoundedText(command.id, 80) : undefined,
       kind: safeBoundedText(command.kind, 40),
-      summary: safeBoundedText(command.summary, 180),
+      summary: safeBoundedActionPlanText(command.summary, 180),
       operation: command.operation ? safeBoundedText(command.operation, 40) : undefined,
-      title: command.title ? safeBoundedText(command.title, 120) : undefined,
+      title: command.title ? safeBoundedActionPlanText(command.title, 120) : undefined,
       assetKind: command.assetKind ? safeBoundedText(command.assetKind, 40) : undefined,
       parentAssetId: command.parentAssetId ? safeBoundedText(command.parentAssetId, 80) : undefined,
-      parentTitle: command.parentTitle ? safeBoundedText(command.parentTitle, 120) : undefined,
+      parentTitle: command.parentTitle ? safeBoundedActionPlanText(command.parentTitle, 120) : undefined,
       parentKind: command.parentKind ? safeBoundedText(command.parentKind, 40) : undefined,
       parentCommandId: command.parentCommandId ? safeBoundedText(command.parentCommandId, 80) : undefined
     })),
-    risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedText(risk, 180)).filter(Boolean)
+    risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedActionPlanText(risk, 180)).filter(Boolean)
   };
 }
 
@@ -1048,6 +1048,16 @@ function voiceFailureProgressLabel(code: string): string {
 
 function safeBoundedText(value: string, maxLength: number): string {
   const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return normalized.slice(0, maxLength).trim();
+}
+
+function safeBoundedActionPlanText(value: string, maxLength: number): string {
+  const normalized = redactUnsafeVoiceStructuredText(value)
+    .replace(/\s+/g, ' ')
+    .trim();
   if (normalized.length <= maxLength) {
     return normalized;
   }
