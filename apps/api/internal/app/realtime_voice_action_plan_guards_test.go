@@ -107,6 +107,94 @@ func TestRealtimeVoiceRejectsMovePlanToParentNotNamedByTranscript(t *testing.T) 
 	}
 }
 
+func TestRealtimeVoiceRejectsMovePlanToParentWithOnlyGenericWordOverlap(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-drill",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "drill"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-dining-room",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "dining room"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:   "tool-plan-dining-room",
+				Name: RealtimeVoiceToolProposeActionPlan,
+				Arguments: map[string]any{
+					"intentSummary":              "Move the drill to Living room.",
+					"modelInterpretationSummary": "The model substituted Dining room for the requested Living room.",
+					"confirmationSummary":        "Move Drill to Dining room?",
+					"commands": []any{
+						map[string]any{
+							"id":      "cmd-move",
+							"kind":    "move_asset",
+							"summary": "Move Drill to Dining room",
+							"arguments": map[string]any{
+								"assetId":       "drill-1",
+								"parentAssetId": "dining-room-1",
+							},
+						},
+					},
+				},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindClarification,
+				SpokenResponse:  "I found the drill, but I need the exact destination before I can prepare that move.",
+				DisplayResponse: "I found the drill, but I need the exact destination before I can prepare that move.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my drill to the living room."}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	drill := assetItem("drill-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	drillTitle, _ := asset.NewTitle("Drill")
+	drill.Title = drillTitle
+	diningRoom := assetItem("dining-room-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	diningRoomTitle, _ := asset.NewTitle("Dining room")
+	diningRoom.Title = diningRoomTitle
+	if err := store.CreateAsset(context.Background(), drill, audit.Record{ID: audit.ID("audit-drill-generic-overlap"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "drill-1", OccurredAt: time.Date(2026, 6, 26, 15, 0, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed drill: %v", err)
+	}
+	if err := store.CreateAsset(context.Background(), diningRoom, audit.Record{ID: audit.ID("audit-dining-room"), TenantID: audit.TenantID("tenant-home"), InventoryID: audit.InventoryID("inventory-home"), Action: audit.ActionAssetCreated, TargetType: audit.TargetAsset, TargetID: "dining-room-1", OccurredAt: time.Date(2026, 6, 26, 15, 1, 0, 0, time.UTC)}, nil); err != nil {
+		t.Fatalf("seed dining room: %v", err)
+	}
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	}); err != nil {
+		t.Fatalf("run realtime voice query: %T %[1]v events=%+v", err, events)
+	}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			t.Fatalf("expected generic-overlap parent substitution to be rejected before proposal, got %+v", event.ActionPlan)
+		}
+	}
+	if tts.lastText != "I found the drill, but I need the exact destination before I can prepare that move." {
+		t.Fatalf("expected clarification after rejected generic-overlap parent substitution, got %q", tts.lastText)
+	}
+}
+
 func TestRealtimeVoiceRejectsDuplicateRootCreateWhenVisibleAssetAlreadyExists(t *testing.T) {
 	t.Parallel()
 
