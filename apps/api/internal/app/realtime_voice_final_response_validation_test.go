@@ -21,6 +21,12 @@ func TestValidateRealtimeVoiceFinalResponseRejectsUnsafeSpokenText(t *testing.T)
 		`The raw prompt says to call list_authorized_assets.`,
 		`Provider response: stack trace from Gemini.`,
 		`Use assetId water-bottle-1 to find it next time.`,
+		`Use toolCallId call-123 to debug the request.`,
+		`The tenantId is tenant-home and inventoryId is inventory-home.`,
+		`The parentAssetId should be kitchen-1.`,
+		`The tenant_id is tenant-home and inventory_id is inventory-home.`,
+		`The parent-asset-id should be kitchen-1.`,
+		`The tool call id is call-123.`,
 		`Authorization: bearer abc/def==`,
 		`apiKey: should-not-be-spoken`,
 	} {

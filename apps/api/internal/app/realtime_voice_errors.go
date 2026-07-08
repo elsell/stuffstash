@@ -58,11 +58,16 @@ func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
 		"stack trace",
 		"raw transcript",
 		"raw audio",
-		"assetid",
 		"tool_call",
 		"functioncall",
 	} {
 		if strings.Contains(normalized, token) {
+			return true
+		}
+	}
+	collapsed := realtimeVoiceFinalCollapsedText(normalized)
+	for _, token := range []string{"assetid", "parentassetid", "inventoryid", "tenantid", "toolcallid"} {
+		if strings.Contains(collapsed, token) {
 			return true
 		}
 	}
@@ -73,6 +78,13 @@ var (
 	realtimeVoiceFinalJSONFragmentPattern = regexp.MustCompile(`["']?[a-zA-Z][a-zA-Z0-9_-]*["']?\s*:\s*["'{\[]`)
 	realtimeVoiceFinalSecretPattern       = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?(bearer\s+)?[a-z0-9._~+/=-]{16,}|bearer\s+[^"',\s}\]\)]+`)
 )
+
+func realtimeVoiceFinalCollapsedText(value string) string {
+	value = strings.ReplaceAll(value, "_", "")
+	value = strings.ReplaceAll(value, "-", "")
+	value = strings.ReplaceAll(value, " ", "")
+	return value
+}
 
 func realtimeVoiceErrorCode(err error) string {
 	var providerErr realtimeVoiceProviderStageError
