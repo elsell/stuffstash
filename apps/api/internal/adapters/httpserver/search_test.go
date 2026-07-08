@@ -190,6 +190,11 @@ func TestAssetSearchFiltersByAuthorization(t *testing.T) {
 func TestAssetSearchDoesNotMatchArchivedTags(t *testing.T) {
 	fixture := newAssetSearchFixture(t)
 
+	activeTagSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Workshop", "exact", "", "")
+	if len(activeTagSearch.Data) != 1 || activeTagSearch.Data[0].Asset.ID != fixture.drillAssetID || activeTagSearch.Data[0].Matches[0].Field != "tag_display_name" {
+		t.Fatalf("expected active tag display-name search to find drill, got %+v", activeTagSearch.Data)
+	}
+
 	archiveTag := performRequest(fixture.server, http.MethodDelete, "/tenants/"+fixture.tenantID+"/inventories/"+fixture.toolsInventoryID+"/tags/"+fixture.workshopTagID, "Bearer dev:owner", nil)
 	if archiveTag.Code != http.StatusOK {
 		t.Fatalf("expected archived tag status %d, got %d with body %s", http.StatusOK, archiveTag.Code, archiveTag.Body.String())
@@ -261,7 +266,6 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 			"drill-checkout", "op-drill-checkout", "audit-drill-checkout",
 			"viewer-grant-event", "audit-viewer-grant", "viewer-claim",
 			"archive-drill-audit",
-			"audit-archive-workshop-tag",
 		},
 	}))
 
