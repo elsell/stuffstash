@@ -710,6 +710,9 @@ func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentRespo
 			return true
 		}
 	}
+	if strings.Contains(text, " in ") && strings.Contains(text, " now ") {
+		return true
+	}
 	return false
 }
 

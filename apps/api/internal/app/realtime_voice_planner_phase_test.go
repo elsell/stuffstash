@@ -211,3 +211,75 @@ func TestRealtimeVoicePlannerOnlySafeFailureDoesNotClaimPlacementMutation(t *tes
 		t.Fatalf("planner-only safe failure must not claim placement mutation, got %q", tts.lastText)
 	}
 }
+
+func TestRealtimeVoicePlannerOnlySafeFailureDoesNotClaimReversedPlacementMutation(t *testing.T) {
+	t.Parallel()
+
+	if !realtimeVoicePlannerFinalClaimsMutation(ports.StructuredAgentResponse{
+		Kind:            ports.StructuredAgentResponseKindSafeFailure,
+		SpokenResponse:  "The drill is in the garage now.",
+		DisplayResponse: "The drill is in the garage now.",
+	}) {
+		t.Fatalf("expected reversed placement phrasing to count as a planner mutation claim")
+	}
+
+	tts := &resolvedTextToSpeech{}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-drill",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "drill"},
+			}},
+		},
+		{
+			ToolCalls: []ports.AgentToolCall{{
+				ID:        "search-garage",
+				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
+				Arguments: map[string]any{"query": "garage"},
+			}},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindSafeFailure,
+				SpokenResponse:  "The drill is in the garage now.",
+				DisplayResponse: "The drill is in the garage now.",
+			},
+		},
+		{
+			Final: &ports.StructuredAgentResponse{
+				Kind:            ports.StructuredAgentResponseKindSafeFailure,
+				SpokenResponse:  "I could not prepare that move safely.",
+				DisplayResponse: "I could not prepare that move safely.",
+			},
+		},
+	}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Put the drill in the garage."}
+	resolver.providers.LanguageInference = language
+	resolver.providers.TextToSpeech = tts
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	drill := assetItem("drill-1", "tenant-home", "inventory-home", asset.KindItem, "")
+	drillTitle, _ := asset.NewTitle("Drill")
+	drill.Title = drillTitle
+	seedRealtimeVoiceLoopAsset(t, store, drill, "audit-drill-planner-phase-reversed-placement")
+	garage := assetItem("garage-1", "tenant-home", "inventory-home", asset.KindLocation, "")
+	garageTitle, _ := asset.NewTitle("Garage")
+	garage.Title = garageTitle
+	seedRealtimeVoiceLoopAsset(t, store, garage, "audit-garage-planner-phase-reversed-placement")
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{
+		Session:     session,
+		AudioChunks: [][]byte{[]byte("audio")},
+	}, func(RealtimeVoiceEvent) error { return nil }); err != nil {
+		t.Fatalf("run realtime voice query: %v", err)
+	}
+
+	if strings.Contains(strings.ToLower(tts.lastText), "garage now") {
+		t.Fatalf("planner-only safe failure must not claim reversed placement mutation, got %q", tts.lastText)
+	}
+}
