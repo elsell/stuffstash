@@ -101,6 +101,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - No account affordance until there is a specified account, profile, or authentication interaction.
 - Home must not show dashboard metric tiles. The inventory home workspace is a browse and recency surface, not an analytics dashboard.
 - The Home locations preview must intentionally show only a few top-level locations. The full location browser lives in the `Places` scope inside `Browse`; the full containment explorer lives in the separate `Map` sub-surface inside Browse.
+- Mobile location previews, Places browsing, and location counts must be derived from the selected inventory's full active containment set, not only from the bounded updated-descending recent-assets page used by the Home recent-assets ticker.
 - The Home recent-assets ticker must open asset detail routes. Its `See all` action must open a native stack asset list for the selected inventory.
 - The Home recent-assets ticker must use the API asset recency contract, requesting assets in updated-descending order and deriving labels from API-provided timestamps. Mobile must not infer recency from asset IDs or page through an entire inventory only to sort locally.
 - The Home recent-assets ticker must include all asset kinds in API-provided recency order. After a successful Add flow, switching to Home or pulling to refresh must make the newly created item eligible to appear ahead of older locations and containers.

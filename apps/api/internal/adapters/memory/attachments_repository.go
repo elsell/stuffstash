@@ -31,6 +31,10 @@ func (s *Store) SaveAttachment(_ context.Context, attachment media.Attachment, a
 		attachment.LifecycleState = media.LifecycleStateActive
 	}
 	s.attachments[attachment.ID] = attachment
+	if item.UpdatedAt.Before(attachment.CreatedAt) {
+		item.UpdatedAt = attachment.CreatedAt
+		s.assets[item.ID] = item
+	}
 	s.auditRecords[auditRecord.ID] = auditRecord
 	return nil
 }

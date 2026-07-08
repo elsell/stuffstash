@@ -1026,6 +1026,103 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
+  it('loads locations from the full active inventory tree instead of only the recent summary page', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      ...Array.from({ length: 100 }, (_, index): Asset => ({
+        id: `asset-recent-item-${index.toString().padStart(3, '0')}`,
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: `Recent item ${index.toString().padStart(3, '0')}`,
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T10:00:00Z',
+        updatedAt: `2026-06-25T${(10 + Math.floor(index / 60)).toString().padStart(2, '0')}:${(index % 60).toString().padStart(2, '0')}:00Z`
+      })),
+      {
+        id: 'asset-late-location',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'location',
+        title: 'Late page closet',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T10:00:00Z',
+        updatedAt: '2026-06-20T10:00:00Z'
+      },
+      {
+        id: 'asset-late-child',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Stored blanket',
+        description: '',
+        parentAssetId: 'asset-late-location',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T10:01:00Z',
+        updatedAt: '2026-06-20T10:01:00Z'
+      },
+      {
+        id: 'asset-late-newer-child',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Newer stored blanket',
+        description: '',
+        parentAssetId: 'asset-late-location',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T10:02:00Z',
+        updatedAt: '2026-06-20T10:02:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
+      locationCount: 1,
+      locations: [
+        {
+          id: 'asset-late-location',
+          title: 'Late page closet',
+          containedAssetCount: 2,
+          recentAssetTitles: ['Newer stored blanket', 'Stored blanket']
+        }
+      ],
+      assets: expect.not.arrayContaining([
+        expect.objectContaining({ id: 'asset-late-location' })
+      ])
+    });
+    expect(client.listAssetRequests.filter((request) => request.inventoryId === 'inventory-home')).toEqual([
+      {
+        inventoryId: 'inventory-home',
+        limit: 100,
+        cursor: undefined,
+        lifecycleState: 'all',
+        sort: 'updated_desc'
+      },
+      {
+        inventoryId: 'inventory-home',
+        limit: 100,
+        cursor: undefined,
+        lifecycleState: 'active',
+        sort: 'id_asc'
+      },
+      {
+        inventoryId: 'inventory-home',
+        limit: 100,
+        cursor: '100',
+        lifecycleState: 'active',
+        sort: 'id_asc'
+      }
+    ]);
+  });
+
   it('lists paged selected-inventory assets for browse mode', async () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
@@ -1187,7 +1284,18 @@ describe('ApiInventorySummaryRepository', () => {
       tagIds: ['tag-workshop', 'tag-camping']
     });
 
-    expect(client.listAssetRequests).toHaveLength(2);
+    expect(client.listAssetRequests).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        inventoryId: 'inventory-home',
+        lifecycleState: 'all',
+        sort: 'updated_desc'
+      }),
+      expect.objectContaining({
+        inventoryId: 'inventory-home',
+        lifecycleState: 'active',
+        sort: 'id_asc'
+      })
+    ]));
     expect(client.searchAssetRequests[0]).toMatchObject({
       tenantId: 'tenant-home',
       query: '',

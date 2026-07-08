@@ -95,27 +95,35 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const inventoriesByTenant = await Promise.all(
       tenants.map(async (tenant) => {
         const inventoriesPage = await this.client.listInventories(tenant.id, 100);
-        return Promise.all(
-          inventoriesPage.items.map((item) => this.mapInventoryWithAssets(tenant, item))
-        );
+        return inventoriesPage.items.map((inventory) => ({ tenant, inventory }));
       })
     );
-    const inventories = inventoriesByTenant.flat();
+    const availableInventories = inventoriesByTenant.flat();
     const preferredInventory =
-      inventories.find((inventory) => inventory.tenantId === tenantId(this.configuredTenantId)) ??
-      inventories[0];
+      availableInventories.find((item) => item.tenant.id === this.configuredTenantId) ??
+      availableInventories[0];
     const defaultInventory =
-      inventories.find((inventory) => inventory.id === this.selectedInventoryId) ??
+      availableInventories.find((item) => inventoryId(item.inventory.id) === this.selectedInventoryId) ??
       preferredInventory;
 
     if (!defaultInventory) {
       throw new Error('API principal did not include any inventories.');
     }
 
+    const inventories = await Promise.all(
+      availableInventories.map((item) =>
+        this.mapInventoryWithAssets(
+          item.tenant,
+          item.inventory,
+          item.tenant.id === defaultInventory.tenant.id && item.inventory.id === defaultInventory.inventory.id
+        )
+      )
+    );
+
     return {
       tenants: tenants.map(mapTenant),
       inventories,
-      defaultInventoryId: defaultInventory.id
+      defaultInventoryId: inventoryId(defaultInventory.inventory.id)
     };
   }
 
@@ -360,14 +368,18 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async mapInventoryWithAssets(
     tenant: Tenant,
-    inventory: Inventory
+    inventory: Inventory,
+    hydrateFullLocations: boolean
   ): Promise<InventorySummary> {
     const assets = await this.listRecentInventoryAssets(tenant.id, inventory.id);
+    const locationSourceAssets = hydrateFullLocations
+      ? await this.listAllActiveInventoryAssets(tenant.id, inventory.id)
+      : assets;
     const assetTags = await this.listAllInventoryTags(tenant.id, inventory.id);
     const locations = await Promise.all(
-      assets
+      locationSourceAssets
         .filter((asset) => asset.kind === 'location')
-        .map(async (location) => mapLocation(location, assets, await this.primaryPhotoForAsset(location)))
+        .map(async (location) => mapLocation(location, locationSourceAssets, await this.primaryPhotoForAsset(location)))
     );
 
     const mappedAssets = await Promise.all(
@@ -851,6 +863,7 @@ function mapLocation(
   photo?: AssetSummary['photo']
 ): LocationSummary {
   const children = assets.filter((asset) => asset.parentAssetId === location.id);
+  const recentChildren = sortAssetsByUpdatedDesc(children).slice(0, 3);
 
   return {
     id: assetId(location.id),
@@ -858,7 +871,7 @@ function mapLocation(
     title: location.title,
     description: location.description || 'Location asset',
     containedAssetCount: children.length,
-    recentAssetTitles: children.slice(0, 3).map((asset) => asset.title),
+    recentAssetTitles: recentChildren.map((asset) => asset.title),
     hasPhoto: photo !== undefined,
     photo
   };
@@ -890,6 +903,24 @@ function filterAssetsByCheckoutState(
     return assets.filter((asset) => asset.currentCheckout === undefined);
   }
   return assets;
+}
+
+function sortAssetsByUpdatedDesc(assets: readonly Asset[]): readonly Asset[] {
+  return [...assets].sort((left, right) => {
+    const rightTime = Date.parse(right.updatedAt || right.createdAt || '');
+    const leftTime = Date.parse(left.updatedAt || left.createdAt || '');
+    const timeComparison = safeTimestamp(rightTime) - safeTimestamp(leftTime);
+
+    if (timeComparison !== 0) {
+      return timeComparison;
+    }
+
+    return right.id.localeCompare(left.id);
+  });
+}
+
+function safeTimestamp(timestamp: number): number {
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 function mapAsset(

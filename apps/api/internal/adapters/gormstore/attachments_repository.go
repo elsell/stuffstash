@@ -46,6 +46,11 @@ func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, 
 		}).Error; err != nil {
 			return err
 		}
+		if item.UpdatedAt.Before(attachment.CreatedAt) {
+			if err := tx.Model(&item).Update("updated_at", attachment.CreatedAt).Error; err != nil {
+				return err
+			}
+		}
 		return createAuditRecord(tx, auditRecord)
 	})
 }
