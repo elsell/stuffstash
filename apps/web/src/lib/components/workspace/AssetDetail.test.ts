@@ -109,6 +109,25 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Edit actions require asset edit access.');
   });
 
+  it('searches by detail tag without opening another action', async () => {
+    const searchedTags: string[] = [];
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        tags: [{ id: 'tag-medicine', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
+      },
+      onTagSearch: async (tag) => {
+        searchedTags.push(tag.displayName);
+      }
+    });
+
+    buttonWithLabel('Search for tag Medicine').click();
+    await flush();
+
+    expect(searchedTags).toEqual(['Medicine']);
+    expect(document.body.querySelector('.detail-action-panel')).toBeNull();
+  });
+
   it('ignores a photo owned by a different asset', () => {
     mountAssetDetail({
       asset: {
@@ -671,6 +690,7 @@ function mountAssetDetail(
     onAttachmentDeleteOpen: (attachmentId: string) => void;
     onAttachmentDeleteClose: () => void;
     onDeleteAttachment: (attachment: AssetAttachment) => Promise<void>;
+    onTagSearch: (tag: NonNullable<AssetViewModel['tags']>[number]) => Promise<void>;
   }> = {}
 ): void {
   component = mount(AssetDetail, {
@@ -702,6 +722,7 @@ function mountAssetDetail(
       onAttachmentDeleteOpen: () => {},
       onAttachmentDeleteClose: () => {},
       onDeleteAttachment: async () => {},
+      onTagSearch: async () => {},
       ...props
     }
   });
@@ -804,6 +825,14 @@ function link(text: string): HTMLAnchorElement {
   );
   if (!target) throw new Error(`Missing link ${text}`);
   return target;
+}
+
+function buttonWithLabel(label: string): HTMLButtonElement {
+  const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
+    (candidate) => candidate.getAttribute('aria-label') === label
+  );
+  if (!button) throw new Error(`Missing button ${label}`);
+  return button;
 }
 
 function requiredElement(selector: string): Element {
