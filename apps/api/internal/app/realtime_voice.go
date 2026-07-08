@@ -226,6 +226,19 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		if err := emitRealtimeVoiceDiagnostics(input.Session, modelTurn.Diagnostics, emit); err != nil {
 			return err
 		}
+		if planOnly && !realtimeVoicePlannerOnlyTurnCanProceed(modelTurn) {
+			result, resultErr := realtimeVoicePlannerContractRepairResult(a.newRealtimeVoiceID())
+			if resultErr != nil {
+				return resultErr
+			}
+			toolResults = append(toolResults, result)
+			if input.Session.DeveloperDiagnostics {
+				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Planner contract repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
+					return err
+				}
+			}
+			continue
+		}
 		if input.Session.DeveloperDiagnostics {
 			for _, call := range modelTurn.ToolCalls {
 				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool call requested", realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
@@ -644,6 +657,38 @@ func recoverableRealtimeVoiceToolError(err error) bool {
 		errors.Is(err, apperrors.ErrInvalidInput) ||
 		errors.Is(err, errRealtimeVoiceToolCallTimedOut) ||
 		errors.Is(err, ErrValidation)
+}
+
+func realtimeVoicePlannerOnlyTurnHasActionPlan(turn ports.LanguageInferenceTurn) bool {
+	return turn.Final == nil &&
+		len(turn.ToolCalls) == 1 &&
+		turn.ToolCalls[0].Name == RealtimeVoiceToolProposeActionPlan
+}
+
+func realtimeVoicePlannerOnlyTurnCanProceed(turn ports.LanguageInferenceTurn) bool {
+	return realtimeVoicePlannerOnlyTurnHasActionPlan(turn) ||
+		realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn)
+}
+
+func realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn ports.LanguageInferenceTurn) bool {
+	if turn.Final == nil {
+		return false
+	}
+	switch turn.Final.Kind {
+	case ports.StructuredAgentResponseKindClarification,
+		ports.StructuredAgentResponseKindUnsupportedAction,
+		ports.StructuredAgentResponseKindSafeFailure:
+		return true
+	default:
+		return false
+	}
+}
+
+func realtimeVoicePlannerContractRepairResult(id string) (ports.AgentToolResult, error) {
+	return realtimeVoiceToolErrorResult(ports.AgentToolCall{
+		ID:   id,
+		Name: RealtimeVoiceToolProposeActionPlan,
+	}, "planner_contract_rejected", "Planner-only turns must return exactly one propose_action_plan request. Do not return a final answer from planner mode and do not call read tools from planner mode. Retry propose_action_plan with valid structured commands, or return a safe clarification, unsupported_action, or safe_failure response if no reviewable plan can be prepared.", true)
 }
 
 func (a App) MarkRealtimeVoiceSessionFailed(ctx context.Context, session RealtimeVoiceSession, safeFailureCode string) error {
