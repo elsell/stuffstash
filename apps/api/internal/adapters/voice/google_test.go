@@ -431,7 +431,8 @@ func TestGoogleGeminiLanguageInferenceExposesSafeDiagnostics(t *testing.T) {
 	if turn.Diagnostics[1].Title != "Language tool catalog (turn 1)" ||
 		!strings.Contains(turn.Diagnostics[1].Detail, `"requireToolCall": false`) ||
 		!strings.Contains(turn.Diagnostics[1].Detail, `"name": "search_authorized_assets"`) ||
-		!strings.Contains(turn.Diagnostics[1].Detail, `"readOnly": true`) {
+		!strings.Contains(turn.Diagnostics[1].Detail, `"readOnly": true`) ||
+		!strings.Contains(turn.Diagnostics[1].Detail, `"providerCallable": true`) {
 		t.Fatalf("unexpected tool catalog diagnostic: %+v", turn.Diagnostics[1])
 	}
 	if turn.Diagnostics[2].Title != "Language model turn (turn 1)" || !strings.Contains(turn.Diagnostics[2].Detail, "search_authorized_assets") {

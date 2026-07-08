@@ -488,7 +488,7 @@ func languageToolCatalogDiagnostic(input ports.LanguageInferenceInput) string {
 		payload.Tools = append(payload.Tools, toolDiagnostic{
 			Name:             name,
 			ReadOnly:         tool.ReadOnly,
-			ProviderCallable: tool.ProviderCallable,
+			ProviderCallable: googleGeminiProviderCallableTool(tool),
 			RequiresApproval: tool.RequiresApproval,
 			MutatesInventory: tool.MutatesInventory,
 			Required:         append([]string{}, tool.Parameters.Required...),
