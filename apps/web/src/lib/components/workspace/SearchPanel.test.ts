@@ -390,6 +390,19 @@ describe('SearchPanel', () => {
     expect(searchedTags).toEqual(['Tools']);
   });
 
+  it('does not render browse tag filters without a tag search handler', () => {
+    mountSearchPanel({
+      query: '',
+      suggestions: [],
+      onTagSearch: undefined,
+      assetTags: [
+        { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' }
+      ]
+    });
+
+    expect(document.body.querySelector('[aria-label="Browse by tag"]')).toBeNull();
+  });
+
   it('routes location suggestions and results to the focused location surface', async () => {
     const locationAsset = asset('garage', 'Garage', 'location');
     const results: SearchResult[] = [

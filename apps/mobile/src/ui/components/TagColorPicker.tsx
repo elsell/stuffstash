@@ -19,13 +19,15 @@ type TagColorPickerProps = {
 
 export function TagColorPicker({ value, disabled = false, onChange }: TagColorPickerProps) {
   const normalizedValue = normalizeColor(value);
+  const hasTypedColor = value.trim().length > 0;
+  const invalidTypedColor = hasTypedColor && normalizedValue === undefined;
   return (
     <View accessibilityLabel="Tag color choices" style={styles.shell}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatches}>
         <Pressable
           accessibilityLabel="No tag color"
           accessibilityRole="button"
-          accessibilityState={{ disabled, selected: normalizedValue === undefined }}
+          accessibilityState={{ disabled, selected: !hasTypedColor }}
           disabled={disabled}
           onPress={() => onChange('')}
           style={[styles.clearSwatch, normalizedValue === undefined ? styles.selectedSwatch : null, disabled ? styles.disabled : null]}
@@ -54,7 +56,9 @@ export function TagColorPicker({ value, disabled = false, onChange }: TagColorPi
           );
         })}
       </ScrollView>
-      <Text style={styles.fallbackLabel}>Or type a hex color</Text>
+      <Text style={invalidTypedColor ? styles.invalidLabel : styles.fallbackLabel}>
+        {invalidTypedColor ? 'Enter a #RRGGBB color' : 'Or type a hex color'}
+      </Text>
     </View>
   );
 }
@@ -106,6 +110,12 @@ const styles = StyleSheet.create({
   },
   fallbackLabel: {
     color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0
+  },
+  invalidLabel: {
+    color: colors.warning,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0

@@ -573,16 +573,23 @@ export function SearchHeader({
       {tagFilters && tagFilters.length > 0 && onSelectTag ? (
         <View style={styles.tagFilterBlock} accessibilityLabel="Browse by tag">
           <Text style={styles.tagFilterLabel}>Tags</Text>
-          <AssetTagChips
-            tags={tagFilters.map((tag) => ({ id: tag.id, label: tag.label, color: tag.color }))}
-            compact
-            onTagPress={(tag) => {
-              const selected = tagFilters.find((candidate) => candidate.id === tag.id);
-              if (selected) {
-                onSelectTag(selected);
-              }
-            }}
-          />
+          <ScrollView
+            accessibilityLabel="Tag filters"
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagFilterScroller}
+          >
+            <AssetTagChips
+              tags={tagFilters.map((tag) => ({ id: tag.id, label: tag.label, color: tag.color }))}
+              compact
+              onTagPress={(tag) => {
+                const selected = tagFilters.find((candidate) => candidate.id === tag.id);
+                if (selected) {
+                  onSelectTag(selected);
+                }
+              }}
+            />
+          </ScrollView>
         </View>
       ) : null}
       <RefinementBar
@@ -918,6 +925,10 @@ const styles = StyleSheet.create({
   tagFilterBlock: {
     gap: spacing.xs,
     marginTop: spacing.xs
+  },
+  tagFilterScroller: {
+    minWidth: '100%',
+    paddingBottom: 2
   },
   tagFilterLabel: {
     color: colors.textMuted,

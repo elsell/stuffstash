@@ -263,7 +263,10 @@ describe('SearchScreen presentation helpers', () => {
     const header = renderHeader({
       tagFilters: [
         { id: 'tag-tools', key: 'tools', label: 'Tools', color: '#2F80ED' },
-        { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' }
+        { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' },
+        { id: 'tag-kids', key: 'kids', label: 'Kids' },
+        { id: 'tag-office', key: 'office', label: 'Office' },
+        { id: 'tag-travel', key: 'travel', label: 'Travel' }
       ],
       onSelectTag: (tag) => {
         selectedTags.push(tag.label);
@@ -274,6 +277,7 @@ describe('SearchScreen presentation helpers', () => {
     expect(text).toContain('Tags');
     expect(text).toContain('Tools');
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by tag')).toBeTruthy();
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Tag filters')?.props?.horizontal).toBe(true);
 
     const tools = findFirstByProp(header, 'accessibilityLabel', 'Search for tag Tools');
     expect(tools).toBeTruthy();

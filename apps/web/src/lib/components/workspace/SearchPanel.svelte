@@ -263,7 +263,7 @@
     />
   </div>
 
-  {#if assetTags.length > 0}
+  {#if assetTags.length > 0 && onTagSearch}
     <div class="search-tag-filter" aria-label="Browse by tag">
       <small>Tags</small>
       <AssetTagChips tags={assetTags} compact onTagSelect={onTagSearch} />

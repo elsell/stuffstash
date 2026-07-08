@@ -45,6 +45,17 @@ describe('TagColorPicker', () => {
     expect(changes).toEqual(['#2E7D32', '']);
     expect(collectText(picker)).toContain('Or type a hex color');
   });
+
+  it('distinguishes invalid typed colors from no color', () => {
+    const picker = TagColorPicker({
+      value: 'blue',
+      onChange: () => {}
+    });
+
+    const clear = findFirstByProp(picker, 'accessibilityLabel', 'No tag color');
+    expect(clear?.props?.accessibilityState).toMatchObject({ selected: false });
+    expect(collectText(picker)).toContain('Enter a #RRGGBB color');
+  });
 });
 
 function press(node: ElementNode | undefined): void {
