@@ -43,6 +43,9 @@ export class SearchAssetsQuery {
       ...input,
       query: trimmed
     });
+    const searchMatchLabelsByAssetId = new Map(
+      (page.searchMatches ?? []).map((match) => [match.assetId, match.labels])
+    );
 
     return {
       query: trimmed,
@@ -51,7 +54,13 @@ export class SearchAssetsQuery {
       kind: input.kind,
       checkoutState: input.checkoutState,
       sort: input.sort,
-      assets: page.assets.map(toAssetCardViewModel),
+      assets: page.assets.map((asset) => {
+        const card = toAssetCardViewModel(asset);
+        const searchMatchLabels = searchMatchLabelsByAssetId.get(asset.id);
+        return searchMatchLabels && searchMatchLabels.length > 0
+          ? { ...card, searchMatchLabels }
+          : card;
+      }),
       nextCursor: page.nextCursor,
       hasMore: page.hasMore
     };

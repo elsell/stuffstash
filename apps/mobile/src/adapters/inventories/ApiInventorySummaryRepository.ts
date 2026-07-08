@@ -313,7 +313,9 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       summaryToApiAsset(inventory.tenantId, inventory.id, item)
     );
     return Promise.all(
-      page.map((item) => this.mapAssetWithPrimaryPhoto(inventory.name, item.asset, siblings))
+      page.map((item) =>
+        this.mapAssetWithPrimaryPhoto(inventory.name, item.asset, siblings)
+      )
     );
   }
 
@@ -678,36 +680,45 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     knownAssets: readonly Asset[]
   ): Promise<AssetBrowsePage> {
     const desiredMatches = input.limit ?? 20;
-    const selectedAssets: Asset[] = [];
+    const selectedResults: AssetSearchResult[] = [];
     let cursor = input.cursor;
     let nextCursor: string | undefined;
     let hasMore = false;
 
     do {
-      const pageSize = desiredMatches - selectedAssets.length;
+      const pageSize = desiredMatches - selectedResults.length;
       const page = await this.client.searchAssets(inventory.tenantId, input.query, {
         limit: pageSize,
         cursor,
         lifecycleState: input.lifecycleState,
         checkoutState: input.checkoutState
       });
-      const inventoryAssets = page.items
-        .filter((item) => item.inventory.id === inventory.id)
-        .map((item) => item.asset);
-      selectedAssets.push(...filterAssetsByKind(inventoryAssets, input.kind));
+      selectedResults.push(
+        ...page.items
+          .filter((item) => item.inventory.id === inventory.id)
+          .filter((item) => assetMatchesKind(item.asset, input.kind))
+      );
       nextCursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
       cursor = nextCursor;
-    } while (selectedAssets.length < desiredMatches && hasMore);
+    } while (selectedResults.length < desiredMatches && hasMore);
 
+    const pageResults = selectedResults.slice(0, desiredMatches);
     const assets = await Promise.all(
-      selectedAssets
-        .slice(0, desiredMatches)
-        .map((asset) => this.mapAssetWithPrimaryPhoto(inventory.name, asset, knownAssets))
+      pageResults.map((item) =>
+        this.mapAssetWithPrimaryPhoto(inventory.name, item.asset, knownAssets)
+      )
     );
+    const searchMatches = pageResults
+      .map((item) => ({
+        assetId: assetId(item.asset.id),
+        labels: searchMatchLabels(item.matches)
+      }))
+      .filter((item) => item.labels.length > 0);
 
     return {
       assets,
+      searchMatches,
       nextCursor,
       hasMore
     };
@@ -842,6 +853,10 @@ function filterAssetsByKind(
   return assets.filter((asset) => asset.kind === kind);
 }
 
+function assetMatchesKind(asset: Asset, kind: AssetBrowsePageInput['kind']): boolean {
+  return kind === 'all' || asset.kind === kind;
+}
+
 function filterAssetsByCheckoutState(
   assets: readonly Asset[],
   checkoutState: AssetBrowsePageInput['checkoutState']
@@ -883,6 +898,47 @@ function mapAsset(
     currentCheckout: asset.currentCheckout,
     tags: asset.tags
   };
+}
+
+function searchMatchLabels(matches: readonly { readonly field: string }[]): readonly string[] {
+  const labels: string[] = [];
+  const seen = new Set<string>();
+  for (const match of matches) {
+    const label = searchMatchFieldLabel(match.field);
+    if (seen.has(label)) {
+      continue;
+    }
+    labels.push(label);
+    seen.add(label);
+  }
+  return labels;
+}
+
+function searchMatchFieldLabel(field: string): string {
+  switch (field) {
+    case 'tag_display_name':
+    case 'tag_key':
+      return 'Tag';
+    case 'title':
+      return 'Title';
+    case 'description':
+      return 'Description';
+    case 'location':
+    case 'path':
+      return 'Location';
+    case 'custom_field':
+      return 'Custom field';
+    default:
+      return humanizeSearchMatchField(field);
+  }
+}
+
+function humanizeSearchMatchField(field: string): string {
+  const label = field.trim().replace(/[_-]+/g, ' ');
+  if (label.length === 0) {
+    return 'Match';
+  }
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function ancestorTrail(asset: Asset, assets: readonly Asset[]): readonly Asset[] {

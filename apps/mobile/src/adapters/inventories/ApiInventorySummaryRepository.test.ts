@@ -603,6 +603,24 @@ class FakeInventoryApiClient {
       return page([]);
     }
 
+    if (query === 'tagged') {
+      return page([
+        {
+          type: 'asset',
+          tenantId,
+          inventory: {
+            id: this.inventory.id,
+            name: this.inventory.name
+          },
+          asset,
+          matches: [
+            { field: 'tag_display_name', value: 'Workshop' },
+            { field: 'tag_key', value: 'workshop' }
+          ]
+        }
+      ]);
+    }
+
     if (query === 'paged' && options?.cursor === undefined) {
       return pageWithCursor(
         [
@@ -1106,6 +1124,32 @@ describe('ApiInventorySummaryRepository', () => {
     ]);
     await expect(repository.searchAssets('filters')).resolves.toHaveLength(1);
     expect(client.searchedQuery).toBe('tenant-home:filters');
+  });
+
+  it('maps tag-backed search matches to a user-facing mobile label', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.browseAssets({
+      query: 'tagged',
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      kind: 'all',
+      sort: 'updated_desc',
+      limit: 20
+    })).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-filters'
+        }
+      ],
+      searchMatches: [
+        {
+          assetId: 'asset-filters',
+          labels: ['Tag']
+        }
+      ]
+    });
   });
 
   it('creates asset tags through the generated client wrapper', async () => {

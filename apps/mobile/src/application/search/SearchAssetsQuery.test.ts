@@ -155,6 +155,54 @@ describe('SearchAssetsQuery', () => {
       }
     ]);
   });
+
+  it('preserves search match labels on asset card view models', async () => {
+    const repository = new FakeInventorySummaryRepository([
+      {
+        assets: [asset('asset-workshop-bin', 'Workshop bin', 'container', 'Garage')],
+        searchMatches: [{ assetId: assetId('asset-workshop-bin'), labels: ['Tag'] }],
+        hasMore: false
+      }
+    ]);
+    const query = new SearchAssetsQuery(repository);
+
+    await expect(
+      query.execute({
+        query: 'workshop',
+        lifecycleState: 'active',
+        checkoutState: 'any',
+        kind: 'all',
+        sort: 'updated_desc'
+      })
+    ).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-workshop-bin',
+          searchMatchLabels: ['Tag']
+        }
+      ]
+    });
+  });
+
+  it('omits search match labels when browse results have no search metadata', async () => {
+    const repository = new FakeInventorySummaryRepository([
+      {
+        assets: [asset('asset-workshop-bin', 'Workshop bin', 'container', 'Garage')],
+        hasMore: false
+      }
+    ]);
+    const query = new SearchAssetsQuery(repository);
+
+    const result = await query.execute({
+      query: '',
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      kind: 'all',
+      sort: 'updated_desc'
+    });
+
+    expect(result.assets[0]).not.toHaveProperty('searchMatchLabels');
+  });
 });
 
 function asset(

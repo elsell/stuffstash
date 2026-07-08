@@ -37,6 +37,11 @@ export function AssetCard({ asset, onPress }: AssetCardProps) {
         <Text numberOfLines={1} style={styles.meta}>
           {asset.locationTrailLabel}
         </Text>
+        {asset.searchMatchLabels && asset.searchMatchLabels.length > 0 ? (
+          <Text numberOfLines={1} style={styles.matchMeta}>
+            Matched {asset.searchMatchLabels.join(', ')}
+          </Text>
+        ) : null}
         <AssetTagChips tags={asset.tags} compact overflowLimit={2} />
         <View style={styles.footer}>
           <Text style={asset.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
@@ -138,6 +143,13 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 16
+  },
+  matchMeta: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 15
   },
   footer: {
     alignItems: 'center',

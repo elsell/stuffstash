@@ -11,6 +11,7 @@ export type AssetCardViewModel = {
   readonly photoLabel: string;
   readonly checkedOutLabel?: string;
   readonly tags?: readonly AssetTagViewModel[];
+  readonly searchMatchLabels?: readonly string[];
   readonly imagePlaceholderLabel: string;
   readonly photo?: {
     readonly uri: string;

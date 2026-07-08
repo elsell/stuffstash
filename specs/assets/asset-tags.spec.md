@@ -146,6 +146,7 @@ Import job counts must include:
 ## User Experience
 
 Web and mobile clients must show assigned tags as compact chips in asset list and detail views.
+When a search result matched because of a tag display name or tag key, web and mobile clients must present that match as `Tag` in result metadata instead of exposing raw transport field names such as `tag_display_name` or `tag_key`.
 
 Tag chips must:
 

@@ -68,8 +68,14 @@ export type AssetBrowsePageInput = {
 
 export type AssetBrowsePage = {
   readonly assets: readonly AssetSummary[];
+  readonly searchMatches?: readonly AssetSearchMatchLabels[];
   readonly nextCursor?: string;
   readonly hasMore: boolean;
+};
+
+export type AssetSearchMatchLabels = {
+  readonly assetId: AssetSummary['id'];
+  readonly labels: readonly string[];
 };
 
 export type CreateInventoryAssetInput = {
