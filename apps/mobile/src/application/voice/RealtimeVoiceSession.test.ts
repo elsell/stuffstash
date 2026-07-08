@@ -599,6 +599,86 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('redacts unsafe photo upload failure details before they reach voice state', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg', 123)]
+    });
+    const repository = new FakeInventoryRepository();
+    repository.failPhotoUploads = 1;
+    repository.photoUploadFailureMessage = 'PUT https://uploads.example.test/raw-object?token=bearer-secret failed for ph://photo-one';
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        uri: 'ph://photo-one',
+        sizeBytes: 123
+      }]
+    });
+    const states = await stop;
+    const message = states.at(-1)?.photoAttachmentStatus?.message ?? '';
+
+    expect(message).toContain('The change was applied, but photos could not be attached:');
+    expect(message).not.toContain('https://uploads.example.test');
+    expect(message).not.toContain('bearer-secret');
+    expect(message).not.toContain('ph://photo-one');
+  });
+
+  it('uses generic photo upload failure copy for arbitrary exception text', async () => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{
+        commandId: 'cmd-water-bottle',
+        assetId: 'asset-water-bottle',
+        operation: 'create',
+        assetKind: 'item'
+      }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'water-bottle.jpg', 123)]
+    });
+    const repository = new FakeInventoryRepository();
+    repository.failPhotoUploads = 1;
+    repository.photoUploadFailureMessage = 'Transcript: where is my passport? prompt: provider raw response for hidden asset';
+    const controller = new RealtimeVoiceSessionController(
+      repository,
+      new FakeRecorder(),
+      transport,
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+
+    await controller.approveActionPlan('plan-1', {
+      'cmd-water-bottle': [{
+        fileName: 'water-bottle.jpg',
+        contentType: 'image/jpeg',
+        uri: 'ph://photo-one',
+        sizeBytes: 123
+      }]
+    });
+    const states = await stop;
+
+    expect(states.at(-1)?.photoAttachmentStatus?.message).toBe(
+      'The change was applied, but photos could not be attached: Photo upload failed.'
+    );
+  });
+
   it('does not offer retry when the server omits the required upload intent', async () => {
     const transport = new ReviewDecisionTransport({
       commandResults: [{

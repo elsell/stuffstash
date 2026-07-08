@@ -778,10 +778,17 @@ function withProgressStep(
 }
 
 function safePhotoUploadFailureReason(error: unknown): string {
-  if (error instanceof Error && error.message.trim().length > 0) {
-    return safeBoundedText(error.message, 160);
+  if (!(error instanceof Error)) {
+    return 'Photo upload failed.';
   }
-  return 'Photo upload failed.';
+  const message = safeVisibleProgressText(error.message, 160);
+  switch (message) {
+    case 'Attachment content is not available for JSON upload fallback.':
+    case 'Photo attachments are not available in this build.':
+      return message;
+    default:
+      return 'Photo upload failed.';
+  }
 }
 
 function photoUploadFailureMessage(reasons: readonly string[]): string {
@@ -1036,6 +1043,8 @@ function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
 
 function redactUnsafeVoiceText(value: string): string {
   return value
+    .replace(/\bhttps?:\/\/[^\s"',\]}]+/gi, '[redacted-url]')
+    .replace(/\b(?:ph|file|content):\/\/[^\s"',\]}]+/gi, '[redacted-uri]')
     .replace(/\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+/gi, '$1: [redacted]')
     .replace(/bearer\s+[^"',\s}\]\)]+/gi, 'bearer [redacted]')
     .replace(/\b(raw prompt|stack trace|raw query|raw transcript|provider session id)\b/gi, '[redacted]');
