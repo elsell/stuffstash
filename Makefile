@@ -1,4 +1,4 @@
-.PHONY: test api-release-build run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check release-plan-test selfhost-happy-path-check scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-shadcn-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
+.PHONY: test api-release-build go-structural-check run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check required-checks release-plan-test selfhost-happy-path-check scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-e2e-install web-e2e-test web-shadcn-check mobile-test mobile-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -22,6 +22,25 @@ test:
 
 api-release-build:
 	cd apps/api && GOWORK=off GOCACHE=$(GOCACHE) CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash-release-check ./cmd/stuff-stash
+
+go-structural-check:
+	@base="$${STUFF_STASH_STRUCTURAL_BASE:-}"; \
+	if [ -n "$$base" ] && git cat-file -e "$$base^{commit}" 2>/dev/null; then \
+		go_files="$$(git diff --name-only --diff-filter=ACMRTUXB "$$base"...HEAD -- '*.go')"; \
+	else \
+		go_files="$$( { git diff --name-only --diff-filter=ACMRTUXB -- '*.go'; git diff --cached --name-only --diff-filter=ACMRTUXB -- '*.go'; git ls-files --others --exclude-standard -- '*.go'; } | sort -u)"; \
+	fi; \
+	if [ -z "$$go_files" ]; then \
+		exit 0; \
+	fi; \
+	unformatted="$$(printf '%s\n' "$$go_files" | xargs gofmt -l)"; \
+	if [ -n "$$unformatted" ]; then \
+		printf '%s\n' "$$unformatted" >&2; \
+		echo "Go files must be gofmt-formatted" >&2; \
+		exit 1; \
+	fi; \
+	printf '%s\n' "$$go_files" | xargs scripts/check-go-structural-rules.sh; \
+	printf '%s\n' "$$go_files" | xargs scripts/check-go-domain-imports.sh
 
 run:
 	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
@@ -165,6 +184,8 @@ docker-build-web:
 dependency-age-check:
 	python3 scripts/check-dependency-age.py
 
+required-checks: dependency-age-check scripts-test go-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
+
 release-plan-test:
 	scripts/test-release-planner.sh
 
@@ -205,8 +226,20 @@ web-check:
 web-test:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web test
 
+web-e2e-install:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web install:e2e-browsers
+
+web-e2e-test:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web test:e2e
+
 web-shadcn-check:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check:shadcn
+
+mobile-test:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/mobile test
+
+mobile-check:
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/mobile check
 
 api-openapi-generate:
 	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash-openapi > packages/api-client/openapi.json
