@@ -84,6 +84,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		PrimaryThumbnailWarmLimit:       cfg.PrimaryThumbnailWarmLimit,
 		PrimaryThumbnailWarmConcurrency: cfg.PrimaryThumbnailWarmConcurrency,
 		PrimaryThumbnailWarmTimeout:     cfg.PrimaryThumbnailWarmTimeout,
+		RealtimeVoiceToolCallTimeout:    cfg.RealtimeVoiceToolCallTimeout,
 		SpeechToText:                    stt,
 		LanguageInference:               languageInference,
 		TextToSpeech:                    tts,

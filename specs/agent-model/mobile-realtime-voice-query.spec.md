@@ -763,6 +763,8 @@ The server must enforce configured session, silence, provider, tool-call, and id
 
 The HTTP realtime voice adapter must enforce a per-message client idle timeout while waiting for audio chunks, `audio.end`, or `session.cancel`, separate from the whole-session deadline. The first runtime knob is `STUFF_STASH_REALTIME_VOICE_IDLE_TIMEOUT`, defaulting to 15 seconds. Invalid, empty, zero, or negative values must fall back to the safe default rather than disabling the idle timeout.
 
+The realtime voice application loop must enforce a per-tool-call timeout around every project-owned inventory tool execution, separate from provider HTTP timeouts and the WebSocket idle timeout. The first runtime knob is `STUFF_STASH_REALTIME_VOICE_TOOL_CALL_TIMEOUT`, defaulting to 10 seconds. Invalid, empty, zero, or negative values must fall back to the safe default rather than disabling tool-call deadlines. A tool-call timeout must cancel the tool context and be surfaced as a safe `tool.call.failed` event plus a structured tool error result so the model loop can recover with a clarification, safe failure, or final response instead of hanging the session.
+
 The first Google provider bridge must use a configured provider HTTP timeout, defaulting to 60 seconds for local smoke testing unless runtime configuration overrides it. Tenant-managed Google provider profiles may also carry a provider-runtime HTTP timeout option so slow model turns can be tuned without changing code. Invalid, empty, zero, or negative timeout values must be rejected or ignored safely rather than disabling timeouts.
 
 Timeouts must fail safely and should produce a spoken response only when there is enough time and provider availability to do so safely.

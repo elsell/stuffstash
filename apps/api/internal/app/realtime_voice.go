@@ -642,6 +642,7 @@ func (a App) ensureRealtimeVoiceDependencies() error {
 func recoverableRealtimeVoiceToolError(err error) bool {
 	return errors.Is(err, ports.ErrInvalidProviderInput) ||
 		errors.Is(err, apperrors.ErrInvalidInput) ||
+		errors.Is(err, context.DeadlineExceeded) ||
 		errors.Is(err, ErrValidation)
 }
 

@@ -15,72 +15,73 @@ import (
 )
 
 type App struct {
-	observer                    ports.Observer
-	auth                        ports.Authenticator
-	authorizer                  ports.Authorizer
-	users                       ports.UserRepository
-	tenants                     ports.TenantRepository
-	tenantUnitOfWork            ports.TenantUnitOfWork
-	inventories                 ports.InventoryRepository
-	inventoryUnitOfWork         ports.InventoryUnitOfWork
-	inventoryAccess             ports.InventoryAccessRepository
-	inventoryAccessUnitOfWork   ports.InventoryAccessUnitOfWork
-	customAssetTypes            ports.CustomAssetTypeRepository
-	customAssetTypeUnitOfWork   ports.CustomAssetTypeUnitOfWork
-	customFields                ports.CustomFieldDefinitionRepository
-	customFieldUnitOfWork       ports.CustomFieldDefinitionUnitOfWork
-	assets                      ports.AssetRepository
-	assetTags                   ports.AssetTagRepository
-	checkouts                   ports.AssetCheckoutRepository
-	assetUnitOfWork             ports.AssetUnitOfWork
-	assetTagUnitOfWork          ports.AssetTagUnitOfWork
-	undoables                   ports.UndoableOperationRepository
-	search                      ports.AssetSearchRepository
-	attachments                 ports.AttachmentRepository
-	attachmentUnitOfWork        ports.AttachmentUnitOfWork
-	blobs                       ports.BlobStorage
-	directUploads               ports.DirectAttachmentUploader
-	imageProcessor              ports.ImageProcessor
-	blobDeletionOutbox          ports.BlobDeletionOutbox
-	audit                       ports.AuditRepository
-	outbox                      ports.AuthorizationOutbox
-	providerProfiles            ports.ProviderProfileRepository
-	providerProfileUnitOfWork   ports.ProviderProfileUnitOfWork
-	voiceProviderConfigs        ports.VoiceProviderConfigurationRepository
-	providerCredentialVault     ports.ProviderCredentialVault
-	providerProfileTester       ports.ProviderProfileTester
-	realtimeSessions            ports.RealtimeSessionRepository
-	actionPlans                 ports.ActionPlanRepository
-	importSources               ports.ImportSourceReader
-	importJobs                  ports.ImportJobRepository
-	importSourceVault           ports.ImportJobSourceVault
-	importLinks                 ports.ImportLinkRepository
-	importAssetUnitOfWork       ports.ImportAssetUnitOfWork
-	importAttachmentUnitOfWork  ports.ImportAttachmentUnitOfWork
-	importWorker                ports.ImportWorker
-	ids                         ports.IDGenerator
-	clock                       ports.Clock
-	outboxDrainLimit            int
-	outboxClaimLease            time.Duration
-	blobDeletionClaimLease      time.Duration
-	blobDeletionMaxAttempts     int
-	directUploadTTL             time.Duration
-	invitationTTL               time.Duration
-	defaultPageLimit            int
-	maxPageLimit                int
-	maxAttachmentBytes          int
-	importJobTimeout            time.Duration
-	primaryThumbnailWarmLimit   int
-	primaryThumbnailWarmTimeout time.Duration
-	assetService                assetapp.Service
-	customFieldService          customfieldapp.Service
-	providerProfileService      agentmodelapp.Service
-	speechToText                ports.SpeechToTextProvider
-	languageInference           ports.LanguageInferenceProvider
-	textToSpeech                ports.TextToSpeechProvider
-	realtimeVoiceProviders      ports.RealtimeVoiceProviderResolver
-	thumbnailWarmState          *primaryThumbnailWarmState
-	thumbnailGenerationState    *thumbnailGenerationState
+	observer                     ports.Observer
+	auth                         ports.Authenticator
+	authorizer                   ports.Authorizer
+	users                        ports.UserRepository
+	tenants                      ports.TenantRepository
+	tenantUnitOfWork             ports.TenantUnitOfWork
+	inventories                  ports.InventoryRepository
+	inventoryUnitOfWork          ports.InventoryUnitOfWork
+	inventoryAccess              ports.InventoryAccessRepository
+	inventoryAccessUnitOfWork    ports.InventoryAccessUnitOfWork
+	customAssetTypes             ports.CustomAssetTypeRepository
+	customAssetTypeUnitOfWork    ports.CustomAssetTypeUnitOfWork
+	customFields                 ports.CustomFieldDefinitionRepository
+	customFieldUnitOfWork        ports.CustomFieldDefinitionUnitOfWork
+	assets                       ports.AssetRepository
+	assetTags                    ports.AssetTagRepository
+	checkouts                    ports.AssetCheckoutRepository
+	assetUnitOfWork              ports.AssetUnitOfWork
+	assetTagUnitOfWork           ports.AssetTagUnitOfWork
+	undoables                    ports.UndoableOperationRepository
+	search                       ports.AssetSearchRepository
+	attachments                  ports.AttachmentRepository
+	attachmentUnitOfWork         ports.AttachmentUnitOfWork
+	blobs                        ports.BlobStorage
+	directUploads                ports.DirectAttachmentUploader
+	imageProcessor               ports.ImageProcessor
+	blobDeletionOutbox           ports.BlobDeletionOutbox
+	audit                        ports.AuditRepository
+	outbox                       ports.AuthorizationOutbox
+	providerProfiles             ports.ProviderProfileRepository
+	providerProfileUnitOfWork    ports.ProviderProfileUnitOfWork
+	voiceProviderConfigs         ports.VoiceProviderConfigurationRepository
+	providerCredentialVault      ports.ProviderCredentialVault
+	providerProfileTester        ports.ProviderProfileTester
+	realtimeSessions             ports.RealtimeSessionRepository
+	actionPlans                  ports.ActionPlanRepository
+	importSources                ports.ImportSourceReader
+	importJobs                   ports.ImportJobRepository
+	importSourceVault            ports.ImportJobSourceVault
+	importLinks                  ports.ImportLinkRepository
+	importAssetUnitOfWork        ports.ImportAssetUnitOfWork
+	importAttachmentUnitOfWork   ports.ImportAttachmentUnitOfWork
+	importWorker                 ports.ImportWorker
+	ids                          ports.IDGenerator
+	clock                        ports.Clock
+	outboxDrainLimit             int
+	outboxClaimLease             time.Duration
+	blobDeletionClaimLease       time.Duration
+	blobDeletionMaxAttempts      int
+	directUploadTTL              time.Duration
+	invitationTTL                time.Duration
+	defaultPageLimit             int
+	maxPageLimit                 int
+	maxAttachmentBytes           int
+	importJobTimeout             time.Duration
+	primaryThumbnailWarmLimit    int
+	primaryThumbnailWarmTimeout  time.Duration
+	realtimeVoiceToolCallTimeout time.Duration
+	assetService                 assetapp.Service
+	customFieldService           customfieldapp.Service
+	providerProfileService       agentmodelapp.Service
+	speechToText                 ports.SpeechToTextProvider
+	languageInference            ports.LanguageInferenceProvider
+	textToSpeech                 ports.TextToSpeechProvider
+	realtimeVoiceProviders       ports.RealtimeVoiceProviderResolver
+	thumbnailWarmState           *primaryThumbnailWarmState
+	thumbnailGenerationState     *thumbnailGenerationState
 }
 
 type Dependencies struct {
@@ -142,6 +143,7 @@ type Dependencies struct {
 	PrimaryThumbnailWarmLimit       int
 	PrimaryThumbnailWarmConcurrency int
 	PrimaryThumbnailWarmTimeout     time.Duration
+	RealtimeVoiceToolCallTimeout    time.Duration
 	SpeechToText                    ports.SpeechToTextProvider
 	LanguageInference               ports.LanguageInferenceProvider
 	TextToSpeech                    ports.TextToSpeechProvider
@@ -173,69 +175,70 @@ func New(deps Dependencies) App {
 		}}
 	}
 	app := App{
-		observer:                    observer,
-		auth:                        deps.Auth,
-		authorizer:                  deps.Authorizer,
-		users:                       deps.Users,
-		tenants:                     deps.Tenants,
-		tenantUnitOfWork:            deps.TenantUnitOfWork,
-		inventories:                 deps.Inventories,
-		inventoryUnitOfWork:         deps.InventoryUnitOfWork,
-		inventoryAccess:             deps.InventoryAccess,
-		inventoryAccessUnitOfWork:   deps.InventoryAccessUnitOfWork,
-		customAssetTypes:            deps.CustomAssetTypes,
-		customAssetTypeUnitOfWork:   deps.CustomAssetTypeUnitOfWork,
-		customFields:                deps.CustomFields,
-		customFieldUnitOfWork:       deps.CustomFieldUnitOfWork,
-		assets:                      deps.Assets,
-		assetTags:                   deps.AssetTags,
-		checkouts:                   deps.Checkouts,
-		assetUnitOfWork:             deps.AssetUnitOfWork,
-		assetTagUnitOfWork:          deps.AssetTagUnitOfWork,
-		undoables:                   deps.Undoables,
-		search:                      deps.Search,
-		attachments:                 deps.Attachments,
-		attachmentUnitOfWork:        deps.AttachmentUnitOfWork,
-		blobs:                       deps.Blobs,
-		directUploads:               deps.DirectUploads,
-		imageProcessor:              deps.ImageProcessor,
-		blobDeletionOutbox:          deps.BlobDeletionOutbox,
-		audit:                       deps.Audit,
-		outbox:                      deps.Outbox,
-		providerProfiles:            deps.ProviderProfiles,
-		providerProfileUnitOfWork:   deps.ProviderProfileUnitOfWork,
-		voiceProviderConfigs:        deps.VoiceProviderConfigs,
-		providerCredentialVault:     deps.ProviderCredentialVault,
-		providerProfileTester:       deps.ProviderProfileTester,
-		realtimeSessions:            deps.RealtimeSessions,
-		actionPlans:                 deps.ActionPlans,
-		importSources:               deps.ImportSources,
-		importJobs:                  deps.ImportJobs,
-		importSourceVault:           deps.ImportSourceVault,
-		importLinks:                 deps.ImportLinks,
-		importAssetUnitOfWork:       deps.ImportAssetUnitOfWork,
-		importAttachmentUnitOfWork:  deps.ImportAttachmentUnitOfWork,
-		importWorker:                deps.ImportWorker,
-		ids:                         ids,
-		clock:                       clock,
-		outboxDrainLimit:            deps.AuthorizationOutboxDrainLimit,
-		outboxClaimLease:            deps.AuthorizationOutboxClaimLease,
-		blobDeletionClaimLease:      normalizeOutboxClaimLease(deps.BlobDeletionOutboxClaimLease),
-		blobDeletionMaxAttempts:     normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
-		directUploadTTL:             normalizeDirectUploadTTL(deps.DirectUploadTTL),
-		invitationTTL:               normalizeInvitationTTL(deps.InvitationTTL),
-		defaultPageLimit:            defaultPageLimit,
-		maxPageLimit:                maxPageLimit,
-		maxAttachmentBytes:          normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
-		importJobTimeout:            normalizeImportJobTimeout(deps.ImportJobTimeout),
-		primaryThumbnailWarmLimit:   normalizePrimaryThumbnailWarmLimit(deps.PrimaryThumbnailWarmLimit),
-		primaryThumbnailWarmTimeout: normalizePrimaryThumbnailWarmTimeout(deps.PrimaryThumbnailWarmTimeout),
-		speechToText:                deps.SpeechToText,
-		languageInference:           deps.LanguageInference,
-		textToSpeech:                deps.TextToSpeech,
-		realtimeVoiceProviders:      realtimeVoiceProviders,
-		thumbnailWarmState:          newPrimaryThumbnailWarmState(primaryThumbnailWarmConcurrency),
-		thumbnailGenerationState:    newThumbnailGenerationState(),
+		observer:                     observer,
+		auth:                         deps.Auth,
+		authorizer:                   deps.Authorizer,
+		users:                        deps.Users,
+		tenants:                      deps.Tenants,
+		tenantUnitOfWork:             deps.TenantUnitOfWork,
+		inventories:                  deps.Inventories,
+		inventoryUnitOfWork:          deps.InventoryUnitOfWork,
+		inventoryAccess:              deps.InventoryAccess,
+		inventoryAccessUnitOfWork:    deps.InventoryAccessUnitOfWork,
+		customAssetTypes:             deps.CustomAssetTypes,
+		customAssetTypeUnitOfWork:    deps.CustomAssetTypeUnitOfWork,
+		customFields:                 deps.CustomFields,
+		customFieldUnitOfWork:        deps.CustomFieldUnitOfWork,
+		assets:                       deps.Assets,
+		assetTags:                    deps.AssetTags,
+		checkouts:                    deps.Checkouts,
+		assetUnitOfWork:              deps.AssetUnitOfWork,
+		assetTagUnitOfWork:           deps.AssetTagUnitOfWork,
+		undoables:                    deps.Undoables,
+		search:                       deps.Search,
+		attachments:                  deps.Attachments,
+		attachmentUnitOfWork:         deps.AttachmentUnitOfWork,
+		blobs:                        deps.Blobs,
+		directUploads:                deps.DirectUploads,
+		imageProcessor:               deps.ImageProcessor,
+		blobDeletionOutbox:           deps.BlobDeletionOutbox,
+		audit:                        deps.Audit,
+		outbox:                       deps.Outbox,
+		providerProfiles:             deps.ProviderProfiles,
+		providerProfileUnitOfWork:    deps.ProviderProfileUnitOfWork,
+		voiceProviderConfigs:         deps.VoiceProviderConfigs,
+		providerCredentialVault:      deps.ProviderCredentialVault,
+		providerProfileTester:        deps.ProviderProfileTester,
+		realtimeSessions:             deps.RealtimeSessions,
+		actionPlans:                  deps.ActionPlans,
+		importSources:                deps.ImportSources,
+		importJobs:                   deps.ImportJobs,
+		importSourceVault:            deps.ImportSourceVault,
+		importLinks:                  deps.ImportLinks,
+		importAssetUnitOfWork:        deps.ImportAssetUnitOfWork,
+		importAttachmentUnitOfWork:   deps.ImportAttachmentUnitOfWork,
+		importWorker:                 deps.ImportWorker,
+		ids:                          ids,
+		clock:                        clock,
+		outboxDrainLimit:             deps.AuthorizationOutboxDrainLimit,
+		outboxClaimLease:             deps.AuthorizationOutboxClaimLease,
+		blobDeletionClaimLease:       normalizeOutboxClaimLease(deps.BlobDeletionOutboxClaimLease),
+		blobDeletionMaxAttempts:      normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
+		directUploadTTL:              normalizeDirectUploadTTL(deps.DirectUploadTTL),
+		invitationTTL:                normalizeInvitationTTL(deps.InvitationTTL),
+		defaultPageLimit:             defaultPageLimit,
+		maxPageLimit:                 maxPageLimit,
+		maxAttachmentBytes:           normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),
+		importJobTimeout:             normalizeImportJobTimeout(deps.ImportJobTimeout),
+		primaryThumbnailWarmLimit:    normalizePrimaryThumbnailWarmLimit(deps.PrimaryThumbnailWarmLimit),
+		primaryThumbnailWarmTimeout:  normalizePrimaryThumbnailWarmTimeout(deps.PrimaryThumbnailWarmTimeout),
+		realtimeVoiceToolCallTimeout: normalizeRealtimeVoiceToolCallTimeout(deps.RealtimeVoiceToolCallTimeout),
+		speechToText:                 deps.SpeechToText,
+		languageInference:            deps.LanguageInference,
+		textToSpeech:                 deps.TextToSpeech,
+		realtimeVoiceProviders:       realtimeVoiceProviders,
+		thumbnailWarmState:           newPrimaryThumbnailWarmState(primaryThumbnailWarmConcurrency),
+		thumbnailGenerationState:     newThumbnailGenerationState(),
 	}
 	app.assetService = assetapp.New(assetapp.Dependencies{
 		Observer:           app.observer,
@@ -332,6 +335,13 @@ func normalizePrimaryThumbnailWarmConcurrency(concurrency int) int {
 func normalizePrimaryThumbnailWarmTimeout(timeout time.Duration) time.Duration {
 	if timeout <= 0 {
 		return defaultPrimarySmallThumbnailWarmTimeout
+	}
+	return timeout
+}
+
+func normalizeRealtimeVoiceToolCallTimeout(timeout time.Duration) time.Duration {
+	if timeout <= 0 {
+		return 10 * time.Second
 	}
 	return timeout
 }

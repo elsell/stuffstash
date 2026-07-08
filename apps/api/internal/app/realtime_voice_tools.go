@@ -18,27 +18,29 @@ import (
 const realtimeVoiceToolMaxResults = 20
 
 func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, transcript string, priorResults []ports.AgentToolResult, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
+	toolCtx, cancel := context.WithTimeout(ctx, a.realtimeVoiceToolCallTimeout)
+	defer cancel()
 	switch call.Name {
 	case RealtimeVoiceToolSearchAuthorizedAssets:
-		result, err := a.executeRealtimeVoiceSearchTool(ctx, session, call)
+		result, err := a.executeRealtimeVoiceSearchTool(toolCtx, session, call)
 		return result, nil, err
 	case RealtimeVoiceToolGetAssetDetail:
-		result, err := a.executeRealtimeVoiceAssetDetailTool(ctx, session, call, visibleAssetIDs)
+		result, err := a.executeRealtimeVoiceAssetDetailTool(toolCtx, session, call, visibleAssetIDs)
 		return result, nil, err
 	case RealtimeVoiceToolListAuthorizedAssets:
-		result, err := a.executeRealtimeVoiceListTool(ctx, session, call)
+		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call)
 		return result, nil, err
 	case RealtimeVoiceToolListAssetAuditHistory:
-		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(ctx, session, call, visibleAssetIDs)
+		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(toolCtx, session, call, visibleAssetIDs)
 		return result, nil, err
 	case RealtimeVoiceToolListCheckedOutAssets:
-		result, err := a.executeRealtimeVoiceCheckedOutAssetsTool(ctx, session, call)
+		result, err := a.executeRealtimeVoiceCheckedOutAssetsTool(toolCtx, session, call)
 		return result, nil, err
 	case RealtimeVoiceToolListAssetCheckoutHistory:
-		result, err := a.executeRealtimeVoiceAssetCheckoutHistoryTool(ctx, session, call, visibleAssetIDs)
+		result, err := a.executeRealtimeVoiceAssetCheckoutHistoryTool(toolCtx, session, call, visibleAssetIDs)
 		return result, nil, err
 	case RealtimeVoiceToolProposeActionPlan:
-		return a.executeRealtimeVoiceProposeActionPlanTool(ctx, session, transcript, priorResults, call, visibleAssetIDs)
+		return a.executeRealtimeVoiceProposeActionPlanTool(toolCtx, session, transcript, priorResults, call, visibleAssetIDs)
 	default:
 		return ports.AgentToolResult{}, nil, ports.ErrInvalidProviderInput
 	}
