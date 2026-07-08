@@ -129,6 +129,7 @@ CSV imports:
 Live imports:
 
 - Read tags from item detail responses.
+- Read the Homebox tag list when available and use it to resolve sparse item tag references to canonical tag names and colors.
 - Preserve tag names.
 - Preserve tag color when Homebox provides one. Accepted Homebox color values are `#RRGGBB` or `RRGGBB`; imported colors must normalize to uppercase `#RRGGBB`.
 - Normalize invalid or absent colors to no color.

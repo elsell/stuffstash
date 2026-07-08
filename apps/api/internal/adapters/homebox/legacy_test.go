@@ -170,6 +170,63 @@ func TestLegacyHomeboxPreviewPlansImagesWithoutDownloadingAttachmentBytes(t *tes
 	}
 }
 
+func TestLegacyHomeboxLiveImportEnrichesItemTagsFromTagList(t *testing.T) {
+	server := newLegacyHomeboxTestServerWithTags(t, `[{"id":"tag-workshop","name":"Workshop","color":"2f80ed"},{"id":"tag-damaged","name":"Damaged","color":"not-a-color"}]`, `[{"id":"tag-workshop","name":"Stale Workshop","color":"not-a-color"},{"id":"tag-damaged"}]`)
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             server.URL,
+		Username:            "user@example.com",
+		Password:            "secret",
+		AllowPrivateNetwork: true,
+	})
+	if err != nil {
+		t.Fatalf("read Homebox source: %v", err)
+	}
+	tagsByKey := map[string]importplan.TagDefinition{}
+	for _, tag := range plan.Tags {
+		tagsByKey[tag.Key] = tag
+	}
+	if tagsByKey["workshop"].DisplayName != "Workshop" || tagsByKey["workshop"].Color != "#2F80ED" {
+		t.Fatalf("expected tag list color enrichment, got %+v", tagsByKey)
+	}
+	if tagsByKey["damaged"].DisplayName != "Damaged" || tagsByKey["damaged"].Color != "" {
+		t.Fatalf("expected invalid catalog color to be cleared, got %+v", tagsByKey["damaged"])
+	}
+	if got := plan.Assets[1].TagKeys; len(got) != 2 || got[0] != "damaged" || got[1] != "workshop" {
+		t.Fatalf("expected item tags from tag list, got %#v", got)
+	}
+}
+
+func TestLegacyHomeboxLiveImportContinuesWhenTagListIsUnavailable(t *testing.T) {
+	server := newLegacyHomeboxTestServerWithConfig(t, legacyHomeboxServerConfig{
+		itemDetailStatus: http.StatusOK,
+		attachmentStatus: http.StatusOK,
+		tagsStatus:       http.StatusNotFound,
+		itemTagsJSON:     `[{"name":"Workshop","color":"2f80ed"}]`,
+	})
+
+	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             server.URL,
+		Username:            "user@example.com",
+		Password:            "secret",
+		AllowPrivateNetwork: true,
+	})
+	if err != nil {
+		t.Fatalf("read Homebox source: %v", err)
+	}
+	if got := plan.Assets[1].TagKeys; len(got) != 1 || got[0] != "workshop" {
+		t.Fatalf("expected fallback item detail tags, got %#v", got)
+	}
+	if plan.Tags[0].Color != "#2F80ED" {
+		t.Fatalf("expected item detail tag color fallback, got %+v", plan.Tags)
+	}
+	if len(plan.Messages) != 1 || plan.Messages[0].Code != "tag-list-unavailable" {
+		t.Fatalf("expected tag list warning, got %+v", plan.Messages)
+	}
+}
+
 func TestLegacyHomeboxApplyDownloadsAttachmentBytesWhenRequested(t *testing.T) {
 	var attachmentDownloads int
 	server := newLegacyHomeboxTestServerWithAttachmentCounter(t, http.StatusOK, &attachmentDownloads)
@@ -277,6 +334,51 @@ func newLegacyHomeboxTestServerWithAttachmentCounter(t *testing.T, itemDetailSta
 
 func newLegacyHomeboxTestServerWithAttachmentResponse(t *testing.T, itemDetailStatus int, attachmentStatus int, attachmentDownloads *int) *httptest.Server {
 	t.Helper()
+	return newLegacyHomeboxTestServerWithConfig(t, legacyHomeboxServerConfig{
+		itemDetailStatus:    itemDetailStatus,
+		attachmentStatus:    attachmentStatus,
+		attachmentDownloads: attachmentDownloads,
+		itemTagsJSON:        `[{"name":"Workshop","color":"2f80ed"},{"name":"Damaged","color":"not-a-color"}]`,
+		tagsJSON:            `[{"id":"tag-workshop","name":"Workshop","color":"2f80ed"},{"id":"tag-damaged","name":"Damaged","color":"not-a-color"}]`,
+	})
+}
+
+func newLegacyHomeboxTestServerWithTags(t *testing.T, tagsJSON string, itemTagsJSON string) *httptest.Server {
+	t.Helper()
+	return newLegacyHomeboxTestServerWithConfig(t, legacyHomeboxServerConfig{
+		itemDetailStatus: http.StatusOK,
+		attachmentStatus: http.StatusOK,
+		tagsJSON:         tagsJSON,
+		itemTagsJSON:     itemTagsJSON,
+	})
+}
+
+type legacyHomeboxServerConfig struct {
+	itemDetailStatus    int
+	attachmentStatus    int
+	attachmentDownloads *int
+	tagsStatus          int
+	tagsJSON            string
+	itemTagsJSON        string
+}
+
+func newLegacyHomeboxTestServerWithConfig(t *testing.T, config legacyHomeboxServerConfig) *httptest.Server {
+	t.Helper()
+	if config.itemDetailStatus == 0 {
+		config.itemDetailStatus = http.StatusOK
+	}
+	if config.attachmentStatus == 0 {
+		config.attachmentStatus = http.StatusOK
+	}
+	if config.tagsStatus == 0 {
+		config.tagsStatus = http.StatusOK
+	}
+	if config.tagsJSON == "" {
+		config.tagsJSON = `[]`
+	}
+	if config.itemTagsJSON == "" {
+		config.itemTagsJSON = `[]`
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -291,18 +393,24 @@ func newLegacyHomeboxTestServerWithAttachmentResponse(t *testing.T, itemDetailSt
 			_, _ = w.Write([]byte(`[{"id":"location-one","name":"Garage","type":"location","children":[]}]`))
 		case "/api/v1/items":
 			_, _ = w.Write([]byte(`{"items":[{"id":"item-one","assetId":"HB-1","name":"Drill"}]}`))
-		case "/api/v1/items/item-one":
-			if itemDetailStatus != http.StatusOK {
-				http.Error(w, "database password leaked", itemDetailStatus)
+		case "/api/v1/tags":
+			if config.tagsStatus != http.StatusOK {
+				http.Error(w, "tag list failed", config.tagsStatus)
 				return
 			}
-			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"tags":[{"name":"Workshop","color":"2f80ed"},{"name":"Damaged","color":"not-a-color"}],"attachments":[{"id":"attachment-one","type":"photo","primary":true,"title":"drill.jpg","mimeType":"image/jpeg"}]}`))
-		case "/api/v1/items/item-one/attachments/attachment-one":
-			if attachmentDownloads != nil {
-				(*attachmentDownloads)++
+			_, _ = w.Write([]byte(config.tagsJSON))
+		case "/api/v1/items/item-one":
+			if config.itemDetailStatus != http.StatusOK {
+				http.Error(w, "database password leaked", config.itemDetailStatus)
+				return
 			}
-			if attachmentStatus != http.StatusOK {
-				http.Error(w, "not found", attachmentStatus)
+			_, _ = w.Write([]byte(`{"id":"item-one","assetId":"HB-1","name":"Drill","description":"Cordless","quantity":1,"location":{"id":"location-one","name":"Garage"},"tags":` + config.itemTagsJSON + `,"attachments":[{"id":"attachment-one","type":"photo","primary":true,"title":"drill.jpg","mimeType":"image/jpeg"}]}`))
+		case "/api/v1/items/item-one/attachments/attachment-one":
+			if config.attachmentDownloads != nil {
+				(*config.attachmentDownloads)++
+			}
+			if config.attachmentStatus != http.StatusOK {
+				http.Error(w, "not found", config.attachmentStatus)
 				return
 			}
 			w.Header().Set("Content-Type", "image/jpeg")

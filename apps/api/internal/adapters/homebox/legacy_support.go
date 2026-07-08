@@ -290,6 +290,14 @@ func (i LegacyImporter) item(ctx context.Context, baseURL string, token string, 
 	return detail, i.doJSON(ctx, http.MethodGet, baseURL+"/items/"+url.PathEscape(id), token, nil, &detail)
 }
 
+func (i LegacyImporter) tags(ctx context.Context, baseURL string, token string) ([]legacyTag, error) {
+	var response legacyTagListResponse
+	if err := i.doJSON(ctx, http.MethodGet, baseURL+"/tags", token, nil, &response); err != nil {
+		return nil, err
+	}
+	return normalizedTagValues(response.Tags), nil
+}
+
 func (i LegacyImporter) attachment(ctx context.Context, baseURL string, token string, itemID string, attachmentID string) ([]byte, string, error) {
 	endpoint := baseURL + "/items/" + url.PathEscape(itemID) + "/attachments/" + url.PathEscape(attachmentID)
 	if err := validateOutboundURL(endpoint); err != nil {
@@ -401,8 +409,34 @@ type legacyItemDetail struct {
 }
 
 type legacyTag struct {
+	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Color string `json:"color"`
+}
+
+type legacyTagListResponse struct {
+	Tags []legacyTag
+}
+
+func (r *legacyTagListResponse) UnmarshalJSON(data []byte) error {
+	var tags []legacyTag
+	if err := json.Unmarshal(data, &tags); err == nil {
+		r.Tags = tags
+		return nil
+	}
+	var object struct {
+		Tags  []legacyTag `json:"tags"`
+		Items []legacyTag `json:"items"`
+	}
+	if err := json.Unmarshal(data, &object); err != nil {
+		return err
+	}
+	if object.Tags != nil {
+		r.Tags = object.Tags
+		return nil
+	}
+	r.Tags = object.Items
+	return nil
 }
 
 type legacyAttachment struct {
@@ -512,7 +546,7 @@ func normalizedTagValues(values []legacyTag) []legacyTag {
 		if _, ok := seen[key]; ok {
 			continue
 		}
-		seen[key] = legacyTag{Name: name, Color: normalizedTagColor(value.Color)}
+		seen[key] = legacyTag{ID: strings.TrimSpace(value.ID), Name: name, Color: normalizedTagColor(value.Color)}
 	}
 	keys := make([]string, 0, len(seen))
 	for key := range seen {
@@ -524,6 +558,47 @@ func normalizedTagValues(values []legacyTag) []legacyTag {
 		out = append(out, seen[key])
 	}
 	return out
+}
+
+type legacyTagCatalog struct {
+	byID  map[string]legacyTag
+	byKey map[string]legacyTag
+}
+
+func newLegacyTagCatalog(tags []legacyTag) legacyTagCatalog {
+	catalog := legacyTagCatalog{
+		byID:  map[string]legacyTag{},
+		byKey: map[string]legacyTag{},
+	}
+	for _, tag := range normalizedTagValues(tags) {
+		if tag.ID != "" {
+			catalog.byID[tag.ID] = tag
+		}
+		catalog.byKey[tagKeyFromName(tag.Name)] = tag
+	}
+	return catalog
+}
+
+func (c legacyTagCatalog) enrich(tags []legacyTag) []legacyTag {
+	out := make([]legacyTag, 0, len(tags))
+	for _, tag := range tags {
+		enriched := tag
+		if catalogTag, ok := c.byID[strings.TrimSpace(tag.ID)]; ok {
+			enriched = mergeLegacyTags(enriched, catalogTag)
+		}
+		if catalogTag, ok := c.byKey[tagKeyFromName(enriched.Name)]; ok {
+			enriched = mergeLegacyTags(enriched, catalogTag)
+		}
+		out = append(out, enriched)
+	}
+	return normalizedTagValues(out)
+}
+
+func mergeLegacyTags(item legacyTag, catalog legacyTag) legacyTag {
+	item.ID = strings.TrimSpace(firstNonEmpty(item.ID, catalog.ID))
+	item.Name = firstNonEmpty(catalog.Name, item.Name)
+	item.Color = firstNonEmpty(catalog.Color, item.Color)
+	return item
 }
 
 func tagDefinitionsFromValues(values []legacyTag) []importplan.TagDefinition {

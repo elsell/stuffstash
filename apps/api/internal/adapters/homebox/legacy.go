@@ -175,6 +175,18 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 	if err != nil {
 		return importplan.Plan{}, safeLiveSourceError(err)
 	}
+	tags, err := importer.tags(ctx, baseURL, token)
+	var tagCatalog legacyTagCatalog
+	if err != nil {
+		plan.Messages = append(plan.Messages, importplan.Message{
+			Code:     "tag-list-unavailable",
+			Severity: importplan.SeverityWarning,
+			Summary:  "Homebox tag list could not be read",
+			Detail:   safeHomeboxWarningDetail(err, "tag list could not be read"),
+		})
+	} else {
+		tagCatalog = newLegacyTagCatalog(tags)
+	}
 	locationsByID := map[string]legacyLocation{}
 	for _, location := range locations {
 		locationsByID[location.ID] = location
@@ -238,6 +250,7 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 			continue
 		}
 		values := legacyValuesFromItem(detail)
+		values.Tags = tagCatalog.enrich(detail.Tags)
 		customFields, rowMessages := customFieldsFromLegacyValues(values, detail.ID, detail.Name)
 		plan.Tags = appendTagDefinitions(plan.Tags, values.Tags)
 		plan.Messages = append(plan.Messages, rowMessages...)
