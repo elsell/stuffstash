@@ -10,24 +10,74 @@ import (
 )
 
 func validateRealtimeVoiceMissingDestinationSegmentsAccountedFor(commands []ActionPlanCommandInput, transcript string, priorResults []ports.AgentToolResult) error {
-	represented := strings.Builder{}
-	for _, command := range commands {
-		if command.Kind != actionplan.CommandKindCreateAsset && command.Kind != actionplan.CommandKindCreateLocation {
-			continue
-		}
-		represented.WriteString(" ")
-		represented.WriteString(firstStringArg(command.Arguments["title"], command.Arguments["name"]))
-	}
-	representedText := represented.String()
+	representedDestinations := realtimeVoiceRepresentedDestinationUnits(commands, priorResults)
 	for _, query := range realtimeVoiceNoMatchQueries(priorResults) {
 		if !realtimeVoiceQueryLooksLikeDestinationSegment(query, transcript) {
 			continue
 		}
-		if !realtimeVoiceMeaningfulWordsRepresented(query, representedText) {
+		if !realtimeVoiceAnyDestinationUnitRepresents(query, representedDestinations) {
 			return ports.ErrInvalidProviderInput
 		}
 	}
 	return nil
+}
+
+func realtimeVoiceRepresentedDestinationUnits(commands []ActionPlanCommandInput, toolResults []ports.AgentToolResult) []string {
+	parentTitles := realtimeVoiceVisibleTitlesByAssetID(toolResults)
+	units := []string{}
+	for _, command := range commands {
+		if command.Kind != actionplan.CommandKindCreateAsset && command.Kind != actionplan.CommandKindCreateLocation {
+			continue
+		}
+		kind := strings.TrimSpace(stringArg(command.Arguments["kind"]))
+		if command.Kind == actionplan.CommandKindCreateLocation {
+			kind = asset.KindLocation.String()
+		}
+		if kind == "" {
+			kind = asset.KindItem.String()
+		}
+		if kind != asset.KindContainer.String() && kind != asset.KindLocation.String() {
+			continue
+		}
+		unit := strings.Builder{}
+		unit.WriteString(firstStringArg(command.Arguments["title"], command.Arguments["name"]))
+		if parentTitle := parentTitles[strings.TrimSpace(stringArg(command.Arguments["parentAssetId"]))]; parentTitle != "" {
+			unit.WriteString(" ")
+			unit.WriteString(parentTitle)
+		}
+		if text := strings.TrimSpace(unit.String()); text != "" {
+			units = append(units, text)
+		}
+	}
+	return units
+}
+
+func realtimeVoiceVisibleTitlesByAssetID(toolResults []ports.AgentToolResult) map[string]string {
+	titles := map[string]string{}
+	for _, result := range toolResults {
+		if result.Name != RealtimeVoiceToolSearchAuthorizedAssets && result.Name != RealtimeVoiceToolListAuthorizedAssets {
+			continue
+		}
+		var output realtimeVoiceAssetToolOutput
+		if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
+			continue
+		}
+		for _, item := range output.Items {
+			if strings.TrimSpace(item.AssetID) != "" && strings.TrimSpace(item.Title) != "" {
+				titles[item.AssetID] = item.Title
+			}
+		}
+	}
+	return titles
+}
+
+func realtimeVoiceAnyDestinationUnitRepresents(query string, units []string) bool {
+	for _, unit := range units {
+		if realtimeVoiceMeaningfulWordsRepresented(query, unit) {
+			return true
+		}
+	}
+	return false
 }
 
 func validateRealtimeVoiceMoveRequestUsesVisibleSource(commands []ActionPlanCommandInput, transcript string, priorResults []ports.AgentToolResult) error {

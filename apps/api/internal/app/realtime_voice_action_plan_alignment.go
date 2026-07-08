@@ -103,13 +103,16 @@ func realtimeVoiceQueryLooksLikeDestinationSegment(query string, transcript stri
 }
 
 func realtimeVoiceMeaningfulWordsRepresented(query string, represented string) bool {
-	represented = " " + strings.ToLower(represented) + " "
+	representedWords := map[string]struct{}{}
+	for _, word := range realtimeVoiceMeaningfulWords(represented) {
+		representedWords[word] = struct{}{}
+	}
 	for _, word := range realtimeVoiceMeaningfulWords(query) {
-		if realtimeVoiceDestinationSegmentWords[word] && strings.Contains(represented, " "+word+" ") {
-			return true
+		if !realtimeVoiceWordPresent(representedWords, word) {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func realtimeVoiceTranscriptHasUnrepresentedDestinationSegment(transcript string, represented string) bool {
@@ -165,7 +168,7 @@ func realtimeVoiceMeaningfulWords(value string) []string {
 	words := []string{}
 	for _, word := range strings.Fields(strings.ToLower(value)) {
 		word = strings.Trim(word, ".,!?;:'\"()[]{}")
-		if len(word) < 3 || realtimeVoiceTranscriptStopWords[word] {
+		if (len(word) < 3 && !realtimeVoiceShortMeaningfulWords[word]) || realtimeVoiceTranscriptStopWords[word] {
 			continue
 		}
 		words = append(words, word)
@@ -330,6 +333,10 @@ var realtimeVoiceTranscriptStopWords = map[string]bool{
 	"with":   true,
 	"under":  true,
 	"inside": true,
+}
+
+var realtimeVoiceShortMeaningfulWords = map[string]bool{
+	"tv": true,
 }
 
 var realtimeVoiceDestinationSegmentWords = map[string]bool{
