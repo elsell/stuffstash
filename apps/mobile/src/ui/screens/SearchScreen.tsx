@@ -46,7 +46,7 @@ import {
 } from './SearchScreenPresentation';
 import { BrowseSurfaceControl, InventoryMapScreen } from './InventoryMapScreen';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
-import { assetTagSearchHref } from './AssetTagSearchNavigation';
+import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 
 type SearchScreenProps = {
   readonly initialScope?: BrowseScope;
@@ -464,7 +464,7 @@ export function SearchScreen({
             <AssetCard
               asset={item.asset}
               onPress={() => router.push(`/assets/${item.asset.id}`)}
-              onTagPress={(tag) => router.push(assetTagSearchHref(tag.label))}
+              onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
             />
           );
         }}

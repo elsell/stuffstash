@@ -39,7 +39,7 @@ import {
   assetDetailHref,
   navigateAfterDeletedAsset
 } from './AssetDetailNavigation';
-import { assetTagSearchHref } from './AssetTagSearchNavigation';
+import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
@@ -421,7 +421,7 @@ export function AssetDetailRouteScreen({
             onPhotoPress={(photoId) => selectAssetPhoto(screenState.asset, photoId)}
             onReturn={() => void runCheckoutAction('return', screenState.asset)}
             onRetryPhotos={() => void retryPhotos()}
-            onTagPress={(tag) => router.push(assetTagSearchHref(tag.label))}
+            onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
             photoUploads={photoUploads}
             photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
             workspaceStatusKind={presentedWorkspaceStatus?.kind}

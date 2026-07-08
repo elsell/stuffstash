@@ -15,7 +15,7 @@ import {
 import { AssetCard } from '../components/AssetCard';
 import { IdentityLabel } from '../components/IdentityIcon';
 import { locationAssetDetailHref } from './AssetDetailNavigation';
-import { assetTagSearchHref } from './AssetTagSearchNavigation';
+import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import { colors, spacing } from '../theme/tokens';
 
 type LocationAssetsRouteScreenProps = {
@@ -127,7 +127,7 @@ export function LocationAssetList({
           <AssetCard
             asset={item}
             onPress={() => router.push(locationAssetDetailHref(locationAssets.locationId, item.id))}
-            onTagPress={(tag) => router.push(assetTagSearchHref(tag.label))}
+            onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
           />
         )}
       />

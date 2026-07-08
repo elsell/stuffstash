@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { router } from 'expo-router';
 import { InventoryAssetList } from './InventoryAssetsRouteScreen';
 import { LocationAssetList } from './LocationAssetsRouteScreen';
-import { assetTagSearchHref } from './AssetTagSearchNavigation';
+import {
+  assetTagSearchHref,
+  navigateToAssetTagSearch
+} from './AssetTagSearchNavigation';
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn()
@@ -44,6 +47,14 @@ describe('asset tag search navigation', () => {
       pathname: '/search',
       params: { query: 'Camp Kitchen' }
     });
+  });
+
+  it('pushes tag-backed search from shared tag chip navigation', () => {
+    mocks.push.mockClear();
+
+    navigateToAssetTagSearch(router, { label: 'Emergency Kit' });
+
+    expect(router.push).toHaveBeenCalledWith(assetTagSearchHref('Emergency Kit'));
   });
 
   it('wires inventory asset card tag presses to tag-backed search', () => {
