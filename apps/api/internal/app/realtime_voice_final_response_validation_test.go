@@ -114,6 +114,40 @@ func TestRealtimeVoiceRecoversUnsafeFinalResponseBeforeMobileOrTTS(t *testing.T)
 	}
 }
 
+func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.TextToSpeech = tts
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start realtime voice session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.completeRealtimeVoiceResponse(context.Background(), session, ports.StructuredAgentResponse{
+		Kind:            ports.StructuredAgentResponseKindAnswer,
+		SpokenResponse:  "Use assetId water-bottle-1.",
+		DisplayResponse: "Call search_authorized_assets.",
+	}, nil, nil, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if !errors.Is(err, ports.ErrInvalidProviderInput) {
+		t.Fatalf("expected invalid provider input, got %v", err)
+	}
+	if tts.lastText != "" {
+		t.Fatalf("unsafe response reached TTS: %q", tts.lastText)
+	}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAssistantResponseStarted || event.Type == RealtimeVoiceEventAssistantResponseCompleted {
+			t.Fatalf("unsafe response reached mobile event: %+v", event)
+		}
+	}
+}
+
 func TestRealtimeVoiceRecoversEmptyModelTurnWithSafeSpokenResponse(t *testing.T) {
 	t.Parallel()
 

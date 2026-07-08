@@ -23,6 +23,9 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	if response.DisplayResponse == "" {
 		response.DisplayResponse = response.SpokenResponse
 	}
+	if err := validateRealtimeVoiceFinalResponse(response); err != nil {
+		return err
+	}
 
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAssistantResponseStarted, SessionID: session.ID, Response: &response}); err != nil {
 		return err
