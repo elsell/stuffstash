@@ -1091,6 +1091,48 @@ describe('RealtimeVoiceSessionController', () => {
     });
   });
 
+  it('ignores stale action plan terminal events for a different active plan', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([
+        {
+          type: 'action.plan.proposed',
+          seq: 1,
+          sessionId: 'session-1',
+          actionPlan: {
+            planId: 'plan-current',
+            status: 'proposed',
+            confirmationSummary: 'Create item water bottle?',
+            commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+            risks: []
+          }
+        },
+        {
+          type: 'action.plan.executed',
+          seq: 2,
+          sessionId: 'session-1',
+          planId: 'plan-stale',
+          status: 'executed',
+          message: 'The stale change was applied.'
+        }
+      ]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'review',
+      progressLabel: 'Review needed',
+      actionPlan: {
+        planId: 'plan-current',
+        status: 'proposed'
+      }
+    });
+  });
+
   it('shows a safe failure when approved action plan execution fails', async () => {
     const transport = new FailedReviewDecisionTransport();
     const player = new FakePlayer();

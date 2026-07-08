@@ -505,22 +505,27 @@ export class RealtimeVoiceSessionController {
       case 'action.plan.proposed':
         return withProgressStep(state, 'Review needed', { status: 'review', actionPlan: safeActionPlanProposal(event.actionPlan) });
       case 'action.plan.approved':
+        if (!actionPlanEventMatchesState(state, event.planId)) {
+          return state;
+        }
         return withProgressStep(state, 'Applying change', {
           status: 'processing',
-          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
-            ? { ...state.actionPlan, status: 'approved' }
-            : state.actionPlan,
+          actionPlan: { ...state.actionPlan, status: 'approved' },
           reviewDecisionPending: true
         });
       case 'action.plan.cancelled':
+        if (!actionPlanEventMatchesState(state, event.planId)) {
+          return state;
+        }
         return withProgressStep(state, 'Change cancelled', {
           status: 'completed',
-          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
-            ? { ...state.actionPlan, status: 'cancelled' }
-            : state.actionPlan,
+          actionPlan: { ...state.actionPlan, status: 'cancelled' },
           reviewDecisionPending: false
         });
       case 'action.plan.executed':
+        if (!actionPlanEventMatchesState(state, event.planId)) {
+          return state;
+        }
         const photoAttachmentStatus = await this.attachApprovedPlanPhotos({
           ...event,
           type: 'action.plan.executed',
@@ -528,19 +533,18 @@ export class RealtimeVoiceSessionController {
         }, state.actionPlan);
         return withProgressStep(state, 'Change applied', {
           status: 'completed',
-          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
-            ? { ...state.actionPlan, status: 'executed' }
-            : state.actionPlan,
+          actionPlan: { ...state.actionPlan, status: 'executed' },
           reviewDecisionPending: false,
           photoAttachmentStatus
         });
       case 'action.plan.failed':
+        if (!actionPlanEventMatchesState(state, event.planId)) {
+          return state;
+        }
         await this.player.stop();
         return withProgressStep(state, 'Change failed', {
           status: 'failed',
-          actionPlan: state.actionPlan && state.actionPlan.planId === event.planId
-            ? { ...state.actionPlan, status: 'failed' }
-            : state.actionPlan,
+          actionPlan: { ...state.actionPlan, status: 'failed' },
           reviewDecisionPending: false,
           errorMessage: 'The approved change could not be applied safely.'
         });
@@ -946,6 +950,13 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedActionPlanText(risk, 180)).filter(Boolean)
   };
+}
+
+function actionPlanEventMatchesState(
+  state: VoiceRealtimeState,
+  planId: string
+): state is VoiceRealtimeState & { readonly actionPlan: VoiceActionPlanProposal } {
+  return Boolean(state.actionPlan && state.actionPlan.planId === planId);
 }
 
 function usableActionPlanId(planId: string): string {

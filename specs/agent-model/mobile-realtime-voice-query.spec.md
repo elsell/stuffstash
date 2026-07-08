@@ -376,6 +376,8 @@ The server must reject review decisions with stale sequence numbers, forged sess
 
 After receiving `action.plan.approved`, mobile must show that the approved change is being applied and keep duplicate decisions disabled. After receiving `action.plan.cancelled`, `action.plan.executed`, or `action.plan.failed`, mobile must leave the pending review state and show a safe terminal state. Terminal review states must not keep stale pending-decision flags that can suppress normal terminal controls or misrepresent the session as still waiting on the user's earlier tap. Failure states must not expose command arguments, stack traces, hidden resources, provider output, prompts, transcripts, or authorization details. Cancellation messaging must make clear that no change was made.
 
+Mobile must apply action-plan approval, cancellation, execution, and failure events only when the event plan ID matches the currently reviewed plan. A mismatched plan event is stale or malformed for the active mobile session view and must not complete, fail, clear pending review state, upload photos, or change the visible active review.
+
 ## Transcript Events
 
 Speech-to-text may emit partial and final transcript events.
