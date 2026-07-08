@@ -155,6 +155,18 @@ func TestRealtimeVoiceActionPlanApprovalRejectsInvalidPhotoMetadataBeforeApprova
 				"sizeBytes":   float64(26 * 1024 * 1024),
 			},
 		},
+		{
+			name: "local uri and bytes are not metadata",
+			photo: map[string]any{
+				"commandId":     "cmd-diaper-genie-refills",
+				"photoIndex":    float64(0),
+				"fileName":      "refills.jpg",
+				"contentType":   "image/jpeg",
+				"sizeBytes":     float64(1024),
+				"localUri":      "file:///private/mobile/photo.jpg",
+				"contentBase64": "cGhvdG8=",
+			},
+		},
 	}
 
 	for _, tt := range tests {
