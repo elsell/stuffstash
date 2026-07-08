@@ -40,6 +40,16 @@ func TestAssetSearchFindsMetadata(t *testing.T) {
 	if len(exactTypeSearch.Data) != 1 || exactTypeSearch.Data[0].Asset.Title != "Aspirin" || exactTypeSearch.Data[0].Type != "asset" {
 		t.Fatalf("expected exact custom asset type search to find aspirin, got %+v", exactTypeSearch.Data)
 	}
+
+	exactTagNameSearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "Workshop", "exact", "", "")
+	if len(exactTagNameSearch.Data) != 1 || exactTagNameSearch.Data[0].Asset.Title != "Cordless Drill" || exactTagNameSearch.Data[0].Matches[0].Field != "tag_display_name" {
+		t.Fatalf("expected exact tag display-name search to find drill, got %+v", exactTagNameSearch.Data)
+	}
+
+	exactTagKeySearch := searchAssets(t, fixture.server, fixture.tenantID, "Bearer dev:owner", "shop-tools", "exact", "", "")
+	if len(exactTagKeySearch.Data) != 1 || exactTagKeySearch.Data[0].Asset.Title != "Cordless Drill" || exactTagKeySearch.Data[0].Matches[0].Field != "tag_key" {
+		t.Fatalf("expected exact tag key search to find drill, got %+v", exactTagKeySearch.Data)
+	}
 }
 
 func TestAssetSearchFiltersByCheckoutState(t *testing.T) {
@@ -254,6 +264,7 @@ func newAssetSearchFixture(t *testing.T) assetSearchFixture {
 	}
 
 	createWorkshopTag := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+toolsInventoryID+"/tags", "Bearer dev:owner", map[string]any{
+		"key":         "shop-tools",
 		"displayName": "Workshop",
 		"color":       "#2f80ed",
 	})
