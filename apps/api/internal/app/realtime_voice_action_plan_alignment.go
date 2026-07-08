@@ -247,10 +247,7 @@ func realtimeVoiceTitleMentionedInTranscript(title string, transcript string) bo
 		transcriptWords[word] = struct{}{}
 	}
 	for _, word := range realtimeVoiceMeaningfulWords(title) {
-		if _, ok := transcriptWords[word]; ok {
-			return true
-		}
-		if _, ok := transcriptWords[word+"s"]; ok {
+		if realtimeVoiceWordPresent(transcriptWords, word) {
 			return true
 		}
 	}
@@ -262,25 +259,46 @@ func realtimeVoiceParentTitleMentionedInTranscript(title string, transcript stri
 	for _, word := range realtimeVoiceMeaningfulWords(transcript) {
 		transcriptWords[word] = struct{}{}
 	}
-	distinctTitleWords := []string{}
-	for _, word := range realtimeVoiceMeaningfulWords(title) {
-		if realtimeVoiceGenericParentKindWords[word] {
-			continue
-		}
-		distinctTitleWords = append(distinctTitleWords, word)
+	titleWords := realtimeVoiceMeaningfulWords(title)
+	if len(titleWords) == 0 {
+		return false
 	}
-	if len(distinctTitleWords) == 0 {
-		return realtimeVoiceTitleMentionedInTranscript(title, transcript)
-	}
-	for _, word := range distinctTitleWords {
-		if _, ok := transcriptWords[word]; ok {
-			return true
+	for _, word := range titleWords {
+		if !realtimeVoiceWordPresent(transcriptWords, word) {
+			return false
 		}
-		if _, ok := transcriptWords[word+"s"]; ok {
+	}
+	return true
+}
+
+func realtimeVoiceWordPresent(words map[string]struct{}, word string) bool {
+	for _, candidate := range realtimeVoiceWordForms(word) {
+		if _, ok := words[candidate]; ok {
 			return true
 		}
 	}
 	return false
+}
+
+func realtimeVoiceWordForms(word string) []string {
+	word = strings.TrimSpace(word)
+	if word == "" {
+		return nil
+	}
+	forms := []string{word, word + "s"}
+	if strings.HasSuffix(word, "x") || strings.HasSuffix(word, "s") || strings.HasSuffix(word, "ch") || strings.HasSuffix(word, "sh") {
+		forms = append(forms, word+"es")
+	}
+	if strings.HasSuffix(word, "y") && len(word) > 1 {
+		forms = append(forms, strings.TrimSuffix(word, "y")+"ies")
+	}
+	if strings.HasSuffix(word, "f") && len(word) > 1 {
+		forms = append(forms, strings.TrimSuffix(word, "f")+"ves")
+	}
+	if strings.HasSuffix(word, "fe") && len(word) > 2 {
+		forms = append(forms, strings.TrimSuffix(word, "fe")+"ves")
+	}
+	return forms
 }
 
 var realtimeVoiceTranscriptStopWords = map[string]bool{
@@ -322,16 +340,4 @@ var realtimeVoiceContainerSegmentWords = map[string]bool{
 	"basket":  true,
 	"closet":  true,
 	"counter": true,
-}
-
-var realtimeVoiceGenericParentKindWords = map[string]bool{
-	"basket":  true,
-	"bin":     true,
-	"box":     true,
-	"cabinet": true,
-	"closet":  true,
-	"counter": true,
-	"drawer":  true,
-	"room":    true,
-	"shelf":   true,
 }

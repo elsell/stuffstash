@@ -195,6 +195,63 @@ func TestRealtimeVoiceRejectsMovePlanToParentWithOnlyGenericWordOverlap(t *testi
 	}
 }
 
+func TestRealtimeVoiceParentTitleRequiresFullMeaningfulCoverage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		title      string
+		transcript string
+		want       bool
+	}{
+		{
+			name:       "full named room",
+			title:      "Living room",
+			transcript: "Move my drill to the living room.",
+			want:       true,
+		},
+		{
+			name:       "pluralized full generic title",
+			title:      "Box shelf",
+			transcript: "Move my drill to the boxes shelves.",
+			want:       true,
+		},
+		{
+			name:       "shared adjective different container",
+			title:      "Big cabinet",
+			transcript: "Move my drill to the big box.",
+			want:       false,
+		},
+		{
+			name:       "partial parent title",
+			title:      "Living room shelf",
+			transcript: "Move my drill to the living room.",
+			want:       false,
+		},
+		{
+			name:       "all generic multi word partial",
+			title:      "Box shelf",
+			transcript: "Move my drill to the box.",
+			want:       false,
+		},
+		{
+			name:       "single generic title",
+			title:      "Box",
+			transcript: "Move my drill to the box.",
+			want:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := realtimeVoiceParentTitleMentionedInTranscript(tt.title, tt.transcript); got != tt.want {
+				t.Fatalf("parent title match = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRealtimeVoiceRejectsDuplicateRootCreateWhenVisibleAssetAlreadyExists(t *testing.T) {
 	t.Parallel()
 
