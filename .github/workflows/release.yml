@@ -200,13 +200,48 @@ jobs:
           subject-digest: ${{ steps.web_image.outputs.digest }}
           push-to-registry: true
 
+      - name: Create release tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ needs.validate.outputs.next_tag }}" "${GITHUB_SHA}"
+          git push origin "${{ needs.validate.outputs.next_tag }}"
+
+      - name: Create GitHub release
+        run: |
+          release_ref="${GITHUB_SHA}"
+          previous="${{ needs.validate.outputs.previous_tag }}"
+          if [ "$previous" = "none" ]; then
+            range="$release_ref"
+          else
+            range="${previous}..${release_ref}"
+          fi
+
+          {
+            printf 'API image: `%s`\n\n' "${{ steps.api_image.outputs.image_ref }}"
+            printf 'API digest: `%s`\n\n' "${{ steps.api_image.outputs.digest }}"
+            printf 'Web image: `%s`\n\n' "${{ steps.web_image.outputs.image_ref }}"
+            printf 'Web digest: `%s`\n\n' "${{ steps.web_image.outputs.digest }}"
+            printf 'Changes:\n'
+            git log --format='- %s (%h)' "$range"
+          } > release-notes.md
+
+          gh release create "${{ needs.validate.outputs.next_tag }}" \
+            --target "$release_ref" \
+            --title "${{ needs.validate.outputs.next_tag }}" \
+            --notes-file release-notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Update self-host image digests
+        continue-on-error: true
         run: |
           node scripts/update-selfhost-image-refs.mjs \
             --api-image "${{ steps.api_image.outputs.image_ref }}" \
             --web-image "${{ steps.web_image.outputs.image_ref }}"
 
       - name: Open self-host image digest update PR
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -249,81 +284,6 @@ jobs:
             fi
           fi
 
-          required_checks_passed=false
-          for _ in $(seq 1 120); do
-            required_checks_state="$(gh pr view "$pr_number" --json statusCheckRollup --jq '
-              if (.statusCheckRollup | length) == 0 then
-                "missing"
-              elif ([.statusCheckRollup[] | select(.name == "Required checks")] | length) == 0 then
-                "missing"
-              elif ([.statusCheckRollup[] | select(.name == "Required checks" and .status == "COMPLETED" and .conclusion == "SUCCESS")] | length) > 0 then
-                "passed"
-              elif ([.statusCheckRollup[] | select(.name == "Required checks" and .status == "COMPLETED" and .conclusion != "SUCCESS")] | length) > 0 then
-                "failed"
-              else
-                "pending"
-              end
-            ')"
-
-            case "$required_checks_state" in
-              passed)
-                required_checks_passed=true
-                break
-                ;;
-              failed)
-                gh pr view "$pr_number" --json statusCheckRollup
-                echo "Required checks failed for digest update PR #$pr_number." >&2
-                exit 1
-                ;;
-              missing|pending)
-                sleep 10
-                ;;
-              *)
-                echo "Unexpected required check state '$required_checks_state' for digest update PR #$pr_number." >&2
-                exit 1
-                ;;
-            esac
-          done
-
-          if [ "$required_checks_passed" != "true" ]; then
-            gh pr view "$pr_number" --json statusCheckRollup
-            echo "Required checks did not pass for digest update PR #$pr_number before the release wait timeout." >&2
-            exit 1
-          fi
-
-          gh pr merge "$pr_number" --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Create release tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${{ needs.validate.outputs.next_tag }}" "${GITHUB_SHA}"
-          git push origin "${{ needs.validate.outputs.next_tag }}"
-
-      - name: Create GitHub release
-        run: |
-          release_ref="${GITHUB_SHA}"
-          previous="${{ needs.validate.outputs.previous_tag }}"
-          if [ "$previous" = "none" ]; then
-            range="$release_ref"
-          else
-            range="${previous}..${release_ref}"
-          fi
-
-          {
-            printf 'API image: `%s`\n\n' "${{ steps.api_image.outputs.image_ref }}"
-            printf 'API digest: `%s`\n\n' "${{ steps.api_image.outputs.digest }}"
-            printf 'Web image: `%s`\n\n' "${{ steps.web_image.outputs.image_ref }}"
-            printf 'Web digest: `%s`\n\n' "${{ steps.web_image.outputs.digest }}"
-            printf 'Changes:\n'
-            git log --format='- %s (%h)' "$range"
-          } > release-notes.md
-
-          gh release create "${{ needs.validate.outputs.next_tag }}" \
-            --target "$release_ref" \
-            --title "${{ needs.validate.outputs.next_tag }}" \
-            --notes-file release-notes.md
+          gh pr merge "$pr_number" --auto --squash --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}
