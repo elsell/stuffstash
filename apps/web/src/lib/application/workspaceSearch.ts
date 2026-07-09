@@ -210,9 +210,28 @@ export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput)
       query,
       results: [],
       submitted: true,
-      error: caught instanceof Error ? caught.message : 'Search failed.'
+      error: searchFailureMessage(caught)
     };
   }
+}
+
+function searchFailureMessage(error: unknown): string {
+  if (!error || typeof error !== 'object') {
+    return 'Search failed.';
+  }
+
+  const safeForUser = 'safeForUser' in error && error.safeForUser === true;
+  if (safeForUser && error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  const status = 'status' in error && typeof error.status === 'number' ? error.status : 0;
+  const message = error instanceof Error ? error.message.trim() : '';
+  if (status >= 500 || message.toLowerCase() === 'internal server error.') {
+    return 'Search could not complete. Try again, or check the server logs if it keeps happening.';
+  }
+
+  return message || 'Search failed.';
 }
 
 function searchLifecycleFilterLabel(lifecycleState: SearchLifecycleFilter): string {

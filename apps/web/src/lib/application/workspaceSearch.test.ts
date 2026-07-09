@@ -268,4 +268,31 @@ describe('workspace search helpers', () => {
       error: 'Search service unavailable.'
     });
   });
+
+  it('replaces unsafe server search failures with a recovery-oriented message', async () => {
+    const serverError = new Error('Internal server error.') as Error & { safeForUser: boolean; status: number };
+    serverError.safeForUser = false;
+    serverError.status = 500;
+
+    const result = await executeWorkspaceSearch({
+      repository: {
+        searchAssets: async () => {
+          throw serverError;
+        }
+      },
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      query: 'fertilizer',
+      lifecycleState: 'active',
+      mode: 'fuzzy',
+      checkoutState: 'any'
+    });
+
+    expect(result).toEqual({
+      query: 'fertilizer',
+      results: [],
+      submitted: true,
+      error: 'Search could not complete. Try again, or check the server logs if it keeps happening.'
+    });
+  });
 });
