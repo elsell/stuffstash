@@ -217,7 +217,6 @@ jobs:
           fi
           digest_branch="release/self-host-images-${{ needs.validate.outputs.next_tag }}"
           git commit -m "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}"
-          digest_sha="$(git rev-parse HEAD)"
           if git ls-remote --exit-code --heads origin "$digest_branch" >/dev/null; then
             git fetch origin "refs/heads/$digest_branch:refs/remotes/origin/$digest_branch"
             git push --force-with-lease=refs/heads/"$digest_branch" origin HEAD:"$digest_branch"
@@ -250,20 +249,7 @@ jobs:
             fi
           fi
 
-          gh workflow run ci.yml --ref "$digest_branch"
-          ci_run_id=""
-          for _ in $(seq 1 30); do
-            ci_run_id="$(gh run list --workflow CI --branch "$digest_branch" --event workflow_dispatch --limit 20 --json databaseId,headSha --jq ".[] | select(.headSha == \"$digest_sha\") | .databaseId" | head -n 1)"
-            if [ -n "$ci_run_id" ]; then
-              break
-            fi
-            sleep 5
-          done
-          if [ -z "$ci_run_id" ]; then
-            echo "Could not find dispatched CI run for $digest_branch at $digest_sha." >&2
-            exit 1
-          fi
-          gh run watch "$ci_run_id" --exit-status --interval 10
+          gh pr checks "$pr_number" --required --watch --fail-fast --interval 10
           gh pr merge "$pr_number" --squash --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}
