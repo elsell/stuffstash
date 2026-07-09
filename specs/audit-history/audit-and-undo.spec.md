@@ -28,6 +28,8 @@ The second implementation slice defines undo and redo for a narrow set of asset 
 - Audit behavior must be behind ports and adapters.
 - Audit writing must be part of the application operation boundary.
 - Audit records must preserve tenant and inventory isolation.
+- Tenant audit history reads must return tenant-scoped records only. They must not include records for every inventory inside the tenant.
+- Inventory audit history reads must return records scoped to the requested tenant and requested inventory only.
 - Audit records must be append-only through application ports. The first slice must not expose update or delete behavior for audit records.
 - Append-only audit persistence must reject duplicate audit record IDs instead of overwriting existing records. This applies to durable adapters and in-memory adapters used for local runs and tests.
 - Audit records must be cursor paginated.

@@ -165,6 +165,31 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
+  it('creates a tenant with its first inventory without dropping existing tenant access', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.createTenantWithInventory({ tenantName: 'Workshop', inventoryName: 'Tools' });
+
+    expect(data.context.selectedTenantId).toBe('tenant-created');
+    expect(data.context.selectedInventoryId).toBe('inventory-created-new-tenant');
+    expect(data.context.tenants.map((tenant) => tenant.id)).toEqual([
+      'tenant-home',
+      'tenant-cabin',
+      'tenant-empty',
+      'tenant-created'
+    ]);
+    expect(data.context.inventories.map((inventory) => inventory.id)).toEqual(['inventory-created-new-tenant']);
+    expect(await requests.find((request) => request.method === 'POST' && new URL(request.url).pathname === '/tenants')?.json()).toEqual({
+      name: 'Workshop'
+    });
+    expect(
+      await requests.find(
+        (request) => request.method === 'POST' && new URL(request.url).pathname === '/tenants/tenant-created/inventories'
+      )?.json()
+    ).toEqual({ name: 'Tools' });
+  });
+
   it('loads asset detail by ID through the generated client path', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);

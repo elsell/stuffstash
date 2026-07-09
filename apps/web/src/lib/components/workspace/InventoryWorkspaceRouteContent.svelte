@@ -80,7 +80,6 @@
 
   export type RouteContentHandlers = {
     onHome: (event: MouseEvent) => void;
-    onCreateStarterInventory: () => Promise<void>;
     onOpenLocation: (asset: Asset) => void;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => Promise<void>;
@@ -180,9 +179,6 @@
     <div class="empty-state spacious">
       <h1>{noInventoryPresentation.title}</h1>
       <p>{noInventoryPresentation.message}</p>
-      {#if noInventoryPresentation.actionLabel}
-        <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>{noInventoryPresentation.actionLabel}</Button.Root>
-      {/if}
     </div>
   </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}

@@ -170,7 +170,7 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(searchedTags).toEqual(['Tools']);
   });
 
-  it('renders the no-inventory branch with starter inventory affordances', async () => {
+  it('renders the no-inventory branch without hard-coded starter names', async () => {
     const props = await routeContentProps();
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
@@ -192,7 +192,8 @@ describe('InventoryWorkspaceRouteContent', () => {
     });
 
     expect(document.body.textContent).toContain('No inventory yet');
-    expect(document.body.textContent).toContain('Create Household');
+    expect(document.body.textContent).toContain('Create the first inventory for this tenant.');
+    expect(document.body.textContent).not.toContain('Create Household');
   });
 
   it('renders the no-inventory branch without a starter action when creation is unavailable', async () => {
@@ -375,7 +376,6 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
 	    searchCheckoutState: 'any',
     handlers: {
       onHome: () => {},
-      onCreateStarterInventory: async () => {},
       onOpenLocation: () => {},
       onEditLocation: () => {},
       onOpenAsset: async () => {},

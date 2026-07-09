@@ -42,6 +42,7 @@ func createAuditRecord(tx *gorm.DB, record audit.Record) error {
 
 func (s Store) ListTenantAuditRecords(ctx context.Context, tenantID tenant.ID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
 	query := s.db.WithContext(ctx).Where(&auditRecordModel{TenantID: tenantID.String()})
+	query = query.Where(clause.Eq{Column: clause.Column{Name: "inventory_id"}, Value: nil})
 	return s.listAuditRecords(query, page)
 }
 

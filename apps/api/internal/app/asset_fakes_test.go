@@ -59,7 +59,7 @@ func (f *fakeAuditRepository) recordForAction(action audit.Action) (audit.Record
 func (f *fakeAuditRepository) ListTenantAuditRecords(_ context.Context, tenantID tenant.ID, page ports.AuditRecordPageRequest) ([]audit.Record, error) {
 	items := []audit.Record{}
 	for _, record := range f.items {
-		if record.TenantID.String() == tenantID.String() && fakeAuditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == "" && fakeAuditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
 			items = append(items, record)
 		}
 	}

@@ -36,7 +36,7 @@ func (s *Store) ListTenantAuditRecords(_ context.Context, tenantID tenant.ID, pa
 
 	items := []audit.Record{}
 	for _, record := range s.auditRecords {
-		if record.TenantID.String() == tenantID.String() && auditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == "" && auditRecordAfter(record, page.AfterOccurredAt, page.AfterRecordID) {
 			items = append(items, record)
 		}
 	}

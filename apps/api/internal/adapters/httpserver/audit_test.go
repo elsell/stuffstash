@@ -72,6 +72,10 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 	if viewerGrant.Code != http.StatusCreated {
 		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
 	}
+	otherTenantList := performRequest(server, http.MethodGet, "/me/tenants", "Bearer dev:other-owner", nil)
+	if otherTenantList.Code != http.StatusOK {
+		t.Fatalf("expected other tenant list status %d, got %d with body %s", http.StatusOK, otherTenantList.Code, otherTenantList.Body.String())
+	}
 
 	firstPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=1", "Bearer dev:viewer-user", nil)
 	if firstPageResponse.Code != http.StatusOK {
@@ -129,11 +133,13 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 		t.Fatalf("expected tenant audit status %d, got %d with body %s", http.StatusOK, tenantAudit.Code, tenantAudit.Body.String())
 	}
 	tenantAuditBody := decodeAuditRecordList(t, tenantAudit)
-	if len(tenantAuditBody.Data) < 3 {
-		t.Fatalf("expected tenant audit to include state changes, got %+v", tenantAuditBody.Data)
-	}
-	if auditRecordsContainTarget(tenantAuditBody.Data, "other-tenant-asset") {
-		t.Fatalf("expected tenant audit to exclude other tenant records, got %+v", tenantAuditBody.Data)
+	for _, record := range tenantAuditBody.Data {
+		if record.InventoryID != "" {
+			t.Fatalf("expected tenant audit to exclude inventory-scoped records, got %+v", tenantAuditBody.Data)
+		}
+		if record.TenantID != tenantID {
+			t.Fatalf("expected tenant audit to exclude other tenant-scoped records, got %+v", tenantAuditBody.Data)
+		}
 	}
 
 	viewerTenantAudit := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/audit-records", "Bearer dev:viewer-user", nil)

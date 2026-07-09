@@ -27,7 +27,6 @@ export function workspaceNoInventoryPresentation(
 
   return {
     title: 'No inventory yet',
-    message: selectedTenantId ? 'Create the first inventory for this tenant.' : 'Create your first tenant and inventory.',
-    actionLabel: 'Create Household'
+    message: selectedTenantId ? 'Create the first inventory for this tenant.' : 'Create your first tenant and inventory.'
   };
 }

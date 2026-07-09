@@ -113,26 +113,9 @@ export class StuffStashInventoryRepository
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = mapTenant(await this.client.createTenant(input.tenantName));
     const inventory = mapInventory(await this.client.createInventory(tenant.id, input.inventoryName));
-    this.selectedTenantId = tenant.id;
-    this.selectedInventoryId = inventory.id;
-    this.rememberSelection();
-    return {
-      context: {
-        principal: mapPrincipal(await this.client.me()),
-        tenants: [tenant],
-        inventories: [inventory],
-        selectedTenantId: tenant.id,
-        selectedInventoryId: inventory.id,
-        assetLifecycleState: 'active',
-        mediaUploadPolicy: this.config.mediaUploadPolicy,
-        customAssetTypes: [],
-        customFieldDefinitions: [],
-        assetTags: [],
-        capability: mapCapability(inventory)
-      },
-      assets: [],
-      checkedOutAssets: []
-    };
+    const principal = mapPrincipal(await this.client.me());
+    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    return this.loadTenantWorkspace(principal, tenants, tenant.id, inventory.id);
   }
 
   async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {
