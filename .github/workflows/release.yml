@@ -225,9 +225,9 @@ jobs:
           fi
 
           {
-            printf 'Updates `.env.example` to the image digests published for `%s`.\n\n' "${{ needs.validate.outputs.next_tag }}"
-            printf '- API image: `%s`\n' "${{ steps.api_image.outputs.image_ref }}"
-            printf '- Web image: `%s`\n' "${{ steps.web_image.outputs.image_ref }}"
+            printf '%s\n\n' "Updates \`.env.example\` to the image digests published for \`${{ needs.validate.outputs.next_tag }}\`."
+            printf '%s\n' "- API image: \`${{ steps.api_image.outputs.image_ref }}\`"
+            printf '%s\n' "- Web image: \`${{ steps.web_image.outputs.image_ref }}\`"
           } > digest-pr-body.md
 
           existing_pr="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
