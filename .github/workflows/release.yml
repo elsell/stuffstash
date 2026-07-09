@@ -249,6 +249,32 @@ jobs:
             fi
           fi
 
+          checks_reported=false
+          for _ in $(seq 1 60); do
+            set +e
+            checks_output="$(gh pr checks "$pr_number" --required 2>&1)"
+            checks_status=$?
+            set -e
+
+            if printf '%s\n' "$checks_output" | grep -Fq "no checks reported"; then
+              sleep 5
+              continue
+            fi
+
+            if [ "$checks_status" -eq 0 ] || [ "$checks_status" -eq 8 ]; then
+              checks_reported=true
+              break
+            fi
+
+            printf '%s\n' "$checks_output" >&2
+            exit "$checks_status"
+          done
+
+          if [ "$checks_reported" != "true" ]; then
+            echo "Required checks were not reported for digest update PR #$pr_number." >&2
+            exit 1
+          fi
+
           gh pr checks "$pr_number" --required --watch --fail-fast --interval 10
           gh pr merge "$pr_number" --squash --delete-branch
         env:
