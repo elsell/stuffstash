@@ -5,15 +5,111 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+func TestPostgresStoreSearchAssetsReturnsInventoryScopedResultsAndWritesReadAudit(t *testing.T) {
+	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
+	if dsn == "" {
+		t.Skip("set STUFF_STASH_TEST_POSTGRES_DSN to run Postgres search audit verification")
+	}
+
+	ctx := context.Background()
+	db, err := OpenPostgres(dsn)
+	if err != nil {
+		t.Fatalf("open postgres: %v", err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("postgres db handle: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := sqlDB.Close(); err != nil {
+			t.Fatalf("close postgres: %v", err)
+		}
+	})
+	if err := runEmbeddedPostgresMigrations(db); err != nil {
+		t.Fatalf("migrate postgres: %v", err)
+	}
+
+	store := NewStore(db)
+	authorizer := memory.NewAuthorizer()
+	tenantID := tenant.ID("01KX2A1B7D5VYYA70W2NQ4TE5A")
+	inventoryID := inventory.InventoryID("01KX2A1BEGDWWN7P149T1P3R06")
+	assetID := "01KX2A34G3TS98AR86N4KQW9QK"
+	createAuditID := "01KX2A3AR94F9DJWVEYEYWK31N"
+	principal := identity.Principal{ID: identity.PrincipalID("oidc_oVHefizjP_fV2vLDR_PdhwYJq-36AQl_MNw5vGxvfSM")}
+
+	cleanupSearchTestRows(t, ctx, store, tenantID)
+	saveTenant(t, ctx, store, tenantID, "Household")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Home")
+	if err := authorizer.GrantTenantOwner(ctx, principal, tenantID); err != nil {
+		t.Fatalf("grant tenant owner: %v", err)
+	}
+	if err := authorizer.GrantInventoryOwner(ctx, principal, tenantID, inventoryID); err != nil {
+		t.Fatalf("grant inventory owner: %v", err)
+	}
+
+	item := assetItem(assetID, tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	title, ok := asset.NewTitle("Spring lawn fertilizer in the garage")
+	if !ok {
+		t.Fatal("expected valid title")
+	}
+	item.Title = title
+	if err := store.CreateAsset(ctx, item, postgresAuditRecord(t, createAuditID, tenantID, inventoryID, audit.ActionAssetCreated), nil); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+
+	application := app.New(app.Dependencies{
+		Authorizer:       authorizer,
+		Users:            store,
+		Tenants:          store,
+		Inventories:      store,
+		Assets:           store,
+		Search:           store,
+		Attachments:      store,
+		Audit:            store,
+		DefaultPageLimit: 50,
+		MaxPageLimit:     100,
+	})
+
+	result, err := application.SearchAssets(ctx, app.SearchAssetsInput{
+		Principal:      principal,
+		TenantID:       tenantID,
+		InventoryIDs:   []inventory.InventoryID{inventoryID},
+		Source:         audit.SourceAPI,
+		RequestID:      "search-request-one",
+		Query:          "fertilizer",
+		LifecycleState: string(ports.AssetLifecycleFilterActive),
+		Mode:           search.ModeFuzzy.String(),
+		CheckoutState:  string(ports.AssetCheckoutStateFilterAny),
+		Limit:          20,
+	})
+	if err != nil {
+		t.Fatalf("search assets: %v", err)
+	}
+	if len(result.Items) != 1 || result.Items[0].Asset.ID != item.ID {
+		t.Fatalf("expected fertilizer search result, got %+v", result.Items)
+	}
+
+	records, err := store.ListInventoryAuditRecords(ctx, tenantID, inventoryID, ports.AuditRecordPageRequest{Limit: 20})
+	if err != nil {
+		t.Fatalf("list inventory audit records: %v", err)
+	}
+	if !auditRecordsIncludeAction(records, audit.ActionAssetSearched) {
+		t.Fatalf("expected inventory search read audit record, got %+v", records)
+	}
+}
 
 func TestPostgresStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")

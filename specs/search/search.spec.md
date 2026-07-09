@@ -32,6 +32,8 @@ This spec does not define final indexes, ranking, advanced query syntax, highlig
 - Search must expose stable result types so clients can render assets, locations, inventories, and future result types safely.
 - Search implementation must live behind ports and adapters.
 - REST asset search and conversational search tools are audited read surfaces. Successful searches from those surfaces must write a safe read audit record after authorization and before returning results. Internal validation lookups that do not return search results to a user, client, model provider, or tool result do not create separate read history. The audit record must identify only the tenant or inventory search scope, source, request correlation ID when supplied, mode, lifecycle filter, checkout-state filter, custom-asset-type filter presence, limit, authorized inventory count, and result count. It must not store the raw search query, match values, result payloads, provider prompts, transcripts, tool arguments, tool results, authorization decisions, credentials, bearer material, or hidden resource details.
+- Inventory-scoped REST asset searches that successfully find authorized assets must return the result payload and persist the safe read audit record. Read-audit target metadata must be valid for inventory-scoped search and must not turn an otherwise successful search into an internal server error.
+- Web search must present API and repository failures with a calm, recovery-oriented message. Server errors must not be shown only as the literal API message `Internal server error`; the user should know the search did not complete and that retrying or checking the server is the next step.
 
 ## First API Slice
 
@@ -77,7 +79,9 @@ The first API slice is asset search:
 - Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, checkout-state filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
 - Tests must verify search read audit records are written with safe metadata and without raw queries or result payloads, including conversational search use.
+- Tests must verify inventory-scoped REST/API-source search results can be returned and audited through the GORM-backed persistence adapter without a server error.
 - Web inventory search must pass the selected inventory ID to the REST search endpoint so inventory-scoped UI routes do not receive cross-inventory result payloads and then filter them in the browser.
+- Web tests must verify server-error search failures render a user-facing recovery message instead of exposing only `Internal server error`.
 - PostgreSQL-backed tests are required for PostgreSQL-specific search behavior.
 
 ## Open Questions
