@@ -26,6 +26,7 @@
     lifecycleState = $bindable<SearchLifecycleFilter>('active'),
     searchMode = $bindable<SearchMode>('fuzzy'),
     checkoutState = $bindable<SearchCheckoutFilter>('any'),
+    selectedTagIds = [],
     results,
     suggestions,
     assetTags = [],
@@ -42,6 +43,7 @@
     lifecycleState: SearchLifecycleFilter;
     searchMode: SearchMode;
     checkoutState: SearchCheckoutFilter;
+    selectedTagIds?: string[];
     results: SearchResult[];
     suggestions: Asset[];
     assetTags?: AssetTag[];
@@ -58,6 +60,7 @@
       tenantId,
       inventoryId,
       query,
+      tagIds: selectedTagIds,
       mode: searchMode,
       checkoutState
     })
@@ -67,6 +70,7 @@
       tenantId,
       inventoryId,
       query,
+      tagIds: selectedTagIds,
       lifecycleState,
       checkoutState
     })
@@ -76,6 +80,7 @@
       tenantId,
       inventoryId,
       query,
+      tagIds: selectedTagIds,
       lifecycleState,
       mode: searchMode
     })
@@ -86,6 +91,7 @@
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
   let showNoSuggestions = $derived(searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0);
   let statusPresentation = $derived(searchPanelStatus({ error, busy, submitted, query, resultCount: results.length, lifecycleState }));
+  let sortedAssetTags = $derived([...assetTags].sort((left, right) => left.displayName.localeCompare(right.displayName)));
   const suggestionIdPrefix = 'search-page-suggestion';
 
   $effect(() => {
@@ -263,10 +269,10 @@
     />
   </div>
 
-  {#if assetTags.length > 0 && onTagSearch}
+  {#if sortedAssetTags.length > 0 && onTagSearch}
     <div class="search-tag-filter" aria-label="Browse by tag">
       <small>Tags</small>
-      <AssetTagChips tags={assetTags} compact onTagSelect={onTagSearch} />
+      <AssetTagChips tags={sortedAssetTags} compact selectedTagIds={selectedTagIds} onTagSelect={onTagSearch} />
     </div>
   {/if}
 
@@ -303,7 +309,13 @@
               {/if}
             </span>
           </Button.Root>
-          <AssetTagChips tags={result.asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
+          <AssetTagChips
+            tags={result.asset.tags ?? []}
+            compact
+            overflowLimit={2}
+            selectedTagIds={selectedTagIds}
+            onTagSelect={onTagSearch}
+          />
           <span class="asset-row-meta">
             <small>{searchMatchFieldLabel(result.matches[0]?.field)}</small>
             <small>{result.matches[0]?.value ?? ''}</small>

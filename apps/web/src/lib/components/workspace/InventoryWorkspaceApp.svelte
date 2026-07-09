@@ -421,6 +421,7 @@
           tenantId: data.context.selectedTenantId,
           inventoryId: data.context.selectedInventoryId,
           searchQuery: result.query,
+          searchTagIds,
           searchLifecycleState,
           searchMode,
           searchCheckoutState
@@ -740,7 +741,7 @@
       attachmentId = route.attachmentId;
       attachmentAction = route.attachmentAction;
       searchQuery = route.searchQuery;
-      searchTagIds = [];
+      searchTagIds = route.searchTagIds;
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
       searchCheckoutState = route.searchCheckoutState;
@@ -908,7 +909,7 @@
         selectedAssetAttachments = [];
         selectedAssetCheckoutHistory = [];
         selectedAssetCheckoutHistory = [];
-        if (route.searchQuery.trim()) {
+        if (route.searchQuery.trim() || route.searchTagIds.length > 0) {
           await search();
         } else {
           searchResults = [];
@@ -1512,6 +1513,7 @@
       mode,
       searchResults,
       searchSuggestions,
+      searchTagIds,
       searchSubmitted,
       searchError,
       assetAction,

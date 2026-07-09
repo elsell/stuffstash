@@ -846,10 +846,15 @@ small {
   white-space: normal;
 }
 
-.recent-card-open {
+.recent-card-open,
+.recent-card-open[data-slot="button"] {
   display: grid;
   width: 100%;
+  height: auto;
+  min-height: 0;
   justify-items: start;
+  align-content: start;
+  align-items: start;
   padding: 0;
   border: 0;
   background: transparent;
@@ -858,7 +863,7 @@ small {
   white-space: normal;
 }
 
-.recent-card span {
+.recent-card-open > .recent-card-body {
   display: grid;
   width: 100%;
   min-width: 0;
@@ -866,7 +871,10 @@ small {
   gap: 3px;
 }
 
-.recent-card .tag-chip-list {
+.recent-card > .tag-chip-list {
+  display: flex;
+  width: auto;
+  max-width: 100%;
   margin-top: 3px;
 }
 
@@ -2050,6 +2058,24 @@ dd {
   font-weight: 650;
   line-height: 1.2;
   text-decoration: none;
+}
+
+.tag-chip[data-slot="button"] {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 24px;
+  max-width: 100%;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.tag-chip[data-selected="true"] {
+  border-color: color-mix(in oklab, var(--tag-color, var(--primary)) 70%, var(--foreground));
+  background: color-mix(in oklab, var(--tag-color, var(--primary)) 24%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tag-color, var(--primary)) 28%, transparent);
 }
 
 .tag-chip-colored {

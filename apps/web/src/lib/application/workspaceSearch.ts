@@ -64,10 +64,11 @@ export function searchFilterHref(
   query: string,
   lifecycleState: SearchLifecycleFilter,
   mode: SearchMode,
-  checkoutState: SearchCheckoutFilter
+  checkoutState: SearchCheckoutFilter,
+  tagIds: string[] = []
 ): string {
   return workspaceRouteHref(
-    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
+    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchTagIds: tagIds, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
     tenantId,
     inventoryId
   );
@@ -77,13 +78,14 @@ export function searchLifecycleFilterOptions(input: {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   mode: SearchMode;
   checkoutState: SearchCheckoutFilter;
 }): SearchFilterOption<SearchLifecycleFilter>[] {
   return searchLifecycleFilters.map((lifecycleState) => ({
     value: lifecycleState,
     label: searchLifecycleFilterLabel(lifecycleState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode, input.checkoutState)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode, input.checkoutState, input.tagIds)
   }));
 }
 
@@ -91,13 +93,14 @@ export function searchModeFilterOptions(input: {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   checkoutState: SearchCheckoutFilter;
 }): SearchFilterOption<SearchMode>[] {
   return searchModes.map((mode) => ({
     value: mode,
     label: searchModeLabel(mode),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode, input.checkoutState)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode, input.checkoutState, input.tagIds)
   }));
 }
 
@@ -105,13 +108,14 @@ export function searchCheckoutFilterOptions(input: {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
 }): SearchFilterOption<SearchCheckoutFilter>[] {
   return searchCheckoutFilters.map((checkoutState) => ({
     value: checkoutState,
     label: searchCheckoutFilterLabel(checkoutState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, input.mode, checkoutState)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, input.mode, checkoutState, input.tagIds)
   }));
 }
 

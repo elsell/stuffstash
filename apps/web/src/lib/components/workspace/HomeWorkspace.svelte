@@ -148,7 +148,7 @@
             <article class="recent-card">
               <Button.Root href={browseAssetHref(asset)} variant="ghost" class="recent-card-open" onclick={(event) => openAsset(event, asset)}>
                 <AssetThumb {asset} size="lg" />
-                <span>
+                <span class="recent-card-body">
                   <strong>{asset.title}</strong>
                   <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                   <small>{asset.containmentTrail}</small>

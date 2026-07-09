@@ -92,6 +92,23 @@ describe('AssetTagChips', () => {
     expect(selected).toEqual([tag('tools', 'Tools')]);
   });
 
+  it('marks selected tag filter chips without changing their labels', () => {
+    component = mount(AssetTagChips, {
+      target: document.body,
+      props: {
+        compact: true,
+        selectedTagIds: ['tag-camping', 'tag-tools'],
+        tags: [tag('tools', 'Tools'), tag('camping', 'Camping')],
+        onTagSelect: () => {}
+      }
+    });
+
+    const chips = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button.tag-chip'));
+    expect(chips.map((chip) => chip.textContent)).toEqual(['Tools', 'Camping']);
+    expect(chips.map((chip) => chip.getAttribute('aria-pressed'))).toEqual(['true', 'true']);
+    expect(chips.map((chip) => chip.getAttribute('data-selected'))).toEqual(['true', 'true']);
+  });
+
 });
 
 function tag(key: string, displayName: string): AssetTag {

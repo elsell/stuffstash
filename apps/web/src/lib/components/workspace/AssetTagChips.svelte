@@ -6,16 +6,19 @@
     tags = [],
     compact = false,
     overflowLimit,
+    selectedTagIds = [],
     onTagSelect
   }: {
     tags?: AssetTag[];
     compact?: boolean;
     overflowLimit?: number;
+    selectedTagIds?: string[];
     onTagSelect?: (tag: AssetTag) => void;
   } = $props();
   let visibleLimit = $derived(overflowLimit ?? tags.length);
   let visibleTags = $derived(tags.slice(0, visibleLimit));
   let hiddenCount = $derived(Math.max(0, tags.length - visibleTags.length));
+  let selectedTagIdSet = $derived(new Set(selectedTagIds));
 
   function selectTag(event: MouseEvent, tag: AssetTag): void {
     event.preventDefault();
@@ -33,6 +36,7 @@
     aria-label="Asset tags"
   >
     {#each visibleTags as tag}
+      {@const selected = selectedTagIdSet.has(tag.id)}
       {#if onTagSelect}
         <Button.Root
           type="button"
@@ -40,6 +44,8 @@
           class={`tag-chip tag-chip-action${tag.color ? ' tag-chip-colored' : ''}`}
           style={tag.color ? `--tag-color: ${tag.color}` : undefined}
           aria-label={`Search for tag ${tag.displayName}`}
+          aria-pressed={selected}
+          data-selected={selected ? 'true' : undefined}
           onclick={(event) => selectTag(event, tag)}
         >
           <span>{tag.displayName}</span>
