@@ -18,6 +18,8 @@
     modalOpen?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
+    onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onModeChange: (mode: WorkspaceMode) => void;
     onSearch: () => void;
     onOpenSearchAsset: (asset: Asset) => void;
@@ -49,6 +51,8 @@
     modalOpen = false,
     onSelectTenant,
     onSelectInventory,
+    onCreateTenantWithInventory,
+    onCreateInventory,
     onModeChange,
     onSearch,
     onOpenSearchAsset,
@@ -69,6 +73,8 @@
     {userLabel}
     {onSelectTenant}
     {onSelectInventory}
+    {onCreateTenantWithInventory}
+    {onCreateInventory}
     {onModeChange}
     {onSignOut}
   />
@@ -85,6 +91,8 @@
       showSearch={mode !== 'search'}
       {onSelectTenant}
       {onSelectInventory}
+      {onCreateTenantWithInventory}
+      {onCreateInventory}
       {onSearch}
       onOpenAsset={onOpenSearchAsset}
       {onOpenAdd}

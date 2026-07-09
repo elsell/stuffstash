@@ -79,6 +79,7 @@
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
   import InventoryWorkspaceRouteContent from './InventoryWorkspaceRouteContent.svelte';
+  import WorkspaceSetupPanel from './WorkspaceSetupPanel.svelte';
 
   let {
     repository,
@@ -212,15 +213,38 @@
     });
   }
 
-  async function createStarterInventory(): Promise<void> {
-    await run(async () => {
-      data = data.context.selectedTenantId
-        ? await repository.createInventory(data.context.selectedTenantId, 'Household')
-        : await repository.createTenantWithInventory({ tenantName: 'Home', inventoryName: 'Household' });
+  async function createStarterInventory(input: { tenantName: string; inventoryName: string }): Promise<void> {
+    const created = data.context.selectedTenantId
+      ? () => repository.createInventory(data.context.selectedTenantId, input.inventoryName)
+      : () => repository.createTenantWithInventory({ tenantName: input.tenantName, inventoryName: input.inventoryName });
+    await createWorkspaceContext(created, input.inventoryName);
+  }
+
+  async function createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<void> {
+    await createWorkspaceContext(() => repository.createTenantWithInventory(input), input.inventoryName, true);
+  }
+
+  async function createInventoryInTenant(tenantId: string, inventoryName: string): Promise<void> {
+    await createWorkspaceContext(() => repository.createInventory(tenantId, inventoryName), inventoryName, true);
+  }
+
+  async function createWorkspaceContext(loadCreatedWorkspace: () => Promise<WorkspaceData>, inventoryName: string, rethrow = false): Promise<void> {
+    busy = true;
+    error = '';
+    notification = null;
+    try {
+      data = await loadCreatedWorkspace();
       routeUnavailable = '';
+      invalidateAssetDetailLoad();
+      resetSearchState();
       mode = 'home';
+      selectedLocationId = null;
+      selectedAssetId = null;
+      loadedAssetDetail = null;
+      selectedAssetAttachments = [];
+      selectedAssetCheckoutHistory = [];
       replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
-      setSuccessNotification('Created Household.', {
+      setSuccessNotification(`Created ${inventoryName}.`, {
         label: 'Open inventory',
         href: workspaceRouteHref(
           { mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId },
@@ -228,7 +252,17 @@
           data.context.selectedInventoryId
         )
       });
-    });
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
+      error = caught instanceof Error ? caught.message : 'Action failed.';
+      if (rethrow) {
+        throw new Error(error);
+      }
+    } finally {
+      busy = false;
+    }
   }
 
   async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
@@ -1417,7 +1451,26 @@
 
 </script>
 
-<InventoryWorkspaceChrome
+{#if data.context.inventories.length === 0 && canCreateStarter}
+  <main class="setup-shell">
+    <div class="brand-lockup setup-lockup">
+      <div class="brand-mark" aria-hidden="true"><span></span></div>
+      <div>
+        <strong>Stuff Stash</strong>
+        <p>{userLabel}</p>
+      </div>
+    </div>
+    <WorkspaceSetupPanel
+      mode={data.context.selectedTenantId ? 'inventory' : 'tenant_and_inventory'}
+      tenantName={selectedTenant?.name}
+      {busy}
+      {error}
+      submitLabel={data.context.selectedTenantId ? 'Create inventory' : 'Create workspace'}
+      onSubmit={createStarterInventory}
+    />
+  </main>
+{:else}
+  <InventoryWorkspaceChrome
     tenants={data.context.tenants}
     inventories={data.context.inventories}
     selectedTenantId={data.context.selectedTenantId}
@@ -1432,6 +1485,8 @@
     modalOpen={addOpen}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
+    onCreateTenantWithInventory={createTenantWithInventory}
+    onCreateInventory={createInventoryInTenant}
     onModeChange={navigateMode}
     onSearch={() => { void search(); }}
     onOpenSearchAsset={openSearchAsset}
@@ -1481,7 +1536,6 @@
     bind:searchCheckoutState
     handlers={{
       onHome: openHome,
-      onCreateStarterInventory: createStarterInventory,
       onOpenLocation: openLocation,
       onEditLocation: openLocationEdit,
       onOpenAsset: openAsset,
@@ -1520,24 +1574,24 @@
       onCustomizationChange: updateCustomizationContext,
       onSelectLifecycle: selectAssetLifecycle
     }}
+    />
+  </InventoryWorkspaceChrome>
+
+  <InventoryWorkspaceOverlays
+    {addOpen}
+    {createAssetAllowed}
+    {addKind}
+    {addParentAssetId}
+    addCloseHref={addCloseHref()}
+    parentTargets={parentTargets(assets)}
+    mediaPolicy={data.context.mediaUploadPolicy}
+    customAssetTypes={data.context.customAssetTypes}
+    customFieldDefinitions={data.context.customFieldDefinitions}
+    assetTags={data.context.assetTags ?? []}
+    saving={busy}
+    {notification}
+    {error}
+    onAddClose={closeAdd}
+    onAddSave={createAsset}
   />
-
-</InventoryWorkspaceChrome>
-
-<InventoryWorkspaceOverlays
-  {addOpen}
-  {createAssetAllowed}
-  {addKind}
-  {addParentAssetId}
-  addCloseHref={addCloseHref()}
-  parentTargets={parentTargets(assets)}
-  mediaPolicy={data.context.mediaUploadPolicy}
-  customAssetTypes={data.context.customAssetTypes}
-  customFieldDefinitions={data.context.customFieldDefinitions}
-  assetTags={data.context.assetTags ?? []}
-  saving={busy}
-  {notification}
-  {error}
-  onAddClose={closeAdd}
-  onAddSave={createAsset}
-/>
+{/if}

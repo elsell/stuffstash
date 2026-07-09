@@ -373,6 +373,22 @@ small {
   font-weight: 780;
 }
 
+.context-create-button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.context-create-form {
+  display: grid;
+  gap: 12px;
+}
+
+.context-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .eyebrow {
   font-size: 0.72rem;
   font-weight: 700;
@@ -1961,6 +1977,37 @@ dd {
 .field-stack {
   display: grid;
   gap: 6px;
+}
+
+.field-error,
+.form-error {
+  color: var(--destructive);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.setup-form {
+  display: grid;
+  gap: 14px;
+}
+
+.setup-shell {
+  display: grid;
+  width: min(560px, calc(100vw - 32px));
+  min-height: 100vh;
+  align-content: center;
+  gap: 18px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.setup-lockup {
+  padding-left: 2px;
+}
+
+.setup-lockup p {
+  color: var(--muted-foreground);
+  font-size: 0.86rem;
 }
 
 .tag-chip-list,
