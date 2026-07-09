@@ -249,33 +249,48 @@ jobs:
             fi
           fi
 
-          checks_reported=false
-          for _ in $(seq 1 60); do
-            set +e
-            checks_output="$(gh pr checks "$pr_number" --required 2>&1)"
-            checks_status=$?
-            set -e
+          required_checks_passed=false
+          for _ in $(seq 1 120); do
+            required_checks_state="$(gh pr view "$pr_number" --json statusCheckRollup --jq '
+              if (.statusCheckRollup | length) == 0 then
+                "missing"
+              elif ([.statusCheckRollup[] | select(.name == "Required checks")] | length) == 0 then
+                "missing"
+              elif ([.statusCheckRollup[] | select(.name == "Required checks" and .status == "COMPLETED" and .conclusion == "SUCCESS")] | length) > 0 then
+                "passed"
+              elif ([.statusCheckRollup[] | select(.name == "Required checks" and .status == "COMPLETED" and .conclusion != "SUCCESS")] | length) > 0 then
+                "failed"
+              else
+                "pending"
+              end
+            ')"
 
-            if printf '%s\n' "$checks_output" | grep -Fq "no checks reported"; then
-              sleep 5
-              continue
-            fi
-
-            if [ "$checks_status" -eq 0 ] || [ "$checks_status" -eq 8 ]; then
-              checks_reported=true
-              break
-            fi
-
-            printf '%s\n' "$checks_output" >&2
-            exit "$checks_status"
+            case "$required_checks_state" in
+              passed)
+                required_checks_passed=true
+                break
+                ;;
+              failed)
+                gh pr view "$pr_number" --json statusCheckRollup
+                echo "Required checks failed for digest update PR #$pr_number." >&2
+                exit 1
+                ;;
+              missing|pending)
+                sleep 10
+                ;;
+              *)
+                echo "Unexpected required check state '$required_checks_state' for digest update PR #$pr_number." >&2
+                exit 1
+                ;;
+            esac
           done
 
-          if [ "$checks_reported" != "true" ]; then
-            echo "Required checks were not reported for digest update PR #$pr_number." >&2
+          if [ "$required_checks_passed" != "true" ]; then
+            gh pr view "$pr_number" --json statusCheckRollup
+            echo "Required checks did not pass for digest update PR #$pr_number before the release wait timeout." >&2
             exit 1
           fi
 
-          gh pr checks "$pr_number" --required --watch --fail-fast --interval 10
           gh pr merge "$pr_number" --squash --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}
