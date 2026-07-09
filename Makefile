@@ -189,10 +189,13 @@ required-checks: dependency-age-check scripts-test go-structural-check test api-
 release-plan-test:
 	scripts/test-release-planner.sh
 
+release-image-signing-test:
+	scripts/test-sign-release-images.sh
+
 selfhost-happy-path-check:
 	scripts/check-selfhost-happy-path.sh
 
-scripts-test: release-plan-test selfhost-happy-path-check
+scripts-test: release-plan-test release-image-signing-test selfhost-happy-path-check
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs
