@@ -10,9 +10,10 @@ interface SearchPanelProps {
   tenantId: string;
   inventoryId: string;
   query: string;
-	  lifecycleState: 'active' | 'archived' | 'all';
-	  searchMode: 'fuzzy' | 'exact';
-	  checkoutState: 'any' | 'checked_out' | 'available';
+  lifecycleState: 'active' | 'archived' | 'all';
+  searchMode: 'fuzzy' | 'exact';
+  checkoutState: 'any' | 'checked_out' | 'available';
+  selectedTagIds?: string[];
   results: SearchResult[];
   suggestions: Asset[];
   assetTags?: AssetTag[];
@@ -49,9 +50,10 @@ function mountSearchPanel(props: Partial<SearchPanelProps> = {}) {
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
       query: 'ta',
-	      lifecycleState: 'active',
-	      searchMode: 'fuzzy',
-	      checkoutState: 'any',
+      lifecycleState: 'active',
+      searchMode: 'fuzzy',
+      checkoutState: 'any',
+      selectedTagIds: [],
       results: [],
       suggestions: [asset('tape', 'Tape measure'), asset('tags', 'Gift tags'), asset('table', 'Hall table', 'container')],
       assetTags: [],
@@ -183,6 +185,32 @@ describe('SearchPanel', () => {
     expect(document.body.textContent).toContain('Tag');
   });
 
+  it('marks selected search result tag chips as active filters', () => {
+    const results: SearchResult[] = [
+      {
+        type: 'asset',
+        asset: {
+          ...asset('tent', 'Family tent'),
+          tags: [
+            { id: 'tag-camping', key: 'camping', displayName: 'Camping', color: '#2E7D32' },
+            { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' }
+          ]
+        },
+        inventory: { id: 'inventory-household', name: 'Household' },
+        matches: [{ field: 'title', value: 'Family tent' }]
+      }
+    ];
+
+    mountSearchPanel({ query: 'tent', results, submitted: true, selectedTagIds: ['tag-camping'] });
+
+    const campingChip = buttonWithLabel('Search for tag Camping');
+    const toolsChip = buttonWithLabel('Search for tag Tools');
+    expect(campingChip.getAttribute('aria-pressed')).toBe('true');
+    expect(campingChip.getAttribute('data-selected')).toBe('true');
+    expect(toolsChip.getAttribute('aria-pressed')).toBe('false');
+    expect(toolsChip.getAttribute('data-selected')).toBeNull();
+  });
+
   it('supports keyboard traversal for autocomplete suggestions', async () => {
     const { openedAssetIds } = mountSearchPanel();
     const input = searchInput();
@@ -277,14 +305,15 @@ describe('SearchPanel', () => {
       query: 'garage shelf',
       lifecycleState: 'active',
       searchMode: 'fuzzy',
+      selectedTagIds: ['tag-tools'],
       suggestions: []
     });
 
     expect(linkWithText('Archived').getAttribute('href')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&tagId=tag-tools&lifecycle=archived'
     );
     expect(linkWithText('Exact').getAttribute('href')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&mode=exact'
+      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&tagId=tag-tools&mode=exact'
     );
 
     linkWithText('Exact').click();
@@ -382,12 +411,34 @@ describe('SearchPanel', () => {
     expect(filter).not.toBeNull();
     expect(filter?.textContent).toContain('Tags');
     expect(filter?.textContent).toContain('Tools');
-    expect(filter?.querySelector<HTMLElement>('.tag-chip-colored')?.style.getPropertyValue('--tag-color')).toBe('#2F80ED');
+    expect(buttonWithLabel('Search for tag Tools').style.getPropertyValue('--tag-color')).toBe('#2F80ED');
 
     buttonWithLabel('Search for tag Tools').click();
     await flush();
 
     expect(searchedTags).toEqual(['Tools']);
+  });
+
+  it('treats browse tags as multi-select filters over the current text query', async () => {
+    const { searchedTags } = mountSearchPanel({
+      query: 'blankets',
+      suggestions: [],
+      selectedTagIds: ['tag-tools', 'tag-camping'],
+      assetTags: [
+        { id: 'tag-tools', key: 'tools', displayName: 'Tools', color: '#2F80ED' },
+        { id: 'tag-camping', key: 'camping', displayName: 'Camping', color: '#2E7D32' },
+        { id: 'tag-safety', key: 'safety', displayName: 'Safety', color: '#7C3AED' }
+      ]
+    });
+
+    const selectedFilters = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[aria-label^="Search for tag"][data-selected="true"]'));
+    expect(selectedFilters.map((button) => button.textContent)).toEqual(['Camping', 'Tools']);
+
+    buttonWithLabel('Search for tag Safety').click();
+    await flush();
+
+    expect(searchInput().value).toBe('blankets');
+    expect(searchedTags).toEqual(['Safety']);
   });
 
   it('does not render browse tag filters without a tag search handler', () => {

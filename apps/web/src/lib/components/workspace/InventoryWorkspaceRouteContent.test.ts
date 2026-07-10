@@ -349,6 +349,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       mode: 'home' as WorkspaceMode,
       searchResults: [],
       searchSuggestions: [],
+      searchTagIds: [],
       searchSubmitted: false,
       searchError: '',
       assetAction: null,

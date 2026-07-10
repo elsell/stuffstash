@@ -26,13 +26,14 @@ describe('workspace route state', () => {
       assetAction: 'edit'
     });
 
-    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact'))).toMatchObject({
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact&tagId=tag_tools&tagId=tag_camping'))).toMatchObject({
       mode: 'search',
       tenantId: 'tenant_1',
       lifecycleState: 'active',
       searchQuery: 'drill',
       searchLifecycleState: 'all',
-      searchMode: 'exact'
+      searchMode: 'exact',
+      searchTagIds: ['tag_tools', 'tag_camping']
     });
   });
 
@@ -192,6 +193,9 @@ describe('workspace route state', () => {
     );
     expect(workspaceRouteHref({ mode: 'search', searchQuery: 'garage shelf', searchLifecycleState: 'archived' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/search?q=garage+shelf&lifecycle=archived'
+    );
+    expect(workspaceRouteHref({ mode: 'search', searchQuery: 'garage shelf', searchTagIds: ['tag_tools', 'tag_camping'] }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/search?q=garage+shelf&tagId=tag_tools&tagId=tag_camping'
     );
     expect(workspaceRouteHref({ action: 'add', addKind: 'location' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/location'

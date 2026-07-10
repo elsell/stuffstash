@@ -55,6 +55,7 @@
     mode: WorkspaceMode;
     searchResults: SearchResult[];
     searchSuggestions: Asset[];
+    searchTagIds: string[];
     searchSubmitted: boolean;
     searchError: string;
     assetAction: AssetRouteAction;
@@ -235,6 +236,7 @@
     bind:checkoutState={searchCheckoutState}
     results={route.searchResults}
     suggestions={route.searchSuggestions}
+    selectedTagIds={route.searchTagIds}
     assetTags={workspace.data.context.assetTags ?? []}
     submitted={route.searchSubmitted}
     error={route.searchError}

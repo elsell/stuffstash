@@ -43,6 +43,7 @@ export interface WorkspaceRouteState {
   importTab: ImportDetailTabRoute | null;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
+  searchTagIds: string[];
   searchLifecycleState: SearchLifecycleFilter;
   searchMode: SearchMode;
   searchCheckoutState: SearchCheckoutFilter;
@@ -73,6 +74,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   importTab: null,
   lifecycleState: 'active',
   searchQuery: '',
+  searchTagIds: [],
   searchLifecycleState: 'active',
   searchMode: 'fuzzy',
   searchCheckoutState: 'any'
@@ -102,6 +104,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     lifecycleState: parseLifecycle(url.searchParams.get('lifecycle')),
     searchLifecycleState: parseSearchLifecycle(url.searchParams.get('lifecycle')),
     searchQuery: url.searchParams.get('q') ?? '',
+    searchTagIds: parseSearchTagIds(url.searchParams.getAll('tagId')),
     searchMode: parseSearchMode(url.searchParams.get('mode')),
     searchCheckoutState: parseSearchCheckout(url.searchParams.get('checkout'))
   };
@@ -353,6 +356,9 @@ export function workspaceRouteHref(
     if (next.searchQuery.trim()) {
       search.set('q', next.searchQuery.trim());
     }
+    for (const tagId of uniqueSearchTagIds(next.searchTagIds ?? [])) {
+      search.append('tagId', tagId);
+    }
     if (next.searchLifecycleState !== 'active') {
       search.set('lifecycle', next.searchLifecycleState);
     }
@@ -423,6 +429,14 @@ function parseSearchMode(value: string | null): SearchMode {
 
 function parseSearchCheckout(value: string | null): SearchCheckoutFilter {
   return searchCheckoutFilters.has(value as SearchCheckoutFilter) ? (value as SearchCheckoutFilter) : 'any';
+}
+
+function parseSearchTagIds(values: string[]): string[] {
+  return uniqueSearchTagIds(values);
+}
+
+function uniqueSearchTagIds(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => value.trim()).filter((value) => value.length > 0)));
 }
 
 function parseInvitationStatus(value: string | null): InvitationStatusFilter {
