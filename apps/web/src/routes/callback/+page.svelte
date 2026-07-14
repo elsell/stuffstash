@@ -23,8 +23,8 @@
     <p>{error}</p>
     <a href="/">Back to Stuff Stash</a>
   {:else}
-    <h1>Signing you in…</h1>
-    <p>Hang tight while Dex hands the browser session back to Stuff Stash.</p>
+    <h1>Finishing secure sign-in…</h1>
+    <p>Stuff Stash is confirming your session.</p>
   {/if}
 </main>
 

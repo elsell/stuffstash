@@ -201,7 +201,7 @@
     aria-labelledby="checkout-asset-panel-title"
     tabindex="-1"
   >
-    <h2 id="checkout-asset-panel-title">Checkout asset</h2>
+    <h2 id="checkout-asset-panel-title">Check out asset</h2>
     <p>{asset.title} will stay in its home location and be marked as checked out.</p>
     <div class="field-stack">
       <Label for="checkout-asset-details">Details</Label>
@@ -209,7 +209,7 @@
     </div>
     <div class="tray-actions">
       <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>Checkout</Button.Root>
+      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>Check out</Button.Root>
     </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>

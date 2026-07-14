@@ -382,7 +382,11 @@ describe('SearchPanel', () => {
     expect(filter).not.toBeNull();
     expect(filter?.textContent).toContain('Tags');
     expect(filter?.textContent).toContain('Tools');
-    expect(filter?.querySelector<HTMLElement>('.tag-chip-colored')?.style.getPropertyValue('--tag-color')).toBe('#2F80ED');
+    expect(Array.from(filter?.querySelectorAll('button') ?? []).map((element) => element.textContent?.trim())).toEqual([
+      'Camping',
+      'Tools'
+    ]);
+    expect(filter?.querySelector<HTMLElement>('.tag-chip-colored')?.style.getPropertyValue('--tag-color')).toBe('#2E7D32');
 
     buttonWithLabel('Search for tag Tools').click();
     await flush();

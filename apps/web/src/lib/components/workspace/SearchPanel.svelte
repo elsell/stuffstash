@@ -1,5 +1,6 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { sortAssetTagsByDisplayName } from '$lib/application/workspaceTagPresentation';
   import { tick } from 'svelte';
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -84,6 +85,7 @@
   let activeSuggestionIndex = $state(-1);
   let searchRegion = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
+  let sortedAssetTags = $derived(sortAssetTagsByDisplayName(assetTags));
   let showNoSuggestions = $derived(searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0);
   let statusPresentation = $derived(searchPanelStatus({ error, busy, submitted, query, resultCount: results.length, lifecycleState }));
   const suggestionIdPrefix = 'search-page-suggestion';
@@ -266,7 +268,7 @@
   {#if assetTags.length > 0 && onTagSearch}
     <div class="search-tag-filter" aria-label="Browse by tag">
       <small>Tags</small>
-      <AssetTagChips tags={assetTags} compact onTagSelect={onTagSearch} />
+      <AssetTagChips tags={sortedAssetTags} compact onTagSelect={onTagSearch} />
     </div>
   {/if}
 

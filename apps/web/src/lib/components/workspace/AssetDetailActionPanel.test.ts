@@ -14,6 +14,17 @@ afterEach(() => {
 });
 
 describe('AssetDetailActionPanel', () => {
+  it('uses verb-form copy throughout the check-out panel', () => {
+    component = mount(AssetDetailActionPanel, {
+      target: document.body,
+      props: panelProps({ panel: 'checkout' })
+    });
+
+    expect(document.body.textContent).toContain('Check out asset');
+    expect(button('Check out')).not.toBeNull();
+    expect(document.body.textContent).not.toContain('Checkout asset');
+  });
+
   it('renders the edit panel with bound fields and custom field controls', async () => {
     const customChanges: Array<[string, string]> = [];
     component = mount(AssetDetailActionPanel, {

@@ -22,6 +22,13 @@ afterEach(() => {
 });
 
 describe('AssetDetail', () => {
+  it('uses verb-form copy for the check-out command', () => {
+    mountAssetDetail();
+
+    expect(controls('Check out')).toHaveLength(1);
+    expect(controls('Checkout')).toHaveLength(0);
+  });
+
   it('scrolls route-opened action panels into view after focusing them', async () => {
     const scrollIntoView = vi.fn();
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;

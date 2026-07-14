@@ -197,6 +197,7 @@ Checkout and return are primary web asset maintenance actions and must use the s
 
 Web requirements:
 
+- User-facing command labels must use the verb phrase `Check out`; the noun `checkout` remains appropriate for status and history labels.
 - Checkout from asset detail must be one visible action when the asset is active and not currently checked out.
 - Return from asset detail must be one visible action when the asset is currently checked out.
 - Checkout and return details must be optional and must not block the fastest checkout or return path.

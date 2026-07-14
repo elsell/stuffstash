@@ -616,7 +616,7 @@
 	              variant="outline"
 	              disabled={!actionIsAvailable('checkout')}
 	              onclick={(event) => openAction(event, 'checkout')}
-	            ><LogOut /> Checkout</Button.Root>
+	            ><LogOut /> Check out</Button.Root>
 	          {/if}
 	          <Button.Root
 	            variant="outline"
