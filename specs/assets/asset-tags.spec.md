@@ -170,6 +170,8 @@ Asset create and edit flows must let users:
 - Create a new tag inline with display name and optional color where the UI already supports editing asset metadata.
 - Choose the optional tag color with a color-picker affordance on clients that support native color input; text entry may remain as a fallback for platforms without a native picker.
 
+Web tag selection lists and web or mobile tag filter option lists must sort active tags alphabetically by display name using locale-aware, case-insensitive collation. Assigned tag chips may preserve the order supplied by the asset when that order is used for compact overflow or otherwise communicates content order.
+
 Web and mobile clients must load active inventory tags through client adapter boundaries, map API tag DTOs into client domain models, and submit complete `tagIds` lists on asset create and update. Clients must not treat generated API DTOs as UI domain models.
 
 Clients must reconcile pending inline tag drafts against known inventory tags by normalized key before calling the tag creation API. If a matching active tag is already known locally, the save must reuse that tag ID instead of issuing a duplicate create request.
@@ -180,7 +182,7 @@ The first inline creation behavior may create the tag immediately before saving 
 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.
 
-Mobile Browse must keep the first viewport focused on inventory content rather than summoning the keyboard. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. The primary `All`, `Places`, `Containers`, and `Items` scope control must remain visible outside secondary Filters. Lifecycle, availability, and tag browse controls must be disclosed through the compact Filters control; Sort must use its own control. Tag browse suggestions must be sorted alphabetically by display label so the filter sheet is predictable.
+Mobile Browse must keep the first viewport focused on inventory content rather than summoning the keyboard. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. The primary `All`, `Places`, `Containers`, and `Items` scope control must remain visible outside secondary Filters. Lifecycle, availability, and tag browse controls must be disclosed through the compact Filters control; Sort must use its own control.
 Mobile tag browse controls must behave as multi-select filters over the current result set. Selecting or clearing a tag must not change the text in the search field. Selected tags must compose with the current text query and other filters, and more than one tag may be selected at once.
 When mobile opens search from a known tag chip with selected tag IDs, the search text input must not auto-focus. Tag-driven navigation is a browse/filter entry point, not a text-entry entry point.
 Mobile filter controls must use consistent titled groups and shared option controls. The secondary filter groups are `Tags`, `Status`, and `Availability`; option copy must use consistent noun or adjective labels such as `Active`, `Archived`, `Any`, `Checked out`, and `Available`. Applied tags must remain visible by display name as removable tokens when the sheet is closed. Filter selection must use accessible selected semantics and a non-color state indicator.

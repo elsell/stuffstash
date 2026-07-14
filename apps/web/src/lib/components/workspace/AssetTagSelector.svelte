@@ -4,6 +4,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import { sortAssetTagsByDisplayName } from '$lib/application/workspaceTagPresentation';
   import {
     assetTagDisplayNameByteLength,
     assetTagDisplayNameMaxLength,
@@ -31,6 +32,7 @@
   let newTagColor = $state('');
   let selected = $derived(new Set(selectedIds));
   let selectedExistingTags = $derived(tags.filter((tag) => selected.has(tag.id)));
+  let sortedAvailableTags = $derived(sortAssetTagsByDisplayName(tags));
   let hasSelection = $derived(selectedExistingTags.length > 0 || newTags.length > 0);
   let normalizedNewTagColor = $derived(normalizeColor(newTagColor));
   let colorPickerValue = $derived(normalizedNewTagColor ?? '#2F80ED');
@@ -144,7 +146,7 @@
 
   {#if tags.length > 0}
     <div class="tag-options" aria-label="Available tags">
-      {#each tags as tag}
+      {#each sortedAvailableTags as tag}
         <Button.Root
           type="button"
           variant={selected.has(tag.id) ? 'default' : 'outline'}

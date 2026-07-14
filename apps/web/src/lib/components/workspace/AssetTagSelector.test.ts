@@ -247,6 +247,24 @@ describe('AssetTagSelector', () => {
 
     expect(newTags).toEqual([{ displayName: 'A' }]);
   });
+
+  it('sorts available tags alphabetically without changing the input array', async () => {
+    const tags = [
+      tag('tag-workshop', 'Workshop'),
+      tag('tag-attic-title', 'Attic'),
+      tag('tag-attic-lower', 'attic'),
+      tag('tag-camping', 'Camping')
+    ];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({ tags })
+    });
+    await tick();
+
+    const optionLabels = Array.from(document.querySelectorAll('.tag-options button')).map((element) => element.textContent?.trim());
+    expect(optionLabels).toEqual(['Attic', 'attic', 'Camping', 'Workshop']);
+    expect(tags.map((item) => item.displayName)).toEqual(['Workshop', 'Attic', 'attic', 'Camping']);
+  });
 });
 
 function props(
