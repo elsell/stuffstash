@@ -153,6 +153,10 @@ describe('LocationAssetsQuery', () => {
           canAddContainedAssets: false,
           containedAssetsLabel: '0 things inside',
           containedAssets: [],
+          containedSpaces: [],
+          containedSpacesLabel: '0 spaces',
+          containedItems: [],
+          containedItemsLabel: '0 items',
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           imagePlaceholderLabel: 'Item'

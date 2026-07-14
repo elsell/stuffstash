@@ -87,6 +87,7 @@ describe('AssetDetailPhotoGallery', () => {
       onAddPhotos: () => {
         addCount += 1;
       },
+      palette: lightHighContrastPalette,
       photos: []
     });
 
@@ -94,11 +95,18 @@ describe('AssetDetailPhotoGallery', () => {
     expect(addActions).toHaveLength(1);
     expect(addActions[0]?.props?.accessibilityRole).toBe('button');
     expect(resolvePressableStyle(addActions[0])).toEqual(expect.arrayContaining([
-      expect.objectContaining({ minHeight: 44 }),
-      expect.objectContaining({ backgroundColor: lightHighContrastPalette.surfaceMuted })
+      expect.objectContaining({ minHeight: 44, borderWidth: 1 }),
+      expect.objectContaining({
+        backgroundColor: lightHighContrastPalette.elevatedSurface,
+        borderColor: lightHighContrastPalette.controlBorder
+      })
     ]));
-    expect(resolvePressableStyle(addActions[0])).not.toEqual(expect.arrayContaining([
-      expect.objectContaining({ borderWidth: 1 })
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style).toEqual(expect.arrayContaining([
+      expect.objectContaining({ borderWidth: 1 }),
+      expect.objectContaining({
+        backgroundColor: lightHighContrastPalette.elevatedSurface,
+        borderColor: lightHighContrastPalette.border
+      })
     ]));
     expect(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.type).toBe('View');
     press(addActions[0]);

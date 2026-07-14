@@ -1,6 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
-import { AssetDetailView } from './AssetDetailView';
+import type { AssetCardViewModel, AssetDetailViewModel } from '../../application/assets/AssetViewModels';
+import {
+  AssetDetailView,
+  assetDetailNavigationTitle,
+  containedWorkspaceItems
+} from './AssetDetailView';
+
+vi.mock('react', () => ({
+  useState: <Value,>(initial: Value) => [initial, vi.fn()]
+}));
+
+vi.mock('react', async (importOriginal) => ({
+  ...await importOriginal<typeof import('react')>(),
+  useState: <T,>(initial: T) => [initial, vi.fn()] as const
+}));
 
 vi.mock('lucide-react-native', () => ({
   Camera: 'CameraIcon',
@@ -86,6 +99,7 @@ vi.mock('react-native', () => ({
     hairlineWidth: 1
   },
   Text: 'Text',
+  TextInput: 'TextInput',
   View: 'View',
   useColorScheme: () => 'light',
   useWindowDimensions: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 })
@@ -195,6 +209,99 @@ describe('AssetDetailView', () => {
     expect(text).not.toContain('Inventory root');
   });
 
+  it('omits synthetic placement for a root place and keeps one gallery-level photo action', () => {
+    const tree = AssetDetailView({
+      asset: {
+        ...assetDetail(),
+        title: 'Garage',
+        kind: 'location',
+        kindLabel: 'Place',
+        canContainAssets: true,
+        canAddContainedAssets: true,
+        locationTrailLabel: 'Garage',
+        parentLocationTrailLabel: 'Inventory root',
+        parentLocationTrail: [],
+        imagePlaceholderLabel: 'Place'
+      },
+      onAddHere: vi.fn(),
+      onAddPhotos: vi.fn(),
+      onEdit: vi.fn(),
+      onMove: vi.fn(),
+      onMoveThingsHere: vi.fn()
+    });
+    const text = collectText(tree);
+
+    expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
+    expect(text.indexOf('Add photos')).toBeLessThan(text.indexOf('Garage'));
+    expect(text).not.toContain('No location');
+    expect(text).not.toContain('Inventory root');
+    expect(text).toContain('Move place');
+    expect(text).not.toContain('Move');
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style, 'width')).toBe(358);
+  });
+
+  it('uses place route language only for locations', () => {
+    expect(assetDetailNavigationTitle({ kind: 'location' })).toBe('Place');
+    expect(assetDetailNavigationTitle({ kind: 'container' })).toBe('Details');
+    expect(assetDetailNavigationTitle({ kind: 'item' })).toBe('Details');
+  });
+
+  it('keeps place section headings adjacent to title-first rows with relative paths', () => {
+    const tree = AssetDetailView({
+      asset: placeDetail({
+        spaces: [containedCard('space-shelf', 'Utility shelf', 'container')],
+        items: [{
+          ...containedCard('item-drill', 'Cordless drill', 'item'),
+          relativePath: [{ id: 'space-shelf', title: 'Utility shelf' }],
+          relativePathLabel: 'Utility shelf'
+        }]
+      }),
+      onAddHere: vi.fn(),
+      onChildPress: vi.fn(),
+      onMoveThingsHere: vi.fn()
+    });
+    const text = collectText(tree);
+
+    expect(text.indexOf('Add item here')).toBeLessThan(text.indexOf('Spaces in Garage'));
+    expect(text.indexOf('Spaces in Garage')).toBeLessThan(text.indexOf('Utility shelf'));
+    expect(text.indexOf('Items in Garage')).toBeLessThan(text.indexOf('Cordless drill'));
+    expect(text.indexOf('Cordless drill')).toBeLessThan(text.lastIndexOf('Item'));
+    expect(text.lastIndexOf('Item')).toBeLessThan(text.lastIndexOf('Utility shelf'));
+    expect(text.indexOf('Move place')).toBeGreaterThan(text.indexOf('Cordless drill'));
+  });
+
+  it('filters large place contents by title and relative path while preserving sections and recovery', () => {
+    const asset = placeDetail({
+      spaces: [containedCard('space-shelf', 'Utility shelf', 'container')],
+      items: [{
+        ...containedCard('item-drill', 'Cordless drill', 'item'),
+        relativePath: [{ id: 'space-shelf', title: 'Utility shelf' }],
+        relativePathLabel: 'Utility shelf'
+      }]
+    });
+    const pathMatches = containedWorkspaceItems(asset, 'utility');
+    const noMatches = containedWorkspaceItems(asset, 'freezer');
+
+    expect(pathMatches.filter((item) => item.kind === 'section').map((item) => item.heading.summary))
+      .toEqual(['1 space', '1 item']);
+    expect(pathMatches.filter((item) => item.kind === 'row').map((item) => item.row.title))
+      .toEqual(['Utility shelf', 'Cordless drill']);
+    expect(noMatches.filter((item) => item.kind === 'section').map((item) => item.heading.summary))
+      .toEqual(['0 of 1 space', '0 of 1 item']);
+    expect(noMatches.some((item) => item.kind === 'empty' && item.canClearSearch)).toBe(true);
+  });
+
+  it('reserves inline contents search for places with at least twenty rows', () => {
+    const twentySpaces = Array.from({ length: 20 }, (_, index) => (
+      containedCard(`space-${index.toString()}`, `Shelf ${index.toString()}`, 'container')
+    ));
+    const large = AssetDetailView({ asset: placeDetail({ spaces: twentySpaces }), onAddHere: vi.fn() });
+    const small = AssetDetailView({ asset: placeDetail({ spaces: twentySpaces.slice(0, 19) }), onAddHere: vi.fn() });
+
+    expect(findFirstByProp(large, 'accessibilityLabel', 'Search contents')?.type).toBe('TextInput');
+    expect(findFirstByProp(small, 'accessibilityLabel', 'Search contents')).toBeUndefined();
+  });
+
   it('puts the primary spatial action before quieter container utility actions', () => {
     const text = collectText(AssetDetailView({
       asset: {
@@ -216,7 +323,8 @@ describe('AssetDetailView', () => {
     expect(addHereIndex).toBeGreaterThan(-1);
     expect(addHereIndex).toBeLessThan(text.indexOf('Check out'));
     expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
-    expect(addHereIndex).toBeLessThan(text.indexOf('Add photos'));
+    expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
+    expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
   });
 
   it('keeps overflow actions reachable when detail is embedded without a native header', () => {
@@ -281,12 +389,61 @@ function assetDetail(): AssetDetailViewModel {
     canReturn: false,
     containedAssets: [],
     containedAssetsLabel: '0 things inside',
+    containedSpaces: [],
+    containedSpacesLabel: '0 spaces',
+    containedItems: [],
+    containedItemsLabel: '0 items',
     canContainAssets: false,
     canAddContainedAssets: false,
     updatedAtLabel: 'Updated today',
     photoLabel: 'Needs photo',
     imagePlaceholderLabel: 'Item',
     photos: []
+  };
+}
+
+function placeDetail({
+  items = [],
+  spaces = []
+}: {
+  readonly items?: AssetDetailViewModel['containedItems'];
+  readonly spaces?: AssetDetailViewModel['containedSpaces'];
+} = {}): AssetDetailViewModel {
+  return {
+    ...assetDetail(),
+    title: 'Garage',
+    kind: 'location',
+    kindLabel: 'Place',
+    parentLocationTrail: [],
+    parentLocationTrailLabel: 'Inventory root',
+    containedAssets: spaces,
+    containedAssetsLabel: `${spaces.length.toString()} things inside`,
+    containedSpaces: spaces,
+    containedSpacesLabel: `${spaces.length.toString()} ${spaces.length === 1 ? 'space' : 'spaces'}`,
+    containedItems: items,
+    containedItemsLabel: `${items.length.toString()} ${items.length === 1 ? 'item' : 'items'}`,
+    canContainAssets: true,
+    canAddContainedAssets: true,
+    canCheckout: false,
+    imagePlaceholderLabel: 'Place'
+  };
+}
+
+function containedCard(
+  id: string,
+  title: string,
+  kind: 'item' | 'container' | 'location'
+): AssetCardViewModel {
+  return {
+    id,
+    title,
+    kindLabel: kind === 'location' ? 'Place' : kind === 'container' ? 'Container' : 'Item',
+    description: '',
+    locationTrailLabel: 'Garage',
+    parentLocationTrail: [],
+    updatedAtLabel: 'Updated today',
+    photoLabel: 'Needs photo',
+    imagePlaceholderLabel: kind === 'location' ? 'Place' : kind === 'container' ? 'Container' : 'Item'
   };
 }
 
@@ -304,6 +461,13 @@ function collectText(node: unknown): string[] {
     return collectText(node.type(node.props));
   }
   return childrenOf(node).flatMap(collectText);
+}
+
+function styleValue(style: unknown, key: string): unknown {
+  if (Array.isArray(style)) {
+    return style.reduce<unknown>((found, entry) => found ?? styleValue(entry, key), undefined);
+  }
+  return style && typeof style === 'object' ? (style as Record<string, unknown>)[key] : undefined;
 }
 
 function press(node: ElementNode | undefined): void {

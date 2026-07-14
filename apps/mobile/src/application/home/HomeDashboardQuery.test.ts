@@ -215,7 +215,7 @@ describe('HomeDashboardQuery', () => {
       {
         id: 'asset-kitchen',
         title: 'Kitchen',
-        kindLabel: 'Location',
+        kindLabel: 'Place',
         customTypeLabel: undefined,
         description: 'Main household location.',
         locationTrailLabel: 'Home',

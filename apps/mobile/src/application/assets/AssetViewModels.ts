@@ -26,6 +26,16 @@ export type AssetParentLocationCrumbViewModel = {
   readonly isImmediateParent: boolean;
 };
 
+export type AssetRelativePathCrumbViewModel = {
+  readonly id: string;
+  readonly title: string;
+};
+
+export type AssetContainedItemViewModel = AssetCardViewModel & {
+  readonly relativePath: readonly AssetRelativePathCrumbViewModel[];
+  readonly relativePathLabel: string | undefined;
+};
+
 export type AssetTagViewModel = {
   readonly id: string;
   readonly label: string;
@@ -73,6 +83,10 @@ export type AssetDetailViewModel = {
   readonly canReturn: boolean;
   readonly containedAssets: readonly AssetCardViewModel[];
   readonly containedAssetsLabel: string;
+  readonly containedSpaces: readonly AssetCardViewModel[];
+  readonly containedSpacesLabel: string;
+  readonly containedItems: readonly AssetContainedItemViewModel[];
+  readonly containedItemsLabel: string;
   readonly canContainAssets: boolean;
   readonly canAddContainedAssets: boolean;
   readonly updatedAtLabel: string;
@@ -125,6 +139,9 @@ export function toAssetDetailViewModel(
     .slice()
     .sort(compareContainedAssetSummaries)
     .map(toAssetCardViewModel);
+  const locationContents = asset.kind === 'location'
+    ? locationWorkspaceContents(asset, options.allAssets ?? [])
+    : { spaces: [], items: [] };
 
   return {
     ...toAssetCardViewModel(asset),
@@ -156,13 +173,101 @@ export function toAssetDetailViewModel(
     checkoutLabel: checkoutLabel(asset),
     // Principal IDs are authorization identifiers, not safe user-facing names.
     // Populate an actor label only when the API exposes a resolved safe profile.
-    canCheckout: canEditAsset && asset.lifecycleState === 'active' && asset.currentCheckout === undefined,
+    canCheckout: asset.kind !== 'location'
+      && canEditAsset
+      && asset.lifecycleState === 'active'
+      && asset.currentCheckout === undefined,
     canReturn: canEditAsset && asset.currentCheckout !== undefined,
     containedAssets,
     containedAssetsLabel: containedAssets.length === 1 ? '1 thing inside' : `${containedAssets.length.toString()} things inside`,
+    containedSpaces: locationContents.spaces,
+    containedSpacesLabel: countLabel(locationContents.spaces.length, 'space'),
+    containedItems: locationContents.items,
+    containedItemsLabel: countLabel(locationContents.items.length, 'item'),
     canContainAssets: asset.kind === 'container' || asset.kind === 'location',
     canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
+}
+
+function locationWorkspaceContents(
+  location: AssetSummary,
+  allAssets: readonly AssetSummary[]
+): {
+  readonly spaces: readonly AssetCardViewModel[];
+  readonly items: readonly AssetContainedItemViewModel[];
+} {
+  const assetsById = new Map(allAssets.map((asset) => [asset.id, asset]));
+  const spaces = allAssets
+    .filter((candidate) => candidate.parentAssetId === location.id && candidate.kind !== 'item')
+    .slice()
+    .sort(compareContainedAssetSummaries)
+    .map(toAssetCardViewModel);
+  const items = allAssets
+    .filter((candidate) => candidate.kind === 'item')
+    .map((candidate) => {
+      const relativePath = relativePathFromLocation(location.id, candidate, assetsById);
+      if (!relativePath) {
+        return undefined;
+      }
+      return {
+        ...toAssetCardViewModel(candidate),
+        relativePath,
+        relativePathLabel: relativePath.length > 0
+          ? relativePath.map((crumb) => crumb.title).join(' / ')
+          : undefined
+      } satisfies AssetContainedItemViewModel;
+    })
+    .filter((candidate): candidate is AssetContainedItemViewModel => candidate !== undefined)
+    .sort(compareContainedItems);
+
+  return { spaces, items };
+}
+
+function relativePathFromLocation(
+  locationId: AssetSummary['id'],
+  item: AssetSummary,
+  assetsById: ReadonlyMap<AssetSummary['id'], AssetSummary>
+): readonly AssetRelativePathCrumbViewModel[] | undefined {
+  const reversedPath: AssetRelativePathCrumbViewModel[] = [];
+  const visited = new Set<AssetSummary['id']>([item.id]);
+  let parentId = item.parentAssetId;
+
+  while (parentId !== undefined) {
+    if (parentId === locationId) {
+      return reversedPath.reverse();
+    }
+    if (visited.has(parentId)) {
+      return undefined;
+    }
+    visited.add(parentId);
+    const parent = assetsById.get(parentId);
+    if (!parent) {
+      return undefined;
+    }
+    reversedPath.push({ id: parent.id, title: parent.title });
+    parentId = parent.parentAssetId;
+  }
+
+  return undefined;
+}
+
+function compareContainedItems(
+  left: AssetContainedItemViewModel,
+  right: AssetContainedItemViewModel
+): number {
+  const titleOrder = compareStableText(left.title, right.title);
+  if (titleOrder !== 0) {
+    return titleOrder;
+  }
+  const pathOrder = compareStableText(left.relativePathLabel ?? '', right.relativePathLabel ?? '');
+  if (pathOrder !== 0) {
+    return pathOrder;
+  }
+  return left.id.localeCompare(right.id);
+}
+
+function countLabel(count: number, noun: string): string {
+  return `${count.toString()} ${count === 1 ? noun : `${noun}s`}`;
 }
 
 function checkoutLabel(asset: AssetSummary): string {
@@ -248,7 +353,7 @@ function labelAssetKind(kind: AssetSummary['kind']): string {
     case 'item':
       return 'Item';
     case 'location':
-      return 'Location';
+      return 'Place';
   }
 }
 

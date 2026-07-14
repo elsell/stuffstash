@@ -59,6 +59,9 @@ func (s Service) PrepareCheckoutAsset(ctx context.Context, input CheckoutAssetIn
 	if item.LifecycleState != asset.LifecycleStateActive {
 		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
 	}
+	if !item.Kind.IsPortable() {
+		return PreparedCheckoutOperation{}, apperrors.ErrInvalidInput
+	}
 	if _, found, err := s.checkouts.CurrentAssetCheckout(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return PreparedCheckoutOperation{}, err
 	} else if found {

@@ -38,6 +38,12 @@ export class AssetDetailQuery {
 
     const summaryAsset = inventory.assets.find((candidate) => candidate.id === selectedAssetId);
     if (summaryAsset) {
+      if (summaryAsset.kind === 'location') {
+        const mapSource = await this.mapDetailSource(selectedAssetId, inventory.tenantId, inventory.id);
+        if (mapSource) {
+          return this.buildDetailView(mapSource);
+        }
+      }
       return this.buildDetailView({
         tenantId: inventory.tenantId,
         inventoryId: inventory.id,

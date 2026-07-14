@@ -29,6 +29,7 @@ import {
 } from '../../application/add/PhotoSelectionQuery';
 import {
   AssetDetailView,
+  assetDetailNavigationTitle,
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
@@ -409,7 +410,7 @@ export function AssetDetailRouteScreen({
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <Stack.Screen options={{
-        title: 'Details',
+        title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
         ...(screenState.status === 'ready' ? {
           headerRight: () => (
             <Pressable

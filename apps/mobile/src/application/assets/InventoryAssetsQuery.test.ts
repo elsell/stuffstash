@@ -112,7 +112,7 @@ describe('InventoryAssetsQuery', () => {
         {
           id: 'asset-garage',
           title: 'Garage',
-          kindLabel: 'Location',
+          kindLabel: 'Place',
           customTypeLabel: undefined,
           description: 'Shelves and bins.',
           locationTrailLabel: 'Garage',

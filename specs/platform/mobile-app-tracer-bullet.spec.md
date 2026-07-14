@@ -227,6 +227,12 @@ This spec defines camera behavior only for attaching still photos during the Add
     current location so an item inside a nested container remains findable and
     understandable. Container workspaces may continue to present immediate
     children only.
+  - When a location workspace contains at least 20 combined space and item
+    rows, it must expose one compact inline contents search field that filters
+    both sections by title and relative path without leaving the workspace.
+    Smaller locations must not spend permanent vertical space on this control.
+    The search result state must preserve section headings, counts, and a clear
+    no-match recovery action.
   - Contained children must have deterministic presentation ordering. The first ordering groups containers and locations before items so nested places remain easy to scan, then sorts each group by the user-visible title and asset ID as a stable tiebreaker.
   - Container and location workspaces should elevate spatial actions over generic asset maintenance: `Add item here` should be the primary spatial action before the contents section, while generic `Edit` and target-specific movement actions remain available as quiet maintenance controls after the contained-assets workspace. Photo management belongs to the shared gallery.
   - Contained-assets headings should anchor the spatial context to the current asset, such as `Inside Garage cabinet` for containers and `In Garage` or `Items in Garage` for locations, with the count as secondary text. A heading must remain adjacent to the rows or empty state it labels; action stacks must not separate them.
@@ -240,6 +246,11 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Browse must be a combined list, search, and map inventory surface for the selected inventory:
   - Browse must contain separate `List` and `Map` sub-surfaces rather than treating Map as a visual layout toggle for list results.
   - The `List` sub-surface owns search-first browsing, scopes, secondary filters, a separate sort control, paginated asset cards, and Places rows.
+  - Selecting a Places row must open that location asset's shared detail
+    workspace. Places must not fork users into a separate legacy location-only
+    list whose identity, photos, actions, and containment language differ from
+    the asset workspace. Existing location-scoped deep links may remain as
+    compatibility routes for contained-asset browsing.
   - The `Map` sub-surface owns full-inventory containment exploration for the selected inventory. It must always show the selected inventory's containment structure instead of inheriting the current list scope, sort, or search-result subset.
   - With an empty query it must browse selected-inventory assets through the API asset list endpoint.
   - With a non-empty query it must call the API search endpoint through the generated API client wrapper.

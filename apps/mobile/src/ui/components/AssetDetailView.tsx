@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import {
   FlatList,
@@ -6,10 +6,12 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View
 } from 'react-native';
 import { ChevronRight, MoreHorizontal, MoveRight, Plus } from 'lucide-react-native';
 import type {
+  AssetCardViewModel,
   AssetDetailViewModel,
   AssetParentLocationCrumbViewModel,
   AssetTagViewModel
@@ -28,7 +30,13 @@ import {
   containedAssetRows,
   containedAssetsEmptyState,
   containedAssetsSectionHeading,
+  containedItemsEmptyState,
+  containedItemsSectionHeading,
+  containedSpacesEmptyState,
+  containedSpacesSectionHeading,
   type ContainedAssetAction,
+  type ContainedAssetsEmptyState,
+  type ContainedAssetsSectionHeading,
   type ContainedAssetRowViewModel
 } from './ContainedAssetsPresentation';
 import { assetDetailUpdatedMetadata } from './AssetDetailPresentation';
@@ -64,6 +72,94 @@ type AssetDetailViewProps = {
   readonly refreshControl?: ReactElement<RefreshControlProps>;
 };
 
+export function assetDetailNavigationTitle(asset: Pick<AssetDetailViewModel, 'kind'>): 'Place' | 'Details' {
+  return asset.kind === 'location' ? 'Place' : 'Details';
+}
+
+type ContainedWorkspaceListItem =
+  | { readonly key: string; readonly kind: 'section'; readonly heading: ContainedAssetsSectionHeading }
+  | { readonly key: string; readonly kind: 'row'; readonly row: ContainedAssetRowViewModel }
+  | {
+      readonly key: string;
+      readonly kind: 'empty';
+      readonly emptyState: ContainedAssetsEmptyState;
+      readonly canClearSearch?: boolean;
+    };
+
+export function containedWorkspaceItems(
+  asset: AssetDetailViewModel,
+  query: string
+): readonly ContainedWorkspaceListItem[] {
+  if (asset.kind !== 'location') {
+    return containedSectionItems(
+      'contained',
+      containedAssetsSectionHeading(asset),
+      containedAssetRows(asset.containedAssets),
+      containedAssetsEmptyState(asset)
+    );
+  }
+
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const spaces = filterContainedAssets(asset.containedSpaces, normalizedQuery);
+  const items = filterContainedAssets(asset.containedItems, normalizedQuery);
+  const isFiltering = normalizedQuery.length > 0;
+  const noMatches = isFiltering && spaces.length + items.length === 0;
+  const spacesHeading = containedSpacesSectionHeading(asset, isFiltering ? {
+    visibleCount: spaces.length,
+    totalCount: asset.containedSpaces.length
+  } : undefined);
+  const itemsHeading = containedItemsSectionHeading(asset, isFiltering ? {
+    visibleCount: items.length,
+    totalCount: asset.containedItems.length
+  } : undefined);
+
+  return [
+    ...containedSectionItems(
+      'spaces',
+      spacesHeading,
+      containedAssetRows(spaces),
+      isFiltering
+        ? { title: 'No matching spaces', message: 'Try another name or path.' }
+        : containedSpacesEmptyState()
+    ),
+    ...containedSectionItems(
+      'items',
+      itemsHeading,
+      containedAssetRows(items),
+      isFiltering
+        ? { title: 'No matching items', message: 'Try another name or path.' }
+        : containedItemsEmptyState(asset),
+      noMatches
+    )
+  ];
+}
+
+function filterContainedAssets<T extends AssetCardViewModel & { readonly relativePathLabel?: string }>(
+  assets: readonly T[],
+  normalizedQuery: string
+): readonly T[] {
+  if (normalizedQuery.length === 0) {
+    return assets;
+  }
+  return assets.filter((candidate) => [candidate.title, candidate.relativePathLabel]
+    .some((value) => value?.toLocaleLowerCase().includes(normalizedQuery)));
+}
+
+function containedSectionItems(
+  sectionKey: string,
+  heading: ContainedAssetsSectionHeading,
+  rows: readonly ContainedAssetRowViewModel[],
+  emptyState: ContainedAssetsEmptyState,
+  canClearSearch = false
+): readonly ContainedWorkspaceListItem[] {
+  return [
+    { key: `${sectionKey}-heading`, kind: 'section', heading },
+    ...(rows.length > 0
+      ? rows.map((row) => ({ key: `${sectionKey}-${row.id}`, kind: 'row' as const, row }))
+      : [{ key: `${sectionKey}-empty`, kind: 'empty' as const, emptyState, canClearSearch }])
+  ];
+}
+
 export function AssetDetailView({
   asset,
   canRetryPhotos = false,
@@ -90,22 +186,27 @@ export function AssetDetailView({
 }: AssetDetailViewProps) {
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
-  const childRows = asset.canContainAssets ? containedAssetRows(asset.containedAssets) : [];
+  const [contentsQuery, setContentsQuery] = useState('');
+  const showContentsSearch = asset.kind === 'location'
+    && asset.containedSpaces.length + asset.containedItems.length >= 20;
+  const workspaceItems = asset.canContainAssets
+    ? containedWorkspaceItems(asset, showContentsSearch ? contentsQuery : '')
+    : [];
   const updatedMetadata = assetDetailUpdatedMetadata(asset);
 
   return (
     <FlatList
       contentContainerStyle={styles.content}
-      data={childRows}
-      keyExtractor={(child) => child.id}
+      data={workspaceItems}
+      keyExtractor={(item) => item.key}
       refreshControl={refreshControl}
       renderItem={({ item }) => (
-        <ContainedAssetRowView
-          asset={item}
-          onPress={onChildPress ? () => onChildPress(item.id) : undefined}
+        <ContainedWorkspaceListItemView
+          item={item}
+          onChildPress={onChildPress}
+          onClearSearch={() => setContentsQuery('')}
         />
       )}
-      ItemSeparatorComponent={() => <View style={styles.childSeparator} />}
       ListHeaderComponent={(
         <View style={styles.headerStack}>
           {onBack || onMoreActions ? (
@@ -131,7 +232,8 @@ export function AssetDetailView({
           ) : null}
 
           <AssetDetailPhotoGallery
-            canAddPhotos={!asset.canContainAssets && !isActionPending && asset.canAddPhotos}
+            canAddPhotos={!isActionPending && asset.canAddPhotos}
+            contentHorizontalPadding={spacing.md}
             imagePlaceholderLabel={asset.imagePlaceholderLabel}
             onAddPhotos={onAddPhotos}
             onPhotoPress={onPhotoPress}
@@ -162,61 +264,79 @@ export function AssetDetailView({
           />
 
           {asset.canContainAssets ? (
-            <ContainedWorkspaceHeader
+            <ContainedSpatialActions
               asset={asset}
               isActionPending={isActionPending}
               onAddHere={onAddHere}
-              onAddPhotos={onAddPhotos}
-              onCheckout={onCheckout}
-              onEdit={onEdit}
-              onMove={onMove}
               onMoveThingsHere={onMoveThingsHere}
-              onReturn={onReturn}
             />
+          ) : null}
+
+          {showContentsSearch ? (
+            <View style={styles.contentsSearch}>
+              <TextInput
+                accessibilityLabel="Search contents"
+                autoCapitalize="none"
+                onChangeText={setContentsQuery}
+                placeholder="Search this place"
+                placeholderTextColor={palette.textMuted}
+                returnKeyType="search"
+                style={styles.contentsSearchInput}
+                value={contentsQuery}
+              />
+              {contentsQuery.length > 0 ? (
+                <Pressable
+                  accessibilityLabel="Clear contents search"
+                  accessibilityRole="button"
+                  onPress={() => setContentsQuery('')}
+                  style={styles.clearSearchButton}
+                >
+                  <Text style={styles.clearSearchText}>Clear</Text>
+                </Pressable>
+              ) : null}
+            </View>
           ) : null}
         </View>
       )}
-      ListEmptyComponent={asset.canContainAssets ? <ContainedAssetsEmptyState asset={asset} /> : null}
       ListFooterComponent={(
-        <Text accessibilityLabel={updatedMetadata.value} style={styles.updatedText}>
-          {updatedMetadata.value}
-        </Text>
+        <View style={styles.footerStack}>
+          {asset.canContainAssets ? (
+            <ContainedWorkspaceMaintenance
+              asset={asset}
+              isActionPending={isActionPending}
+              onCheckout={onCheckout}
+              onEdit={onEdit}
+              onMove={onMove}
+              onReturn={onReturn}
+            />
+          ) : null}
+          <Text accessibilityLabel={updatedMetadata.value} style={styles.updatedText}>
+            {updatedMetadata.value}
+          </Text>
+        </View>
       )}
     />
   );
 }
 
-function ContainedWorkspaceHeader({
+function ContainedSpatialActions({
   asset,
   isActionPending,
   onAddHere,
-  onAddPhotos,
-  onCheckout,
-  onEdit,
-  onMove,
-  onMoveThingsHere,
-  onReturn
+  onMoveThingsHere
 }: {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending: boolean;
   readonly onAddHere?: () => void;
-  readonly onAddPhotos?: () => void;
-  readonly onCheckout?: () => void;
-  readonly onEdit?: () => void;
-  readonly onMove?: () => void;
   readonly onMoveThingsHere?: () => void;
-  readonly onReturn?: () => void;
 }) {
-  const palette = useAppearanceAwarePalette();
-  const styles = createStyles(palette);
-  const heading = containedAssetsSectionHeading(asset);
+  const styles = createStyles(useAppearanceAwarePalette());
   const actions = containedAssetActions(asset);
   return (
-    <View style={styles.containedHeader}>
-      <View style={styles.sectionHeading}>
-        <Text accessibilityRole="header" style={styles.sectionTitle}>{heading.title}</Text>
-        <Text style={styles.sectionSummary}>{heading.summary}</Text>
-      </View>
+    <View
+      accessibilityLabel={asset.kind === 'location' ? 'Place items in this place' : 'Place items in this container'}
+      style={styles.spatialActions}
+    >
       {actions.map((action) => (
         <ContainedAssetActionButton
           action={action}
@@ -225,6 +345,28 @@ function ContainedWorkspaceHeader({
           onPress={action.kind === 'add_here' ? onAddHere : onMoveThingsHere}
         />
       ))}
+    </View>
+  );
+}
+
+function ContainedWorkspaceMaintenance({
+  asset,
+  isActionPending,
+  onCheckout,
+  onEdit,
+  onMove,
+  onReturn
+}: {
+  readonly asset: AssetDetailViewModel;
+  readonly isActionPending: boolean;
+  readonly onCheckout?: () => void;
+  readonly onEdit?: () => void;
+  readonly onMove?: () => void;
+  readonly onReturn?: () => void;
+}) {
+  const styles = createStyles(useAppearanceAwarePalette());
+  return (
+    <View accessibilityLabel="Manage this asset" style={styles.maintenanceSection}>
       <AssetDetailAvailabilityButton
         asset={asset}
         isActionPending={isActionPending}
@@ -234,9 +376,7 @@ function ContainedWorkspaceHeader({
       />
       <AssetDetailMaintenanceBar
         asset={asset}
-        includeAddPhotos
         isActionPending={isActionPending}
-        onAddPhotos={onAddPhotos}
         onEdit={onEdit}
         onMove={onMove}
       />
@@ -244,13 +384,23 @@ function ContainedWorkspaceHeader({
   );
 }
 
-function ContainedAssetsEmptyState({ asset }: { readonly asset: AssetDetailViewModel }) {
+function ContainedAssetsEmptyState({
+  emptyState,
+  onClearSearch
+}: {
+  readonly emptyState: ContainedAssetsEmptyState;
+  readonly onClearSearch?: () => void;
+}) {
   const styles = createStyles(useAppearanceAwarePalette());
-  const emptyState = containedAssetsEmptyState(asset);
   return (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyContainerTitle}>{emptyState.title}</Text>
       <Text style={styles.emptyContainerText}>{emptyState.message}</Text>
+      {onClearSearch ? (
+        <Pressable accessibilityRole="button" onPress={onClearSearch} style={styles.emptyClearButton}>
+          <Text style={styles.emptyClearText}>Clear search</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -290,6 +440,40 @@ function ContainedAssetActionButton({
   );
 }
 
+function ContainedWorkspaceListItemView({
+  item,
+  onChildPress,
+  onClearSearch
+}: {
+  readonly item: ContainedWorkspaceListItem;
+  readonly onChildPress?: (assetId: string) => void;
+  readonly onClearSearch: () => void;
+}) {
+  const styles = createStyles(useAppearanceAwarePalette());
+  if (item.kind === 'section') {
+    return (
+      <View style={styles.sectionHeading}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>{item.heading.title}</Text>
+        <Text style={styles.sectionSummary}>{item.heading.summary}</Text>
+      </View>
+    );
+  }
+  if (item.kind === 'empty') {
+    return (
+      <ContainedAssetsEmptyState
+        emptyState={item.emptyState}
+        onClearSearch={item.canClearSearch ? onClearSearch : undefined}
+      />
+    );
+  }
+  return (
+    <ContainedAssetRowView
+      asset={item.row}
+      onPress={onChildPress ? () => onChildPress(item.row.id) : undefined}
+    />
+  );
+}
+
 function ContainedAssetRowView({
   asset,
   onPress
@@ -300,32 +484,35 @@ function ContainedAssetRowView({
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
   return (
-    <Pressable
-      accessibilityLabel={`Open asset ${asset.title}`}
-      accessibilityRole="button"
-      disabled={!onPress}
-      onPress={onPress}
-      style={({ pressed }) => [styles.childRow, pressed ? styles.childRowPressed : null]}
-    >
-      <View style={styles.childPhoto}>
-        {asset.photo ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            accessible={false}
-            source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
-            style={styles.childPhotoImage}
-          />
-        ) : (
-          <Text style={styles.childPhotoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
-        )}
-      </View>
-      <View style={styles.childRowText}>
-        <Text style={styles.childEyebrow}>{asset.eyebrowLabel}</Text>
-        <Text style={styles.childTitle}>{asset.title}</Text>
-        {asset.supportingLabel ? <Text style={styles.childSupporting}>{asset.supportingLabel}</Text> : null}
-      </View>
-      <ChevronRight color={palette.textMuted} size={20} />
-    </Pressable>
+    <View>
+      <Pressable
+        accessibilityLabel={`Open asset ${asset.title}`}
+        accessibilityRole="button"
+        disabled={!onPress}
+        onPress={onPress}
+        style={({ pressed }) => [styles.childRow, pressed ? styles.childRowPressed : null]}
+      >
+        <View style={styles.childPhoto}>
+          {asset.photo ? (
+            <Image
+              accessibilityIgnoresInvertColors
+              accessible={false}
+              source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
+              style={styles.childPhotoImage}
+            />
+          ) : (
+            <Text style={styles.childPhotoPlaceholder}>{asset.imagePlaceholderLabel}</Text>
+          )}
+        </View>
+        <View style={styles.childRowText}>
+          <Text style={styles.childTitle}>{asset.title}</Text>
+          <Text style={styles.childEyebrow}>{asset.eyebrowLabel}</Text>
+          {asset.supportingLabel ? <Text style={styles.childSupporting}>{asset.supportingLabel}</Text> : null}
+        </View>
+        <ChevronRight color={palette.textMuted} size={20} />
+      </Pressable>
+      <View style={styles.childSeparator} />
+    </View>
   );
 }
 
@@ -430,7 +617,8 @@ function createStyles(palette: MobileColorPalette) {
     minWidth: 44
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xl * 2
   },
   headerStack: {
@@ -526,11 +714,52 @@ function createStyles(palette: MobileColorPalette) {
     backgroundColor: palette.warningSurface,
     color: palette.warning
   },
-  containedHeader: {
+  spatialActions: {
     gap: spacing.md
   },
+  maintenanceSection: {
+    borderTopColor: palette.border,
+    borderTopWidth: 1,
+    gap: spacing.md,
+    paddingTop: spacing.lg
+  },
+  footerStack: {
+    gap: spacing.lg,
+    paddingTop: spacing.lg
+  },
+  contentsSearch: {
+    alignItems: 'center',
+    backgroundColor: palette.elevatedSurface,
+    borderColor: palette.controlBorder,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    minHeight: 44,
+    paddingLeft: spacing.sm
+  },
+  contentsSearchInput: {
+    color: palette.text,
+    flex: 1,
+    fontSize: 16,
+    minHeight: 44,
+    paddingVertical: spacing.sm
+  },
+  clearSearchButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 60,
+    paddingHorizontal: spacing.sm
+  },
+  clearSearchText: {
+    color: palette.action,
+    fontSize: 15,
+    fontWeight: '600'
+  },
   sectionHeading: {
-    gap: 3
+    gap: 3,
+    paddingBottom: spacing.sm,
+    paddingTop: spacing.lg
   },
   sectionTitle: {
     color: palette.text,
@@ -557,7 +786,9 @@ function createStyles(palette: MobileColorPalette) {
     backgroundColor: palette.action
   },
   secondarySpatialAction: {
-    backgroundColor: palette.surfaceMuted
+    backgroundColor: palette.elevatedSurface,
+    borderColor: palette.controlBorder,
+    borderWidth: 1
   },
   spatialActionPressed: {
     opacity: 0.82
@@ -591,8 +822,10 @@ function createStyles(palette: MobileColorPalette) {
   childPhoto: {
     alignItems: 'center',
     aspectRatio: 1,
-    backgroundColor: palette.surfaceMuted,
+    backgroundColor: palette.elevatedSurface,
+    borderColor: palette.border,
     borderRadius: radius.sm,
+    borderWidth: 1,
     justifyContent: 'center',
     overflow: 'hidden',
     width: 64
@@ -627,10 +860,9 @@ function createStyles(palette: MobileColorPalette) {
     lineHeight: 20
   },
   emptyContainer: {
-    borderTopColor: palette.border,
-    borderTopWidth: 1,
     gap: spacing.xs,
-    paddingVertical: spacing.lg
+    paddingBottom: spacing.md,
+    paddingTop: spacing.sm
   },
   emptyContainerTitle: {
     color: palette.text,
@@ -642,11 +874,22 @@ function createStyles(palette: MobileColorPalette) {
     fontSize: 15,
     lineHeight: 21
   },
+  emptyClearButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.sm
+  },
+  emptyClearText: {
+    color: palette.action,
+    fontSize: 15,
+    fontWeight: '600'
+  },
   updatedText: {
     color: palette.textMuted,
     fontSize: 13,
-    lineHeight: 18,
-    paddingTop: spacing.lg
+    lineHeight: 18
   },
   disabledAction: {
     opacity: 0.55

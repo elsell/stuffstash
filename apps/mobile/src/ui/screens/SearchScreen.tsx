@@ -560,7 +560,11 @@ export function SearchScreen({
           ) : null
         }
         renderItem={({ item }) => item.type === 'place' ? (
-          <BrowsePlaceRow location={item.location} palette={palette} onPress={() => router.push(`/locations/${item.location.id}`)} />
+          <BrowsePlaceRow
+            location={item.location}
+            palette={palette}
+            onPress={() => router.push(assetDetailHref(item.location.id))}
+          />
         ) : (
           <AssetCard
             asset={item.asset}

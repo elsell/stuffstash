@@ -77,7 +77,11 @@ export function AssetDetailPhotoGallery({
           style={[
             styles.mediaFrame,
             styles.emptyMedia,
-            { backgroundColor: palette.surfaceMuted, width: photoWidth }
+            {
+              backgroundColor: palette.elevatedSurface,
+              borderColor: palette.border,
+              width: photoWidth
+            }
           ]}
         >
           <Camera color={palette.textMuted} size={28} />
@@ -160,7 +164,8 @@ function AddPhotosButton({
       style={({ pressed }) => [
         styles.addPhotoButton,
         {
-          backgroundColor: pressed ? palette.selected : palette.surfaceMuted
+          backgroundColor: pressed ? palette.selected : palette.elevatedSurface,
+          borderColor: palette.controlBorder
         }
       ]}
     >
@@ -205,6 +210,7 @@ const styles = StyleSheet.create({
     lineHeight: 17
   },
   emptyMedia: {
+    borderWidth: 1,
     gap: spacing.xs,
     padding: spacing.lg
   },
@@ -223,6 +229,7 @@ const styles = StyleSheet.create({
   addPhotoButton: {
     alignItems: 'center',
     borderRadius: radius.md,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'center',

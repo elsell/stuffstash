@@ -1,5 +1,6 @@
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
+import type { AssetContainedItemViewModel } from '../../application/assets/AssetViewModels';
 
 export type ContainedAssetActionKind = 'add_here' | 'move_here';
 
@@ -60,6 +61,59 @@ export function containedAssetsSectionHeading(
   };
 }
 
+export function containedSpacesSectionHeading(
+  asset: Pick<AssetDetailViewModel, 'title' | 'containedSpacesLabel'>,
+  counts?: ContainedAssetsFilteredCount
+): ContainedAssetsSectionHeading {
+  return {
+    title: `Spaces in ${asset.title}`,
+    summary: filteredCountLabel(asset.containedSpacesLabel, counts)
+  };
+}
+
+export function containedItemsSectionHeading(
+  asset: Pick<AssetDetailViewModel, 'title' | 'containedItemsLabel'>,
+  counts?: ContainedAssetsFilteredCount
+): ContainedAssetsSectionHeading {
+  return {
+    title: `Items in ${asset.title}`,
+    summary: filteredCountLabel(asset.containedItemsLabel, counts)
+  };
+}
+
+export type ContainedAssetsFilteredCount = {
+  readonly visibleCount: number;
+  readonly totalCount: number;
+};
+
+function filteredCountLabel(
+  totalLabel: string,
+  counts: ContainedAssetsFilteredCount | undefined
+): string {
+  if (!counts || counts.visibleCount === counts.totalCount) {
+    return totalLabel;
+  }
+  return `${counts.visibleCount.toString()} of ${totalLabel}`;
+}
+
+export function containedSpacesEmptyState(): ContainedAssetsEmptyState {
+  return {
+    title: 'No spaces here yet',
+    message: 'Containers and nested places will appear here.'
+  };
+}
+
+export function containedItemsEmptyState(
+  asset: Pick<AssetDetailViewModel, 'canAddContainedAssets'>
+): ContainedAssetsEmptyState {
+  return {
+    title: 'Nothing here yet',
+    message: asset.canAddContainedAssets
+      ? 'Add an item here or move items into this place.'
+      : 'There are no items in this place.'
+  };
+}
+
 export function canUseContainedAssetAction({
   isActionPending,
   onPress
@@ -71,7 +125,7 @@ export function canUseContainedAssetAction({
 }
 
 export function containedAssetRows(
-  assets: readonly AssetCardViewModel[]
+  assets: readonly (AssetCardViewModel | AssetContainedItemViewModel)[]
 ): readonly ContainedAssetRowViewModel[] {
   return assets.map((asset) => ({
     id: asset.id,
@@ -86,16 +140,12 @@ export function containedAssetRows(
 }
 
 function containedAssetSupportingLabel(asset: AssetCardViewModel): string {
-  if (asset.checkedOutLabel) {
-    return asset.description.trim().length > 0
-      ? `${asset.checkedOutLabel} · ${asset.description.trim()}`
-      : asset.checkedOutLabel;
+  const relativePathLabel = (asset as Partial<AssetContainedItemViewModel>).relativePathLabel;
+  const context = [asset.checkedOutLabel, relativePathLabel]
+    .filter((value): value is string => value !== undefined && value.trim().length > 0)
+    .join(' · ');
+  if (context.length > 0) {
+    return context;
   }
-
-  const description = asset.description.trim();
-  if (description.length > 0) {
-    return description;
-  }
-
-  return asset.photoLabel;
+  return asset.description.trim() || asset.updatedAtLabel;
 }

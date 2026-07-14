@@ -64,6 +64,9 @@ The first checkout states are:
 - An open checkout is one with state `open`.
 - Checkout requires the asset to exist in the requested tenant and inventory.
 - Checkout requires the asset to be active.
+- Checkout requires a portable asset. Location assets are non-portable place
+  concepts and checkout attempts for them must fail with a safe validation
+  error at the application boundary.
 - Checkout must fail when the asset already has an open checkout.
 - Return requires an open checkout for the requested asset.
 - Return must fail when the asset has no open checkout.
@@ -210,7 +213,7 @@ Checkout and return are primary mobile asset maintenance actions.
 Mobile requirements:
 
 - A recently used, searched, scanned, or browsed asset must be check-outable from a fresh app launch in no more than three primary user actions after the app is ready.
-- Checkout from asset detail should be one visible action when the asset is active and not currently checked out.
+- Checkout from asset detail should be one visible action when a portable asset is active and not currently checked out.
 - Return from asset detail should be one visible action when the asset is currently checked out.
 - Checkout details must be optional and must not block the fastest checkout path.
 - After checkout, mobile may offer `Add details` as a secondary follow-up action.
@@ -226,7 +229,7 @@ Permission behavior:
 
 - Viewers may see checkout state and checkout history.
 - Viewers must not see checkout or return mutation actions.
-- Editors may check out active assets when domain invariants allow it.
+- Editors may check out active non-location assets when domain invariants allow it.
 - Editors may return any existing asset with an open checkout, regardless of lifecycle, when domain invariants allow it.
 
 ## Conversational Voice And Text

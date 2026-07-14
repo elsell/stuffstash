@@ -45,7 +45,7 @@ describe('InventoryMapQuery', () => {
         {
           id: 'location-garage',
           title: 'Garage',
-          kindLabel: 'Location',
+          kindLabel: 'Place',
           childCountLabel: '1 inside',
           canContainAssets: true,
           canAddContainedAssets: true

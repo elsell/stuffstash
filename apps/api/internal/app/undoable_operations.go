@@ -114,15 +114,8 @@ func (a App) applyCheckoutUndoableOperation(ctx context.Context, input ApplyUndo
 	if err != nil {
 		return asset.Asset{}, err
 	}
-	applied, _, err := a.undoables.ApplyAssetCheckoutUndoableOperation(ctx, operation.ID, direction, expectedCurrent, resulting, auditRecord)
-	if err != nil {
-		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
-			return asset.Asset{}, ErrInvalidInput
-		}
-		return asset.Asset{}, err
-	}
 	itemID, ok := asset.NewID(operation.TargetID)
-	if !ok {
+	if !ok || itemID != resulting.AssetID {
 		return asset.Asset{}, ErrInvalidInput
 	}
 	item, found, err := a.assets.AssetByID(ctx, input.TenantID, input.InventoryID, itemID)
@@ -131,6 +124,16 @@ func (a App) applyCheckoutUndoableOperation(ctx context.Context, input ApplyUndo
 	}
 	if !found {
 		return asset.Asset{}, ErrNotFound
+	}
+	if resulting.State == asset.CheckoutStateOpen && (item.LifecycleState != asset.LifecycleStateActive || !item.Kind.IsPortable()) {
+		return asset.Asset{}, ErrInvalidInput
+	}
+	applied, _, err := a.undoables.ApplyAssetCheckoutUndoableOperation(ctx, operation.ID, direction, expectedCurrent, resulting, auditRecord)
+	if err != nil {
+		if errors.Is(err, ports.ErrConflict) || errors.Is(err, ports.ErrForbidden) {
+			return asset.Asset{}, ErrInvalidInput
+		}
+		return asset.Asset{}, err
 	}
 	a.observer.Record(ctx, ports.Event{
 		Name:    eventName,

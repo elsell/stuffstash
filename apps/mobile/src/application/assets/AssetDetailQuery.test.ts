@@ -16,7 +16,7 @@ import type { InventoryMapAssetRepository } from './InventoryMapQuery';
 import { toAssetDetailViewModel } from './AssetViewModels';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
-  private readonly inventory: InventorySummary;
+  private inventory: InventorySummary;
   private readonly detailAssets = new Map<string, AssetSummary>();
 
   constructor(permissions: InventorySummary['permissions'] = ['view', 'create_asset', 'edit_asset']) {
@@ -66,6 +66,10 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
 
   setDetailAsset(asset: AssetSummary): void {
     this.detailAssets.set(asset.id, asset);
+  }
+
+  setSummaryAssets(assets: readonly AssetSummary[]): void {
+    this.inventory = { ...this.inventory, assets };
   }
 
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
@@ -152,12 +156,15 @@ describe('AssetDetailQuery', () => {
       canDeletePermanently: false,
       isCheckedOut: false,
       checkoutLabel: 'Available',
-      checkoutActorLabel: undefined,
       canCheckout: true,
       canReturn: false,
       canContainAssets: true,
       canAddContainedAssets: true,
       containedAssetsLabel: '1 thing inside',
+      containedSpaces: [],
+      containedSpacesLabel: '0 spaces',
+      containedItems: [],
+      containedItemsLabel: '0 items',
       containedAssets: [{
         id: 'asset-birth-certificate',
         title: 'Birth certificate',
@@ -244,6 +251,39 @@ describe('AssetDetailQuery', () => {
       title: 'Living room table',
       kind: 'location',
       canAddContainedAssets: true
+    });
+  });
+
+  it('loads the complete map tree for a place opened from a partial inventory summary', async () => {
+    const repository = new FakeInventorySummaryRepository();
+    const garage: AssetSummary = {
+      id: assetId('asset-garage'), title: 'Garage', kind: 'location', lifecycleState: 'active',
+      locationLabel: 'Inventory root', locationTrail: ['Home', 'Garage'], parentLocationTrail: [],
+      description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    const cabinet: AssetSummary = {
+      id: assetId('asset-cabinet'), title: 'Cabinet', kind: 'container', lifecycleState: 'active',
+      parentAssetId: garage.id, locationLabel: 'Garage', locationTrail: ['Home', 'Garage', 'Cabinet'],
+      parentLocationTrail: [{ id: garage.id, title: garage.title }], description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    repository.setSummaryAssets([garage]);
+    const query = new AssetDetailQuery(
+      repository,
+      new FakeInventoryMapAssetRepository([
+        garage,
+        cabinet,
+        {
+          id: assetId('asset-hammer'), title: 'Hammer', kind: 'item', lifecycleState: 'active',
+          parentAssetId: cabinet.id, locationLabel: 'Cabinet', locationTrail: ['Home', 'Garage', 'Cabinet', 'Hammer'],
+          parentLocationTrail: [{ id: garage.id, title: garage.title }, { id: cabinet.id, title: cabinet.title }],
+          description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+        }
+      ])
+    );
+
+    await expect(query.execute('asset-garage')).resolves.toMatchObject({
+      containedSpaces: [{ id: 'asset-cabinet' }],
+      containedItems: [{ id: 'asset-hammer', relativePathLabel: 'Cabinet' }]
     });
   });
 
@@ -375,6 +415,29 @@ describe('AssetDetailQuery', () => {
       canReturn: true
     });
     expect(detail).not.toHaveProperty('checkoutActorLabel');
+  });
+
+  it('allows an existing location checkout to be returned without offering a new checkout', () => {
+    const detail = toAssetDetailViewModel({
+      id: assetId('asset-workshop'),
+      title: 'Workshop',
+      kind: 'location',
+      lifecycleState: 'active',
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home', 'Workshop'],
+      parentLocationTrail: [],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false,
+      currentCheckout: {
+        id: 'checkout-legacy',
+        state: 'open',
+        checkedOutAt: '2026-06-24T11:00:00Z',
+        checkedOutByPrincipalId: 'user-one'
+      }
+    });
+
+    expect(detail).toMatchObject({ canCheckout: false, canReturn: true });
   });
 
   it('requires create permission before offering Add item here inside containers', async () => {
@@ -537,6 +600,158 @@ describe('AssetDetailQuery', () => {
       'asset-aa-batteries',
       'asset-zipties'
     ]);
+  });
+
+  it('builds a place workspace from direct spaces and recursively nested items', () => {
+    const garage = {
+      id: assetId('asset-garage'),
+      title: 'Garage',
+      kind: 'location' as const,
+      lifecycleState: 'active' as const,
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home', 'Garage'],
+      parentLocationTrail: [],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    };
+    const toolCabinet = {
+      id: assetId('asset-tool-cabinet'),
+      title: 'Tool cabinet',
+      kind: 'container' as const,
+      lifecycleState: 'active' as const,
+      parentAssetId: garage.id,
+      locationLabel: 'Garage',
+      locationTrail: ['Home', 'Garage', 'Tool cabinet'],
+      parentLocationTrail: [{ id: garage.id, title: garage.title }],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    };
+    const drawer = {
+      id: assetId('asset-drawer-two'),
+      title: 'Drawer 2',
+      kind: 'container' as const,
+      lifecycleState: 'active' as const,
+      parentAssetId: toolCabinet.id,
+      locationLabel: 'Tool cabinet',
+      locationTrail: ['Home', 'Garage', 'Tool cabinet', 'Drawer 2'],
+      parentLocationTrail: [
+        { id: garage.id, title: garage.title },
+        { id: toolCabinet.id, title: toolCabinet.title }
+      ],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    };
+
+    const detail = toAssetDetailViewModel(garage, {
+      allAssets: [
+        {
+          id: assetId('asset-extension-cord'),
+          title: 'Extension cord',
+          kind: 'item',
+          lifecycleState: 'active',
+          parentAssetId: drawer.id,
+          locationLabel: 'Drawer 2',
+          locationTrail: ['Home', 'Garage', 'Tool cabinet', 'Drawer 2', 'Extension cord'],
+          parentLocationTrail: [
+            { id: garage.id, title: garage.title },
+            { id: toolCabinet.id, title: toolCabinet.title },
+            { id: drawer.id, title: drawer.title }
+          ],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        },
+        {
+          id: assetId('asset-broom'),
+          title: 'Broom',
+          kind: 'item',
+          lifecycleState: 'active',
+          parentAssetId: garage.id,
+          locationLabel: 'Garage',
+          locationTrail: ['Home', 'Garage', 'Broom'],
+          parentLocationTrail: [{ id: garage.id, title: garage.title }],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        },
+        drawer,
+        toolCabinet,
+        {
+          id: assetId('asset-workshop'),
+          title: 'Workshop',
+          kind: 'location',
+          lifecycleState: 'active',
+          parentAssetId: garage.id,
+          locationLabel: 'Garage',
+          locationTrail: ['Home', 'Garage', 'Workshop'],
+          parentLocationTrail: [{ id: garage.id, title: garage.title }],
+          description: '',
+          updatedAtLabel: 'Updated today',
+          hasPhoto: false
+        }
+      ]
+    });
+
+    expect(detail).toMatchObject({
+      canCheckout: false,
+      canReturn: false,
+      containedSpacesLabel: '2 spaces',
+      containedItemsLabel: '2 items',
+      containedSpaces: [
+        { id: 'asset-tool-cabinet', title: 'Tool cabinet' },
+        { id: 'asset-workshop', title: 'Workshop' }
+      ],
+      containedItems: [
+        { id: 'asset-broom', relativePath: [], relativePathLabel: undefined },
+        {
+          id: 'asset-extension-cord',
+          relativePath: [
+            { id: 'asset-tool-cabinet', title: 'Tool cabinet' },
+            { id: 'asset-drawer-two', title: 'Drawer 2' }
+          ],
+          relativePathLabel: 'Tool cabinet / Drawer 2'
+        }
+      ]
+    });
+    expect(detail.containedSpaces.map((asset) => asset.id)).not.toContain('asset-drawer-two');
+  });
+
+  it('keeps container contents limited to immediate children', () => {
+    const cabinet = {
+      id: assetId('asset-cabinet'),
+      title: 'Cabinet',
+      kind: 'container' as const,
+      lifecycleState: 'active' as const,
+      locationLabel: 'Garage',
+      locationTrail: ['Home', 'Garage', 'Cabinet'],
+      parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    };
+
+    const detail = toAssetDetailViewModel(cabinet, {
+      allAssets: [
+        {
+          id: assetId('asset-drawer'), title: 'Drawer', kind: 'container', lifecycleState: 'active',
+          parentAssetId: cabinet.id, locationLabel: 'Cabinet', locationTrail: ['Home', 'Garage', 'Cabinet', 'Drawer'],
+          parentLocationTrail: [{ id: cabinet.id, title: cabinet.title }], description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+        },
+        {
+          id: assetId('asset-screwdriver'), title: 'Screwdriver', kind: 'item', lifecycleState: 'active',
+          parentAssetId: assetId('asset-drawer'), locationLabel: 'Drawer', locationTrail: ['Home', 'Garage', 'Cabinet', 'Drawer', 'Screwdriver'],
+          parentLocationTrail: [{ id: cabinet.id, title: cabinet.title }, { id: assetId('asset-drawer'), title: 'Drawer' }],
+          description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+        }
+      ]
+    });
+
+    expect(detail.containedAssets.map((asset) => asset.id)).toEqual(['asset-drawer']);
+    expect(detail.containedSpaces).toEqual([]);
+    expect(detail.containedItems).toEqual([]);
   });
 });
 

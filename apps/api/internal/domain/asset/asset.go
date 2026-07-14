@@ -76,6 +76,10 @@ func (k Kind) CanContainChildren() bool {
 	return k == KindContainer || k == KindLocation
 }
 
+func (k Kind) IsPortable() bool {
+	return k == KindItem || k == KindContainer
+}
+
 type LifecycleState string
 
 const (

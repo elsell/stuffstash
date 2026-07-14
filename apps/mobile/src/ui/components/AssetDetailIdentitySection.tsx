@@ -47,6 +47,7 @@ export function AssetDetailIdentitySection({
   const styles = createStyles(palette);
   const identity = assetDetailIdentity(asset);
   const placement = assetDetailPlacement(asset);
+  const showPlacement = asset.kind !== 'location' || placement.crumbs.length > 0;
   const description = visibleAssetDescription(asset);
   const exceptionRows = assetDetailExceptionMetadataRows(asset);
 
@@ -57,7 +58,7 @@ export function AssetDetailIdentitySection({
         <Text style={styles.classification}>{identity.classificationLabel}</Text>
       </View>
 
-      <View style={styles.placement}>
+      {showPlacement ? <View style={styles.placement}>
         <Text style={styles.placementLabel}>Location</Text>
         {placement.crumbs.length > 0 && onParentLocationPress ? (
           <AssetBreadcrumbTrail
@@ -71,7 +72,7 @@ export function AssetDetailIdentitySection({
             {placement.fallbackLabel ?? placement.crumbs.map((crumb) => crumb.title).join(' / ')}
           </Text>
         )}
-      </View>
+      </View> : null}
 
       {showAvailability ? (
         <AssetDetailAvailabilityButton
@@ -137,9 +138,10 @@ export function AssetDetailMaintenanceBar({
       {maintenanceActions.map((action) => {
         const handler = action.id === 'edit' ? onEdit : action.id === 'move' ? onMove : onAddPhotos;
         const disabled = isActionPending || !handler;
+        const label = action.id === 'move' && asset.kind === 'location' ? 'Move place' : action.label;
         return (
           <Pressable
-            accessibilityLabel={action.label}
+            accessibilityLabel={label}
             accessibilityRole="button"
             accessibilityState={{ disabled }}
             disabled={disabled}
@@ -154,7 +156,7 @@ export function AssetDetailMaintenanceBar({
             {action.id === 'edit' ? <Pencil color={palette.action} size={18} /> : null}
             {action.id === 'move' ? <MoveRight color={palette.action} size={18} /> : null}
             {action.id === 'add_photos' ? <Camera color={palette.action} size={18} /> : null}
-            <Text style={styles.maintenanceActionText}>{action.label}</Text>
+            <Text style={styles.maintenanceActionText}>{label}</Text>
           </Pressable>
         );
       })}
@@ -299,8 +301,10 @@ function createStyles(palette: MobileColorPalette) {
   },
   maintenanceAction: {
     alignItems: 'center',
-    backgroundColor: palette.surfaceMuted,
+    backgroundColor: palette.elevatedSurface,
+    borderColor: palette.controlBorder,
     borderRadius: radius.md,
+    borderWidth: 1,
     flex: 1,
     flexDirection: 'row',
     gap: spacing.xs,
