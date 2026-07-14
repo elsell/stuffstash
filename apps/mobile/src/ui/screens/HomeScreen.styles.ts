@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, spacing } from '../theme/tokens';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
-export const styles = StyleSheet.create({
+export function createHomeScreenStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background
@@ -131,36 +132,6 @@ export const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingBottom: spacing.lg
   },
-  recentCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    minHeight: 210,
-    overflow: 'hidden',
-    width: 164
-  },
-  recentImageFrame: {
-    alignItems: 'center',
-    aspectRatio: 1,
-    backgroundColor: colors.surfaceMuted,
-    justifyContent: 'center',
-    width: '100%'
-  },
-  recentImagePlaceholder: {
-    color: colors.accentStrong,
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  recentImage: {
-    height: '100%',
-    width: '100%'
-  },
-  recentBody: {
-    gap: spacing.xs,
-    padding: spacing.sm
-  },
   emptyText: {
     color: colors.textMuted,
     fontSize: 15,
@@ -168,20 +139,6 @@ export const styles = StyleSheet.create({
   },
   checkedOutEmpty: {
     paddingBottom: spacing.md
-  },
-  returnButton: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.sm,
-    justifyContent: 'center',
-    margin: spacing.sm,
-    minHeight: 40
-  },
-  returnButtonText: {
-    color: colors.surface,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
   },
   returnSheet: {
     backgroundColor: colors.background,
@@ -242,7 +199,7 @@ export const styles = StyleSheet.create({
     letterSpacing: 0
   },
   returnSheetSaveText: {
-    color: colors.surface,
+    color: colors.onAction,
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0
@@ -435,65 +392,11 @@ export const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0
   },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginBottom: spacing.xs
-  },
-  kindBadge: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
-  },
-  customTypeBadge: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
-  },
-  checkoutBadge: {
-    backgroundColor: colors.warningSurface,
-    borderRadius: radius.sm,
-    color: colors.warning,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
-  },
-  assetTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 0,
-    lineHeight: 23
-  },
   assetDescription: {
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 2
-  },
-  assetMeta: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: spacing.xs
   },
   photoReady: {
     backgroundColor: colors.surfaceMuted,
@@ -517,4 +420,5 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
   }
-});
+  });
+}

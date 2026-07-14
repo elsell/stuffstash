@@ -23,6 +23,16 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'app.stuffstash.mobile',
+      splash: {
+        image: './assets/brand/stuff-stash-glyph.png',
+        resizeMode: 'contain',
+        backgroundColor: '#F7FAFB',
+        dark: {
+          image: './assets/brand/stuff-stash-glyph.png',
+          resizeMode: 'contain',
+          backgroundColor: '#111416'
+        }
+      },
       infoPlist: {
         NSPhotoLibraryUsageDescription:
           'Stuff Stash uses your photo library so you can attach household item photos.',
@@ -33,6 +43,16 @@ module.exports = {
     },
     android: {
       package: 'app.stuffstash.mobile',
+      splash: {
+        image: './assets/brand/stuff-stash-glyph.png',
+        resizeMode: 'contain',
+        backgroundColor: '#F7FAFB',
+        dark: {
+          image: './assets/brand/stuff-stash-glyph.png',
+          resizeMode: 'contain',
+          backgroundColor: '#111416'
+        }
+      },
       adaptiveIcon: {
         foregroundImage: './assets/brand/stuff-stash-glyph.png',
         backgroundColor: '#F7FAFB'

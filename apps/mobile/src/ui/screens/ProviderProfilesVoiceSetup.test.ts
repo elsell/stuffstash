@@ -21,6 +21,23 @@ vi.mock('react-native', () => ({
   View: 'View'
 }));
 
+vi.mock('../theme/AppearanceContext', () => ({
+  useAppearancePalette: () => ({
+    accent: '#6B90AA',
+    action: '#0066CC',
+    background: '#F7FAFB',
+    border: '#C5D0D7',
+    brandAmber: '#F5AB4B',
+    brandDustyBlueSoft: '#E8F0F5',
+    onAction: '#FFFFFF',
+    surface: '#FFFFFF',
+    text: '#243038',
+    textMuted: '#52616B',
+    warning: '#8A4F00',
+    warningSurface: '#FFF3DF'
+  })
+}));
+
 describe('formatVoiceProviderReadinessLabel', () => {
   it.each([
     ['ready', 'Ready'],

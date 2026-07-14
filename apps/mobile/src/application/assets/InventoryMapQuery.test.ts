@@ -123,6 +123,7 @@ function asset(
     parentAssetId: parentAssetId ? assetId(parentAssetId) : undefined,
     locationLabel: parentAssetId ? 'Stored' : 'Inventory root',
     locationTrail: parentAssetId ? ['Home', 'Garage', title] : ['Home', title],
+    parentLocationTrail: parentAssetId ? [{ id: assetId(parentAssetId), title: 'Garage' }] : [],
     description: `${title} description.`,
     updatedAtLabel: 'Updated today',
     hasPhoto: false

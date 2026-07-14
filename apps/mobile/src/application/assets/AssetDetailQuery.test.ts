@@ -38,6 +38,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
           lifecycleState: 'active',
           locationLabel: 'Office closet',
           locationTrail: ['Home', 'Office closet', 'Passport folder'],
+          parentLocationTrail: [{ id: assetId('asset-office-closet'), title: 'Office closet' }],
           customType: 'Documents',
           description: 'Travel documents and copies.',
           updatedAtLabel: 'Updated today',
@@ -51,6 +52,10 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
           parentAssetId: assetId('asset-passport'),
           locationLabel: 'Passport folder',
           locationTrail: ['Home', 'Office closet', 'Passport folder', 'Birth certificate'],
+          parentLocationTrail: [
+            { id: assetId('asset-office-closet'), title: 'Office closet' },
+            { id: assetId('asset-passport'), title: 'Passport folder' }
+          ],
           description: '',
           updatedAtLabel: 'Updated yesterday',
           hasPhoto: false
@@ -93,6 +98,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
       lifecycleState: 'active',
       locationLabel: 'Inventory root',
       locationTrail: ['Home', input.title],
+      parentLocationTrail: [],
       description: input.description,
       updatedAtLabel: 'Updated now',
       hasPhoto: false
@@ -134,7 +140,8 @@ describe('AssetDetailQuery', () => {
       description: 'Travel documents and copies.',
       parentAssetId: undefined,
       locationTrailLabel: 'Office closet / Passport folder',
-      parentLocationTrailLabel: 'Inventory root',
+      parentLocationTrail: [{ id: 'asset-office-closet', title: 'Office closet', isImmediateParent: true }],
+      parentLocationTrailLabel: 'Office closet',
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,
@@ -158,15 +165,17 @@ describe('AssetDetailQuery', () => {
         customTypeLabel: undefined,
         description: '',
         locationTrailLabel: 'Office closet / Passport folder / Birth certificate',
+        parentLocationTrail: [
+          { id: 'asset-office-closet', title: 'Office closet', isImmediateParent: false },
+          { id: 'asset-passport', title: 'Passport folder', isImmediateParent: true }
+        ],
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
-        photo: undefined,
         imagePlaceholderLabel: 'Item'
       }],
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
       photos: [],
-      photo: undefined,
       imagePlaceholderLabel: 'Box'
     });
   });
@@ -188,6 +197,7 @@ describe('AssetDetailQuery', () => {
       lifecycleState: 'active',
       locationLabel: 'Office closet',
       locationTrail: ['Home', 'Office closet', 'Passport folder'],
+      parentLocationTrail: [{ id: assetId('asset-office-closet'), title: 'Office closet' }],
       customType: 'Documents',
       description: 'Travel documents and copies.',
       updatedAtLabel: 'Updated today',
@@ -221,6 +231,7 @@ describe('AssetDetailQuery', () => {
           lifecycleState: 'active',
           locationLabel: 'Inventory root',
           locationTrail: ['Home', 'Living room table'],
+          parentLocationTrail: [],
           description: 'Temporary landing spot.',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
@@ -245,6 +256,7 @@ describe('AssetDetailQuery', () => {
       lifecycleState: 'active',
       locationLabel: 'Inventory root',
       locationTrail: ['Home', 'Living room table'],
+      parentLocationTrail: [],
       description: 'Temporary landing spot.',
       updatedAtLabel: 'Updated today',
       hasPhoto: true,
@@ -262,6 +274,7 @@ describe('AssetDetailQuery', () => {
           lifecycleState: 'active',
           locationLabel: 'Inventory root',
           locationTrail: ['Home', 'Living room table'],
+          parentLocationTrail: [],
           description: 'Temporary landing spot.',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
@@ -288,6 +301,7 @@ describe('AssetDetailQuery', () => {
           lifecycleState: 'active',
           locationLabel: 'Inventory root',
           locationTrail: ['Home', 'Map workspace', 'Passport folder'],
+          parentLocationTrail: [{ id: assetId('asset-map-workspace'), title: 'Map workspace' }],
           description: 'Map source description.',
           updatedAtLabel: 'Updated from map',
           hasPhoto: false
@@ -300,6 +314,10 @@ describe('AssetDetailQuery', () => {
           parentAssetId: assetId('asset-passport'),
           locationLabel: 'Passport folder',
           locationTrail: ['Home', 'Map workspace', 'Passport folder', 'Map child'],
+          parentLocationTrail: [
+            { id: assetId('asset-map-workspace'), title: 'Map workspace' },
+            { id: assetId('asset-passport'), title: 'Passport folder' }
+          ],
           description: '',
           updatedAtLabel: 'Updated from map',
           hasPhoto: false
@@ -328,13 +346,17 @@ describe('AssetDetailQuery', () => {
   });
 
   it('exposes return action instead of checkout for checked-out assets', () => {
-    expect(toAssetDetailViewModel({
+    const detail = toAssetDetailViewModel({
       id: assetId('asset-drill'),
       title: 'Cordless drill',
       kind: 'item',
       lifecycleState: 'active',
       locationLabel: 'Tool bin',
       locationTrail: ['Home', 'Garage', 'Tool bin', 'Cordless drill'],
+      parentLocationTrail: [
+        { id: assetId('asset-garage'), title: 'Garage' },
+        { id: assetId('asset-tool-bin'), title: 'Tool bin' }
+      ],
       description: '',
       updatedAtLabel: 'Updated today',
       hasPhoto: false,
@@ -344,13 +366,15 @@ describe('AssetDetailQuery', () => {
         checkedOutAt: '2026-06-24T11:00:00Z',
         checkedOutByPrincipalId: 'user-one'
       }
-    })).toMatchObject({
+    });
+
+    expect(detail).toMatchObject({
       isCheckedOut: true,
       checkoutLabel: 'Checked out Jun 24, 2026',
-      checkoutActorLabel: 'Checked out by user-one',
       canCheckout: false,
       canReturn: true
     });
+    expect(detail).not.toHaveProperty('checkoutActorLabel');
   });
 
   it('requires create permission before offering Add item here inside containers', async () => {
@@ -370,6 +394,7 @@ describe('AssetDetailQuery', () => {
       lifecycleState: 'archived',
       locationLabel: 'Inventory root',
       locationTrail: ['Home', 'Archive box'],
+      parentLocationTrail: [],
       description: '',
       updatedAtLabel: 'Updated today',
       hasPhoto: false
@@ -389,6 +414,7 @@ describe('AssetDetailQuery', () => {
       lifecycleState: 'active',
       locationLabel: 'Inventory root',
       locationTrail: ['Home', 'Water bottle'],
+      parentLocationTrail: [],
       description: '',
       updatedAtLabel: 'Updated today',
       hasPhoto: true,
@@ -417,6 +443,7 @@ describe('AssetDetailQuery', () => {
       lifecycleState: 'active',
       locationLabel: 'Garage',
       locationTrail: ['Home', 'Garage', 'Garage shelf'],
+      parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
       description: '',
       updatedAtLabel: 'Updated today',
       hasPhoto: false
@@ -430,6 +457,10 @@ describe('AssetDetailQuery', () => {
           parentAssetId: assetId('asset-garage-shelf'),
           locationLabel: 'Garage shelf',
           locationTrail: ['Home', 'Garage', 'Garage shelf', 'Zip ties'],
+          parentLocationTrail: [
+            { id: assetId('asset-garage'), title: 'Garage' },
+            { id: assetId('asset-garage-shelf'), title: 'Garage shelf' }
+          ],
           description: '',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
@@ -442,6 +473,10 @@ describe('AssetDetailQuery', () => {
           parentAssetId: assetId('asset-garage-shelf'),
           locationLabel: 'Garage shelf',
           locationTrail: ['Home', 'Garage', 'Garage shelf', 'Cable bin'],
+          parentLocationTrail: [
+            { id: assetId('asset-garage'), title: 'Garage' },
+            { id: assetId('asset-garage-shelf'), title: 'Garage shelf' }
+          ],
           description: '',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
@@ -454,6 +489,10 @@ describe('AssetDetailQuery', () => {
           parentAssetId: assetId('asset-garage-shelf'),
           locationLabel: 'Garage shelf',
           locationTrail: ['Home', 'Garage', 'Garage shelf', 'Cable bin'],
+          parentLocationTrail: [
+            { id: assetId('asset-garage'), title: 'Garage' },
+            { id: assetId('asset-garage-shelf'), title: 'Garage shelf' }
+          ],
           description: '',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
@@ -466,6 +505,10 @@ describe('AssetDetailQuery', () => {
           parentAssetId: assetId('asset-garage-shelf'),
           locationLabel: 'Garage shelf',
           locationTrail: ['Home', 'Garage', 'Garage shelf', 'Archive cubby'],
+          parentLocationTrail: [
+            { id: assetId('asset-garage'), title: 'Garage' },
+            { id: assetId('asset-garage-shelf'), title: 'Garage shelf' }
+          ],
           description: '',
           updatedAtLabel: 'Updated today',
           hasPhoto: false
@@ -478,6 +521,10 @@ describe('AssetDetailQuery', () => {
           parentAssetId: assetId('asset-garage-shelf'),
           locationLabel: 'Garage shelf',
           locationTrail: ['Home', 'Garage', 'Garage shelf', 'AA batteries'],
+          parentLocationTrail: [
+            { id: assetId('asset-garage'), title: 'Garage' },
+            { id: assetId('asset-garage-shelf'), title: 'Garage shelf' }
+          ],
           description: '',
           updatedAtLabel: 'Updated today',
           hasPhoto: false

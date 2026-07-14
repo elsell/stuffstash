@@ -11,6 +11,7 @@ import {
   inventoryMapBranchSwipeOffset,
   inventoryMapGestureConfig,
   mapOverviewLabel,
+  inventoryMapEmbeddedDetailRequest,
   nearestInventoryMapColumnForOffset,
   pathForBreadcrumbLevel,
   preserveInventoryMapHighlightForPath,
@@ -76,6 +77,13 @@ describe('InventoryMapPresentation', () => {
     ]);
     expect(pathForBreadcrumbLevel(['garage', 'bin'], 1)).toEqual(['garage']);
     expect(pathForBreadcrumbLevel(['garage', 'bin'], 0)).toEqual([]);
+  });
+
+  it('opens a detail breadcrumb inside the map sheet using the map audit source', () => {
+    expect(inventoryMapEmbeddedDetailRequest('garage')).toEqual({
+      assetId: 'garage',
+      options: { source: 'map' }
+    });
   });
 
   it('selects only containing assets as branches', () => {

@@ -18,10 +18,18 @@ export type InventoryWorkspace = {
   readonly defaultInventoryId: InventoryId;
 };
 
+export type HomeDashboardSnapshot = {
+  readonly workspace: InventoryWorkspace;
+  readonly checkedOutAssets: readonly AssetSummary[];
+};
+
+export interface HomeDashboardSnapshotRepository {
+  getHomeDashboardSnapshot(): Promise<HomeDashboardSnapshot>;
+}
+
 export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
-  getCheckedOutAssetSummaries?(): Promise<readonly AssetSummary[]>;
   getAssetDetail?(input: GetInventoryAssetDetailInput): Promise<AssetSummary>;
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;

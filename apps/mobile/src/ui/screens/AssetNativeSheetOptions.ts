@@ -1,4 +1,4 @@
-import { colors } from '../theme/tokens';
+import { colors, type MobileColorPalette } from '../theme/tokens';
 
 type AssetNativeSheetOptions = {
   readonly contentStyle: { readonly backgroundColor: string };
@@ -13,39 +13,64 @@ type AssetNativeSheetOptions = {
   readonly sheetLargestUndimmedDetentIndex: 'none';
 };
 
-const baseAssetNativeSheetOptions = {
-  contentStyle: { backgroundColor: colors.surface },
-  headerShown: false,
-  presentation: 'formSheet',
-  sheetCornerRadius: 24,
-  sheetExpandsWhenScrolledToEdge: true,
-  sheetGrabberVisible: true,
-  sheetInitialDetentIndex: 0,
-  sheetLargestUndimmedDetentIndex: 'none'
-} as const;
+function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
+  return {
+    contentStyle: { backgroundColor: palette.surface },
+    headerShown: false,
+    presentation: 'formSheet',
+    sheetCornerRadius: 24,
+    sheetExpandsWhenScrolledToEdge: true,
+    sheetGrabberVisible: true,
+    sheetInitialDetentIndex: 0,
+    sheetLargestUndimmedDetentIndex: 'none'
+  } as const;
+}
+
+export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
+  const baseOptions = baseAssetNativeSheetOptions(palette);
+  return {
+    edit: {
+      ...baseOptions,
+      gestureEnabled: false,
+      sheetAllowedDetents: [0.56, 0.9]
+    } satisfies AssetNativeSheetOptions,
+    move: {
+      ...baseOptions,
+      sheetAllowedDetents: [0.62, 0.92]
+    } satisfies AssetNativeSheetOptions,
+    moveHere: {
+      ...baseOptions,
+      sheetAllowedDetents: [0.6, 0.9]
+    } satisfies AssetNativeSheetOptions,
+    audit: {
+      ...baseOptions,
+      sheetAllowedDetents: [0.58, 0.92]
+    } satisfies AssetNativeSheetOptions,
+    checkoutHistory: {
+      ...baseOptions,
+      sheetAllowedDetents: [0.58, 0.92]
+    } satisfies AssetNativeSheetOptions
+  };
+}
+
+const defaultOptions = createAssetNativeSheetOptions(colors);
 
 export const assetEditNativeSheetOptions: AssetNativeSheetOptions = {
-  ...baseAssetNativeSheetOptions,
-  gestureEnabled: false,
-  sheetAllowedDetents: [0.56, 0.9]
+  ...defaultOptions.edit
 };
 
 export const assetMoveNativeSheetOptions: AssetNativeSheetOptions = {
-  ...baseAssetNativeSheetOptions,
-  sheetAllowedDetents: [0.62, 0.92]
+  ...defaultOptions.move
 };
 
 export const assetMoveHereNativeSheetOptions: AssetNativeSheetOptions = {
-  ...baseAssetNativeSheetOptions,
-  sheetAllowedDetents: [0.6, 0.9]
+  ...defaultOptions.moveHere
 };
 
 export const assetAuditNativeSheetOptions: AssetNativeSheetOptions = {
-  ...baseAssetNativeSheetOptions,
-  sheetAllowedDetents: [0.58, 0.92]
+  ...defaultOptions.audit
 };
 
 export const assetCheckoutHistoryNativeSheetOptions: AssetNativeSheetOptions = {
-  ...baseAssetNativeSheetOptions,
-  sheetAllowedDetents: [0.58, 0.92]
+  ...defaultOptions.checkoutHistory
 };

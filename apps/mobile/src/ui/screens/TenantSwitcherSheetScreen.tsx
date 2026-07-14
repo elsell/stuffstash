@@ -14,7 +14,8 @@ import {
 } from '../../application/home/HomeDashboardQuery';
 import { SelectInventoryCommand } from '../../application/home/SelectInventoryCommand';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 type TenantSwitcherSheetScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
@@ -30,6 +31,7 @@ export function TenantSwitcherSheetScreen({
   dashboardQuery,
   selectInventoryCommand
 }: TenantSwitcherSheetScreenProps) {
+  const styles = useStyles();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
 
   useEffect(() => {
@@ -82,6 +84,7 @@ function TenantSwitcher({
   readonly dashboard: HomeDashboardViewModel;
   readonly onSelectInventory: (inventoryId: string) => Promise<void>;
 }) {
+  const styles = useStyles();
   const currentTenant = dashboard.tenants.find((tenant) => tenant.name === dashboard.tenantName);
   const [selectedTenantId, setSelectedTenantId] = useState(currentTenant?.id ?? dashboard.tenants[0]?.id);
   const [mode, setMode] = useState<'inventories' | 'tenants'>('inventories');
@@ -189,15 +192,18 @@ function TenantSwitcher({
 }
 
 function LoadingState() {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.accent} />
+      <ActivityIndicator color={palette.accent} />
       <Text style={styles.stateText}>Loading tenants</Text>
     </View>
   );
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -210,7 +216,12 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     padding: spacing.md
@@ -320,4 +331,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
   }
-});
+  });
+}

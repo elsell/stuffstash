@@ -8,7 +8,8 @@ import {
 } from './AssetTagSearchNavigation';
 
 const mocks = vi.hoisted(() => ({
-  push: vi.fn()
+  push: vi.fn(),
+  palette: { background: '#111416', text: '#F4F7F8', textMuted: '#B8C4CB', accent: '#8EB3CC' }
 }));
 
 vi.mock('expo-router', () => ({
@@ -39,6 +40,10 @@ vi.mock('../components/AssetCard', () => ({
     type: 'AssetCard',
     props
   })
+}));
+
+vi.mock('../theme/AppearanceContext', () => ({
+  useAppearancePalette: () => mocks.palette
 }));
 
 describe('asset tag search navigation', () => {
@@ -72,6 +77,7 @@ describe('asset tag search navigation', () => {
     (card.props?.onTagPress as (tag: { id: string; label: string }) => void)({ id: 'tag-camp-kitchen', label: 'Camp Kitchen' });
 
     expect(router.push).toHaveBeenCalledWith(assetTagSearchHref({ id: 'tag-camp-kitchen', label: 'Camp Kitchen' }));
+    expect(card.props?.palette).toBe(mocks.palette);
   });
 
   it('wires location asset card tag presses to tag-backed search', () => {
@@ -92,6 +98,7 @@ describe('asset tag search navigation', () => {
     (card.props?.onTagPress as (tag: { id: string; label: string }) => void)({ id: 'tag-shop-tools', label: 'Shop Tools' });
 
     expect(router.push).toHaveBeenCalledWith(assetTagSearchHref({ id: 'tag-shop-tools', label: 'Shop Tools' }));
+    expect(card.props?.palette).toBe(mocks.palette);
   });
 });
 
@@ -113,6 +120,9 @@ function assetCard(id: string) {
     customTypeLabel: undefined,
     description: 'Cooking kit',
     locationTrailLabel: 'Garage / Camp bin',
+    parentLocationTrail: [
+      { id: 'asset-garage', title: 'Garage', isImmediateParent: true }
+    ],
     updatedAtLabel: 'Updated today',
     photoLabel: 'Photo ready',
     imagePlaceholderLabel: 'Item',

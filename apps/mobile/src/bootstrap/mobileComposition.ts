@@ -12,6 +12,7 @@ import { FileSystemConnectionProfileStore } from '../adapters/onboarding/FileSys
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
 import { ApiProviderProfileRepository } from '../adapters/providerProfiles/ApiProviderProfileRepository';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
+import { FileSystemAppearancePreferenceStore } from '../adapters/settings/FileSystemAppearancePreferenceStore';
 import { ExpoVoiceAudioPlayer, ExpoVoiceAudioRecorder } from '../adapters/voice/ExpoVoiceAudio';
 import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketRealtimeVoiceTransport';
 import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
@@ -46,6 +47,7 @@ import { ProviderProfileVoiceReadinessCheck } from '../application/providerProfi
 import { TestProviderProfileCommand } from '../application/providerProfiles/TestProviderProfileCommand';
 import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
 import { SettingsQuery } from '../application/settings/SettingsQuery';
+import { AppearancePreferenceController } from '../application/settings/AppearancePreference';
 import { VoiceInteractionPreviewQuery } from '../application/voice/VoiceInteractionPreviewQuery';
 import { RealtimeVoiceSessionController } from '../application/voice/RealtimeVoiceSession';
 import {
@@ -93,6 +95,9 @@ export type MobileCompositionOptions = {
 };
 
 const connectionProfiles = new FileSystemConnectionProfileStore();
+const appearancePreferences = new AppearancePreferenceController(
+  new FileSystemAppearancePreferenceStore()
+);
 const runtimeSeed = loadMobileRuntimeConfigSeed();
 const authSessionController = new MobileAuthSessionController(
   new ExpoSecureAuthSessionStore(SecureStore),
@@ -102,6 +107,10 @@ const authSessionController = new MobileAuthSessionController(
 
 export function getConnectionProfileStore(): ConnectionProfileStore {
   return connectionProfiles;
+}
+
+export function getAppearancePreferenceController(): AppearancePreferenceController {
+  return appearancePreferences;
 }
 
 export function createOnboardingCommand(): OnboardingCommand {

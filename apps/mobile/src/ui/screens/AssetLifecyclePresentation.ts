@@ -25,11 +25,44 @@ export type AssetLifecycleFailurePresentation = {
   readonly message: string;
 };
 
+export type AssetDetailLoadErrorPresentation = {
+  readonly title: string;
+  readonly message: string;
+  readonly canRetry: boolean;
+};
+
+export function assetDetailOverflowControlState(isActionPending: boolean): {
+  readonly disabled: boolean;
+  readonly accessibilityState: { readonly disabled: boolean };
+} {
+  return {
+    disabled: isActionPending,
+    accessibilityState: { disabled: isActionPending }
+  };
+}
+
+export function assetDetailLoadErrorPresentation(error: unknown): AssetDetailLoadErrorPresentation {
+  if (isUnavailableAssetError(error)) {
+    return {
+      title: 'Asset unavailable',
+      message: 'This asset is not available in your current inventory.',
+      canRetry: false
+    };
+  }
+
+  return {
+    title: 'Could not load asset',
+    message: 'Check your connection and try again.',
+    canRetry: true
+  };
+}
+
 export type AssetLifecycleOverflowMenu = AssetLifecycleOverflowPresentation & {
   readonly options: readonly string[];
   readonly actionRows: readonly AssetLifecycleActionRow[];
   readonly checkoutHistoryIndex: number;
   readonly auditIndex: number;
+  readonly lifecycleActionIndexes: readonly number[];
   readonly cancelIndex: number;
   readonly destructiveIndex?: number;
 };
@@ -90,7 +123,7 @@ export function assetLifecycleOverflowPresentation(
 ): AssetLifecycleOverflowPresentation {
   return {
     title: `${asset.title} actions`,
-    message: `Lifecycle actions for this ${asset.lifecycleLabel.toLowerCase()} asset.`
+    message: 'History, lifecycle, and other actions for this asset.'
   };
 }
 
@@ -99,18 +132,20 @@ export function assetLifecycleOverflowMenu(
 ): AssetLifecycleOverflowMenu {
   const overflow = assetLifecycleOverflowPresentation(asset);
   const actionRows = assetLifecycleActionRows(asset);
-  const checkoutHistoryIndex = actionRows.length;
-  const auditIndex = actionRows.length + 1;
+  const checkoutHistoryIndex = 0;
+  const auditIndex = 1;
+  const lifecycleActionIndexes = actionRows.map((_, index) => index + 2);
   const cancelIndex = actionRows.length + 2;
-  const destructiveIndex = actionRows.findIndex((action) => action.isDestructive);
+  const destructiveActionIndex = actionRows.findIndex((action) => action.isDestructive);
   return {
     ...overflow,
     actionRows,
-    options: [...actionRows.map((action) => action.label), 'Checkout history', 'Audit history', 'Cancel'],
+    options: ['Checkout history', 'Audit history', ...actionRows.map((action) => action.label), 'Cancel'],
     checkoutHistoryIndex,
     auditIndex,
+    lifecycleActionIndexes,
     cancelIndex,
-    destructiveIndex: destructiveIndex >= 0 ? destructiveIndex : undefined
+    destructiveIndex: destructiveActionIndex >= 0 ? lifecycleActionIndexes[destructiveActionIndex] : undefined
   };
 }
 
@@ -154,6 +189,25 @@ function lifecycleValidationKind(cause: string): 'active_children' | 'archived_p
     return 'archived_parent';
   }
   return 'generic';
+}
+
+function isUnavailableAssetError(error: unknown): boolean {
+  if (typeof error === 'object' && error !== null) {
+    const status = 'status' in error ? error.status : 'statusCode' in error ? error.statusCode : undefined;
+    if (status === 401 || status === 403 || status === 404) {
+      return true;
+    }
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return message.includes('not found')
+    || message.includes('forbidden')
+    || message.includes('access denied')
+    || message.includes('not available');
 }
 
 function permanentDeleteMessage(

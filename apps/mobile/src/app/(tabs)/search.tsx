@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useAppServices } from '../../ui/navigation/AppServicesContext';
+import { parseBrowseRouteParams } from '../../ui/screens/BrowseRouteParams';
 import { SearchScreen } from '../../ui/screens/SearchScreen';
-import { parseBrowseScope } from '../../ui/screens/SearchScreenPresentation';
 
 export default function SearchRoute() {
   const {
@@ -17,14 +17,11 @@ export default function SearchRoute() {
     searchAssetsQuery
   } = useAppServices();
   const params = useLocalSearchParams();
-  const initialTagId = Array.isArray(params.tagId) ? params.tagId[0] : params.tagId;
-  const initialQuery = Array.isArray(params.query) ? params.query[0] ?? '' : params.query ?? '';
+  const initialBrowseState = parseBrowseRouteParams(params);
 
   return (
     <SearchScreen
-      initialScope={parseBrowseScope(params.scope)}
-      initialQuery={initialQuery}
-      initialTagIds={initialTagId ? [initialTagId] : []}
+      {...initialBrowseState}
       addAssetPhotosCommand={addAssetPhotosCommand}
       assetCheckoutCommand={assetCheckoutCommand}
       assetDetailQuery={assetDetailQuery}

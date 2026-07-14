@@ -1,18 +1,67 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { AssetCardViewModel, AssetTagViewModel } from '../../application/assets/AssetViewModels';
-import { colors, radius, spacing } from '../theme/tokens';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
+import type {
+  AssetCardViewModel,
+  AssetParentLocationCrumbViewModel,
+  AssetTagViewModel
+} from '../../application/assets/AssetViewModels';
+import {
+  radius,
+  spacing,
+  type MobileColorPalette
+} from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
 import { AssetTagChips } from './AssetTagChips';
+
+const stylesByPalette = new WeakMap<object, ReturnType<typeof createStyles>>();
+
+function useAssetCardStyles(paletteOverride?: MobileColorPalette) {
+  const contextPalette = useAppearancePalette();
+  const palette = paletteOverride ?? contextPalette;
+  const cached = stylesByPalette.get(palette);
+  if (cached) return cached;
+  const styles = createStyles(palette);
+  stylesByPalette.set(palette, styles);
+  return styles;
+}
 
 type AssetCardProps = {
   readonly asset: AssetCardViewModel;
+  readonly density?: 'standard' | 'compact';
+  readonly footerAction?: {
+    readonly disabled?: boolean;
+    readonly label: string;
+    readonly onPress: () => void;
+  };
   readonly onPress: () => void;
+  readonly onParentLocationPress: (location: AssetParentLocationCrumbViewModel) => void;
+  readonly palette?: MobileColorPalette;
+  readonly showTags?: boolean;
+  readonly style?: StyleProp<ViewStyle>;
   readonly onTagPress?: (tag: AssetTagViewModel) => void;
 };
 
-export function AssetCard({ asset, onPress, onTagPress }: AssetCardProps) {
+export function AssetCard({
+  asset,
+  density = 'standard',
+  footerAction,
+  onParentLocationPress,
+  palette: paletteOverride,
+  onPress,
+  onTagPress,
+  showTags = true,
+  style
+}: AssetCardProps) {
+  const isCompact = density === 'compact';
+  const styles = useAssetCardStyles(paletteOverride);
+
   return (
-    <View style={styles.card}>
-      <Pressable accessibilityRole="button" onPress={onPress} style={styles.openRegion}>
+    <View style={[styles.card, isCompact ? styles.compactCard : styles.standardCard, style]}>
+      <Pressable
+        accessible={false}
+        onPress={onPress}
+        style={({ pressed }) => [styles.openRegion, pressed ? styles.openRegionPressed : undefined]}
+      >
         <View style={styles.imageFrame}>
           {asset.photo ? (
             <Image
@@ -23,69 +72,189 @@ export function AssetCard({ asset, onPress, onTagPress }: AssetCardProps) {
           ) : (
             <Text style={styles.imagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
           )}
+          {asset.checkedOutLabel ? <Text style={styles.checkoutImageBadge}>{asset.checkedOutLabel}</Text> : null}
         </View>
       </Pressable>
       <View style={styles.body}>
-        <Pressable accessibilityRole="button" onPress={onPress} style={styles.openTextRegion}>
-          <View style={styles.badgeRow}>
-            <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
-            {asset.customTypeLabel ? <Text style={styles.typeBadge}>{asset.customTypeLabel}</Text> : null}
-            {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
-          </View>
-          <Text numberOfLines={2} style={styles.title}>
+        <Pressable
+          accessibilityLabel={`Open asset ${asset.title}`}
+          accessibilityRole="button"
+          onPress={onPress}
+          style={({ pressed }) => [styles.openTextRegion, pressed ? styles.openTextRegionPressed : undefined]}
+        >
+          <Text numberOfLines={2} style={[styles.title, isCompact ? styles.compactTitle : styles.standardTitle]}>
             {asset.title}
           </Text>
-          <Text numberOfLines={2} style={styles.description}>
-            {asset.description}
-          </Text>
-          <Text numberOfLines={1} style={styles.meta}>
-            {asset.locationTrailLabel}
-          </Text>
-          {asset.searchMatchLabels && asset.searchMatchLabels.length > 0 ? (
-            <Text numberOfLines={1} style={styles.matchMeta}>
-              Matched {asset.searchMatchLabels.join(', ')}
-            </Text>
-          ) : null}
         </Pressable>
-        <AssetTagChips tags={asset.tags} compact overflowLimit={2} onTagPress={onTagPress} />
-        <View style={styles.footer}>
-          <Text style={asset.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
-            {asset.photoLabel}
-          </Text>
-          <Text style={styles.updated}>{asset.updatedAtLabel}</Text>
-        </View>
+        {asset.parentLocationTrail.length > 0 ? (
+          <View style={styles.topRow}>
+            <AssetBreadcrumbTrail
+              palette={paletteOverride}
+              segments={asset.parentLocationTrail}
+              onSegmentPress={onParentLocationPress}
+            />
+          </View>
+        ) : null}
+        {shouldShowAssetCardSupportingDetails(asset, density) ? (
+          <Pressable
+            accessible={false}
+            onPress={onPress}
+            style={({ pressed }) => [styles.openTextRegion, pressed ? styles.openTextRegionPressed : undefined]}
+          >
+            {asset.description.trim().length > 0 ? (
+              <Text numberOfLines={2} style={styles.description}>
+                {asset.description}
+              </Text>
+            ) : null}
+            {asset.searchMatchLabels && asset.searchMatchLabels.length > 0 ? (
+              <Text numberOfLines={1} style={styles.matchMeta}>
+                Matched {asset.searchMatchLabels.join(', ')}
+              </Text>
+            ) : null}
+          </Pressable>
+        ) : null}
+        {showTags ? <AssetTagChips palette={paletteOverride} tags={asset.tags} compact overflowLimit={2} onTagPress={onTagPress} /> : null}
       </View>
+      {footerAction ? (
+        <Pressable
+          accessibilityRole="button"
+          disabled={footerAction.disabled}
+          onPress={footerAction.onPress}
+          style={({ pressed }) => [
+            styles.footerAction,
+            pressed && !footerAction.disabled ? styles.footerActionPressed : undefined,
+            footerAction.disabled ? styles.disabledFooterAction : undefined
+          ]}
+        >
+          <Text style={styles.footerActionText}>{footerAction.label}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+export function shouldShowAssetCardSupportingDetails(
+  asset: AssetCardViewModel,
+  density: 'standard' | 'compact'
+): boolean {
+  return density === 'standard'
+    && (asset.description.trim().length > 0 || (asset.searchMatchLabels?.length ?? 0) > 0);
+}
+
+type BreadcrumbScroller = {
+  readonly scrollToEnd?: (options?: { readonly animated?: boolean }) => void;
+};
+
+export function AssetBreadcrumbTrail({
+  onSegmentPress,
+  palette: paletteOverride,
+  prominence = 'compact',
+  segments
+}: {
+  readonly segments: readonly AssetParentLocationCrumbViewModel[];
+  readonly onSegmentPress: (location: AssetParentLocationCrumbViewModel) => void;
+  readonly palette?: MobileColorPalette;
+  readonly prominence?: 'compact' | 'detail';
+}) {
+  const styles = useAssetCardStyles(paletteOverride);
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  let scroller: BreadcrumbScroller | null = null;
+  const scrollToMostSpecificParent = () => {
+    if (segments.length > 1) {
+      scroller?.scrollToEnd?.({ animated: false });
+    }
+  };
+
+  return (
+    <ScrollView
+      accessibilityLabel={`Location ${segments.map((segment) => segment.title).join(', ')}`}
+      horizontal
+      onContentSizeChange={scrollToMostSpecificParent}
+      onLayout={scrollToMostSpecificParent}
+      ref={(node) => {
+        scroller = node;
+      }}
+      showsHorizontalScrollIndicator={false}
+      style={styles.breadcrumbScroller}
+      contentContainerStyle={styles.breadcrumbContent}
+    >
+      {segments.map((segment, index) => (
+        <View key={segment.id} style={styles.breadcrumbSegment}>
+          {index > 0 ? <Text style={styles.breadcrumbSeparator}>/</Text> : null}
+          <Pressable
+            accessibilityLabel={`Open location ${segment.title}`}
+            accessibilityRole="button"
+            onPress={() => onSegmentPress(segment)}
+            style={({ pressed }) => [
+              styles.breadcrumbButton,
+              pressed ? styles.breadcrumbButtonPressed : undefined
+            ]}
+          >
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.breadcrumbText,
+                prominence === 'detail' ? styles.detailBreadcrumbText : null,
+                segment.isImmediateParent ? styles.immediateBreadcrumbText : styles.ancestorBreadcrumbText
+              ]}
+            >
+              {segment.title}
+            </Text>
+          </Pressable>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
-    flex: 1,
-    minHeight: 286,
     overflow: 'hidden'
+  },
+  standardCard: {
+    flex: 1,
+    minHeight: 286
+  },
+  compactCard: {
+    minHeight: 210,
+    width: 164
   },
   imageFrame: {
     alignItems: 'center',
     aspectRatio: 1,
     backgroundColor: colors.surfaceMuted,
     justifyContent: 'center',
+    position: 'relative',
     width: '100%'
   },
   openRegion: {
     width: '100%'
   },
+  openRegionPressed: {
+    borderColor: colors.controlBorder,
+    borderWidth: 2
+  },
   openTextRegion: {
-    gap: spacing.xs
+    borderRadius: radius.sm,
+    gap: spacing.xs,
+    minHeight: 44
+  },
+  openTextRegionPressed: {
+    backgroundColor: colors.selected
   },
   imagePlaceholder: {
     color: colors.accentStrong,
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '700',
     letterSpacing: 0
   },
   assetImage: {
@@ -96,41 +265,73 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     padding: spacing.sm
   },
-  badgeRow: {
+  topRow: {
+    alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.xs,
-    minHeight: 24
+    minHeight: 28
   },
-  kindBadge: {
+  breadcrumbScroller: {
+    flex: 1,
+    minWidth: 0
+  },
+  breadcrumbContent: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingRight: spacing.xs
+  },
+  breadcrumbSegment: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs
+  },
+  breadcrumbSeparator: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0
+  },
+  breadcrumbButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44
+  },
+  breadcrumbButtonPressed: {
+    opacity: 0.62
+  },
+  breadcrumbText: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.sm,
-    color: colors.accentStrong,
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
     letterSpacing: 0,
+    maxWidth: 240,
     overflow: 'hidden',
     paddingHorizontal: spacing.xs,
     paddingVertical: 4
   },
-  typeBadge: {
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    borderWidth: 1,
+  detailBreadcrumbText: {
+    fontSize: 15,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  ancestorBreadcrumbText: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 4
+    fontWeight: '600'
   },
-  checkoutBadge: {
+  immediateBreadcrumbText: {
+    color: colors.accentStrong,
+    fontWeight: '700'
+  },
+  checkoutImageBadge: {
+    position: 'absolute',
+    right: spacing.xs,
+    top: spacing.xs,
     backgroundColor: colors.warningSurface,
     borderRadius: radius.sm,
     color: colors.warning,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: 0,
     overflow: 'hidden',
     paddingHorizontal: spacing.xs,
@@ -138,64 +339,50 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '900',
+    fontSize: 16,
+    fontWeight: '700',
     letterSpacing: 0,
-    lineHeight: 20,
+    lineHeight: 21
+  },
+  standardTitle: {
     minHeight: 40
+  },
+  compactTitle: {
+    fontSize: 17,
+    lineHeight: 23
   },
   description: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    minHeight: 34
-  },
-  meta: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 16
+    fontSize: 13,
+    lineHeight: 18,
+    minHeight: 36
   },
   matchMeta: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '600',
     letterSpacing: 0,
-    lineHeight: 15
+    lineHeight: 16
   },
-  footer: {
+  footerAction: {
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'space-between',
-    minHeight: 24
-  },
-  photoReady: {
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: colors.action,
     borderRadius: radius.sm,
-    color: colors.accentStrong,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 4
+    justifyContent: 'center',
+    margin: spacing.sm,
+    minHeight: 44
   },
-  photoNeeded: {
-    backgroundColor: colors.warningSurface,
-    borderRadius: radius.sm,
-    color: colors.warning,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 4
+  footerActionPressed: {
+    backgroundColor: colors.actionPressed
   },
-  updated: {
-    color: colors.textMuted,
-    flex: 1,
-    fontSize: 10,
-    letterSpacing: 0,
-    textAlign: 'right'
-  }
-});
+  disabledFooterAction: {
+    opacity: 0.55
+  },
+  footerActionText: {
+    color: colors.onAction,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0
+  },
+  });
+}

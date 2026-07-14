@@ -18,7 +18,8 @@ import {
   OnboardingStartState
 } from '../../application/onboarding/OnboardingCommand';
 import { BrandMark } from '../components/BrandMark';
-import { colors, radius, spacing } from '../theme/tokens';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 
 type OnboardingScreenProps = {
   readonly command: OnboardingCommand;
@@ -35,6 +36,8 @@ export function OnboardingScreen({
   onStateChange,
   onComplete
 }: OnboardingScreenProps) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const [apiBaseUrl, setApiBaseUrl] = useState(initialState.profile?.apiBaseUrl ?? initialApiBaseUrl ?? '');
   const [tenantName, setTenantName] = useState('');
   const [inventoryName, setInventoryName] = useState('');
@@ -242,6 +245,8 @@ function OnboardingProgress({
 }: {
   readonly currentStep: OnboardingStartState['step'];
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const steps = onboardingSteps();
   const currentIndex = Math.max(0, steps.findIndex((step) => step.id === currentStep));
 
@@ -311,6 +316,8 @@ function OnboardingTextInput({
   readonly onChangeText: (value: string) => void;
   readonly onSubmitEditing: () => void;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
@@ -386,7 +393,8 @@ function readableError(error: unknown): string {
   }
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background
@@ -584,4 +592,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   }
-});
+  });
+}

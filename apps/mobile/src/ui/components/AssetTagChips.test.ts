@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TagChip } from './AssetTagChips';
 import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
+import { darkPalette } from '../theme/tokens';
 
 vi.mock('react-native', () => ({
   Pressable: 'Pressable',
@@ -97,6 +98,7 @@ describe('assetTagChipPresentation', () => {
 
     expect(chip?.props?.accessibilityLabel).toBe('Search for tag tools');
     expect(chip?.props?.accessibilityRole).toBe('button');
+    expect(chip?.props?.hitSlop).toBe(6);
     (chip?.props?.onPress as () => void)();
 
     expect(pressed).toEqual(['tools']);
@@ -107,6 +109,13 @@ describe('assetTagChipPresentation', () => {
 
     expect(chip.type).toBe('View');
     expect(findFirstByType(chip, 'Text')).not.toBeUndefined();
+  });
+
+  it('uses the supplied appearance palette for chip text', () => {
+    const chip = TagChip({ style: [], tag: tag('tools'), palette: darkPalette }) as ElementNode;
+    const label = findFirstByType(chip, 'Text');
+
+    expect(label?.props?.style).toMatchObject({ color: darkPalette.text });
   });
 });
 

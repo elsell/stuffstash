@@ -22,11 +22,11 @@ import {
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { BrandMark } from '../components/BrandMark';
 import { IdentityLabel } from '../components/IdentityIcon';
-import { AssetTagChips } from '../components/AssetTagChips';
+import { AssetCard } from '../components/AssetCard';
 import { useAppFeedback } from '../feedback/AppFeedback';
-import { colors } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import { assetDetailHref } from './AssetDetailNavigation';
-import { styles } from './HomeScreen.styles';
+import { createHomeScreenStyles } from './HomeScreen.styles';
 
 type HomeScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
@@ -39,6 +39,7 @@ type ScreenState =
   | { readonly status: 'error'; readonly message: string };
 
 export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenProps) {
+  const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -134,6 +135,8 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenP
 }
 
 function LoadingState() {
+  const colors = useAppearanceAwarePalette();
+  const styles = createHomeScreenStyles(colors);
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={colors.accent} />
@@ -143,6 +146,7 @@ function LoadingState() {
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -166,6 +170,8 @@ function Dashboard({
   readonly isRefreshing: boolean;
   readonly onRefresh: () => void | Promise<void>;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createHomeScreenStyles(colors);
   return (
     <ScrollView
       contentContainerStyle={styles.content}
@@ -203,6 +209,8 @@ function DashboardHeader({
   readonly dashboard: HomeDashboardViewModel;
   readonly onDashboardChanged: () => void | Promise<void>;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createHomeScreenStyles(colors);
   const feedback = useAppFeedback();
   const [returningAssetId, setReturningAssetId] = useState<string | undefined>();
   const [pendingReturn, setPendingReturn] = useState<PendingReturnState | undefined>();
@@ -322,9 +330,12 @@ function DashboardHeader({
         showsHorizontalScrollIndicator={false}
       >
         {dashboard.recentAssets.map((asset) => (
-          <RecentAssetCard
+          <AssetCard
             asset={asset}
+            density="compact"
             key={asset.id}
+            palette={colors}
+            onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
             onPress={() => router.push(assetDetailHref(asset.id))}
           />
         ))}
@@ -346,12 +357,19 @@ function DashboardHeader({
           showsHorizontalScrollIndicator={false}
         >
           {dashboard.checkedOutAssets.map((asset) => (
-            <CheckedOutAssetCard
+            <AssetCard
               asset={asset}
-              isReturning={returningAssetId === asset.id}
+              density="compact"
+              footerAction={{
+                disabled: returningAssetId === asset.id,
+                label: returningAssetId === asset.id ? 'Returning...' : 'Return',
+                onPress: () => void returnAsset(asset)
+              }}
               key={asset.id}
+              palette={colors}
+              onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
               onPress={() => router.push(assetDetailHref(asset.id))}
-              onReturn={() => void returnAsset(asset)}
+              showTags={false}
             />
           ))}
         </ScrollView>
@@ -391,6 +409,7 @@ function DashboardHeader({
 }
 
 function LocationCard({ location }: { readonly location: HomeDashboardLocationViewModel }) {
+  const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   return (
     <Pressable
       accessibilityRole="button"
@@ -421,104 +440,6 @@ function LocationCard({ location }: { readonly location: HomeDashboardLocationVi
   );
 }
 
-export function RecentAssetCard({
-  asset,
-  onPress
-}: {
-  readonly asset: AssetCardViewModel;
-  readonly onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={styles.recentCard}
-    >
-      <View style={styles.recentImageFrame}>
-        {asset.photo ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
-            style={styles.recentImage}
-          />
-        ) : (
-          <Text style={styles.recentImagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
-        )}
-      </View>
-      <View style={styles.recentBody}>
-        <View style={styles.badgeRow}>
-          <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
-          {asset.customTypeLabel ? <Text style={styles.customTypeBadge}>{asset.customTypeLabel}</Text> : null}
-          {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
-        </View>
-        <Text numberOfLines={2} style={styles.assetTitle}>
-          {asset.title}
-        </Text>
-        <Text numberOfLines={1} style={styles.assetMeta}>
-          {asset.locationTrailLabel}
-        </Text>
-        <Text numberOfLines={1} style={styles.assetMeta}>
-          {asset.updatedAtLabel}
-        </Text>
-        <AssetTagChips tags={asset.tags} compact overflowLimit={2} />
-      </View>
-    </Pressable>
-  );
-}
-
-export function CheckedOutAssetCard({
-  asset,
-  isReturning,
-  onPress,
-  onReturn
-}: {
-  readonly asset: AssetCardViewModel;
-  readonly isReturning: boolean;
-  readonly onPress: () => void;
-  readonly onReturn: () => void;
-}) {
-  return (
-    <View style={styles.recentCard}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onPress}
-      >
-        <View style={styles.recentImageFrame}>
-          {asset.photo ? (
-            <Image
-              accessibilityIgnoresInvertColors
-              source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
-              style={styles.recentImage}
-            />
-          ) : (
-            <Text style={styles.recentImagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
-          )}
-        </View>
-        <View style={styles.recentBody}>
-          <View style={styles.badgeRow}>
-            <Text style={styles.kindBadge}>{asset.kindLabel}</Text>
-            {asset.checkedOutLabel ? <Text style={styles.checkoutBadge}>{asset.checkedOutLabel}</Text> : null}
-          </View>
-          <Text numberOfLines={2} style={styles.assetTitle}>
-            {asset.title}
-          </Text>
-          <Text numberOfLines={1} style={styles.assetMeta}>
-            {asset.locationTrailLabel}
-          </Text>
-        </View>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        disabled={isReturning}
-        onPress={onReturn}
-        style={styles.returnButton}
-      >
-        <Text style={styles.returnButtonText}>{isReturning ? 'Returning...' : 'Return'}</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 function ReturnDetailsSheet({
   pendingReturn,
   onCancel,
@@ -530,6 +451,8 @@ function ReturnDetailsSheet({
   readonly onChangeDetails: (details: string) => void;
   readonly onSave: () => void;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createHomeScreenStyles(colors);
   return (
     <Modal
       animationType="slide"

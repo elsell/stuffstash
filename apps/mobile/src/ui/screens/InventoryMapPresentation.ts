@@ -35,6 +35,11 @@ export type InventoryMapEmptyColumnActionViewModel = {
   readonly label: 'Add item here';
 };
 
+export type InventoryMapEmbeddedDetailRequest = {
+  readonly assetId: string;
+  readonly options: { readonly source: 'map' };
+};
+
 export const inventoryMapGestureConfig = {
   branchSwipeActivationDistance: -2,
   branchSwipeAxisDominanceRatio: 1.05,
@@ -53,6 +58,10 @@ export function buildBrowseSurfaceOptions(): readonly {
     { label: 'List', value: 'list' },
     { label: 'Map', value: 'map' }
   ];
+}
+
+export function inventoryMapEmbeddedDetailRequest(assetId: string): InventoryMapEmbeddedDetailRequest {
+  return { assetId, options: { source: 'map' } };
 }
 
 export function buildInventoryMapColumns(

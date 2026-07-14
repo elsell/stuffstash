@@ -43,6 +43,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
       lifecycleState: 'active',
       locationLabel: 'Garage',
       locationTrail: ['Home', 'Garage', input.title],
+      parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
       description: input.description,
       updatedAtLabel: 'Updated now',
       hasPhoto: false

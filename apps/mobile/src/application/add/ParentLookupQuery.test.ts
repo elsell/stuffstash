@@ -153,6 +153,9 @@ function asset(
     lifecycleState: 'active',
     locationLabel,
     locationTrail: ['Home', locationLabel, title].filter((value) => value !== 'No parent'),
+    parentLocationTrail: locationLabel === 'No parent'
+      ? []
+      : [{ id: assetId(`asset-${locationLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`), title: locationLabel }],
     description: '',
     updatedAtLabel: 'Updated today',
     hasPhoto: false

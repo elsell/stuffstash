@@ -44,7 +44,8 @@ import {
   moveDestinationCreatePlacement,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
-import { colors, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
 
 type LoadableAssetState =
   | { readonly status: 'loading' }
@@ -484,6 +485,7 @@ function NativeSheetFrame({
   readonly children: ReactNode;
   readonly title: string;
 }) {
+  const styles = useStyles();
   return (
     <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
       <Stack.Screen options={{ title }} />
@@ -493,15 +495,18 @@ function NativeSheetFrame({
 }
 
 function LoadingState({ label }: { readonly label: string }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.action} />
+      <ActivityIndicator color={palette.action} />
       <Text style={styles.stateText}>{label}</Text>
     </View>
   );
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -521,7 +526,12 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   frame: {
     backgroundColor: colors.surface,
     flex: 1
@@ -545,4 +555,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   }
-});
+  });
+}

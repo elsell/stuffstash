@@ -79,6 +79,10 @@ describe('ContainedAssetsPresentation', () => {
       customTypeLabel: undefined,
       description: 'AA, AAA, and coin cells.',
       locationTrailLabel: 'Garage / Shelf / Battery bin',
+      parentLocationTrail: [
+        { id: 'asset-garage', title: 'Garage', isImmediateParent: false },
+        { id: 'asset-shelf', title: 'Shelf', isImmediateParent: true }
+      ],
       updatedAtLabel: 'Updated yesterday',
       photoLabel: 'Photo ready',
       imagePlaceholderLabel: 'Box',
@@ -101,6 +105,10 @@ describe('ContainedAssetsPresentation', () => {
       customTypeLabel: undefined,
       description: '',
       locationTrailLabel: 'Garage / Shelf / Spare key',
+      parentLocationTrail: [
+        { id: 'asset-garage', title: 'Garage', isImmediateParent: false },
+        { id: 'asset-shelf', title: 'Shelf', isImmediateParent: true }
+      ],
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
       imagePlaceholderLabel: 'Item',

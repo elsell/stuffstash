@@ -7,6 +7,7 @@ export type AssetCardViewModel = {
   readonly customTypeLabel?: string;
   readonly description: string;
   readonly locationTrailLabel: string;
+  readonly parentLocationTrail: readonly AssetParentLocationCrumbViewModel[];
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
   readonly checkedOutLabel?: string;
@@ -17,6 +18,12 @@ export type AssetCardViewModel = {
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };
+};
+
+export type AssetParentLocationCrumbViewModel = {
+  readonly id: string;
+  readonly title: string;
+  readonly isImmediateParent: boolean;
 };
 
 export type AssetTagViewModel = {
@@ -49,6 +56,7 @@ export type AssetDetailViewModel = {
   readonly parentAssetId?: string;
   readonly locationTrailLabel: string;
   readonly parentLocationTrailLabel: string;
+  readonly parentLocationTrail: readonly AssetParentLocationCrumbViewModel[];
   readonly lifecycleLabel: string;
   readonly isActive: boolean;
   readonly canEdit: boolean;
@@ -90,12 +98,13 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     customTypeLabel: asset.customType,
     description: asset.description,
     locationTrailLabel: labelLocationTrail(asset.locationTrail),
+    parentLocationTrail: parentLocationTrail(asset),
     updatedAtLabel: asset.updatedAtLabel,
     photoLabel: asset.hasPhoto ? 'Photo ready' : 'Needs photo',
-    checkedOutLabel: asset.currentCheckout ? 'Checked out' : undefined,
+    ...(asset.currentCheckout ? { checkedOutLabel: 'Checked out' } : {}),
     ...(tags.length > 0 ? { tags } : {}),
     imagePlaceholderLabel: placeholderForKind(asset.kind),
-    photo: asset.photo
+    ...(asset.photo ? { photo: asset.photo } : {})
   };
 }
 
@@ -145,7 +154,8 @@ export function toAssetDetailViewModel(
     canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived',
     isCheckedOut: asset.currentCheckout !== undefined,
     checkoutLabel: checkoutLabel(asset),
-    checkoutActorLabel: asset.currentCheckout ? `Checked out by ${asset.currentCheckout.checkedOutByPrincipalId}` : undefined,
+    // Principal IDs are authorization identifiers, not safe user-facing names.
+    // Populate an actor label only when the API exposes a resolved safe profile.
     canCheckout: canEditAsset && asset.lifecycleState === 'active' && asset.currentCheckout === undefined,
     canReturn: canEditAsset && asset.currentCheckout !== undefined,
     containedAssets,
@@ -216,17 +226,19 @@ function labelLocationTrail(locationTrail: readonly string[]): string {
 }
 
 function labelParentLocationTrail(asset: AssetSummary): string {
-  if (!asset.parentAssetId) {
+  if (asset.parentLocationTrail.length === 0) {
     return 'Inventory root';
   }
 
-  const localParentTrail = asset.locationTrail.slice(1, -1);
+  return asset.parentLocationTrail.map((segment) => segment.title).join(' / ');
+}
 
-  if (localParentTrail.length === 0) {
-    return 'Inventory root';
-  }
-
-  return localParentTrail.join(' / ');
+function parentLocationTrail(asset: AssetSummary): readonly AssetParentLocationCrumbViewModel[] {
+  return asset.parentLocationTrail.map((segment, index) => ({
+    id: segment.id,
+    title: segment.title,
+    isImmediateParent: index === asset.parentLocationTrail.length - 1
+  }));
 }
 
 function labelAssetKind(kind: AssetSummary['kind']): string {

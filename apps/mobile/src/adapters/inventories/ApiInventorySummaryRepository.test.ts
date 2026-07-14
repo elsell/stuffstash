@@ -202,6 +202,7 @@ class FakeInventoryApiClient {
   }> = [];
   shouldFailAttachmentLookup = false;
   failedThumbnailAssetIds = new Set<string>();
+  searchResultAssetOverrides = new Map<string, Partial<Asset>>();
 
   async listMyTenants(): Promise<Page<Tenant>> {
     return page([this.tenant, this.cabinTenant]);
@@ -652,11 +653,15 @@ class FakeInventoryApiClient {
       lifecycleState: options?.lifecycleState,
       checkoutState: options?.checkoutState
     });
-    const asset = this.assets[1];
+    const baseAsset = this.assets[1];
 
-    if (!asset) {
+    if (!baseAsset) {
       return page([]);
     }
+    const asset = {
+      ...baseAsset,
+      ...this.searchResultAssetOverrides.get(baseAsset.id)
+    };
 
     if (query === 'tagged') {
       return page([
@@ -946,6 +951,7 @@ describe('ApiInventorySummaryRepository', () => {
         parentAssetId: assetId('asset-garage'),
         locationLabel: 'Garage',
         locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
+        parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
         description: 'Three-pack of filters.',
         updatedAtLabel: 'Updated today',
         hasPhoto: true
@@ -998,6 +1004,7 @@ describe('ApiInventorySummaryRepository', () => {
         lifecycleState: 'active',
         locationLabel: 'Garage',
         locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
+        parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
         description: 'Three-pack of filters.',
         updatedAtLabel: 'Updated today',
         hasPhoto: true
@@ -1059,6 +1066,116 @@ describe('ApiInventorySummaryRepository', () => {
         }
       ]
     });
+  });
+
+  it('uses the full active tree to build parent trails for recent asset cards', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      ...Array.from({ length: 99 }, (_, index): Asset => ({
+        id: `asset-new-root-${index.toString().padStart(3, '0')}`,
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: `New root ${index.toString().padStart(3, '0')}`,
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: `2026-06-25T10:${index.toString().padStart(2, '0')}:00Z`,
+        updatedAt: `2026-06-25T10:${index.toString().padStart(2, '0')}:00Z`
+      })),
+      {
+        id: 'asset-hand-towels',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Christmas hand towels',
+        description: '',
+        parentAssetId: 'asset-seasonal-bin',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T09:59:00Z',
+        updatedAt: '2026-06-25T09:59:00Z'
+      },
+      {
+        id: 'asset-seasonal-bin',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Holiday / seasonal bin',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T09:00:00Z',
+        updatedAt: '2026-06-20T09:00:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
+      assets: expect.arrayContaining([
+        expect.objectContaining({
+          id: 'asset-hand-towels',
+          locationTrail: ['Home Inventory', 'Holiday / seasonal bin', 'Christmas hand towels'],
+          parentLocationTrail: [{ id: assetId('asset-seasonal-bin'), title: 'Holiday / seasonal bin' }]
+        })
+      ])
+    });
+  });
+
+  it('uses the full active tree to build parent trails for checked-out asset cards', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-seasonal-bin',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Holiday / seasonal bin',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T09:00:00Z',
+        updatedAt: '2026-06-20T09:00:00Z'
+      },
+      {
+        id: 'asset-hand-towels',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Christmas hand towels',
+        description: '',
+        parentAssetId: 'asset-seasonal-bin',
+        lifecycleState: 'active',
+        customFields: {},
+        currentCheckout: {
+          id: 'checkout-one',
+          state: 'open',
+          checkedOutAt: '2026-06-25T09:59:00Z',
+          checkedOutByPrincipalId: 'user-one'
+        },
+        createdAt: '2026-06-25T09:59:00Z',
+        updatedAt: '2026-06-25T09:59:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getHomeDashboardSnapshot()).resolves.toMatchObject({
+      checkedOutAssets: [
+        expect.objectContaining({
+          id: 'asset-hand-towels',
+          locationTrail: ['Home Inventory', 'Holiday / seasonal bin', 'Christmas hand towels'],
+          parentLocationTrail: [{ id: assetId('asset-seasonal-bin'), title: 'Holiday / seasonal bin' }]
+        })
+      ]
+    });
+    expect(client.listAssetRequests.filter((request) =>
+      request.inventoryId === 'inventory-home' &&
+      request.lifecycleState === 'active' &&
+      request.sort === 'id_asc'
+    )).toHaveLength(1);
   });
 
   it('loads locations from the full active inventory tree instead of only the recent summary page', async () => {
@@ -1515,6 +1632,167 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
+  it('uses the full active tree to build parent trails for browse result cards', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-seasonal-bin',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Holiday / seasonal bin',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T09:00:00Z',
+        updatedAt: '2026-06-20T09:00:00Z'
+      },
+      {
+        id: 'asset-hand-towels',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Christmas hand towels',
+        description: '',
+        parentAssetId: 'asset-seasonal-bin',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T09:59:00Z',
+        updatedAt: '2026-06-25T09:59:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.browseAssets({
+      query: '',
+      limit: 1,
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      kind: 'all',
+      sort: 'updated_desc'
+    })).resolves.toMatchObject({
+      assets: [
+        expect.objectContaining({
+          id: 'asset-hand-towels',
+          locationTrail: ['Home Inventory', 'Holiday / seasonal bin', 'Christmas hand towels'],
+          parentLocationTrail: [{ id: assetId('asset-seasonal-bin'), title: 'Holiday / seasonal bin' }]
+        })
+      ]
+    });
+    expect(client.listAssetRequests.filter((request) =>
+      request.inventoryId === 'inventory-home' &&
+      request.lifecycleState === 'active' &&
+      request.sort === 'id_asc'
+    )).toHaveLength(1);
+  });
+
+  it('uses the full active tree to build parent trails for search result cards', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-seasonal-bin',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Holiday / seasonal bin',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T09:00:00Z',
+        updatedAt: '2026-06-20T09:00:00Z'
+      },
+      {
+        id: 'asset-hand-towels',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Christmas hand towels',
+        description: '',
+        parentAssetId: 'asset-seasonal-bin',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T09:59:00Z',
+        updatedAt: '2026-06-25T09:59:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.browseAssets({
+      query: 'christmas',
+      limit: 1,
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      kind: 'all',
+      sort: 'updated_desc'
+    })).resolves.toMatchObject({
+      assets: [
+        expect.objectContaining({
+          id: 'asset-hand-towels',
+          locationTrail: ['Home Inventory', 'Holiday / seasonal bin', 'Christmas hand towels'],
+          parentLocationTrail: [{ id: assetId('asset-seasonal-bin'), title: 'Holiday / seasonal bin' }]
+        })
+      ]
+    });
+    expect(client.listAssetRequests.filter((request) =>
+      request.inventoryId === 'inventory-home' &&
+      request.lifecycleState === 'active' &&
+      request.sort === 'id_asc'
+    )).toHaveLength(1);
+  });
+
+  it('preserves full-tree parent linkage when a search result omits parent asset id', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [
+      {
+        id: 'asset-seasonal-bin',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'container',
+        title: 'Holiday / seasonal bin',
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-20T09:00:00Z',
+        updatedAt: '2026-06-20T09:00:00Z'
+      },
+      {
+        id: 'asset-hand-towels',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-home',
+        kind: 'item',
+        title: 'Christmas hand towels',
+        description: '',
+        parentAssetId: 'asset-seasonal-bin',
+        lifecycleState: 'active',
+        customFields: {},
+        createdAt: '2026-06-25T09:59:00Z',
+        updatedAt: '2026-06-25T09:59:00Z'
+      }
+    ];
+    client.searchResultAssetOverrides.set('asset-hand-towels', { parentAssetId: null });
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.browseAssets({
+      query: 'christmas',
+      limit: 1,
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      kind: 'all',
+      sort: 'updated_desc'
+    })).resolves.toMatchObject({
+      assets: [
+        expect.objectContaining({
+          id: 'asset-hand-towels',
+          locationTrail: ['Home Inventory', 'Holiday / seasonal bin', 'Christmas hand towels'],
+          parentLocationTrail: [{ id: assetId('asset-seasonal-bin'), title: 'Holiday / seasonal bin' }]
+        })
+      ]
+    });
+  });
+
   it('uses primary photo summaries for browse cards without paged attachment lookups', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
@@ -1836,18 +2114,20 @@ describe('ApiInventorySummaryRepository', () => {
     ];
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
 
-    await expect(repository.getCheckedOutAssetSummaries()).resolves.toMatchObject([
-      {
-        id: 'asset-filters',
-        hasPhoto: true,
-        photo: {
-          uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small'
-        },
-        currentCheckout: {
-          id: 'checkout-filters'
+    await expect(repository.getHomeDashboardSnapshot()).resolves.toMatchObject({
+      checkedOutAssets: [
+        {
+          id: 'asset-filters',
+          hasPhoto: true,
+          photo: {
+            uri: 'https://api.example.test/tenants/tenant-home/inventories/inventory-home/assets/asset-filters/attachments/attachment-filters-photo/thumbnail?variant=small'
+          },
+          currentCheckout: {
+            id: 'checkout-filters'
+          }
         }
-      }
-    ]);
+      ]
+    });
     expect(client.listCheckedOutAssetRequests).toContainEqual({
       inventoryId: 'inventory-home',
       limit: 10,

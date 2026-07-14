@@ -4,7 +4,8 @@ import {
   VoiceProviderConfiguration,
   VoiceProviderSlot
 } from '../../application/providerProfiles/ProviderProfileRepository';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import {
   formatProviderProfileCredentialStatusLabel,
   formatProviderProfileLifecycleLabel,
@@ -34,6 +35,7 @@ export function VoiceSetupPanel({
   ) => void;
   readonly onTestProfile: (profile: ProviderProfileSummary) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.setupStack}>
       {configuration.slots.map((slot, index) => (
@@ -76,6 +78,7 @@ function VoiceSlotCard({
   ) => void;
   readonly onTestProfile: (profile: ProviderProfileSummary) => void;
 }) {
+  const styles = useStyles();
   const selectedProfile = slot.selectedProfile;
   const alternatives = profiles.filter((profile) => profile.id !== slot.selectedProfileId);
   const issueLabels = voiceProviderSetupIssueLabels(slot.readiness, slot.recommendedAction);
@@ -168,6 +171,8 @@ function ChoiceRow({
   readonly workingAction: boolean;
   readonly onSelect: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -182,7 +187,7 @@ function ChoiceRow({
         </Text>
       </View>
       {workingAction ? (
-        <ActivityIndicator color={colors.action} />
+        <ActivityIndicator color={palette.action} />
       ) : (
         <Text style={[styles.choiceAction, isSelected ? styles.choiceActionSelected : null]}>
           {isSelected ? 'Selected' : 'Use'}
@@ -199,6 +204,7 @@ function SecondaryActionButton({
   readonly label: string;
   readonly onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -211,6 +217,7 @@ function SecondaryActionButton({
 }
 
 function ReadinessPill({ readiness }: { readonly readiness: string }) {
+  const styles = useStyles();
   const isReady = readiness === 'ready';
   return (
     <View style={[styles.readinessPill, isReady ? styles.readinessPillReady : null]}>
@@ -222,6 +229,7 @@ function ReadinessPill({ readiness }: { readonly readiness: string }) {
 }
 
 function InfoRow({ label, value }: { readonly label: string; readonly value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -230,7 +238,12 @@ function InfoRow({ label, value }: { readonly label: string; readonly value: str
   );
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   setupStack: {
     gap: spacing.md
   },
@@ -281,7 +294,7 @@ const styles = StyleSheet.create({
   },
   readinessPill: {
     backgroundColor: colors.warningSurface,
-    borderColor: colors.brandAmber,
+    borderColor: colors.warningBorder,
     borderRadius: radius.sm,
     borderWidth: 1,
     maxWidth: 130,
@@ -347,7 +360,7 @@ const styles = StyleSheet.create({
   },
   issueList: {
     backgroundColor: colors.warningSurface,
-    borderColor: colors.brandAmber,
+    borderColor: colors.warningBorder,
     borderRadius: radius.md,
     borderWidth: 1,
     marginTop: spacing.sm,
@@ -446,4 +459,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     textAlign: 'right'
   }
-});
+  });
+}

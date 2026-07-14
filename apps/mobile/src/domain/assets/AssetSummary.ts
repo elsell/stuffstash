@@ -10,6 +10,7 @@ export type AssetSummary = {
   readonly parentAssetId?: AssetId;
   readonly locationLabel: string;
   readonly locationTrail: readonly string[];
+  readonly parentLocationTrail: readonly AssetLocationTrailSegment[];
   readonly customType?: string;
   readonly description: string;
   readonly updatedAtLabel: string;
@@ -18,6 +19,11 @@ export type AssetSummary = {
   readonly photo?: AssetPhoto;
   readonly currentCheckout?: CurrentCheckoutSummary;
   readonly tags?: readonly AssetTagSummary[];
+};
+
+export type AssetLocationTrailSegment = {
+  readonly id: AssetId;
+  readonly title: string;
 };
 
 export type AssetTagSummary = {

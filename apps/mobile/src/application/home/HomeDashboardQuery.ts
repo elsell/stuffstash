@@ -3,7 +3,7 @@ import { toAssetCardViewModel } from '../assets/AssetViewModels';
 import { createInventoryOverview } from '../../domain/inventories/InventorySummary';
 import type { AccessRole } from '../../domain/inventories/InventorySummary';
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
-import { InventorySummaryRepository } from './InventorySummaryRepository';
+import { HomeDashboardSnapshotRepository } from './InventorySummaryRepository';
 
 export type HomeDashboardInventoryViewModel = {
   readonly id: string;
@@ -53,10 +53,10 @@ export type HomeDashboardViewModel = {
 };
 
 export class HomeDashboardQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: HomeDashboardSnapshotRepository) {}
 
   async execute(): Promise<HomeDashboardViewModel> {
-    const workspace = await this.inventories.getInventoryWorkspace();
+    const { checkedOutAssets, workspace } = await this.inventories.getHomeDashboardSnapshot();
     const inventory =
       workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
       workspace.inventories[0];
@@ -72,10 +72,6 @@ export class HomeDashboardQuery {
     }
 
     const overview = createInventoryOverview(tenant, inventory, workspace.inventories);
-
-    const checkedOutAssets = this.inventories.getCheckedOutAssetSummaries
-      ? await this.inventories.getCheckedOutAssetSummaries()
-      : inventory.assets.filter((item) => item.currentCheckout);
 
     return {
       tenantId: tenant.id,

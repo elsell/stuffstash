@@ -12,15 +12,83 @@ vi.mock('lucide-react-native', () => ({
   Plus: 'PlusIcon'
 }));
 
+vi.mock('../theme/appearance', () => ({
+  appearanceAwarePalette: () => ({
+    accent: '#6B90AA',
+    accentStrong: '#303A41',
+    action: '#0066CC',
+    background: '#F7FAFB',
+    border: '#C5D0D7',
+    onAction: '#FFFFFF',
+    onScrim: '#FFFFFF',
+    surface: '#FFFFFF',
+    surfaceMuted: '#E8F0F5',
+    text: '#243038',
+    textMuted: '#52616B'
+  }),
+  useAppearanceAwarePalette: () => ({
+    accent: '#6B90AA',
+    accentStrong: '#303A41',
+    action: '#0066CC',
+    background: '#F7FAFB',
+    border: '#C5D0D7',
+    onAction: '#FFFFFF',
+    onScrim: '#FFFFFF',
+    surface: '#FFFFFF',
+    surfaceMuted: '#E8F0F5',
+    text: '#243038',
+    textMuted: '#52616B'
+  })
+}));
+
+vi.mock('../theme/AppearanceContext', () => ({
+  useAppearancePalette: () => ({
+    accent: '#6B90AA',
+    accentStrong: '#303A41',
+    action: '#0066CC',
+    actionPressed: '#004F9F',
+    border: '#C5D0D7',
+    controlBorder: '#6F7E88',
+    onAction: '#FFFFFF',
+    selected: '#E8F0F5',
+    surface: '#FFFFFF',
+    surfaceMuted: '#E8F0F5',
+    text: '#243038',
+    textMuted: '#52616B',
+    warning: '#8A4F00',
+    warningSurface: '#FFF3DF'
+  })
+}));
+
 vi.mock('react-native', () => ({
+  DynamicColorIOS: ({ light }: { light: string }) => light,
+  FlatList: (props: Record<string, unknown>) => {
+    const data = (props.data as readonly unknown[] | undefined) ?? [];
+    const renderItem = props.renderItem as ((input: { item: unknown; index: number }) => unknown) | undefined;
+    return {
+      type: 'View',
+      props: {
+        children: [
+          props.ListHeaderComponent,
+          ...data.map((item, index) => renderItem?.({ item, index })),
+          data.length === 0 ? props.ListEmptyComponent : undefined,
+          props.ListFooterComponent
+        ]
+      }
+    };
+  },
   Image: 'Image',
+  Platform: { OS: 'ios' },
   Pressable: 'Pressable',
   ScrollView: 'ScrollView',
   StyleSheet: {
-    create: (styles: unknown) => styles
+    create: (styles: unknown) => styles,
+    hairlineWidth: 1
   },
   Text: 'Text',
-  View: 'View'
+  View: 'View',
+  useColorScheme: () => 'light',
+  useWindowDimensions: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 })
 }));
 
 describe('AssetDetailView', () => {
@@ -39,6 +107,150 @@ describe('AssetDetailView', () => {
 
     expect(searchedTags).toEqual(['Camping']);
   });
+
+  it('presents the asset title before classification and placement before description', () => {
+    const tree = AssetDetailView({ asset: assetDetail() });
+    const text = collectText(tree);
+    const identityHeading = findFirstByProp(tree, 'accessibilityRole', 'header');
+    const placementIndex = text.findIndex((value) => value.includes('Garage'));
+
+    expect(collectText(identityHeading)).toContain('Family tent');
+    expect(text.indexOf('Family tent')).toBeLessThan(placementIndex);
+    expect(placementIndex).toBeLessThan(text.indexOf('Sleeps four.'));
+  });
+
+  it('shows only the applicable availability action and hides unavailable maintenance actions', () => {
+    const available = collectText(AssetDetailView({
+      asset: assetDetail(),
+      onCheckout: vi.fn(),
+      onEdit: vi.fn(),
+      onMove: vi.fn(),
+      onAddPhotos: vi.fn()
+    }));
+    const checkedOut = collectText(AssetDetailView({
+      asset: {
+        ...assetDetail(),
+        isCheckedOut: true,
+        checkoutLabel: 'Checked out Jul 14, 2026',
+        canCheckout: false,
+        canReturn: true
+      },
+      onCheckout: vi.fn(),
+      onReturn: vi.fn(),
+      onEdit: vi.fn(),
+      onMove: vi.fn(),
+      onAddPhotos: vi.fn()
+    }));
+    const readOnly = collectText(AssetDetailView({
+      asset: {
+        ...assetDetail(),
+        canCheckout: false,
+        canEdit: false,
+        canMove: false,
+        canAddPhotos: false
+      },
+      onCheckout: vi.fn(),
+      onEdit: vi.fn(),
+      onMove: vi.fn(),
+      onAddPhotos: vi.fn()
+    }));
+
+    expect(available).toContain('Check out');
+    expect(available).not.toContain('Return');
+    expect(checkedOut).toContain('Return');
+    expect(checkedOut).not.toContain('Check out');
+    expect(readOnly).not.toContain('Check out');
+    expect(readOnly).not.toContain('Return');
+    expect(readOnly).not.toContain('Edit');
+    expect(readOnly).not.toContain('Move');
+  });
+
+  it('opens structured placement breadcrumbs using parent asset identity', () => {
+    const openedParents: string[] = [];
+    const tree = AssetDetailView({
+      asset: assetDetail(),
+      onParentLocationPress: (parent) => openedParents.push(parent.id)
+    });
+
+    const garage = findFirstByProp(tree, 'accessibilityLabel', 'Open location Garage');
+    const campBin = findFirstByProp(tree, 'accessibilityLabel', 'Open location Camp / bin');
+    press(campBin);
+
+    expect(garage?.props?.accessibilityRole).toBe('button');
+    expect(campBin?.props?.accessibilityRole).toBe('button');
+    expect(openedParents).toEqual(['asset-camp-bin']);
+  });
+
+  it('uses a calm root placement label when there is no parent trail', () => {
+    const text = collectText(AssetDetailView({
+      asset: {
+        ...assetDetail(),
+        locationTrailLabel: 'Household',
+        parentLocationTrailLabel: 'Inventory root',
+        parentLocationTrail: []
+      }
+    }));
+
+    expect(text).toContain('No location');
+    expect(text).not.toContain('Inventory root');
+  });
+
+  it('puts the primary spatial action before quieter container utility actions', () => {
+    const text = collectText(AssetDetailView({
+      asset: {
+        ...assetDetail(),
+        kind: 'container',
+        kindLabel: 'Container',
+        canContainAssets: true,
+        canAddContainedAssets: true
+      },
+      onAddHere: vi.fn(),
+      onAddPhotos: vi.fn(),
+      onCheckout: vi.fn(),
+      onEdit: vi.fn(),
+      onMove: vi.fn(),
+      onMoveThingsHere: vi.fn()
+    }));
+
+    const addHereIndex = text.indexOf('Add item here');
+    expect(addHereIndex).toBeGreaterThan(-1);
+    expect(addHereIndex).toBeLessThan(text.indexOf('Check out'));
+    expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
+    expect(addHereIndex).toBeLessThan(text.indexOf('Add photos'));
+  });
+
+  it('keeps overflow actions reachable when detail is embedded without a native header', () => {
+    const onMoreActions = vi.fn();
+    const tree = AssetDetailView({ asset: assetDetail(), onMoreActions });
+
+    const moreButton = findFirstByProp(tree, 'accessibilityLabel', 'More actions');
+    expect(moreButton?.props?.accessibilityRole).toBe('button');
+    press(moreButton);
+
+    expect(onMoreActions).toHaveBeenCalledOnce();
+  });
+
+  it('disables embedded overflow and callback-less maintenance actions while they cannot run', () => {
+    const onMoreActions = vi.fn();
+    const pendingTree = AssetDetailView({
+      asset: assetDetail(),
+      isActionPending: true,
+      onMoreActions
+    });
+    const callbackLessTree = AssetDetailView({ asset: assetDetail() });
+
+    const moreButton = findFirstByProp(pendingTree, 'accessibilityLabel', 'More actions');
+    const editButton = findFirstByProp(callbackLessTree, 'accessibilityLabel', 'Edit');
+    const moveButton = findFirstByProp(callbackLessTree, 'accessibilityLabel', 'Move');
+
+    expect(moreButton?.props?.disabled).toBe(true);
+    expect(moreButton?.props?.accessibilityState).toEqual({ disabled: true });
+    expect(editButton?.props?.disabled).toBe(true);
+    expect(editButton?.props?.accessibilityState).toEqual({ disabled: true });
+    expect(moveButton?.props?.disabled).toBe(true);
+    expect(moveButton?.props?.accessibilityState).toEqual({ disabled: true });
+    expect(onMoreActions).not.toHaveBeenCalled();
+  });
 });
 
 function assetDetail(): AssetDetailViewModel {
@@ -50,6 +262,10 @@ function assetDetail(): AssetDetailViewModel {
     description: 'Sleeps four.',
     locationTrailLabel: 'Garage / Camp bin',
     parentLocationTrailLabel: 'Garage / Camp bin',
+    parentLocationTrail: [
+      { id: 'asset-garage', title: 'Garage', isImmediateParent: false },
+      { id: 'asset-camp-bin', title: 'Camp / bin', isImmediateParent: true }
+    ],
     lifecycleLabel: 'Active',
     isActive: true,
     canEdit: true,
@@ -72,6 +288,22 @@ function assetDetail(): AssetDetailViewModel {
     imagePlaceholderLabel: 'Item',
     photos: []
   };
+}
+
+function collectText(node: unknown): string[] {
+  if (typeof node === 'string') {
+    return [node];
+  }
+  if (Array.isArray(node)) {
+    return node.flatMap(collectText);
+  }
+  if (!isElementNode(node)) {
+    return [];
+  }
+  if (typeof node.type === 'function') {
+    return collectText(node.type(node.props));
+  }
+  return childrenOf(node).flatMap(collectText);
 }
 
 function press(node: ElementNode | undefined): void {

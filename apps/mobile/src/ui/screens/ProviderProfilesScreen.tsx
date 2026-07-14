@@ -25,7 +25,8 @@ import {
 } from '../../application/providerProfiles/ProviderProfileRepository';
 import { recommendedProviderProfiles } from '../../application/providerProfiles/RecommendedProviderProfiles';
 import { TestProviderProfileCommand } from '../../application/providerProfiles/TestProviderProfileCommand';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import {
   buildCredentialEditorPresentation,
   buildPromptEditorPresentation
@@ -64,6 +65,7 @@ export function ProviderProfilesScreen({
   query,
   testCommand
 }: ProviderProfilesScreenProps) {
+  const styles = useStyles();
   const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -343,13 +345,15 @@ function ProviderProfileContent({
   readonly onSelectTab: (tab: ProviderProfilesTab) => void;
   readonly onTestProfile: (profile: ProviderProfileSummary) => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <ScrollView
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
-          tintColor={colors.action}
+          tintColor={palette.action}
           onRefresh={onRefresh}
         />
       }
@@ -444,6 +448,7 @@ function RecommendedProfilesPanel({
   readonly workingAction?: string;
   readonly onCreateRecommendedProfile: (templateKey: string) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.panel}>
       <Text style={styles.sectionTitle}>Recommended profiles</Text>
@@ -482,6 +487,8 @@ function ProviderProfileCard({
   readonly onEditPrompt: () => void;
   readonly onTest: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   const lifecycleAction = profile.lifecycleState === 'enabled' ? 'disable' : 'enable';
 
   return (
@@ -530,7 +537,7 @@ function ProviderProfileCard({
         style={[styles.testButton, isTesting ? styles.testButtonDisabled : null]}
       >
         {isTesting ? (
-          <ActivityIndicator color={colors.onAction} />
+          <ActivityIndicator color={palette.onAction} />
         ) : (
           <Text style={styles.testButtonText}>Test profile</Text>
         )}
@@ -552,6 +559,8 @@ function InlineSecretEditor({
   readonly onChange: (value: string) => void;
   readonly onSave: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.panel}>
       <Text style={styles.sectionTitle}>Replace credential</Text>
@@ -568,7 +577,7 @@ function InlineSecretEditor({
           autoCapitalize="none"
           autoCorrect={false}
           placeholder="Paste credential"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={palette.textMuted}
           secureTextEntry
           style={styles.textInput}
           value={editor.value}
@@ -593,6 +602,8 @@ function InlinePromptEditor({
   readonly onChange: (value: string) => void;
   readonly onSave: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.panel}>
       <Text style={styles.sectionTitle}>Replace prompt template</Text>
@@ -600,7 +611,7 @@ function InlinePromptEditor({
       <TextInput
         multiline
         placeholder="Optional tenant guidance for this language model"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={palette.textMuted}
         style={[styles.textInput, styles.promptInput]}
         value={editor.value}
         onChangeText={onChange}
@@ -619,6 +630,8 @@ function EditorActions({
   readonly onCancel: () => void;
   readonly onSave: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.editorActions}>
       <SecondaryActionButton label="Cancel" onPress={onCancel} />
@@ -629,7 +642,7 @@ function EditorActions({
         style={[styles.editorSaveButton, isSaving ? styles.testButtonDisabled : null]}
       >
         {isSaving ? (
-          <ActivityIndicator color={colors.onAction} />
+          <ActivityIndicator color={palette.onAction} />
         ) : (
           <Text style={styles.testButtonText}>Save</Text>
         )}
@@ -649,6 +662,8 @@ function SecondaryActionButton({
   readonly label: string;
   readonly onPress: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -657,7 +672,7 @@ function SecondaryActionButton({
       style={styles.secondaryActionButton}
     >
       {isBusy ? (
-        <ActivityIndicator color={colors.action} />
+        <ActivityIndicator color={palette.action} />
       ) : (
         <Text style={[styles.secondaryActionText, isDestructive ? styles.destructiveActionText : null]}>{label}</Text>
       )}
@@ -674,6 +689,7 @@ function TabButton({
   readonly label: string;
   readonly onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="tab"
@@ -687,6 +703,7 @@ function TabButton({
 }
 
 function StatusPill({ label, tone }: { readonly label: string; readonly tone: 'success' | 'muted' }) {
+  const styles = useStyles();
   return (
     <View style={[styles.statusPill, tone === 'success' ? styles.statusPillSuccess : null]}>
       <Text style={[styles.statusPillText, tone === 'success' ? styles.statusPillTextSuccess : null]}>{label}</Text>
@@ -695,6 +712,7 @@ function StatusPill({ label, tone }: { readonly label: string; readonly tone: 's
 }
 
 function InfoRow({ label, value }: { readonly label: string; readonly value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -704,15 +722,18 @@ function InfoRow({ label, value }: { readonly label: string; readonly value: str
 }
 
 function LoadingState() {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.accent} />
+      <ActivityIndicator color={palette.accent} />
       <Text style={styles.stateText}>Loading provider profiles</Text>
     </View>
   );
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -740,7 +761,12 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     backgroundColor: colors.background,
     flex: 1
@@ -789,7 +815,7 @@ const styles = StyleSheet.create({
   },
   warningPanel: {
     backgroundColor: colors.warningSurface,
-    borderColor: colors.brandAmber,
+    borderColor: colors.warningBorder,
     borderRadius: radius.md,
     borderWidth: 1,
     marginBottom: spacing.md,
@@ -1086,4 +1112,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0
   }
-});
+  });
+}

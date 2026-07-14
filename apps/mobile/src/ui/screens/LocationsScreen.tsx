@@ -5,6 +5,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View
@@ -16,7 +17,8 @@ import {
   LocationsViewModel
 } from '../../application/locations/LocationsQuery';
 import { IdentityLabel } from '../components/IdentityIcon';
-import { colors, radius, spacing } from '../theme/tokens';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 
 type LocationsScreenProps = {
   readonly locationsQuery: LocationsQuery;
@@ -28,6 +30,7 @@ type ScreenState =
   | { readonly status: 'error'; readonly message: string };
 
 export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
+  const styles = createStyles(useAppearanceAwarePalette());
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -87,6 +90,8 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
 }
 
 function LoadingState() {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={colors.accent} />
@@ -96,6 +101,7 @@ function LoadingState() {
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const styles = createStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -113,13 +119,20 @@ function LocationsList({
   readonly locations: LocationsViewModel;
   readonly onRefresh: () => void;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   return (
     <FlatList
       data={locations.locations}
       keyExtractor={(location) => location.id}
       contentContainerStyle={styles.content}
-      refreshing={isRefreshing}
-      onRefresh={onRefresh}
+      refreshControl={(
+        <RefreshControl
+          onRefresh={onRefresh}
+          refreshing={isRefreshing}
+          tintColor={colors.action}
+        />
+      )}
       ListHeaderComponent={
         <View>
           <Text style={styles.title}>Locations</Text>
@@ -146,6 +159,7 @@ function LocationsList({
 }
 
 function LocationRow({ location }: { readonly location: LocationBrowserItemViewModel }) {
+  const styles = createStyles(useAppearanceAwarePalette());
   return (
     <Pressable
       accessibilityRole="button"
@@ -186,7 +200,8 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background
@@ -329,4 +344,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
   }
-});
+  });
+}

@@ -42,7 +42,8 @@ import {
   movePlacementPreview,
   MovePlacementPreview
 } from './AssetDetailMovePresentation';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type MoveDraft = {
   readonly query: string;
@@ -75,6 +76,7 @@ export function EditAssetSheet({
   readonly onClose: () => void;
   readonly onSave: () => void;
 }) {
+  const styles = useStyles();
   const editContext = assetEditContext(asset);
   const canSave = canSaveEditAsset(asset, draft) && !isSaving;
   return (
@@ -140,6 +142,8 @@ function EditTagPicker({
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('');
   const selected = new Set(selectedTagIds);
@@ -232,7 +236,7 @@ function EditTagPicker({
               <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
                 {tag.label}
               </Text>
-              {isSelected ? <Check color={colors.action} size={14} strokeWidth={2.4} /> : null}
+              {isSelected ? <Check color={palette.action} size={14} strokeWidth={2.4} /> : null}
             </Pressable>
           );
         })}
@@ -243,7 +247,7 @@ function EditTagPicker({
           editable={!disabled}
           onChangeText={setNewTagName}
           placeholder="New tag"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={palette.textMuted}
           style={[styles.input, styles.newTagNameInput]}
           value={newTagName}
         />
@@ -253,7 +257,7 @@ function EditTagPicker({
           editable={!disabled}
           onChangeText={setNewTagColor}
           placeholder="#2F80ED"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={palette.textMuted}
           style={[styles.input, styles.newTagColorInput]}
           value={newTagColor}
         />
@@ -266,7 +270,7 @@ function EditTagPicker({
           <Text style={styles.newTagButtonText}>Add</Text>
         </Pressable>
       </View>
-      <TagColorPicker disabled={disabled} value={newTagColor} onChange={setNewTagColor} />
+      <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
     </View>
   );
 }
@@ -294,6 +298,8 @@ export function MoveAssetSheet({
   readonly onSelectParent: (parent: ParentLookupResult) => void;
   readonly onSelectRoot: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !isSaving : false;
   const placement = draft ? movePlacementPreview(asset, draft.selectedParent) : undefined;
   const createPlacement = moveDestinationCreatePlacement(asset);
@@ -318,7 +324,7 @@ export function MoveAssetSheet({
         editable={!isSaving}
         onChangeText={onChangeQuery}
         placeholder="Search places, boxes, shelves"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={palette.textMuted}
         style={styles.input}
         value={draft?.query ?? ''}
       />
@@ -398,6 +404,8 @@ export function MoveThingsHereSheet({
   readonly onSave: () => void;
   readonly onSelectAsset: (asset: ParentLookupResult) => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   const canSave = draft?.selectedAsset !== undefined && !isSaving;
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
@@ -410,7 +418,7 @@ export function MoveThingsHereSheet({
         editable={!isSaving}
         onChangeText={onChangeQuery}
         placeholder="Search your inventory"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={palette.textMuted}
         style={styles.input}
         value={draft?.query ?? ''}
       />
@@ -455,6 +463,7 @@ function CreateKindOption({
   readonly onPress: (kind: MoveDestinationCreateKind) => void;
   readonly selectedKind: MoveDestinationCreateKind;
 }) {
+  const styles = useStyles();
   const isSelected = kind === selectedKind;
   return (
     <Pressable
@@ -480,6 +489,7 @@ function ParentRow({
   readonly onPress: () => void;
   readonly row: MoveDestinationRow;
 }) {
+  const styles = useStyles();
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null]}>
       <View style={styles.parentTextColumn}>
@@ -495,6 +505,7 @@ function ParentRow({
 }
 
 function PlacementPanel({ preview }: { readonly preview: MovePlacementPreview }) {
+  const styles = useStyles();
   return (
     <View style={styles.placementPanel}>
       <PlacementRow label="From" value={preview.currentLocationLabel} />
@@ -512,6 +523,7 @@ function PlacementRow({
   readonly label: string;
   readonly value: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.placementRow}>
       <Text style={styles.placementLabel}>{label}</Text>
@@ -521,6 +533,7 @@ function PlacementRow({
 }
 
 function MovePreview({ left, right }: { readonly left: string; readonly right: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.movePreview}>
       <Text style={styles.movePreviewLabel}>Move preview</Text>
@@ -540,6 +553,7 @@ function SheetActions({
   readonly onSave: () => void;
   readonly primaryLabel: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.sheetActions}>
       <Pressable accessibilityRole="button" onPress={onClose} style={styles.sheetSecondary}>
@@ -557,7 +571,12 @@ function SheetActions({
   );
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     flex: 1,
@@ -895,4 +914,5 @@ const styles = StyleSheet.create({
   disabledAction: {
     opacity: 0.55
   }
-});
+  });
+}

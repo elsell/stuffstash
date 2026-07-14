@@ -1,25 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { assetId, AssetSummary } from '../../domain/assets/AssetSummary';
+import { assetId } from '../../domain/assets/AssetSummary';
 import {
   inventoryId,
-  InventorySummary,
   tenantId
 } from '../../domain/inventories/InventorySummary';
 import { HomeDashboardQuery } from './HomeDashboardQuery';
 import {
-  CreateInventoryAssetInput,
-  InventorySummaryRepository,
+  HomeDashboardSnapshot,
+  HomeDashboardSnapshotRepository,
   InventoryWorkspace
 } from './InventorySummaryRepository';
 
-class FakeInventorySummaryRepository implements InventorySummaryRepository {
+class FakeInventorySummaryRepository implements HomeDashboardSnapshotRepository {
   constructor(private readonly workspace: InventoryWorkspace) {}
 
-  async getInventoryWorkspace(): Promise<InventoryWorkspace> {
-    return this.workspace;
-  }
-
-  async getDefaultInventorySummary(): Promise<InventorySummary> {
+  async getHomeDashboardSnapshot(): Promise<HomeDashboardSnapshot> {
     const inventory =
       this.workspace.inventories.find(
         (inventory) => inventory.id === this.workspace.defaultInventoryId
@@ -29,43 +24,10 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
       throw new Error('Fake workspace must include at least one inventory.');
     }
 
-    return inventory;
-  }
-
-  async selectInventory(): Promise<void> {}
-
-  async createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary> {
     return {
-      id: assetId('created-asset'),
-      title: input.title,
-      kind: input.kind,
-      lifecycleState: 'active',
-      locationLabel: 'Inventory root',
-      locationTrail: ['Home', input.title],
-      description: input.description,
-      updatedAtLabel: 'Updated now',
-      hasPhoto: false
+      workspace: this.workspace,
+      checkedOutAssets: inventory.assets.filter((asset) => asset.currentCheckout)
     };
-  }
-
-  async addAssetPhoto(): Promise<void> {}
-
-  async archiveAsset(): Promise<void> {}
-
-  async restoreAsset(): Promise<void> {}
-
-  async deleteAsset(): Promise<void> {}
-
-  async browseAssets() {
-    return { assets: [], hasMore: false };
-  }
-
-  async searchAssets(): Promise<readonly AssetSummary[]> {
-    return [];
-  }
-
-  async searchLocations() {
-    return [];
   }
 }
 
@@ -115,6 +77,7 @@ describe('HomeDashboardQuery', () => {
                 lifecycleState: 'active',
                 locationLabel: 'Utility drawer',
                 locationTrail: ['Home', 'Kitchen', 'Utility drawer'],
+                parentLocationTrail: [{ id: assetId('asset-kitchen'), title: 'Kitchen' }],
                 description: 'AA batteries just added from the Add sheet.',
                 updatedAtLabel: 'Updated just now',
                 hasPhoto: false
@@ -126,6 +89,7 @@ describe('HomeDashboardQuery', () => {
                 lifecycleState: 'active',
                 locationLabel: 'Home',
                 locationTrail: ['Home'],
+                parentLocationTrail: [],
                 description: 'Main household location.',
                 updatedAtLabel: 'Updated today',
                 hasPhoto: true
@@ -137,6 +101,7 @@ describe('HomeDashboardQuery', () => {
                 lifecycleState: 'active',
                 locationLabel: 'Hall closet',
                 locationTrail: ['Home', 'Hall closet'],
+                parentLocationTrail: [],
                 description: 'Camera kit and accessories.',
                 updatedAtLabel: 'Updated yesterday',
                 hasPhoto: false,
@@ -154,6 +119,7 @@ describe('HomeDashboardQuery', () => {
                 lifecycleState: 'archived',
                 locationLabel: 'Office bin',
                 locationTrail: ['Home', 'Office', 'Office bin'],
+                parentLocationTrail: [{ id: assetId('asset-office'), title: 'Office' }],
                 description: 'Retired network hardware.',
                 updatedAtLabel: 'Updated last week',
                 hasPhoto: true
@@ -241,6 +207,7 @@ describe('HomeDashboardQuery', () => {
         customTypeLabel: undefined,
         description: 'AA batteries just added from the Add sheet.',
         locationTrailLabel: 'Kitchen / Utility drawer',
+        parentLocationTrail: [{ id: 'asset-kitchen', title: 'Kitchen', isImmediateParent: true }],
         updatedAtLabel: 'Updated just now',
         photoLabel: 'Needs photo',
         imagePlaceholderLabel: 'Item'
@@ -252,6 +219,7 @@ describe('HomeDashboardQuery', () => {
         customTypeLabel: undefined,
         description: 'Main household location.',
         locationTrailLabel: 'Home',
+        parentLocationTrail: [],
         updatedAtLabel: 'Updated today',
         photoLabel: 'Photo ready',
         imagePlaceholderLabel: 'Place'
@@ -263,6 +231,7 @@ describe('HomeDashboardQuery', () => {
         customTypeLabel: undefined,
         description: 'Camera kit and accessories.',
         locationTrailLabel: 'Hall closet',
+        parentLocationTrail: [],
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
         imagePlaceholderLabel: 'Box',
@@ -275,6 +244,7 @@ describe('HomeDashboardQuery', () => {
         customTypeLabel: undefined,
         description: 'Retired network hardware.',
         locationTrailLabel: 'Office / Office bin',
+        parentLocationTrail: [{ id: 'asset-office', title: 'Office', isImmediateParent: true }],
         updatedAtLabel: 'Updated last week',
         photoLabel: 'Photo ready',
         imagePlaceholderLabel: 'Item'
@@ -288,6 +258,7 @@ describe('HomeDashboardQuery', () => {
         customTypeLabel: undefined,
         description: 'Camera kit and accessories.',
         locationTrailLabel: 'Hall closet',
+        parentLocationTrail: [],
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
         imagePlaceholderLabel: 'Box',

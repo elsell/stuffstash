@@ -10,7 +10,8 @@ import {
 import type { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
 import { AppFeedbackProvider, useAppFeedback } from '../feedback/AppFeedback';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
-import { colors, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
 import {
   appServicesStateAfterAuthenticationRequired,
   appServicesStateAfterReset,
@@ -157,15 +158,18 @@ export function useAppConnectionActions(): { readonly resetConnectionProfile: ()
 type AppServicesState = AppServicesGateState;
 
 function LoadingAppState() {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.loading}>
-      <ActivityIndicator color={colors.accent} />
+      <ActivityIndicator color={palette.accent} />
       <Text style={styles.loadingText}>Loading Stuff Stash</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   loading: {
     alignItems: 'center',
     backgroundColor: colors.background,
@@ -179,4 +183,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: spacing.md
   }
-});
+  });
+}

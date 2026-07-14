@@ -149,6 +149,7 @@ describe('AddAssetScreen initial parent routing', () => {
       parentAssetId: 'asset-office',
       locationTrailLabel: 'Office / Office bin',
       parentLocationTrailLabel: 'Office',
+      parentLocationTrail: [{ id: 'asset-office', title: 'Office', isImmediateParent: true }],
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,

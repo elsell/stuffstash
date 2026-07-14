@@ -7,7 +7,8 @@ import {
   View
 } from 'react-native';
 import type { AssetAuditHistoryViewModel } from '../../application/assets/AssetAuditHistoryQuery';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type AssetAuditHistorySheetState =
   | { readonly status: 'closed' }
@@ -22,6 +23,7 @@ export function AssetAuditHistorySheet({
   readonly onClose: () => void;
   readonly state: AssetAuditHistorySheetState;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.sheet}>
       <View style={styles.headerRow}>
@@ -43,15 +45,18 @@ export function AssetAuditHistorySheet({
 }
 
 function LoadingHistory() {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.action} />
+      <ActivityIndicator color={palette.action} />
       <Text style={styles.stateText}>Loading history</Text>
     </View>
   );
 }
 
 function ErrorHistory({ message }: { readonly message: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load history</Text>
@@ -61,6 +66,7 @@ function ErrorHistory({ message }: { readonly message: string }) {
 }
 
 function ReadyHistory({ history }: { readonly history: AssetAuditHistoryViewModel }) {
+  const styles = useStyles();
   if (history.records.length === 0) {
     return (
       <View style={styles.centerState}>
@@ -99,7 +105,12 @@ function ReadyHistory({ history }: { readonly history: AssetAuditHistoryViewMode
   );
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     flex: 1,
@@ -235,4 +246,5 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: 'center'
   }
-});
+  });
+}

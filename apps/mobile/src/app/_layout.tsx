@@ -1,26 +1,44 @@
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
+import { View } from 'react-native';
+import { getAppearancePreferenceController } from '../bootstrap/mobileComposition';
 import { AppServicesProvider } from '../ui/navigation/AppServicesContext';
-import { colors } from '../ui/theme/tokens';
+import { AppearanceProvider, useAppearance } from '../ui/theme/AppearanceContext';
 import {
-  assetAuditNativeSheetOptions,
-  assetCheckoutHistoryNativeSheetOptions,
-  assetEditNativeSheetOptions,
-  assetMoveHereNativeSheetOptions,
-  assetMoveNativeSheetOptions
+  createAssetNativeSheetOptions
 } from '../ui/screens/AssetNativeSheetOptions';
 
 export default function RootLayout() {
   return (
+    <AppearanceProvider controller={getAppearancePreferenceController()}>
+      <ThemedApp />
+    </AppearanceProvider>
+  );
+}
+
+function ThemedApp() {
+  const { isHydrated, palette, resolvedColorScheme } = useAppearance();
+  const sheetOptions = createAssetNativeSheetOptions(palette);
+
+  if (!isHydrated) {
+    return (
+      <View style={{ backgroundColor: palette.background, flex: 1 }}>
+        <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
+      </View>
+    );
+  }
+
+  return (
     <AppServicesProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
-          contentStyle: { backgroundColor: colors.background },
+          contentStyle: { backgroundColor: palette.background },
           headerBackTitle: 'Back',
-          headerTintColor: colors.action,
+          headerStyle: { backgroundColor: palette.surface },
+          headerTintColor: palette.action,
           headerTitleStyle: {
-            color: colors.text,
+            color: palette.text,
             fontWeight: '700'
           }
         }}
@@ -29,7 +47,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="voice"
           options={{
-            contentStyle: { backgroundColor: colors.surface },
+            contentStyle: { backgroundColor: palette.surface },
             headerShown: false,
             presentation: 'formSheet',
             sheetAllowedDetents: [0.42, 0.88],
@@ -44,28 +62,28 @@ export default function RootLayout() {
         <Stack.Screen name="provider-profiles" options={{ title: 'Voice providers' }} />
         <Stack.Screen
           name="assets/[assetId]/edit"
-          options={assetEditNativeSheetOptions}
+          options={sheetOptions.edit}
         />
         <Stack.Screen
           name="assets/[assetId]/move"
-          options={assetMoveNativeSheetOptions}
+          options={sheetOptions.move}
         />
         <Stack.Screen
           name="assets/[assetId]/move-here"
-          options={assetMoveHereNativeSheetOptions}
+          options={sheetOptions.moveHere}
         />
         <Stack.Screen
           name="assets/[assetId]/audit"
-          options={assetAuditNativeSheetOptions}
+          options={sheetOptions.audit}
         />
         <Stack.Screen
           name="assets/[assetId]/checkouts"
-          options={assetCheckoutHistoryNativeSheetOptions}
+          options={sheetOptions.checkoutHistory}
         />
         <Stack.Screen
           name="tenant-switcher"
           options={{
-            contentStyle: { backgroundColor: colors.surface },
+            contentStyle: { backgroundColor: palette.surface },
             headerShown: false,
             presentation: 'formSheet',
             sheetAllowedDetents: 'fitToContents',
