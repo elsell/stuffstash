@@ -3,12 +3,15 @@ import { router, usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Mic, SendHorizontal } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
 import { useVoiceInteractionState } from './VoiceInteractionStateContext';
 import { buildVoiceAccessoryPresentation } from './VoiceSessionPresentation';
 
 export function VoiceBottomAccessory() {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const isInline = placement === 'inline';
   const pathname = usePathname();
@@ -70,7 +73,7 @@ export function VoiceBottomAccessory() {
           onPress={openVoiceSheet}
           style={styles.statusRegion}
         >
-          <View style={[styles.statusDot, dotStyleForTone(presentation.tone)]} />
+          <View style={[styles.statusDot, dotStyleForTone(presentation.tone, styles)]} />
           <View style={styles.statusText}>
             <Text numberOfLines={1} style={styles.statusTitle}>
               {presentation.title}
@@ -99,24 +102,27 @@ export function VoiceBottomAccessory() {
         ]}
       >
         {state.stage === 'processing' || state.stage === 'speaking' ? (
-          <ActivityIndicator color={colors.onAction} size="small" />
+          <ActivityIndicator color={palette.onAction} size="small" />
         ) : state.stage === 'listening' ? (
           <View style={styles.sendButtonContent}>
             <VoiceLevelMeter
               level={state.status === 'ready' ? state.realtime?.recordingLevel ?? 0 : 0}
               size="compact"
             />
-            <SendHorizontal color={colors.onAction} size={isInline ? 18 : 19} strokeWidth={2.6} />
+            <SendHorizontal color={palette.onAction} size={isInline ? 18 : 19} strokeWidth={2.6} />
           </View>
         ) : (
-          <Mic color={colors.onAction} size={isInline ? 22 : 23} strokeWidth={2.5} />
+          <Mic color={palette.onAction} size={isInline ? 22 : 23} strokeWidth={2.5} />
         )}
       </Pressable>
     </View>
   );
 }
 
-function dotStyleForTone(tone: 'ready' | 'active' | 'attention' | 'failed') {
+function dotStyleForTone(
+  tone: 'ready' | 'active' | 'attention' | 'failed',
+  styles: ReturnType<typeof createStyles>
+) {
   switch (tone) {
     case 'active':
       return styles.activeDot;
@@ -129,7 +135,8 @@ function dotStyleForTone(tone: 'ready' | 'active' | 'attention' | 'failed') {
   }
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   accessoryArea: {
     alignItems: 'center',
     flex: 1,
@@ -153,7 +160,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.action,
     justifyContent: 'center',
-    shadowColor: '#000000',
+    shadowColor: colors.brandCharcoalDeep,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.16,
     shadowRadius: 8
@@ -223,4 +230,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   }
-});
+  });
+}

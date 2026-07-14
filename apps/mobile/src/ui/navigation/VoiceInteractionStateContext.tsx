@@ -9,6 +9,7 @@ import {
   VoiceRealtimeCancelledError,
   VoiceRealtimeState,
   VoicePhotoAttachmentStatus,
+  type VoiceActionPlanCommandEdit,
   type VoiceActionPlanPhotoDrafts
 } from '../../application/voice/RealtimeVoiceSession';
 import { redactUnsafeVoiceStructuredText } from '../../application/voice/VoiceTextSafety';
@@ -31,7 +32,7 @@ type VoiceInteractionStateContextValue = {
   readonly setStage: (stage: VoiceInteractionStage) => void;
   readonly startRealtime: () => Promise<void>;
   readonly stopRealtime: () => Promise<void>;
-  readonly approveRealtimeActionPlan: (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts) => Promise<void>;
+  readonly approveRealtimeActionPlan: (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts, edits?: readonly VoiceActionPlanCommandEdit[]) => Promise<void>;
   readonly cancelRealtimeActionPlan: (planId: string) => Promise<void>;
   readonly retryRealtimeActionPlanPhotos: (planId: string) => Promise<void>;
   readonly cancelRealtime: () => Promise<void>;
@@ -199,10 +200,10 @@ export function VoiceInteractionStateProvider({
           setStage('failed');
         }
       },
-      approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts) => {
+      approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts, edits?: readonly VoiceActionPlanCommandEdit[]) => {
         setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
         try {
-          await realtimeController.approveActionPlan(planId, photoDrafts);
+          await realtimeController.approveActionPlan(planId, photoDrafts, edits);
         } catch (error) {
           setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');

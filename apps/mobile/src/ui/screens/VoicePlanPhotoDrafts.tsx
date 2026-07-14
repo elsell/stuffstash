@@ -9,7 +9,8 @@ import {
   View
 } from 'react-native';
 import type { SelectedAssetPhoto } from '../../application/add/PhotoSelectionQuery';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 
 export function showVoicePlanPhotoSourceChooser({
@@ -42,6 +43,8 @@ export function VoicePlanPhotoDraftStrip({
   readonly onRemovePhoto: (commandKey: string, photoId: string) => void;
   readonly photos: readonly SelectedAssetPhoto[];
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.planPhotoStrip}>
       <Pressable
@@ -50,7 +53,7 @@ export function VoicePlanPhotoDraftStrip({
         onPress={() => onAddPhotos(commandKey)}
         style={styles.planPhotoAddButton}
       >
-        <ImagePlus color={colors.accentStrong} size={17} strokeWidth={2.4} />
+        <ImagePlus color={palette.accentStrong} size={17} strokeWidth={2.4} />
         <Text style={styles.planPhotoAddText}>
           {photos.length > 0 ? 'Stage more' : 'Stage photos'}
         </Text>
@@ -74,7 +77,7 @@ export function VoicePlanPhotoDraftStrip({
                 onPress={() => onRemovePhoto(commandKey, photo.id)}
                 style={styles.planPhotoRemoveButton}
               >
-                <X color={colors.surface} size={11} strokeWidth={3} />
+                <X color={palette.surface} size={11} strokeWidth={3} />
               </Pressable>
             </View>
           ))}
@@ -88,7 +91,8 @@ export function VoicePlanPhotoDraftStrip({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   planPhotoAddButton: {
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -159,4 +163,5 @@ const styles = StyleSheet.create({
     marginLeft: 28 + spacing.md,
     minHeight: 38
   }
-});
+  });
+}

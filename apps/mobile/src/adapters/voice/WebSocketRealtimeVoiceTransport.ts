@@ -3,6 +3,7 @@ import type {
   RealtimeVoiceTransportInput,
   RealtimeVoiceTransportRunOptions,
   VoiceActionPlanPhotoApprovalRequest,
+  VoiceActionPlanCommandEdit,
   VoiceRealtimeEvent
 } from '../../application/voice/RealtimeVoiceSession';
 import { VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
@@ -69,7 +70,7 @@ type VoiceServerActionPlanTerminalMessage =
   typeof voiceServerMessage.actionPlanFailed;
 
 type ActiveRealtimeReviewSession = {
-  readonly sendDecision: (type: VoiceClientActionPlanDecisionMessage, planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]) => void;
+  readonly sendDecision: (type: VoiceClientActionPlanDecisionMessage, planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[], edits?: readonly VoiceActionPlanCommandEdit[]) => void;
 };
 
 type ActiveRealtimeFollowUpSession = {
@@ -154,7 +155,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         }
         socket.send(JSON.stringify({ type: voiceClientMessage.audioEnd, seq: seq++, sessionId }));
       };
-      const sendDecision = (type: VoiceClientActionPlanDecisionMessage, planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []) => {
+      const sendDecision = (type: VoiceClientActionPlanDecisionMessage, planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = [], edits: readonly VoiceActionPlanCommandEdit[] = []) => {
         if (!sessionId || settled) {
           throw new Error('Voice review session is not active.');
         }
@@ -171,7 +172,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           seq: seq++,
           sessionId,
           planId,
-          ...(safePhotos.length > 0 ? { photoAttachments: safePhotos } : {})
+          ...(safePhotos.length > 0 ? { photoAttachments: safePhotos } : {}),
+          ...(type === voiceClientMessage.actionPlanApprove && edits.length > 0 ? { commandEdits: edits } : {})
         }));
       };
       const cancelSocketForUser = () => {
@@ -408,11 +410,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     await this.activeFollowUpSession.sendAudio(audioChunksBase64, onEvent, options);
   }
 
-  async approveActionPlan(planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = []): Promise<void> {
+  async approveActionPlan(planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = [], edits: readonly VoiceActionPlanCommandEdit[] = []): Promise<void> {
     if (!this.activeReviewSession) {
       throw new Error('Voice review session is not active.');
     }
-    this.activeReviewSession.sendDecision(voiceClientMessage.actionPlanApprove, planId, photos);
+    this.activeReviewSession.sendDecision(voiceClientMessage.actionPlanApprove, planId, photos, edits);
   }
 
   async cancelActionPlan(planId: string): Promise<void> {

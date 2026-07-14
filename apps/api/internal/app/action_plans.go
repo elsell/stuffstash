@@ -45,10 +45,22 @@ type ActionPlanCommandInput struct {
 }
 
 type ActionPlanDecisionInput struct {
-	Principal   identity.Principal
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	PlanID      string
+	Principal    identity.Principal
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	PlanID       string
+	CommandEdits []ActionPlanCommandEditInput
+}
+
+type ActionPlanCommandEditInput struct {
+	CommandID       string
+	Title           *string
+	ParentSelection *ActionPlanParentSelectionInput
+}
+
+type ActionPlanParentSelectionInput struct {
+	Kind string
+	ID   string
 }
 
 type ActionPlanExecutionResult struct {
@@ -106,6 +118,9 @@ func (a App) CreateActionPlan(ctx context.Context, input CreateActionPlanInput) 
 }
 
 func (a App) ApproveActionPlan(ctx context.Context, input ActionPlanDecisionInput) (ports.ActionPlanRecord, error) {
+	if len(input.CommandEdits) > 0 {
+		return a.approveEditedActionPlan(ctx, input)
+	}
 	return a.transitionActionPlan(ctx, input, actionplan.StateApproved)
 }
 

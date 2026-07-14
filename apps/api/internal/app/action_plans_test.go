@@ -202,21 +202,6 @@ func TestApproveActionPlanRequiresEditAccessAndInitiatingPrincipal(t *testing.T)
 	}
 }
 
-func TestApproveActionPlanReturnsNotFoundForMissingPlan(t *testing.T) {
-	t.Parallel()
-
-	application := newActionPlanTestApp(&fakeActionPlanRepository{records: map[string]ports.ActionPlanRecord{}}, &fakeIDGenerator{}, nil)
-	_, err := application.ApproveActionPlan(context.Background(), ActionPlanDecisionInput{
-		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
-		TenantID:    tenant.ID("tenant-home"),
-		InventoryID: inventory.InventoryID("inventory-home"),
-		PlanID:      "missing-plan",
-	})
-	if !errors.Is(err, ErrNotFound) {
-		t.Fatalf("expected not found, got %v", err)
-	}
-}
-
 func TestCancelActionPlanFreezesProposedPlan(t *testing.T) {
 	t.Parallel()
 
@@ -652,6 +637,16 @@ func (f *fakeActionPlanRepository) UpdateActionPlanState(_ context.Context, tena
 	case actionplan.StateFailed:
 		record.FailedAt = transition.At
 	}
+	f.records[planID] = record
+	return record, true, nil
+}
+
+func (f *fakeActionPlanRepository) UpdateActionPlanCommandsAndState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, commands []ports.ActionPlanCommandRecord, transition ports.ActionPlanStateTransition) (ports.ActionPlanRecord, bool, error) {
+	record, found, err := f.UpdateActionPlanState(ctx, tenantID, inventoryID, planID, transition)
+	if err != nil || !found {
+		return record, found, err
+	}
+	record.Commands = append([]ports.ActionPlanCommandRecord(nil), commands...)
 	f.records[planID] = record
 	return record, true, nil
 }

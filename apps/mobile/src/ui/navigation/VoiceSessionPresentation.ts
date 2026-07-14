@@ -242,6 +242,7 @@ export type VoiceSessionActivityPresentation =
 
 export type VoiceSessionActionPlanCommand = {
   readonly id?: string;
+  readonly editable: boolean;
   readonly title: string;
   readonly subtitle: string;
   readonly placement?: string;
@@ -426,6 +427,7 @@ function formatExistingParentUseCommand(command: VoiceActionPlanCommand): VoiceS
     title: command.parentTitle ?? 'Existing place',
     subtitle: `Use existing ${parentKind}`,
     photoDraftEligible: false,
+    editable: false,
     tone: 'use'
   };
 }
@@ -442,6 +444,7 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
     placement: placementLabel(command, titlesByID),
     photoDraftEligible: isPhotoDraftEligible(command, title),
+    editable: tone === 'create' && Boolean(command.id),
     tone
   };
 }

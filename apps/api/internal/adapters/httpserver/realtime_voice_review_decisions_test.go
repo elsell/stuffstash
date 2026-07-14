@@ -93,6 +93,18 @@ func TestRealtimeVoiceActionPlanDecisionRejectsUnsafeMessages(t *testing.T) {
 				"photoAttachments": nil,
 			},
 		},
+		{
+			name:    "cancel with command edits",
+			message: map[string]any{"type": "action.plan.cancel", "seq": 4, "sessionId": "voice-session-id", "planId": "plan-id", "commandEdits": []map[string]any{}},
+		},
+		{
+			name:    "command edit with arbitrary arguments",
+			message: map[string]any{"type": "action.plan.approve", "seq": 4, "sessionId": "voice-session-id", "planId": "plan-id", "commandEdits": []map[string]any{{"commandId": "command-1", "arguments": map[string]any{"tenantId": "tenant-other"}}}},
+		},
+		{
+			name:    "command edit with both unsafe parent data and unknown field",
+			message: map[string]any{"type": "action.plan.approve", "seq": 4, "sessionId": "voice-session-id", "planId": "plan-id", "commandEdits": []map[string]any{{"commandId": "command-1", "parent": map[string]any{"kind": "asset", "id": "asset-1", "title": "hidden"}}}},
+		},
 	}
 
 	for _, tt := range tests {
