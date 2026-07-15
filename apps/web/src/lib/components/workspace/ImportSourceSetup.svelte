@@ -255,10 +255,6 @@
   }
 
   @media (max-width: 860px) {
-    :global(.import-source-setup-content) {
-      padding-bottom: var(--mobile-scroll-clearance);
-    }
-
     .setup-grid {
       grid-template-columns: 1fr;
     }

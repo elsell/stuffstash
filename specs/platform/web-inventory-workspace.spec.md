@@ -483,6 +483,7 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Custom asset type, enum, and custom field target choice grids must use a shared workspace choice-grid composition so selected-state semantics, disabled behavior, empty state copy, and button styling do not drift between add, edit, and settings surfaces.
 - Import options for images, insecure TLS, and private-network access must use the shared binary-option composition with visible on/off state, clear option copy, and honest switch or checkbox semantics.
 - Import source choices that correspond to distinct import workflows must expose canonical `href` values while preserving ordinary in-app source switching behavior.
+- Import wizard content must remain intrinsically sized and top-aligned at every viewport. A short source form must not stretch its card or internal rows to fill the remaining workspace height; mobile users must be able to scroll all fields, source context, and actions above persistent navigation without crossing large artificial blank regions.
 - Route-backed controls rendered as disabled links must remove their `href`, expose `aria-disabled`, leave the tab order, and visually match native disabled buttons through the shared button primitive.
 - Form errors, denied actions, loading states, and saved feedback must be perceivable to assistive technologies.
 - Passive saved/status feedback must not intercept pointer interaction with dialogs, sheets, or workspace controls.

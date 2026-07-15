@@ -3,6 +3,8 @@ import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryR
 import type { ImportJob, ImportJobCancellationMode } from '$lib/domain/inventory';
 import importJobDetailPanelSource from './ImportJobDetailPanel.svelte?raw';
 import importJobHistorySource from './ImportJobHistory.svelte?raw';
+import importSourceSetupSource from './ImportSourceSetup.svelte?raw';
+import inventoryImportWorkspaceSource from './InventoryImportWorkspace.svelte?raw';
 import {
   CancellableImportJobRepository,
   CompletingImportJobRepository,
@@ -38,6 +40,15 @@ afterEach(() => {
 });
 
 describe('InventoryImportWorkspace import history and progress', () => {
+  it('top-aligns intrinsically sized wizard content instead of stretching short cards', () => {
+    const workspaceRule = inventoryImportWorkspaceSource.match(/\.import-workspace\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+    const mobileSourceContentRule =
+      importSourceSetupSource.match(/@media \(max-width: 860px\)\s*{[\s\S]*?:global\(\.import-source-setup-content\)\s*{(?<body>[^}]*)}/)?.groups?.body ?? '';
+
+    expect(workspaceRule).toContain('align-content: start');
+    expect(mobileSourceContentRule).not.toContain('padding-bottom');
+  });
+
   it('keeps import warning styles on semantic warning tokens', () => {
     expect(importJobHistorySource).toContain('var(--color-warning)');
     expect(importJobHistorySource).toContain('var(--color-warning-foreground)');
