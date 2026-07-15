@@ -991,7 +991,10 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.search).toBe('?invitationStatus=pending');
       expect(document.body.textContent).toContain('Cancel invitation');
       expect(document.body.textContent).toContain('friend@example.test');
-      expect(controlContaining('Cancel').getAttribute('href')).toBe(
+      const cancel = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('[role="alertdialog"] a')).find(
+        (candidate) => candidate.textContent?.trim() === 'Cancel'
+      );
+      expect(cancel?.getAttribute('href')).toBe(
         '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending'
       );
     });
