@@ -1351,14 +1351,49 @@ h2 {
 .customization-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.settings-panel.customization-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.customization-surface {
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--card);
+}
+
+.customization-surface-heading {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.customization-surface-heading > span {
+  flex: 0 0 auto;
+  min-width: 24px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+  line-height: var(--text-caption-line-height);
+  text-align: center;
 }
 
 .customization-column,
 .schema-list,
 .custom-field-grid {
   display: grid;
-  gap: 10px;
+  align-content: start;
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -1370,6 +1405,31 @@ h2 {
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+.schema-list {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--card);
+}
+
+.schema-list .schema-row {
+  border: 0;
+  border-radius: 0;
+}
+
+.schema-list .schema-row + .schema-row {
+  border-top: 1px solid var(--border);
+}
+
+.schema-empty {
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--muted-foreground);
+  font-size: var(--text-metadata-size);
+  line-height: var(--text-metadata-line-height);
 }
 
 .schema-row > div {
@@ -1641,9 +1701,14 @@ h2 {
   .invitation-row,
   .customization-grid,
   .import-step-list,
-  .schema-row,
   .audit-row {
     grid-template-columns: 1fr;
+  }
+
+  .schema-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 68px;
+    padding: var(--space-3);
   }
 
   .access-form > [data-slot="button"] {

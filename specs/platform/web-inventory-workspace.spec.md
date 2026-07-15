@@ -502,6 +502,9 @@ Inventory settings must be structured as focused sections rather than one long m
 - `overview` for inventory and tenant summary.
 - `access` for sharing and access management.
 - `fields` for custom asset types and custom fields.
+- Side-by-side schema creation columns in `fields` must remain independently top-aligned. A long list in one column must not vertically stretch or scatter the controls in the other column.
+- Customization creation forms and their existing-definition lists must use separate grouped surfaces. On mobile, each form must precede its related list so users do not have to cross an unrelated workflow to understand what they are creating.
+- Existing custom asset types and field definitions must use bounded, divided lists with a visible count, concise metadata, and an explicit empty state rather than one bordered card per record.
 - `activity` for audit/history when exposed.
 - Activity must group records by calendar day, keep the initial page bounded, and place the `Load older activity` action after the grouped list. Source, actor, target, and technical details remain secondary to the human-readable action and time.
 - `administration` for tenant or inventory administrative actions and denied states.

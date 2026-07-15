@@ -16,6 +16,58 @@ afterEach(() => {
 });
 
 describe('InventoryCustomizationManager', () => {
+  it('keeps asset types and field definitions in independently sized grouped surfaces', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    const surfaces = document.body.querySelectorAll('section.customization-surface');
+    expect(surfaces).toHaveLength(2);
+    expect(surfaces[0]?.querySelector('h3')?.textContent).toBe('Asset types');
+    expect(surfaces[1]?.querySelector('h3')?.textContent).toBe('Field definitions');
+    expect(surfaces[0]?.querySelector('[aria-label="0 custom asset types"]')?.textContent).toBe('0');
+    expect(surfaces[1]?.querySelector('[aria-label="0 custom fields"]')?.textContent).toBe('0');
+    expect(surfaces[0]?.textContent).toContain('No custom asset types yet.');
+    expect(surfaces[1]?.textContent).toContain('No custom fields yet.');
+  });
+
+  it('counts only active definitions and removes empty copy when rows are visible', async () => {
+    const medicine = customAssetType();
+    const expiration = customFieldDefinition();
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [medicine, { ...medicine, id: 'type-archived', key: 'archived', lifecycleState: 'archived' }],
+        initialFieldDefinitions: [
+          expiration,
+          { ...expiration, id: 'field-archived', key: 'archived-field', lifecycleState: 'archived' }
+        ],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    const surfaces = document.body.querySelectorAll('section.customization-surface');
+    expect(surfaces[0]?.querySelector('[aria-label="1 custom asset types"]')?.textContent).toBe('1');
+    expect(surfaces[1]?.querySelector('[aria-label="1 custom fields"]')?.textContent).toBe('1');
+    expect(surfaces[0]?.textContent).toContain('Medicine');
+    expect(surfaces[1]?.textContent).toContain('Expiration date');
+    expect(surfaces[0]?.textContent).not.toContain('No custom asset types yet.');
+    expect(surfaces[1]?.textContent).not.toContain('No custom fields yet.');
+  });
+
   it('renders missing inventory customization status without an alert role', async () => {
     component = mount(InventoryCustomizationManager, {
       target: document.body,

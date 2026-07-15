@@ -307,7 +307,7 @@
   }
 </script>
 
-<section class="settings-panel wide" aria-labelledby="settings-customization">
+<section class="settings-panel wide customization-panel" aria-labelledby="settings-customization">
   <div class="settings-panel-heading">
     <Shapes aria-hidden="true" />
     <div>
@@ -334,8 +334,11 @@
     {/if}
 
     <div class="customization-grid">
-      <div class="customization-column">
-        <h3>Asset types</h3>
+      <section class="customization-column customization-surface" aria-labelledby="custom-asset-types-title">
+        <div class="customization-surface-heading">
+          <h3 id="custom-asset-types-title">Asset types</h3>
+          <span aria-label={`${activeAssetTypes.length} custom asset types`}>{activeAssetTypes.length}</span>
+        </div>
         <SegmentedControl
           label="Custom type scope"
           value={typeScope}
@@ -357,6 +360,9 @@
         <Button.Root disabled={busy || !typeKey.trim() || !typeName.trim() || !canScope(typeScope)} onclick={() => { void createAssetType(); }}>Create type</Button.Root>
 
         <div class="schema-list" aria-label="Custom asset types">
+          {#if activeAssetTypes.length === 0}
+            <p class="schema-empty">No custom asset types yet.</p>
+          {:else}
           {#each activeAssetTypes as assetType}
             <article class="schema-row">
               <div>
@@ -378,11 +384,15 @@
               </div>
             </article>
           {/each}
+          {/if}
         </div>
-      </div>
+      </section>
 
-      <div class="customization-column">
-        <h3>Field definitions</h3>
+      <section class="customization-column customization-surface" aria-labelledby="custom-field-definitions-title">
+        <div class="customization-surface-heading">
+          <h3 id="custom-field-definitions-title">Field definitions</h3>
+          <span aria-label={`${activeFieldDefinitions.length} custom fields`}>{activeFieldDefinitions.length}</span>
+        </div>
         <SegmentedControl
           label="Custom field scope"
           value={fieldScope}
@@ -435,6 +445,9 @@
         <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim() || !canScope(fieldScope)} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>
 
         <div class="schema-list" aria-label="Custom field definitions">
+          {#if activeFieldDefinitions.length === 0}
+            <p class="schema-empty">No custom fields yet.</p>
+          {:else}
           {#each activeFieldDefinitions as definition}
             <article class="schema-row">
               <div>
@@ -456,8 +469,9 @@
               </div>
             </article>
           {/each}
+          {/if}
         </div>
-      </div>
+      </section>
     </div>
   {/if}
 
