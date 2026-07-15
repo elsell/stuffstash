@@ -440,7 +440,7 @@ describe('InventoryAccessManager', () => {
     expect(document.activeElement?.textContent).toBe('Cancel');
     clickButton('Expire');
     await flush();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed.includes('expire'));
     expect(fake.calls).toContain('expire:tenant-one:inventory-one:invite-one:1970-01-01T00:00:00.000Z');
 
     await unmount(component);
@@ -467,7 +467,7 @@ describe('InventoryAccessManager', () => {
     );
     clickButton('Cancel invitation');
     await flush();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed.includes('cancel'));
     expect(fake.calls).toContain('cancel:tenant-one:inventory-one:invite-one');
     expect(document.body.textContent).not.toContain('friend@example.test');
 
@@ -491,7 +491,7 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).toContain('Delete invitation');
     clickButton('Delete');
     await flush();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed.includes('delete'));
     expect(fake.calls).toContain('delete-invitation:tenant-one:inventory-one:invite-one');
     expect(closed).toEqual(['expire', 'cancel', 'delete']);
   });
@@ -510,7 +510,7 @@ describe('InventoryAccessManager', () => {
     await flush();
 
     requiredElement('[role="alertdialog"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await flushDialogClose();
+    await waitForDialogClose(() => document.activeElement?.id === 'settings-access');
 
     expect(document.activeElement).toBe(requiredElement('#settings-access'));
   });
@@ -536,7 +536,7 @@ describe('InventoryAccessManager', () => {
 
     expect(document.body.textContent).toContain('Invitation unavailable');
     link('Back to invitations').click();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed === 1);
     expect(closed).toBe(1);
   });
 
@@ -778,9 +778,15 @@ async function flush(): Promise<void> {
   await tick();
 }
 
-async function flushDialogClose(): Promise<void> {
-  await new Promise((resolve) => window.setTimeout(resolve, 25));
-  await flush();
+async function waitForDialogClose(condition: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    await flush();
+    if (condition() && !document.body.querySelector('[role="alertdialog"]')) {
+      return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+  }
+  throw new Error('Dialog did not finish closing.');
 }
 
 function tenant(id: string): Tenant {

@@ -364,7 +364,8 @@ describe('InventoryCustomizationManager', () => {
     expect(openedActions).toEqual(['archive_asset_type:type-medicine']);
     expect(calls).toEqual([]);
 
-    unmount(component);
+    await unmount(component);
+    component = null;
     component = mount(InventoryCustomizationManager, {
       target: document.body,
       props: {
@@ -389,7 +390,7 @@ describe('InventoryCustomizationManager', () => {
 
     clickExactButton('Archive');
     await flush();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed === 1);
 
     expect(calls).toEqual(['archive-type:type-medicine:inventory']);
     expect(closed).toBe(1);
@@ -431,12 +432,13 @@ describe('InventoryCustomizationManager', () => {
     expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
 
     link('Cancel').click();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed === 1);
 
     expect(closed).toBe(1);
     expect(calls).toEqual([]);
 
-    unmount(component);
+    await unmount(component);
+    component = null;
     document.body.innerHTML = '';
     component = mount(InventoryCustomizationManager, {
       target: document.body,
@@ -458,7 +460,7 @@ describe('InventoryCustomizationManager', () => {
 
     clickExactButton('Archive');
     await flush();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed === 2);
 
     expect(calls).toEqual(['archive-field:field-expiration:inventory']);
     expect(closed).toBe(2);
@@ -486,7 +488,7 @@ describe('InventoryCustomizationManager', () => {
 
     expect(document.body.textContent).toContain('Archive target unavailable');
     link('Back to fields').click();
-    await flushDialogClose();
+    await waitForDialogClose(() => closed === 1);
 
     expect(closed).toBe(1);
   });
@@ -510,7 +512,7 @@ describe('InventoryCustomizationManager', () => {
     document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
     );
-    await flushDialogClose();
+    await waitForDialogClose(() => document.activeElement?.id === 'settings-customization');
 
     expect(document.activeElement).toBe(document.getElementById('settings-customization'));
   });
@@ -637,7 +639,13 @@ async function flush(): Promise<void> {
   await tick();
 }
 
-async function flushDialogClose(): Promise<void> {
-  await new Promise((resolve) => window.setTimeout(resolve, 25));
-  await flush();
+async function waitForDialogClose(condition: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    await flush();
+    if (condition() && !document.body.querySelector('[role="alertdialog"]')) {
+      return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+  }
+  throw new Error('Dialog did not finish closing.');
 }
