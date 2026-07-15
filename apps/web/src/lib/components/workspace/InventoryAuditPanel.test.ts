@@ -191,7 +191,7 @@ describe('InventoryAuditPanel', () => {
     const repository: InventoryAuditRepository = {
       listTenantAuditRecords: async () => page(null),
       listInventoryAuditRecords: async () => {
-        throw new Error('Audit service unavailable.');
+        throw new Error('RAW_SENTINEL provider stack');
       }
     };
 
@@ -201,7 +201,8 @@ describe('InventoryAuditPanel', () => {
     });
     await flush();
 
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Audit service unavailable.');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Activity could not be loaded. Try again.');
+    expect(document.body.textContent).not.toContain('RAW_SENTINEL');
     expect(document.body.textContent).not.toContain('No audit records found.');
   });
 

@@ -145,7 +145,7 @@ describe('InventoryAccessManager', () => {
   it('does not present failed initial access loads as empty lists', async () => {
     const repository: InventoryAccessRepository = {
       listInventoryAccessGrants: async () => {
-        throw new Error('Access service unavailable.');
+        throw new Error('RAW_SENTINEL provider stack');
       },
       listInventoryAccessInvitations: async () => page([]),
       grantInventoryAccess: async () => failRepositoryCall(),
@@ -162,7 +162,8 @@ describe('InventoryAccessManager', () => {
     });
     await flush();
 
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Access service unavailable.');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Sharing could not be loaded. Try again.');
+    expect(document.body.textContent).not.toContain('RAW_SENTINEL');
     expect(document.body.textContent).not.toContain('No direct grants.');
     expect(document.body.textContent).not.toContain('No invitations.');
   });

@@ -103,7 +103,9 @@ function importSourceKeyFingerprint(value: string): string {
 export function readableImportActionError(value: unknown, fallback: string): string {
   if (!isErrorLike(value)) return fallback;
   if (isGenericInvalidRequest(value)) return fallback;
-  return value.message || fallback;
+  if (value.safeForUser === true && value.message.trim()) return value.message.trim();
+  const validationStatus = value.status === 400 || value.status === 422;
+  return validationStatus && value.code === 'invalid_request' && value.message.trim() ? value.message.trim() : fallback;
 }
 
 function isGenericInvalidRequest(value: Error & { status?: number; code?: string }): boolean {
@@ -113,6 +115,6 @@ function isGenericInvalidRequest(value: Error & { status?: number; code?: string
   return safeValidationStatus && value.code === 'invalid_request' && (message === 'invalid request.' || message === 'validation failed');
 }
 
-function isErrorLike(value: unknown): value is Error & { status?: number; code?: string } {
+function isErrorLike(value: unknown): value is Error & { status?: number; code?: string; safeForUser?: boolean } {
   return value instanceof Error;
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import Link2 from '@lucide/svelte/icons/link-2';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import UserPlus from '@lucide/svelte/icons/user-plus';
@@ -164,7 +165,7 @@
       loaded = true;
     } catch (caught) {
       if (sameContext(current, expectedContext)) {
-        error = caught instanceof Error ? caught.message : 'Unable to load access.';
+        error = safeWorkspaceErrorMessage(caught, 'Sharing could not be loaded. Try again.');
       }
     } finally {
       if (sameContext(current, expectedContext)) {
@@ -230,7 +231,7 @@
       loaded = true;
     } catch (caught) {
       if (sameContext(current, expectedContext)) {
-        error = caught instanceof Error ? caught.message : 'Unable to load invitations.';
+        error = safeWorkspaceErrorMessage(caught, 'Invitations could not be loaded. Try again.');
       }
     } finally {
       if (sameContext(current, expectedContext)) {
@@ -400,7 +401,7 @@
       await action();
     } catch (caught) {
       if (contextKey === expectedContext) {
-        error = caught instanceof Error ? caught.message : 'Access action failed.';
+        error = safeWorkspaceErrorMessage(caught, 'Sharing change could not be saved. Try again.');
       }
     } finally {
       if (contextKey === expectedContext) {

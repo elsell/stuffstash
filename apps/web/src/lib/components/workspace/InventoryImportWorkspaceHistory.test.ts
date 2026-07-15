@@ -346,7 +346,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
         mode: ImportJobCancellationMode
       ): Promise<ImportJob> {
         this.attempts += 1;
-        if (this.attempts === 1) throw new Error('Cancellation service unavailable.');
+        if (this.attempts === 1) throw new Error('RAW_SENTINEL provider stack');
         return super.cancelImportJob(tenantId, inventoryId, jobId, mode);
       }
     }
@@ -361,7 +361,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
       expect(dialog?.querySelectorAll('[role="alert"]')).toHaveLength(1);
-      expect(dialog?.textContent).toContain('Cancellation service unavailable.');
+      expect(dialog?.textContent).toContain('Cancellation could not be requested.');
+      expect(dialog?.textContent).not.toContain('RAW_SENTINEL');
       expect(document.body.querySelector('.import-alert')).toBeFalsy();
     });
 
@@ -975,7 +976,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
   it('clears a local removal failure when dismissed and does not restore it when reopened', async () => {
     class FailingRemovalRepository extends TerminalImportJobRepository {
       async removeImportJobFromHistory(): Promise<void> {
-        throw new Error('History service unavailable.');
+        throw new Error('RAW_SENTINEL storage failure');
       }
     }
     await mountImportWorkspace(new FailingRemovalRepository(structuredClone(seed)));
@@ -988,7 +989,8 @@ describe('InventoryImportWorkspace import history and progress', () => {
     await waitFor(() => {
       const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
       expect(dialog?.querySelectorAll('[role="alert"]')).toHaveLength(1);
-      expect(dialog?.textContent).toContain('History service unavailable.');
+      expect(dialog?.textContent).toContain('Import run could not be removed. Try again.');
+      expect(dialog?.textContent).not.toContain('RAW_SENTINEL');
       expect(document.body.querySelector('.import-alert')).toBeFalsy();
     });
 

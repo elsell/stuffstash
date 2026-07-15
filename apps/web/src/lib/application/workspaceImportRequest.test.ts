@@ -139,4 +139,26 @@ describe('workspace import request helpers', () => {
       'Base URL must use http or https.'
     );
   });
+
+  it('does not expose untyped server diagnostics as import recovery copy', () => {
+    const serverFailure = Object.assign(new Error('RAW_SENTINEL provider stack'), { status: 500 });
+    const providerFailure = Object.assign(new Error('RAW_SENTINEL provider response'), { status: 400, code: 'provider_error' });
+
+    expect(readableImportActionError(serverFailure, 'Cancellation could not be requested.')).toBe(
+      'Cancellation could not be requested.'
+    );
+    expect(readableImportActionError(new Error('RAW_SENTINEL transport failure'), 'Import history could not be loaded.')).toBe(
+      'Import history could not be loaded.'
+    );
+    expect(readableImportActionError(providerFailure, 'Homebox connection could not be confirmed.')).toBe(
+      'Homebox connection could not be confirmed.'
+    );
+  });
+
+  it('preserves import errors explicitly marked safe for users', () => {
+    const safeFailure = Object.assign(new Error('This import has already finished.'), { safeForUser: true });
+    expect(readableImportActionError(safeFailure, 'Cancellation could not be requested.')).toBe(
+      'This import has already finished.'
+    );
+  });
 });

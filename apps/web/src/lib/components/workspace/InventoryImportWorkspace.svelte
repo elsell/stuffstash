@@ -517,7 +517,7 @@
       }
     } catch (removeError) {
       if (!isCurrentAction(action)) return;
-      confirmationError = errorMessage(removeError, 'Only completed import jobs can be removed from history.');
+      confirmationError = errorMessage(removeError, 'Import run could not be removed. Try again.');
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -1013,6 +1013,11 @@
   }
 
   @media (max-width: 860px) {
+    .import-toolbar :global([data-slot='button']) {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
     .import-workspace {
       gap: 0.9rem;
       padding: 1rem;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Shapes from '@lucide/svelte/icons/shapes';
   import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -143,7 +144,7 @@
       typeName = '';
       typeDescription = '';
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to create custom asset type.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom asset type could not be created. Try again.');
     } finally {
       busy = false;
     }
@@ -179,7 +180,7 @@
       fieldTargets = [];
       enumOptions = '';
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to create custom field.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom field could not be created. Try again.');
     } finally {
       busy = false;
     }
@@ -198,7 +199,7 @@
       onSchemaChange(nextAssetTypes, fieldDefinitions);
       return true;
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to archive custom asset type.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom asset type could not be archived. Try again.');
       return false;
     } finally {
       busy = false;
@@ -216,7 +217,7 @@
       onSchemaChange(assetTypes, nextFieldDefinitions);
       return true;
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to archive custom field.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom field could not be archived. Try again.');
       return false;
     } finally {
       busy = false;

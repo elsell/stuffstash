@@ -1,5 +1,6 @@
 <script lang="ts">
   import Activity from '@lucide/svelte/icons/activity';
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import {
@@ -124,7 +125,7 @@
         return;
       }
       if (current === requestId && contextKey === expectedContext) {
-        error = caught instanceof Error ? caught.message : 'Unable to load audit history.';
+        error = safeWorkspaceErrorMessage(caught, 'Activity could not be loaded. Try again.');
       }
     } finally {
       if (controller?.signal === signal) {

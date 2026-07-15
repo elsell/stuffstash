@@ -1801,6 +1801,12 @@ h2 {
 }
 
 @media (max-width: 760px) {
+  .settings-panel [data-slot="input"],
+  .settings-panel [data-slot="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   .access-form,
   .access-columns,
   .access-row,

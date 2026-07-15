@@ -1069,6 +1069,16 @@
   }
 
   @media (max-width: 860px) {
+    .history-header :global([data-slot='button']),
+    .history-status-strip :global([data-slot='button']),
+    .action-row :global([data-slot='button']),
+    .attention-alert :global([data-slot='button']),
+    :global(.history-ledger .row-actions [data-slot='button']),
+    :global(.import-history-empty-state [data-slot='button']) {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
     .history-header,
     :global(.import-job-card),
     .job-main {

@@ -131,7 +131,8 @@ describe('InventoryCustomizationManager', () => {
     clickExactButton('Create type');
     await flush();
 
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Unexpected repository call.');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Custom asset type could not be created. Try again.');
+    expect(document.body.textContent).not.toContain('Unexpected repository call.');
     expect(exactButton('Create type')).toBeTruthy();
   });
 
