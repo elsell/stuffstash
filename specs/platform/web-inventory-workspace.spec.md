@@ -918,6 +918,20 @@ The UI direction depends on existing domain capabilities:
 
 If an API operation is not available during implementation, the UI must expose a truthful loading, unavailable, or disabled state rather than fake saved behavior in production code.
 
+## Clickable Invitation Experience
+
+- Inventory Sharing must present the invitation creation result as a complete `Invitation link`, not a raw token. It must provide `Copy link` and the Web Share API when available, plus selectable manual-copy text when clipboard access fails.
+- The one-time link surface must state that the link cannot be shown again and must disappear when the user leaves the creation result or changes inventory context. Persistent invitation rows must never contain the link or token.
+- `/invitations/accept` is a public shell route. Signed-out visitors see a branded invitation card with one primary `Continue to sign in` action; the route must not claim an invitation is valid before authenticated preview succeeds.
+- Web OIDC return-to behavior must restore the full invitation path, query, and fragment without sending the fragment to the identity provider.
+- Signed-in visitors receive a responsive invitation preview naming the inventory and viewer/editor access in plain language, followed by an explicit `Accept invitation` action.
+- Email mismatch, invalid/malformed link, expired, revoked, cancelled, already accepted, retryable network failure, accepting, and success must each have calm, specific, screen-reader-perceivable presentation. Raw API, token, OIDC, and authorization errors must not be rendered.
+- Revoked and cancelled invitations must use distinct headings and recovery copy so the browser does not collapse different owner actions into an ambiguous unavailable state.
+- The browser may retain validated raw invitation material in route memory only while sign-in, account switching, retry, preview, or explicit acceptance still needs it. Invalid, expired, revoked, cancelled, already-accepted, and successfully accepted states must clear raw token references while retaining only the token-free inventory destination needed for navigation.
+- Successful acceptance must update workspace access state, select the accepted inventory when available, and provide a canonical `Open inventory` route.
+- Invitation UI must use the shared auth surface, buttons, alerts, and responsive design tokens; preserve 44 CSS-pixel targets; work at narrow mobile widths and 200% zoom; and support light/dark/high-contrast and reduced-motion preferences.
+- Browser tests must exercise creation, copy/share fallback, sign-in return, preview, every terminal state, explicit acceptance, and post-accept inventory entry with two distinct identities.
+
 Temporary candidates may use realistic mock data, but promoted web implementation must go through adapter boundaries and generated API contracts.
 
 ## Verification
@@ -946,6 +960,7 @@ Before this direction is promoted into `apps/web`:
   - unavailable asset action deep-link normalization,
   - back navigation from asset detail to location list,
   - viewer denied edit/add state when applicable.
+  - invitation creation, sign-in return, preview, acceptance, terminal failure states, and accepted-inventory entry.
 - Run accessibility checks for dialogs, context switchers, nav, and list/detail flows.
 - Run the code critic agent after implementation and fix or explicitly defer findings.
 

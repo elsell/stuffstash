@@ -1,9 +1,4 @@
-export interface InvitationLinkMaterial {
-  tenantId: string;
-  inventoryId: string;
-  invitationId: string;
-  token: string;
-}
+import type { InvitationLinkMaterial } from '$lib/domain/invitation';
 
 const invitationPath = '/invitations/accept';
 const tokenLength = 43;
@@ -31,6 +26,16 @@ export function parseInvitationLink(value: string, expectedOrigin: string): Invi
     return null;
   }
   return { tenantId, inventoryId, invitationId, token };
+}
+
+export function invitationReturnPath(material: InvitationLinkMaterial): string {
+  const query = new URLSearchParams({
+    tenant: material.tenantId,
+    inventory: material.inventoryId,
+    invitation: material.invitationId
+  });
+  const fragment = new URLSearchParams({ token: material.token });
+  return `${invitationPath}?${query.toString()}#${fragment.toString()}`;
 }
 
 function hasOnlyFields(params: URLSearchParams, allowed: ReadonlySet<string>): boolean {

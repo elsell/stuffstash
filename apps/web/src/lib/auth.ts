@@ -49,14 +49,17 @@ export function signOut(storage: Storage = window.sessionStorage): void {
 export async function startSignIn(
   config: RuntimeConfig,
   location: Location = window.location,
-  storage: Storage = window.sessionStorage
+  storage: Storage = window.sessionStorage,
+  history: Pick<History, 'replaceState' | 'state'> = window.history,
+  returnTo: string = location.pathname + location.search + location.hash
 ): Promise<void> {
   const state = randomURLSafeString(24);
   const verifier = randomURLSafeString(64);
   const challenge = await sha256URLSafe(verifier);
   storage.setItem(stateKey, state);
   storage.setItem(verifierKey, verifier);
-  storage.setItem(returnToKey, location.pathname + location.search);
+  storage.setItem(returnToKey, safeAppReturnTo(returnTo));
+  history.replaceState(history.state, '', location.pathname + location.search);
 
   const params = new URLSearchParams({
     client_id: config.oidcClientId,
@@ -76,46 +79,66 @@ export async function completeSignIn(
   fetchImpl: typeof fetch = fetch,
   storage: Storage = window.sessionStorage
 ): Promise<string> {
-  const url = new URL(callbackUrl);
-  const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const expectedState = storage.getItem(stateKey);
-  const verifier = storage.getItem(verifierKey);
-  if (!code || !state || !expectedState || state !== expectedState || !verifier) {
-    throw new Error('Invalid sign-in callback.');
-  }
+  const returnTo = safeAppReturnTo(storage.getItem(returnToKey) ?? '/');
+  try {
+    const url = new URL(callbackUrl);
+    const code = url.searchParams.get('code');
+    const state = url.searchParams.get('state');
+    const expectedState = storage.getItem(stateKey);
+    const verifier = storage.getItem(verifierKey);
+    if (!code || !state || !expectedState || state !== expectedState || !verifier) {
+      throw new Error('Invalid sign-in callback.');
+    }
 
-  const response = await fetchImpl(`${config.oidcIssuer}/token`, {
-    method: 'POST',
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: config.oidcClientId,
-      redirect_uri: config.oidcRedirectUri,
-      code,
-      code_verifier: verifier
-    })
-  });
-  if (!response.ok) {
-    throw new Error('Unable to complete sign-in.');
+    const response = await fetchImpl(`${config.oidcIssuer}/token`, {
+      method: 'POST',
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: config.oidcClientId,
+        redirect_uri: config.oidcRedirectUri,
+        code,
+        code_verifier: verifier
+      })
+    });
+    if (!response.ok) {
+      throw new Error('Unable to complete sign-in.');
+    }
+    const token = (await response.json()) as TokenResponse;
+    if (!token.id_token) {
+      throw new Error('Sign-in response did not include an ID token.');
+    }
+    storeSession(
+      {
+        idToken: token.id_token,
+        expiresAt: tokenExpiry(token)
+      },
+      storage
+    );
+    storage.setItem(completedAtKey, String(Date.now()));
+    return returnTo;
+  } finally {
+    storage.removeItem(verifierKey);
+    storage.removeItem(stateKey);
+    storage.removeItem(returnToKey);
   }
-  const token = (await response.json()) as TokenResponse;
-  if (!token.id_token) {
-    throw new Error('Sign-in response did not include an ID token.');
-  }
-  storeSession(
-    {
-      idToken: token.id_token,
-      expiresAt: tokenExpiry(token)
-    },
-    storage
-  );
-  storage.setItem(completedAtKey, String(Date.now()));
+}
 
-  const returnTo = storage.getItem(returnToKey) ?? '/';
-  storage.removeItem(verifierKey);
-  storage.removeItem(stateKey);
-  storage.removeItem(returnToKey);
-  return returnTo;
+function safeAppReturnTo(value: string): string {
+  if (value.length === 0 || value.length > 4096 || !value.startsWith('/') || value.startsWith('//')) {
+    return '/';
+  }
+  if (/[%](?:2f|5c)/i.test(value) || /[\\\u0000-\u001f\u007f]/.test(value)) {
+    return '/';
+  }
+  try {
+    const parsed = new URL(value, 'https://stuffstash.local');
+    if (parsed.origin !== 'https://stuffstash.local' || parsed.pathname.replace(/\/+$/, '') === '/callback') {
+      return '/';
+    }
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return '/';
+  }
 }
 
 export function hasRecentlyCompletedSignIn(storage: Storage = window.sessionStorage, now = Date.now()): boolean {

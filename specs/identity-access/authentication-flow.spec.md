@@ -118,3 +118,13 @@ Stuff Stash must keep a durable user profile row for authenticated principals.
 - The local Dex verification path must run the same happy-path API user flow and authorization adversary checks as the local-dev verifier.
 - The OIDC adapter must have fake-backed tests for valid tokens, verifier failures, empty issuer or subject claims, provider-specific subject characters, malformed authorization headers, and unsupported schemes.
 - Authentication tests must use fakes or local adapters, not mocks.
+
+## Invitation Return-To Safety
+
+- Web sign-in started from an invitation route must preserve the same-origin invitation path, query, and fragment through the OIDC round trip.
+- The invitation fragment must remain only in browser session state and must never be appended to the OIDC authorization or token request.
+- Once a valid invitation is parsed, the browser must immediately remove its token fragment from visible history while retaining the complete return-to value only in session-scoped state for sign-in completion.
+- Return-to restoration must accept only an app-local absolute path beginning with `/`; absolute URLs, protocol-relative values, backslash variants, control characters, and callback recursion must normalize to `/`.
+- Callback completion must remove the stored return-to value after one use whether restoration succeeds or falls back safely.
+- Sign-out must clear pending invitation return state.
+- Tests must prove a token-bearing fragment survives a valid callback, never reaches provider requests, cannot create an open redirect, and is cleared after use.

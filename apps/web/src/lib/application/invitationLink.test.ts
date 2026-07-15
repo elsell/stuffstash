@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInvitationLink } from './invitationLink';
+import { invitationReturnPath, parseInvitationLink } from './invitationLink';
 
 const origin = 'https://stash.example.test';
 const token = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -12,6 +12,14 @@ describe('parseInvitationLink', () => {
       invitationId: 'invite-one',
       token
     });
+  });
+
+  it('reconstructs only the canonical app-local return path for OIDC handoff', () => {
+    expect(invitationReturnPath({
+      tenantId: 'tenant one', inventoryId: 'inventory-one', invitationId: 'invite?one', token
+    })).toBe(
+      `/invitations/accept?tenant=tenant+one&inventory=inventory-one&invitation=invite%3Fone#token=${token}`
+    );
   });
 
   it.each([
