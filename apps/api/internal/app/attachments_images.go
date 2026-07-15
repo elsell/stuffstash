@@ -164,7 +164,7 @@ func (a App) authorizeImageAttachmentRead(ctx context.Context, principal identit
 	if err := a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionView); err != nil {
 		return media.Attachment{}, err
 	}
-	if err := a.ensureActiveAssetForAttachment(ctx, tenantID, inventoryID, assetID); err != nil {
+	if err := a.ensureReadableAssetForAttachment(ctx, tenantID, inventoryID, assetID); err != nil {
 		return media.Attachment{}, err
 	}
 	attachment, found, err := a.attachments.AttachmentByID(ctx, tenantID, inventoryID, assetID, attachmentID)

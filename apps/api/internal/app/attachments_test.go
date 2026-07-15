@@ -169,7 +169,7 @@ func TestAttachmentThumbnailAndModelImageUseImageProcessorPort(t *testing.T) {
 		TenantUnitOfWork:     attachmentTenantRepository{},
 		Inventories:          attachmentInventoryRepository{},
 		InventoryUnitOfWork:  attachmentInventoryRepository{},
-		Assets:               attachmentAssetRepository{},
+		Assets:               archivedAttachmentAssetRepository{},
 		Attachments:          repository,
 		AttachmentUnitOfWork: repository,
 		Blobs:                blobStore,
@@ -321,6 +321,8 @@ func (allowInventoryAuthorizer) RevokeInventoryEditor(context.Context, identity.
 
 type attachmentAssetRepository struct{}
 
+type archivedAttachmentAssetRepository struct{ attachmentAssetRepository }
+
 type attachmentTenantRepository struct{}
 
 func (attachmentTenantRepository) SaveTenant(context.Context, tenant.Tenant) error {
@@ -447,6 +449,15 @@ func (attachmentAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID
 		TenantID:       asset.TenantID(tenantID.String()),
 		InventoryID:    asset.InventoryID(inventoryID.String()),
 		LifecycleState: asset.LifecycleStateActive,
+	}, true, nil
+}
+
+func (archivedAttachmentAssetRepository) AssetByID(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) (asset.Asset, bool, error) {
+	return asset.Asset{
+		ID:             assetID,
+		TenantID:       asset.TenantID(tenantID.String()),
+		InventoryID:    asset.InventoryID(inventoryID.String()),
+		LifecycleState: asset.LifecycleStateArchived,
 	}, true, nil
 }
 

@@ -122,6 +122,7 @@ Attachment listing:
 Attachment content download:
 
 - Must authorize every request.
+- Must remain readable to authorized principals when the parent asset is archived so archived asset summaries and detail surfaces do not expose broken attachment or thumbnail references.
 - Must return the bytes stored for the attachment.
 - Must set the stored content type.
 - Must not return presigned object storage URLs in the first slice.
@@ -137,6 +138,7 @@ Thumbnails and image processing:
 - Generated thumbnails should prefer compact, broadly supported image encodings suitable for photos, such as bounded-quality JPEG, so camera-photo derivatives remain small enough for mobile card and list browsing.
 - Image processors must inspect image dimensions before full decode and reject excessive dimensions or pixel counts before resizing, so small-byte images with hostile dimensions cannot force unbounded memory or CPU work.
 - Thumbnail generation must be authorized with `inventory.view` and scoped to the requested tenant, inventory, asset, and attachment.
+- Thumbnail generation must remain available to authorized principals when the parent asset is archived. Archived parent state must not turn an otherwise valid primary image summary into a broken thumbnail reference.
 - Thumbnail generation is supported only for image attachments.
 - The application must not contain image codec, resize, crop, EXIF, or color-management implementation details.
 - Image processing adapters must enforce bounded input and output sizes and must not leak implementation paths, command lines, or provider internals in user-facing errors.
@@ -159,6 +161,7 @@ Model image readiness:
 
 - Media may prepare image attachments for future model providers through an image preparation port.
 - Model-image preparation must require `inventory.view`, must use the same tenant/inventory/asset/attachment scoping as downloads, and must support only image attachments.
+- Model-image preparation may read attachments whose parent asset is archived under the same authorization and scope checks as other attachment reads.
 - Prepared image data must include only the bounded bytes and media metadata needed by a future model adapter, such as content type, byte size, hash, and optional dimensions.
 - The media application layer must not call model providers, construct provider prompts, or bypass authorization, validation, audit, tenant isolation, inventory isolation, or attachment lifecycle rules.
 - Model provider adapters must be specified separately before any provider is implemented.
@@ -233,6 +236,7 @@ When a browser client cannot use an advertised direct-upload target because the 
 - Attachment upload requires `inventory.edit_asset`.
 - Attachment direct upload initiation and completion require `inventory.edit_asset`.
 - Attachment list and content download require `inventory.view`.
+- Attachment list, detail, content download, thumbnail, and model-image preparation may read from active or archived parent assets. Create, direct-upload, attachment lifecycle mutation, and hard-delete operations still require an active parent asset.
 - Attachment thumbnail and model-image preparation require `inventory.view`.
 - The target asset must belong to the tenant and inventory in the route.
 - Hidden or cross-tenant assets must return safe not-found behavior after the caller passes inventory authorization.
