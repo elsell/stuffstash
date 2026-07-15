@@ -7,6 +7,7 @@ const config: RuntimeConfig = {
   oidcIssuer: 'http://localhost:5556/dex',
   oidcClientId: 'stuff-stash-web-local',
   oidcRedirectUri: 'http://localhost:5173/callback',
+  invitationAllowInsecureLocalHTTP: false,
   mediaUploadPolicy: {
     supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
     maxBytes: 5242880

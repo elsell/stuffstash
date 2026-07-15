@@ -132,7 +132,7 @@ export interface InventoryAccessInvitation {
 
 export interface CreatedInventoryAccessInvitation {
   invitation: InventoryAccessInvitation;
-  acceptanceToken?: string;
+  inviteUrl: string;
 }
 
 export type AuditScope = 'inventory' | 'tenant';

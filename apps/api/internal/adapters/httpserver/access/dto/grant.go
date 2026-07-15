@@ -74,7 +74,8 @@ type InvitationBody struct {
 }
 
 type CreateInventoryAccessInvitationOutput struct {
-	Body shared.SuccessEnvelope[InvitationResponse]
+	CacheControl string `header:"Cache-Control"`
+	Body         shared.SuccessEnvelope[CreatedInvitationResponse]
 }
 
 type AcceptInventoryAccessInvitationInput struct {
@@ -92,6 +93,19 @@ type AcceptInvitationBody struct {
 
 type AcceptInventoryAccessInvitationOutput struct {
 	Body shared.SuccessEnvelope[InvitationAcceptanceResponse]
+}
+
+type PreviewInventoryAccessInvitationInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID      string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
+	InvitationID  string `path:"invitationId" doc:"Invitation ID"`
+	Body          AcceptInvitationBody
+}
+
+type PreviewInventoryAccessInvitationOutput struct {
+	Body shared.SuccessEnvelope[InvitationPreviewResponse]
 }
 
 type ListInventoryAccessInvitationsInput struct {
@@ -151,16 +165,38 @@ type InvitationResponse struct {
 	TenantID            string `json:"tenantId"`
 	InventoryID         string `json:"inventoryId"`
 	Email               string `json:"email"`
-	Relationship        string `json:"relationship"`
-	Status              string `json:"status"`
+	Relationship        string `json:"relationship" enum:"viewer,editor"`
+	Status              string `json:"status" enum:"pending,accepted,revoked,cancelled,expired"`
 	InviterPrincipalID  string `json:"inviterPrincipalId"`
 	AcceptedPrincipalID string `json:"acceptedPrincipalId,omitempty"`
 	ExpiresAt           string `json:"expiresAt"`
 	IsExpired           bool   `json:"isExpired"`
-	AcceptanceToken     string `json:"acceptanceToken,omitempty"`
+}
+
+type CreatedInvitationResponse struct {
+	ID                  string `json:"id"`
+	TenantID            string `json:"tenantId"`
+	InventoryID         string `json:"inventoryId"`
+	Email               string `json:"email"`
+	Relationship        string `json:"relationship" enum:"viewer,editor"`
+	Status              string `json:"status" enum:"pending,accepted,revoked,cancelled,expired"`
+	InviterPrincipalID  string `json:"inviterPrincipalId"`
+	AcceptedPrincipalID string `json:"acceptedPrincipalId,omitempty"`
+	ExpiresAt           string `json:"expiresAt"`
+	IsExpired           bool   `json:"isExpired"`
+	InviteURL           string `json:"inviteUrl"`
 }
 
 type InvitationAcceptanceResponse struct {
 	Invitation InvitationResponse `json:"invitation"`
 	Grant      GrantResponse      `json:"grant"`
+}
+
+type InvitationPreviewResponse struct {
+	InventoryID   string `json:"inventoryId"`
+	InventoryName string `json:"inventoryName"`
+	Relationship  string `json:"relationship" enum:"viewer,editor"`
+	Status        string `json:"status" enum:"pending,accepted,revoked,cancelled,expired"`
+	ExpiresAt     string `json:"expiresAt"`
+	IsExpired     bool   `json:"isExpired"`
 }

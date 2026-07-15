@@ -43,7 +43,19 @@ export interface InventoryAccessInvitation {
   expiresAt: string;
   inviterPrincipalId: string;
   acceptedPrincipalId?: string;
-  acceptanceToken?: string;
+}
+
+export interface CreatedInventoryAccessInvitation extends InventoryAccessInvitation {
+  inviteUrl: string;
+}
+
+export interface InventoryAccessInvitationPreview {
+  inventoryId: string;
+  inventoryName: string;
+  relationship: InventoryAccessRelationship;
+  status: InvitationStatus;
+  isExpired: boolean;
+  expiresAt: string;
 }
 
 export interface InvitationAcceptance {
@@ -603,7 +615,9 @@ type AttachmentResponse = components['schemas']['AttachmentResponse'];
 type DirectUploadResponse = components['schemas']['DirectUploadResponse'];
 type GrantResponse = components['schemas']['GrantResponse'];
 type InvitationResponse = components['schemas']['InvitationResponse'];
+type CreatedInvitationResponse = components['schemas']['CreatedInvitationResponse'];
 type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceResponse'];
+type InvitationPreviewResponse = components['schemas']['InvitationPreviewResponse'];
 type RecordResponse = components['schemas']['RecordResponse'];
 type AssetTypeResponse = components['schemas']['AssetTypeResponse'];
 type DefinitionResponse = components['schemas']['DefinitionResponse'];
@@ -1278,7 +1292,7 @@ export class StuffStashClient {
     tenantId: string,
     inventoryId: string,
     input: { email: string; relationship: InventoryAccessRelationship }
-  ): Promise<InventoryAccessInvitation> {
+  ): Promise<CreatedInventoryAccessInvitation> {
     const envelope = await this.unwrap(
       this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations', {
         headers: await this.authHeaders(),
@@ -1286,7 +1300,7 @@ export class StuffStashClient {
         body: input
       })
     );
-    return mapInvitation(envelope.data);
+    return mapCreatedInvitation(envelope.data);
   }
 
   async updateInventoryAccessInvitationExpiration(
@@ -1321,6 +1335,22 @@ export class StuffStashClient {
         params: { path: { tenantId, inventoryId, invitationId } }
       })
     );
+  }
+
+  async previewInventoryAccessInvitation(
+    tenantId: string,
+    inventoryId: string,
+    invitationId: string,
+    acceptanceToken: string
+  ): Promise<InventoryAccessInvitationPreview> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, invitationId } },
+        body: { acceptanceToken }
+      })
+    );
+    return mapInvitationPreview(envelope.data);
   }
 
   async acceptInventoryAccessInvitation(
@@ -1803,7 +1833,7 @@ function mapGrant(response: GrantResponse): InventoryAccessGrant {
 }
 
 function mapInvitation(response: InvitationResponse): InventoryAccessInvitation {
-  return {
+  const invitation: InventoryAccessInvitation = {
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId,
@@ -1812,9 +1842,24 @@ function mapInvitation(response: InvitationResponse): InventoryAccessInvitation 
     status: mapInvitationStatus(response.status),
     isExpired: response.isExpired,
     expiresAt: response.expiresAt,
-    inviterPrincipalId: response.inviterPrincipalId,
-    acceptedPrincipalId: response.acceptedPrincipalId,
-    acceptanceToken: response.acceptanceToken
+    inviterPrincipalId: response.inviterPrincipalId
+  };
+  if (response.acceptedPrincipalId) invitation.acceptedPrincipalId = response.acceptedPrincipalId;
+  return invitation;
+}
+
+function mapCreatedInvitation(response: CreatedInvitationResponse): CreatedInventoryAccessInvitation {
+  return { ...mapInvitation(response), inviteUrl: response.inviteUrl };
+}
+
+function mapInvitationPreview(response: InvitationPreviewResponse): InventoryAccessInvitationPreview {
+  return {
+    inventoryId: response.inventoryId,
+    inventoryName: response.inventoryName,
+    relationship: mapInventoryAccessRelationship(response.relationship),
+    status: mapInvitationStatus(response.status),
+    isExpired: response.isExpired,
+    expiresAt: response.expiresAt
   };
 }
 

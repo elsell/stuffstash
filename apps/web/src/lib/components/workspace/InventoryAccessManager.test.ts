@@ -14,6 +14,8 @@ import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/
 
 let component: ReturnType<typeof mount> | null = null;
 const originalClipboardDescriptor = Object.getOwnPropertyDescriptor(Navigator.prototype, 'clipboard');
+const originalShareDescriptor = Object.getOwnPropertyDescriptor(Navigator.prototype, 'share');
+const inviteUrl = 'https://stash.example.test/invitations/accept?tenant=tenant-one&inventory=inventory-one&invitation=invite-two#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 
 afterEach(() => {
   if (component) {
@@ -22,6 +24,7 @@ afterEach(() => {
   }
   document.body.innerHTML = '';
   restoreClipboard();
+  restoreShare();
   vi.restoreAllMocks();
 });
 
@@ -180,10 +183,10 @@ describe('InventoryAccessManager', () => {
     expect(calls).toContain('invite:tenant-one:inventory-one:new@example.test:viewer');
     expect(document.body.textContent).toContain('principal-three');
     expect(document.body.textContent).toContain('new@example.test');
-    expect(document.body.textContent).toContain('raw-token');
+    expect(document.body.textContent).toContain('token=');
   });
 
-  it('keeps acceptance token out of persistent invitation rows', async () => {
+  it('keeps the one-time invitation link out of persistent invitation rows', async () => {
     const { repository } = fakeAccessRepository();
 
     component = mount(InventoryAccessManager, {
@@ -196,14 +199,13 @@ describe('InventoryAccessManager', () => {
     clickButton('Create invite');
     await flush();
 
-    expect(document.body.querySelector('.one-time-token')?.textContent).toContain('raw-token');
-    expect(document.body.querySelector('.one-time-token')?.textContent).toContain('Copy token');
-    expect(document.body.querySelector('.one-time-token')?.getAttribute('aria-label')).toBe('One-time invitation token');
+    expect(document.body.querySelector('.one-time-token')?.textContent).toContain('Copy link');
+    expect(document.body.querySelector('.one-time-token')?.getAttribute('aria-label')).toBe('One-time invitation link');
     expect(document.body.querySelector('.one-time-token')?.getAttribute('role')).toBeNull();
-    expect(document.body.querySelector('[aria-label="Invitations"]')?.textContent).not.toContain('raw-token');
+    expect(document.body.querySelector('[aria-label="Invitations"]')?.textContent).not.toContain('token=');
   });
 
-  it('copies the one-time invitation token when clipboard access is available', async () => {
+  it('copies the complete one-time invitation link when clipboard access is available', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
     const { repository } = fakeAccessRepository();
@@ -217,11 +219,11 @@ describe('InventoryAccessManager', () => {
     await setInput('#invite-email', 'new@example.test');
     clickButton('Create invite');
     await flush();
-    clickButton('Copy token');
+    clickButton('Copy link');
     await flush();
 
-    expect(writeText).toHaveBeenCalledWith('raw-token');
-    expect(document.body.textContent).toContain('Invitation token copied.');
+    expect(writeText).toHaveBeenCalledWith(inviteUrl);
+    expect(document.body.textContent).toContain('Invitation link copied.');
   });
 
   it('shows a manual-copy error when clipboard copy fails', async () => {
@@ -237,10 +239,10 @@ describe('InventoryAccessManager', () => {
     await setInput('#invite-email', 'new@example.test');
     clickButton('Create invite');
     await flush();
-    clickButton('Copy token');
+    clickButton('Copy link');
     await flush();
 
-    expect(document.body.textContent).toContain('Invitation token not copied. Select the token and copy it manually.');
+    expect(document.body.textContent).toContain('Invitation link not copied. Select the link and copy it manually.');
   });
 
   it('clears stale copied status when a later copy attempt fails', async () => {
@@ -257,15 +259,15 @@ describe('InventoryAccessManager', () => {
     await setInput('#invite-email', 'new@example.test');
     clickButton('Create invite');
     await flush();
-    clickButton('Copy token');
+    clickButton('Copy link');
     await flush();
-    expect(document.body.textContent).toContain('Invitation token copied.');
+    expect(document.body.textContent).toContain('Invitation link copied.');
 
-    clickButton('Copy token');
+    clickButton('Copy link');
     await flush();
 
-    expect(document.body.textContent).not.toContain('Invitation token copied.');
-    expect(document.body.textContent).toContain('Invitation token not copied. Select the token and copy it manually.');
+    expect(document.body.textContent).not.toContain('Invitation link copied.');
+    expect(document.body.textContent).toContain('Invitation link not copied. Select the link and copy it manually.');
   });
 
   it('shows a manual-copy error when clipboard access is unavailable', async () => {
@@ -281,10 +283,44 @@ describe('InventoryAccessManager', () => {
     await setInput('#invite-email', 'new@example.test');
     clickButton('Create invite');
     await flush();
-    clickButton('Copy token');
+    clickButton('Copy link');
     await flush();
 
-    expect(document.body.textContent).toContain('Invitation token not copied. Select the token and copy it manually.');
+    expect(document.body.textContent).toContain('Invitation link not copied. Select the link and copy it manually.');
+  });
+
+  it('shares the complete one-time invitation link through the Web Share API', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    stubShare(share);
+    const { repository } = fakeAccessRepository();
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+    await setInput('#invite-email', 'new@example.test');
+    clickButton('Create invite');
+    await flush();
+    clickButton('Share invitation');
+    await flush();
+    expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: inviteUrl }));
+  });
+
+  it('clears a prior one-time link before a later creation attempt fails', async () => {
+    const { repository } = fakeAccessRepository({ failInvitationCreationAfter: 1 });
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+    await setInput('#invite-email', 'first@example.test');
+    clickButton('Create invite');
+    await flush();
+    expect(document.body.textContent).toContain('token=');
+    await setInput('#invite-email', 'second@example.test');
+    clickButton('Create invite');
+    await flush();
+    expect(document.body.textContent).not.toContain('token=');
   });
 
   it('revokes grants through the access repository port', async () => {
@@ -669,6 +705,15 @@ function restoreClipboard(): void {
   Reflect.deleteProperty(Navigator.prototype, 'clipboard');
 }
 
+function stubShare(share: typeof navigator.share | undefined): void {
+  Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value: share });
+}
+
+function restoreShare(): void {
+  if (originalShareDescriptor) Object.defineProperty(Navigator.prototype, 'share', originalShareDescriptor);
+  else delete (Navigator.prototype as unknown as { share?: typeof navigator.share }).share;
+}
+
 async function flush(): Promise<void> {
   await Promise.resolve();
   await tick();
@@ -693,7 +738,7 @@ function inventory(tenantId: string, id: string, permissions: string[]): Invento
   };
 }
 
-function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: InventoryAccessInvitation['status']; expired?: boolean } = {}): {
+function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: InventoryAccessInvitation['status']; expired?: boolean; failInvitationCreationAfter?: number } = {}): {
   repository: InventoryAccessRepository;
   calls: string[];
 } {
@@ -707,6 +752,7 @@ function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: I
       isExpired: options.expired ?? false
     }
   ];
+  let invitationCreations = 0;
   return {
     calls,
     repository: {
@@ -736,10 +782,14 @@ function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: I
         );
       },
       createInventoryAccessInvitation: async (tenantId, inventoryId, email, relationship) => {
+        if (options.failInvitationCreationAfter !== undefined && invitationCreations >= options.failInvitationCreationAfter) {
+          throw new Error('creation failed');
+        }
+        invitationCreations += 1;
         calls.push(`invite:${tenantId}:${inventoryId}:${email}:${relationship}`);
         const created = invitation('invite-two', email, relationship);
         invitations = [created, ...invitations];
-        return { invitation: created, acceptanceToken: 'raw-token' };
+        return { invitation: created, inviteUrl };
       },
       updateInventoryAccessInvitationExpiration: async (tenantId, inventoryId, invitationId, expiresAt) => {
         calls.push(`expire:${tenantId}:${inventoryId}:${invitationId}:${expiresAt}`);

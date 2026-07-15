@@ -5,6 +5,7 @@ export interface RuntimeConfig {
   oidcIssuer: string;
   oidcClientId: string;
   oidcRedirectUri: string;
+  invitationAllowInsecureLocalHTTP: boolean;
   mediaUploadPolicy: MediaUploadPolicy;
 }
 
@@ -38,6 +39,7 @@ export function parseRuntimeConfig(value: unknown): RuntimeConfig {
     oidcIssuer: trimTrailingSlash(record.oidcIssuer as string),
     oidcClientId: record.oidcClientId as string,
     oidcRedirectUri: record.oidcRedirectUri as string,
+    invitationAllowInsecureLocalHTTP: record.invitationAllowInsecureLocalHTTP === true,
     mediaUploadPolicy: parseMediaUploadPolicy(record.mediaUploadPolicy)
   };
 }

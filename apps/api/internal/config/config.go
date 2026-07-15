@@ -45,6 +45,8 @@ const (
 	envBlobDeletionOutboxLease            = "STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE"
 	envBlobDeletionOutboxMaxAttempts      = "STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS"
 	envInvitationTTL                      = "STUFF_STASH_INVITATION_TTL"
+	envInvitationPublicBaseURL            = "STUFF_STASH_INVITATION_PUBLIC_BASE_URL"
+	envInvitationAllowInsecureLocalHTTP   = "STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP"
 	envDefaultPageLimit                   = "STUFF_STASH_DEFAULT_PAGE_LIMIT"
 	envMaxPageLimit                       = "STUFF_STASH_MAX_PAGE_LIMIT"
 	envBlobStorageMode                    = "STUFF_STASH_BLOB_STORAGE_MODE"
@@ -99,6 +101,7 @@ const (
 	defaultBlobDeletionLease              = 30 * time.Second
 	defaultBlobDeletionMaxAttempts        = 5
 	defaultInvitationTTL                  = 7 * 24 * time.Hour
+	defaultInvitationPublicBaseURL        = ""
 	defaultDefaultPageLimit               = 50
 	defaultMaxPageLimit                   = 100
 	defaultBlobStorageMode                = "filesystem"
@@ -167,6 +170,8 @@ type Config struct {
 	BlobDeletionOutboxClaimLease     time.Duration
 	BlobDeletionOutboxMaxAttempts    int
 	InvitationTTL                    time.Duration
+	InvitationPublicBaseURL          string
+	InvitationAllowInsecureLocalHTTP bool
 	DefaultPageLimit                 int
 	MaxPageLimit                     int
 	BlobStorageMode                  string
@@ -237,6 +242,8 @@ func Load() Config {
 		BlobDeletionOutboxClaimLease:     durationEnvOrDefault(envBlobDeletionOutboxLease, defaultBlobDeletionLease),
 		BlobDeletionOutboxMaxAttempts:    intEnvOrDefault(envBlobDeletionOutboxMaxAttempts, defaultBlobDeletionMaxAttempts),
 		InvitationTTL:                    durationEnvOrDefault(envInvitationTTL, defaultInvitationTTL),
+		InvitationPublicBaseURL:          envOrDefault(envInvitationPublicBaseURL, defaultInvitationPublicBaseURL),
+		InvitationAllowInsecureLocalHTTP: boolEnvOrDefault(envInvitationAllowInsecureLocalHTTP, false),
 		DefaultPageLimit:                 intEnvOrDefault(envDefaultPageLimit, defaultDefaultPageLimit),
 		MaxPageLimit:                     intEnvOrDefault(envMaxPageLimit, defaultMaxPageLimit),
 		BlobStorageMode:                  envOrDefault(envBlobStorageMode, defaultBlobStorageMode),

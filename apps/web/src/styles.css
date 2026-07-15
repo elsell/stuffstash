@@ -1359,6 +1359,26 @@ h2 {
   font-size: 0.86rem;
 }
 
+.one-time-token > div:first-child,
+.invitation-link-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.invitation-link-actions {
+  grid-auto-flow: column;
+}
+
+@media (max-width: 640px) {
+  .one-time-token {
+    grid-template-columns: 1fr;
+  }
+
+  .invitation-link-actions {
+    grid-auto-flow: row;
+  }
+}
+
 .audit-list {
   display: grid;
   gap: var(--space-6);

@@ -97,9 +97,12 @@ The first runtime config shape is:
   "apiBaseUrl": "http://localhost:8080",
   "oidcIssuer": "http://localhost:5556/dex",
   "oidcClientId": "stuff-stash-web-local",
-  "oidcRedirectUri": "http://localhost:5173/callback"
+  "oidcRedirectUri": "http://localhost:5173/callback",
+  "invitationAllowInsecureLocalHTTP": false
 }
 ```
+
+`invitationAllowInsecureLocalHTTP` defaults to `false`. When explicitly enabled at the web runtime composition boundary, invitation-link validation may accept HTTP only for `localhost`, IP loopback, and IPv4 RFC 1918 addresses. It must continue to reject public HTTP hosts and public IP addresses. This switch must be configured consistently with the API invitation-link switch for local browser acceptance.
 
 The runtime config may be served as a static file by the web app in local development. It must not be compiled into frontend source code as the only configuration mechanism.
 

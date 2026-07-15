@@ -707,6 +707,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 	application := app.New(app.Dependencies{
 		Observer:                  &fakeObserver{},
 		Auth:                      auth.NewLocalDevAuthenticator(),
+		InvitationPublicBaseURL:   "https://stash.example.test/invitations/accept",
 		Authorizer:                authorizer,
 		Users:                     store,
 		Tenants:                   store,

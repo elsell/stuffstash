@@ -272,9 +272,56 @@ func TestStoreRejectsRevokedInventoryAccessInvitationAcceptance(t *testing.T) {
 	if !revoked {
 		t.Fatalf("expected invitation revoked")
 	}
+	terminal, found, err := store.InventoryAccessInvitationByID(ctx, tenantID, inventoryID, invitation.ID)
+	if err != nil || !found {
+		t.Fatalf("load revoked invitation: found=%t err=%v", found, err)
+	}
+	if terminal.Status != ports.InventoryAccessInvitationRevoked || terminal.TokenHash != "correct-token-hash" {
+		t.Fatalf("expected revoked invitation to retain its one-way verifier, got %+v", terminal)
+	}
 	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
 	if !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected revoked invitation forbidden, got %v", err)
+	}
+}
+
+func TestStoreCancelledInventoryAccessInvitationRetainsVerifierAndRejectsAcceptance(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	email, _ := identity.NewEmail("viewer@example.com")
+	invitation, err := store.SaveInventoryAccessInvitation(ctx, ports.InventoryAccessInvitation{
+		ID:                 "01ARZ3NDEKTSV4RRFFQ69G5FAX",
+		TenantID:           tenantID,
+		InventoryID:        inventoryID,
+		Email:              email,
+		TokenHash:          "correct-token-hash",
+		Relationship:       ports.InventoryAccessViewer,
+		Status:             ports.InventoryAccessInvitationPending,
+		InviterPrincipalID: identity.PrincipalID("owner"),
+		ExpiresAt:          time.Now().Add(time.Hour),
+	}, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, inventoryID, audit.ActionInventoryInvitationCreated))
+	if err != nil {
+		t.Fatalf("save invitation: %v", err)
+	}
+	cancelled, err := store.CancelInventoryAccessInvitation(ctx, tenantID, inventoryID, invitation.ID, auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FAZ", tenantID, inventoryID, audit.ActionInventoryInvitationCancelled))
+	if err != nil || !cancelled {
+		t.Fatalf("cancel invitation: cancelled=%t err=%v", cancelled, err)
+	}
+	terminal, found, err := store.InventoryAccessInvitationByID(ctx, tenantID, inventoryID, invitation.ID)
+	if err != nil || !found {
+		t.Fatalf("load cancelled invitation: found=%t err=%v", found, err)
+	}
+	if terminal.Status != ports.InventoryAccessInvitationCancelled || terminal.TokenHash != "correct-token-hash" {
+		t.Fatalf("expected cancelled invitation to retain its one-way verifier, got %+v", terminal)
+	}
+	_, _, err = store.AcceptInventoryAccessInvitationAndEnqueue(ctx, tenantID, inventoryID, invitation.ID, "correct-token-hash", identity.Principal{ID: identity.PrincipalID("viewer-user"), Email: email}, "01ARZ3NDEKTSV4RRFFQ69G5FB0", time.Now(), auditRecord(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantID, inventoryID, audit.ActionInventoryInvitationAccepted))
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected cancelled invitation forbidden, got %v", err)
 	}
 }
 

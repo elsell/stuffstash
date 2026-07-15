@@ -48,6 +48,10 @@ func ToHumaError(err error) error {
 	var importSourceInvalidInput app.ImportSourceInvalidInputError
 	var importSourceChanged app.ImportSourceChangedAfterPreviewError
 	switch {
+	case errors.Is(err, app.ErrInvitationInvalid):
+		return newCodedErrorEnvelope(http.StatusNotFound, "invitation_invalid", "This invitation link is invalid.")
+	case errors.Is(err, app.ErrInvitationEmailMismatch):
+		return newCodedErrorEnvelope(http.StatusForbidden, "invitation_email_mismatch", "This invitation belongs to another signed-in account.")
 	case errors.Is(err, app.ErrUnauthenticated):
 		return huma.Error401Unauthorized("Authentication required.")
 	case errors.Is(err, app.ErrUnauthorized):
@@ -76,6 +80,18 @@ func ToHumaError(err error) error {
 		return huma.Error404NotFound("Resource not found.")
 	default:
 		return huma.Error500InternalServerError("Internal server error.")
+	}
+}
+
+func newCodedErrorEnvelope(status int, code string, message string) *ErrorEnvelope {
+	return &ErrorEnvelope{
+		status: status,
+		BodyError: ErrorBody{
+			Code:    code,
+			Message: message,
+			Details: []ErrorDetail{},
+		},
+		Meta: Meta{},
 	}
 }
 

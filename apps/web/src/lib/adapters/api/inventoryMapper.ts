@@ -13,6 +13,7 @@ import type {
   AssetSearchResult as ApiSearchResult,
   InventoryAccessGrant as ApiInventoryAccessGrant,
   InventoryAccessInvitation as ApiInventoryAccessInvitation,
+  CreatedInventoryAccessInvitation as ApiCreatedInventoryAccessInvitation,
   Inventory as ApiInventory,
   Principal as ApiPrincipal,
   Tenant as ApiTenant
@@ -194,11 +195,11 @@ export function mapInventoryAccessInvitation(invitation: ApiInventoryAccessInvit
 }
 
 export function mapCreatedInventoryAccessInvitation(
-  invitation: ApiInventoryAccessInvitation
+  invitation: ApiCreatedInventoryAccessInvitation
 ): CreatedInventoryAccessInvitation {
   return {
     invitation: mapInventoryAccessInvitation(invitation),
-    acceptanceToken: invitation.acceptanceToken
+    inviteUrl: invitation.inviteUrl
   };
 }
 

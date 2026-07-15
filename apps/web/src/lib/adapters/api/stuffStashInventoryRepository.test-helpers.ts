@@ -5,6 +5,7 @@ export const config: RuntimeConfig = {
   oidcIssuer: 'http://oidc.local',
   oidcClientId: 'web',
   oidcRedirectUri: 'http://web.local/auth/callback',
+  invitationAllowInsecureLocalHTTP: false,
   mediaUploadPolicy: {
     supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
     maxBytes: 5242880
@@ -24,6 +25,7 @@ export function fakeFetch(
     failedThumbnailStatusByAssetId?: Record<string, number>;
     includeUnphotographedContainerAndLocation?: boolean;
     failedImportOperations?: Array<'list' | 'preview' | 'start' | 'cancel' | 'remove'>;
+    createdInvitationOverride?: Record<string, unknown>;
   } = {}
 ): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
@@ -319,7 +321,11 @@ export function fakeFetch(
       }
       if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/access-invitations') {
         const body = (await request.clone().json()) as { email: string; relationship: string };
-        return envelope({ ...invitation('invite-created', body.email, body.relationship), acceptanceToken: 'raw-token' }, 201);
+        return envelope({
+          ...invitation('invite-created', body.email, body.relationship),
+          inviteUrl: 'https://stash.example.test/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          ...options.createdInvitationOverride
+        }, 201);
       }
       if (
         request.method === 'PATCH' &&

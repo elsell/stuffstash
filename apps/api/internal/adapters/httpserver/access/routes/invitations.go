@@ -31,11 +31,10 @@ func RegisterInvitations(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		response := mapper.InvitationToResponse(result.Invitation)
-		response.AcceptanceToken = result.AcceptanceToken
 		return &dto.CreateInventoryAccessInvitationOutput{
-			Body: shared.SuccessEnvelope[dto.InvitationResponse]{
-				Data: response,
+			CacheControl: "no-store",
+			Body: shared.SuccessEnvelope[dto.CreatedInvitationResponse]{
+				Data: mapper.CreatedInvitationToResponse(result.Invitation, result.InviteURL),
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
@@ -65,6 +64,36 @@ func RegisterInvitations(api huma.API, application app.App) {
 			Body: shared.SuccessEnvelope[[]dto.InvitationResponse]{
 				Data: mapper.InvitationsToResponseAt(result.Items, result.Now),
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
+			},
+		}, nil
+	}, huma.OperationTags("inventory access"), shared.SecuredOperation)
+
+	huma.Post(api, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview", func(ctx context.Context, input *dto.PreviewInventoryAccessInvitationInput) (*dto.PreviewInventoryAccessInvitationOutput, error) {
+		principal, err := shared.Authenticate(ctx, application, input.Authorization)
+		if err != nil {
+			return nil, err
+		}
+		preview, err := application.PreviewInventoryAccessInvitation(ctx, app.PreviewInventoryAccessInvitationInput{
+			Principal:    principal,
+			TenantID:     tenant.ID(input.TenantID),
+			InventoryID:  inventory.InventoryID(input.InventoryID),
+			InvitationID: input.InvitationID,
+			Token:        input.Body.AcceptanceToken,
+		})
+		if err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+		return &dto.PreviewInventoryAccessInvitationOutput{
+			Body: shared.SuccessEnvelope[dto.InvitationPreviewResponse]{
+				Data: mapper.InvitationPreviewToResponse(
+					preview.InventoryID,
+					preview.InventoryName,
+					preview.Relationship,
+					preview.Status,
+					preview.ExpiresAt,
+					preview.IsExpired,
+				),
+				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
 	}, huma.OperationTags("inventory access"), shared.SecuredOperation)

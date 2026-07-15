@@ -863,7 +863,7 @@ export class SeededInventoryRepository
     email: string,
     relationship: InventoryAccessRelationship
   ): Promise<CreatedInventoryAccessInvitation> {
-    const acceptanceToken = `local-demo-${Date.now()}`;
+    const acceptanceToken = `local_demo_${Date.now().toString(36)}`.padEnd(43, 'x').slice(0, 43);
     const invitation: InventoryAccessInvitation = {
       id: `invitation-${Date.now()}`,
       tenantId,
@@ -884,7 +884,8 @@ export class SeededInventoryRepository
       targetId: invitation.id,
       metadata: { email: invitation.email, relationship }
     });
-    return { invitation, acceptanceToken };
+    const inviteUrl = `https://demo.stuffstash.invalid/invitations/accept?tenant=${encodeURIComponent(tenantId)}&inventory=${encodeURIComponent(inventoryId)}&invitation=${encodeURIComponent(invitation.id)}#token=${acceptanceToken}`;
+    return { invitation, inviteUrl };
   }
 
   async updateInventoryAccessInvitationExpiration(

@@ -66,6 +66,8 @@ type App struct {
 	blobDeletionMaxAttempts      int
 	directUploadTTL              time.Duration
 	invitationTTL                time.Duration
+	invitationPublicBaseURL      string
+	invitationAllowInsecureHTTP  bool
 	defaultPageLimit             int
 	maxPageLimit                 int
 	maxAttachmentBytes           int
@@ -85,69 +87,71 @@ type App struct {
 }
 
 type Dependencies struct {
-	Observer                        ports.Observer
-	Auth                            ports.Authenticator
-	Authorizer                      ports.Authorizer
-	Users                           ports.UserRepository
-	Tenants                         ports.TenantRepository
-	TenantUnitOfWork                ports.TenantUnitOfWork
-	Inventories                     ports.InventoryRepository
-	InventoryUnitOfWork             ports.InventoryUnitOfWork
-	InventoryAccess                 ports.InventoryAccessRepository
-	InventoryAccessUnitOfWork       ports.InventoryAccessUnitOfWork
-	CustomAssetTypes                ports.CustomAssetTypeRepository
-	CustomAssetTypeUnitOfWork       ports.CustomAssetTypeUnitOfWork
-	CustomFields                    ports.CustomFieldDefinitionRepository
-	CustomFieldUnitOfWork           ports.CustomFieldDefinitionUnitOfWork
-	Assets                          ports.AssetRepository
-	AssetTags                       ports.AssetTagRepository
-	Checkouts                       ports.AssetCheckoutRepository
-	AssetUnitOfWork                 ports.AssetUnitOfWork
-	AssetTagUnitOfWork              ports.AssetTagUnitOfWork
-	Undoables                       ports.UndoableOperationRepository
-	Search                          ports.AssetSearchRepository
-	Attachments                     ports.AttachmentRepository
-	AttachmentUnitOfWork            ports.AttachmentUnitOfWork
-	Blobs                           ports.BlobStorage
-	DirectUploads                   ports.DirectAttachmentUploader
-	ImageProcessor                  ports.ImageProcessor
-	BlobDeletionOutbox              ports.BlobDeletionOutbox
-	Audit                           ports.AuditRepository
-	Outbox                          ports.AuthorizationOutbox
-	ProviderProfiles                ports.ProviderProfileRepository
-	ProviderProfileUnitOfWork       ports.ProviderProfileUnitOfWork
-	VoiceProviderConfigs            ports.VoiceProviderConfigurationRepository
-	ProviderCredentialVault         ports.ProviderCredentialVault
-	ProviderProfileTester           ports.ProviderProfileTester
-	RealtimeSessions                ports.RealtimeSessionRepository
-	ActionPlans                     ports.ActionPlanRepository
-	ImportSources                   ports.ImportSourceReader
-	ImportJobs                      ports.ImportJobRepository
-	ImportSourceVault               ports.ImportJobSourceVault
-	ImportLinks                     ports.ImportLinkRepository
-	ImportAssetUnitOfWork           ports.ImportAssetUnitOfWork
-	ImportAttachmentUnitOfWork      ports.ImportAttachmentUnitOfWork
-	ImportWorker                    ports.ImportWorker
-	IDs                             ports.IDGenerator
-	Clock                           ports.Clock
-	AuthorizationOutboxDrainLimit   int
-	AuthorizationOutboxClaimLease   time.Duration
-	BlobDeletionOutboxClaimLease    time.Duration
-	BlobDeletionOutboxMaxAttempts   int
-	DirectUploadTTL                 time.Duration
-	InvitationTTL                   time.Duration
-	DefaultPageLimit                int
-	MaxPageLimit                    int
-	MaxAttachmentBytes              int
-	ImportJobTimeout                time.Duration
-	PrimaryThumbnailWarmLimit       int
-	PrimaryThumbnailWarmConcurrency int
-	PrimaryThumbnailWarmTimeout     time.Duration
-	RealtimeVoiceToolCallTimeout    time.Duration
-	SpeechToText                    ports.SpeechToTextProvider
-	LanguageInference               ports.LanguageInferenceProvider
-	TextToSpeech                    ports.TextToSpeechProvider
-	RealtimeVoiceProviderResolver   ports.RealtimeVoiceProviderResolver
+	Observer                         ports.Observer
+	Auth                             ports.Authenticator
+	Authorizer                       ports.Authorizer
+	Users                            ports.UserRepository
+	Tenants                          ports.TenantRepository
+	TenantUnitOfWork                 ports.TenantUnitOfWork
+	Inventories                      ports.InventoryRepository
+	InventoryUnitOfWork              ports.InventoryUnitOfWork
+	InventoryAccess                  ports.InventoryAccessRepository
+	InventoryAccessUnitOfWork        ports.InventoryAccessUnitOfWork
+	CustomAssetTypes                 ports.CustomAssetTypeRepository
+	CustomAssetTypeUnitOfWork        ports.CustomAssetTypeUnitOfWork
+	CustomFields                     ports.CustomFieldDefinitionRepository
+	CustomFieldUnitOfWork            ports.CustomFieldDefinitionUnitOfWork
+	Assets                           ports.AssetRepository
+	AssetTags                        ports.AssetTagRepository
+	Checkouts                        ports.AssetCheckoutRepository
+	AssetUnitOfWork                  ports.AssetUnitOfWork
+	AssetTagUnitOfWork               ports.AssetTagUnitOfWork
+	Undoables                        ports.UndoableOperationRepository
+	Search                           ports.AssetSearchRepository
+	Attachments                      ports.AttachmentRepository
+	AttachmentUnitOfWork             ports.AttachmentUnitOfWork
+	Blobs                            ports.BlobStorage
+	DirectUploads                    ports.DirectAttachmentUploader
+	ImageProcessor                   ports.ImageProcessor
+	BlobDeletionOutbox               ports.BlobDeletionOutbox
+	Audit                            ports.AuditRepository
+	Outbox                           ports.AuthorizationOutbox
+	ProviderProfiles                 ports.ProviderProfileRepository
+	ProviderProfileUnitOfWork        ports.ProviderProfileUnitOfWork
+	VoiceProviderConfigs             ports.VoiceProviderConfigurationRepository
+	ProviderCredentialVault          ports.ProviderCredentialVault
+	ProviderProfileTester            ports.ProviderProfileTester
+	RealtimeSessions                 ports.RealtimeSessionRepository
+	ActionPlans                      ports.ActionPlanRepository
+	ImportSources                    ports.ImportSourceReader
+	ImportJobs                       ports.ImportJobRepository
+	ImportSourceVault                ports.ImportJobSourceVault
+	ImportLinks                      ports.ImportLinkRepository
+	ImportAssetUnitOfWork            ports.ImportAssetUnitOfWork
+	ImportAttachmentUnitOfWork       ports.ImportAttachmentUnitOfWork
+	ImportWorker                     ports.ImportWorker
+	IDs                              ports.IDGenerator
+	Clock                            ports.Clock
+	AuthorizationOutboxDrainLimit    int
+	AuthorizationOutboxClaimLease    time.Duration
+	BlobDeletionOutboxClaimLease     time.Duration
+	BlobDeletionOutboxMaxAttempts    int
+	DirectUploadTTL                  time.Duration
+	InvitationTTL                    time.Duration
+	InvitationPublicBaseURL          string
+	InvitationAllowInsecureLocalHTTP bool
+	DefaultPageLimit                 int
+	MaxPageLimit                     int
+	MaxAttachmentBytes               int
+	ImportJobTimeout                 time.Duration
+	PrimaryThumbnailWarmLimit        int
+	PrimaryThumbnailWarmConcurrency  int
+	PrimaryThumbnailWarmTimeout      time.Duration
+	RealtimeVoiceToolCallTimeout     time.Duration
+	SpeechToText                     ports.SpeechToTextProvider
+	LanguageInference                ports.LanguageInferenceProvider
+	TextToSpeech                     ports.TextToSpeechProvider
+	RealtimeVoiceProviderResolver    ports.RealtimeVoiceProviderResolver
 }
 
 func New(deps Dependencies) App {
@@ -226,6 +230,8 @@ func New(deps Dependencies) App {
 		blobDeletionMaxAttempts:      normalizeBlobDeletionMaxAttempts(deps.BlobDeletionOutboxMaxAttempts),
 		directUploadTTL:              normalizeDirectUploadTTL(deps.DirectUploadTTL),
 		invitationTTL:                normalizeInvitationTTL(deps.InvitationTTL),
+		invitationPublicBaseURL:      normalizeInvitationPublicBaseURL(deps.InvitationPublicBaseURL),
+		invitationAllowInsecureHTTP:  deps.InvitationAllowInsecureLocalHTTP,
 		defaultPageLimit:             defaultPageLimit,
 		maxPageLimit:                 maxPageLimit,
 		maxAttachmentBytes:           normalizeMaxAttachmentBytes(deps.MaxAttachmentBytes),

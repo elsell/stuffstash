@@ -40,6 +40,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations`
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview`
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept`
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}`
 - `POST /tenants/{tenantId}/custom-field-definitions`
@@ -83,6 +84,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/access-grants` requires `inventory.share`.
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}` requires `inventory.share`.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations` requires `inventory.share` and returns time-limited one-time invite link material for delivery outside the core service.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview` requires an authenticated principal whose verified email matches the invitation plus the valid one-time acceptance token; it returns only safe presentation metadata and creates no grant.
 - `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept` requires a matching authenticated principal email and an unexpired invite acceptance token, then creates the accepted direct grant.
 - `DELETE /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}` requires `inventory.share`. In the lifecycle slice this endpoint is reserved for deliberate hard delete, and `PATCH /cancel` is the normal pending-invitation cancellation endpoint.
 - `POST /tenants/{tenantId}/custom-field-definitions` requires `tenant.configure`.

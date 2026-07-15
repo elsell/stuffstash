@@ -410,6 +410,23 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-expiration"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID access invitations by invitation ID preview */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/archive": {
         parameters: {
             query?: never;
@@ -1544,6 +1561,21 @@ export interface components {
             /** @description Tenant name */
             name: string;
         };
+        CreatedInvitationResponse: {
+            acceptedPrincipalId?: string;
+            email: string;
+            expiresAt: string;
+            id: string;
+            inventoryId: string;
+            inviteUrl: string;
+            inviterPrincipalId: string;
+            isExpired: boolean;
+            /** @enum {string} */
+            relationship: "viewer" | "editor";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
+            tenantId: string;
+        };
         CurrentCheckout: {
             checkedOutAt: string;
             checkedOutByPrincipal?: components["schemas"]["AssetCheckoutPrincipalResponse"];
@@ -1847,8 +1879,17 @@ export interface components {
              */
             relationship: "viewer" | "editor";
         };
+        InvitationPreviewResponse: {
+            expiresAt: string;
+            inventoryId: string;
+            inventoryName: string;
+            isExpired: boolean;
+            /** @enum {string} */
+            relationship: "viewer" | "editor";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
+        };
         InvitationResponse: {
-            acceptanceToken?: string;
             acceptedPrincipalId?: string;
             email: string;
             expiresAt: string;
@@ -1856,8 +1897,10 @@ export interface components {
             inventoryId: string;
             inviterPrincipalId: string;
             isExpired: boolean;
-            relationship: string;
-            status: string;
+            /** @enum {string} */
+            relationship: "viewer" | "editor";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
             tenantId: string;
         };
         Meta: {
@@ -2017,6 +2060,16 @@ export interface components {
             data: components["schemas"]["AttachmentResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeCreatedInvitationResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeCreatedInvitationResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["CreatedInvitationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeDefinitionResponse: {
             /**
              * Format: uri
@@ -2085,6 +2138,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InvitationAcceptanceResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeInvitationPreviewResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeInvitationPreviewResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InvitationPreviewResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeInvitationResponse: {
@@ -3789,10 +3852,11 @@ export interface operations {
             /** @description Created */
             201: {
                 headers: {
+                    "Cache-Control"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelopeInvitationResponse"];
+                    "application/json": components["schemas"]["SuccessEnvelopeCreatedInvitationResponse"];
                 };
             };
             /** @description Error */
@@ -4002,6 +4066,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeInvitationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-preview": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Invitation ID */
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInvitationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInvitationPreviewResponse"];
                 };
             };
             /** @description Error */

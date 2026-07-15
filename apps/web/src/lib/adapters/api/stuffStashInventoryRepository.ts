@@ -11,6 +11,7 @@ import type {
   AssetTagDraft,
   AssetLifecycleFilter,
   CheckedOutAsset,
+  CreatedInventoryAccessInvitation,
   InventoryAccessRelationship,
   ImportJob,
   ImportJobCancellationMode,
@@ -30,6 +31,7 @@ import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditReposito
 import { fileToBase64 } from '$lib/application/fileEncoding';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import { normalizeImportSourceRequest } from '$lib/application/workspaceImportRequest';
+import { parseInvitationLink } from '$lib/application/invitationLink';
 import type {
   CustomAssetTypeDraft,
   CustomFieldDefinitionDraft,
@@ -63,6 +65,8 @@ export class StuffStashInventoryRepository
   private readonly client: StuffStashClient;
   private readonly uploadFetch: typeof fetch;
   private readonly config: RuntimeConfig;
+  private readonly invitationOrigin: string;
+  private readonly invitationAllowInsecureLocalHTTP: boolean;
   private selectedTenantId = readSessionValue('stuffstash.selectedTenantId');
   private selectedInventoryId = readSessionValue('stuffstash.selectedInventoryId');
 
@@ -70,9 +74,12 @@ export class StuffStashInventoryRepository
     config: RuntimeConfig,
     tokenProvider: TokenProvider,
     private readonly observer: WorkspaceObserver,
-    fetchImpl?: typeof fetch
+    fetchImpl?: typeof fetch,
+    invitationOrigin: string = typeof window === 'undefined' ? '' : window.location.origin
   ) {
     this.config = config;
+    this.invitationOrigin = invitationOrigin;
+    this.invitationAllowInsecureLocalHTTP = config.invitationAllowInsecureLocalHTTP;
     this.uploadFetch = fetchImpl ?? fetch;
     this.client = new StuffStashClient({
       baseUrl: config.apiBaseUrl,
@@ -700,6 +707,13 @@ export class StuffStashInventoryRepository
       const invitation = mapCreatedInventoryAccessInvitation(
         await this.client.createInventoryAccessInvitation(tenantId, inventoryId, { email, relationship })
       );
+      assertCanonicalCreatedInvitation(
+        invitation,
+        tenantId,
+        inventoryId,
+        this.invitationOrigin,
+        this.invitationAllowInsecureLocalHTTP
+      );
       this.observer.record('workspace.access_invitation_created', { relationship });
       return invitation;
     } catch (error) {
@@ -987,6 +1001,48 @@ function browsePage(
   assets: Asset[], searchResults: SearchResult[], nextCursor: string | null, hasMore: boolean
 ): BrowseAssetsPage {
   return { assets, searchResults, nextCursor, hasMore };
+}
+
+function assertCanonicalCreatedInvitation(
+  created: CreatedInventoryAccessInvitation,
+  tenantId: string,
+  inventoryId: string,
+  expectedOrigin: string,
+  allowInsecureLocalHTTP: boolean
+): void {
+  let url: URL;
+  try {
+    url = new URL(created.inviteUrl);
+  } catch {
+    throw new Error('Stuff Stash returned an invalid invitation link.');
+  }
+  const permittedHTTP = url.protocol === 'http:' && allowInsecureLocalHTTP && isLocalInvitationHost(url.hostname);
+  if (url.origin !== expectedOrigin || (url.protocol !== 'https:' && !permittedHTTP)) {
+    throw new Error('Stuff Stash returned an invalid invitation link.');
+  }
+  const material = parseInvitationLink(created.inviteUrl, url.origin);
+  if (
+    created.invitation.tenantId !== tenantId ||
+    created.invitation.inventoryId !== inventoryId ||
+    !material ||
+    material.tenantId !== tenantId ||
+    material.inventoryId !== inventoryId ||
+    material.invitationId !== created.invitation.id
+  ) {
+    throw new Error('Stuff Stash returned an invalid invitation link.');
+  }
+}
+
+function isLocalInvitationHost(hostname: string): boolean {
+  if (hostname === 'localhost' || hostname === '[::1]' || hostname === '::1') return true;
+  const octets = hostname.split('.');
+  if (octets.length !== 4 || octets.some((value) => !/^\d{1,3}$/.test(value))) return false;
+  const values = octets.map(Number);
+  if (values.some((value) => value < 0 || value > 255)) return false;
+  return values[0] === 127 ||
+    values[0] === 10 ||
+    (values[0] === 172 && values[1] >= 16 && values[1] <= 31) ||
+    (values[0] === 192 && values[1] === 168);
 }
 
 function safeError(error: unknown): Error {

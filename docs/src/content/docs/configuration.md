@@ -98,6 +98,9 @@ SQLite file mount explicitly.
 | `STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS` | `900` | Seconds before stored import source credentials are considered expired. |
 | `STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS` | `60` | Seconds between background cleanup passes for expired import source credentials. |
 | `STUFF_STASH_INVITATION_TTL` | `168h` | Default inventory invitation token lifetime. |
+| `STUFF_STASH_INVITATION_PUBLIC_BASE_URL` | empty | Public web URL used to create clickable inventory invitation links. Required to create invitations; use HTTPS outside explicit local development. |
+| `STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP` | `false` | Allows a loopback or private RFC 1918 LAN HTTP invitation URL for explicit local development only. Do not enable in deployed environments. |
+| `STUFF_STASH_WEB_INVITATION_ALLOW_INSECURE_LOCAL_HTTP` | `false` | Allows the web client to trust its exact configured loopback or private RFC 1918 HTTP origin for invitation links. Enable only with the matching API local-development switch. |
 | `STUFF_STASH_DEFAULT_PAGE_LIMIT` | `50` | Default API collection page size. |
 | `STUFF_STASH_MAX_PAGE_LIMIT` | `100` | Maximum accepted API collection page size. |
 

@@ -1176,8 +1176,7 @@ describe('StuffStashClient', () => {
       status: 'pending',
       isExpired: false,
       expiresAt: '2026-06-30T00:00:00Z',
-      inviterPrincipalId: 'principal-one',
-      acceptanceToken: 'raw-token'
+      inviterPrincipalId: 'principal-one'
     };
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',
@@ -1211,7 +1210,20 @@ describe('StuffStashClient', () => {
             meta: {}
           });
         }
-        return Response.json({ data: invitation, meta: {} }, { status: request.method === 'POST' ? 201 : 200 });
+		if (request.url.endsWith('/preview')) {
+			return Response.json({
+				data: {
+					inventoryId: 'inventory-one',
+					inventoryName: 'Workshop tools',
+					relationship: 'editor',
+					status: 'pending',
+					isExpired: false,
+					expiresAt: '2026-06-30T00:00:00Z'
+				},
+				meta: {}
+			});
+		}
+		return Response.json({ data: request.method === 'POST' ? { ...invitation, inviteUrl: 'https://stash.example.test/invitations/accept#token=raw-token' } : invitation, meta: {} }, { status: request.method === 'POST' ? 201 : 200 });
       }
     });
 
@@ -1223,7 +1235,7 @@ describe('StuffStashClient', () => {
         email: 'person@example.test',
         relationship: 'editor'
       })
-    ).resolves.toEqual(invitation);
+    ).resolves.toEqual({ ...invitation, inviteUrl: 'https://stash.example.test/invitations/accept#token=raw-token' });
     await expect(
       client.updateInventoryAccessInvitationExpiration(
         'tenant-one',
@@ -1234,6 +1246,16 @@ describe('StuffStashClient', () => {
     ).resolves.toEqual(invitation);
     await expect(client.cancelInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one')).resolves.toBeUndefined();
     await expect(client.deleteInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one')).resolves.toBeUndefined();
+    await expect(
+      client.previewInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one', 'raw-token')
+    ).resolves.toEqual({
+      inventoryId: 'inventory-one',
+      inventoryName: 'Workshop tools',
+      relationship: 'editor',
+      status: 'pending',
+      isExpired: false,
+      expiresAt: '2026-06-30T00:00:00Z'
+    });
     await expect(
       client.acceptInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one', 'raw-token')
     ).resolves.toMatchObject({
@@ -1247,11 +1269,13 @@ describe('StuffStashClient', () => {
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/expiration',
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/cancel',
       'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/preview',
       'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/accept'
     ]);
     expect(await requests[1]?.json()).toEqual({ email: 'person@example.test', relationship: 'editor' });
     expect(await requests[2]?.json()).toEqual({ expiresAt: '2026-07-01T00:00:00Z' });
-    expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
+	expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
+	expect(await requests[6]?.json()).toEqual({ acceptanceToken: 'raw-token' });
   });
 
   it('lists tenant, inventory, and asset audit records through generated paths', async () => {

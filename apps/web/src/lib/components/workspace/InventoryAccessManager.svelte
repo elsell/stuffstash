@@ -70,7 +70,7 @@
   let grantRelationship = $state<InventoryAccessRelationship>('viewer');
   let invitationEmail = $state('');
   let invitationRelationship = $state<InventoryAccessRelationship>('viewer');
-  let inviteLinkToken = $state('');
+  let inviteLink = $state('');
   let busy = $state(false);
   let loaded = $state(false);
   let message = $state('');
@@ -104,7 +104,7 @@
       invitations = [];
       grantNextCursor = null;
       invitationNextCursor = null;
-      inviteLinkToken = '';
+      inviteLink = '';
       loaded = false;
       error = '';
       message = '';
@@ -118,7 +118,7 @@
       invitations = [];
       grantNextCursor = null;
       invitationNextCursor = null;
-      inviteLinkToken = '';
+      inviteLink = '';
       loaded = false;
       error = '';
       message = '';
@@ -287,6 +287,7 @@
     if (!context || !email) {
       return;
     }
+    inviteLink = '';
     await mutate(context.key, async () => {
       const created = await repository.createInventoryAccessInvitation(context.tenantId, context.inventoryId, email, relationship);
       if (!sameContext(context.requestId, context.key)) {
@@ -294,25 +295,38 @@
       }
       invitations = [created.invitation, ...invitations.filter((candidate) => candidate.id !== created.invitation.id)];
       invitationEmail = '';
-      inviteLinkToken = created.acceptanceToken ?? '';
-      message = created.acceptanceToken ? 'Invitation created. Copy the one-time token now.' : 'Invitation created.';
+      inviteLink = created.inviteUrl;
+      message = 'Invitation created. Copy or share the link now.';
     });
   }
 
-  async function copyInviteToken(): Promise<void> {
+  async function copyInviteLink(): Promise<void> {
     const writeText = typeof navigator !== 'undefined' ? navigator.clipboard?.writeText : undefined;
-    if (!inviteLinkToken || !writeText) {
+    if (!inviteLink || !writeText) {
       message = '';
-      error = 'Invitation token not copied. Select the token and copy it manually.';
+      error = 'Invitation link not copied. Select the link and copy it manually.';
       return;
     }
     try {
-      await writeText.call(navigator.clipboard, inviteLinkToken);
-      message = 'Invitation token copied.';
+      await writeText.call(navigator.clipboard, inviteLink);
+      message = 'Invitation link copied.';
       error = '';
     } catch {
       message = '';
-      error = 'Invitation token not copied. Select the token and copy it manually.';
+      error = 'Invitation link not copied. Select the link and copy it manually.';
+    }
+  }
+
+  async function shareInviteLink(): Promise<void> {
+    if (!inviteLink || typeof navigator === 'undefined' || typeof navigator.share !== 'function') return;
+    try {
+      await navigator.share({ title: 'Stuff Stash invitation', text: 'You’ve been invited to a Stuff Stash inventory.', url: inviteLink });
+      message = 'Invitation shared.';
+      error = '';
+    } catch (caught) {
+      if (caught instanceof DOMException && caught.name === 'AbortError') return;
+      message = '';
+      error = 'Invitation not shared. Copy the link instead.';
     }
   }
 
@@ -494,10 +508,19 @@
     {#if message}
       <p class="success-note" role="status">{message}</p>
     {/if}
-    {#if inviteLinkToken}
-      <div class="one-time-token" aria-label="One-time invitation token">
-        <p class="token-line"><Link2 aria-hidden="true" /> <code>{inviteLinkToken}</code></p>
-        <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void copyInviteToken(); }}>Copy token</Button.Root>
+    {#if inviteLink}
+      <div class="one-time-token" aria-label="One-time invitation link">
+        <div>
+          <strong>Invitation link</strong>
+          <p class="token-line"><Link2 aria-hidden="true" /> <code>{inviteLink}</code></p>
+          <small>This link cannot be shown again after you leave this page.</small>
+        </div>
+        <div class="invitation-link-actions">
+          <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void copyInviteLink(); }}>Copy link</Button.Root>
+          {#if typeof navigator !== 'undefined' && typeof navigator.share === 'function'}
+            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void shareInviteLink(); }}>Share invitation</Button.Root>
+          {/if}
+        </div>
       </div>
     {/if}
 

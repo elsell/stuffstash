@@ -183,10 +183,12 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 
 	inviteAcceptCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", inventoryPath+"/access-invitations", "Bearer dev:owner", map[string]any{"email": "invitee@example.com", "relationship": "viewer"}, http.StatusCreated)
 	inviteAccept := decodeInventoryAccessInvitation(t, inviteAcceptCreate).Data
+	inviteAcceptToken := acceptanceTokenFromInviteURL(t, inviteAccept.InviteURL)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", inventoryPath+"/access-invitations?limit=10", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", inventoryPath+"/access-invitations/"+inviteAccept.ID, "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration", inventoryPath+"/access-invitations/"+inviteAccept.ID+"/expiration", "Bearer dev:owner", map[string]any{"expiresAt": "2999-01-01T00:00:00Z"}, http.StatusOK)
-	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept", inventoryPath+"/access-invitations/"+inviteAccept.ID+"/accept", "Bearer dev:invitee:invitee@example.com", map[string]any{"acceptanceToken": inviteAccept.AcceptanceToken}, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview", inventoryPath+"/access-invitations/"+inviteAccept.ID+"/preview", "Bearer dev:invitee:invitee@example.com", map[string]any{"acceptanceToken": inviteAcceptToken}, http.StatusOK)
+	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept", inventoryPath+"/access-invitations/"+inviteAccept.ID+"/accept", "Bearer dev:invitee:invitee@example.com", map[string]any{"acceptanceToken": inviteAcceptToken}, http.StatusOK)
 
 	inviteDeleteCreate := coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations", inventoryPath+"/access-invitations", "Bearer dev:owner", map[string]any{"email": "cancel@example.com", "relationship": "viewer"}, http.StatusCreated)
 	inviteDeleteID := decodeInventoryAccessInvitation(t, inviteDeleteCreate).Data.ID
@@ -398,6 +400,7 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel", path: invitePath + "/cancel"},
 		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}", path: invitePath},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept", path: invitePath + "/accept", body: map[string]any{"acceptanceToken": inviteBody.AcceptanceToken}},
+		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview", path: invitePath + "/preview", body: map[string]any{"acceptanceToken": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/custom-asset-types", path: tenantPath + "/custom-asset-types", body: map[string]any{"key": "blocked", "displayName": "Blocked"}},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/custom-asset-types", path: tenantPath + "/custom-asset-types?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}", path: tenantTypePath},

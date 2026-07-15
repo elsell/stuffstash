@@ -37,6 +37,7 @@ func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authoriz
 	application := app.New(app.Dependencies{
 		Observer:                   observer,
 		Auth:                       auth.NewLocalDevAuthenticator(),
+		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",
 		Authorizer:                 authorizer,
 		Users:                      store,
 		Tenants:                    store,
@@ -113,6 +114,7 @@ func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seede
 	application := app.New(app.Dependencies{
 		Observer:                   &fakeObserver{},
 		Auth:                       auth.NewLocalDevAuthenticator(),
+		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",
 		Authorizer:                 authorizer,
 		Users:                      store,
 		Tenants:                    store,
@@ -161,6 +163,7 @@ func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, sto
 	application := app.New(app.Dependencies{
 		Observer:                   &fakeObserver{},
 		Auth:                       auth.NewLocalDevAuthenticator(),
+		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",
 		Authorizer:                 authorizer,
 		Users:                      store,
 		Tenants:                    store,
