@@ -83,6 +83,10 @@
       return;
     }
     event.preventDefault();
+    selectSuggestion(asset);
+  }
+
+  function selectSuggestion(asset: Asset): void {
     query = asset.title;
     activeSuggestionIndex = -1;
     searchFocused = false;
@@ -91,19 +95,6 @@
 
   function suggestionId(index: number): string {
     return `${suggestionIdPrefix}-${index}`;
-  }
-
-  function suggestionElement(index: number): HTMLElement | null {
-    if (typeof document === 'undefined') {
-      return null;
-    }
-    return document.getElementById(suggestionId(index));
-  }
-
-  async function focusSuggestion(index: number): Promise<void> {
-    activeSuggestionIndex = index;
-    await tick();
-    suggestionElement(index)?.focus();
   }
 
   function handleSearchKeydown(event: KeyboardEvent): void {
@@ -120,36 +111,18 @@
       return;
     }
 
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       searchFocused = true;
-      void focusSuggestion(0);
-      return;
-    }
-  }
-
-  function handleSuggestionKeydown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      searchInput?.focus();
-      closeSearchSuggestions();
+      activeSuggestionIndex = event.key === 'ArrowDown'
+        ? (activeSuggestionIndex + 1) % visibleSuggestions.length
+        : (activeSuggestionIndex <= 0 ? visibleSuggestions.length - 1 : activeSuggestionIndex - 1);
       return;
     }
 
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'Enter' && activeSuggestionIndex >= 0) {
       event.preventDefault();
-      void focusSuggestion((index + 1) % visibleSuggestions.length);
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (index === 0) {
-        activeSuggestionIndex = -1;
-        searchInput?.focus();
-      } else {
-        void focusSuggestion(index - 1);
-      }
+      selectSuggestion(visibleSuggestions[activeSuggestionIndex]!);
     }
   }
 
@@ -235,7 +208,13 @@
           bind:value={query}
           placeholder="Search this inventory"
           aria-label="Search this inventory"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={visibleSuggestions.length > 0}
+          aria-controls={visibleSuggestions.length > 0 ? 'global-search-suggestions' : undefined}
+          aria-activedescendant={activeSuggestionIndex >= 0 ? suggestionId(activeSuggestionIndex) : undefined}
           onfocus={() => { searchFocused = true; }}
+          oninput={() => { activeSuggestionIndex = -1; }}
           onkeydown={handleSearchKeydown}
         />
         <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
@@ -249,7 +228,7 @@
         showEmpty={showNoSuggestions}
         assetHref={searchAssetHref}
         onFocusIndex={(index) => { activeSuggestionIndex = index; }}
-        onSuggestionKeydown={handleSuggestionKeydown}
+        onSuggestionKeydown={() => {}}
         onOpen={openSuggestion}
       />
     </div>

@@ -574,4 +574,30 @@ describe('SeededInventoryRepository tenant selection', () => {
     ).resolves.toBeUndefined();
     await expect(repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-home')).resolves.toEqual([]);
   });
+
+  it('pages authoritative Browse collections across lifecycle state', async () => {
+    const repository = new SeededInventoryRepository(seed);
+
+    const first = await repository.browseAssets({
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', tagIds: [], lifecycleState: 'all',
+      checkoutState: 'any', scope: 'all', sort: 'id_asc', mode: 'fuzzy', limit: 1
+    });
+    const second = await repository.browseAssets({
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', tagIds: [], lifecycleState: 'all',
+      checkoutState: 'any', scope: 'all', sort: 'id_asc', mode: 'fuzzy', limit: 1, cursor: first.nextCursor ?? undefined
+    });
+
+    expect(first.assets).toHaveLength(1);
+    expect(first.hasMore).toBe(true);
+    expect(second.assets).toHaveLength(1);
+    expect(new Set([...first.assets, ...second.assets].map((asset) => asset.lifecycleState))).toEqual(new Set(['active', 'archived']));
+  });
+
+  it('checks inventory existence across lifecycle state for honest Browse empty copy', async () => {
+    const repository = new SeededInventoryRepository(seed);
+    const emptyRepository = new SeededInventoryRepository({ ...seed, assets: [] });
+
+    await expect(repository.hasAnyAssets('tenant-home', 'inventory-household')).resolves.toBe(true);
+    await expect(emptyRepository.hasAnyAssets('tenant-home', 'inventory-household')).resolves.toBe(false);
+  });
 });

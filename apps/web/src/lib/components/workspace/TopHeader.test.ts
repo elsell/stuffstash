@@ -87,20 +87,21 @@ describe('TopHeader', () => {
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
 
-    expect(input?.getAttribute('role')).toBeNull();
-    expect(input?.getAttribute('aria-activedescendant')).toBeNull();
-    expect(document.body.querySelector('[role="listbox"]')).toBeNull();
-    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(input?.getAttribute('role')).toBe('combobox');
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
+    expect(document.body.querySelector('[role="listbox"]')).not.toBeNull();
+    expect(document.activeElement).toBe(input);
 
-    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
-    expect(document.activeElement?.id).toBe('global-search-suggestion-1');
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-1');
+    expect(document.activeElement).toBe(input);
 
-    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
     await flush();
-    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
 
-    (document.activeElement as HTMLElement | null)?.click();
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
     await flush();
 
     expect(selectedAssets.map((selected) => selected.id)).toEqual(['tape']);
@@ -216,7 +217,7 @@ describe('TopHeader', () => {
     expect(componentPreventedModifiedClick).toBe(false);
   });
 
-  it('keeps suggestions open when keyboard focus moves into the suggestion list', async () => {
+  it('keeps keyboard focus on the combobox while traversing suggestions', async () => {
     vi.useFakeTimers();
     mountHeader();
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
@@ -228,11 +229,12 @@ describe('TopHeader', () => {
     vi.advanceTimersByTime(160);
     await flush();
 
-    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(document.activeElement).toBe(input);
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
     expect(document.body.querySelector('#global-search-suggestions')).not.toBeNull();
   });
 
-  it('closes suggestions with Escape from a focused suggestion and returns to the search field', async () => {
+  it('closes suggestions with Escape while focus remains on the search field', async () => {
     mountHeader();
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
 
@@ -240,7 +242,7 @@ describe('TopHeader', () => {
     await flush();
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
-    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await flush();
 
     expect(document.activeElement).toBe(input);
@@ -260,7 +262,7 @@ describe('TopHeader', () => {
     await flush();
 
     expect(document.body.querySelector('#global-search-suggestions')).toBeNull();
-    expect(input?.getAttribute('aria-expanded')).toBeNull();
+    expect(input?.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('exposes durable add action links from the create menu', async () => {

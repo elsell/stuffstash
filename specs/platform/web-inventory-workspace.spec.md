@@ -472,21 +472,60 @@ Saved state:
 - If some photo uploads succeed and others fail, saved feedback must report both the uploaded count and the failed count.
 - Future real implementation must produce audit history through application behavior, not UI-only state.
 
-## Search
+## Browse
 
-Search is a primary workflow.
+Browse is the comprehensive inventory destination shared with the mobile product. It combines finding, filtering, collection browsing, and containment exploration without making Search or Locations separate primary destinations.
 
-Desktop:
+Browse header and navigation:
 
-- Search belongs in the top header.
-- Search does not belong in the side navigation for the approved first direction.
+- The page title must be `Browse` and must show quiet selected-inventory context.
+- `List` and `Map` are separate sub-surfaces represented by a persistent segmented control. Map is not a visual layout toggle for the filtered list.
+- List/Map, scope, and available sort choices must expose canonical Browse `href` values for their durable route state while preserving ordinary in-app navigation and modified-click behavior.
+- Entering Browse, changing scope, or applying a tag must not autofocus the search field.
+- Search belongs in the desktop header for fast access, but submitting it must open Browse. Mobile search lives at the top of Browse rather than in the compact shell header.
 
-Mobile:
+Browse List:
 
-- Search belongs in bottom navigation or an equivalent mobile primary action surface.
-- Search does not need to occupy header space.
+- The always-visible primary scopes are `All`, `Places`, `Containers`, and `Items` in that order.
+- A compact tool row must expose `Filters` and `Sort` as separate controls.
+- Filters must include lifecycle Status (`Active`, `Archived`, `All`), Availability (`Any`, `Available`, `Checked out`), and Tags.
+- The filter surface must use draft state with explicit Apply and Reset actions; cancelling must not apply draft changes.
+- Applied non-default filters must remain visible as named, individually removable tokens, with `Clear all` when more than one is applied.
+- Tag options and selected tag tokens must use locale-aware, case-insensitive natural alphabetical order.
+- Sort options are `Recently changed` (`updated_desc`) and `Default order` (`id_asc`). When text search is relevance-ranked, Sort must be disabled with a perceivable explanation.
+- All, Containers, and Items use photo-first, content-driven asset cards with stable aspect-ratio media and normal document-flow copy. Fixed heights or positioned copy that can overlap media, tags, badges, or neighboring cards are prohibited.
+- Places use richer rows with photo or fallback, title, contained-asset count, and recent contained-asset names when available.
+- The result model must preserve `nextCursor` and `hasMore`; pagination appends without discarding prior results and exposes direct retry for append failures.
+- Result copy must say how many records are currently shown and must not imply a complete total when the API has not returned one.
+- Empty inventory, no text matches, and no filter matches require distinct recovery copy and actions. The default empty-inventory state must not claim that filters removed content; editors receive route-backed add-item and add-location actions, while viewers receive an honest non-mutating state.
+- The default empty-inventory state must use an authoritative all-lifecycle asset-existence check. An inventory containing only archived assets is not empty and receives an honest no-active-results recovery instead of first-use create copy.
+- A submitted search with no matches must name the query, recommend changing the search term, and provide a direct `Clear search` recovery action that restores the unsearched Browse collection.
+- Replacement loads retain prior results until the new response arrives. Initial, replacement, tag-option, and pagination failures require distinct error states and retry actions. Stale responses must never replace newer route state.
+- Browse failures may show an adapter error reason only when the error is explicitly safe for users. Unsafe server or infrastructure details must be replaced with calm phase-specific retry copy for initial, replacement, pagination, and Map failures.
 
-Search behavior:
+Browse Map:
+
+- Browse Map must use the same user-facing, title-cased asset-kind labels as Home, Browse List, and detail surfaces, including jump-search results; raw enum values must not leak into node or selected-asset metadata.
+- API-backed Browse page and map loading must emit injected `workspace.browse_started`, `workspace.browse_completed`, and `workspace.browse_failed` observer events with safe scope/surface and result-count attributes rather than ad hoc logging.
+
+Browse Map:
+
+- Map represents the complete active containment tree and does not inherit List query, tag, lifecycle, availability, scope, or sort filters.
+- Map loads complete active containment data only when selected and must not eagerly hydrate thumbnails for every node.
+- Desktop Map uses a Finder-style horizontal column explorer with a visible containment path, breadcrumb controls, and jump search.
+- Mobile Map uses one primary containment column with adjacent-column peeks and horizontal paging; every gesture must have an equivalent tap and keyboard path.
+- Selecting a node exposes essential identity, placement, state, and a route-backed open action.
+- Large trees must bound rendered nodes before the surface is described as production-ready.
+
+Responsive and accessible behavior:
+
+- Desktop asset results use a responsive three-to-five-column grid; Places may use a two-column row grid.
+- Ordinary phone widths use two photo-first asset columns, falling back to one column for narrow or large-text layouts.
+- The filter surface becomes a focused full-width task sheet on mobile with completion controls reachable above the reserved bottom navigation.
+- Tabs expose tab semantics, selected filters are perceivable without color, focus remains visible, and interactive targets should be at least 44 CSS pixels.
+- Each Browse tab must have a stable ID, control exactly one tab panel, and provide that panel's accessible name. Nested surface and scope tab sets must label their own panels from the selected tab rather than from the page title or an unrelated tab set.
+
+Search behavior within Browse:
 
 - Search should resolve to authorized assets, containers, and locations in the selected inventory.
 - Search should provide autocomplete-style suggestions from visible inventory assets while preserving the repository-backed search action as the authoritative result source.

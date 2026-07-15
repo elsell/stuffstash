@@ -5,6 +5,9 @@
 	    AssetCheckout,
     AssetKind,
     AssetTag,
+    BrowseScope,
+    BrowseSort,
+    BrowseSurface,
     CustomAssetType,
     CustomFieldDefinition,
     Inventory,
@@ -57,6 +60,16 @@
     searchSuggestions: Asset[];
     searchSubmitted: boolean;
     searchError: string;
+    browseSurface: BrowseSurface;
+    browseScope: BrowseScope;
+    browseSort: BrowseSort;
+    browseTagIds: string[];
+    browseAssets: Asset[];
+    browseInventoryEmpty: boolean;
+    browseHasMore: boolean;
+    browseLoadingMore: boolean;
+    browseBusy: boolean;
+    browseErrorPhase: 'initial' | 'replacement' | 'append' | 'map' | null;
     assetAction: AssetRouteAction;
     attachmentId: string | null;
     attachmentAction: WorkspaceRouteState['attachmentAction'];
@@ -82,6 +95,17 @@
     onHome: (event: MouseEvent) => void;
     onCreateStarterInventory: () => Promise<void>;
     onOpenLocation: (asset: Asset) => void;
+    onOpenLocations?: () => void;
+    onBrowseStateChange: (state: {
+      surface?: BrowseSurface;
+      scope?: BrowseScope;
+      lifecycleState?: SearchLifecycleFilter;
+      checkoutState?: SearchCheckoutFilter;
+      sort?: BrowseSort;
+      selectedTagIds?: string[];
+    }) => void;
+    onBrowseLoadMore: () => Promise<void>;
+    onBrowseRetry: () => Promise<void>;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => Promise<void>;
     onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null) => void;
@@ -141,11 +165,11 @@
   } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
   import AssetDetail from './AssetDetail.svelte';
+  import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
   import InventoryImportWorkspace from './InventoryImportWorkspace.svelte';
   import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
-  import SearchPanel from './SearchPanel.svelte';
 
   let {
     workspace,
@@ -229,23 +253,38 @@
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
     onTagSearch={handlers.onAssetTagSearch}
   />
-{:else if route.mode === 'search' || route.mode === 'browse'}
-  <SearchPanel
+{:else if route.mode === 'browse' || route.mode === 'search'}
+  <BrowsePanel
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
+    inventoryName={workspace.selectedInventory?.name ?? 'Inventory'}
+    assets={route.browseAssets}
+    placementAssets={workspace.assets}
+    inventoryEmpty={route.browseInventoryEmpty}
     bind:query={searchQuery}
-    bind:lifecycleState={searchLifecycleState}
-    bind:searchMode={searchMode}
-    bind:checkoutState={searchCheckoutState}
     results={route.searchResults}
     suggestions={route.searchSuggestions}
     assetTags={workspace.data.context.assetTags ?? []}
     submitted={route.searchSubmitted}
     error={route.searchError}
-    busy={status.busy}
+    busy={route.browseBusy}
+    surface={route.browseSurface}
+    scope={route.browseScope}
+    lifecycleState={searchLifecycleState}
+    {searchMode}
+    checkoutState={searchCheckoutState}
+    sort={route.browseSort}
+    selectedTagIds={route.browseTagIds}
+    canCreateAsset={status.createAssetAllowed}
+    hasMore={route.browseHasMore}
+    loadingMore={route.browseLoadingMore}
+    errorPhase={route.browseErrorPhase}
+    onStateChange={handlers.onBrowseStateChange}
+    onLoadMore={handlers.onBrowseLoadMore}
+    onRetry={handlers.onBrowseRetry}
     onSearch={() => { void handlers.onSearch(); }}
     onOpenAsset={handlers.onOpenSearchAsset}
-    onTagSearch={handlers.onAssetTagSearch}
+    onOpenAdd={(kind) => handlers.onOpenAdd(kind)}
   />
 {:else if route.mode === 'import'}
   <InventoryImportWorkspace

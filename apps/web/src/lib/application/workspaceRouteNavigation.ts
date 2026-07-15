@@ -41,7 +41,7 @@ export function replaceWorkspaceRoute(
 }
 
 export function shouldCanonicalizeWorkspaceAlias(route: WorkspaceRouteState): boolean {
-  return !!route.inventoryId && !route.tenantId;
+  return (!!route.inventoryId && !route.tenantId) || route.compatibilityAlias;
 }
 
 export function replaceCanonicalWorkspaceAlias(

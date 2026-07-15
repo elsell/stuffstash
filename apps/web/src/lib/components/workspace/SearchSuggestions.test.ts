@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('SearchSuggestions', () => {
-  it('renders route-backed thumbnail suggestions with ordinary list semantics', () => {
+  it('renders route-backed thumbnail suggestions with combobox listbox semantics', () => {
     const focused: number[] = [];
     const opened: string[] = [];
     component = mount(SearchSuggestions, {
@@ -39,8 +39,11 @@ describe('SearchSuggestions', () => {
     });
 
     expect(document.body.querySelector('ul[aria-label="Search suggestions"]')).not.toBeNull();
-    expect(document.body.querySelector('[role="listbox"]')).toBeNull();
+    expect(document.body.querySelector('[role="listbox"]')).not.toBeNull();
+    expect(link('Open Garage').getAttribute('role')).toBe('option');
+    expect(link('Open Garage').getAttribute('aria-selected')).toBe('true');
     expect(link('Open Tape measure').getAttribute('href')).toBe('/assets/tape');
+    expect(link('Open Tape measure').getAttribute('tabindex')).toBe('-1');
     expect(link('Open Garage').dataset.active).toBe('true');
     expect(document.body.querySelector<HTMLImageElement>('img')?.src).toBe('blob:tape-photo');
     expect(document.body.textContent).toContain('Location');

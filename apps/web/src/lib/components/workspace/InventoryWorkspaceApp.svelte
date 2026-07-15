@@ -29,7 +29,8 @@
   } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { reconcilePendingAssetTagDrafts } from '$lib/application/workspaceTagDrafts';
-  import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
+  import { buildSearchSuggestions } from '$lib/application/workspaceSearch';
+  import { browseFailureMessage } from '$lib/application/workspaceBrowsePresentation';
   import {
     type AssetRouteAction,
     type ImportSourceRoute,
@@ -59,6 +60,9 @@
     type AssetKind,
     type AssetLifecycleFilter,
     type AssetTag,
+    type BrowseScope,
+    type BrowseSort,
+    type BrowseSurface,
     type CustomAssetType,
     type CustomFieldDefinition,
     type LocationAsset,
@@ -75,6 +79,7 @@
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+  import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
   import type { WorkspaceNotification, WorkspaceNotificationAction } from '$lib/components/ui/sonner/index.js';
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
@@ -86,7 +91,7 @@
     onSignOut,
     onSessionExpired = onSignOut
   }: {
-    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
+    repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
     initialData: WorkspaceData;
     onSignOut: () => void;
     onSessionExpired?: () => void;
@@ -94,8 +99,9 @@
 
   // svelte-ignore state_referenced_locally -- initial route data seeds local workspace state.
   const startingData = initialData;
+  const startingRoute = currentWorkspaceRoute();
   let data = $state(startingData);
-  let mode = $state<WorkspaceMode>(startingData.context.inventories.length > 0 ? 'home' : 'settings');
+  let mode = $state<WorkspaceMode>(startingData.context.inventories.length > 0 ? startingRoute.mode : 'settings');
   let selectedLocationId = $state<string | null>(null);
   let selectedAssetId = $state<string | null>(null);
   let addOpen = $state(false);
@@ -114,6 +120,9 @@
   let searchMode = $state<SearchMode>('fuzzy');
   let searchCheckoutState = $state<SearchCheckoutFilter>('any');
   let searchTagIds = $state<string[]>([]);
+  let browseSurface = $state<BrowseSurface>(startingRoute.browseSurface);
+  let browseScope = $state<BrowseScope>(startingRoute.browseScope);
+  let browseSort = $state<BrowseSort>(startingRoute.browseSort);
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let accessInvitationAction = $state<WorkspaceRouteState['accessInvitationAction']>(null);
@@ -128,6 +137,15 @@
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
+  let browseAssets = $state<Asset[]>([]);
+  let browseNextCursor = $state<string | null>(null);
+  let browseHasMore = $state(false);
+  let browseLoadingMore = $state(false);
+  let browseBusy = $state(false);
+  let browseRequestId = 0;
+  let browseMapAssets = $state<Asset[]>([]);
+  let browseInventoryEmpty = $state(false);
+  let browseErrorPhase = $state<'initial' | 'replacement' | 'append' | 'map' | null>(null);
   let loadedAssetDetail = $state<Asset | null>(null);
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
@@ -358,50 +376,71 @@
   }
 
   async function search(): Promise<void> {
-    busy = true;
-    error = '';
-    notification = null;
+    navigateTo({
+      mode: 'browse', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId,
+      searchQuery: searchQuery.trim(), searchLifecycleState, searchMode, searchCheckoutState,
+      browseSurface: 'list', browseScope, browseSort, browseTagIds: searchTagIds
+    });
+  }
+
+  async function loadBrowsePage(append = false): Promise<void> {
+    const tenantId = data.context.selectedTenantId;
+    const inventoryId = data.context.selectedInventoryId;
+    if (!tenantId || !inventoryId) return;
+    const requestId = ++browseRequestId;
+    if (append) browseLoadingMore = true;
+    else browseBusy = true;
     searchError = '';
-    searchResults = [];
-    searchSubmitted = true;
+    browseErrorPhase = null;
     try {
-      const result = await executeWorkspaceSearch({
-        repository,
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        query: searchQuery,
-        tagIds: searchTagIds,
-        lifecycleState: searchLifecycleState,
-        mode: searchMode,
-        checkoutState: searchCheckoutState
+      const page = await repository.browseAssets({
+        tenantId, inventoryId, query: searchQuery, tagIds: searchTagIds, lifecycleState: searchLifecycleState,
+        checkoutState: searchCheckoutState, scope: browseScope, sort: browseSort, mode: searchMode, limit: 20,
+        cursor: append ? browseNextCursor ?? undefined : undefined
       });
-      searchQuery = result.query;
-      searchResults = result.results;
-      searchSubmitted = result.submitted;
-      searchError = result.error;
-      error = result.error;
-      mode = 'browse';
-      if (!applyingRoute) {
-        replaceRoute({
-          mode: 'browse',
-          tenantId: data.context.selectedTenantId,
-          inventoryId: data.context.selectedInventoryId,
-          searchQuery: result.query,
-          searchLifecycleState,
-          searchMode,
-          searchCheckoutState
-        });
-      }
-      if (!result.query && searchTagIds.length === 0) {
-        return;
-      }
+      const checksDefaultInventoryEmptiness = !append && !searchQuery.trim() && searchTagIds.length === 0 &&
+        browseScope === 'all' && searchLifecycleState === 'active' && searchCheckoutState === 'any';
+      const inventoryEmpty = checksDefaultInventoryEmptiness && page.assets.length === 0
+        ? !(await repository.hasAnyAssets(tenantId, inventoryId))
+        : page.assets.length > 0 ? false : browseInventoryEmpty;
+      if (requestId !== browseRequestId) return;
+      browseAssets = append ? [...browseAssets, ...page.assets] : page.assets;
+      searchResults = append ? [...searchResults, ...page.searchResults] : page.searchResults;
+      browseNextCursor = page.nextCursor;
+      browseHasMore = page.hasMore;
+      browseInventoryEmpty = inventoryEmpty;
+      searchSubmitted = !!searchQuery.trim() || searchTagIds.length > 0;
     } catch (caught) {
-      if (handleSessionExpired(caught)) {
-        return;
-      }
-      throw caught;
+      if (requestId !== browseRequestId || handleSessionExpired(caught)) return;
+      const phase = append ? 'append' : browseAssets.length > 0 ? 'replacement' : 'initial';
+      searchError = browseFailureMessage(caught, phase);
+      browseErrorPhase = phase;
     } finally {
-      busy = false;
+      if (requestId === browseRequestId) {
+        browseBusy = false;
+        browseLoadingMore = false;
+      }
+    }
+  }
+
+  async function loadBrowseMap(): Promise<void> {
+    const tenantId = data.context.selectedTenantId;
+    const inventoryId = data.context.selectedInventoryId;
+    if (!tenantId || !inventoryId) return;
+    const requestId = ++browseRequestId;
+    browseBusy = true;
+    searchError = '';
+    browseErrorPhase = null;
+    try {
+      const assets = await repository.loadActiveContainmentMap(tenantId, inventoryId);
+      if (requestId === browseRequestId) browseMapAssets = assets;
+    } catch (caught) {
+      if (requestId === browseRequestId && !handleSessionExpired(caught)) {
+        searchError = browseFailureMessage(caught, 'map');
+        browseErrorPhase = 'map';
+      }
+    } finally {
+      if (requestId === browseRequestId) browseBusy = false;
     }
   }
 
@@ -690,6 +729,9 @@
       if (routeKey === activeRouteApplicationKey) {
         queuedRoute = null;
       } else {
+        browseRequestId += 1;
+        browseBusy = false;
+        browseLoadingMore = false;
         queuedRoute = { route, href: currentWorkspaceHref() };
       }
       return;
@@ -706,7 +748,10 @@
       attachmentId = route.attachmentId;
       attachmentAction = route.attachmentAction;
       searchQuery = route.searchQuery;
-      searchTagIds = [];
+      searchTagIds = route.browseTagIds;
+      browseSurface = route.browseSurface;
+      browseScope = route.browseScope;
+      browseSort = route.browseSort;
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
       searchCheckoutState = route.searchCheckoutState;
@@ -742,7 +787,7 @@
         }
       }
 
-      if (route.mode !== 'search' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
+      if (route.mode !== 'search' && route.mode !== 'browse' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
       const addRoute = resolveWorkspaceAddRoute(route, {
@@ -866,21 +911,16 @@
         return;
       }
 
-      if (route.mode === 'search' || route.mode === 'browse') {
-        mode = route.mode;
+      if (route.mode === 'browse' || route.mode === 'search') {
+        mode = 'browse';
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
         selectedAssetCheckoutHistory = [];
         selectedAssetCheckoutHistory = [];
-        if (route.searchQuery.trim()) {
-          await search();
-        } else {
-          searchResults = [];
-          searchSubmitted = false;
-          searchError = '';
-        }
+        if (route.browseSurface === 'map') await loadBrowseMap();
+        else await loadBrowsePage(false);
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
       }
@@ -973,6 +1013,29 @@
       importSource: nextMode === 'import' ? importSource : null,
       importJobId: null,
       importTab: null
+    });
+  }
+
+  function updateBrowseState(next: {
+    surface?: BrowseSurface;
+    scope?: BrowseScope;
+    lifecycleState?: SearchLifecycleFilter;
+    checkoutState?: SearchCheckoutFilter;
+    sort?: BrowseSort;
+    selectedTagIds?: string[];
+  }): void {
+    navigateTo({
+      mode: 'browse',
+      tenantId: data.context.selectedTenantId,
+      inventoryId: data.context.selectedInventoryId,
+      browseSurface: next.surface ?? browseSurface,
+      browseScope: next.scope ?? browseScope,
+      browseSort: next.sort ?? browseSort,
+      browseTagIds: next.selectedTagIds ?? searchTagIds,
+      searchQuery,
+      searchLifecycleState: next.lifecycleState ?? searchLifecycleState,
+      searchCheckoutState: next.checkoutState ?? searchCheckoutState,
+      searchMode
     });
   }
 
@@ -1381,7 +1444,7 @@
   }
 
   function closeLocationToLocations(): void {
-    navigateMode('locations');
+    updateBrowseState({ scope: 'places' });
   }
 
   function closeDetailToPrevious(): void {
@@ -1459,6 +1522,16 @@
       searchSuggestions,
       searchSubmitted,
       searchError,
+      browseSurface,
+      browseScope,
+      browseSort,
+      browseTagIds: searchTagIds,
+      browseAssets: browseSurface === 'map' ? browseMapAssets : browseAssets,
+      browseInventoryEmpty,
+      browseHasMore,
+      browseLoadingMore,
+      browseBusy,
+      browseErrorPhase,
       assetAction,
       attachmentId,
       attachmentAction,
@@ -1483,6 +1556,10 @@
       onHome: openHome,
       onCreateStarterInventory: createStarterInventory,
       onOpenLocation: openLocation,
+      onOpenLocations: () => updateBrowseState({ scope: 'places' }),
+      onBrowseStateChange: updateBrowseState,
+      onBrowseLoadMore: () => loadBrowsePage(true),
+      onBrowseRetry: () => browseErrorPhase === 'append' ? loadBrowsePage(true) : browseErrorPhase === 'map' ? loadBrowseMap() : loadBrowsePage(false),
       onEditLocation: openLocationEdit,
       onOpenAsset: openAsset,
       onOpenAdd: openAdd,

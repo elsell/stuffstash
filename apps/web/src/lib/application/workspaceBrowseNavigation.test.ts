@@ -64,7 +64,7 @@ describe('workspace browse navigation helpers', () => {
   it('derives focused location action and row hrefs', () => {
     const garage = locationAsset('garage');
 
-    expect(locationBackHref(garage)).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+    expect(locationBackHref(garage)).toBe('/tenants/tenant-home/inventories/inventory-household/browse?scope=places');
     expect(locationEditHref(garage)).toBe('/tenants/tenant-home/inventories/inventory-household/locations/garage/edit');
     expect(locationAddItemHref(garage)).toBe('/tenants/tenant-home/inventories/inventory-household/add/item?parent=garage');
     expect(locationRowHref(locationAsset('shelf'))).toBe('/tenants/tenant-home/inventories/inventory-household/locations/shelf');

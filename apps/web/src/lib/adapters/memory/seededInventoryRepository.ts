@@ -31,6 +31,7 @@ import {
   type WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
+import type { BrowseAssetsPage, BrowseAssetsRequest, InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
 import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { AuditRecordPage, InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import type {
@@ -47,7 +48,7 @@ type ScopedImportJob = {
 };
 
 export class SeededInventoryRepository
-  implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
 {
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
@@ -484,6 +485,38 @@ export class SeededInventoryRepository
       },
       matches: [{ field: 'title', value: asset.title }]
     }));
+  }
+
+  async browseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    const results = await this.searchAssets(request);
+    const scoped = results.filter(({ asset }) =>
+      request.scope === 'all' ||
+      (request.scope === 'places' && asset.kind === 'location' && asset.parentAssetId === null) ||
+      (request.scope === 'containers' && asset.kind === 'container') ||
+      (request.scope === 'items' && asset.kind === 'item')
+    );
+    if (!request.query.trim()) {
+      scoped.sort((left, right) => request.sort === 'id_asc'
+        ? left.asset.id.localeCompare(right.asset.id)
+        : (Date.parse(right.asset.updatedAt ?? '') || 0) - (Date.parse(left.asset.updatedAt ?? '') || 0) || right.asset.id.localeCompare(left.asset.id));
+    }
+    const offset = Number.parseInt(request.cursor ?? '0', 10) || 0;
+    const pageResults = scoped.slice(offset, offset + request.limit);
+    const nextOffset = offset + pageResults.length;
+    return {
+      assets: pageResults.map((result) => result.asset),
+      searchResults: pageResults,
+      nextCursor: nextOffset < scoped.length ? String(nextOffset) : null,
+      hasMore: nextOffset < scoped.length
+    };
+  }
+
+  async hasAnyAssets(tenantId: string, inventoryId: string): Promise<boolean> {
+    return this.seed.assets.some((asset) => asset.tenantId === tenantId && asset.inventoryId === inventoryId);
+  }
+
+  async loadActiveContainmentMap(tenantId: string, inventoryId: string): Promise<Asset[]> {
+    return this.seed.assets.filter((asset) => asset.tenantId === tenantId && asset.inventoryId === inventoryId && asset.lifecycleState === 'active');
   }
 
   async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {

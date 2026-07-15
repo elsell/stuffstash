@@ -120,25 +120,25 @@ describe('InventoryWorkspaceRouteContent', () => {
       })
     });
 
-    const search = document.body.querySelector<HTMLInputElement>('#search-page-query');
+    const search = document.body.querySelector<HTMLInputElement>('input[aria-label="Search Browse"]');
     if (!search) {
       throw new Error('Missing workspace search input');
     }
     search.value = 'passport';
     search.dispatchEvent(new InputEvent('input', { bubbles: true }));
-    document.body.querySelector<HTMLFormElement>('form.search-panel')?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    document.body.querySelector<HTMLFormElement>('form.browse-search')?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
     await tick();
 
     expect(searched).toBe(true);
   });
 
   it('threads active inventory tags into search browsing filters', async () => {
-    const searchedTags: string[] = [];
+    const searchedTags: string[][] = [];
     const props = await routeContentProps({
-      route: { mode: 'search' },
+      route: { mode: 'browse' },
       handlers: {
-        onAssetTagSearch: async (tag) => {
-          searchedTags.push(tag.displayName);
+        onBrowseStateChange: (state) => {
+          searchedTags.push(state.selectedTagIds ?? []);
         }
       }
     });
@@ -162,12 +162,18 @@ describe('InventoryWorkspaceRouteContent', () => {
       }
     });
 
-    const tagFilter = document.body.querySelector<HTMLElement>('[aria-label="Browse by tag"]');
+    const filterTrigger = document.body.querySelector<HTMLButtonElement>('.browse-filter-trigger');
+    if (!filterTrigger) throw new Error('Missing Browse filter trigger');
+    filterTrigger.click();
+    await tick();
+    await tick();
+    const tagFilter = document.body.querySelector<HTMLElement>('.browse-filter-popover');
     expect(tagFilter?.textContent).toContain('Tools');
-    document.body.querySelector<HTMLButtonElement>('button[aria-label="Search for tag Tools"]')?.click();
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('.browse-filter-popover button')).find((button) => button.textContent?.includes('Tools'))?.click();
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((button) => button.textContent?.includes('Apply filters'))?.click();
     await tick();
 
-    expect(searchedTags).toEqual(['Tools']);
+    expect(searchedTags).toEqual([['tag-tools']]);
   });
 
   it('renders the no-inventory branch with starter inventory affordances', async () => {
@@ -350,6 +356,16 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       searchSuggestions: [],
       searchSubmitted: false,
       searchError: '',
+      browseSurface: 'list',
+      browseScope: 'all',
+      browseSort: 'updated_desc',
+      browseTagIds: [],
+      browseAssets: data.assets,
+      browseInventoryEmpty: false,
+      browseHasMore: false,
+      browseLoadingMore: false,
+      browseBusy: false,
+      browseErrorPhase: null,
       assetAction: null,
       attachmentId: null,
       attachmentAction: null,
@@ -377,6 +393,9 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       onHome: () => {},
       onCreateStarterInventory: async () => {},
       onOpenLocation: () => {},
+      onBrowseStateChange: () => {},
+      onBrowseLoadMore: async () => {},
+      onBrowseRetry: async () => {},
       onEditLocation: () => {},
       onOpenAsset: async () => {},
       onOpenAdd: () => {},

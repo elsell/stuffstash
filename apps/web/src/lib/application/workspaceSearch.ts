@@ -67,7 +67,7 @@ export function searchFilterHref(
   checkoutState: SearchCheckoutFilter
 ): string {
   return workspaceRouteHref(
-    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
+    { mode: 'browse', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
     tenantId,
     inventoryId
   );

@@ -24,6 +24,7 @@ import type {
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import type { BrowseAssetsPage, BrowseAssetsRequest, InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
 import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import { fileToBase64 } from '$lib/application/fileEncoding';
@@ -52,9 +53,12 @@ import {
   mapTenant
 } from './inventoryMapper';
 import { mapInventoryAccessGrant, mapInventoryAccessInvitation } from './inventoryMapper';
+import { collectCursorPages } from './cursorPagination';
+
+const workspacePageSize = 100;
 
 export class StuffStashInventoryRepository
-  implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
 {
   private readonly client: StuffStashClient;
   private readonly uploadFetch: typeof fetch;
@@ -449,6 +453,94 @@ export class StuffStashInventoryRepository
       this.observer.record('workspace.search_failed');
       throw safeError(error);
     }
+  }
+
+  async browseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    this.observer.record('workspace.browse_started', { scope: request.scope });
+    try {
+      const page = request.query.trim() || request.tagIds.length > 0
+        ? await this.searchBrowseAssets(request)
+        : request.checkoutState === 'checked_out'
+          ? await this.checkedOutBrowseAssets(request)
+          : await this.listBrowseAssets(request);
+      this.observer.record('workspace.browse_completed', { scope: request.scope, resultCount: page.assets.length });
+      return page;
+    } catch (error) {
+      this.observer.record('workspace.browse_failed', { scope: request.scope });
+      throw safeError(error);
+    }
+  }
+
+  async hasAnyAssets(tenantId: string, inventoryId: string): Promise<boolean> {
+    try {
+      const page = await this.client.listAssets(tenantId, inventoryId, 1, undefined, 'all');
+      return page.items.length > 0;
+    } catch (error) {
+      throw safeError(error);
+    }
+  }
+
+  async loadActiveContainmentMap(tenantId: string, inventoryId: string): Promise<Asset[]> {
+    this.observer.record('workspace.browse_started', { surface: 'map' });
+    try {
+      const assets = await collectCursorPages((cursor) => this.client.listAssets(tenantId, inventoryId, workspacePageSize, cursor, 'active', 'id_asc'));
+      const mapped = assets.map(mapAsset);
+      this.observer.record('workspace.browse_completed', { surface: 'map', resultCount: mapped.length });
+      return mapped;
+    } catch (error) {
+      this.observer.record('workspace.browse_failed', { surface: 'map' });
+      throw safeError(error);
+    }
+  }
+
+  private async listBrowseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    const selected: Asset[] = [];
+    let cursor = request.cursor;
+    let hasMore = false;
+    do {
+      const page = await this.client.listAssets(
+        request.tenantId, request.inventoryId, Math.max(1, request.limit - selected.length), cursor,
+        request.lifecycleState, request.sort
+      );
+      selected.push(...page.items.map(mapAsset).filter((asset) => browseAssetMatches(asset, request)));
+      cursor = page.pagination.nextCursor ?? undefined;
+      hasMore = page.pagination.hasMore;
+    } while (selected.length < request.limit && hasMore && cursor);
+    return browsePage(selected.slice(0, request.limit), [], cursor ?? null, hasMore);
+  }
+
+  private async searchBrowseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    const selected: SearchResult[] = [];
+    let cursor = request.cursor;
+    let hasMore = false;
+    do {
+      const page = await this.client.searchAssets(request.tenantId, request.query, {
+        limit: Math.max(1, request.limit - selected.length), cursor, inventoryId: request.inventoryId,
+        tagIds: request.tagIds, lifecycleState: request.lifecycleState, mode: request.mode, checkoutState: request.checkoutState
+      });
+      selected.push(...page.items.map(mapSearchResult).filter((result) => browseAssetMatches(result.asset, request)));
+      cursor = page.pagination.nextCursor ?? undefined;
+      hasMore = page.pagination.hasMore;
+    } while (selected.length < request.limit && hasMore && cursor);
+    const pageResults = selected.slice(0, request.limit);
+    return browsePage(pageResults.map((result) => result.asset), pageResults, cursor ?? null, hasMore);
+  }
+
+  private async checkedOutBrowseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    const checkedOut = await collectCursorPages((cursor) =>
+      this.client.listCheckedOutAssets(request.tenantId, request.inventoryId, workspacePageSize, cursor)
+    );
+    const assets = checkedOut
+      .map(mapCheckedOutAsset)
+      .map((entry) => entry.asset)
+      .filter((asset) => browseAssetMatches(asset, request))
+      .sort((left, right) => request.sort === 'id_asc'
+        ? left.id.localeCompare(right.id)
+        : (Date.parse(right.updatedAt ?? '') || 0) - (Date.parse(left.updatedAt ?? '') || 0) || right.id.localeCompare(left.id));
+    const offset = Number.parseInt(request.cursor ?? '0', 10) || 0;
+    const pageAssets = assets.slice(offset, offset + request.limit);
+    const nextOffset = offset + pageAssets.length;
+    return browsePage(pageAssets, [], nextOffset < assets.length ? String(nextOffset) : null, nextOffset < assets.length);
   }
 
   async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
@@ -879,6 +971,22 @@ export class StuffStashInventoryRepository
     }
     return URL.createObjectURL(await response.blob());
   }
+}
+
+function browseAssetMatches(asset: Asset, request: BrowseAssetsRequest): boolean {
+  if (request.lifecycleState !== 'all' && asset.lifecycleState !== request.lifecycleState) return false;
+  if (request.scope === 'places' && (asset.kind !== 'location' || asset.parentAssetId !== null)) return false;
+  if (request.scope === 'containers' && asset.kind !== 'container') return false;
+  if (request.scope === 'items' && asset.kind !== 'item') return false;
+  if (request.checkoutState === 'available' && asset.currentCheckout) return false;
+  if (request.checkoutState === 'checked_out' && !asset.currentCheckout) return false;
+  return true;
+}
+
+function browsePage(
+  assets: Asset[], searchResults: SearchResult[], nextCursor: string | null, hasMore: boolean
+): BrowseAssetsPage {
+  return { assets, searchResults, nextCursor, hasMore };
 }
 
 function safeError(error: unknown): Error {

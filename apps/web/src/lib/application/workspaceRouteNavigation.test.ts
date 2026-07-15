@@ -97,7 +97,7 @@ describe('workspace route navigation helpers', () => {
 
     replaceCanonicalWorkspaceAlias(alias, 'tenant-home', 'inventory-household');
 
-    expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+    expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
     expect(window.location.search).toBe('?q=tape');
   });
 

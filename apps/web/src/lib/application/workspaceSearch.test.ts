@@ -73,16 +73,16 @@ describe('workspace search helpers', () => {
 
   it('derives canonical hrefs for search filters', () => {
     expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'archived', 'fuzzy', 'any')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+      '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
     );
     expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'active', 'exact', 'any')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&mode=exact'
+      '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&mode=exact'
     );
     expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy', 'checked_out')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?lifecycle=all&checkout=checked_out'
+      '/tenants/tenant-home/inventories/inventory-household/browse?lifecycle=all&availability=checked_out'
     );
     expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy', 'any')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?lifecycle=all'
+      '/tenants/tenant-home/inventories/inventory-household/browse?lifecycle=all'
     );
   });
 
@@ -99,17 +99,17 @@ describe('workspace search helpers', () => {
       {
         value: 'active',
         label: 'Active',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf'
       },
       {
         value: 'archived',
         label: 'Archived',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
       },
       {
         value: 'all',
         label: 'All',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=all'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=all'
       }
     ]);
     expect(
@@ -124,12 +124,12 @@ describe('workspace search helpers', () => {
       {
         value: 'fuzzy',
         label: 'Contains',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
       },
       {
         value: 'exact',
         label: 'Exact',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&mode=exact'
 	      }
 	    ]);
     expect(
@@ -144,17 +144,17 @@ describe('workspace search helpers', () => {
       {
         value: 'any',
         label: 'Any',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&mode=exact'
       },
       {
         value: 'checked_out',
         label: 'Checked out',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact&checkout=checked_out'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&availability=checked_out&mode=exact'
       },
       {
         value: 'available',
         label: 'Available',
-        href: '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived&mode=exact&checkout=available'
+        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&availability=available&mode=exact'
       }
     ]);
   });

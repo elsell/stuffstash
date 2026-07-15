@@ -2,23 +2,52 @@ import { describe, expect, it } from 'vitest';
 import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
-  it('parses and formats the canonical Browse destination', () => {
+  it('parses and formats the canonical Browse state', () => {
+    const route = parseWorkspaceRoute(
+      new URL(
+        'https://app.test/tenants/tenant_1/inventories/inv_1/browse?surface=map&scope=containers&q=paint&tag=tag_2&tag=tag_1&lifecycle=all&availability=available&sort=id_asc&mode=exact'
+      )
+    );
+
+    expect(route).toMatchObject({
+      mode: 'browse',
+      browseSurface: 'map',
+      browseScope: 'containers',
+      searchQuery: 'paint',
+      browseTagIds: ['tag_2', 'tag_1'],
+      searchLifecycleState: 'all',
+      searchCheckoutState: 'available',
+      browseSort: 'id_asc',
+      searchMode: 'exact'
+    });
+    expect(workspaceRouteHref(route, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?surface=map&scope=containers&q=paint&tag=tag_2&tag=tag_1&lifecycle=all&availability=available&sort=id_asc&mode=exact'
+    );
+  });
+
+  it('parses legacy Locations and Search routes as Browse compatibility state', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'))).toMatchObject({
+      mode: 'browse',
+      browseScope: 'places',
+      compatibilityAlias: true
+    });
     expect(
-      parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/browse?q=drill'))
+      parseWorkspaceRoute(
+        new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&checkout=checked_out')
+      )
     ).toMatchObject({
       mode: 'browse',
-      tenantId: 'tenant_1',
-      inventoryId: 'inv_1',
       searchQuery: 'drill',
+      searchLifecycleState: 'all',
+      searchCheckoutState: 'checked_out',
+      compatibilityAlias: true
     });
-    expect(workspaceRouteHref({ mode: 'browse', searchQuery: ' drill ' }, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/browse?q=drill'
-    );
   });
 
   it('parses a tenant inventory location deep link', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'))).toMatchObject({
-      mode: 'locations',
+      mode: 'browse',
+      browseScope: 'places',
       tenantId: 'tenant_1',
       inventoryId: 'inv_1'
     });
@@ -41,7 +70,7 @@ describe('workspace route state', () => {
     });
 
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact'))).toMatchObject({
-      mode: 'search',
+      mode: 'browse',
       tenantId: 'tenant_1',
       lifecycleState: 'active',
       searchQuery: 'drill',

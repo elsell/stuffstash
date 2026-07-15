@@ -550,4 +550,32 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
+  it('preserves Browse pagination metadata and API-backed default ordering', async () => {
+    const { fetch, requests } = fakeFetch();
+    const observer = new InMemoryWorkspaceObserver();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
+
+    const page = await repository.browseAssets({
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', tagIds: [], lifecycleState: 'all',
+      checkoutState: 'any', scope: 'all', sort: 'id_asc', mode: 'fuzzy', limit: 20
+    });
+
+    expect(page.assets[0]?.id).toBe('asset-archived');
+    expect(page).toMatchObject({ hasMore: false, nextCursor: null });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=20&lifecycleState=all'
+    ]);
+    expect(observer.events.map((event) => event.eventName)).toEqual(['workspace.browse_started', 'workspace.browse_completed']);
+  });
+
+  it('checks Browse inventory existence across all lifecycle states', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(repository.hasAnyAssets('tenant-home', 'inventory-household')).resolves.toBe(true);
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=1&lifecycleState=all'
+    ]);
+  });
+
 });

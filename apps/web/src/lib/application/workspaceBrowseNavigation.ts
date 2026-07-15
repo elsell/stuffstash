@@ -62,7 +62,7 @@ export function browseLocationHref(location: LocationAsset): string {
 }
 
 export function locationBackHref(location: LocationAsset): string {
-  return workspaceRouteHref({ mode: 'locations' }, location.tenantId, location.inventoryId);
+  return workspaceRouteHref({ mode: 'browse', browseScope: 'places' }, location.tenantId, location.inventoryId);
 }
 
 export function locationEditHref(location: LocationAsset): string {

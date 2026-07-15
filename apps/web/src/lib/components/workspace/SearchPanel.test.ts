@@ -281,10 +281,10 @@ describe('SearchPanel', () => {
     });
 
     expect(linkWithText('Archived').getAttribute('href')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&lifecycle=archived'
+      '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
     );
     expect(linkWithText('Exact').getAttribute('href')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=garage+shelf&mode=exact'
+      '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&mode=exact'
     );
 
     linkWithText('Exact').click();

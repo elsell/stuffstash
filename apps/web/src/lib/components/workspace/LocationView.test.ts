@@ -90,7 +90,7 @@ describe('LocationView', () => {
       }
     });
 
-    expect(link('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+    expect(link('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/browse?scope=places');
     expect(link('Edit location').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/garage/edit'
     );

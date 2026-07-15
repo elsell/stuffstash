@@ -167,6 +167,33 @@ class DelayedAssetRepository extends SeededInventoryRepository {
   }
 }
 
+class DelayedBrowseRepository extends SeededInventoryRepository {
+  releaseBrowseLoad: (() => void) | null = null;
+
+  async browseAssets(...args: Parameters<SeededInventoryRepository['browseAssets']>) {
+    if (!this.releaseBrowseLoad) {
+      await new Promise<void>((resolve) => {
+        this.releaseBrowseLoad = resolve;
+      });
+    }
+    return super.browseAssets(...args);
+  }
+}
+
+class UnsafeBrowseRepository extends SeededInventoryRepository {
+  private unsafeFailure(): Error & { safeForUser: false } {
+    return Object.assign(new Error('database host 10.0.0.8 rejected the query'), { safeForUser: false as const });
+  }
+
+  async browseAssets(): Promise<never> {
+    throw this.unsafeFailure();
+  }
+
+  async loadActiveContainmentMap(): Promise<never> {
+    throw this.unsafeFailure();
+  }
+}
+
 class AssetUpdateFailingRepository extends SeededInventoryRepository {
   createdTagCount = 0;
 
@@ -391,38 +418,15 @@ describe('InventoryWorkspaceApp route application', () => {
 
   it('keeps search lifecycle route state independent from the home lifecycle', async () => {
     await mountWorkspace(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=Passport&lifecycle=archived',
+      '/tenants/tenant-home/inventories/inventory-household/browse?q=Passport&lifecycle=archived',
       new LifecycleSelectionFailingRepository(structuredClone(seed))
     );
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
       expect(window.location.search).toBe('?q=Passport&lifecycle=archived');
-      expect(document.body.textContent).toContain('Search');
+      expect(document.body.textContent).toContain('Browse');
       expect(document.body.textContent).toContain('Archived Passport');
-    });
-  });
-
-  it('keeps direct Browse navigation canonical when submitting search', async () => {
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/browse');
-
-    await waitFor(() => {
-      expect(document.body.querySelector('#search-page-query')).not.toBeNull();
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
-    });
-
-    const search = document.body.querySelector<HTMLInputElement>('#search-page-query');
-    if (!search) throw new Error('Missing Browse search input');
-    search.value = 'Passport';
-    search.dispatchEvent(new InputEvent('input', { bubbles: true }));
-    document.body.querySelector<HTMLFormElement>('form.search-panel')?.dispatchEvent(
-      new SubmitEvent('submit', { bubbles: true, cancelable: true })
-    );
-
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
-      expect(window.location.search).toBe('?q=Passport');
-      expect(document.body.textContent).toContain('Passport');
     });
   });
 
@@ -444,20 +448,54 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('canonicalizes submitted search filters to Browse', async () => {
+  it('updates the Browse sort URL when no query has been submitted', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search');
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
-      expect(document.body.textContent).toContain('Search this inventory');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(document.body.textContent).toContain('Browse');
     });
 
-    controlContaining('Exact').click();
+    controlContaining('Default order').click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
-      expect(window.location.search).toBe('?mode=exact');
-      expect(document.body.textContent).toContain('Search this inventory');
+      expect(window.location.search).toBe('?sort=id_asc');
+      expect(document.body.textContent).toContain('Browse');
+    });
+  });
+
+  it('does not expose unsafe Browse list or Map failure details', async () => {
+    const repository = new UnsafeBrowseRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/browse', repository);
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Browse could not be loaded. Try again.');
+      expect(document.body.textContent).not.toContain('database host');
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/browse?surface=map');
+    afterNavigateCallbacks.forEach((callback) => callback());
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Map could not be loaded. Try again.');
+      expect(document.body.textContent).not.toContain('database host');
+    });
+  });
+
+  it('does not present an archived-only inventory as a new empty inventory', async () => {
+    const archivedOnlySeed = structuredClone(seed);
+    archivedOnlySeed.assets = archivedOnlySeed.assets.filter((asset) =>
+      asset.tenantId !== 'tenant-home' || asset.inventoryId !== 'inventory-household' || asset.lifecycleState === 'archived'
+    );
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/browse',
+      new SeededInventoryRepository(archivedOnlySeed)
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Nothing matches these filters');
+      expect(document.body.textContent).not.toContain('No stuff here yet');
     });
   });
 
@@ -616,6 +654,20 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Blue folder');
+    });
+  });
+
+  it('does not leave global actions busy after leaving an in-flight Browse request', async () => {
+    const repository = new DelayedBrowseRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/browse', repository);
+    await waitFor(() => expect(repository.releaseBrowseLoad).toBeTruthy());
+
+    document.body.querySelector<HTMLAnchorElement>('.nav-button[href="/tenants/tenant-home/inventories/inventory-household"]')?.click();
+    repository.releaseBrowseLoad?.();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(document.body.querySelector<HTMLButtonElement>('.header-add')?.disabled).toBe(false);
     });
   });
 
@@ -1104,16 +1156,16 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('opens top-level locations through a durable locations route', async () => {
+  it('normalizes top-level locations to the Places scope of Browse', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations');
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
-      expect(document.body.textContent).toContain('Locations');
-      expect(document.body.textContent).toContain('The places where your things live.');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(window.location.search).toBe('?scope=places');
+      expect(document.body.textContent).toContain('Browse');
       expect(document.body.textContent).toContain('Garage');
-      expect(document.body.textContent).not.toContain('Recently added');
-      expect(buttonMaybeContaining('Archived')).toBeUndefined();
+      expect(document.body.querySelectorAll('[data-recent-card]')).toHaveLength(0);
+      expect(document.body.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('List');
     });
   });
 
@@ -1209,12 +1261,13 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Main storage area');
     });
 
-    expect(controlContaining('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+    expect(controlContaining('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/browse?scope=places');
     controlContaining('Back').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
-      expect(document.body.textContent).toContain('The places where your things live.');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(window.location.search).toBe('?scope=places');
+      expect(document.body.textContent).toContain('Browse');
     });
   });
 

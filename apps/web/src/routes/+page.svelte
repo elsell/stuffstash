@@ -15,10 +15,11 @@
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+  import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
 
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
-  let repository = $state<(InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository) | null>(null);
+  let repository = $state<(InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository) | null>(null);
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
   let error = $state('');
