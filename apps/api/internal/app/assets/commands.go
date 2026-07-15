@@ -13,25 +13,30 @@ import (
 )
 
 func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
+	result, err := s.CreateAssetWithOperation(ctx, input)
+	return result.Asset, err
+}
+
+func (s Service) CreateAssetWithOperation(ctx context.Context, input CreateAssetInput) (AssetMutationResult, error) {
 	prepared, err := s.PrepareCreateAsset(ctx, input)
 	if err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	if len(input.TagIDs) > 0 {
 		if _, err := s.validateAssignableAssetTagIDs(ctx, input.TenantID, input.InventoryID, input.TagIDs); err != nil {
-			return asset.Asset{}, err
+			return AssetMutationResult{}, err
 		}
 	}
 	if err := s.persistPreparedCreateAsset(ctx, prepared); err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	if len(input.TagIDs) > 0 {
 		if err := s.setAssetTagAssignments(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, prepared.Asset.ID, input.TagIDs); err != nil {
-			return asset.Asset{}, err
+			return AssetMutationResult{}, err
 		}
 	}
 	s.RecordAssetCreated(ctx, prepared.Asset, input.Principal.ID)
-	return prepared.Asset, nil
+	return AssetMutationResult{Asset: prepared.Asset, UndoableOperationID: prepared.UndoableOperation.ID}, nil
 }
 
 type PreparedCreateAsset struct {
@@ -224,25 +229,34 @@ func (s Service) RecordAssetCreated(ctx context.Context, item asset.Asset, princ
 }
 
 func (s Service) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Asset, error) {
+	result, err := s.UpdateAssetWithOperation(ctx, input)
+	return result.Asset, err
+}
+
+func (s Service) UpdateAssetWithOperation(ctx context.Context, input UpdateAssetInput) (AssetMutationResult, error) {
 	prepared, err := s.PrepareUpdateAsset(ctx, input)
 	if err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	if input.TagIDs != nil {
 		if _, err := s.validateAssignableAssetTagIDs(ctx, input.TenantID, input.InventoryID, *input.TagIDs); err != nil {
-			return asset.Asset{}, err
+			return AssetMutationResult{}, err
 		}
 	}
 	if err := s.persistPreparedUpdateAsset(ctx, prepared); err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	if input.TagIDs != nil {
 		if err := s.setAssetTagAssignments(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, prepared.Asset.ID, *input.TagIDs); err != nil {
-			return asset.Asset{}, err
+			return AssetMutationResult{}, err
 		}
 	}
 	s.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
-	return prepared.Asset, nil
+	result := AssetMutationResult{Asset: prepared.Asset}
+	if prepared.UndoableOperation != nil {
+		result.UndoableOperationID = prepared.UndoableOperation.ID
+	}
+	return result, nil
 }
 
 type PreparedUpdateAsset struct {
@@ -419,27 +433,37 @@ func (s Service) RecordAssetUpdated(ctx context.Context, item asset.Asset, princ
 }
 
 func (s Service) ArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
+	result, err := s.ArchiveAssetWithOperation(ctx, input)
+	return result.Asset, err
+}
+
+func (s Service) ArchiveAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {
 	prepared, err := s.PrepareArchiveAsset(ctx, input)
 	if err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	if err := s.persistPreparedUpdateAssetLifecycle(ctx, prepared); err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	s.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
-	return prepared.Asset, nil
+	return AssetMutationResult{Asset: prepared.Asset, UndoableOperationID: prepared.UndoableOperation.ID}, nil
 }
 
 func (s Service) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
+	result, err := s.RestoreAssetWithOperation(ctx, input)
+	return result.Asset, err
+}
+
+func (s Service) RestoreAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {
 	prepared, err := s.PrepareRestoreAsset(ctx, input)
 	if err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	if err := s.persistPreparedUpdateAssetLifecycle(ctx, prepared); err != nil {
-		return asset.Asset{}, err
+		return AssetMutationResult{}, err
 	}
 	s.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
-	return prepared.Asset, nil
+	return AssetMutationResult{Asset: prepared.Asset, UndoableOperationID: prepared.UndoableOperation.ID}, nil
 }
 
 func (s Service) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) error {

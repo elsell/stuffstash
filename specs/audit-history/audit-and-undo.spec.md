@@ -187,6 +187,18 @@ Initial operation shape:
 
 The first slice may expose only `undo` and `redo` endpoints. Listing undoable operations can follow once the UI timeline is specified.
 
+### Web experience
+
+- A successful supported asset action whose response includes an undoable operation ID must show a time-bounded success notification with an `Undo` action. Supported web actions are create, edit, move, archive, restore, checkout, and return, including one-click return from Home.
+- The notification action must apply the exact operation ID returned by that mutation; the web client must not infer a global "last action" or discover an operation by timing.
+- Mutation responses for those supported actions must include `undoableOperationId`. Ordinary asset list and detail reads must omit it so a stale operation is never presented as though it belongs to a read.
+- While Undo or Redo is being applied, repeated activation for the same operation must be suppressed and the action must remain screen-reader announced as in progress.
+- Successful Undo must refresh the affected asset, checked-out collection, selected detail, and active lifecycle collection, then offer a time-bounded `Redo` action for the same operation ID. Successful Redo must perform the symmetric refresh and offer `Undo` again.
+- Undo/Redo must stay behind the web inventory repository port. The Svelte component must not call the generated API client directly.
+- An expired, stale, denied, invalid, or otherwise failed Undo/Redo must not announce success or remove the current page context. The notification must become a persistent error with the server-safe reason and a dismiss control; stale state must then be refreshed from the selected inventory so the page does not continue presenting invalid state.
+- Hard delete and attachment operations must not offer Undo in the first slice. Their confirmations and completion messages must continue to state their actual recovery semantics.
+- If a successful mutation response does not include an operation ID, the web app must preserve the normal success confirmation without presenting a nonfunctional Undo action.
+
 ## REST API
 
 The first undo/redo endpoints are:
@@ -204,6 +216,8 @@ Both endpoints:
 - Must not reveal whether an operation exists outside the caller's authorized tenant and inventory.
 - Must emit domain-oriented observability.
 - Must be represented in the generated OpenAPI contract.
+
+Asset create, update, archive, and restore responses must expose the operation ID created atomically with the mutation. Checkout and return responses must do the same on their checkout response. This metadata is response-only and must not become persisted asset or checkout state.
 
 ## Undo/Redo Audit Actions
 

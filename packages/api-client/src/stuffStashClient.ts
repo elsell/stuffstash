@@ -112,6 +112,7 @@ export interface Asset {
   updatedAt: string;
   primaryPhoto?: AssetPrimaryPhoto;
   currentCheckout?: CurrentCheckout;
+  undoableOperationId?: string;
 }
 
 export interface CompactAssetTag {
@@ -1903,7 +1904,8 @@ function mapAsset(response: AssetResponse): Asset {
     createdAt: response.createdAt,
     updatedAt: response.updatedAt,
     primaryPhoto: mapAssetPrimaryPhoto(response.primaryPhoto),
-    currentCheckout: mapCurrentCheckout(response.currentCheckout)
+    currentCheckout: mapCurrentCheckout(response.currentCheckout),
+    undoableOperationId: response.undoableOperationId
   };
 }
 

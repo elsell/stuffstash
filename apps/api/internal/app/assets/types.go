@@ -67,6 +67,11 @@ type UpdateAssetInput struct {
 	TagIDs        *[]string
 }
 
+type AssetMutationResult struct {
+	Asset               asset.Asset
+	UndoableOperationID string
+}
+
 type UpdateAssetLifecycleInput struct {
 	Principal   identity.Principal
 	Source      audit.Source

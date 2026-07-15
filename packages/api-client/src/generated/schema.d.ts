@@ -1328,6 +1328,7 @@ export interface components {
             tags: components["schemas"]["CompactTag"][] | null;
             tenantId: string;
             title: string;
+            undoableOperationId?: string;
             updatedAt: string;
         };
         AssetSearchResultResponse: {
