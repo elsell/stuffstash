@@ -61,6 +61,50 @@ describe('AssetDetailHero', () => {
     expect(button('Add photo').disabled).toBe(true);
     expect(button('Add photo').getAttribute('aria-describedby')).toBe('asset-photo-upload-disabled asset-photo-upload-error');
   });
+
+  it('announces photo upload progress and offers an explicit retry for the retained file', () => {
+    let retries = 0;
+    component = mount(AssetDetailHero, {
+      target: document.body,
+      props: {
+        kind: 'item',
+        heroPhoto: undefined,
+        photos: [],
+        canAddPhoto: false,
+        uploadDisabledReason: '',
+        uploadError: '',
+        uploadBusy: true,
+        retryPhotoName: 'shelf.jpg',
+        onChoosePhoto: () => {},
+        onSelectPhoto: () => {},
+        onRetryPhoto: () => { retries += 1; }
+      }
+    });
+
+    expect(document.body.querySelector('[role="status"]')?.textContent).toContain('Uploading photo');
+    expect(document.body.querySelector('[aria-label="Retry shelf.jpg"]')).toBeNull();
+
+    unmount(component);
+    component = mount(AssetDetailHero, {
+      target: document.body,
+      props: {
+        kind: 'item',
+        heroPhoto: undefined,
+        photos: [],
+        canAddPhoto: true,
+        uploadDisabledReason: '',
+        uploadError: 'Unable to upload photo.',
+        uploadBusy: false,
+        retryPhotoName: 'shelf.jpg',
+        onChoosePhoto: () => {},
+        onSelectPhoto: () => {},
+        onRetryPhoto: () => { retries += 1; }
+      }
+    });
+
+    button('Retry shelf.jpg').click();
+    expect(retries).toBe(1);
+  });
 });
 
 function photo(id: string, isPrimary: boolean): DetailPhoto {

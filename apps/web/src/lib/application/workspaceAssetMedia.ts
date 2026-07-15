@@ -83,3 +83,9 @@ export function unsupportedAttachmentTypeMessage(): string {
 export function unsupportedImageTypeMessage(): string {
   return 'Unsupported image type.';
 }
+
+export function userSafeMediaErrorMessage(caught: unknown, fallback: string): string {
+  const explicitlySafe = typeof caught === 'object' && caught !== null &&
+    (caught as { safeForUser?: unknown }).safeForUser === true;
+  return explicitlySafe && caught instanceof Error && caught.message.trim() ? caught.message.trim() : fallback;
+}

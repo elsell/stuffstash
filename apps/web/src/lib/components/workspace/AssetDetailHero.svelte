@@ -19,9 +19,12 @@
     canAddPhoto,
     uploadDisabledReason,
     uploadError,
+    uploadBusy = false,
+    retryPhotoName = '',
     children,
     onChoosePhoto,
-    onSelectPhoto
+    onSelectPhoto,
+    onRetryPhoto = () => {}
   }: {
     kind: AssetKind;
     heroPhoto: DetailPhoto | undefined;
@@ -29,9 +32,12 @@
     canAddPhoto: boolean;
     uploadDisabledReason: string;
     uploadError: string;
+    uploadBusy?: boolean;
+    retryPhotoName?: string;
     children?: Snippet;
     onChoosePhoto: () => void;
     onSelectPhoto: (photoId: string) => void;
+    onRetryPhoto?: () => void;
   } = $props();
   let uploadDescribedBy = $derived(
     [uploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '', uploadError ? PHOTO_UPLOAD_ERROR_ID : ''].filter(Boolean).join(' ')
@@ -90,6 +96,11 @@
     {/if}
     {#if uploadError}
       <p id={PHOTO_UPLOAD_ERROR_ID} class="denied-note" role="alert">{uploadError}</p>
+    {/if}
+    {#if uploadBusy}
+      <p class="photo-upload-status" role="status">Uploading photo…</p>
+    {:else if retryPhotoName}
+      <Button.Root variant="outline" aria-label={`Retry ${retryPhotoName}`} onclick={onRetryPhoto}>Retry {retryPhotoName}</Button.Root>
     {/if}
   </div>
 </div>

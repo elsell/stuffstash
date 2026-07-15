@@ -26,7 +26,8 @@
     supportedAttachmentContentType,
     supportedImageContentType,
     unsupportedAttachmentTypeMessage,
-    unsupportedImageTypeMessage
+    unsupportedImageTypeMessage,
+    userSafeMediaErrorMessage
   } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
 	  import type {
@@ -45,7 +46,7 @@
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
   import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID } from './AssetDetailHero.svelte';
   import AssetTagChips from './AssetTagChips.svelte';
-  import AssetFilesSection from './AssetFilesSection.svelte';
+  import AssetFilesSection, { type AssetFilesError } from './AssetFilesSection.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
   import { formatBytes } from './formatBytes';
 
@@ -119,7 +120,10 @@
   let selectedTagIds = $state<string[]>([]);
   let newTags = $state<AssetTagDraft[]>([]);
   let saveError = $state('');
-  let uploadError = $state('');
+  let photoUploadError = $state('');
+  let fileError = $state<AssetFilesError | null>(null);
+  let failedPhotoUpload = $state<SelectedAttachment | null>(null);
+  let photoUploading = $state(false);
   let photoInput = $state<HTMLInputElement | null>(null);
   let fileInput = $state<HTMLInputElement | null>(null);
   let selectedAttachment = $state<AssetAttachment | null>(null);
@@ -133,21 +137,23 @@
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
-  let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
+  let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && !photoUploading && imageContentTypes.length > 0);
   let editUnavailableStatus = $derived(assetEditUnavailableStatus(canEdit));
   let descriptionText = $derived(assetDescriptionText(asset.description));
   let photoUploadDisabledReason = $derived(
-    photoUploadUnavailableReason({
-      canEditAsset: canEdit,
-      lifecycleState: asset.lifecycleState,
-      isSaving: saving,
-      supportedImageTypeCount: imageContentTypes.length
-    })
+    photoUploading
+      ? 'Photo upload is already in progress.'
+      : photoUploadUnavailableReason({
+          canEditAsset: canEdit,
+          lifecycleState: asset.lifecycleState,
+          isSaving: saving,
+          supportedImageTypeCount: imageContentTypes.length
+        })
   );
   let photoUploadDescribedBy = $derived(
     [
       photoUploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '',
-      uploadError ? PHOTO_UPLOAD_ERROR_ID : ''
+      photoUploadError ? PHOTO_UPLOAD_ERROR_ID : ''
     ].filter(Boolean).join(' ')
   );
   let displayFields = $derived(
@@ -413,16 +419,20 @@
   }
 
   async function archiveAttachment(attachment: AssetAttachment): Promise<void> {
-    saveError = '';
+    fileError = null;
     try {
       await onArchiveAttachment(attachment);
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to archive attachment.';
+      fileError = {
+        operation: 'archive',
+        attachmentId: attachment.id,
+        message: userSafeMediaErrorMessage(caught, 'Unable to archive file.')
+      };
     }
   }
 
-  async function uploadAttachment(event: Event, fallbackMessage = 'Unable to upload attachment.'): Promise<void> {
-    uploadError = '';
+  async function uploadAttachment(event: Event): Promise<void> {
+    fileError = null;
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -430,12 +440,12 @@
     }
     const contentType = file.type;
     if (!supportedAttachmentContentType(mediaPolicy.supportedContentTypes, contentType)) {
-      uploadError = unsupportedAttachmentTypeMessage();
+      fileError = { operation: 'upload', message: unsupportedAttachmentTypeMessage() };
       input.value = '';
       return;
     }
     if (file.size > mediaPolicy.maxBytes) {
-      uploadError = `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.`;
+      fileError = { operation: 'upload', message: `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.` };
       input.value = '';
       return;
     }
@@ -449,13 +459,14 @@
       });
       input.value = '';
     } catch (caught) {
-      uploadError = caught instanceof Error ? caught.message : fallbackMessage;
+      fileError = { operation: 'upload', message: userSafeMediaErrorMessage(caught, 'Unable to upload file.') };
       input.value = '';
     }
   }
 
   async function uploadPhotoAttachment(event: Event): Promise<void> {
-    uploadError = '';
+    photoUploadError = '';
+    failedPhotoUpload = null;
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -463,11 +474,39 @@
     }
     const contentType = file.type;
     if (!supportedImageContentType(imageContentTypes, contentType)) {
-      uploadError = unsupportedImageTypeMessage();
+      photoUploadError = unsupportedImageTypeMessage();
       input.value = '';
       return;
     }
-    await uploadAttachment(event, 'Unable to upload photo.');
+    if (file.size > mediaPolicy.maxBytes) {
+      photoUploadError = `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.`;
+      input.value = '';
+      return;
+    }
+    const attachment: SelectedAttachment = {
+      id: createClientAttachmentId(),
+      name: file.name,
+      sizeBytes: file.size,
+      contentType,
+      file
+    };
+    await uploadPhoto(attachment);
+    input.value = '';
+  }
+
+  async function uploadPhoto(attachment: SelectedAttachment): Promise<void> {
+    if (photoUploading) return;
+    photoUploading = true;
+    photoUploadError = '';
+    try {
+      await onUploadAttachment(attachment);
+      failedPhotoUpload = null;
+    } catch (caught) {
+      failedPhotoUpload = attachment;
+      photoUploadError = userSafeMediaErrorMessage(caught, 'Unable to upload photo.');
+    } finally {
+      photoUploading = false;
+    }
   }
 
   async function removeAttachment(): Promise<void> {
@@ -575,9 +614,12 @@
       photos={detailPhotos}
       {canAddPhoto}
       uploadDisabledReason={photoUploadDisabledReason}
-      {uploadError}
+      uploadError={photoUploadError}
+      uploadBusy={photoUploading}
+      retryPhotoName={failedPhotoUpload?.name ?? ''}
       onChoosePhoto={() => photoInput?.click()}
       onSelectPhoto={(photoId) => { selectedPhotoId = photoId; }}
+      onRetryPhoto={() => { if (failedPhotoUpload) void uploadPhoto(failedPhotoUpload); }}
     >
       <div class="asset-detail-copy">
         <div class="detail-title-row">
@@ -706,6 +748,7 @@
       {canEdit}
       {saving}
       active={asset.lifecycleState === 'active'}
+      error={fileError}
       onChooseFile={() => fileInput?.click()}
       onArchiveAttachment={(attachment) => { void archiveAttachment(attachment); }}
       onOpenAttachmentDelete={openAttachmentDelete}

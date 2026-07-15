@@ -1,3 +1,9 @@
+<script lang="ts" module>
+  export type AssetFilesError =
+    | { operation: 'upload'; message: string }
+    | { operation: 'archive'; attachmentId: string; message: string };
+</script>
+
 <script lang="ts">
   import FileText from '@lucide/svelte/icons/file-text';
   import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -13,6 +19,7 @@
     canEdit,
     saving,
     active,
+    error = null,
     onChooseFile,
     onArchiveAttachment,
     onOpenAttachmentDelete,
@@ -23,6 +30,7 @@
     canEdit: boolean;
     saving: boolean;
     active: boolean;
+    error?: AssetFilesError | null;
     onChooseFile: () => void;
     onArchiveAttachment: (attachment: AssetAttachment) => void;
     onOpenAttachmentDelete: (event: MouseEvent, attachment: AssetAttachment) => void;
@@ -30,6 +38,7 @@
   } = $props();
 
   let status = $derived(assetFilesStatus(attachments.length));
+  let errorId = $derived(`${titleId}-error`);
 </script>
 
 <section class="attachment-section" aria-labelledby={titleId}>
@@ -39,12 +48,14 @@
       <Button.Root
         variant="outline"
         disabled={!canEdit || !active || saving}
+        aria-describedby={error?.operation === 'upload' ? errorId : undefined}
         onclick={onChooseFile}
       >
         <Upload /> Upload file
       </Button.Root>
     </div>
   </div>
+  {#if error}<p id={errorId} class="denied-note" role="alert">{error.message}</p>{/if}
   {#if status}
     <div class="empty-state">
       <p>{status.message}</p>
@@ -59,7 +70,12 @@
             <small>{attachment.contentType} / {formatBytes(attachment.sizeBytes)}</small>
           </span>
           <div class="attachment-actions">
-            <Button.Root variant="outline" disabled={!canEdit || saving} onclick={() => onArchiveAttachment(attachment)}>Archive</Button.Root>
+            <Button.Root
+              variant="outline"
+              disabled={!canEdit || saving}
+              aria-describedby={error?.operation === 'archive' && error.attachmentId === attachment.id ? errorId : undefined}
+              onclick={() => onArchiveAttachment(attachment)}
+            >Archive</Button.Root>
             <Button.Root
               href={attachmentDeleteHref(attachment)}
               variant="destructive"

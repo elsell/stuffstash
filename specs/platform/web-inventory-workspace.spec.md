@@ -403,6 +403,8 @@ Desktop asset detail layout:
 - Description and custom fields belong below the hero identity area.
 - Photos must be presented near the hero as asset identity media, with a thumbnail rail when more than one image is available.
 - Disabled asset-detail photo upload actions must expose a perceivable reason, including missing edit access, inactive lifecycle state, save-in-progress state, or no supported image upload types.
+- Asset-detail photo upload must expose local uploading and failed states in the photo surface. A failed photo must retain its safe filename and a Retry action so the user does not need to reopen the system picker; retry reuses the selected file, prevents duplicate concurrent attempts, and clears the failed state after success.
+- Media surfaces may render server detail only when the adapter explicitly marks the message safe for users. Unmarked transport, infrastructure, and internal server errors must use calm operation-specific fallback copy.
 - The first implementation may choose the first active image attachment as the primary photo until explicit primary-photo selection is specified.
 - Non-image attachments such as receipts, manuals, PDFs, and supporting documents must be visually separated from photos and appear lower than the primary photo/gallery.
 

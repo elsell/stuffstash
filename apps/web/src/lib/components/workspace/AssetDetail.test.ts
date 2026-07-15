@@ -628,6 +628,54 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Attachment must be 4 B or smaller.');
   });
 
+  it('keeps a failed photo locally available for retry', async () => {
+    let attempts = 0;
+    let releaseRetry = () => {};
+    mountAssetDetail({
+      onUploadAttachment: () => {
+        attempts += 1;
+        if (attempts === 1) return Promise.reject(Object.assign(new Error('Photo upload interrupted. Try again.'), { safeForUser: true }));
+        return new Promise<void>((resolve) => { releaseRetry = resolve; });
+      }
+    });
+
+    chooseAttachment(new File(['photo'], 'shelf.jpg', { type: 'image/jpeg' }), 'Choose photo');
+    await flush();
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Photo upload interrupted. Try again.');
+    expect(buttonWithLabel('Retry shelf.jpg')).not.toBeNull();
+
+    const retry = buttonWithLabel('Retry shelf.jpg');
+    retry.click();
+    retry.click();
+    await tick();
+    expect(attempts).toBe(2);
+    expect(document.body.querySelector('[role="status"]')?.textContent).toContain('Uploading photo');
+    releaseRetry();
+    await flush();
+    expect(document.body.querySelector('[aria-label="Retry shelf.jpg"]')).toBeNull();
+  });
+
+  it('hides unsafe upload details and disables a second selection while uploading', async () => {
+    let releaseUpload = () => {};
+    mountAssetDetail({
+      onUploadAttachment: () => new Promise<void>((resolve) => { releaseUpload = resolve; })
+    });
+    chooseAttachment(new File(['photo'], 'shelf.jpg', { type: 'image/jpeg' }), 'Choose photo');
+    await tick();
+    expect(buttons('Add photo')[0]?.disabled).toBe(true);
+    expect(document.body.textContent).toContain('Photo upload is already in progress.');
+    releaseUpload();
+    await flush();
+
+    unmount(component!); component = null; document.body.innerHTML = '';
+    const unsafe = Object.assign(new Error('storage host 10.0.0.8 failed'), { safeForUser: false });
+    mountAssetDetail({ onUploadAttachment: async () => { throw unsafe; } });
+    chooseAttachment(new File(['photo'], 'shelf.jpg', { type: 'image/jpeg' }), 'Choose photo');
+    await flush();
+    expect(document.body.textContent).toContain('Unable to upload photo.');
+    expect(document.body.textContent).not.toContain('10.0.0.8');
+  });
+
   it('explains disabled photo upload states', () => {
     const cases: Array<{
       name: string;
@@ -706,7 +754,24 @@ describe('AssetDetail', () => {
     await flush();
 
     expect(uploadCount).toBe(0);
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Unsupported file type.');
+    const filesSection = document.body.querySelector('.attachment-section');
+    expect(filesSection?.querySelector('[role="alert"]')?.textContent).toContain('Unsupported file type.');
+    expect(document.body.querySelector('.asset-photo-panel')?.textContent).not.toContain('Unsupported file type.');
+  });
+
+  it('keeps archive failures visible beside the file that was not archived', async () => {
+    mountAssetDetail({
+      attachments: [attachment('manual', 'manual.pdf', 'application/pdf')],
+      onArchiveAttachment: async () => {
+        throw Object.assign(new Error('Unable to archive manual.pdf.'), { safeForUser: true });
+      }
+    });
+
+    clickLast('Archive');
+    await flush();
+
+    const filesSection = document.body.querySelector('.attachment-section');
+    expect(filesSection?.querySelector('[role="alert"]')?.textContent).toContain('Unable to archive manual.pdf.');
   });
 });
 
