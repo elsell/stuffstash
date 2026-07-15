@@ -88,6 +88,7 @@ export function mapAsset(asset: ApiAsset): Asset {
     customFields: asset.customFields,
     tags: (asset.tags ?? []).map(mapAssetTagSummary),
     currentCheckout: mapCurrentCheckout(asset.currentCheckout),
+    undoableOperationId: asset.undoableOperationId,
     updatedAt: undefined
   };
 }
@@ -131,7 +132,8 @@ export function mapAssetCheckout(checkout: ApiAssetCheckout): AssetCheckout {
     returnedByPrincipalId: checkout.returnedByPrincipalId,
     returnDetails: checkout.returnDetails,
     createdAt: checkout.createdAt,
-    updatedAt: checkout.updatedAt
+    updatedAt: checkout.updatedAt,
+    undoableOperationId: checkout.undoableOperationId
   };
 }
 

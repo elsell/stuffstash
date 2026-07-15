@@ -1,5 +1,6 @@
 export type AssetKind = 'item' | 'container' | 'location';
 export type AssetLifecycleState = 'active' | 'archived';
+export type UndoableOperationDirection = 'undo' | 'redo';
 export type AssetLifecycleFilter = AssetLifecycleState;
 export type SearchLifecycleFilter = AssetLifecycleFilter | 'all';
 export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
@@ -197,6 +198,7 @@ export interface Asset {
   photo?: AssetPhoto;
   photoUnavailable?: boolean;
   currentCheckout?: CurrentCheckout;
+  undoableOperationId?: string;
   updatedAt?: string;
 }
 
@@ -221,6 +223,7 @@ export interface AssetCheckout extends CurrentCheckout {
   returnDetails?: string;
   createdAt: string;
   updatedAt: string;
+  undoableOperationId?: string;
 }
 
 export interface CheckedOutAsset {

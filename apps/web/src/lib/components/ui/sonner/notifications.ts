@@ -5,7 +5,8 @@ export type WorkspaceNotificationKind = 'success' | 'info' | 'warning' | 'error'
 
 export interface WorkspaceNotificationAction {
   label: string;
-  href: string;
+  href?: string;
+  onClick?: () => void | Promise<void>;
 }
 
 export interface WorkspaceNotification {
@@ -14,6 +15,7 @@ export interface WorkspaceNotification {
   description?: string;
   important?: boolean;
   duration?: number;
+  id?: string | number;
   action?: WorkspaceNotificationAction;
 }
 
@@ -22,11 +24,16 @@ export function notify(notification: WorkspaceNotification): string | number {
     description: notification.description,
     important: notification.important ?? notification.kind === 'error',
     duration: notification.duration,
+    id: notification.id,
     action: notification.action
       ? {
           label: notification.action.label,
           onClick: () => {
-            void goto(notification.action?.href ?? '/');
+            if (notification.action?.onClick) {
+              void notification.action.onClick();
+              return;
+            }
+            if (notification.action?.href) void goto(notification.action.href);
           }
         }
       : undefined

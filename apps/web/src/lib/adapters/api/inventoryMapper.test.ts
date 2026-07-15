@@ -13,6 +13,7 @@ describe('inventory API mapper', () => {
         description: 'Main storage',
         parentAssetId: null,
         lifecycleState: 'active',
+        undoableOperationId: 'operation-move-one',
         customFields: {},
         tags: [{ id: 'tag-one', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
         currentCheckout: {
@@ -39,6 +40,7 @@ describe('inventory API mapper', () => {
         checkedOutAt: '2026-06-24T11:00:00Z',
         checkedOutByPrincipalId: 'principal-one'
       },
+      undoableOperationId: 'operation-move-one',
       updatedAt: undefined
     });
   });
@@ -73,14 +75,16 @@ describe('inventory API mapper', () => {
       returnedByPrincipalId: 'principal-two',
       returnDetails: 'back in bin',
       createdAt: '2026-06-24T11:00:00Z',
-      updatedAt: '2026-06-24T12:00:00Z'
+      updatedAt: '2026-06-24T12:00:00Z',
+      undoableOperationId: 'operation-return-one'
     } as any);
 
     expect(checkout).toMatchObject({
       id: 'checkout-one',
       state: 'returned',
       checkoutDetails: 'using at desk',
-      returnDetails: 'back in bin'
+      returnDetails: 'back in bin',
+      undoableOperationId: 'operation-return-one'
     });
     expect(
       mapCheckedOutAsset({

@@ -28,6 +28,7 @@ import {
   type SelectedAttachment,
   type SelectedPhoto,
   type UpdateAssetDraft,
+  type UndoableOperationDirection,
   type WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
@@ -346,6 +347,15 @@ export class SeededInventoryRepository
     });
     this.recordAssetAudit(asset, 'asset.returned');
     return returned;
+  }
+
+  async applyAssetOperation(
+    _tenantId: string,
+    _inventoryId: string,
+    _operationId: string,
+    _direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    throw new Error('This saved operation is no longer available.');
   }
 
   async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]> {

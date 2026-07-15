@@ -21,6 +21,7 @@ import type {
   ImportJobCancellationMode,
   Tenant,
   UpdateAssetDraft,
+  UndoableOperationDirection,
   WorkspaceData
 } from '$lib/domain/inventory';
 
@@ -40,6 +41,12 @@ export interface InventoryRepository {
   deleteAsset(tenantId: string, inventoryId: string, assetId: string): Promise<void>;
   checkoutAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout>;
   returnAsset(tenantId: string, inventoryId: string, assetId: string, draft: AssetCheckoutDraft): Promise<AssetCheckout>;
+  applyAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset>;
   listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]>;
   listCheckedOutAssets(tenantId: string, inventoryId: string): Promise<CheckedOutAsset[]>;
   listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]>;

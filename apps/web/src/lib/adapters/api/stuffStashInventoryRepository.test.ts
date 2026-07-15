@@ -242,7 +242,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       id: 'asset-passport',
       title: 'Updated Passport',
       description: 'Fire safe',
-      parentAssetId: 'asset-safe'
+      parentAssetId: 'asset-safe',
+      undoableOperationId: 'operation-edit-one'
     });
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
@@ -253,6 +254,23 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       parentAssetId: 'asset-safe',
       tagIds: ['tag-workshop']
     });
+  });
+
+  it('applies target-scoped Undo and Redo through generated client paths', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(
+      repository.applyAssetOperation('tenant-home', 'inventory-household', 'operation-edit-one', 'undo')
+    ).resolves.toMatchObject({ id: 'asset-passport', title: 'Passport' });
+    await expect(
+      repository.applyAssetOperation('tenant-home', 'inventory-household', 'operation-edit-one', 'redo')
+    ).resolves.toMatchObject({ id: 'asset-passport', title: 'Updated Passport' });
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/undoable-operations/operation-edit-one/undo',
+      'POST http://api.local/tenants/tenant-home/inventories/inventory-household/undoable-operations/operation-edit-one/redo'
+    ]);
   });
 
   it('creates inventory tags through the generated client boundary', async () => {
@@ -316,12 +334,14 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ).resolves.toMatchObject({
       id: 'checkout-open',
       checkoutDetails: 'using at desk',
-      state: 'open'
+      state: 'open',
+      undoableOperationId: 'operation-checkout-one'
     });
     await expect(repository.returnAsset('tenant-home', 'inventory-household', 'asset-passport', { details: 'back in bin' })).resolves.toMatchObject({
       id: 'checkout-open',
       state: 'returned',
-      returnDetails: 'back in bin'
+      returnDetails: 'back in bin',
+      undoableOperationId: 'operation-return-one'
     });
     await expect(repository.listAssetCheckoutHistory('tenant-home', 'inventory-household', 'asset-passport')).resolves.toMatchObject([
       { id: 'checkout-open', state: 'open', checkoutDetails: 'using at desk' }
@@ -342,11 +362,13 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
 
     await expect(repository.archiveAsset('tenant-home', 'inventory-household', 'asset-passport')).resolves.toMatchObject({
       id: 'asset-passport',
-      lifecycleState: 'archived'
+      lifecycleState: 'archived',
+      undoableOperationId: 'operation-archive-one'
     });
     await expect(repository.restoreAsset('tenant-home', 'inventory-household', 'asset-passport')).resolves.toMatchObject({
       id: 'asset-passport',
-      lifecycleState: 'active'
+      lifecycleState: 'active',
+      undoableOperationId: 'operation-restore-one'
     });
     await expect(repository.deleteAsset('tenant-home', 'inventory-household', 'asset-passport')).resolves.toBeUndefined();
 

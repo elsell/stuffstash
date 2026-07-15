@@ -22,6 +22,7 @@ import type {
   SelectedAttachment,
   SelectedPhoto,
   UpdateAssetDraft,
+  UndoableOperationDirection,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
@@ -296,6 +297,25 @@ export class StuffStashInventoryRepository
       return checkout;
     } catch (error) {
       this.observer.record('workspace.asset_return_failed');
+      throw safeError(error);
+    }
+  }
+
+  async applyAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.observer.record('workspace.asset_operation_apply_started', { direction });
+    try {
+      const asset = await this.mapAssetWithPrimaryPhoto(
+        await this.client.applyUndoableOperation(tenantId, inventoryId, operationId, direction)
+      );
+      this.observer.record('workspace.asset_operation_applied', { direction, kind: asset.kind });
+      return asset;
+    } catch (error) {
+      this.observer.record('workspace.asset_operation_apply_failed', { direction });
       throw safeError(error);
     }
   }

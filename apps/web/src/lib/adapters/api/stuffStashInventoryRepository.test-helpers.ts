@@ -167,14 +167,21 @@ export function fakeFetch(
         const body = (await request.clone().json()) as { title: string; description?: string; parentAssetId?: string | null };
         return envelope({
           ...asset('asset-passport', 'tenant-home', 'inventory-household', body.title, body.parentAssetId ?? null),
-          description: body.description ?? ''
+          description: body.description ?? '',
+          undoableOperationId: 'operation-edit-one'
         });
       }
       if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/archive') {
-        return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'));
+        return envelope({ ...asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'), undoableOperationId: 'operation-archive-one' });
       }
       if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/restore') {
+        return envelope({ ...asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport'), undoableOperationId: 'operation-restore-one' });
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/undoable-operations/operation-edit-one/undo') {
         return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport'));
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/undoable-operations/operation-edit-one/redo') {
+        return envelope({ ...asset('asset-passport', 'tenant-home', 'inventory-household', 'Updated Passport'), undoableOperationId: 'operation-edit-one' });
       }
       if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
         return new Response(null, { status: 204 });
@@ -481,6 +488,7 @@ function assetCheckout(id: string, state: string, checkoutDetails?: string): obj
     checkedOutAt: '2026-06-24T11:00:00Z',
     checkedOutByPrincipalId: 'principal-one',
     checkoutDetails,
+    undoableOperationId: state === 'returned' ? 'operation-return-one' : 'operation-checkout-one',
     createdAt: '2026-06-24T11:00:00Z',
     updatedAt: '2026-06-24T11:00:00Z'
   };

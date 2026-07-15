@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import { Toaster } from '$lib/components/ui/sonner/index.js';
+import { toast } from 'svelte-sonner';
 import {
   ResourcefulImportJobRepository,
   TerminalImportJobRepository,
@@ -18,6 +19,7 @@ import type {
   InvitationStatusFilter,
   SelectedPhoto,
   UpdateAssetDraft,
+  UndoableOperationDirection,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
@@ -127,7 +129,7 @@ class RefreshFailingAfterReturnRepository extends SeededInventoryRepository {
   async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
     const result = await super.returnAsset(...args);
     this.returned = true;
-    return result;
+    return { ...result, undoableOperationId: 'operation-home-return' };
   }
 
   async getAsset(...args: Parameters<SeededInventoryRepository['getAsset']>) {
@@ -227,6 +229,89 @@ class AssetUpdateFailingRepository extends SeededInventoryRepository {
   }
 }
 
+let undoableOperationSequence = 0;
+
+class UndoableCreateRepository extends SeededInventoryRepository {
+  directions: string[] = [];
+  readonly operationId = `operation-create-${++undoableOperationSequence}`;
+  private createdAsset: Asset | null = null;
+
+  async createAsset(...args: Parameters<SeededInventoryRepository['createAsset']>): Promise<Asset> {
+    const created = await super.createAsset(...args);
+    this.createdAsset = created;
+    return { ...created, undoableOperationId: this.operationId };
+  }
+
+  async applyAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    if (!this.createdAsset) throw new Error('The saved operation is no longer available.');
+    const asset = direction === 'undo'
+      ? await super.archiveAsset(tenantId, inventoryId, this.createdAsset.id)
+      : await super.restoreAsset(tenantId, inventoryId, this.createdAsset.id);
+    this.createdAsset = asset;
+    return asset;
+  }
+}
+
+class StaleUndoableCreateRepository extends UndoableCreateRepository {
+  async applyAssetOperation(
+    _tenantId: string,
+    _inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    throw Object.assign(new Error('This change is stale because the asset changed later.'), { safeForUser: true as const });
+  }
+}
+
+class RefreshFailingUndoableCreateRepository extends UndoableCreateRepository {
+  private applied = false;
+
+  async applyAssetOperation(...args: Parameters<UndoableCreateRepository['applyAssetOperation']>): Promise<Asset> {
+    const result = await super.applyAssetOperation(...args);
+    this.applied = true;
+    return result;
+  }
+
+  async selectAssetLifecycle(...args: Parameters<SeededInventoryRepository['selectAssetLifecycle']>): Promise<WorkspaceData> {
+    if (this.applied) throw Object.assign(new Error('database host 10.0.0.8 failed'), { safeForUser: false as const });
+    return super.selectAssetLifecycle(...args);
+  }
+}
+
+class UnsafeUndoableCreateRepository extends UndoableCreateRepository {
+  async applyAssetOperation(
+    _tenantId: string,
+    _inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    throw Object.assign(new Error('database host 10.0.0.8 rejected operation'), { safeForUser: false as const });
+  }
+}
+
+class AuthExpiredRefreshUndoableCreateRepository extends UndoableCreateRepository {
+  private applied = false;
+
+  async applyAssetOperation(...args: Parameters<UndoableCreateRepository['applyAssetOperation']>): Promise<Asset> {
+    const result = await super.applyAssetOperation(...args);
+    this.applied = true;
+    return result;
+  }
+
+  async selectAssetLifecycle(...args: Parameters<SeededInventoryRepository['selectAssetLifecycle']>): Promise<WorkspaceData> {
+    if (this.applied) throw new AuthenticationRequiredError();
+    return super.selectAssetLifecycle(...args);
+  }
+}
+
 async function mountWorkspace(
   path: string,
   repository = new SeededInventoryRepository(structuredClone(seed)),
@@ -280,6 +365,7 @@ async function waitFor(assertion: () => void): Promise<void> {
 }
 
 afterEach(() => {
+  toast.dismiss();
   if (component) {
     unmount(component);
     component = null;
@@ -314,6 +400,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(document.body.querySelector('[aria-label="Return Passport"]')).toBeNull();
       expect(document.body.textContent).toContain('Returned Passport.');
+      expect(controlContaining('Undo')).toBeTruthy();
       expect(document.body.textContent).not.toContain('Refresh failed after confirmed return.');
     });
   });
@@ -1073,6 +1160,99 @@ describe('InventoryWorkspaceApp route application', () => {
     expect(productShell?.contains(toast)).toBe(false);
   });
 
+  it('offers target-scoped Undo after a supported mutation and Redo after compensation', async () => {
+    const repository = new UndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Camera bag');
+    await tick();
+    (await waitForSaveButton()).click();
+
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(document.body.textContent).toContain('Undid change to Camera bag.');
+      expect(controlContaining('Redo')).toBeTruthy();
+    });
+
+    controlContaining('Redo').click();
+    await waitFor(() => {
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`, `${repository.operationId}:redo`]);
+      expect(document.body.textContent).toContain('Redid change to Camera bag.');
+    });
+  });
+
+  it('keeps stale Undo failure visible without announcing false success', async () => {
+    const repository = new StaleUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Camera bag');
+    await tick();
+    (await waitForSaveButton()).click();
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Couldn’t undo change.');
+      expect(document.body.textContent).toContain('This change is stale because the asset changed later.');
+      expect(document.body.textContent).not.toContain('Undid change to Camera bag.');
+    });
+  });
+
+  it('keeps successful Undo and Redo available when the follow-up refresh fails', async () => {
+    const repository = new RefreshFailingUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+    await saveNamedItem('Camera bag');
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Undid change to Camera bag.');
+      expect(document.body.textContent).toContain('Change applied, but this view could not be refreshed.');
+      expect(controlContaining('Redo')).toBeTruthy();
+    });
+  });
+
+  it('does not expose unsafe Undo failure details', async () => {
+    const repository = new UnsafeUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+    await saveNamedItem('Camera bag');
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Couldn’t undo change.');
+      expect(document.body.textContent).toContain('can’t be applied safely');
+      expect(document.body.textContent).not.toContain('database host');
+    });
+  });
+
+  it('expires the session when Undo succeeds but the reconciliation refresh is unauthenticated', async () => {
+    const onSessionExpired = vi.fn();
+    const repository = new AuthExpiredRefreshUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository, { onSessionExpired });
+    await saveNamedItem('Camera bag');
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(onSessionExpired).toHaveBeenCalledOnce();
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(document.body.textContent).not.toContain('Couldn’t undo change.');
+    });
+  });
+
   it('passes add kind routes into contextual add tray copy', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/location');
 
@@ -1523,6 +1703,15 @@ async function waitForSaveButton(): Promise<HTMLButtonElement> {
   });
   if (!button) throw new Error('Missing Save button');
   return button;
+}
+
+async function saveNamedItem(title: string): Promise<void> {
+  await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+  const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+  if (!titleInput) throw new Error('Missing add title input');
+  setInputValue(titleInput, title);
+  await tick();
+  (await waitForSaveButton()).click();
 }
 
 function buttonContaining(text: string): HTMLButtonElement {

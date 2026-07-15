@@ -1,5 +1,6 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { operationRefreshWarning, safeOperationFailureDescription } from '$lib/application/workspaceOperationNotifications';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { afterNavigate } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -73,6 +74,7 @@
     type SearchResult,
     type SelectedAttachment,
     type UpdateAssetDraft,
+    type UndoableOperationDirection,
     type WorkspaceData,
     type WorkspaceMode
   } from '$lib/domain/inventory';
@@ -115,6 +117,7 @@
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
   let busy = $state(false);
   let notification = $state<WorkspaceNotification | null>(null);
+  let refreshWarning = $state<WorkspaceNotification | null>(null);
   let error = $state('');
   let searchQuery = $state('');
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
@@ -261,12 +264,13 @@
     }
     busy = true;
     error = '';
+    refreshWarning = null;
     notification = null;
     try {
       const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
       data = result.data;
       if (result.message) {
-        setSuccessNotification(result.message, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
+        setMutationSuccessNotification(result.message, result.selectedAsset, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
       }
       if (result.error) {
         error = result.error;
@@ -344,7 +348,7 @@
         }
       };
       loadedAssetDetail = asset;
-      setSuccessNotification(`Saved ${asset.title}.`, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
+      setMutationSuccessNotification(`Saved ${asset.title}.`, asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -479,10 +483,10 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
+      const result = await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setSuccessNotification(`Archived ${asset.title}.`, {
+      setMutationSuccessNotification(`Archived ${asset.title}.`, result, {
         label: 'View archived',
         href: workspaceRouteHref(
           { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
@@ -503,10 +507,10 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
+      const result = await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setSuccessNotification(`Restored ${asset.title}.`, viewAssetAction(asset));
+      setMutationSuccessNotification(`Restored ${asset.title}.`, result, viewAssetAction(asset));
     });
   }
 
@@ -537,13 +541,13 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.checkoutAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const checkout = await repository.checkoutAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
       const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
       selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setSuccessNotification(`Checked out ${refreshed.title}.`, viewAssetAction(refreshed));
+      setMutationSuccessNotification(`Checked out ${refreshed.title}.`, { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
@@ -557,13 +561,13 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
       const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
       selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setSuccessNotification(`Returned ${refreshed.title}.`, viewAssetAction(refreshed));
+      setMutationSuccessNotification(`Returned ${refreshed.title}.`, { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
@@ -573,10 +577,10 @@
       return;
     }
     await run(async () => {
-      await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
+      const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
       const returnedAsset: Asset = { ...asset, currentCheckout: undefined };
       data = replaceWorkspaceAsset(data, returnedAsset);
-      setSuccessNotification(`Returned ${returnedAsset.title}.`, viewAssetAction(returnedAsset));
+      setMutationSuccessNotification(`Returned ${returnedAsset.title}.`, { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
     });
   }
 
@@ -638,6 +642,95 @@
 
   function setSuccessNotification(title: string, action?: WorkspaceNotificationAction): void {
     notification = { kind: 'success', title, action };
+  }
+
+  function setMutationSuccessNotification(
+    title: string,
+    result: Pick<Asset, 'tenantId' | 'inventoryId' | 'undoableOperationId'> | null | undefined,
+    fallbackAction?: WorkspaceNotificationAction
+  ): void {
+    if (!result?.undoableOperationId) {
+      setSuccessNotification(title, fallbackAction);
+      return;
+    }
+    const operationId = result.undoableOperationId;
+    notification = {
+      id: `asset-operation:${operationId}`,
+      kind: 'success',
+      title,
+      duration: 10_000,
+      action: {
+        label: 'Undo',
+        onClick: () => applyUndoableAssetOperation(result.tenantId, result.inventoryId, operationId, 'undo')
+      }
+    };
+  }
+
+  async function applyUndoableAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<void> {
+    if (busy) return;
+    busy = true;
+    error = '';
+    notification = {
+      id: `asset-operation:${operationId}`,
+      kind: 'info',
+      title: direction === 'undo' ? 'Undoing change…' : 'Redoing change…',
+      important: true,
+      duration: Infinity
+    };
+    try {
+      const asset = await repository.applyAssetOperation(tenantId, inventoryId, operationId, direction);
+      data = replaceWorkspaceAsset(data, asset);
+      if (asset.lifecycleState !== data.context.assetLifecycleState) {
+        data = { ...data, assets: data.assets.filter((candidate) => candidate.id !== asset.id) };
+      }
+      if (selectedAssetId === asset.id || selectedLocationId === asset.id) {
+        if (asset.lifecycleState === data.context.assetLifecycleState) {
+          loadedAssetDetail = asset;
+        } else {
+          closeDetailToHome();
+        }
+      }
+      const inverse: UndoableOperationDirection = direction === 'undo' ? 'redo' : 'undo';
+      const successNotification: WorkspaceNotification = {
+        id: `asset-operation:${operationId}`,
+        kind: 'success',
+        title: `${direction === 'undo' ? 'Undid' : 'Redid'} change to ${asset.title}.`,
+        duration: 10_000,
+        action: {
+          label: inverse === 'undo' ? 'Undo' : 'Redo',
+          onClick: () => applyUndoableAssetOperation(tenantId, inventoryId, operationId, inverse)
+        }
+      };
+      notification = successNotification;
+      try {
+        await refreshSelectedAssetLifecycle();
+      } catch (refreshError) {
+        if (handleSessionExpired(refreshError)) return;
+        refreshWarning = operationRefreshWarning(operationId, successNotification.title, successNotification.action!);
+      }
+    } catch (caught) {
+      if (handleSessionExpired(caught)) return;
+      try {
+        await refreshSelectedAssetLifecycle();
+      } catch (refreshError) {
+        if (handleSessionExpired(refreshError)) return;
+      }
+      notification = {
+        id: `asset-operation:${operationId}`,
+        kind: 'error',
+        title: direction === 'undo' ? 'Couldn’t undo change.' : 'Couldn’t redo change.',
+        description: safeOperationFailureDescription(caught),
+        important: true,
+        duration: Infinity
+      };
+    } finally {
+      busy = false;
+    }
   }
 
   function viewAssetAction(asset: Asset): WorkspaceNotificationAction {
@@ -1630,6 +1723,7 @@
   assetTags={data.context.assetTags ?? []}
   saving={busy}
   {notification}
+  {refreshWarning}
   {error}
   onAddClose={closeAdd}
   onAddSave={createAsset}
