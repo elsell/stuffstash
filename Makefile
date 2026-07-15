@@ -224,6 +224,7 @@ web-check:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check:shadcn
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check
 
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check:visual
 web-test:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web test
 

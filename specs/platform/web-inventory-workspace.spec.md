@@ -520,6 +520,84 @@ Repeated segmented controls must be implemented through a reusable workspace con
 
 Search suggestions must use honest ordinary button/list semantics unless a future pass implements a complete combobox pattern. Partial combobox/listbox/menu ARIA is not allowed.
 
+## Visual Foundation And Production Polish
+
+The authenticated web workspace must use one coherent visual system across the
+shell, Home, Browse, focused asset and location views, settings, import, auth,
+and transient surfaces. A screen that is functionally complete but visibly
+misaligned, cramped, over-boxed, or inconsistent is not production complete.
+
+Visual rhythm:
+
+- Product spacing must use the shared 4, 8, 12, 16, 24, 32, and 48 CSS-pixel
+  scale. Optical exceptions are limited to icon alignment and one-pixel
+  borders; product components must not introduce near-duplicate spacing values.
+- The default component gap is 8 or 12 pixels, a related control group uses 16
+  pixels, major page sections use 24 pixels, and page-level separation uses 32
+  pixels.
+- Desktop content uses a shared maximum content track of 72rem with 24-pixel
+  gutters. Mobile content uses 16-pixel gutters. Readable form and settings
+  content may use a narrower shared track instead of stretching across the
+  page.
+- Shell, header, page title, section title, and content edges must share stable
+  alignment lines. Layout width must not depend on subtracting hard-coded
+  sidebar arithmetic from `100vw`.
+
+Typography:
+
+- Task surfaces must use the platform-native system font stack. A branded font
+  may be reserved for a future wordmark but must not replace native task text.
+- The shared type roles are caption 12/16, metadata 13/18, body 15/22, label
+  15/20, section title 17/22, and page title 28/34 on desktop and 24/30 on
+  mobile. These are font-size/line-height pairs.
+- Product text weights are limited to regular, medium, semibold, and bold. The
+  UI must not accumulate arbitrary intermediate numeric weights.
+- Primary text uses the calm charcoal text role rather than pure black. Muted
+  text must remain readable and must not be applied globally to every paragraph
+  or small element regardless of meaning.
+
+Surfaces and controls:
+
+- Radius roles are 8 pixels for controls, 12 pixels for ordinary surfaces, 16
+  pixels for large media and overlays, and full-pill only for badges, tags, or
+  circular controls.
+- Ordinary cards and grouped sections use a subtle border with no elevation.
+  Shadows are reserved for menus, popovers, sheets, dialogs, and other genuinely
+  elevated surfaces.
+- Repeated records inside a section use one grouped-list surface with dividers;
+  every record must not become its own bordered card nested inside another
+  bordered panel.
+- Dashed empty rectangles are not the default empty-state treatment. Empty
+  states should use normal grouped-surface hierarchy, direct copy, and an action
+  when one is available.
+- Standard controls are 40 pixels high on desktop and at least 44 pixels high
+  on touch layouts. Compact 36-pixel controls are limited to dense secondary
+  desktop tooling. Control density must come from primitive variants rather
+  than broad descendant selectors.
+- The standard responsive vocabulary is 640, 768, 1024, and 1280 CSS pixels.
+  A workflow may use a documented content-driven exception, but adjacent
+  one-off breakpoints must not create competing layout modes.
+- The current documented content-driven exceptions are 1180 pixels, where the
+  Settings master-detail layout can no longer preserve readable navigation and
+  form columns; 900 pixels, where the application shell changes to reserved
+  mobile navigation and single-column detail layouts; 860 pixels, where import
+  ledgers and preview tables become stacked task surfaces; 760 pixels, where
+  access, customization, and audit rows become single-column records; and 520
+  pixels, where step-progress labels require their narrow-phone optical size.
+  These exceptions are shared by the named workflow rather than copied into
+  nearby one-off layout modes.
+
+Verification:
+
+- Every visual-system change must be reviewed with fresh desktop and mobile
+  screenshots of each affected page family.
+- Screenshot review must check spacing rhythm, alignment, type hierarchy,
+  surface nesting, photo crop, long text, control density, and the final
+  reachable content above mobile navigation or sheet actions.
+- The web package must maintain a structural visual-foundation check that
+  prevents new raw product font sizes, radii, shadows, and off-scale spacing
+  values outside documented token or optical exceptions.
+
 ## Responsive Behavior
 
 Desktop:

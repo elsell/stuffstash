@@ -10,12 +10,12 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:shadcn": "node scripts/check-shadcn-foundation.mjs",
+    "check:visual": "node scripts/check-visual-foundation.mjs",
     "test": "vitest run",
     "install:e2e-browsers": "playwright install chromium",
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@fontsource-variable/inter": "5.2.8",
     "@internationalized/date": "3.12.2",
     "@lucide/svelte": "1.17.0",
     "@stuff-stash/api-client": "workspace:*",

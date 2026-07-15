@@ -80,7 +80,8 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Tailwind class merge helper: `tailwind-merge 3.6.0`.
 - Class variance helper: `class-variance-authority 0.7.1`.
 - Tailwind variants helper: `tailwind-variants 3.2.2`.
-- Inter variable font package for web UI: `@fontsource-variable/inter 5.2.8`.
+- Web UI typography uses the operating system's native font stack and does not
+  ship a separate font package.
 - Internationalized date helper used by generated UI components: `@internationalized/date 3.12.2`.
 - Svelte icon package used by generated UI components: `@lucide/svelte 1.17.0`.
 - Svelte Sonner toast runtime for web notification feedback: `svelte-sonner 1.1.1`.

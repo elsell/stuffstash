@@ -1,29 +1,28 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn-svelte/tailwind.css";
-@import "@fontsource-variable/inter";
 
 :root {
   color-scheme: light;
-  --background: oklch(0.976 0.003 247.858);
-  --foreground: oklch(0.145 0 0);
+  --background: #f6f8f9;
+  --foreground: #243038;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #2563eb;
+  --primary: #0066cc;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.965 0.004 247.858);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.955 0.004 247.858);
-  --muted-foreground: oklch(0.478 0.02 247.858);
+  --muted-foreground: #52616b;
   --accent: oklch(0.952 0.011 247.858);
   --accent-foreground: oklch(0.205 0 0);
   --warning: #a15c00;
   --warning-foreground: #6b3a00;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.902 0.006 247.858);
-  --input: oklch(0.902 0.006 247.858);
+  --border: #d9e1e6;
+  --input: #cdd7dd;
   --ring: #6b90aa;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -31,6 +30,31 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.5rem;
+  --radius-control: 0.5rem;
+  --radius-surface: 0.75rem;
+  --radius-overlay: 1rem;
+  --radius-pill: 999px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --text-caption-size: 0.75rem;
+  --text-caption-line-height: 1rem;
+  --text-metadata-size: 0.8125rem;
+  --text-metadata-line-height: 1.125rem;
+  --text-body-size: 0.9375rem;
+  --text-body-line-height: 1.375rem;
+  --text-label-size: 0.9375rem;
+  --text-label-line-height: 1.25rem;
+  --text-section-size: 1.0625rem;
+  --text-section-line-height: 1.375rem;
+  --text-title-size: 1.75rem;
+  --text-title-line-height: 2.125rem;
+  --content-max: 72rem;
+  --content-gutter: 1.5rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -43,14 +67,14 @@
   --color-brand-contained: #6b90aa;
   --color-brand-accent: #f5ab4b;
   --shadow-panel: 0 1px 2px rgb(16 24 40 / 0.06), 0 10px 30px rgb(16 24 40 / 0.08);
+  --shadow-dialog: 0 20px 60px rgb(36 48 56 / 0.16);
   --mobile-bottom-chrome-height: 0px;
   --mobile-scroll-clearance: 96px;
-  font-family:
-    InterVariable, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
 }
 
 @theme inline {
-  --font-sans: InterVariable, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -100,6 +124,9 @@
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-line-height);
+    -webkit-font-smoothing: antialiased;
   }
 
   html {
@@ -115,25 +142,22 @@ p {
 }
 
 h1 {
-  font-size: clamp(1.25rem, 1.1rem + 0.35vw, 1.65rem);
-  font-weight: 760;
-  letter-spacing: 0;
+  font-size: var(--text-title-size);
+  font-weight: 700;
+  line-height: var(--text-title-line-height);
+  letter-spacing: -0.012em;
 }
 
 h2 {
-  font-size: 1rem;
-  font-weight: 720;
-  letter-spacing: 0;
-}
-
-p,
-small {
-  color: var(--muted-foreground);
+  font-size: var(--text-section-size);
+  font-weight: 700;
+  line-height: var(--text-section-line-height);
+  letter-spacing: -0.006em;
 }
 
 .product-shell {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -142,9 +166,9 @@ small {
   top: 0;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
-  gap: 18px;
+  gap: var(--space-6);
   height: 100vh;
-  padding: 18px;
+  padding: var(--space-4);
   border-right: 1px solid var(--border);
   background: rgb(255 255 255 / 0.82);
   backdrop-filter: blur(14px);
@@ -477,9 +501,10 @@ small {
   z-index: 10;
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 14px;
+  gap: var(--space-4);
   align-items: center;
-  padding: 18px 24px;
+  min-height: 72px;
+  padding: var(--space-4) var(--content-gutter);
   border-bottom: 1px solid var(--border);
   background: rgb(249 250 251 / 0.86);
   backdrop-filter: blur(14px);
@@ -669,10 +694,10 @@ small {
 
 .workspace-main {
   display: grid;
-  gap: 20px;
-  width: min(1120px, calc(100vw - 308px));
+  gap: var(--space-8);
+  width: min(var(--content-max), calc(100% - (2 * var(--content-gutter))));
   margin: 0 auto;
-  padding: 26px 24px 96px;
+  padding: var(--space-8) 0 6rem;
 }
 
 .search-workspace {
@@ -2457,6 +2482,8 @@ dd {
   :root {
     --mobile-bottom-chrome-height: calc(68px + env(safe-area-inset-bottom));
     --mobile-scroll-clearance: calc(var(--mobile-bottom-chrome-height) + 96px);
+    --content-gutter: 1rem;
+    --text-title-size: 1.5rem;
   }
 
   .product-shell {
@@ -2714,3 +2741,4 @@ dd {
     bottom: calc(70px + env(safe-area-inset-bottom));
   }
 }
+    --text-title-line-height: 1.875rem;
