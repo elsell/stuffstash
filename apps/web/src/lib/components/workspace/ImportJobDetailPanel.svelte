@@ -10,8 +10,10 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
   import * as Table from '$lib/components/ui/table/index.js';
   import * as Tabs from '$lib/components/ui/tabs/index.js';
+  import { cn } from '$lib/utils.js';
   import {
     actorSummary,
     canRemoveJobFromHistory,
@@ -85,7 +87,6 @@
   }: Props = $props();
 
   let resourcePage = $state(0);
-  let actionMenuOpen = $state(false);
   let issueCount = $derived(issueTotalCount(job));
   let issueTone = $derived(importIssueTone(job));
   let resourcePageCount = $derived(Math.max(1, Math.ceil(job.resources.length / RESOURCE_PAGE_SIZE)));
@@ -99,7 +100,6 @@
   $effect(() => {
     job.id;
     resourcePage = 0;
-    actionMenuOpen = false;
   });
 
   $effect(() => {
@@ -183,6 +183,15 @@
     if (job.status === 'cancelled_discarded') return 'Discarded progress';
     if (job.status === 'cancelled_kept') return 'Kept partial progress';
     return 'Saved and skipped records';
+  }
+
+  function menuActionClass(primitiveClass: unknown): string {
+    return cn(typeof primitiveClass === 'string' ? primitiveClass : undefined, 'import-detail-action-item');
+  }
+
+  function openAuditHistoryFromMenu(event: MouseEvent, primitiveOnClick: unknown): void {
+    onOpenAuditHistory(event);
+    if (typeof primitiveOnClick === 'function') primitiveOnClick(event);
   }
 </script>
 
@@ -438,35 +447,53 @@
                 <Button.BusyContent {busy} label="Continue import" busyLabel="Opening preview" />
               </Button.Root>
             {/if}
-            <div class="detail-more-actions">
-              <Button.Root
-                variant="outline"
-                size="sm"
-                aria-expanded={actionMenuOpen}
-                aria-controls="import-detail-secondary-actions"
-                onclick={() => (actionMenuOpen = !actionMenuOpen)}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                  <Button.Root {...props} variant="outline" size="sm" class="min-h-11">
+                    <MoreHorizontal size={16} aria-hidden="true" />
+                    More
+                  </Button.Root>
+                {/snippet}
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                id="import-detail-secondary-actions"
+                class="import-detail-action-menu"
+                align="start"
+                aria-label="More import actions"
               >
-                <MoreHorizontal size={16} aria-hidden="true" />
-                More
-              </Button.Root>
-              {#if actionMenuOpen}
-                <div id="import-detail-secondary-actions" class="detail-action-menu" role="menu" aria-label="More import actions">
-                  <a class="detail-action-item" role="menuitem" href={auditHistoryHref} onclick={onOpenAuditHistory}>
-                    <Activity size={16} aria-hidden="true" />
+                <DropdownMenu.Item>
+                  {#snippet child({ props })}
+                    <a
+                      {...props}
+                      class={menuActionClass(props.class)}
+                      href={auditHistoryHref}
+                      onclick={(event) => openAuditHistoryFromMenu(event, props.onclick)}
+                    >
+                      <Activity size={16} aria-hidden="true" />
+                      <span>
+                        <strong>Open inventory activity</strong>
+                        <small>Shows the full inventory activity log.</small>
+                      </span>
+                    </a>
+                  {/snippet}
+                </DropdownMenu.Item>
+                {#if canCreateImports && canRemoveJobFromHistory(job)}
+                  <DropdownMenu.Item
+                    variant="destructive"
+                    disabled={busy}
+                    class="import-detail-action-item h-auto min-h-11 items-start whitespace-normal"
+                    onSelect={onRemove}
+                  >
+                    <Trash2 size={16} aria-hidden="true" />
                     <span>
-                      <strong>Open inventory activity</strong>
-                      <small>Shows the full inventory activity log.</small>
-                    </span>
-                  </a>
-                  {#if canCreateImports && canRemoveJobFromHistory(job)}
-                    <Button.Root variant="ghost" class="detail-action-item danger" role="menuitem" onclick={onRemove} disabled={busy}>
-                      <Button.BusyContent {busy} icon={Trash2} label="Remove from history" busyLabel="Removing from history" />
+                      <strong>Remove from history</strong>
                       <small>Imported records and audit history remain.</small>
-                    </Button.Root>
-                  {/if}
-                </div>
-              {/if}
-            </div>
+                    </span>
+                  </DropdownMenu.Item>
+                {/if}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           </section>
         </div>
       </div>
@@ -653,58 +680,41 @@
     padding-top: 0.75rem;
   }
 
-  .detail-more-actions {
-    display: grid;
-    gap: 0.5rem;
-    justify-items: start;
-    position: relative;
-    width: 100%;
-  }
-
-  .detail-action-menu {
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 1rem 2.5rem color-mix(in oklab, var(--foreground) 12%, transparent);
+  :global(.import-detail-action-menu) {
     display: grid;
     gap: 0.25rem;
-    min-width: min(100%, 17rem);
-    padding: 0.35rem;
-    z-index: 2;
+    min-width: 17rem;
   }
 
-  .detail-action-item {
+  :global(.import-detail-action-item) {
     align-items: flex-start;
     border-radius: 6px;
     color: var(--foreground);
     display: flex;
     gap: 0.55rem;
     min-width: 0;
+    min-height: 2.75rem;
     padding: 0.55rem 0.6rem;
     text-align: left;
     text-decoration: none;
     width: 100%;
   }
 
-  :global(.detail-action-item[data-slot='button']) {
-    height: auto;
-    justify-content: flex-start;
-    white-space: normal;
-  }
-
-  .detail-action-item:hover,
-  .detail-action-item:focus-visible {
+  :global(.import-detail-action-item:hover),
+  :global(.import-detail-action-item:focus-visible) {
     background: color-mix(in oklab, var(--muted) 36%, transparent);
     text-decoration: none;
   }
 
-  .detail-action-item span {
+  :global(.import-detail-action-menu [role='menuitem'] span),
+  :global(.import-detail-action-item span) {
     display: grid;
     gap: 0.12rem;
     min-width: 0;
   }
 
-  .detail-action-item small {
+  :global(.import-detail-action-menu [role='menuitem'] small),
+  :global(.import-detail-action-item small) {
     color: var(--muted-foreground);
     display: block;
     font-size: 0.76rem;
@@ -712,10 +722,6 @@
     line-height: 1.3;
     margin-top: 0.14rem;
     overflow-wrap: anywhere;
-  }
-
-  .detail-action-item.danger {
-    color: var(--destructive);
   }
 
   .detail-topline span {

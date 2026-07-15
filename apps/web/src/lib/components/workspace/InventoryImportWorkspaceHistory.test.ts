@@ -373,7 +373,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
   });
 
   it('returns to import history after removing the selected terminal import job', async () => {
-    await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)));
+    let activityOpens = 0;
+    await mountImportWorkspace(new TerminalImportJobRepository(structuredClone(seed)), {
+      onOpenInventoryAuditHistory: () => { activityOpens += 1; }
+    });
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
@@ -404,20 +407,74 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).not.toContain('Shows the full inventory activity log.');
     });
 
-    buttonContaining('More').click();
+    const moreButton = buttonContaining('More');
+    moreButton.focus();
+    moreButton.click();
+    expect(moreButton.classList.contains('min-h-11')).toBe(true);
     await waitFor(() => {
       expect(document.body.textContent).toContain('Shows the full inventory activity log.');
       expect(document.body.textContent).toContain('Imported records and audit history remain.');
     });
-    expect(linkContaining('Open inventory activity').getAttribute('href')).toBe(
+    expect(document.body.querySelector('[role="menu"]')).not.toBeNull();
+    expect(document.body.querySelectorAll('[role="menuitem"]').length).toBe(2);
+    const removeAction = menuItemContaining('Remove from history');
+    expect(removeAction.getAttribute('data-variant')).toBe('destructive');
+    expect(Array.from(removeAction.classList).some((name) => name.includes('data-[variant=destructive]:text-destructive'))).toBe(true);
+    expect(removeAction.classList.contains('h-auto')).toBe(true);
+    expect(removeAction.classList.contains('whitespace-normal')).toBe(true);
+    const activityLink = linkContaining('Open inventory activity');
+    expect(activityLink.getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/settings/activity'
     );
 
-    buttonContaining('Remove from history').click();
+    activityLink.click();
+    await waitFor(() => {
+      expect(activityOpens).toBe(1);
+      expect(document.body.querySelector('[role="menu"]')).toBeNull();
+      expect(document.activeElement).toBe(moreButton);
+    });
+
+    moreButton.click();
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="menu"]')).not.toBeNull();
+    });
+
+    document.body.querySelector<HTMLElement>('[role="menu"]')?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="menu"]')).toBeNull();
+      expect(document.activeElement).toBe(moreButton);
+    });
+
+    moreButton.click();
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="menu"]')).not.toBeNull();
+    });
+
+    menuItemContaining('Remove from history').click();
 
     await waitFor(() => {
+      expect(document.body.querySelector('[role="menu"]')).toBeNull();
       expect(document.body.textContent).toContain('Remove Homebox from history?');
       expect(document.body.textContent).toContain('Imported records and audit history will remain.');
+    });
+
+    confirmationButton('Keep in history').click();
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('[role="menu"]')).toBeNull();
+      expect(document.activeElement).toBe(moreButton);
+    });
+
+    moreButton.click();
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="menu"]')).not.toBeNull();
+    });
+    menuItemContaining('Remove from history').click();
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="menu"]')).toBeNull();
+      expect(document.body.textContent).toContain('Remove Homebox from history?');
     });
 
     confirmationButton('Remove from history').click();
@@ -1728,6 +1785,16 @@ function confirmationButton(text: string): HTMLButtonElement {
     throw new Error(`Missing confirmation button containing ${text}`);
   }
   return button;
+}
+
+function menuItemContaining(text: string): HTMLElement {
+  const item = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!item) {
+    throw new Error(`Missing menu item containing ${text}`);
+  }
+  return item;
 }
 
 function activeDetailTabText(): string {
