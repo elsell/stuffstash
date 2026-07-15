@@ -595,7 +595,7 @@
       await repository.archiveAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
       setSuccessNotification(`Archived ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
-    });
+    }, { rethrow: true });
   }
 
   async function deleteSelectedAttachment(attachment: AssetAttachment): Promise<void> {
@@ -626,7 +626,7 @@
     });
   }
 
-  async function run(task: () => Promise<void>): Promise<void> {
+  async function run(task: () => Promise<void>, options: { rethrow?: boolean } = {}): Promise<void> {
     busy = true;
     error = '';
     notification = null;
@@ -636,7 +636,11 @@
       if (handleSessionExpired(caught)) {
         return;
       }
-      error = caught instanceof Error ? caught.message : 'Action failed.';
+      const taskError = caught instanceof Error ? caught.message : 'Action failed.';
+      if (options.rethrow) {
+        throw caught instanceof Error ? caught : new Error(taskError);
+      }
+      error = taskError;
     } finally {
       busy = false;
     }

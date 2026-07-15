@@ -103,6 +103,24 @@ class PhotoUploadFailingRepository extends SeededInventoryRepository {
   }
 }
 
+class AttachmentArchiveFailingRepository extends SeededInventoryRepository {
+  async archiveAssetAttachment(): Promise<AssetAttachment> {
+    throw new Error('garage-s3 returned 503 while archiving object 7f8a');
+  }
+}
+
+class AttachmentArchiveExpiredRepository extends SeededInventoryRepository {
+  async archiveAssetAttachment(): Promise<AssetAttachment> {
+    throw new AuthenticationRequiredError('private expired-session diagnostic');
+  }
+}
+
+class HomeReturnFailingRepository extends SeededInventoryRepository {
+  async returnAsset(): Promise<never> {
+    throw new Error('Return failed. Passport stayed checked out.');
+  }
+}
+
 class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
   async selectAssetLifecycle(
     _tenantId: string,
@@ -1759,6 +1777,62 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
       expect(document.body.textContent).not.toContain('Delete attachment');
     });
+  });
+
+  it('keeps unsafe attachment archive failures sanitized inside the Files section', async () => {
+    const repository = new AttachmentArchiveFailingRepository(structuredClone(seed));
+    await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(document.body.textContent).toContain('manual.pdf'));
+
+    const archiveActions = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button'))
+      .filter((candidate) => candidate.textContent?.includes('Archive'));
+    archiveActions.at(-1)?.click();
+
+    await waitFor(() => {
+      const alert = document.body.querySelector('.attachment-section [role="alert"]');
+      expect(alert?.textContent).toContain('Unable to archive file.');
+      expect(alert?.textContent).not.toMatch(/garage-s3|503|7f8a/i);
+    });
+  });
+
+  it('handles attachment archive session expiry before local error propagation', async () => {
+    const repository = new AttachmentArchiveExpiredRepository(structuredClone(seed));
+    await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+    const onSessionExpired = vi.fn();
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository, { onSessionExpired });
+    await waitFor(() => expect(document.body.textContent).toContain('manual.pdf'));
+
+    const archiveActions = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button'))
+      .filter((candidate) => candidate.textContent?.includes('Archive'));
+    archiveActions.at(-1)?.click();
+
+    await waitFor(() => expect(onSessionExpired).toHaveBeenCalledOnce());
+    expect(document.body.textContent).not.toMatch(/private expired-session|Unable to archive file/i);
+  });
+
+  it('keeps default shared mutation failures in the workspace error channel', async () => {
+    const repository = new HomeReturnFailingRepository(structuredClone(seed));
+    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', { details: 'Using it' });
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household', repository);
+    await waitFor(() => expect(controlContaining('Return')).toBeTruthy());
+
+    controlContaining('Return').click();
+
+    await waitFor(() => expect(document.body.textContent).toContain('Return failed. Passport stayed checked out.'));
   });
 
   it('keeps location attachment delete cancel aligned with the exposed location href', async () => {
