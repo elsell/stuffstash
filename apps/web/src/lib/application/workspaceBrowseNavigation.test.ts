@@ -11,12 +11,14 @@ import {
   homeLifecycleHref,
   homeLifecycleOptions,
   homeLocationsEmptyState,
+  homeLocationsHref,
   homeRecentEmptyState,
   locationAddItemHref,
   locationBackHref,
   locationEditHref,
   locationEmptyState,
-  locationRowHref
+  locationRowHref,
+  visibleAssetCountLabel
 } from './workspaceBrowseNavigation';
 
 function asset(id: string, kind: Asset['kind'] = 'item'): Asset {
@@ -57,6 +59,7 @@ describe('workspace browse navigation helpers', () => {
   });
 
   it('derives home asset and location row hrefs', () => {
+    expect(homeLocationsHref('tenant-home', 'inventory-household')).toBe('/tenants/tenant-home/inventories/inventory-household/browse?scope=places');
     expect(browseAssetHref(asset('tape'))).toBe('/tenants/tenant-home/inventories/inventory-household/assets/tape');
     expect(browseLocationHref(locationAsset('garage'))).toBe('/tenants/tenant-home/inventories/inventory-household/locations/garage');
   });
@@ -74,7 +77,7 @@ describe('workspace browse navigation helpers', () => {
   it('builds home heading, empty, and denied presentation', () => {
     expect(homeHeadingPresentation('active', 'home')).toEqual({
       title: 'Home',
-      description: 'Recently added and the places where your things live.'
+      description: 'Recently changed and the places where your things live.'
     });
     expect(homeHeadingPresentation('active', 'locations')).toEqual({
       title: 'Locations',
@@ -116,5 +119,11 @@ describe('workspace browse navigation helpers', () => {
       actionLabel: 'Add item here',
       deniedMessage: 'Adding items is unavailable for this inventory.'
     });
+  });
+
+  it('formats visible asset counts with correct grammar', () => {
+    expect(visibleAssetCountLabel(0)).toBe('0 visible assets');
+    expect(visibleAssetCountLabel(1)).toBe('1 visible asset');
+    expect(visibleAssetCountLabel(2)).toBe('2 visible assets');
   });
 });

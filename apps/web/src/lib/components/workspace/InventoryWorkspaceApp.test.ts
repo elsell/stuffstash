@@ -121,6 +121,21 @@ class LifecycleSelectionExpiredRepository extends SeededInventoryRepository {
   }
 }
 
+class RefreshFailingAfterReturnRepository extends SeededInventoryRepository {
+  private returned = false;
+
+  async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
+    const result = await super.returnAsset(...args);
+    this.returned = true;
+    return result;
+  }
+
+  async getAsset(...args: Parameters<SeededInventoryRepository['getAsset']>) {
+    if (this.returned) throw new Error('Refresh failed after confirmed return.');
+    return super.getAsset(...args);
+  }
+}
+
 class InvitationStatusRecordingRepository extends SeededInventoryRepository {
   invitationStatuses: InvitationStatusFilter[] = [];
 
@@ -284,7 +299,22 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
+    });
+  });
+
+  it('removes a returned Home row without depending on a follow-up asset refresh', async () => {
+    const repository = new RefreshFailingAfterReturnRepository(structuredClone(seed));
+    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household', repository);
+
+    await waitFor(() => expect(controlWithLabel('Return Passport')).toBeTruthy());
+    controlWithLabel('Return Passport').click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[aria-label="Return Passport"]')).toBeNull();
+      expect(document.body.textContent).toContain('Returned Passport.');
+      expect(document.body.textContent).not.toContain('Refresh failed after confirmed return.');
     });
   });
 
@@ -317,7 +347,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/not-a-workspace-route');
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
     });
   });
 
@@ -343,7 +373,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
       expect(document.body.textContent).not.toContain('Workspace unavailable');
     });
   });
@@ -975,7 +1005,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
     });
   });
 

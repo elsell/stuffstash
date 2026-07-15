@@ -303,8 +303,8 @@ Mobile must not show a desktop-style global search bar in the header because sea
 
 The inventory home workspace must stay focused on one or two primary concerns:
 
-- Browse top-level locations.
-- Recently added assets, when useful and low-clutter.
+- Preview top-level places.
+- Recently changed assets, when useful and low-clutter.
 
 The home workspace must not include primary panels for:
 
@@ -316,22 +316,33 @@ The home workspace must not include primary panels for:
 
 Sharing and activity belong in inventory settings, asset detail, or future focused pages unless a later spec gives them a stronger home-workspace role.
 
-Top-level location browsing:
+Top-level place preview:
 
-- Locations should be the main browse surface.
-- A top-level locations browse route must exist for navigation surfaces that need to prioritize places separately from the home workspace.
+- Browse is the primary collection surface; Home only previews places and recent changes.
+- Location collections must use locale-aware, case-insensitive natural title ordering so names such as `Bin 8` appear before `Bin 10` and lowercase names do not fall into a separate trailing group.
+- Visible child-count labels must use correct singular and plural grammar.
+- The Places scope of Browse must provide the complete top-level place collection.
 - Location cards or tiles should use photos when available.
 - Location cards must open a focused location view.
 - The UI must support long location names, missing photos, and empty inventories.
 
-Recently added:
+Recently changed:
 
-- Recently added assets should appear before location browsing as a compact horizontal rail when active assets exist.
-- Recently added must not dominate the page or compete with search/add.
-- Recently added rows must open the asset detail view.
-- Recently added rows, archived asset rows, location tiles, and add-location actions must expose canonical `href` values while preserving ordinary in-app navigation behavior.
+- Recently changed active assets of every base kind—places, containers, and items—should appear before location browsing as a compact horizontal rail when active assets exist. This must match the mobile Home contract rather than silently excluding recently updated places.
+- Each recent card must be a content-driven vertical composition: media, title, kind, containment trail, checkout state, and tags must occupy non-overlapping flow rows. Shared button height utilities must not constrain the card link, and card selectors must not restyle nested badge or tag internals through broad descendant selectors.
+- At desktop, tablet, mobile, browser zoom, and long-content widths, the title must begin below the media, tags must begin below the linked identity content, and all visible content must remain clipped to its own card rather than paint over adjacent cards.
+- The rail must order records by most recent `updatedAt` first, use deterministic order for ties, and place records without an update timestamp after dated records. The API-backed workspace load must request the supported `updated_desc` ordering so the bounded client page contains the correct recent records.
+- Recently changed must not dominate the page or compete with search/add.
+- When the recent rail can extend beyond its viewport, it must provide visible, accessible previous/next controls in addition to touch, trackpad, pointer-drag, and horizontal-scroll behavior. The controls must move by approximately one visible group, preserve the rail as a normal keyboard-reading sequence, and expose disabled edge state rather than relying on a partially clipped card as the only overflow cue.
+- Recently changed rows must open the kind-appropriate focused workspace: places use the canonical focused location route, while containers and items use asset detail.
+- Recently changed rows, archived asset rows, location tiles, and add-location actions must expose canonical `href` values while preserving ordinary in-app navigation behavior.
 - Home add-location controls, including empty-inventory calls to action, must respect the selected inventory's create permission. When creation is unavailable they must render as explicit disabled or denied states instead of live deep links.
 - Empty-inventory home states must not imply that item creation is blocked when the inventory can accept root-level items. They should recommend creating locations for better browsing while still exposing a route-backed add-item action when creation is allowed.
+- Home must present a compact preview of at most nine top-level locations and a clear route-backed `View all places` action to Browse with `scope=places` when more exist. Browse must remain complete and must not apply the Home preview limit.
+
+Asset state hierarchy:
+
+- A current checkout is the primary exceptional state. Checked-out assets must show the checkout badge without a competing normal `active` lifecycle badge. Archived assets must still expose their archived lifecycle state.
 
 ## Location View
 

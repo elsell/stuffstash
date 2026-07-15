@@ -41,6 +41,10 @@ export function homeAddItemHref(tenantId: string | null, inventoryId: string | n
   return workspaceRouteHref({ action: 'add', addKind: 'item' }, tenantId, inventoryId);
 }
 
+export function homeLocationsHref(tenantId: string | null, inventoryId: string | null): string {
+  return workspaceRouteHref({ mode: 'browse', browseScope: 'places' }, tenantId, inventoryId);
+}
+
 export function homeLifecycleHref(
   tenantId: string | null,
   inventoryId: string | null,
@@ -85,6 +89,10 @@ export function locationRowHref(asset: Asset): string {
   return asset.kind === 'location' ? browseLocationHref(asset as LocationAsset) : browseAssetHref(asset);
 }
 
+export function visibleAssetCountLabel(count: number): string {
+  return `${count} visible ${count === 1 ? 'asset' : 'assets'}`;
+}
+
 export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter, browseMode: HomeBrowseMode): HomeHeadingPresentation {
   if (lifecycleState === 'archived') {
     return {
@@ -100,7 +108,7 @@ export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter, br
   }
   return {
     title: 'Home',
-    description: 'Recently added and the places where your things live.'
+    description: 'Recently changed and the places where your things live.'
   };
 }
 

@@ -119,6 +119,7 @@
     onAssetDelete: () => Promise<void>;
     onAssetCheckout: (details: string) => Promise<void>;
     onAssetReturn: (details: string) => Promise<void>;
+    onHomeAssetReturn: (asset: Asset) => Promise<void>;
     onAssetUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onAssetArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
     onAttachmentDeleteOpen: (attachmentId: string) => void;
@@ -158,7 +159,7 @@
 </script>
 
 <script lang="ts">
-  import { containedAssets, moveParentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { containedAssets, moveParentTargets, recentlyChangedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import {
     workspaceNoInventoryPresentation,
     workspaceUnavailableRoutePresentation
@@ -336,12 +337,15 @@
     lifecycleState={workspace.data.context.assetLifecycleState}
     browseMode={route.mode === 'locations' ? 'locations' : 'home'}
     locations={topLevelLocations(workspace.assets)}
-    recentAssets={recentlyAddedAssets(workspace.assets)}
+    recentAssets={recentlyChangedAssets(workspace.assets)}
     archivedAssets={workspace.assets}
     checkedOutAssets={workspace.data.checkedOutAssets.map((entry) => entry.asset)}
     canCreateAsset={status.createAssetAllowed}
+    canEditAsset={status.editAssetAllowed}
     onOpenLocation={handlers.onOpenLocation}
+    onOpenLocations={handlers.onOpenLocations}
     onOpenAsset={handlers.onOpenAsset}
+    onReturnAsset={handlers.onHomeAssetReturn}
     onOpenAdd={(kind = 'location') => handlers.onOpenAdd(kind)}
     onSelectLifecycle={(lifecycleState) => { void handlers.onSelectLifecycle(lifecycleState); }}
     onTagSearch={handlers.onAssetTagSearch}

@@ -64,8 +64,8 @@ describe('InventoryWorkspaceRouteContent', () => {
 
     const mainText = document.body.querySelector('.workspace-main')?.textContent ?? '';
     expect(mainText.indexOf('Recent')).toBeGreaterThanOrEqual(0);
-    expect(mainText.indexOf('Locations')).toBeGreaterThanOrEqual(0);
-    expect(mainText.indexOf('Recent')).toBeLessThan(mainText.indexOf('Locations'));
+    expect(mainText.indexOf('Places')).toBeGreaterThanOrEqual(0);
+    expect(mainText.indexOf('Recent')).toBeLessThan(mainText.indexOf('Places'));
 
     link('Add location').click();
     await tick();
@@ -253,7 +253,7 @@ describe('InventoryWorkspaceRouteContent', () => {
 
     expect(document.body.querySelector('#home-title')?.textContent).toBe('Locations');
     expect(document.body.textContent).toContain('The places where your things live.');
-    expect(document.body.textContent).not.toContain('Recently added');
+    expect(document.body.textContent).not.toContain('Recently changed');
   });
 
   it('renders the asset detail branch with action route state', async () => {
@@ -409,6 +409,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
 	      onAssetDelete: async () => {},
 	      onAssetCheckout: async () => {},
 	      onAssetReturn: async () => {},
+	      onHomeAssetReturn: async () => {},
 	      onAssetUploadAttachment: async () => {},
       onAssetArchiveAttachment: async () => {},
       onAttachmentDeleteOpen: () => {},

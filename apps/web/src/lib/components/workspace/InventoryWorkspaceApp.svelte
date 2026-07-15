@@ -566,6 +566,19 @@
     });
   }
 
+  async function returnAssetFromHome(asset: Asset): Promise<void> {
+    if (!editAssetAllowed || !selectedInventory) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      return;
+    }
+    await run(async () => {
+      await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
+      const returnedAsset: Asset = { ...asset, currentCheckout: undefined };
+      data = replaceWorkspaceAsset(data, returnedAsset);
+      setSuccessNotification(`Returned ${returnedAsset.title}.`, viewAssetAction(returnedAsset));
+    });
+  }
+
   async function archiveSelectedAttachment(attachment: AssetAttachment): Promise<void> {
     if (!editAssetAllowed) {
       error = 'You do not have permission to edit assets in this inventory.';
@@ -1573,6 +1586,7 @@
       onAssetDelete: deleteSelectedAsset,
       onAssetCheckout: checkoutSelectedAsset,
       onAssetReturn: returnSelectedAsset,
+      onHomeAssetReturn: returnAssetFromHome,
       onAssetUploadAttachment: uploadSelectedAttachment,
       onAssetArchiveAttachment: archiveSelectedAttachment,
       onAttachmentDeleteOpen: openAttachmentDeleteRoute,

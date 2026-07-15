@@ -1,6 +1,8 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import ChevronLeft from '@lucide/svelte/icons/chevron-left';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
+  import { onMount } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import {
@@ -13,14 +15,60 @@
     homeHeadingPresentation,
     homeLifecycleOptions,
     homeLocationsEmptyState,
-    homeRecentEmptyState
+    homeLocationsHref,
+    homeRecentEmptyState,
+    visibleAssetCountLabel
   } from '$lib/application/workspaceBrowseNavigation';
-  import type { Asset, AssetLifecycleFilter, AssetTag, AssetViewModel, LocationSummary } from '$lib/domain/inventory';
+  import type { Asset, AssetLifecycleFilter, AssetTag, AssetViewModel, LocationAsset, LocationSummary } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
+  import { homeLocationPreview } from '$lib/application/workspace';
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
+
+  let recentRail = $state<HTMLElement | null>(null);
+  let canScrollRecentBackward = $state(false);
+  let canScrollRecentForward = $state(false);
+  let hasRecentOverflow = $state(false);
+
+  function updateRecentRailControls(): void {
+    if (!recentRail) {
+      canScrollRecentBackward = false;
+      canScrollRecentForward = false;
+      hasRecentOverflow = false;
+      return;
+    }
+    const edgeTolerance = 2;
+    hasRecentOverflow = recentRail.scrollWidth > recentRail.clientWidth + edgeTolerance;
+    canScrollRecentBackward = recentRail.scrollLeft > edgeTolerance;
+    canScrollRecentForward = recentRail.scrollLeft + recentRail.clientWidth < recentRail.scrollWidth - edgeTolerance;
+  }
+
+  function scrollRecent(direction: -1 | 1): void {
+    if (!recentRail) return;
+    const reducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    recentRail.scrollBy({
+      left: direction * Math.round(recentRail.clientWidth * 0.85),
+      behavior: reducedMotion ? 'auto' : 'smooth'
+    });
+  }
+
+  $effect(() => {
+    recentAssets.length;
+    recentRail;
+    queueMicrotask(updateRecentRailControls);
+  });
+
+  onMount(() => {
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateRecentRailControls);
+    if (recentRail) observer?.observe(recentRail);
+    window.addEventListener('resize', updateRecentRailControls);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateRecentRailControls);
+    };
+  });
 
   let {
     tenantId,
@@ -32,8 +80,11 @@
     checkedOutAssets = [],
     browseMode = 'home',
     canCreateAsset = true,
+    canEditAsset = false,
     onOpenLocation,
+    onOpenLocations = () => {},
     onOpenAsset,
+    onReturnAsset = async () => {},
     onOpenAdd,
     onSelectLifecycle,
     onTagSearch
@@ -47,8 +98,11 @@
     checkedOutAssets?: Asset[];
     browseMode?: 'home' | 'locations';
     canCreateAsset?: boolean;
+    canEditAsset?: boolean;
     onOpenLocation: (asset: Asset) => void;
+    onOpenLocations?: () => void;
     onOpenAsset: (asset: Asset) => void;
+    onReturnAsset?: (asset: Asset) => Promise<void>;
     onOpenAdd: (kind?: 'item' | 'location') => void;
     onSelectLifecycle: (lifecycleState: AssetLifecycleFilter) => void;
     onTagSearch?: (tag: AssetTag) => void;
@@ -66,6 +120,8 @@
   const recentEmpty = homeRecentEmptyState();
   const archivedEmpty = homeArchivedEmptyState();
   let locationsEmpty = $derived(homeLocationsEmptyState(browseMode));
+  let displayedLocations = $derived(homeLocationPreview(locations, browseMode));
+  let returningAssetId = $state<string | null>(null);
 
   function addLocationHref(): string {
     return homeAddLocationHref(routeTenantId, routeInventoryId);
@@ -101,10 +157,38 @@
     event.preventDefault();
     onOpenLocation(asset);
   }
+
+  function recentAssetHref(asset: Asset): string {
+    return asset.kind === 'location' ? browseLocationHref(asset as LocationAsset) : browseAssetHref(asset);
+  }
+
+  function openRecentAsset(event: MouseEvent, asset: Asset): void {
+    if (asset.kind === 'location') {
+      openLocation(event, asset);
+      return;
+    }
+    openAsset(event, asset);
+  }
+
+  function openLocations(event: MouseEvent): void {
+    if (!shouldHandleWorkspaceLinkClick(event)) return;
+    event.preventDefault();
+    onOpenLocations();
+  }
+
+  async function returnAsset(asset: Asset): Promise<void> {
+    if (!canEditAsset || returningAssetId) return;
+    returningAssetId = asset.id;
+    try {
+      await onReturnAsset(asset);
+    } finally {
+      returningAssetId = null;
+    }
+  }
 </script>
 
 <section class="workspace-main" aria-labelledby="home-title">
-  <div class="section-heading">
+  <div class="section-heading home-heading">
     <div>
       <h1 id="home-title">{headingPresentation.title}</h1>
       <p>{headingPresentation.description}</p>
@@ -135,21 +219,39 @@
 
   {#if lifecycleState === 'active' && browseMode === 'home'}
     <section class="recent-section" aria-labelledby="recent-title">
-      <div class="section-heading compact">
-        <h2 id="recent-title">Recently added</h2>
+      <div class="section-heading compact recent-heading">
+        <h2 id="recent-title">Recently changed</h2>
+        {#if hasRecentOverflow}
+          <div class="recent-rail-controls" aria-label="Recently changed navigation">
+            <Button.Root
+              variant="outline"
+              size="icon"
+              aria-label="Previous recently changed assets"
+              disabled={!canScrollRecentBackward}
+              onclick={() => scrollRecent(-1)}
+            ><ChevronLeft aria-hidden="true" /></Button.Root>
+            <Button.Root
+              variant="outline"
+              size="icon"
+              aria-label="Next recently changed assets"
+              disabled={!canScrollRecentForward}
+              onclick={() => scrollRecent(1)}
+            ><ChevronRight aria-hidden="true" /></Button.Root>
+          </div>
+        {/if}
       </div>
       {#if recentAssets.length === 0}
         <div class="empty-state">
           <p>{recentEmpty.message}</p>
         </div>
       {:else}
-        <div class="recent-rail" aria-label="Recently added assets">
+        <div bind:this={recentRail} class="recent-rail" aria-label="Recently changed assets" onscroll={updateRecentRailControls}>
           {#each recentAssets as asset}
-            <article class="recent-card">
-              <Button.Root href={browseAssetHref(asset)} variant="ghost" class="recent-card-open" onclick={(event) => openAsset(event, asset)}>
-                <AssetThumb {asset} size="lg" />
-                <span>
-                  <strong>{asset.title}</strong>
+            <article class="recent-card" data-recent-card={asset.id}>
+              <Button.Root href={recentAssetHref(asset)} variant="ghost" class="recent-card-open" data-recent-card-link onclick={(event) => openRecentAsset(event, asset)}>
+                <div data-recent-card-media><AssetThumb {asset} size="lg" /></div>
+                <span class="recent-card-copy" data-recent-card-copy>
+                  <strong data-recent-card-title>{asset.title}</strong>
                   <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                   <small>{asset.containmentTrail}</small>
                   {#if asset.currentCheckout}
@@ -157,7 +259,9 @@
                   {/if}
                 </span>
               </Button.Root>
-              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
+              <div class="recent-card-tags" data-recent-card-tags>
+                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
+              </div>
             </article>
           {/each}
         </div>
@@ -181,8 +285,21 @@
                   {/if}
                 </span>
               </Button.Root>
-              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
-              <Badge variant="outline">{asset.lifecycleState}</Badge>
+              <div class="asset-row-actions">
+                <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
+                {#if asset.lifecycleState === 'archived'}
+                  <Badge variant="outline">Archived</Badge>
+                {/if}
+                {#if canEditAsset}
+                  <Button.Root
+                    variant="outline"
+                    aria-label={returningAssetId === asset.id ? `Returning ${asset.title}` : `Return ${asset.title}`}
+                    aria-busy={returningAssetId === asset.id}
+                    disabled={returningAssetId !== null}
+                    onclick={() => returnAsset(asset)}
+                  >{returningAssetId === asset.id ? 'Returning…' : 'Return'}</Button.Root>
+                {/if}
+              </div>
             </div>
           {/each}
         </div>
@@ -209,8 +326,10 @@
                 {/if}
               </span>
             </Button.Root>
-            <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
-            <Badge variant="outline">{assetKindLabel(asset.kind)}</Badge>
+            <div class="asset-row-actions">
+              <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
+              <Badge variant="outline">Archived</Badge>
+            </div>
           </div>
         {/each}
       </div>
@@ -238,12 +357,17 @@
     </div>
   {:else}
     {#if browseMode === 'home'}
-      <div class="section-heading compact">
-        <h2>Locations</h2>
+      <div class="section-heading compact locations-heading">
+        <h2>Places</h2>
+        {#if locations.length > displayedLocations.length}
+          <Button.Root href={homeLocationsHref(routeTenantId, routeInventoryId)} variant="ghost" onclick={openLocations}>
+            View all places
+          </Button.Root>
+        {/if}
       </div>
     {/if}
     <div class="location-grid">
-      {#each locations as summary}
+      {#each displayedLocations as summary}
         <Button.Root
           href={browseLocationHref(summary.location)}
           variant="ghost"
@@ -254,7 +378,7 @@
           <AssetThumb asset={summary.location} size="lg" />
           <span>
             <strong>{summary.location.title}</strong>
-            <small>{summary.assetCount} visible assets</small>
+            <small>{visibleAssetCountLabel(summary.assetCount)}</small>
           </span>
           <ChevronRight aria-hidden="true" />
         </Button.Root>
