@@ -23,6 +23,33 @@ export interface AuditRecordPresentation {
   technicalDetails: AuditTechnicalDetail[];
 }
 
+export interface AuditDayGroup {
+  key: string;
+  label: string;
+  records: AuditRecord[];
+}
+
+export function groupAuditRecordsByDay(
+  records: AuditRecord[],
+  locale?: string,
+  timeZone?: string
+): AuditDayGroup[] {
+  const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone });
+  const groups = new Map<string, AuditDayGroup>();
+  for (const record of records) {
+    const date = new Date(record.occurredAt);
+    const valid = !Number.isNaN(date.getTime());
+    const key = valid
+      ? new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone }).format(date)
+      : record.occurredAt;
+    const label = valid ? formatter.format(date) : 'Date unavailable';
+    const group = groups.get(key) ?? { key, label, records: [] };
+    group.records.push(record);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
 export function auditStatusPresentation(input: {
   hasTenant: boolean;
   hasInventory: boolean;

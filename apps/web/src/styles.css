@@ -1261,7 +1261,31 @@ h2 {
 
 .audit-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-6);
+}
+
+.audit-day-group,
+.audit-day-records {
+  display: grid;
+  min-width: 0;
+}
+
+.audit-day-group {
+  gap: var(--space-2);
+}
+
+.audit-day-heading {
+  color: var(--muted-foreground);
+  font-size: var(--text-metadata-size);
+  font-weight: 600;
+  line-height: var(--text-metadata-line-height);
+}
+
+.audit-day-records {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--card);
 }
 
 .audit-row {
@@ -1270,8 +1294,12 @@ h2 {
   gap: 12px;
   align-items: start;
   padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 0;
+  border-radius: 0;
+}
+
+.audit-row + .audit-row {
+  border-top: 1px solid var(--border);
 }
 
 .audit-row > div,
