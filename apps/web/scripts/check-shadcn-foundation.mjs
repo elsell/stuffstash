@@ -4,7 +4,6 @@ import { join, relative } from 'node:path';
 const root = new URL('..', import.meta.url).pathname;
 
 const requiredDependencies = {
-  '@fontsource-variable/inter': '5.2.8',
   '@internationalized/date': '3.12.2',
   '@lucide/svelte': '1.17.0',
   'bits-ui': '2.18.1',

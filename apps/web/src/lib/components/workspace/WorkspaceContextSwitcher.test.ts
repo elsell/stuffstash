@@ -239,6 +239,7 @@ describe('WorkspaceContextSwitcher', () => {
     expect(document.body.querySelector<HTMLButtonElement>('.sheet-backdrop')?.getAttribute('aria-label')).toBe(
       'Close inventory switcher'
     );
+    expect(buttonContaining('Switch tenant').classList.contains('context-switch-action')).toBe(true);
     expect(document.body.textContent).toContain('Inventories');
     expect(currentLinkContaining('Garage').getAttribute('aria-current')).toBe('page');
     expect(document.activeElement?.textContent).toContain('Garage');

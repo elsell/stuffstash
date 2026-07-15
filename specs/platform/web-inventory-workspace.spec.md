@@ -88,6 +88,7 @@ The first canonical URL model is:
 
 - `/` for the selected inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}` for an inventory home.
+- `/tenants/{tenantId}/inventories/{inventoryId}/browse` for unified inventory browsing.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations` for top-level location browsing.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/edit` for the location edit state when edit is available.
@@ -148,6 +149,7 @@ Desktop:
 - A sticky left side navigation must be visible at large viewport widths.
 - A top header must remain available for global search and add actions.
 - The side navigation must not include a Search item when search is already globally available in the top header.
+- The side navigation must use the same primary information architecture as mobile: Home and Browse.
 - The side navigation must contain durable destinations, not duplicate global actions.
 - The profile entry belongs at the bottom of the side navigation.
 
@@ -156,9 +158,10 @@ Mobile:
 - The desktop side navigation must collapse away.
 - The top header must be compact and must not contain the global search bar or the add button.
 - Mobile must use bottom navigation for primary reachable actions.
-- The bottom navigation must include Search and a central Add action.
+- Focused place and asset detail/action routes behave like pushed task surfaces on mobile: they must keep an explicit Back path and suppress the global bottom navigation so it cannot cover or compete with identity media and task controls. Returning to a top-level Home, Browse, Import, or Inventory settings surface restores bottom navigation.
+- The bottom navigation must include Home, Browse, and a central Add action.
 - The central Add action must open the same add tray behavior as desktop.
-- The Places or Locations bottom-navigation destination must route to the top-level locations browse route, not merely duplicate Home.
+- Browse must route to the unified Browse surface rather than duplicating Home.
 
 ## Tenant And Inventory Context
 
@@ -192,6 +195,7 @@ Mobile:
 - Mobile context switcher backdrop controls must expose a clear accessible close name and must not inherit ordinary button chrome.
 - The open mobile context switcher sheet must render above the backdrop and bottom navigation so the inventory choices are visually and pointer-accessible.
 - The open mobile context switcher sheet must make the route content and mobile bottom navigation inert and hidden from assistive technology while leaving the sheet itself available.
+- Every non-inline mobile context action must provide at least a 44 CSS-pixel target.
 
 ## Desktop Header
 
@@ -207,7 +211,8 @@ Search:
 - Search must be available across primary web pages.
 - Search should feel closer to Google Drive than a command palette: a visible field that accepts ordinary asset/location/container terms.
 - The dedicated search route must preserve the same autocomplete affordance as the global header search, including keyboard access to suggestions and direct opening of suggested assets.
-- On the dedicated desktop search route, the page search field is the primary search affordance and the desktop header must not also render the global search field.
+- On Browse, the page search field is the primary search affordance and the desktop header must not also render the global search field.
+- Submitting search from the shell or Browse must keep the canonical Browse mode and URL while preserving the normalized query in `q`.
 - Search must be scoped to the selected tenant and inventory unless a future search spec defines cross-inventory behavior.
 - Search must preserve tenant and inventory authorization boundaries.
 
@@ -232,13 +237,13 @@ Mobile bottom navigation must provide reachable primary actions without duplicat
 The approved first mobile bottom navigation direction is:
 
 - Home.
-- Search.
+- Browse.
 - Add as the central primary action.
-- Locations or equivalent browse destination when a full route exists.
 - Settings or inventory/settings access when it exists.
+- The four approved Home, Browse, Add, and Settings actions must occupy four equal mobile-navigation columns without a reserved empty slot.
 - The mobile Add control must expose the same durable add-action URL and unavailable-state semantics as the desktop Add control.
 
-Mobile must not show a desktop-style global search bar in the header when Search is already in bottom navigation.
+Mobile must not show a desktop-style global search bar in the header because search is the first control within Browse.
 
 ## Inventory Home Workspace
 
@@ -628,6 +633,7 @@ The web workspace must meet WCAG 2.2-aligned expectations:
 - Visible focus states.
 - Proper labels for icon buttons.
 - Semantic landmarks for navigation and main content.
+- The persistent workspace shell must expose exactly one main landmark around the active durable route content, independent of which Home, Browse, Settings, Import, location, or asset surface is active.
 - Dialogs must have accessible names.
 - Asset rows and location cards must have clear accessible names.
 - Images used as decoration may have empty alt text; meaningful image content must be represented by adjacent text or appropriate alt text.

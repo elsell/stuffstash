@@ -56,6 +56,8 @@
     onSignOut,
     children
   }: InventoryWorkspaceChromeProps = $props();
+
+  let showMobileNavigation = $derived(mode !== 'asset' && mode !== 'location');
 </script>
 
 <div class="product-shell" inert={modalOpen ? true : undefined} aria-hidden={modalOpen ? 'true' : undefined}>
@@ -82,7 +84,7 @@
       suggestions={searchSuggestions}
       bind:query={searchQuery}
       {canCreateAsset}
-      showSearch={mode !== 'search'}
+      showSearch={mode !== 'search' && mode !== 'browse'}
       {onSelectTenant}
       {onSelectInventory}
       {onSearch}
@@ -91,20 +93,22 @@
       onMobileContextOpenChange={(open) => { mobileContextOpen = open; }}
     />
 
-    <div class="workspace-route-content" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
+    <main class="workspace-route-content" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
       {@render children?.()}
-    </div>
+    </main>
   </div>
 
-  <div class="mobile-nav-shell" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
-    <MobileNav
-      {mode}
-      {selectedTenantId}
-      {selectedInventoryId}
-      {settingsSection}
-      {canCreateAsset}
-      {onModeChange}
-      onOpenAdd={() => onOpenAdd('item')}
-    />
-  </div>
+  {#if showMobileNavigation}
+    <div class="mobile-nav-shell" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
+      <MobileNav
+        {mode}
+        {selectedTenantId}
+        {selectedInventoryId}
+        {settingsSection}
+        {canCreateAsset}
+        {onModeChange}
+        onOpenAdd={() => onOpenAdd('item')}
+      />
+    </div>
+  {/if}
 </div>

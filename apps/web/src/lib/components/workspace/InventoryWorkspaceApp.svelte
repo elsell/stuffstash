@@ -380,10 +380,10 @@
       searchSubmitted = result.submitted;
       searchError = result.error;
       error = result.error;
-      mode = 'search';
+      mode = 'browse';
       if (!applyingRoute) {
         replaceRoute({
-          mode: 'search',
+          mode: 'browse',
           tenantId: data.context.selectedTenantId,
           inventoryId: data.context.selectedInventoryId,
           searchQuery: result.query,
@@ -866,8 +866,8 @@
         return;
       }
 
-      if (route.mode === 'search') {
-        mode = 'search';
+      if (route.mode === 'search' || route.mode === 'browse') {
+        mode = route.mode;
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;

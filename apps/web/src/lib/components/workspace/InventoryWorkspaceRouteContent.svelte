@@ -229,7 +229,7 @@
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
     onTagSearch={handlers.onAssetTagSearch}
   />
-{:else if route.mode === 'search'}
+{:else if route.mode === 'search' || route.mode === 'browse'}
   <SearchPanel
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}

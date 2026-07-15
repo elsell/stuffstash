@@ -20,8 +20,7 @@ const inventory: Inventory = {
 describe('workspace shell navigation helpers', () => {
   it('derives durable shell mode hrefs', () => {
     expect(shellModeHref('home', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one');
-    expect(shellModeHref('locations', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/locations');
-    expect(shellModeHref('search', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/search');
+    expect(shellModeHref('browse', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/browse');
     expect(shellModeHref('import', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/import');
     expect(shellModeHref('settings', 'tenant-one', 'inventory-one', 'activity')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/settings/activity'
@@ -65,11 +64,11 @@ describe('workspace shell navigation helpers', () => {
             current: false
           },
           {
-            mode: 'locations',
-            label: 'Locations',
-            description: 'Browse rooms, shelves, and places',
-            icon: 'locations',
-            href: '/tenants/tenant-one/inventories/inventory-one/locations',
+            mode: 'browse',
+            label: 'Browse',
+            description: 'Find and explore your inventory',
+            icon: 'browse',
+            href: '/tenants/tenant-one/inventories/inventory-one/browse',
             current: true
           }
         ]
@@ -119,7 +118,7 @@ describe('workspace shell navigation helpers', () => {
   it('builds mobile navigation items without desktop-only utility grouping', () => {
     expect(
       mobileShellNavigationItems({
-        mode: 'search',
+        mode: 'browse',
         tenantId: 'tenant-one',
         inventoryId: 'inventory-one',
         settingsSection: 'overview'
@@ -134,20 +133,12 @@ describe('workspace shell navigation helpers', () => {
         current: false
       },
       {
-        mode: 'search',
-        label: 'Search',
-        description: 'Find assets',
-        icon: 'search',
-        href: '/tenants/tenant-one/inventories/inventory-one/search',
+        mode: 'browse',
+        label: 'Browse',
+        description: 'Find and explore',
+        icon: 'browse',
+        href: '/tenants/tenant-one/inventories/inventory-one/browse',
         current: true
-      },
-      {
-        mode: 'locations',
-        label: 'Places',
-        description: 'Browse places',
-        icon: 'locations',
-        href: '/tenants/tenant-one/inventories/inventory-one/locations',
-        current: false
       },
       {
         mode: 'settings',
@@ -160,9 +151,9 @@ describe('workspace shell navigation helpers', () => {
     ]);
   });
 
-  it('treats focused location routes as current for the locations destination', () => {
-    expect(shellModeIsCurrent('location', 'locations')).toBe(true);
-    expect(shellModeIsCurrent('asset', 'locations')).toBe(false);
+  it('treats focused location routes as current for Browse', () => {
+    expect(shellModeIsCurrent('location', 'browse')).toBe(true);
+    expect(shellModeIsCurrent('asset', 'browse')).toBe(false);
     expect(shellModeIsCurrent('settings', 'settings')).toBe(true);
   });
 

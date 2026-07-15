@@ -123,6 +123,9 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
   const section = segments[inventoryOffset.nextIndex];
   const remaining = segments.length - inventoryOffset.nextIndex;
+  if (section === 'browse' && remaining === 1) {
+    return { ...route, mode: 'browse' };
+  }
   if (section === 'locations' && remaining === 1) {
     return { ...route, mode: 'locations' };
   }
@@ -325,7 +328,21 @@ export function workspaceRouteHref(
     path = `/inventories/${encodeURIComponent(inventoryId)}`;
   }
 
-  if (inventoryId && next.mode === 'locations') {
+  if (inventoryId && next.mode === 'browse') {
+    path += '/browse';
+    if (next.searchQuery.trim()) {
+      search.set('q', next.searchQuery.trim());
+    }
+    if (next.searchLifecycleState !== 'active') {
+      search.set('lifecycle', next.searchLifecycleState);
+    }
+    if (next.searchMode !== 'fuzzy') {
+      search.set('mode', next.searchMode);
+    }
+    if (next.searchCheckoutState !== 'any') {
+      search.set('checkout', next.searchCheckoutState);
+    }
+  } else if (inventoryId && next.mode === 'locations') {
     path += '/locations';
   } else if (inventoryId && next.mode === 'location' && next.locationId) {
     path += `/locations/${encodeURIComponent(next.locationId)}`;

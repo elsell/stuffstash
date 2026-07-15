@@ -110,7 +110,7 @@ describe('InventoryWorkspaceRouteContent', () => {
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
       props: await routeContentProps({
-        route: { mode: 'search' },
+        route: { mode: 'browse' },
         searchQuery: 'pass',
         handlers: {
           onSearch: async () => {

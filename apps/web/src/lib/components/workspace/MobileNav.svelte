@@ -2,9 +2,8 @@
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import Plus from '@lucide/svelte/icons/plus';
-  import Search from '@lucide/svelte/icons/search';
+  import Compass from '@lucide/svelte/icons/compass';
   import Settings from '@lucide/svelte/icons/settings';
-  import MapPin from '@lucide/svelte/icons/map-pin';
   import Upload from '@lucide/svelte/icons/upload';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { mobileShellNavigationItems, shellAddHref, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
@@ -44,8 +43,7 @@
 
   const destinationIcons: Record<ShellNavigationIcon, Component> = {
     home: Home,
-    locations: MapPin,
-    search: Search,
+    browse: Compass,
     import: Upload,
     settings: Settings
   };

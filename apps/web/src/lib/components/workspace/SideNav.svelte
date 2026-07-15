@@ -1,8 +1,7 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
-  import MapPin from '@lucide/svelte/icons/map-pin';
-  import Search from '@lucide/svelte/icons/search';
+  import Compass from '@lucide/svelte/icons/compass';
   import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
   import LogOut from '@lucide/svelte/icons/log-out';
@@ -53,8 +52,7 @@
 
   const destinationIcons: Record<ShellNavigationIcon, Component> = {
     home: Home,
-    locations: MapPin,
-    search: Search,
+    browse: Compass,
     import: Upload,
     settings: Settings
   };

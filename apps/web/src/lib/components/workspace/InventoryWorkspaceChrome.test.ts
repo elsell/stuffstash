@@ -26,8 +26,9 @@ describe('InventoryWorkspaceChrome', () => {
     expect(shell.getAttribute('aria-hidden')).toBeNull();
     expect(document.body.querySelector('[aria-label="Workspace navigation"]')?.textContent).toContain('Stuff Stash');
     expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
-    expect(document.body.querySelector('[aria-label="Mobile navigation"]')?.textContent).toContain('Places');
+    expect(document.body.querySelector('[aria-label="Mobile navigation"]')?.textContent).toContain('Browse');
     expect(document.body.querySelector('.workspace-main')?.textContent).toContain('Fixture workspace');
+    expect(document.body.querySelectorAll('main.workspace-route-content')).toHaveLength(1);
   });
 
   it('hides the background shell from assistive technology while modal overlays are open', () => {
@@ -56,13 +57,13 @@ describe('InventoryWorkspaceChrome', () => {
       })
     });
 
-    linkContaining('Locations').click();
+    linkContaining('Browse').click();
     document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.click();
     document.body.querySelector<HTMLButtonElement>('.header-add')?.click();
     await tick();
     addMenuItemContaining('Location').click();
 
-    expect(selectedModes).toContain('locations');
+    expect(selectedModes).toContain('browse');
     expect(addKinds).toContain('item');
     expect(addKinds).toContain('location');
   });
@@ -88,14 +89,24 @@ describe('InventoryWorkspaceChrome', () => {
     expect(document.body.querySelector('[data-testid="bound-search-query"]')?.textContent).toBe('saw');
   });
 
-  it('lets the dedicated search route own the search field', () => {
+  it('lets Browse own the search field', () => {
     component = mount(InventoryWorkspaceChromeHarness, {
       target: document.body,
-      props: chromeProps({ mode: 'search' })
+      props: chromeProps({ mode: 'browse' })
     });
 
     expect(document.body.querySelector('input[aria-label="Search this inventory"]')).toBeNull();
     expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
+  });
+
+  it.each(['asset', 'location'] as const)('suppresses bottom navigation on focused %s task surfaces', (mode) => {
+    component = mount(InventoryWorkspaceChromeHarness, {
+      target: document.body,
+      props: chromeProps({ mode })
+    });
+
+    expect(document.body.querySelector('[aria-label="Mobile navigation"]')).toBeNull();
+    expect(document.body.querySelector('[aria-label="Workspace navigation"]')).not.toBeNull();
   });
 });
 

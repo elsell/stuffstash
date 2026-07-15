@@ -2,8 +2,8 @@ import type { AssetKind, Inventory, WorkspaceMode } from '$lib/domain/inventory'
 import { assetKindLabel, assetKinds, canViewImportJobs } from '$lib/domain/inventory';
 import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from './workspaceRoute';
 
-export type ShellWorkspaceMode = Extract<WorkspaceMode, 'home' | 'locations' | 'search' | 'import' | 'settings'>;
-export type ShellNavigationIcon = 'home' | 'locations' | 'search' | 'import' | 'settings';
+export type ShellWorkspaceMode = Extract<WorkspaceMode, 'home' | 'browse' | 'import' | 'settings'>;
+export type ShellNavigationIcon = 'home' | 'browse' | 'import' | 'settings';
 
 export interface ShellNavigationDestination {
   mode: ShellWorkspaceMode;
@@ -38,7 +38,7 @@ type ShellNavigationDefinition = Omit<ShellNavigationDestination, 'href' | 'curr
 
 const desktopPrimaryDestinations: ShellNavigationDefinition[] = [
   { mode: 'home', label: 'Home', description: 'Recent assets and places', icon: 'home' },
-  { mode: 'locations', label: 'Locations', description: 'Browse rooms, shelves, and places', icon: 'locations' }
+  { mode: 'browse', label: 'Browse', description: 'Find and explore your inventory', icon: 'browse' }
 ];
 
 const desktopUtilityDestinations: ShellNavigationDefinition[] = [
@@ -48,8 +48,7 @@ const desktopUtilityDestinations: ShellNavigationDefinition[] = [
 
 const mobileDestinations: ShellNavigationDefinition[] = [
   { mode: 'home', label: 'Home', description: 'Inventory home', icon: 'home' },
-  { mode: 'search', label: 'Search', description: 'Find assets', icon: 'search' },
-  { mode: 'locations', label: 'Places', description: 'Browse places', icon: 'locations' },
+  { mode: 'browse', label: 'Browse', description: 'Find and explore', icon: 'browse' },
   { mode: 'settings', label: 'Settings', description: 'Inventory settings', icon: 'settings' }
 ];
 
@@ -98,7 +97,7 @@ export function mobileShellNavigationItems(input: ShellNavigationInput): ShellNa
 }
 
 export function shellModeIsCurrent(currentMode: WorkspaceMode, destinationMode: ShellWorkspaceMode): boolean {
-  return currentMode === destinationMode || (destinationMode === 'locations' && currentMode === 'location');
+  return currentMode === destinationMode || (destinationMode === 'browse' && (currentMode === 'location' || currentMode === 'locations' || currentMode === 'search'));
 }
 
 export function contextInventoryHref(inventory: Inventory): string {

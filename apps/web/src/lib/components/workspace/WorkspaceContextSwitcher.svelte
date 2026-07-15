@@ -195,7 +195,7 @@
           <span>{presentation.activeTenantLabel}</span>
         </span>
         {#if tenants.length > 0}
-          <Button.Root variant="ghost" size="sm" onclick={() => { showingTenants = !showingTenants; }}>
+          <Button.Root variant="ghost" size="sm" class={mobile ? 'context-switch-action' : undefined} onclick={() => { showingTenants = !showingTenants; }}>
             {showingTenants ? 'Back' : 'Switch tenant'}
           </Button.Root>
         {/if}

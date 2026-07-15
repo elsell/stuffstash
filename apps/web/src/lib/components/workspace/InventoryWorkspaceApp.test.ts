@@ -403,6 +403,29 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps direct Browse navigation canonical when submitting search', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/browse');
+
+    await waitFor(() => {
+      expect(document.body.querySelector('#search-page-query')).not.toBeNull();
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+    });
+
+    const search = document.body.querySelector<HTMLInputElement>('#search-page-query');
+    if (!search) throw new Error('Missing Browse search input');
+    search.value = 'Passport';
+    search.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    document.body.querySelector<HTMLFormElement>('form.search-panel')?.dispatchEvent(
+      new SubmitEvent('submit', { bubbles: true, cancelable: true })
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(window.location.search).toBe('?q=Passport');
+      expect(document.body.textContent).toContain('Passport');
+    });
+  });
+
   it('opens location search results as focused location routes', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search?q=Garage');
 
@@ -421,7 +444,7 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('updates the search filter URL when no query has been submitted', async () => {
+  it('canonicalizes submitted search filters to Browse', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search');
 
     await waitFor(() => {
@@ -432,7 +455,7 @@ describe('InventoryWorkspaceApp route application', () => {
     controlContaining('Exact').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
       expect(window.location.search).toBe('?mode=exact');
       expect(document.body.textContent).toContain('Search this inventory');
     });

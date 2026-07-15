@@ -2535,6 +2535,10 @@ dd {
     box-shadow: 0 18px 36px rgb(15 23 42 / 0.14);
   }
 
+  .context-switch-action {
+    min-height: 44px;
+  }
+
   .global-search-wrap,
   .global-search {
     display: none;
@@ -2651,7 +2655,7 @@ dd {
     left: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     padding: 8px max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
     border-top: 1px solid var(--border);

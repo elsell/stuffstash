@@ -47,7 +47,7 @@
   {onOpenAdd}
   {onSignOut}
 >
-  <main class="workspace-main" aria-labelledby="fixture-main-title">
+  <section class="workspace-main" aria-labelledby="fixture-main-title">
     <h1 id="fixture-main-title">Fixture workspace</h1>
-  </main>
+  </section>
 </InventoryWorkspaceChrome>

@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
+  it('parses and formats the canonical Browse destination', () => {
+    expect(
+      parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/browse?q=drill'))
+    ).toMatchObject({
+      mode: 'browse',
+      tenantId: 'tenant_1',
+      inventoryId: 'inv_1',
+      searchQuery: 'drill',
+    });
+    expect(workspaceRouteHref({ mode: 'browse', searchQuery: ' drill ' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?q=drill'
+    );
+  });
+
   it('parses a tenant inventory location deep link', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'))).toMatchObject({
       mode: 'locations',
