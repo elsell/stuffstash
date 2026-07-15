@@ -35,10 +35,6 @@ type AssetTagLifecycleInput = assetapp.AssetTagLifecycleInput
 type ListAssetTagsResult = assetapp.ListAssetTagsResult
 type GetAssetAssignedTagsInput = assetapp.GetAssetAssignedTagsInput
 
-func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
-	return a.assetService.CreateAsset(ctx, input)
-}
-
 func (a App) CreateAssetWithOperation(ctx context.Context, input CreateAssetInput) (AssetMutationResult, error) {
 	return a.assetService.CreateAssetWithOperation(ctx, input)
 }
@@ -51,16 +47,8 @@ func (a App) UpdateAssetWithOperation(ctx context.Context, input UpdateAssetInpu
 	return a.assetService.UpdateAssetWithOperation(ctx, input)
 }
 
-func (a App) ArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	return a.assetService.ArchiveAsset(ctx, input)
-}
-
 func (a App) ArchiveAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {
 	return a.assetService.ArchiveAssetWithOperation(ctx, input)
-}
-
-func (a App) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	return a.assetService.RestoreAsset(ctx, input)
 }
 
 func (a App) RestoreAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {

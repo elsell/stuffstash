@@ -12,11 +12,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (s Service) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
-	result, err := s.CreateAssetWithOperation(ctx, input)
-	return result.Asset, err
-}
-
 func (s Service) CreateAssetWithOperation(ctx context.Context, input CreateAssetInput) (AssetMutationResult, error) {
 	prepared, err := s.PrepareCreateAsset(ctx, input)
 	if err != nil {
@@ -432,11 +427,6 @@ func (s Service) RecordAssetUpdated(ctx context.Context, item asset.Asset, princ
 	})
 }
 
-func (s Service) ArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	result, err := s.ArchiveAssetWithOperation(ctx, input)
-	return result.Asset, err
-}
-
 func (s Service) ArchiveAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {
 	prepared, err := s.PrepareArchiveAsset(ctx, input)
 	if err != nil {
@@ -447,11 +437,6 @@ func (s Service) ArchiveAssetWithOperation(ctx context.Context, input UpdateAsse
 	}
 	s.RecordAssetLifecycleUpdated(ctx, prepared, input.Principal.ID)
 	return AssetMutationResult{Asset: prepared.Asset, UndoableOperationID: prepared.UndoableOperation.ID}, nil
-}
-
-func (s Service) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	result, err := s.RestoreAssetWithOperation(ctx, input)
-	return result.Asset, err
 }
 
 func (s Service) RestoreAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {

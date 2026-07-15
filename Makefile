@@ -196,6 +196,7 @@ selfhost-happy-path-check:
 	scripts/check-selfhost-happy-path.sh
 
 scripts-test: release-plan-test selfhost-happy-path-check
+	scripts/test-go-structural-rules.sh
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs

@@ -53,7 +53,7 @@ func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.Speech
 func seedVoiceAsset(t *testing.T, application app.App, principalID string, tenantID string, inventoryID string, kind string, title string, parentAssetID string) {
 	t.Helper()
 
-	_, err := application.CreateAsset(context.Background(), app.CreateAssetInput{
+	_, err := application.CreateAssetWithOperation(context.Background(), app.CreateAssetInput{
 		Principal:     identity.Principal{ID: identity.PrincipalID(principalID)},
 		Source:        audit.SourceAPI,
 		RequestID:     "seed-" + title,

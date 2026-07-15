@@ -59,6 +59,7 @@ fi
 
 httpserver_touched=false
 gormstore_touched=false
+asset_application_touched=false
 for file in "${go_files[@]}"; do
   case "$file" in
     apps/api/internal/adapters/httpserver/*)
@@ -67,8 +68,24 @@ for file in "${go_files[@]}"; do
     apps/api/internal/adapters/gormstore/*)
       gormstore_touched=true
       ;;
+    apps/api/internal/app/assets.go|apps/api/internal/app/assets/*.go)
+      asset_application_touched=true
+      ;;
   esac
 done
+
+if [ "$asset_application_touched" = true ]; then
+  legacy_asset_facade_files=()
+  if [ -f apps/api/internal/app/assets.go ]; then
+    legacy_asset_facade_files+=(apps/api/internal/app/assets.go)
+  fi
+  while IFS= read -r file; do
+    legacy_asset_facade_files+=("$file")
+  done < <(find apps/api/internal/app/assets -maxdepth 1 -name '*.go' -type f 2>/dev/null | sort)
+  if [ "${#legacy_asset_facade_files[@]}" -gt 0 ]; then
+    go run scripts/check-asset-operation-facades.go -- "${legacy_asset_facade_files[@]}"
+  fi
+fi
 
 if [ "$httpserver_touched" = true ]; then
   if rg --line-number --regexp 'huma\.(Get|Post|Patch|Put|Delete)\(' apps/api/internal/adapters/httpserver/server.go apps/api/internal/adapters/httpserver/api.go; then

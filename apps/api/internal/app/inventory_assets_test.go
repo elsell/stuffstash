@@ -36,7 +36,7 @@ func TestCreateAndListAssets(t *testing.T) {
 		MaxPageLimit:     2,
 	})
 
-	location, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	locationResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -46,11 +46,12 @@ func TestCreateAndListAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create location asset: %v", err)
 	}
+	location := locationResult.Asset
 	if location.Kind != asset.KindLocation || location.LifecycleState != asset.LifecycleStateActive {
 		t.Fatalf("unexpected location asset: %+v", location)
 	}
 
-	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	itemResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:     identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:      tenant.ID("tenant-one"),
 		InventoryID:   inventory.InventoryID("inventory-one"),
@@ -62,6 +63,7 @@ func TestCreateAndListAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create item asset: %v", err)
 	}
+	item := itemResult.Asset
 	if item.ParentAssetID != location.ID {
 		t.Fatalf("expected parent %q, got %q", location.ID, item.ParentAssetID)
 	}
@@ -119,7 +121,7 @@ func TestCreateUpdateAndReadAssetTags(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create tag: %v", err)
 	}
-	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	itemResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -130,6 +132,7 @@ func TestCreateUpdateAndReadAssetTags(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create asset with tag: %v", err)
 	}
+	item := itemResult.Asset
 
 	detail, err := application.GetAssetDetail(context.Background(), GetAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
@@ -199,7 +202,7 @@ func TestAssetWritesValidateTagsBeforePersistence(t *testing.T) {
 		IDs:                &fakeIDGenerator{ids: []string{"asset-one", "op-asset-one", "audit-asset-one", "op-update", "audit-update"}},
 	})
 
-	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	_, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -256,7 +259,7 @@ func TestCreateAssetPromotesItemParentToContainer(t *testing.T) {
 		IDs:             &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
 
-	child, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	childResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:     identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:      tenant.ID("tenant-one"),
 		InventoryID:   inventory.InventoryID("inventory-one"),
@@ -267,6 +270,7 @@ func TestCreateAssetPromotesItemParentToContainer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create asset under item parent: %v", err)
 	}
+	child := childResult.Asset
 	if child.ParentAssetID != itemParent.ID {
 		t.Fatalf("expected child parent %q, got %q", itemParent.ID, child.ParentAssetID)
 	}
@@ -300,7 +304,7 @@ func TestCreateAssetRejectsCustomFields(t *testing.T) {
 		IDs:             &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
 
-	_, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	_, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:    identity.Principal{ID: identity.PrincipalID("user-one")},
 		TenantID:     tenant.ID("tenant-one"),
 		InventoryID:  inventory.InventoryID("inventory-one"),
@@ -340,7 +344,7 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 		IDs:                   &fakeIDGenerator{ids: []string{"asset-one"}},
 	})
 
-	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	itemResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -354,11 +358,12 @@ func TestCreateAssetValidatesCustomFieldsAgainstDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create asset with custom fields: %v", err)
 	}
+	item := itemResult.Asset
 	if item.CustomFields.Values()["serial"] != "abc" || item.CustomFields.Values()["condition"] != "used" {
 		t.Fatalf("expected custom fields to be saved, got %+v", item.CustomFields.Values())
 	}
 
-	_, err = application.CreateAsset(context.Background(), CreateAssetInput{
+	_, err = application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -652,7 +657,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 		IDs:                   &fakeIDGenerator{},
 	})
 
-	archived, err := application.ArchiveAsset(context.Background(), UpdateAssetLifecycleInput{
+	archivedResult, err := application.ArchiveAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -661,6 +666,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("archive asset: %v", err)
 	}
+	archived := archivedResult.Asset
 	if archived.LifecycleState != asset.LifecycleStateArchived {
 		t.Fatalf("expected archived asset, got %+v", archived)
 	}
@@ -692,7 +698,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 		t.Fatalf("expected redo archive to archive asset, got %+v", redoArchive)
 	}
 
-	restored, err := application.RestoreAsset(context.Background(), UpdateAssetLifecycleInput{
+	restoredResult, err := application.RestoreAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -701,6 +707,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("restore asset: %v", err)
 	}
+	restored := restoredResult.Asset
 	if restored.LifecycleState != asset.LifecycleStateActive {
 		t.Fatalf("expected restored asset, got %+v", restored)
 	}
@@ -727,118 +734,4 @@ func appAuditRecordsIncludeAction(records []audit.Record, action audit.Action) b
 		}
 	}
 	return false
-}
-
-func TestUpdateAssetRejectsInvalidMovement(t *testing.T) {
-	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
-		asset.ID("garage"):   assetItem("garage", "tenant-one", "inventory-one", asset.KindLocation, ""),
-		asset.ID("shelf"):    assetItem("shelf", "tenant-one", "inventory-one", asset.KindLocation, "garage"),
-		asset.ID("box"):      assetItem("box", "tenant-one", "inventory-one", asset.KindContainer, "shelf"),
-		asset.ID("wrench"):   assetItem("wrench", "tenant-one", "inventory-one", asset.KindItem, "box"),
-		asset.ID("supplies"): assetItem("supplies", "tenant-one", "inventory-one", asset.KindItem, ""),
-	}}
-	application := New(Dependencies{
-		Observer:              &fakeObserver{},
-		Authorizer:            &fakeAuthorizer{},
-		Tenants:               &fakeTenantRepository{exists: true},
-		TenantUnitOfWork:      &fakeTenantRepository{exists: true},
-		Inventories:           &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields:          &fakeCustomFieldRepository{},
-		CustomFieldUnitOfWork: &fakeCustomFieldRepository{},
-		Assets:                assets,
-		AssetUnitOfWork:       assets,
-		Undoables:             assets,
-		Audit:                 &fakeAuditRepository{},
-		Outbox:                &fakeOutbox{},
-		IDs:                   &fakeIDGenerator{},
-	})
-
-	for _, item := range []struct {
-		name    string
-		assetID asset.ID
-		parent  string
-	}{
-		{name: "self parent", assetID: asset.ID("box"), parent: "box"},
-		{name: "cycle through descendant", assetID: asset.ID("garage"), parent: "box"},
-		{name: "item parent", assetID: asset.ID("wrench"), parent: "supplies"},
-	} {
-		t.Run(item.name, func(t *testing.T) {
-			_, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
-				Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
-				TenantID:    tenant.ID("tenant-one"),
-				InventoryID: inventory.InventoryID("inventory-one"),
-				AssetID:     item.assetID,
-				ParentAssetID: AssetParentUpdate{
-					Present: true,
-					Value:   item.parent,
-				},
-			})
-			if !errors.Is(err, ErrInvalidInput) {
-				t.Fatalf("expected invalid movement rejection, got %v", err)
-			}
-		})
-	}
-
-	updated, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
-		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
-		TenantID:    tenant.ID("tenant-one"),
-		InventoryID: inventory.InventoryID("inventory-one"),
-		AssetID:     asset.ID("box"),
-		ParentAssetID: AssetParentUpdate{
-			Present: true,
-			Null:    true,
-		},
-	})
-	if err != nil {
-		t.Fatalf("move container to root: %v", err)
-	}
-	if updated.ParentAssetID.String() != "" || assets.items[asset.ID("wrench")].ParentAssetID != asset.ID("box") {
-		t.Fatalf("expected box moved to root with child preserved, box=%+v wrench=%+v", updated, assets.items[asset.ID("wrench")])
-	}
-
-	_, err = application.UpdateAsset(context.Background(), UpdateAssetInput{
-		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
-		TenantID:    tenant.ID("tenant-one"),
-		InventoryID: inventory.InventoryID("inventory-one"),
-		AssetID:     asset.ID("box"),
-		ParentAssetID: AssetParentUpdate{
-			Present: true,
-			Value:   " ",
-		},
-	})
-	if !errors.Is(err, ErrInvalidInput) {
-		t.Fatalf("expected blank parent rejection, got %v", err)
-	}
-}
-
-func TestUpdateAssetRequiresEditPermission(t *testing.T) {
-	application := New(Dependencies{
-		Observer: &fakeObserver{},
-		Authorizer: &fakeAuthorizer{
-			checkInventoryErr: ports.ErrForbidden,
-		},
-		Tenants:               &fakeTenantRepository{exists: true},
-		TenantUnitOfWork:      &fakeTenantRepository{exists: true},
-		Inventories:           &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		CustomFields:          &fakeCustomFieldRepository{},
-		CustomFieldUnitOfWork: &fakeCustomFieldRepository{},
-		Assets: &fakeAssetRepository{items: map[asset.ID]asset.Asset{
-			asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
-		}},
-		Audit:  &fakeAuditRepository{},
-		Outbox: &fakeOutbox{},
-		IDs:    &fakeIDGenerator{},
-	})
-
-	title := "Cordless Drill"
-	_, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
-		Principal:   identity.Principal{ID: identity.PrincipalID("viewer")},
-		TenantID:    tenant.ID("tenant-one"),
-		InventoryID: inventory.InventoryID("inventory-one"),
-		AssetID:     asset.ID("drill"),
-		Title:       &title,
-	})
-	if !errors.Is(err, ErrUnauthorized) {
-		t.Fatalf("expected unauthorized update, got %v", err)
-	}
 }

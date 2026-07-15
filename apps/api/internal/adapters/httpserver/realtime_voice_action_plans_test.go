@@ -255,7 +255,7 @@ func TestRealtimeVoiceActionPlanApprovalExecutesRestoreAsset(t *testing.T) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
-		_, err := seedApplication.ArchiveAsset(context.Background(), app.UpdateAssetLifecycleInput{
+		_, err := seedApplication.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
 			Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
 			Source:      audit.SourceAPI,
 			RequestID:   "seed-archive-water-bottle",
@@ -317,7 +317,7 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
-	if _, err := application.ArchiveAsset(context.Background(), app.UpdateAssetLifecycleInput{
+	if _, err := application.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
 		Source:      audit.SourceAPI,
 		RequestID:   "seed-archive-water-bottle",
