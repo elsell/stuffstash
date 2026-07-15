@@ -123,6 +123,13 @@ class LifecycleSelectionExpiredRepository extends SeededInventoryRepository {
   }
 }
 
+class BoundedLifecycleLocationRepository extends SeededInventoryRepository {
+  async loadWorkspace(): Promise<WorkspaceData> {
+    const data = await super.loadWorkspace();
+    return { ...data, assets: data.assets.filter((asset) => asset.id !== 'location-garage') };
+  }
+}
+
 class RefreshFailingAfterReturnRepository extends SeededInventoryRepository {
   private returned = false;
 
@@ -135,6 +142,34 @@ class RefreshFailingAfterReturnRepository extends SeededInventoryRepository {
   async getAsset(...args: Parameters<SeededInventoryRepository['getAsset']>) {
     if (this.returned) throw new Error('Refresh failed after confirmed return.');
     return super.getAsset(...args);
+  }
+}
+
+class UndoableReturnRepository extends SeededInventoryRepository {
+  readonly operationId = 'operation-return-detail';
+  directions: string[] = [];
+
+  async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
+    const result = await super.returnAsset(...args);
+    return { ...result, undoableOperationId: this.operationId };
+  }
+
+  async applyAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    if (direction === 'undo') {
+      await super.checkoutAsset(tenantId, inventoryId, 'asset-home', { details: 'Reopened by Undo' });
+    } else {
+      await super.returnAsset(tenantId, inventoryId, 'asset-home', {});
+    }
+    const current = await super.getAsset(tenantId, inventoryId, 'asset-home');
+    // The apply-operation endpoint currently returns the asset without checkout
+    // expansion; the selected-detail refresh must supply that relationship.
+    return { ...current, currentCheckout: undefined };
   }
 }
 
@@ -389,6 +424,20 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('loads a focused location by id when the bounded lifecycle collection omitted it', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage',
+      new BoundedLifecycleLocationRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Garage');
+      expect(document.body.textContent).toContain('Move place');
+      expect(document.body.textContent).toContain('Archive');
+    });
+  });
+
   it('removes a returned Home row without depending on a follow-up asset refresh', async () => {
     const repository = new RefreshFailingAfterReturnRepository(structuredClone(seed));
     await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
@@ -402,6 +451,25 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Returned Passport.');
       expect(controlContaining('Undo')).toBeTruthy();
       expect(document.body.textContent).not.toContain('Refresh failed after confirmed return.');
+    });
+  });
+
+  it('refreshes selected checkout state after undoing a return', async () => {
+    const repository = new UndoableReturnRepository(structuredClone(seed));
+    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => expect(controlContaining('Return')).toBeTruthy());
+    controlContaining('Return').click();
+    await waitFor(() => expect(document.body.querySelector('#return-asset-details')).toBeTruthy());
+    buttonContaining('Return').click();
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(controlContaining('Return')).toBeTruthy();
+      expect(document.body.textContent).toContain('Undid change to Passport.');
     });
   });
 

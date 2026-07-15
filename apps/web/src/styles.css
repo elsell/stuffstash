@@ -2012,6 +2012,18 @@ h2 {
   align-items: start;
 }
 
+.location-hero {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.location-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .asset-detail-copy,
 .detail-list {
   display: grid;
@@ -2799,6 +2811,10 @@ dd {
   .asset-detail-grid {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .location-actions {
+    justify-content: flex-start;
   }
 
   .home-heading .heading-actions {

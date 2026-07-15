@@ -365,6 +365,8 @@ The first location view must include:
 - Location description.
 - Asset count for the assets visible in that location scope.
 - A scannable list of assets inside the location.
+- Visible `Edit location`, `Move place`, and `Archive` actions for editors. Move and archive must use the same route-backed task sheet and confirmation dialog as other asset kinds, return to the canonical focused location route on cancellation, preserve the shared dirty-dismiss, busy, focus, authorization, and Undo behavior, and expose no live mutation control to viewers.
+- A canonical focused location deep link must load its authorized location by ID when that location is not present in the initial bounded lifecycle collection; it must not silently redirect to Home because of list pagination.
 
 The asset list must:
 

@@ -150,7 +150,7 @@
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'move'}
-  <WorkspaceTaskSheet open title="Move asset" description={`Choose a new place for ${asset.title}.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close move" initialFocusSelector="#move-parent-search" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={asset.kind === 'location' ? 'Move place' : 'Move asset'} description={`Choose a new place for ${asset.title}.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close move" initialFocusSelector="#move-parent-search" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <ParentTargetPicker
       legend="Parent"
       searchId="move-parent-search"

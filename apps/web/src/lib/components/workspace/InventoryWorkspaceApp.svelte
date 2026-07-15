@@ -709,6 +709,14 @@
       notification = successNotification;
       try {
         await refreshSelectedAssetLifecycle();
+        if ((selectedAssetId === asset.id || selectedLocationId === asset.id) && asset.lifecycleState === data.context.assetLifecycleState) {
+          const refreshedAsset = await repository.getAsset(tenantId, inventoryId, asset.id);
+          data = replaceWorkspaceAsset(data, refreshedAsset);
+          loadedAssetDetail = refreshedAsset;
+          if (selectedAssetId === asset.id) {
+            selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(tenantId, inventoryId, asset.id);
+          }
+        }
       } catch (refreshError) {
         if (handleSessionExpired(refreshError)) return;
         refreshWarning = operationRefreshWarning(operationId, successNotification.title, successNotification.action!);
@@ -938,12 +946,27 @@
       }
 
       if (route.mode === 'location' && route.locationId) {
-        const location = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        const knownLocation = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        let location = knownLocation;
+        if (!location && data.context.selectedTenantId && data.context.selectedInventoryId) {
+          try {
+            const candidate = await repository.getAsset(
+              data.context.selectedTenantId,
+              data.context.selectedInventoryId,
+              route.locationId
+            );
+            if (candidate.kind === 'location' && candidate.lifecycleState === data.context.assetLifecycleState) {
+              location = candidate;
+            }
+          } catch (caught) {
+            if (handleSessionExpired(caught)) return;
+          }
+        }
         if (location) {
           invalidateAssetDetailLoad();
           selectedLocationId = location.id;
           selectedAssetId = null;
-          loadedAssetDetail = null;
+          loadedAssetDetail = knownLocation ? null : location;
           selectedAssetAttachments = [];
           selectedAssetCheckoutHistory = [];
           attachmentId = null;

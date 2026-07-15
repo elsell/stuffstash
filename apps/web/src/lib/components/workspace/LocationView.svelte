@@ -3,6 +3,8 @@
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Plus from '@lucide/svelte/icons/plus';
   import Pencil from '@lucide/svelte/icons/pencil';
+  import MoveRight from '@lucide/svelte/icons/move-right';
+  import Archive from '@lucide/svelte/icons/archive';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import {
@@ -12,6 +14,7 @@
     locationEmptyState,
     locationRowHref
   } from '$lib/application/workspaceBrowseNavigation';
+  import { assetActionHref } from '$lib/application/workspaceAssetActions';
   import type { Asset, AssetTag, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
   import AssetTagChips from './AssetTagChips.svelte';
@@ -90,11 +93,17 @@
       <p>{location.description}</p>
       <Badge variant="secondary">{assets.length} visible assets</Badge>
     </div>
-    {#if canEdit}
-      <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
-    {/if}
-    {#if canCreateAsset && assets.length > 0}
-      <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}><Plus /> {emptyState.actionLabel}</Button.Root>
+    {#if canEdit || (canCreateAsset && assets.length > 0)}
+      <div class="location-actions" role="group" aria-label="Location actions">
+        {#if canCreateAsset && assets.length > 0}
+          <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}><Plus /> {emptyState.actionLabel}</Button.Root>
+        {/if}
+        {#if canEdit}
+          <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
+          <Button.Root href={assetActionHref(location, 'move')} variant="outline"><MoveRight /> Move place</Button.Root>
+          <Button.Root href={assetActionHref(location, 'archive')} variant="ghost"><Archive /> Archive</Button.Root>
+        {/if}
+      </div>
     {/if}
   </div>
 
