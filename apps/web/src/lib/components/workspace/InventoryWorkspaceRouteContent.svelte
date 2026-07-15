@@ -275,7 +275,7 @@
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
     onTagSearch={handlers.onAssetTagSearch}
   />
-{:else if route.mode === 'browse' || route.mode === 'search'}
+{:else if route.mode === 'browse'}
   <BrowsePanel
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
@@ -356,7 +356,6 @@
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
     lifecycleState={workspace.data.context.assetLifecycleState}
-    browseMode={route.mode === 'locations' ? 'locations' : 'home'}
     locations={topLevelLocations(workspace.assets)}
     recentAssets={recentlyChangedAssets(workspace.assets)}
     archivedAssets={workspace.assets}

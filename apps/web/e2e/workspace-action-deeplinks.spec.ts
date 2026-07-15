@@ -11,7 +11,7 @@ test('asset edit action can be opened, saved, and closed from a direct URL', asy
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/edit');
 
-  const editPanel = page.locator('.detail-action-panel').filter({ has: page.getByRole('heading', { name: 'Edit asset' }) });
+  const editPanel = page.getByRole('dialog', { name: 'Edit asset' });
   const editHeading = editPanel.getByRole('heading', { name: 'Edit asset' });
   await expect(editPanel).toBeVisible();
   await expect(async () => {
@@ -35,7 +35,7 @@ test('mobile asset edit direct URL lands on the edit panel', async ({ page }, te
 
   await page.goto('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato/edit');
 
-  const editPanel = page.locator('.detail-action-panel').filter({ has: page.getByRole('heading', { name: 'Edit asset' }) });
+  const editPanel = page.getByRole('dialog', { name: 'Edit asset' });
   const editHeading = editPanel.getByRole('heading', { name: 'Edit asset' });
   await expect(editPanel).toBeVisible();
   await expect(async () => {

@@ -91,7 +91,7 @@ The first canonical URL model is:
 - `/` for the selected inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}` for an inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}/browse` for unified inventory browsing.
-- `/tenants/{tenantId}/inventories/{inventoryId}/locations` for top-level location browsing.
+- `/tenants/{tenantId}/inventories/{inventoryId}/locations` as an accepted compatibility alias for top-level place browsing.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/edit` for the location edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
@@ -103,7 +103,6 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore` for archived asset restore confirmation when restore is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/delete` for the asset delete confirmation state when delete is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/delete` for the attachment delete confirmation state when delete is available.
-- `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/{section}` for a focused inventory settings section.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/access/invitations/{invitationId}/expire` for an invitation expire confirmation when expire is available.
@@ -116,6 +115,19 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
 
 The web app may accept `/inventories/{inventoryId}` and descendant paths as compatibility aliases for an inventory that is visible in the current tenant context. When a compatibility alias can be resolved, the app should replace the browser URL with the canonical tenant-scoped path.
+
+The former inventory-level `/locations` and `/search` paths are compatibility
+aliases, not primary destinations. `/locations` must normalize to
+`/browse?scope=places`; `/search` must normalize to `/browse` while preserving
+supported search and filter query state. Focused location paths under
+`/locations/{locationAssetId}` remain canonical because they identify a
+location resource rather than the Browse collection.
+
+Compatibility aliases are accepted only at the browser-route input boundary.
+The typed workspace state, navigation helpers, and generated application links
+must use the canonical `browse` mode and `/browse` destination; they must not
+retain or generate former inventory-level `search` or `locations` modes after
+parsing.
 
 The route path owns durable navigation state. Query parameters may own transient filters such as:
 
@@ -578,12 +590,12 @@ Search behavior within Browse:
 - Search should resolve to authorized assets, containers, and locations in the selected inventory.
 - Search should provide autocomplete-style suggestions from visible inventory assets while preserving the repository-backed search action as the authoritative result source.
 - Autocomplete suggestions and local/demo search results must rank exact and prefix title matches before looser title, description, or custom-type matches.
-- Search suggestions and search results must show an asset image thumbnail when the asset has its own primary photo, and must show the same explicit kind fallback used elsewhere when it does not.
+- Search suggestions and Browse search results must show an asset image thumbnail when the asset has its own primary photo, and must show the same explicit kind fallback used elsewhere when it does not. The Browse repository adapter must hydrate the exact result asset's authenticated primary-photo thumbnail before returning each search result.
 - If the API says an asset has its own primary photo but the web adapter cannot fetch or materialize the authenticated thumbnail, the frontend asset model must preserve that state as an unavailable photo rather than treating the asset as unphotographed. Thumbnail surfaces, including search suggestions and results, must show the explicit kind fallback with a visible unavailable-photo badge and expose that state to assistive technology.
 - Assets created with a successfully uploaded photo must appear in subsequent search results with that asset's own primary photo thumbnail.
 - Search result rows should open asset or location detail/list surfaces. Location-kind results and suggestions must route to the focused location URL rather than generic asset detail.
 - Search suggestions and result rows must expose canonical destination `href` values while preserving ordinary in-app navigation behavior.
-- Global header search and the dedicated search page must use a shared suggestion-list composition so thumbnail behavior, kind labels, route links, focus state, and ordinary list/button semantics do not drift.
+- Global header search and Browse search must use a shared suggestion-list composition so thumbnail behavior, kind labels, route links, focus state, and ordinary list/button semantics do not drift.
 - No-results and denied states must be explicit and calm. Submitted searches with no results must name the query so the user can tell the search ran. Focused autocomplete fields with a non-empty query and no suggestions must expose calm no-suggestion feedback instead of appearing inert.
 - Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
 
@@ -815,6 +827,11 @@ Required boundaries:
 - Meaningful UI states must use typed concepts or enums, not loose strings.
 - Multi-step asset workflow transitions, such as create-with-quick-parent, create-with-photo-upload, and local workspace asset replacement, must live in focused application helpers rather than accumulating in the product shell component.
 - Files must stay cohesive. Do not create broad "god" files that mix route state, mock data, adapter mapping, observability, UI primitives, and product components.
+- Once a production surface replaces an earlier workspace implementation, the
+  web app must remove the unreachable component, test-only compatibility helper,
+  seeded fixture, route branch, and product style selectors that served only the
+  replaced implementation. Required URL compatibility remains at the route-input
+  boundary and must not require dormant production UI paths.
 
 The first promoted implementation should split at least these concerns:
 
@@ -871,6 +888,8 @@ Required implementation split:
 - Workspace unavailable-route and no-inventory setup presentation must live in focused application helpers rather than component-local conditional copy.
 - Search query execution, search state normalization, and autocomplete-style suggestion derivation must live in focused application helpers rather than accumulating in the product shell component.
 - Search filter option composition, labels, and href derivation must live in focused application helpers rather than component-local route string assembly.
+- Browse request construction, pagination merging, default-inventory emptiness checks, local result filtering, active-filter counts, and empty-result presentation must live in focused application helpers rather than component-local derivation.
+- Duplicate and empty Browse tag query values must normalize away. A selected tag ID that is no longer available must remain visible as a removable unavailable-tag filter until the user removes it, so stale deep links cannot create an unexplained active filter.
 - Search result and suggestion href derivation must live in focused application helpers rather than component-local route string assembly.
 - Search panel loading, first-run, empty-result, and error presentation must live in focused application helpers rather than component-local conditional copy.
 - Route-backed control click interception must use a shared helper so ordinary in-app clicks, modified clicks, non-primary clicks, and already-prevented events behave consistently across navigation, filters, suggestions, settings actions, and dialogs.

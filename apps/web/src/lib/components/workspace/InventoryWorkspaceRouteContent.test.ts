@@ -243,19 +243,6 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Storage bin');
   });
 
-  it('renders the top-level locations route without the recent rail', async () => {
-    component = mount(InventoryWorkspaceRouteContent, {
-      target: document.body,
-      props: await routeContentProps({
-        route: { mode: 'locations' }
-      })
-    });
-
-    expect(document.body.querySelector('#home-title')?.textContent).toBe('Locations');
-    expect(document.body.textContent).toContain('The places where your things live.');
-    expect(document.body.textContent).not.toContain('Recently changed');
-  });
-
   it('renders the asset detail branch with action route state', async () => {
     const props = await routeContentProps();
     component = mount(InventoryWorkspaceRouteContent, {

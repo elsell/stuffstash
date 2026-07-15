@@ -3,7 +3,17 @@
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
   import { compareNaturalText } from '$lib/application/textCollation';
-  import { searchAssetHref } from '$lib/application/workspaceSearch';
+  import {
+    browseEmptyPresentation,
+    browseFilterOptions,
+    browseFiltersAreDirty,
+    browseFilterCount,
+    browseSearchHref,
+    buildAppliedBrowseFilters,
+    filterBrowseAssets,
+    mergeBrowseSearchState,
+    searchAssetHref
+  } from '$lib/application/workspaceSearch';
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { buildPlaceBrowseSummaries } from '$lib/application/workspaceBrowsePresentation';
@@ -67,16 +77,9 @@
     onOpenAdd: (kind: 'item' | 'location') => void;
   } = $props();
 
-  const scopes: Array<{ value: BrowseScope; label: string }> = [
-    { value: 'all', label: 'All' }, { value: 'places', label: 'Places' },
-    { value: 'containers', label: 'Containers' }, { value: 'items', label: 'Items' }
-  ];
-  const lifecycleOptions: Array<{ value: SearchLifecycleFilter; label: string }> = [
-    { value: 'active', label: 'Active' }, { value: 'archived', label: 'Archived' }, { value: 'all', label: 'All' }
-  ];
-  const availabilityOptions: Array<{ value: SearchCheckoutFilter; label: string }> = [
-    { value: 'any', label: 'Any' }, { value: 'available', label: 'Available' }, { value: 'checked_out', label: 'Checked out' }
-  ];
+  const scopes = browseFilterOptions.scopes;
+  const lifecycleOptions = browseFilterOptions.lifecycle;
+  const availabilityOptions = browseFilterOptions.availability;
 
   let mapPathIds = $state<string[]>([]);
   let mapQuery = $state('');
@@ -89,20 +92,7 @@
   let draftCheckoutState = $state<SearchCheckoutFilter>('any');
   let draftTagIds = $state<string[]>([]);
   let sourceAssets = $derived(submitted ? results.map((result) => result.asset) : assets);
-  let filteredAssets = $derived.by(() => {
-    const selected = new Set(selectedTagIds);
-    const filtered = sourceAssets.filter((asset) => {
-      if (scope === 'places' && asset.kind !== 'location') return false;
-      if (scope === 'containers' && asset.kind !== 'container') return false;
-      if (scope === 'items' && asset.kind !== 'item') return false;
-      if (lifecycleState !== 'all' && asset.lifecycleState !== lifecycleState) return false;
-      if (checkoutState === 'checked_out' && !asset.currentCheckout) return false;
-      if (checkoutState === 'available' && asset.currentCheckout) return false;
-      if (selected.size > 0 && !Array.from(selected).every((id) => asset.tags?.some((tag) => tag.id === id))) return false;
-      return true;
-    });
-    return filtered;
-  });
+  let filteredAssets = $derived(filterBrowseAssets(sourceAssets, { scope, lifecycleState, checkoutState, selectedTagIds }));
   let mapAssets = $derived(assets.filter((asset) => asset.lifecycleState === 'active'));
   let mapColumns = $derived([null, ...mapPathIds].map((parentId) => ({
     parentId,
@@ -111,38 +101,28 @@
   })));
   let mapMatches = $derived(mapQuery.trim() ? mapAssets.filter((asset) => asset.kind !== 'item' && asset.title.toLocaleLowerCase().includes(mapQuery.trim().toLocaleLowerCase())).slice(0, 8) : []);
   let selectedMapAsset = $derived(mapPathIds.length ? mapAssets.find((asset) => asset.id === mapPathIds.at(-1)) ?? null : null);
-  let selectedTags = $derived(assetTags.filter((tag) => selectedTagIds.includes(tag.id)).sort((a, b) => compareNaturalText(a.displayName, b.displayName)));
-  let filterCount = $derived((lifecycleState === 'active' ? 0 : 1) + (checkoutState === 'any' ? 0 : 1) + selectedTagIds.length);
-  let filterDirty = $derived(
-    draftLifecycleState !== lifecycleState || draftCheckoutState !== checkoutState ||
-    [...draftTagIds].sort().join(',') !== [...selectedTagIds].sort().join(',')
-  );
-  let appliedFilters = $derived([
-    ...(lifecycleState === 'active' ? [] : [{ key: 'lifecycle', label: `Status: ${lifecycleOptions.find((option) => option.value === lifecycleState)?.label}` }]),
-    ...(checkoutState === 'any' ? [] : [{ key: 'availability', label: `Availability: ${availabilityOptions.find((option) => option.value === checkoutState)?.label}` }]),
-    ...selectedTags.map((tag) => ({ key: `tag:${tag.id}`, label: `Tag: ${tag.displayName}` }))
-  ]);
+  let filterCount = $derived(browseFilterCount(lifecycleState, checkoutState, selectedTagIds));
+  let filterDirty = $derived(browseFiltersAreDirty(
+    draftLifecycleState, lifecycleState, draftCheckoutState, checkoutState, draftTagIds, selectedTagIds
+  ));
+  let appliedFilters = $derived(buildAppliedBrowseFilters(lifecycleState, checkoutState, selectedTagIds, assetTags));
   let placeSummaries = $derived(new Map(buildPlaceBrowseSummaries(filteredAssets.filter((asset) => asset.kind === 'location'), placementAssets).map((summary) => [summary.asset.id, summary])));
   let visibleSuggestions = $derived(searchFocused && query.trim() ? suggestions.slice(0, 6) : []);
-  let defaultEmptyInventory = $derived(
-    inventoryEmpty && !query.trim() && scope === 'all' && lifecycleState === 'active' &&
-    checkoutState === 'any' && selectedTagIds.length === 0
-  );
+  let emptyPresentation = $derived(browseEmptyPresentation(
+    inventoryEmpty, query, scope, lifecycleState, checkoutState, selectedTagIds, canCreateAsset
+  ));
 
   function browseHref(next: BrowseState = {}): string {
-    return workspaceRouteHref({
-      mode: 'browse',
-      tenantId,
-      inventoryId,
-      browseSurface: next.surface ?? surface,
-      browseScope: next.scope ?? scope,
-      browseSort: next.sort ?? sort,
-      browseTagIds: next.selectedTagIds ?? selectedTagIds,
-      searchQuery: query.trim(),
-      searchLifecycleState: next.lifecycleState ?? lifecycleState,
-      searchCheckoutState: next.checkoutState ?? checkoutState,
-      searchMode: _searchMode
-    }, tenantId, inventoryId);
+    return browseSearchHref(tenantId, inventoryId, mergeBrowseSearchState({
+      query,
+      lifecycleState,
+      mode: _searchMode,
+      checkoutState,
+      surface,
+      scope,
+      sort,
+      selectedTagIds
+    }, next));
   }
 
   function changeBrowseState(event: MouseEvent, next: BrowseState): void {
@@ -364,19 +344,17 @@
     {:else if busy && filteredAssets.length === 0}<div class="empty-state spacious" role="status"><h2>Loading inventory…</h2></div>
     {:else if filteredAssets.length === 0}
       <div class="empty-state spacious">
-        {#if defaultEmptyInventory}
-          <h2>No stuff here yet</h2>
-          <p>{canCreateAsset ? 'Add an item or location to start this inventory.' : 'This inventory is empty.'}</p>
-          {#if canCreateAsset}
+        <h2>{emptyPresentation.title}</h2>
+        <p>{emptyPresentation.description}</p>
+        {#if emptyPresentation.kind === 'inventory'}
+          {#if emptyPresentation.showCreateActions}
             <div class="empty-state-actions">
               <Button.Root href={workspaceRouteHref({ action: 'add', addKind: 'item' }, tenantId, inventoryId)} onclick={(event) => openAdd(event, 'item')}>Add item</Button.Root>
               <Button.Root href={workspaceRouteHref({ action: 'add', addKind: 'location' }, tenantId, inventoryId)} variant="outline" onclick={(event) => openAdd(event, 'location')}>Add location</Button.Root>
             </div>
           {/if}
-        {:else}
-          <h2>{query.trim() ? `No results for “${query.trim()}”` : 'Nothing matches these filters'}</h2>
-          <p>{query.trim() ? 'Try another search term or clear a filter.' : 'Try another scope or clear a filter.'}</p>
-          {#if query.trim()}<Button.Root variant="outline" onclick={clearSearch}>Clear search</Button.Root>{/if}
+        {:else if emptyPresentation.showClearSearch}
+          <Button.Root variant="outline" onclick={clearSearch}>Clear search</Button.Root>
         {/if}
       </div>
     {:else}

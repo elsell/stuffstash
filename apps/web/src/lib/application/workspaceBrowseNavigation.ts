@@ -1,8 +1,6 @@
 import type { Asset, AssetLifecycleFilter, LocationAsset } from '$lib/domain/inventory';
 import { workspaceRouteHref } from './workspaceRoute';
 
-export type HomeBrowseMode = 'home' | 'locations';
-
 export interface HomeHeadingPresentation {
   title: string;
   description: string;
@@ -93,17 +91,11 @@ export function visibleAssetCountLabel(count: number): string {
   return `${count} visible ${count === 1 ? 'asset' : 'assets'}`;
 }
 
-export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter, browseMode: HomeBrowseMode): HomeHeadingPresentation {
+export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter): HomeHeadingPresentation {
   if (lifecycleState === 'archived') {
     return {
       title: 'Archived assets',
       description: 'Assets removed from active browsing.'
-    };
-  }
-  if (browseMode === 'locations') {
-    return {
-      title: 'Locations',
-      description: 'The places where your things live.'
     };
   }
   return {
@@ -127,14 +119,7 @@ export function homeArchivedEmptyState(): HomeEmptyStatePresentation {
   return { title: 'No archived assets' };
 }
 
-export function homeLocationsEmptyState(browseMode: HomeBrowseMode = 'home'): HomeEmptyStatePresentation {
-  if (browseMode === 'locations') {
-    return {
-      title: 'No locations yet',
-      message: 'Add a location to start browsing by place.',
-      actionLabel: 'Add first location'
-    };
-  }
+export function homeLocationsEmptyState(): HomeEmptyStatePresentation {
   return {
     title: 'No locations yet',
     message: 'Locations make browsing easier, but you can capture an item now.',

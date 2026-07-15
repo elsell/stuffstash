@@ -46,14 +46,14 @@ describe('workspace app navigation helpers', () => {
   });
 
   it('derives add close destinations from the current mode', () => {
-    expect(workspaceAddCloseRoute(context, { mode: 'search', selectedLocationId: null, selectedAssetId: null })).toEqual({
-      mode: 'search',
+    expect(workspaceAddCloseRoute(context, { mode: 'browse', selectedLocationId: null, selectedAssetId: null })).toEqual({
+      mode: 'browse',
       tenantId: 'tenant-home',
       inventoryId: 'inventory-household',
       lifecycleState: 'archived'
     });
-    expect(workspaceAddCloseHref(context, { mode: 'search', selectedLocationId: null, selectedAssetId: null })).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/search'
+    expect(workspaceAddCloseHref(context, { mode: 'browse', selectedLocationId: null, selectedAssetId: null })).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/browse'
     );
     expect(workspaceAddCloseRoute(context, { mode: 'home', selectedLocationId: 'location-garage', selectedAssetId: null })).toEqual({
       mode: 'location',

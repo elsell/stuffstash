@@ -84,7 +84,7 @@ describe('workspace route navigation helpers', () => {
     expect(currentWorkspaceRoute(null)).toMatchObject({ mode: 'home' });
 
     const pushed = pushWorkspaceRoute({ mode: 'settings', settingsSection: 'access' }, 'tenant-home', 'inventory-household', null);
-    replaceWorkspaceRoute({ mode: 'search', searchQuery: 'tape' }, 'tenant-home', 'inventory-household', null);
+    replaceWorkspaceRoute({ mode: 'browse', searchQuery: 'tape' }, 'tenant-home', 'inventory-household', null);
 
     expect(pushed).toMatchObject({ mode: 'settings', settingsSection: 'access' });
     expect(window.location.pathname).toBe('/');

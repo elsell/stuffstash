@@ -585,7 +585,11 @@ export class StuffStashInventoryRepository
         limit: Math.max(1, request.limit - selected.length), cursor, inventoryId: request.inventoryId,
         tagIds: request.tagIds, lifecycleState: request.lifecycleState, mode: request.mode, checkoutState: request.checkoutState
       });
-      selected.push(...page.items.map(mapSearchResult).filter((result) => browseAssetMatches(result.asset, request)));
+      const mapped = await Promise.all(page.items.map(async (result) => {
+        const searchResult = mapSearchResult(result);
+        return { ...searchResult, asset: await this.mapAssetWithPrimaryPhoto(result.asset) };
+      }));
+      selected.push(...mapped.filter((result) => browseAssetMatches(result.asset, request)));
       cursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
     } while (selected.length < request.limit && hasMore && cursor);

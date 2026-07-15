@@ -261,6 +261,23 @@ describe('BrowsePanel', () => {
     expect(document.querySelector('.browse-inline-error')?.textContent).not.toContain('Browse could not be refreshed.');
   });
 
+  it('keeps an unavailable deep-linked tag visible and directly removable', () => {
+    const changes: Array<Record<string, unknown>> = [];
+    render('list', 'all', {
+      selectedTagIds: ['deleted-tag'],
+      assetTags: [],
+      onStateChange: (state) => changes.push(state)
+    });
+
+    expect(document.body.textContent).toContain('Filters (1)');
+    const chip = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.getAttribute('aria-label') === 'Remove Unavailable tag: deleted-tag'
+    );
+    expect(chip).toBeTruthy();
+    chip?.click();
+    expect(changes).toContainEqual({ selectedTagIds: [] });
+  });
+
   it('requests the next page and supports arrow-key tab selection', () => {
     let loads = 0;
     const changes: Array<Record<string, unknown>> = [];

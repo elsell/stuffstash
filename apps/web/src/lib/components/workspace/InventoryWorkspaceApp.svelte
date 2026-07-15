@@ -33,7 +33,11 @@
   } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { reconcilePendingAssetTagDrafts } from '$lib/application/workspaceTagDrafts';
-  import { buildSearchSuggestions } from '$lib/application/workspaceSearch';
+  import {
+    browseSearchRoute,
+    buildSearchSuggestions,
+    loadBrowsePage as executeBrowsePageLoad
+  } from '$lib/application/workspaceSearch';
   import { browseFailureMessage } from '$lib/application/workspaceBrowsePresentation';
   import {
     type AssetRouteAction,
@@ -416,11 +420,11 @@
   }
 
   async function search(): Promise<void> {
-    navigateTo({
-      mode: 'browse', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId,
-      searchQuery: searchQuery.trim(), searchLifecycleState, searchMode, searchCheckoutState,
-      browseSurface: 'list', browseScope, browseSort, browseTagIds: searchTagIds
-    });
+    navigateTo(browseSearchRoute(data.context.selectedTenantId, data.context.selectedInventoryId, {
+      query: searchQuery, lifecycleState: searchLifecycleState, mode: searchMode,
+      checkoutState: searchCheckoutState, surface: 'list', scope: browseScope,
+      sort: browseSort, selectedTagIds: searchTagIds
+    }));
   }
 
   async function loadBrowsePage(append = false): Promise<void> {
@@ -433,23 +437,19 @@
     searchError = '';
     browseErrorPhase = null;
     try {
-      const page = await repository.browseAssets({
-        tenantId, inventoryId, query: searchQuery, tagIds: searchTagIds, lifecycleState: searchLifecycleState,
-        checkoutState: searchCheckoutState, scope: browseScope, sort: browseSort, mode: searchMode, limit: 20,
-        cursor: append ? browseNextCursor ?? undefined : undefined
+      const page = await executeBrowsePageLoad(repository, {
+        tenantId, inventoryId, query: searchQuery, selectedTagIds: searchTagIds,
+        lifecycleState: searchLifecycleState, checkoutState: searchCheckoutState, scope: browseScope,
+        sort: browseSort, mode: searchMode, append, cursor: append ? browseNextCursor ?? undefined : undefined,
+        currentAssets: browseAssets, currentSearchResults: searchResults, currentInventoryEmpty: browseInventoryEmpty
       });
-      const checksDefaultInventoryEmptiness = !append && !searchQuery.trim() && searchTagIds.length === 0 &&
-        browseScope === 'all' && searchLifecycleState === 'active' && searchCheckoutState === 'any';
-      const inventoryEmpty = checksDefaultInventoryEmptiness && page.assets.length === 0
-        ? !(await repository.hasAnyAssets(tenantId, inventoryId))
-        : page.assets.length > 0 ? false : browseInventoryEmpty;
       if (requestId !== browseRequestId) return;
-      browseAssets = append ? [...browseAssets, ...page.assets] : page.assets;
-      searchResults = append ? [...searchResults, ...page.searchResults] : page.searchResults;
+      browseAssets = page.assets;
+      searchResults = page.searchResults;
       browseNextCursor = page.nextCursor;
       browseHasMore = page.hasMore;
-      browseInventoryEmpty = inventoryEmpty;
-      searchSubmitted = !!searchQuery.trim() || searchTagIds.length > 0;
+      browseInventoryEmpty = page.inventoryEmpty;
+      searchSubmitted = page.submitted;
     } catch (caught) {
       if (requestId !== browseRequestId || handleSessionExpired(caught)) return;
       const phase = append ? 'append' : browseAssets.length > 0 ? 'replacement' : 'initial';
@@ -974,7 +974,7 @@
         }
       }
 
-      if (route.mode !== 'search' && route.mode !== 'browse' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
+      if (route.mode !== 'browse' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
       const addRoute = resolveWorkspaceAddRoute(route, {
@@ -1001,20 +1001,6 @@
       if (addRoute.replacementRoute) {
         route = { ...route, addParentAssetId: null };
         replaceRoute(addRoute.replacementRoute);
-      }
-
-      if (route.mode === 'locations') {
-        invalidateAssetDetailLoad();
-        selectedLocationId = null;
-        selectedAssetId = null;
-        loadedAssetDetail = null;
-        selectedAssetAttachments = [];
-        selectedAssetCheckoutHistory = [];
-        attachmentId = null;
-        attachmentAction = null;
-        mode = 'locations';
-        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
-        return;
       }
 
       if (route.mode === 'location' && route.locationId) {
@@ -1123,13 +1109,12 @@
         return;
       }
 
-      if (route.mode === 'browse' || route.mode === 'search') {
+      if (route.mode === 'browse') {
         mode = 'browse';
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
-        selectedAssetCheckoutHistory = [];
         selectedAssetCheckoutHistory = [];
         if (route.browseSurface === 'map') await loadBrowseMap();
         else await loadBrowsePage(false);
@@ -1211,7 +1196,6 @@
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
     selectedAssetCheckoutHistory = [];
-    selectedAssetCheckoutHistory = [];
     searchResults = [];
     searchSubmitted = false;
   }
@@ -1236,19 +1220,16 @@
     sort?: BrowseSort;
     selectedTagIds?: string[];
   }): void {
-    navigateTo({
-      mode: 'browse',
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId,
-      browseSurface: next.surface ?? browseSurface,
-      browseScope: next.scope ?? browseScope,
-      browseSort: next.sort ?? browseSort,
-      browseTagIds: next.selectedTagIds ?? searchTagIds,
-      searchQuery,
-      searchLifecycleState: next.lifecycleState ?? searchLifecycleState,
-      searchCheckoutState: next.checkoutState ?? searchCheckoutState,
-      searchMode
-    });
+    navigateTo(browseSearchRoute(data.context.selectedTenantId, data.context.selectedInventoryId, {
+      query: searchQuery,
+      lifecycleState: next.lifecycleState ?? searchLifecycleState,
+      mode: searchMode,
+      checkoutState: next.checkoutState ?? searchCheckoutState,
+      surface: next.surface ?? browseSurface,
+      scope: next.scope ?? browseScope,
+      sort: next.sort ?? browseSort,
+      selectedTagIds: next.selectedTagIds ?? searchTagIds
+    }));
   }
 
   function openImportSource(source: ImportSourceRoute): void {

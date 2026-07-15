@@ -65,21 +65,24 @@ test('search suggestions and image results keep ordinary accessible navigation',
   const search = page.getByLabel('Search this inventory');
   await search.fill('Tomato');
 
-  const suggestion = page.getByLabel('Search suggestions').getByRole('link', { name: 'Open Tomato fertilizer' });
+  const suggestionList = page.getByLabel('Search suggestions');
+  const suggestion = suggestionList.getByRole('option', { name: 'Open Tomato fertilizer' });
   await expect(suggestion).toBeVisible();
-  await expect(page.getByLabel('Search suggestions').locator('img[alt="Tomato fertilizer"]')).toBeVisible();
+  await expect(suggestionList.getByRole('img', { name: 'Tomato fertilizer' })).toBeVisible();
   await search.press('ArrowDown');
-  await expect(suggestion).toBeFocused();
-  await suggestion.press('Escape');
+  await expect(search).toBeFocused();
+  await expect(search).toHaveAttribute('aria-activedescendant', 'global-search-suggestion-0');
+  await search.press('Escape');
   await expect(search).toBeFocused();
   await page.getByRole('button', { name: 'Run search' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible();
-  await expect(page.locator('.asset-list').getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
+  await expect(page.getByRole('heading', { name: 'Browse' })).toBeVisible();
+  const browseResults = page.getByRole('tabpanel', { name: 'All' });
+  await expect(browseResults.getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
     'href',
     '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato'
   );
-  await expect(page.locator('.asset-list img[alt="Tomato fertilizer"]')).toBeVisible();
+  await expect(browseResults.getByRole('img', { name: 'Tomato fertilizer' })).toBeVisible();
 });
 
 test('location and detail flows expose named links, headings, and image alt text', async ({ page }, testInfo) => {
@@ -128,8 +131,9 @@ test('mobile workspace controls provide comfortable touch targets', async ({ pag
   expect(await visibleControlsMeetTarget(page.locator('.detail-actions [data-slot="button"]'), 44)).toBe(true);
 
   await page.getByRole('button', { name: /Household/ }).click();
-  await expect(page.getByRole('dialog', { name: 'Inventory context' })).toBeVisible();
-  expect(await visibleControlsMeetTarget(page.locator('.mobile-context-menu [data-slot="button"]'), 44)).toBe(true);
+  const contextDialog = page.getByRole('dialog', { name: 'Inventory context' });
+  await expect(contextDialog).toBeVisible();
+  expect(await visibleControlsMeetTarget(contextDialog.locator('[data-slot="button"]'), 44)).toBe(true);
   await page.keyboard.press('Escape');
 
   await page.getByRole('link', { name: 'Add asset' }).click();

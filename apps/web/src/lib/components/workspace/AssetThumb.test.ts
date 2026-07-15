@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import type { Asset } from '$lib/domain/inventory';
+import AssetThumb from './AssetThumb.svelte';
 import AssetThumbHarness from './AssetThumbHarness.test.svelte';
 
 let component: ReturnType<typeof mount> | null = null;
@@ -12,6 +14,21 @@ afterEach(() => {
 });
 
 describe('AssetThumb', () => {
+  it.each([
+    { size: 'sm' as const, pixels: 36 },
+    { size: 'md' as const, pixels: 48 },
+    { size: 'lg' as const, pixels: 96 }
+  ])('renders and styles the $size thumbnail contract', ({ size, pixels }) => {
+    component = mount(AssetThumb, {
+      target: document.body,
+      props: { asset: asset('asset-one', 'photo-one', 'Tape measure'), size }
+    });
+    expect(document.body.querySelector('.asset-thumb')?.classList.contains(`asset-thumb-${size}`)).toBe(true);
+
+    const styles = readFileSync('src/styles.css', 'utf8');
+    expect(styles).toMatch(new RegExp(`\\.asset-thumb-${size}\\s*\\{[^}]*width:\\s*${pixels}px;[^}]*height:\\s*${pixels}px;`));
+  });
+
   it('hydrates only its own declared primary photo through the injected loader', async () => {
     const asset: Asset = {
       id: 'asset-one',

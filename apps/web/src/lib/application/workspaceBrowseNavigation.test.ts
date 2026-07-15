@@ -75,15 +75,11 @@ describe('workspace browse navigation helpers', () => {
   });
 
   it('builds home heading, empty, and denied presentation', () => {
-    expect(homeHeadingPresentation('active', 'home')).toEqual({
+    expect(homeHeadingPresentation('active')).toEqual({
       title: 'Home',
       description: 'Recently changed and the places where your things live.'
     });
-    expect(homeHeadingPresentation('active', 'locations')).toEqual({
-      title: 'Locations',
-      description: 'The places where your things live.'
-    });
-    expect(homeHeadingPresentation('archived', 'home')).toEqual({
+    expect(homeHeadingPresentation('archived')).toEqual({
       title: 'Archived assets',
       description: 'Assets removed from active browsing.'
     });
@@ -94,11 +90,6 @@ describe('workspace browse navigation helpers', () => {
       message: 'Locations make browsing easier, but you can capture an item now.',
       actionLabel: 'Add first location',
       secondaryActionLabel: 'Add item'
-    });
-    expect(homeLocationsEmptyState('locations')).toEqual({
-      title: 'No locations yet',
-      message: 'Add a location to start browsing by place.',
-      actionLabel: 'Add first location'
     });
     expect(homeCreateLocationDenied()).toEqual({
       id: 'home-add-location-denied',

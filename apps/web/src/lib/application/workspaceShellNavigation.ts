@@ -102,7 +102,7 @@ export function mobileShellNavigationItems(input: ShellNavigationInput): ShellNa
 }
 
 export function shellModeIsCurrent(currentMode: WorkspaceMode, destinationMode: ShellWorkspaceMode): boolean {
-  return currentMode === destinationMode || (destinationMode === 'browse' && (currentMode === 'location' || currentMode === 'locations' || currentMode === 'search'));
+  return currentMode === destinationMode || (destinationMode === 'browse' && currentMode === 'location');
 }
 
 export function contextInventoryHref(inventory: Inventory): string {

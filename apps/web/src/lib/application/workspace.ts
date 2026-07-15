@@ -1,6 +1,5 @@
 import type { Asset, AssetViewModel, CustomAssetType, LocationAsset, LocationSummary, ParentTargetViewModel } from '$lib/domain/inventory';
 import { compareNaturalText } from './textCollation';
-import type { HomeBrowseMode } from './workspaceBrowseNavigation';
 
 export function topLevelLocations(assets: Asset[]): LocationSummary[] {
   return assets
@@ -12,8 +11,8 @@ export function topLevelLocations(assets: Asset[]): LocationSummary[] {
     .sort((left, right) => compareNaturalText(left.location.title, right.location.title));
 }
 
-export function homeLocationPreview(locations: LocationSummary[], browseMode: HomeBrowseMode = 'home'): LocationSummary[] {
-  return browseMode === 'home' ? locations.slice(0, 9) : locations;
+export function homeLocationPreview(locations: LocationSummary[]): LocationSummary[] {
+  return locations.slice(0, 9);
 }
 
 export function recentlyChangedAssets(assets: Asset[]): AssetViewModel[] {

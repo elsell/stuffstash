@@ -435,6 +435,25 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     expect(results[2]?.asset).not.toHaveProperty('photo');
   });
 
+  it('hydrates primary photos for Browse search results', async () => {
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-passport'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const page = await repository.browseAssets({
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'passport', tagIds: [],
+      lifecycleState: 'all', checkoutState: 'any', scope: 'all', sort: 'updated_desc', mode: 'fuzzy', limit: 20
+    });
+
+    expect(page.assets[0]).toMatchObject({
+      id: 'asset-passport',
+      photo: expect.objectContaining({ assetId: 'asset-passport', alt: 'Passport' })
+    });
+    expect(page.searchResults[0]?.asset.photo).toMatchObject({ assetId: 'asset-passport' });
+    expect(requests.some((request) =>
+      request.url.includes('/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small')
+    )).toBe(true);
+  });
+
   it('updates asset detail and movement through the generated client path', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);

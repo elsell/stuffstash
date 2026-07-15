@@ -205,53 +205,6 @@ describe('HomeWorkspace', () => {
     expect(row.getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/assets/tape');
   });
 
-  it('renders a locations-focused browse view without the recent rail', () => {
-    const location: LocationAsset = {
-      id: 'garage',
-      tenantId: 'tenant-home',
-      inventoryId: 'inventory-household',
-      kind: 'location',
-      title: 'Garage',
-      description: '',
-      parentAssetId: null,
-      lifecycleState: 'active',
-    };
-
-    component = mount(HomeWorkspace, {
-      target: document.body,
-      props: {
-        lifecycleState: 'active',
-        tenantId: 'tenant-home',
-        inventoryId: 'inventory-household',
-        browseMode: 'locations',
-        locations: [{ location, assetCount: 4 }],
-        recentAssets: [
-          {
-            ...location,
-            id: 'recent-item',
-            kind: 'item',
-            title: 'Tape measure',
-            parentAssetId: 'garage',
-            containmentTrail: 'Garage'
-          }
-        ],
-        archivedAssets: [],
-        onOpenLocation: () => {},
-        onOpenAsset: () => {},
-        onOpenAdd: () => {},
-        onSelectLifecycle: () => {}
-      }
-    });
-
-    expect(document.body.textContent).toContain('Locations');
-    expect(document.body.textContent).toContain('The places where your things live.');
-    expect(document.body.textContent).toContain('Garage');
-    expect(document.body.textContent).not.toContain('Recently changed');
-    expect(document.body.textContent).not.toContain('Tape measure');
-    expect(document.body.querySelector('[aria-label="Asset lifecycle"]')).toBeNull();
-    expect(link('Garage').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/locations/garage');
-  });
-
   it('exposes durable hrefs for home actions, location tiles, and archived rows', () => {
     const location: LocationAsset = {
       id: 'garage',
@@ -404,29 +357,6 @@ describe('HomeWorkspace', () => {
 
     link('Add item').click();
     expect(openedKinds).toEqual(['item']);
-  });
-
-  it('keeps the empty locations route focused on creating a location', () => {
-    component = mount(HomeWorkspace, {
-      target: document.body,
-      props: {
-        lifecycleState: 'active',
-        tenantId: 'tenant-home',
-        inventoryId: 'inventory-household',
-        browseMode: 'locations',
-        locations: [],
-        recentAssets: [],
-        archivedAssets: [],
-        onOpenLocation: () => {},
-        onOpenAsset: () => {},
-        onOpenAdd: () => {},
-        onSelectLifecycle: () => {}
-      }
-    });
-
-    expect(document.body.textContent).toContain('Add a location to start browsing by place.');
-    expect(link('Add first location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
-    expect(document.body.textContent).not.toContain('Add item');
   });
 
   it('disables home add-location controls when creation is unavailable', () => {

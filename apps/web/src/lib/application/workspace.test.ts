@@ -122,7 +122,6 @@ describe('workspace domain helpers', () => {
     }));
 
     expect(homeLocationPreview(locations)).toHaveLength(9);
-    expect(homeLocationPreview(locations, 'locations')).toHaveLength(12);
   });
   it('derives top-level active locations and contained asset counts', () => {
     expect(topLevelLocations(assets)).toEqual([{ location: assets[0], assetCount: 2 }]);

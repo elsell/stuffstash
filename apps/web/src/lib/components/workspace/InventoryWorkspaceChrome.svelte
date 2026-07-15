@@ -91,7 +91,7 @@
       {canCreateAsset}
       {userLabel}
       {disablePortal}
-      showSearch={mode !== 'search' && mode !== 'browse'}
+      showSearch={mode !== 'browse'}
       {onSelectTenant}
       {onSelectInventory}
       {onSearch}
