@@ -29,7 +29,7 @@ describe('AssetDetail', () => {
     expect(controls('Checkout')).toHaveLength(0);
   });
 
-  it('scrolls route-opened action panels into view after focusing them', async () => {
+  it('opens route actions as modal task sheets without scrolling the page', async () => {
     const scrollIntoView = vi.fn();
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView });
@@ -37,8 +37,10 @@ describe('AssetDetail', () => {
       mountAssetDetail({ action: 'edit' });
       await flush();
 
-      expect(document.activeElement).toBe(requiredElement('.detail-action-panel'));
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', inline: 'nearest' });
+      const dialog = requiredElement('[role="dialog"]');
+      expect(dialog.getAttribute('aria-modal')).toBe('true');
+      expect(document.activeElement).toBe(requiredElement('#edit-asset-title'));
+      expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: originalScrollIntoView });
     }
@@ -192,13 +194,39 @@ describe('AssetDetail', () => {
 
     expect((requiredElement('#edit-asset-title') as HTMLInputElement).value).toBe('Current asset');
     expect((requiredElement('#edit-custom-field-expiration-date') as HTMLInputElement).value).toBe('2028-02-02');
-    expect(document.activeElement).toBe(requiredElement('.detail-action-panel'));
-    expect(
-      Boolean(
-        requiredElement('.detail-action-panel').compareDocumentPosition(requiredElement('#asset-description-title')) &
-          Node.DOCUMENT_POSITION_FOLLOWING
-      )
-    ).toBe(true);
+    expect(requiredElement('[role="dialog"]').getAttribute('aria-modal')).toBe('true');
+    expect(document.activeElement).toBe(requiredElement('#edit-asset-title'));
+  });
+
+  it('keeps focused custom-field controls mounted while their draft values change', async () => {
+    mountAssetDetail({
+      action: 'edit',
+      asset: {
+        ...asset(),
+        customFields: { 'serial-number': 'ABC-123', 'purchase-store': '' }
+      },
+      customFieldDefinitions: [
+        customFieldDefinition('serial-number', 'Serial number'),
+        customFieldDefinition('purchase-store', 'Purchase store')
+      ]
+    });
+    await flush();
+
+    const populated = requiredElement('#edit-custom-field-serial-number') as HTMLInputElement;
+    populated.focus();
+    setInputValue(populated, '');
+    await flush();
+    expect(populated.isConnected).toBe(true);
+    expect(document.activeElement).toBe(populated);
+
+    const disclosure = requiredElement('.edit-empty-fields') as HTMLDetailsElement;
+    disclosure.open = true;
+    const empty = requiredElement('#edit-custom-field-purchase-store') as HTMLInputElement;
+    empty.focus();
+    setInputValue(empty, 'Corner shop');
+    await flush();
+    expect(empty.isConnected).toBe(true);
+    expect(document.activeElement).toBe(empty);
   });
 
   it('preserves custom field values when moving an asset', async () => {
@@ -228,6 +256,7 @@ describe('AssetDetail', () => {
     clickFirst('Move');
     await flush();
     clickFirst('Inventory root');
+    await flush();
     clickLast('Move');
     await flush();
 
@@ -480,6 +509,17 @@ describe('AssetDetail', () => {
 
     expect(actionClosed).toBe(true);
     expect(document.body.textContent).not.toContain('Edit asset');
+  });
+
+  it('restores focus to the owning detail heading when the invoking action disappears', async () => {
+    mountAssetDetail({ action: 'edit' });
+    await flush();
+
+    link('Edit').remove();
+    link('Cancel').click();
+    await flush();
+
+    expect(document.activeElement).toBe(requiredElement('#asset-title'));
   });
 
   it('preserves modified clicks on asset action cancel links', async () => {
@@ -749,6 +789,22 @@ function asset(): AssetViewModel {
     customAssetTypeLabel: 'Medicine',
     customFields: { 'expiration-date': '2027-01-01' },
     containmentTrail: 'Hall closet'
+  };
+}
+
+function customFieldDefinition(key: string, displayName: string): CustomFieldDefinition {
+  return {
+    id: `field-${key}`,
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    scope: 'inventory',
+    key,
+    displayName,
+    type: 'text',
+    enumOptions: [],
+    applicability: 'all_assets',
+    customAssetTypeIds: [],
+    lifecycleState: 'active'
   };
 }
 

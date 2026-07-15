@@ -55,6 +55,9 @@ describe('WorkspaceTaskSheet', () => {
     expect(dialog?.getAttribute('aria-busy')).toBe('true');
     expect(dialog?.querySelector('[role="status"]')?.textContent).toContain('Saving changes');
     expect(dialog?.querySelector('[data-slot="sheet-header"]')?.textContent).toContain('Saving changes');
+    const body = dialog?.querySelector<HTMLElement>('.workspace-task-sheet-body');
+    expect(body?.inert).toBe(true);
+    expect(body?.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('uses a 44px route-backed close target when the task is dismissible', async () => {

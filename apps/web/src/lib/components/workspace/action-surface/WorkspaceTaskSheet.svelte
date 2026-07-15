@@ -77,7 +77,11 @@
         {/snippet}
       </Sheet.Close>
     {/if}
-    <div class="workspace-task-sheet-body grid min-h-0 flex-1 content-start gap-6 overflow-y-auto px-5 py-6 sm:px-6">
+    <div
+      class="workspace-task-sheet-body grid min-h-0 flex-1 content-start gap-6 overflow-y-auto px-5 py-6 sm:px-6"
+      inert={busy ? true : undefined}
+      aria-disabled={busy}
+    >
       {@render children()}
     </div>
     {#if footer}

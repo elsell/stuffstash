@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
@@ -124,8 +125,8 @@
   let selectedAttachment = $state<AssetAttachment | null>(null);
   let selectedPhotoId = $state<string | null>(null);
   let lastRouteActionKey = $state('');
-  let actionPanelElement = $state<HTMLElement | null>(null);
-  let shouldScrollRouteActionPanel = false;
+  let actionReturnFocus = $state<HTMLElement | null>(null);
+  let actionReturnHref = $state('');
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
@@ -164,62 +165,40 @@
       return;
     }
     const initializingWithoutRouteAction = lastRouteActionKey === '' && !action && !attachmentAction;
-    const routeOpenedActionPanel = panel === 'none';
     lastRouteActionKey = actionKey;
+    saveError = '';
     if (attachmentAction === 'delete' && canEdit) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       const routeAttachment = attachments.find((attachment) => attachment.id === attachmentId) ?? null;
       selectedAttachment = routeAttachment;
+      actionReturnHref = routeAttachment ? attachmentDeleteHref(routeAttachment) : '';
       panel = routeAttachment ? 'attachment-delete' : 'none';
     } else if (action === 'edit' && canEdit && asset.lifecycleState === 'active') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('edit');
       openEdit(false);
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('move');
       openMove(false);
     } else if (action === 'archive' && canEdit && asset.lifecycleState === 'active') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('archive');
       panel = 'archive';
     } else if (action === 'restore' && canEdit && asset.lifecycleState === 'archived') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('restore');
       panel = 'restore';
     } else if (action === 'delete' && canEdit) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('delete');
       panel = 'delete';
     } else if (action === 'checkout' && actionIsAvailable('checkout')) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('checkout');
       checkoutDetails = '';
       panel = 'checkout';
     } else if (action === 'return' && actionIsAvailable('return')) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('return');
       checkoutDetails = '';
       panel = 'return';
     } else if (!action && !attachmentAction && !initializingWithoutRouteAction) {
       panel = 'none';
       selectedAttachment = null;
-      shouldScrollRouteActionPanel = false;
-    }
-  });
-
-  $effect(() => {
-    if (
-      (panel === 'edit' ||
-        panel === 'move' ||
-        panel === 'archive' ||
-        panel === 'restore' ||
-        panel === 'delete' ||
-        panel === 'checkout' ||
-        panel === 'return' ||
-        panel === 'attachment-delete') &&
-      actionPanelElement
-    ) {
-      actionPanelElement.focus();
-      if (shouldScrollRouteActionPanel && typeof actionPanelElement.scrollIntoView === 'function') {
-        actionPanelElement.scrollIntoView({ block: 'start', inline: 'nearest' });
-        shouldScrollRouteActionPanel = false;
-      } else if (shouldScrollRouteActionPanel) {
-        shouldScrollRouteActionPanel = false;
-      }
+      actionReturnHref = '';
     }
   });
 
@@ -276,6 +255,9 @@
       return;
     }
     event.preventDefault();
+    saveError = '';
+    actionReturnFocus = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    actionReturnHref = actionHref(nextAction);
     if (nextAction === 'edit') {
       openEdit();
     } else if (nextAction === 'move') {
@@ -337,6 +319,7 @@
   function closePanel(): void {
     const previousPanel = panel;
     panel = 'none';
+    saveError = '';
     selectedAttachment = null;
     if (
       previousPanel === 'edit' ||
@@ -359,6 +342,27 @@
     }
     event.preventDefault();
     closePanel();
+  }
+
+  function restoreActionFocus(event: Event): void {
+    event.preventDefault();
+    const target = actionReturnFocus;
+    const href = actionReturnHref;
+    actionReturnFocus = null;
+    actionReturnHref = '';
+    void tick().then(() => {
+      const hrefFallback = href
+        ? Array.from(document.querySelectorAll<HTMLElement>('[href]')).find(
+            (candidate) => candidate.getAttribute('href') === href
+          ) ?? null
+        : null;
+      const pageFallback = document.querySelector<HTMLElement>('#asset-title, main h1');
+      const focusTarget = target?.isConnected ? target : hrefFallback ?? pageFallback;
+      if (focusTarget && focusTarget === pageFallback && !focusTarget.hasAttribute('tabindex')) {
+        focusTarget.setAttribute('tabindex', '-1');
+      }
+      focusTarget?.focus();
+    });
   }
 
   async function archive(): Promise<void> {
@@ -489,6 +493,8 @@
       return;
     }
     event.preventDefault();
+    actionReturnFocus = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    actionReturnHref = attachmentDeleteHref(attachment);
     selectedAttachment = attachment;
     panel = 'attachment-delete';
     onAttachmentDeleteOpen(attachment.id);
@@ -576,7 +582,7 @@
       <div class="asset-detail-copy">
         <div class="detail-title-row">
           <div>
-            <h1 id="asset-title">{asset.title}</h1>
+            <h1 id="asset-title" tabindex="-1">{asset.title}</h1>
             <p>{asset.containmentTrail}</p>
             <AssetTagChips tags={asset.tags ?? []} onTagSelect={onTagSearch} />
           </div>
@@ -650,7 +656,6 @@
   <div class="asset-detail-sections">
       <AssetDetailActionPanel
         {panel}
-        bind:panelElement={actionPanelElement}
         {asset}
         {parentTargets}
         {selectedAttachment}
@@ -668,6 +673,8 @@
         bind:checkoutDetails
         {customFieldValues}
         onClose={closeAction}
+        onDismiss={closePanel}
+        onCloseAutoFocus={restoreActionFocus}
         onSave={save}
         onArchive={archive}
         onRestore={restore}
