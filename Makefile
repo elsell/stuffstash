@@ -128,6 +128,8 @@ dex-local-config:
 	STUFF_STASH_API_ORIGIN=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_API_PORT) \
 	STUFF_STASH_DEX_ISSUER=http://$(STUFF_STASH_LOCAL_HOST):$(STUFF_STASH_LOCAL_DEX_PORT)/dex \
 	STUFF_STASH_DEX_HTTP_ADDR=0.0.0.0:$(STUFF_STASH_LOCAL_DEX_PORT) \
+	STUFF_STASH_DEX_FRONTEND_DIR=.stuffstash/local/dex/web \
+	STUFF_STASH_DEX_FRONTEND_OUT=.stuffstash/local/dex/web \
 	STUFF_STASH_DEX_CONFIG_OUT=$(STUFF_STASH_LOCAL_DEX_CONFIG) \
 	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
 	PATH="$(DOCS_PATH)" node scripts/render-local-dex-config.mjs
@@ -155,6 +157,7 @@ compose-up-oidc-lan:
 	STUFF_STASH_WEB_ORIGIN=http://$(STUFF_STASH_LAN_HOST):5173 \
 	STUFF_STASH_API_ORIGIN=http://$(STUFF_STASH_LAN_HOST):8080 \
 	STUFF_STASH_DEX_ISSUER=http://$(STUFF_STASH_LAN_HOST):5556/dex \
+	STUFF_STASH_DEX_FRONTEND_DIR=/srv/dex/web \
 	STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
 	PATH="$(DOCS_PATH)" node scripts/render-local-dex-config.mjs
 	DEX_CONFIG_PATH=.stuffstash/local/dex/config.yaml \
@@ -196,6 +199,7 @@ scripts-test: release-plan-test selfhost-happy-path-check
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs
+	PATH="$(DOCS_PATH)" node scripts/test-dex-branding.mjs
 	PATH="$(DOCS_PATH)" node --check scripts/update-selfhost-image-refs.mjs
 	PATH="$(DOCS_PATH)" node --check scripts/verify-mobile-oidc-pkce.mjs
 

@@ -29,3 +29,9 @@ services:
       - "${DEX_HTTP_PORT:-5556}:5556"
     volumes:
       - ${DEX_CONFIG_PATH:-./deploy/local/dex/config.yaml}:/etc/dex/config.yaml:ro
+      - ./deploy/dex/theme/styles.css:/srv/dex/web/themes/light/styles.css:ro
+      - ./docs/public/brand/stuff-stash-glyph.png:/srv/dex/web/themes/light/logo.png:ro
+      - ./docs/public/brand/stuff-stash-glyph.png:/srv/dex/web/themes/light/favicon.png:ro
+      - ./deploy/dex/templates/header.html:/srv/dex/web/templates/header.html:ro
+      - ./deploy/dex/templates/login.html:/srv/dex/web/templates/login.html:ro
+      - ./deploy/dex/templates/password.html:/srv/dex/web/templates/password.html:ro

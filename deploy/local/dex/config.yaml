@@ -6,6 +6,11 @@ issuer: http://dex:5556/dex
 storage:
   type: memory
 
+frontend:
+  dir: /srv/dex/web
+  issuer: Stuff Stash
+  theme: light
+
 web:
   http: 0.0.0.0:5556
   allowedOrigins:

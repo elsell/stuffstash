@@ -1,0 +1,12 @@
+{{ template "header.html" . }}
+
+<div class="theme-panel">
+  <h1 class="theme-heading">Sign-in complete</h1>
+  <p>Copy this code, return to the application, and paste it there.</p>
+  <div class="theme-form-label">
+    <label for="authorization-code">Authorization code</label>
+  </div>
+  <input id="authorization-code" type="text" class="theme-form-input" value="{{ .Code }}" readonly />
+</div>
+
+{{ template "footer.html" . }}

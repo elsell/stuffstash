@@ -72,6 +72,10 @@ The OIDC Compose override adds:
   host-binary workflow for this topology. `make compose-up-oidc-lan
   STUFF_STASH_LAN_HOST=<host-ip>` remains the named Docker Compose workflow when
   Docker is available.
+- The tracked local, durable self-host, and generated LAN Dex configurations must use the pinned image's `/srv/dex/web` frontend directory, the provider-neutral `Stuff Stash` issuer label, and its reviewed `light` theme contract.
+- Compose must mount the repository-owned Dex theme stylesheet and template overrides read-only onto existing files in the pinned frontend tree. The approved brand glyph is the source for both the Dex logo and favicon; repository verification must reject asset drift.
+- The host-binary Dex workflow must materialize an ignored frontend tree from those same repository-owned templates, styles, and reviewed glyph bytes, then point its generated `frontend.dir` to that tree. Host execution must not require a network fetch or an untracked manual copy.
+- The frontend materializer must accept only a workspace-contained dedicated path ending in `dex/web`, reject the filesystem root, home directory, current working directory, unscoped output paths, destination symlinks, and symlinked existing ancestors before deletion, and clear only the exact entries it owns inside that destination.
 
 ## Verification
 
@@ -90,6 +94,8 @@ The OIDC Compose override adds:
   exchange, refresh exchange, and API mobile metadata. When an API base URL is
   provided, it must verify that the API accepts a refreshed mobile ID token at
   the HTTP boundary.
+- Static verification must cover Dex theme presence, exact frontend configuration, read-only Compose mounting, generated-config parity, and approved glyph identity without requiring Docker.
+- When Docker is available, Dex verification must additionally prove discovery readiness and successful loading of the authorization, theme stylesheet, logo, and favicon responses from the digest-pinned container.
 - The repository must provide an explicit real-SpiceDB adapter verification command that starts pinned local SpiceDB, runs the adapter integration tests, and cleans up.
 - The repository must provide an explicit Garage blob storage verification command that starts a digest-pinned Garage image, runs the S3-compatible blob adapter integration test, and cleans up. Any custom image override must also be pinned with `@sha256:`.
 
