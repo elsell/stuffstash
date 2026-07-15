@@ -271,6 +271,19 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Edit asset');
   });
 
+  it('renders an accessible busy status while asset details load', async () => {
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({ route: { mode: 'asset', assetDetailLoading: true } })
+    });
+
+    const status = document.body.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('Loading asset details');
+    expect(status?.getAttribute('aria-live')).toBe('polite');
+    expect(status?.closest('[aria-busy]')?.getAttribute('aria-busy')).toBe('true');
+    expect(document.body.textContent).not.toContain('Recently changed');
+  });
+
   it('renders import and settings branches with their routed sections', async () => {
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
@@ -351,6 +364,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
     },
     route: {
       routeUnavailable: '',
+      assetDetailLoading: false,
       mode: 'home' as WorkspaceMode,
       searchResults: [],
       searchSuggestions: [],

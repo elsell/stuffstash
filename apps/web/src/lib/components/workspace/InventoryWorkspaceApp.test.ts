@@ -219,6 +219,18 @@ class DelayedAssetRepository extends SeededInventoryRepository {
   }
 }
 
+class UnsafeAssetDetailRepository extends SeededInventoryRepository {
+  async getAsset(): Promise<never> {
+    throw Object.assign(new Error('private database diagnostic must not be shown'), { safeForUser: false as const });
+  }
+}
+
+class ExpiredAssetDetailRepository extends SeededInventoryRepository {
+  async getAsset(): Promise<never> {
+    throw new AuthenticationRequiredError('expired session diagnostic must not be shown');
+  }
+}
+
 class DelayedBrowseRepository extends SeededInventoryRepository {
   releaseBrowseLoad: (() => void) | null = null;
 
@@ -833,6 +845,12 @@ describe('InventoryWorkspaceApp route application', () => {
 
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
     afterNavigateCallbacks.forEach((callback) => callback());
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Activity');
+      expect(document.body.textContent).not.toContain('Loading asset details');
+    });
+
     repository.releaseAssetLoad?.();
 
     await waitFor(() => {
@@ -840,6 +858,62 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Blue folder');
     });
+  });
+
+  it('shows an explicit detail loading state instead of stale Home content', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => expect(repository.releaseAssetLoad).toBeTruthy());
+
+    expect(document.body.textContent).toContain('Loading asset details');
+    expect(document.body.textContent).not.toContain('Recently changed');
+    repository.releaseAssetLoad?.();
+    await waitFor(() => expect(document.body.textContent).toContain('Passport'));
+  });
+
+  it('releases route control so Browse and Import initialize before an obsolete detail request resolves', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(repository.releaseAssetLoad).toBeTruthy());
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/browse');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    await waitFor(() => {
+      expect(document.body.querySelector('h1')?.textContent).toBe('Browse');
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.querySelector<HTMLButtonElement>('.header-add')?.disabled).toBe(false);
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/import');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    await waitFor(() => expect(document.body.querySelector('h1')?.textContent).toBe('Imports'));
+
+    repository.releaseAssetLoad?.();
+    await waitFor(() => expect(document.body.querySelector('h1')?.textContent).toBe('Imports'));
+  });
+
+  it('does not render unsafe asset-detail diagnostics in the unavailable state or toast', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
+      new UnsafeAssetDetailRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => expect(document.body.textContent).toContain('Workspace unavailable'));
+    expect(document.body.textContent).toContain('Asset details could not be loaded. Try again.');
+    expect(document.body.textContent).not.toContain('private database diagnostic');
+  });
+
+  it('expires the session for a typed asset-detail authentication failure without rendering its message', async () => {
+    const onSessionExpired = vi.fn();
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
+      new ExpiredAssetDetailRepository(structuredClone(seed)),
+      { onSessionExpired }
+    );
+
+    await waitFor(() => expect(onSessionExpired).toHaveBeenCalledOnce());
+    expect(document.body.textContent).not.toContain('expired session diagnostic');
   });
 
   it('does not leave global actions busy after leaving an in-flight Browse request', async () => {
@@ -905,10 +979,16 @@ describe('InventoryWorkspaceApp route application', () => {
     afterNavigateCallbacks.forEach((callback) => callback());
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
     afterNavigateCallbacks.forEach((callback) => callback());
-    repository.releaseAssetLoad?.();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.textContent).not.toContain('Activity');
+    });
+
+    repository.releaseAssetLoad?.();
+
+    await waitFor(() => {
       expect(document.body.textContent).toContain('Passport');
       expect(document.body.textContent).not.toContain('Activity');
     });

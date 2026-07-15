@@ -26,6 +26,7 @@
   } from '$lib/application/workspaceAppNavigation';
   import {
     applyLoadedWorkspaceAssetDetail,
+    assetDetailFailureMessage,
     loadWorkspaceAssetDetail,
     refreshWorkspaceAssetAttachments
   } from '$lib/application/workspaceAssetDetail';
@@ -154,6 +155,7 @@
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
   let assetDetailRequestId = 0;
+  let assetDetailLoading = $state(false);
   let applyingRoute = false;
   let activeRouteApplicationKey: string | null = null;
   let queuedRoute: { route: WorkspaceRouteState; href: string } | null = null;
@@ -841,9 +843,30 @@
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
     const routeKey = routeApplicationKey(route);
     if (activeRouteApplicationKey) {
-      if (routeKey === activeRouteApplicationKey) {
+      if (assetDetailLoading && routeKey !== activeRouteApplicationKey) {
+        invalidateAssetDetailLoad();
+        busy = false;
+        activeRouteApplicationKey = null;
+        applyingRoute = false;
         queuedRoute = null;
+        await applyRoute(route);
+        return;
+      }
+      if (routeKey === activeRouteApplicationKey) {
+        if (queuedRoute) {
+          invalidateAssetDetailLoad();
+          routeUnavailable = '';
+          mode = route.mode;
+          settingsSection = route.settingsSection;
+          assetDetailLoading = route.mode === 'asset';
+          queuedRoute = { route, href: currentWorkspaceHref() };
+        }
       } else {
+        invalidateAssetDetailLoad();
+        routeUnavailable = '';
+        mode = route.mode;
+        settingsSection = route.settingsSection;
+        assetDetailLoading = route.mode === 'asset';
         browseRequestId += 1;
         browseBusy = false;
         browseLoadingMore = false;
@@ -988,6 +1011,7 @@
           loaded = await loadAssetDetail(data.context.selectedTenantId, data.context.selectedInventoryId, route.assetId);
         }
         if (!loaded) {
+          if (activeRouteApplicationKey !== routeKey || queuedRoute) return;
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
         }
@@ -1075,13 +1099,13 @@
     } finally {
       if (activeRouteApplicationKey === routeKey) {
         activeRouteApplicationKey = null;
-      }
-      applyingRoute = false;
-      const nextRoute = queuedRoute;
-      queuedRoute = null;
-      if (nextRoute) {
-        window.history.replaceState({}, '', nextRoute.href);
-        void applyRoute(currentWorkspaceRoute());
+        applyingRoute = false;
+        const nextRoute = queuedRoute;
+        queuedRoute = null;
+        if (nextRoute) {
+          window.history.replaceState({}, '', nextRoute.href);
+          void applyRoute(currentWorkspaceRoute());
+        }
       }
     }
   }
@@ -1485,6 +1509,7 @@
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {
     const requestId = ++assetDetailRequestId;
+    assetDetailLoading = true;
     busy = true;
     error = '';
     selectedLocationId = null;
@@ -1518,10 +1543,13 @@
       if (handleSessionExpired(caught)) {
         return false;
       }
-      error = caught instanceof Error ? caught.message : 'Unable to load asset.';
+      error = assetDetailFailureMessage(caught);
       return false;
     } finally {
-      busy = false;
+      if (requestId === assetDetailRequestId) {
+        assetDetailLoading = false;
+        busy = false;
+      }
     }
   }
 
@@ -1595,6 +1623,7 @@
 
   function invalidateAssetDetailLoad(): void {
     assetDetailRequestId += 1;
+    assetDetailLoading = false;
   }
 
   function updateCustomizationContext(assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]): void {
@@ -1648,6 +1677,7 @@
     status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed }}
     route={{
       routeUnavailable,
+      assetDetailLoading,
       mode,
       searchResults,
       searchSuggestions,

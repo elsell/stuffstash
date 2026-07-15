@@ -55,6 +55,7 @@
 
   export type RouteContentRouteState = {
     routeUnavailable: string;
+    assetDetailLoading: boolean;
     mode: WorkspaceMode;
     searchResults: SearchResult[];
     searchSuggestions: Asset[];
@@ -165,6 +166,7 @@
     workspaceUnavailableRoutePresentation
   } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import AssetDetail from './AssetDetail.svelte';
   import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
@@ -208,6 +210,14 @@
       {#if noInventoryPresentation.actionLabel}
         <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>{noInventoryPresentation.actionLabel}</Button.Root>
       {/if}
+    </div>
+  </section>
+{:else if route.assetDetailLoading}
+  <section class="workspace-main" aria-busy="true">
+    <div class="empty-state spacious" role="status" aria-live="polite">
+      <LoaderCircle class="size-6 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
+      <h1>Loading asset details</h1>
+      <p>Getting the latest details and files.</p>
     </div>
   </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}

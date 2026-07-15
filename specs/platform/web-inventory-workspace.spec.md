@@ -443,6 +443,7 @@ Asset detail loading and actions must use real API-backed boundaries:
 - Moving an asset must update `parentAssetId` through the same API-backed update path and must use valid parent targets from the current inventory, not free-form IDs.
 - Edit and move affordances must require the exact `edit_asset` permission from the selected inventory access metadata.
 - Save success, save failure, loading, and denied states must be explicit in the detail workflow.
+- While an initial asset-detail read is pending, the routed detail surface must replace stale Home or previously selected content with an explicit `role="status"`, polite-live, busy loading state. A newer route immediately cancels the pending-detail presentation and renders its own surface without waiting for the obsolete request. Detail authentication failures must retain their typed session-expiry meaning through the application helper so the shell can end the session. Detail failures may render adapter text only when it is explicitly marked safe and specific for users; generic HTTP or adapter messages, transport, infrastructure, and internal server diagnostics must never appear in the unavailable surface, toast, or other rendered copy.
 - Svelte components must not import generated SDK DTOs or call generated client methods directly for detail, edit, or move behavior.
 
 ## Add Flow
