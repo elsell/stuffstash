@@ -68,14 +68,6 @@ describe('workspace settings navigation', () => {
         icon: 'activity',
         href: '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
         current: false
-      },
-      {
-        value: 'administration',
-        label: 'Admin',
-        description: 'Tenant and inventory administration',
-        icon: 'user-cog',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/administration',
-        current: false
       }
     ]);
   });
@@ -258,12 +250,10 @@ describe('workspace settings navigation', () => {
   it('builds administration panel presentation from tenant configuration availability', () => {
     expect(settingsAdministrationPresentation({ canConfigureTenant: true })).toEqual({
       title: 'Administration',
-      description: 'Tenant-level administration is planned for this workspace.',
-      actionLabel: 'Tenant administration unavailable',
-      actionDisabled: true
+      description: 'There are no administration actions available in the web app yet.'
     });
     expect(settingsAdministrationPresentation({ canConfigureTenant: false }).description).toBe(
-      'Tenant administration is not available for this account.'
+      'This account does not have access to tenant administration.'
     );
   });
 });

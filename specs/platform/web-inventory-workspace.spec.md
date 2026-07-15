@@ -502,6 +502,7 @@ Inventory settings must be structured as focused sections rather than one long m
 - `activity` for audit/history when exposed.
 - Activity must group records by calendar day, keep the initial page bounded, and place the `Load older activity` action after the grouped list. Source, actor, target, and technical details remain secondary to the human-readable action and time.
 - `administration` for tenant or inventory administrative actions and denied states.
+- Administration must not be exposed as a settings destination when the web client has no supported administrative action. A directly opened administration route must remain honest and explain that no actions are available without presenting a disabled control as a call to action.
 - The settings section navigator must behave like navigation, not a generic filter bar: each section control must expose a canonical `href`, current section state, icon, title, and short description.
 - The settings section navigator must remain compact and scannable on desktop, and collapse into a compact mobile pattern on narrow screens that exposes all available sections without clipping labels or consuming the first viewport before the active settings task.
 - Settings surfaces must collapse before controls, panels, or invitation lists force horizontal page overflow at tablet and narrow desktop widths.
