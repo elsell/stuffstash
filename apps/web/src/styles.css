@@ -2690,7 +2690,7 @@ dd {
   }
 
   .workspace-header {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 12px 14px;
   }
 

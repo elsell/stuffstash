@@ -9,6 +9,7 @@
     parentTargets,
     selectedAssetForDetail
   } from '$lib/application/workspace';
+  import { accountDisplayLabel } from '$lib/application/workspaceShellNavigation';
   import { resolveWorkspaceAddRoute } from '$lib/application/workspaceAddRoute';
   import {
     assetDetailBackHref as workspaceAssetDetailBackHref,
@@ -170,7 +171,7 @@
   let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
   let editAssetAllowed = $derived(canEditAsset(selectedInventory));
   let canCreateStarter = $derived(!data.context.selectedTenantId || canCreateInventory(selectedTenant));
-  let userLabel = $derived(data.context.principal.email ?? data.context.principal.id);
+  let userLabel = $derived(accountDisplayLabel(data.context.principal));
 
   onMount(() => {
     void applyRoute(currentWorkspaceRoute());
@@ -1512,6 +1513,7 @@
     onSearch={() => { void search(); }}
     onOpenSearchAsset={openSearchAsset}
     onOpenAdd={openAdd}
+    onOpenAccountSettings={() => openSettingsSection('overview')}
     {onSignOut}
   >
   <InventoryWorkspaceRouteContent

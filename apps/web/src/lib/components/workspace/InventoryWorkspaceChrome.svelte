@@ -22,6 +22,7 @@
     onSearch: () => void;
     onOpenSearchAsset: (asset: Asset) => void;
     onOpenAdd: (kind: AssetKind) => void;
+    onOpenAccountSettings: () => void;
     onSignOut: () => void;
     children?: Snippet;
   };
@@ -32,7 +33,7 @@
   import SideNav from './SideNav.svelte';
   import TopHeader from './TopHeader.svelte';
 
-  let mobileContextOpen = $state(false);
+  let mobileSurfaceOpen = $state(false);
 
   let {
     tenants,
@@ -53,6 +54,7 @@
     onSearch,
     onOpenSearchAsset,
     onOpenAdd,
+    onOpenAccountSettings,
     onSignOut,
     children
   }: InventoryWorkspaceChromeProps = $props();
@@ -72,6 +74,7 @@
     {onSelectTenant}
     {onSelectInventory}
     {onModeChange}
+    {onOpenAccountSettings}
     {onSignOut}
   />
 
@@ -84,22 +87,25 @@
       suggestions={searchSuggestions}
       bind:query={searchQuery}
       {canCreateAsset}
+      {userLabel}
       showSearch={mode !== 'search' && mode !== 'browse'}
       {onSelectTenant}
       {onSelectInventory}
       {onSearch}
       onOpenAsset={onOpenSearchAsset}
       {onOpenAdd}
-      onMobileContextOpenChange={(open) => { mobileContextOpen = open; }}
+      onOpenSettings={onOpenAccountSettings}
+      {onSignOut}
+      onMobileSurfaceOpenChange={(open) => { mobileSurfaceOpen = open; }}
     />
 
-    <main class="workspace-route-content" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
+    <main class="workspace-route-content" inert={mobileSurfaceOpen ? true : undefined} aria-hidden={mobileSurfaceOpen ? 'true' : undefined}>
       {@render children?.()}
     </main>
   </div>
 
   {#if showMobileNavigation}
-    <div class="mobile-nav-shell" inert={mobileContextOpen ? true : undefined} aria-hidden={mobileContextOpen ? 'true' : undefined}>
+    <div class="mobile-nav-shell" inert={mobileSurfaceOpen ? true : undefined} aria-hidden={mobileSurfaceOpen ? 'true' : undefined}>
       <MobileNav
         {mode}
         {selectedTenantId}

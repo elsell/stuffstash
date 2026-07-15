@@ -54,6 +54,9 @@ function mountHeader(props: Partial<ComponentProps<typeof TopHeader>> = {}) {
         selectedAssets.push(selected);
       },
       onOpenAdd: () => {},
+      userLabel: 'owner@example.com',
+      onOpenSettings: () => {},
+      onSignOut: () => {},
       ...props
     }
   });
@@ -71,6 +74,14 @@ afterEach(() => {
 });
 
 describe('TopHeader', () => {
+  it('provides the mobile shell with an account control', () => {
+    mountHeader();
+
+    const account = document.body.querySelector<HTMLButtonElement>('[aria-label="Open account menu"]');
+    expect(account).not.toBeNull();
+    expect(getComputedStyle(account!).minHeight).toBe('44px');
+  });
+
   it('opens search suggestions from the keyboard', async () => {
     const { selectedAssets } = mountHeader({
       suggestions: [asset('tape', 'Tape measure', 'blob:tape-photo'), asset('tags', 'Gift tags')]

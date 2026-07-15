@@ -7,10 +7,11 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { searchAssetHref } from '$lib/application/workspaceSearch';
-  import { shellAddOptions, type ShellAddOption } from '$lib/application/workspaceShellNavigation';
+  import { shellAddOptions, shellModeHref, type ShellAddOption } from '$lib/application/workspaceShellNavigation';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import SearchSuggestions from './SearchSuggestions.svelte';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
+  import AccountMenu from './AccountMenu.svelte';
 
   let {
     tenants,
@@ -20,13 +21,16 @@
     suggestions,
     query = $bindable(''),
     canCreateAsset,
+    userLabel,
     showSearch = true,
     onSelectTenant,
     onSelectInventory,
     onSearch,
     onOpenAsset,
     onOpenAdd,
-    onMobileContextOpenChange
+    onOpenSettings,
+    onSignOut,
+    onMobileSurfaceOpenChange
   }: {
     tenants: Tenant[];
     inventories: Inventory[];
@@ -35,13 +39,16 @@
     suggestions: Asset[];
     query: string;
     canCreateAsset: boolean;
+    userLabel: string;
     showSearch?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd: (kind: AssetKind) => void;
-    onMobileContextOpenChange?: (open: boolean) => void;
+    onOpenSettings: () => void;
+    onSignOut: () => void;
+    onMobileSurfaceOpenChange?: (open: boolean) => void;
   } = $props();
 
   let selectedInventoryId = $derived(inventory?.id ?? '');
@@ -57,6 +64,7 @@
   let showNoSuggestions = $derived(searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0);
   let addAvailability = $derived(workspaceAddAvailability({ hasInventory: !!inventory, canCreateAsset }));
   let addOptions = $derived(shellAddOptions(selectedTenantId || null, selectedInventoryId || null));
+  let accountSettingsHref = $derived(shellModeHref('settings', selectedTenantId || null, selectedInventoryId || null));
   const suggestionIdPrefix = 'global-search-suggestion';
   const addDeniedNoteId = 'header-add-denied';
 
@@ -197,9 +205,17 @@
       {selectedInventoryId}
       {onSelectTenant}
       {onSelectInventory}
-      onOpenChange={onMobileContextOpenChange}
+      onOpenChange={onMobileSurfaceOpenChange}
     />
   </div>
+  <AccountMenu
+    mobile
+    {userLabel}
+    settingsHref={accountSettingsHref}
+    {onOpenSettings}
+    {onSignOut}
+    onOpenChange={onMobileSurfaceOpenChange}
+  />
   {#if showSearch}
     <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
       <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>

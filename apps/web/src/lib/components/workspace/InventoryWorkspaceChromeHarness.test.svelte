@@ -20,6 +20,7 @@
     onSearch,
     onOpenSearchAsset,
     onOpenAdd,
+    onOpenAccountSettings,
     onSignOut
   }: InventoryWorkspaceChromeProps = $props();
 </script>
@@ -45,6 +46,7 @@
   {onSearch}
   {onOpenSearchAsset}
   {onOpenAdd}
+  {onOpenAccountSettings}
   {onSignOut}
 >
   <section class="workspace-main" aria-labelledby="fixture-main-title">

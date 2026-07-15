@@ -204,7 +204,10 @@ Desktop:
 - The side navigation must not include a Search item when search is already globally available in the top header.
 - The side navigation must use the same primary information architecture as mobile: Home and Browse.
 - The side navigation must contain durable destinations, not duplicate global actions.
-- The profile entry belongs at the bottom of the side navigation.
+- The account entry belongs at the bottom of the side navigation and must identify the signed-in account before exposing account actions.
+- The desktop account entry uses the shared `DropdownMenu` primitive. Its closed state is one clearly interactive row rather than loose identity text beside a separate action, and its menu exposes the current account, a canonical inventory `Settings` destination, and `Sign out`.
+- Account surfaces show a verified email when available. They must not expose an opaque principal ID as fallback identity copy; when no email is available they use calm product copy such as `Signed-in account`.
+- `Sign out` is visually and semantically separated from navigation, uses the shared destructive treatment consistently on desktop and mobile, and acts immediately without a confirmation dialog.
 
 Mobile:
 
@@ -215,6 +218,9 @@ Mobile:
 - The bottom navigation must include Home, Browse, and a central Add action.
 - The central Add action must open the same add tray behavior as desktop.
 - Browse must route to the unified Browse surface rather than duplicating Home.
+- The compact mobile header must include a named account control because the desktop side-navigation account entry is unavailable at mobile widths. It opens a shared bottom `Sheet` that identifies the current account and exposes the same canonical inventory `Settings` destination and `Sign out` action as desktop.
+- Opening the mobile account sheet must make route content and bottom navigation inert and hidden from assistive technology, lock background scrolling, and restore focus to the account trigger when dismissed.
+- Account triggers and actions must provide at least 44 CSS-pixel targets. The UI must not imply editable profile fields until a profile-editing contract is specified and implemented.
 
 ## Tenant And Inventory Context
 

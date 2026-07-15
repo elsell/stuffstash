@@ -4,13 +4,13 @@
   import Compass from '@lucide/svelte/icons/compass';
   import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
-  import LogOut from '@lucide/svelte/icons/log-out';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { desktopShellNavigationGroups, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
+  import { desktopShellNavigationGroups, shellModeHref, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
   import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
+  import AccountMenu from './AccountMenu.svelte';
 
   let {
     tenants,
@@ -20,9 +20,11 @@
     mode,
     settingsSection,
     userLabel,
+    disableAccountPortal = false,
     onSelectTenant,
     onSelectInventory,
     onModeChange,
+    onOpenAccountSettings,
     onSignOut
   }: {
     tenants: Tenant[];
@@ -32,9 +34,11 @@
     mode: WorkspaceMode;
     settingsSection: SettingsSection;
     userLabel: string;
+    disableAccountPortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onModeChange: (mode: WorkspaceMode) => void;
+    onOpenAccountSettings: () => void;
     onSignOut: () => void;
   } = $props();
 
@@ -49,6 +53,7 @@
       settingsSection
     })
   );
+  let accountSettingsHref = $derived(shellModeHref('settings', selectedTenantId || null, selectedInventoryId || null));
 
   const destinationIcons: Record<ShellNavigationIcon, Component> = {
     home: Home,
@@ -111,7 +116,12 @@
   </nav>
 
   <div class="side-nav-footer">
-    <p>{userLabel}</p>
-    <Button.Root variant="ghost" onclick={onSignOut}><LogOut /> Sign out</Button.Root>
+    <AccountMenu
+      {userLabel}
+      settingsHref={accountSettingsHref}
+      onOpenSettings={onOpenAccountSettings}
+      {onSignOut}
+      disablePortal={disableAccountPortal}
+    />
   </div>
 </aside>

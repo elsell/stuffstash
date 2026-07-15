@@ -1,4 +1,4 @@
-import type { AssetKind, Inventory, WorkspaceMode } from '$lib/domain/inventory';
+import type { AssetKind, Inventory, Principal, WorkspaceMode } from '$lib/domain/inventory';
 import { assetKindLabel, assetKinds, canViewImportJobs } from '$lib/domain/inventory';
 import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from './workspaceRoute';
 
@@ -32,6 +32,11 @@ export interface ShellAddOption {
   kind: AssetKind;
   label: string;
   href: string;
+}
+
+export function accountDisplayLabel(principal: Principal): string {
+  const email = principal.email?.trim();
+  return email || 'Signed-in account';
 }
 
 type ShellNavigationDefinition = Omit<ShellNavigationDestination, 'href' | 'current'>;

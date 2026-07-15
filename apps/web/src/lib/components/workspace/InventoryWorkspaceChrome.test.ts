@@ -99,6 +99,24 @@ describe('InventoryWorkspaceChrome', () => {
     expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
   });
 
+  it('makes route content and mobile navigation inert while the account sheet is open', async () => {
+    component = mount(InventoryWorkspaceChromeHarness, {
+      target: document.body,
+      props: chromeProps()
+    });
+
+    const account = document.body.querySelector<HTMLButtonElement>('[aria-label="Open account menu"]');
+    account?.click();
+    await flush();
+
+    const routeContent = document.body.querySelector<HTMLElement>('.workspace-route-content');
+    const mobileNavigation = document.body.querySelector<HTMLElement>('.mobile-nav-shell');
+    expect(routeContent?.getAttribute('aria-hidden')).toBe('true');
+    expect(isInert(routeContent!)).toBe(true);
+    expect(mobileNavigation?.getAttribute('aria-hidden')).toBe('true');
+    expect(isInert(mobileNavigation!)).toBe(true);
+  });
+
   it.each(['asset', 'location'] as const)('suppresses bottom navigation on focused %s task surfaces', (mode) => {
     component = mount(InventoryWorkspaceChromeHarness, {
       target: document.body,
@@ -155,6 +173,7 @@ function chromeProps(overrides: Partial<InventoryWorkspaceChromeProps> = {}): In
     onSearch: () => {},
     onOpenSearchAsset: () => {},
     onOpenAdd: () => {},
+    onOpenAccountSettings: () => {},
     onSignOut: () => {},
     ...overrides
   };
@@ -191,4 +210,11 @@ function requiredShell(): HTMLElement {
 function isInert(element: HTMLElement): boolean {
   const candidate = element as HTMLElement & { inert?: boolean };
   return typeof candidate.inert === 'boolean' ? candidate.inert : element.hasAttribute('inert');
+}
+
+async function flush(): Promise<void> {
+  await Promise.resolve();
+  await tick();
+  await Promise.resolve();
+  await tick();
 }

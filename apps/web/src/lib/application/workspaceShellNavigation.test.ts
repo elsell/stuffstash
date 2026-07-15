@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Inventory } from '$lib/domain/inventory';
 import {
+  accountDisplayLabel,
   contextInventoryHref,
   desktopShellNavigationGroups,
   mobileShellNavigationItems,
@@ -18,6 +19,12 @@ const inventory: Inventory = {
 };
 
 describe('workspace shell navigation helpers', () => {
+  it('uses verified email for account copy without leaking an opaque principal ID', () => {
+    expect(accountDisplayLabel({ id: 'principal-secret', email: 'owner@example.com' })).toBe('owner@example.com');
+    expect(accountDisplayLabel({ id: 'principal-secret' })).toBe('Signed-in account');
+    expect(accountDisplayLabel({ id: 'principal-secret', email: '   ' })).toBe('Signed-in account');
+  });
+
   it('derives durable shell mode hrefs', () => {
     expect(shellModeHref('home', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one');
     expect(shellModeHref('browse', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/browse');
