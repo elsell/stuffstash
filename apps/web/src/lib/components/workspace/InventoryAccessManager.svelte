@@ -513,32 +513,15 @@
       />
     {/if}
 
-    <form class="access-form" onsubmit={(event) => { event.preventDefault(); void addGrant(); }}>
+    <form class="access-form invitation-form" onsubmit={(event) => { event.preventDefault(); void invite(); }}>
       <div class="field-stack">
-        <Label for="grant-principal">Principal ID</Label>
-        <Input id="grant-principal" bind:value={principalId} placeholder="principal-id" />
-      </div>
-      <div class="field-stack">
-        <span class="field-label">Grant relationship</span>
-        <SegmentedControl
-          label="Grant relationship"
-          value={grantRelationship}
-          options={relationshipOptions}
-          onSelect={(value) => { grantRelationship = value as InventoryAccessRelationship; }}
-        />
-      </div>
-      <Button.Root type="submit" disabled={busy || principalId.trim().length === 0}>Grant access</Button.Root>
-    </form>
-
-    <form class="access-form" onsubmit={(event) => { event.preventDefault(); void invite(); }}>
-      <div class="field-stack">
-        <Label for="invite-email">Invitee email</Label>
+        <Label for="invite-email">Email address</Label>
         <Input id="invite-email" type="email" bind:value={invitationEmail} placeholder="person@example.com" />
       </div>
       <div class="field-stack">
-        <span class="field-label">Invitation relationship</span>
+        <span class="field-label">Access level</span>
         <SegmentedControl
-          label="Invitation relationship"
+          label="Invitation access level"
           value={invitationRelationship}
           options={relationshipOptions}
           onSelect={(value) => { invitationRelationship = value as InventoryAccessRelationship; }}
@@ -547,7 +530,25 @@
       <Button.Root type="submit" disabled={busy || invitationEmail.trim().length === 0}>Create invite</Button.Root>
     </form>
 
-    <div class="access-columns">
+    <details class="advanced-access">
+      <summary>Advanced account grants</summary>
+      <p>Use the account ID supplied by your identity provider or administrator.</p>
+      <form class="access-form" onsubmit={(event) => { event.preventDefault(); void addGrant(); }}>
+        <div class="field-stack">
+          <Label for="grant-principal">Account ID</Label>
+          <Input id="grant-principal" bind:value={principalId} placeholder="account-id" />
+        </div>
+        <div class="field-stack">
+          <span class="field-label">Access level</span>
+          <SegmentedControl
+            label="Direct grant access level"
+            value={grantRelationship}
+            options={relationshipOptions}
+            onSelect={(value) => { grantRelationship = value as InventoryAccessRelationship; }}
+          />
+        </div>
+        <Button.Root type="submit" disabled={busy || principalId.trim().length === 0}>Grant access</Button.Root>
+      </form>
       <div class="access-list" aria-label="Direct grants">
         <h3>Direct grants</h3>
         {#if grantListStatus.kind !== 'none'}
@@ -567,7 +568,9 @@
           {/if}
         {/if}
       </div>
+    </details>
 
+    <div class="access-columns">
       <div class="access-list" aria-label="Invitations">
         <div class="access-list-header">
           <h3>Invitations</h3>

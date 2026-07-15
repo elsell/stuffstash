@@ -476,6 +476,8 @@ The workspace must use consistent controls for repeated interaction patterns:
 - Settings relationship selectors, status filters, and audit scope filters must use the shared segmented-control composition rather than one-off pressed-button groups.
 - Settings status and scope filters that correspond to durable settings subsection state, such as access invitation status and activity audit scope, must expose canonical `href` values while preserving ordinary in-app filtering behavior.
 - Settings access invitation rows must keep identity, relationship/status metadata, status badge, and row actions visually distinct at desktop and mobile widths instead of compressing them into a crowded single line.
+- Settings access must lead with email invitations in ordinary user language. Direct account grants are an advanced workflow and must label their identifier as `Account ID`, explain where that value comes from, and remain visually subordinate to invitation creation.
+- Invitation filters may horizontally scroll at narrow widths, but every option and row action must retain a 44-pixel touch target and the selected state must remain visible without clipping.
 - Route-backed segmented-control options must expose link semantics with canonical `href` values, `aria-current` for the selected option, and the same visible selected state as button-backed options.
 - Custom field target pickers must expose visible selected state, `aria-pressed` state, and a calm empty state when no custom asset types are eligible.
 - Custom asset type, enum, and custom field target choice grids must use a shared workspace choice-grid composition so selected-state semantics, disabled behavior, empty state copy, and button styling do not drift between add, edit, and settings surfaces.

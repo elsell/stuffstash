@@ -68,6 +68,32 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).toContain('friend@example.test');
   });
 
+  it('leads with email invitations and keeps account-id grants advanced', async () => {
+    const { repository } = fakeAccessRepository();
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: { tenant: tenant('tenant-one'), inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']), repository }
+    });
+    await flush();
+
+    const inviteForm = requiredElement('.invitation-form');
+    const advanced = requiredElement('.advanced-access');
+    expect(inviteForm.textContent).toContain('Email address');
+    expect(inviteForm.textContent).toContain('Access level');
+    expect(inviteForm.querySelector('[role="group"][aria-label="Invitation access level"]')).not.toBeNull();
+    expect(advanced.querySelector('summary')?.textContent).toContain('Advanced account grants');
+    expect(advanced.textContent).toContain('Account ID');
+    expect(advanced.textContent).toContain('identity provider');
+    expect(advanced.querySelector('[role="group"][aria-label="Direct grant access level"]')).not.toBeNull();
+    expect((advanced as HTMLDetailsElement).open).toBe(false);
+    expect(requiredElement('[aria-label="Direct grants"]').closest('details')).toBe(advanced);
+    expect(advanced.contains(requiredElement('[aria-label="Invitations"]'))).toBe(false);
+    expect(
+      Boolean(inviteForm.compareDocumentPosition(advanced) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+    expect(document.body.textContent).not.toContain('Principal ID');
+  });
+
   it('renders invitation rows with separated metadata, status, and actions', async () => {
     const { repository } = fakeAccessRepository();
 
@@ -527,7 +553,7 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).toContain('you cannot manage sharing');
   });
 
-  it('uses accessible selected controls for relationship selection', async () => {
+  it('uses accessible selected controls for access-level selection', async () => {
     const { repository } = fakeAccessRepository();
 
     component = mount(InventoryAccessManager, {
@@ -536,8 +562,8 @@ describe('InventoryAccessManager', () => {
     });
     await flush();
 
-    const grantField = segmentedGroup('Grant relationship');
-    const invitationField = segmentedGroup('Invitation relationship');
+    const grantField = segmentedGroup('Direct grant access level');
+    const invitationField = segmentedGroup('Invitation access level');
 
     expect(grantField?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
     expect(grantField?.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Viewer');

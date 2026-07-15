@@ -1083,8 +1083,31 @@ h2 {
 
 .access-columns {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+
+.advanced-access {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--secondary);
+}
+
+.advanced-access summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 44px;
+}
+
+.advanced-access > p {
+  margin: 0 0 var(--space-4);
+  color: var(--muted-foreground);
+}
+
+.advanced-access[open] > .access-list {
+  margin-top: var(--space-6);
 }
 
 @media (max-width: 1180px) {
