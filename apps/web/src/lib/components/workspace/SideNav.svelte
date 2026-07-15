@@ -112,6 +112,6 @@
 
   <div class="side-nav-footer">
     <p>{userLabel}</p>
-    <Button.Root variant="ghost" size="sm" onclick={onSignOut}><LogOut /> Sign out</Button.Root>
+    <Button.Root variant="ghost" onclick={onSignOut}><LogOut /> Sign out</Button.Root>
   </div>
 </aside>

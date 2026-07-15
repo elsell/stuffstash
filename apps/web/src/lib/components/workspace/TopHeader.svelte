@@ -217,7 +217,7 @@
           oninput={() => { activeSuggestionIndex = -1; }}
           onkeydown={handleSearchKeydown}
         />
-        <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
+        <Button.Root type="submit" variant="ghost" size="icon" aria-label="Run search"><Search /></Button.Root>
       </form>
       <SearchSuggestions
         id="global-search-suggestions"
