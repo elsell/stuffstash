@@ -2121,7 +2121,8 @@ dd {
 }
 
 .tag-option {
-  height: 30px;
+  min-width: 44px;
+  height: 44px;
   padding-inline: 9px;
   gap: 6px;
 }
@@ -2131,8 +2132,8 @@ dd {
 }
 
 .pending-tag [data-slot="button"] {
-  width: 20px;
-  height: 20px;
+  width: 44px;
+  height: 44px;
 }
 
 .new-tag-row {
@@ -2400,7 +2401,7 @@ dd {
 
 .photo-label {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 44px;
   align-items: center;
   gap: 6px;
   padding: 0 10px;

@@ -228,6 +228,7 @@ Add:
 - Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
 - Modal add and edit surfaces must make the background workspace inert and hidden from assistive technology while the modal is open.
 - On mobile, the add tray must behave like a focused sheet with usable viewport height and fixed completion controls so save/cancel actions remain reachable while long custom-field or parent-picker content scrolls.
+- The Add heading and its trailing close action must remain one stable row at narrow widths. Every Add button, segmented choice, text/search input, and completion action must provide at least a 44px hit region at desktop and mobile widths.
 - Parent-picker destinations in mobile add and edit trays must scroll with enough bottom clearance that focused or selected destination controls are not hidden under sticky action bars.
 
 ## Mobile Navigation
@@ -384,6 +385,8 @@ The add surface:
 - The tray must show a compact live summary of the selected kind, parent destination, and photo count so users can confirm what will be created without rescanning the whole form.
 - On mobile, the live summary must remain a single compact row so it does not displace the primary create fields or completion controls. The destination value must receive more horizontal priority than the kind and photo-count values, and full summary values must remain available to assistive technology when visible text is elided.
 - Must collect name/title.
+- Photo-source copy must be capability-aware. Desktop and pointer-precise environments use `Choose photos`; `Take photo` may appear only when a coarse-pointer device exposes browser media-capture capability, and denial or loss of capability must leave the ordinary chooser available.
+- Add and edit tag choices must use locale-aware, case-insensitive natural order. A collapsed long tag list must keep every selected tag available as an interactive option so users can deselect it without first discovering or opening the full-list disclosure.
 - Must collect a valid parent target when required.
 - Saving a new location must land on the canonical focused location route for the created location, `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}`, rather than the generic asset detail route.
 - Add routes may include a `parent` query parameter to preselect an existing valid location or container parent. Location view add actions must use this route-backed preselection rather than component-local-only state.
