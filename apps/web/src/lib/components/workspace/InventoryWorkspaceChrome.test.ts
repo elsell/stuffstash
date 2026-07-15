@@ -60,8 +60,10 @@ describe('InventoryWorkspaceChrome', () => {
     linkContaining('Browse').click();
     document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.click();
     document.body.querySelector<HTMLButtonElement>('.header-add')?.click();
-    await tick();
-    addMenuItemContaining('Location').click();
+    await waitForAddMenu();
+    const locationAction = addMenuItemContaining('Location');
+    expect(locationAction.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/add/location');
+    locationAction.click();
 
     expect(selectedModes).toContain('browse');
     expect(addKinds).toContain('item');
@@ -167,6 +169,7 @@ function chromeProps(overrides: Partial<InventoryWorkspaceChromeProps> = {}): In
     searchSuggestions: [asset],
     searchQuery: '',
     canCreateAsset: true,
+    disablePortal: true,
     onSelectTenant: () => {},
     onSelectInventory: () => {},
     onModeChange: () => {},
@@ -217,4 +220,13 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+async function waitForAddMenu(): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (!document.body.querySelector('[role="menu"]')) {
+    if (Date.now() >= deadline) throw new Error('Timed out waiting for Add menu');
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+    await flush();
+  }
 }

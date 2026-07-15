@@ -14,6 +14,7 @@
     searchQuery = $bindable(''),
     canCreateAsset,
     modalOpen,
+    disablePortal,
     onSelectTenant,
     onSelectInventory,
     onModeChange,
@@ -40,6 +41,7 @@
   bind:searchQuery
   {canCreateAsset}
   {modalOpen}
+  {disablePortal}
   {onSelectTenant}
   {onSelectInventory}
   {onModeChange}

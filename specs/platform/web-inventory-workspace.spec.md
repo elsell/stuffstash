@@ -203,7 +203,7 @@ Desktop:
 
 - A sticky left side navigation must be visible at large viewport widths.
 - A top header must remain available for global search and add actions.
-- The side navigation must not include a Search item when search is already globally available in the top header.
+- On desktop destinations that already own the primary search field, the header must become a compact contextual toolbar rather than reserving an empty search-height band: it names the current inventory and keeps Add available without duplicating search.
 - The side navigation must use the same primary information architecture as mobile: Home and Browse.
 - The side navigation must contain durable destinations, not duplicate global actions.
 - The account entry belongs at the bottom of the side navigation and must identify the signed-in account before exposing account actions.
@@ -257,6 +257,7 @@ Mobile:
 - The open mobile context switcher sheet must render above the backdrop and bottom navigation so the inventory choices are visually and pointer-accessible.
 - The open mobile context switcher sheet must make the route content and mobile bottom navigation inert and hidden from assistive technology while leaving the sheet itself available.
 - Every non-inline mobile context action must provide at least a 44 CSS-pixel target.
+- The mobile context sheet header must reserve the close affordance's full touch target so `Switch tenant` or `Back` never collides with it at narrow widths or browser zoom.
 
 ## Desktop Header
 

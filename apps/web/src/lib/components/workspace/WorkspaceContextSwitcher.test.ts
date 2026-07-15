@@ -58,7 +58,8 @@ describe('WorkspaceContextSwitcher', () => {
 
     buttonContaining('Garage').click();
     await tick();
-
+    expect(document.body.querySelector('[data-slot="popover-content"]')).not.toBeNull();
+    expect(buttonContaining('Garage').getAttribute('aria-expanded')).toBe('true');
     expect(document.body.textContent).toContain('Inventories');
     expect(currentLinkContaining('Garage').getAttribute('aria-current')).toBe('page');
     expect(document.body.textContent).toContain('Owner');
@@ -194,11 +195,7 @@ describe('WorkspaceContextSwitcher', () => {
     expect(document.activeElement?.textContent).toContain('Loft');
   });
 
-  it('closes the desktop popover when focus leaves the switcher', async () => {
-    vi.useFakeTimers();
-    const outsideButton = document.createElement('button');
-    outsideButton.textContent = 'Outside';
-    document.body.append(outsideButton);
+  it('closes the desktop popover with Escape and restores trigger focus', async () => {
     component = mount(WorkspaceContextSwitcher, {
       target: document.body,
       props: contextProps({
@@ -211,14 +208,11 @@ describe('WorkspaceContextSwitcher', () => {
     await tick();
     expect(document.body.textContent).toContain('Inventories');
 
-    currentLinkContaining('Garage').dispatchEvent(
-      new FocusEvent('focusout', { bubbles: true, relatedTarget: outsideButton })
-    );
-    outsideButton.focus();
-    vi.runAllTimers();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     await tick();
 
     expect(document.body.textContent).not.toContain('Inventories');
+    expect(document.activeElement?.textContent).toContain('Garage');
   });
 
   it('uses the same one-row trigger and tenant-first sheet structure on mobile', async () => {
@@ -236,14 +230,15 @@ describe('WorkspaceContextSwitcher', () => {
     buttonContaining('Garage').click();
     await tick();
 
-    expect(document.body.querySelector<HTMLButtonElement>('.sheet-backdrop')?.getAttribute('aria-label')).toBe(
-      'Close inventory switcher'
-    );
-    expect(buttonContaining('Switch tenant').classList.contains('context-switch-action')).toBe(true);
+    expect(document.body.querySelector('[data-slot="sheet-content"]')?.getAttribute('role')).toBe('dialog');
+    expect(document.body.querySelector('[data-slot="sheet-content"]')?.getAttribute('aria-modal')).toBe('true');
+    expect(document.body.querySelector('.sheet-backdrop')).toBeNull();
+    expect(document.body.querySelector('[data-slot="sheet-title"]')?.textContent).toContain('Inventory context');
     expect(document.body.textContent).toContain('Inventories');
     expect(currentLinkContaining('Garage').getAttribute('aria-current')).toBe('page');
     expect(document.activeElement?.textContent).toContain('Garage');
     expect(document.body.textContent).not.toContain('Loft');
+    expect(buttonContaining('Switch tenant').classList.contains('context-switch-action')).toBe(true);
 
     buttonContaining('Switch tenant').click();
     await tick();
@@ -262,6 +257,7 @@ function contextProps(
     inventories: [inventory],
     selectedTenantId: tenant.id,
     selectedInventoryId: inventory.id,
+    disablePortal: true,
     onSelectTenant: () => {},
     onSelectInventory: () => {},
     ...overrides

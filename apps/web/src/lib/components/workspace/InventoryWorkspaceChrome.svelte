@@ -16,6 +16,7 @@
     searchQuery: string;
     canCreateAsset: boolean;
     modalOpen?: boolean;
+    disablePortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onModeChange: (mode: WorkspaceMode) => void;
@@ -48,6 +49,7 @@
     searchQuery = $bindable(''),
     canCreateAsset,
     modalOpen = false,
+    disablePortal = false,
     onSelectTenant,
     onSelectInventory,
     onModeChange,
@@ -88,6 +90,7 @@
       bind:query={searchQuery}
       {canCreateAsset}
       {userLabel}
+      {disablePortal}
       showSearch={mode !== 'search' && mode !== 'browse'}
       {onSelectTenant}
       {onSelectInventory}
