@@ -65,8 +65,11 @@ if (!styles.includes('width: min(var(--content-max), calc(100% - (2 * var(--cont
   throw new Error('The shared content track is missing.');
 }
 
-if (!styles.includes('--text-title-size: 1.5rem;') ||
-    !styles.includes('--text-title-line-height: 1.875rem;')) {
+const mobileRootBlock = styles.match(
+  /@media\s*\(max-width:\s*900px\)\s*\{\s*:root\s*\{(?<declarations>[^}]*)\}/
+)?.groups?.declarations;
+if (!mobileRootBlock?.includes('--text-title-size: 1.5rem;') ||
+    !mobileRootBlock.includes('--text-title-line-height: 1.875rem;')) {
   throw new Error('The mobile page-title typography pair must remain 24/30.');
 }
 

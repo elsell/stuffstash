@@ -2484,6 +2484,7 @@ dd {
     --mobile-scroll-clearance: calc(var(--mobile-bottom-chrome-height) + 96px);
     --content-gutter: 1rem;
     --text-title-size: 1.5rem;
+    --text-title-line-height: 1.875rem;
   }
 
   .product-shell {
@@ -2741,4 +2742,3 @@ dd {
     bottom: calc(70px + env(safe-area-inset-bottom));
   }
 }
-    --text-title-line-height: 1.875rem;
