@@ -219,6 +219,13 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Stop future work and leave anything already imported in the inventory.');
     });
 
+    const confirmationActions = document.body.querySelector<HTMLElement>('[data-workspace-confirmation-actions]');
+    expect(Array.from(confirmationActions?.querySelectorAll('button') ?? []).map((button) => button.textContent?.trim())).toEqual([
+      'Keep running',
+      expect.stringContaining('Keep imported items'),
+      expect.stringContaining('Discard imported items')
+    ]);
+
     buttonContaining('Keep imported items').click();
 
     await waitFor(() => {
@@ -274,6 +281,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.querySelector('.busy-button-spinner')).toBeTruthy();
     });
 
+    const confirmationActions = document.body.querySelector<HTMLElement>('[data-workspace-confirmation-actions]');
+    expect(confirmationActions?.getAttribute('aria-disabled')).toBe('true');
+    expect(Array.from(confirmationActions?.querySelectorAll<HTMLButtonElement>('button') ?? []).every((button) => button.disabled)).toBe(true);
+
     releaseCancellation();
 
     await waitFor(() => {
@@ -320,7 +331,44 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Cancel Garage Homebox?');
       expect(document.body.textContent).toContain('garage-homebox.local:7744');
       expect(document.body.textContent).toContain('Importing garage shelves');
-      expect(document.activeElement?.textContent).toContain('Keep imported items');
+      expect(document.activeElement?.textContent).toContain('Keep running');
+    });
+  });
+
+  it('keeps cancellation failures inside the confirmation and clears them before retry', async () => {
+    class RetryableCancellationRepository extends CancellableImportJobRepository {
+      attempts = 0;
+
+      async cancelImportJob(
+        tenantId: string,
+        inventoryId: string,
+        jobId: string,
+        mode: ImportJobCancellationMode
+      ): Promise<ImportJob> {
+        this.attempts += 1;
+        if (this.attempts === 1) throw new Error('Cancellation service unavailable.');
+        return super.cancelImportJob(tenantId, inventoryId, jobId, mode);
+      }
+    }
+    const repository = new RetryableCancellationRepository(structuredClone(seed));
+    await mountImportWorkspace(repository);
+
+    await waitFor(() => expect(exactButton('Cancel')).toBeTruthy());
+    exactButton('Cancel').click();
+    await waitFor(() => expect(document.body.textContent).toContain('Cancel Homebox?'));
+    confirmationButton('Keep imported items').click();
+
+    await waitFor(() => {
+      const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
+      expect(dialog?.querySelectorAll('[role="alert"]')).toHaveLength(1);
+      expect(dialog?.textContent).toContain('Cancellation service unavailable.');
+      expect(document.body.querySelector('.import-alert')).toBeFalsy();
+    });
+
+    confirmationButton('Keep imported items').click();
+    await waitFor(() => {
+      expect(repository.attempts).toBe(2);
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeFalsy();
     });
   });
 
@@ -788,7 +836,10 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(historyLedgerText()).toContain('Completed');
       expect(historyLedgerText()).not.toContain('Completed with warnings.');
     });
-    expect(document.body.querySelector<HTMLElement>('[role="dialog"]')?.getAttribute('aria-labelledby')).toBe('remove-import-heading');
+    expect(document.activeElement?.textContent).toContain('Keep in history');
+    const removalDialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
+    expect(removalDialog).not.toBeNull();
+    expect(document.getElementById(removalDialog?.getAttribute('aria-labelledby') ?? '')?.textContent).toContain('Remove Homebox from history?');
 
     confirmationButton('Keep in history').click();
 
@@ -804,7 +855,7 @@ describe('InventoryImportWorkspace import history and progress', () => {
       expect(document.body.textContent).toContain('Remove Homebox from history?');
     });
 
-    document.body.querySelector<HTMLElement>('[role="dialog"]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('Runs');
@@ -861,6 +912,37 @@ describe('InventoryImportWorkspace import history and progress', () => {
 
     await waitFor(() => {
       expect(document.body.textContent).toContain('No import runs yet');
+    });
+  });
+
+  it('clears a local removal failure when dismissed and does not restore it when reopened', async () => {
+    class FailingRemovalRepository extends TerminalImportJobRepository {
+      async removeImportJobFromHistory(): Promise<void> {
+        throw new Error('History service unavailable.');
+      }
+    }
+    await mountImportWorkspace(new FailingRemovalRepository(structuredClone(seed)));
+
+    await waitFor(() => expect(document.body.textContent).toContain('Runs'));
+    document.body.querySelector<HTMLButtonElement>('button[aria-label^="Remove from history Homebox import"]')?.click();
+    await waitFor(() => expect(document.body.textContent).toContain('Remove Homebox from history?'));
+    confirmationButton('Remove from history').click();
+
+    await waitFor(() => {
+      const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
+      expect(dialog?.querySelectorAll('[role="alert"]')).toHaveLength(1);
+      expect(dialog?.textContent).toContain('History service unavailable.');
+      expect(document.body.querySelector('.import-alert')).toBeFalsy();
+    });
+
+    confirmationButton('Keep in history').click();
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')).toBeFalsy());
+    document.body.querySelector<HTMLButtonElement>('button[aria-label^="Remove from history Homebox import"]')?.click();
+    await waitFor(() => {
+      const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
+      expect(dialog).toBeTruthy();
+      expect(dialog?.querySelector('[role="alert"]')).toBeFalsy();
+      expect(dialog?.textContent).not.toContain('History service unavailable.');
     });
   });
 
@@ -1638,7 +1720,7 @@ function labelContaining(text: string): HTMLLabelElement {
 }
 
 function confirmationButton(text: string): HTMLButtonElement {
-  const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+  const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
   const button = Array.from(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? []).find((candidate) =>
     candidate.textContent?.includes(text)
   );

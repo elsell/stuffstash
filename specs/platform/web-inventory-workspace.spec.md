@@ -133,8 +133,8 @@ Deep links must preserve tenant and inventory boundaries:
 - A location edit deep link must normalize to the same API-backed asset detail edit workflow used for editing the underlying location asset.
 - An asset deep link must load the selected asset through the repository port and API adapter.
 - Asset action deep links must not leave the URL in an action state when the action is unavailable. The app must normalize to asset detail or show an unavailable state.
-- Asset action panels that materially change data, such as edit, move, archive confirmation, restore confirmation, and delete confirmation, are durable route states.
-- Route-opened asset action panels must appear before secondary detail, file, and danger-zone sections and scroll into view so their heading and controls are visible when focus moves to the panel.
+- Asset actions that materially change data, such as edit, move, checkout, return, archive, restore, delete, attachment removal, and Move here, are durable route-backed overlay states. They must never expand as inline panels that displace the detail page or leave unrelated page actions operable.
+- Browser Back closes a route-backed overlay before leaving its owning page; browser Forward and direct deep links reopen the correct overlay after the owning resource is resolved. Unsupported or denied action routes normalize to the safe owning page.
 - Settings access actions that materially change invitations, such as expire, cancel, and delete, must use durable confirmation route states instead of immediate row-button mutations.
 - Settings actions that materially change reusable schema, such as archiving custom asset types or custom field definitions, must use durable confirmation route states instead of immediate icon-button mutations.
 - Unsupported paths under a valid inventory route must fall back to the inventory home without crashing and normalize the browser URL to that inventory home.
@@ -143,6 +143,59 @@ Navigation controls must update the URL when they change durable workspace state
 
 Durable navigation items and durable action menu choices must expose canonical `href` values for their route states even when the app intercepts ordinary same-window clicks for client-side navigation.
 Asset detail controls that open durable action panels must expose canonical `href` values for their action routes.
+
+## Transient Surface System
+
+The authenticated web app must use one consistent shadcn-svelte transient-surface system backed by the pinned local Bits UI foundation. Product components compose domain behavior inside these primitives; they must not hand-roll focus traps, portals, backdrops, outside-dismiss logic, menu roving focus, or modal keyboard handling.
+
+Surface selection:
+
+- Long or stateful creation/editing tasks use a `Sheet`: Add item/container/location, asset or place Edit, asset Move, Checkout, Return, and Move items here.
+- Sheets use a right-side rail on desktop and a near-full-screen task surface on mobile. They contain a stable header, independently scrolling body, and reachable sticky action footer.
+- Sheet headers and action footers must paint an explicit opaque semantic surface above the scrolling body at every breakpoint and browser zoom level. Footer actions preserve readable foreground colors; a safe Cancel action precedes the state-changing action in DOM, reading, tab, and visual order on both mobile and desktop.
+- Consequential confirmations use `AlertDialog`: archive, restore when confirmation remains necessary, permanent deletion, attachment removal, direct access-grant revocation, invitation expire/cancel/delete, reusable schema archive, import cancellation, and removal from import history.
+- Short informational modal content uses `Dialog`, including import issue explanation.
+- Anchored lightweight choice sets use `DropdownMenu` or `Popover`, including the desktop Add-kind menu, import More menu, and desktop tenant/inventory context.
+- Mobile tenant/inventory context uses `Sheet` rather than a small anchored faux popover.
+- Browse filters use the shared task `Sheet` so the same draft/apply interaction, stable actions, and full filter set remain available at every viewport; it is a right rail on desktop and full-width on mobile.
+- Search suggestions and destination/candidate selection use one accessible Combobox/Command-style listbox composition rather than bespoke absolute result lists.
+- Optional secondary content remains an inline disclosure or Collapsible; it must not become modal merely for visual consistency.
+- Sonner Toast is reserved for passive success/information and time-bounded Undo. Persistent failures, denials, and recovery actions use an inline Alert inside the owning page, Sheet, or Dialog.
+- Undo and Redo notifications follow the target-scoped behavior in `specs/audit-history/audit-and-undo.spec.md`: supported mutation responses supply the exact operation ID, successful compensation refreshes the affected workspace state and offers the inverse action, and failure never reports false success or leaves stale action state presented as current.
+
+All Dialog, AlertDialog, and Sheet surfaces must:
+
+- render through the local shadcn-svelte primitive and portal above workspace chrome;
+- expose the correct `dialog` or `alertdialog` semantics with labelled title and description;
+- trap and loop focus, lock background scroll, make the background workspace inert and hidden from assistive technology, and prevent pointer interaction with page controls;
+- place initial focus on the first safe task field for Sheets, the least consequential action for confirmations, or the content heading when no better target exists;
+- close with Escape, explicit Cancel/Close, browser Back for route-backed surfaces, and outside interaction only when the surface is neither dirty nor saving and the action is safe to dismiss;
+- prevent Escape, outside dismissal, and close controls while saving; a future dirty-exit confirmation may be added, but silent draft loss is prohibited;
+- restore focus after route application settles to the connected invoking control, a stable semantic replacement after rerender, or an owning-page heading for direct deep links; focus must never fall to `body`;
+- keep action-local validation and API failure inside the open surface, preserve entered/selected state after recoverable failure, and never show false success;
+- expose canonical Cancel/Close `href` values for route-backed surfaces while preserving ordinary in-app close behavior;
+- keep every app-controlled action target at least 44 CSS pixels and support long localized titles, filenames, labels, keyboard zoom, and mobile safe-area insets without overflow.
+- keep every visible close control, including an icon-only Sheet close button, at least 44 by 44 CSS pixels at desktop, mobile, and browser-reflow widths; the hit region must not depend on a descendant selector reaching through component boundaries.
+- expose a visible, screen-reader-announced in-progress state while an asynchronous task or confirmation is saving. Busy surfaces set `aria-busy`, retain their title and context, and must not look inert merely because their controls are temporarily disabled.
+- disable the primary Edit and Move actions until the draft differs from the persisted asset. No-op saves and moves must not be presented as available primary actions or create misleading success feedback.
+- keep media failures next to the operation that produced them: photo selection, upload, and retry failures belong in the photo gallery; file upload and file archive failures belong in the Files section. Each persistent failure is an inline alert associated with its action and must not appear in an unrelated media region.
+- Keep Move-items-here search and candidate rows as explicit single-column sheet controls at mobile and reflow widths. The search icon stays inside its field, and every candidate preserves readable separation between thumbnail, title, kind, and current containment trail without concatenation, overlap, or opportunistic inline wrapping into a second column.
+
+AlertDialog confirmations must not auto-close before an asynchronous operation succeeds. Destructive dialogs default focus to Cancel, name the affected resource, state the irreversible or compensating consequence precisely, and keep a safe inline error visible if execution fails.
+AlertDialog confirmation actions must keep Cancel before the state-changing action in DOM, reading, tab, and visual order at every responsive breakpoint. Responsive layout may stack the actions, but it must not reverse them.
+The shared confirmation composition must move initial focus to its first safe Cancel action after the portal opens, including for route-deep-linked asset archive, delete, and attachment-removal confirmations. While busy, the shared composition itself must suppress pointer and keyboard activation in its action footer so duplicate submissions remain impossible even if a caller fails to disable a nested action promptly. When a focused confirmation action initiates the busy transition, focus moves to the programmatically focusable progress status inside the alert dialog rather than falling to the document body.
+Import cancellation and history-removal confirmations keep operation failures local to the open confirmation. Retrying clears the local failure before submitting, dismissing clears it permanently, and unrelated import-page errors must never be reused as confirmation errors. The safe cancel action precedes every state-changing choice in DOM and tab order, and all choices participate in the shared busy/inert duplicate-submission guard.
+
+Informational Dialog content must preserve at least a one-rem viewport gutter at narrow and reflow widths, cap height with dynamic viewport units, and move initial focus to its heading rather than a close or mutation control.
+
+DropdownMenu and Popover surfaces must use primitive-provided trigger relationships, Escape/outside dismissal, collision handling, focus restoration, and keyboard behavior. Menus require menu/menuitem semantics, Arrow/Home/End navigation, and typeahead where provided by the primitive.
+
+The product-level shared compositions are:
+
+- `WorkspaceTaskSheet` for route-aware long/stateful workflows.
+- `WorkspaceConfirmationDialog` for asynchronous confirmations with safe focus and local errors.
+
+Feature components retain domain form state and commands. Shared wrappers own only transient-surface mechanics, responsive layout, route-aware close integration, and accessibility wiring.
 
 Desktop:
 
@@ -642,6 +695,7 @@ The web workspace must meet WCAG 2.2-aligned expectations:
 - Keyboard navigation for nav, context switchers, search, add menus, modals, sheets, lists, and detail actions.
 - Focus trapping and Escape close behavior for dialogs and sheets.
 - Visible focus states.
+- Programmatic scrolling and decorative motion must honor `prefers-reduced-motion`; equivalent navigation must remain immediate when reduced motion is requested.
 - Proper labels for icon buttons.
 - Semantic landmarks for navigation and main content.
 - The persistent workspace shell must expose exactly one main landmark around the active durable route content, independent of which Home, Browse, Settings, Import, location, or asset surface is active.

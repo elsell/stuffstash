@@ -161,6 +161,13 @@ describe('ImportMessagesList', () => {
     expect(dialog).toBeTruthy();
     expect(dialog?.getAttribute('aria-labelledby')).toBe('issue-detail-title');
     expect(dialog?.hasAttribute('aria-label')).toBe(false);
+    expect(document.activeElement).toBe(document.getElementById('issue-detail-title'));
+    expect(document.activeElement?.getAttribute('tabindex')).toBe('-1');
+    expect(dialog?.classList.contains('overflow-y-auto')).toBe(true);
+    expect(dialog?.classList.contains('motion-reduce:animate-none!')).toBe(true);
+    expect(document.body.querySelector('[data-slot="dialog-overlay"]')?.classList.contains('motion-reduce:animate-none!')).toBe(true);
+    expect(importMessagesListSource.match(/:global\(\.issue-detail-heading\)\s*{(?<body>[^}]*)}/)?.groups?.body).toContain('flex-direction: row');
+    expect(buttonWithLabel('Close issue details').classList.contains('size-11')).toBe(true);
     expect(dialog?.textContent).toContain('Meaning');
     expect(dialog?.textContent).toContain('connected to an earlier import');
     expect(dialog?.textContent).toContain('Those records were skipped');
