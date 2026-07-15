@@ -74,6 +74,8 @@ The UI must use user-facing household language while preserving domain correctne
 
 The UI must not expose persistence, SpiceDB, OIDC, generated DTOs, storage keys, bucket names, audit internals, or implementation-specific tenancy phrasing.
 
+Sign-in and callback screens must remain provider-neutral and product-branded. The ordinary sign-in screen must explain that the user will continue to a secure sign-in page and return to Stuff Stash, without exposing protocol terms or guessing a provider name from configuration URLs. Its primary action must say `Continue to sign in`. Normal, expired-session, and post-callback account-rejection states must use fixed calm product copy and must never expose provider names, protocol terms, client identifiers, or raw caught diagnostics. Runtime-configuration and initial-workspace failures must map to fixed actionable user messages while safe typed failure categories remain available to operator observability. Failure to open the secure sign-in page must remain on the branded surface, expose a safe retry message, and leave the sign-in action available. The callback must show a calm, explicit progress state while the session is confirmed. A failed, expired, cancelled, or malformed callback must present safe user-facing copy in a branded card, must not render raw provider or protocol errors, and must provide a prominent route back to a fresh sign-in attempt. The callback card must use the available responsive track rather than shrink-wrap to its copy, the recovery document must have a meaningful Stuff Stash title, and every app-controlled primary sign-in/recovery target must be at least 44 CSS pixels high. Provider and client-configuration diagnostics belong in operator observability, not normal user copy.
+
 ## Web Shell
 
 The authenticated web app must use a persistent product shell.
@@ -713,6 +715,10 @@ Surfaces and controls:
   pixels, where step-progress labels require their narrow-phone optical size.
   These exceptions are shared by the named workflow rather than copied into
   nearby one-off layout modes.
+- Auth and callback states use one shared branded surface on a 24rem to 26rem
+  readable track with calm spacing and full-width mobile behavior. They must not
+  shrink-wrap into a narrow text column or use a separate decorative visual
+  language.
 
 Verification:
 
