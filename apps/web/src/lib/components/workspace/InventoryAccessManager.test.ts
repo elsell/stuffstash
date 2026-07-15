@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import InventoryAccessManager from './InventoryAccessManager.svelte';
+import InventoryAccessManagerTestHarness from './InventoryAccessManager.test-harness.svelte';
 import type {
   CreatedInventoryAccessInvitation,
   Inventory,
@@ -17,9 +18,13 @@ const originalClipboardDescriptor = Object.getOwnPropertyDescriptor(Navigator.pr
 const originalShareDescriptor = Object.getOwnPropertyDescriptor(Navigator.prototype, 'share');
 const inviteUrl = 'https://stash.example.test/invitations/accept?tenant=tenant-one&inventory=inventory-one&invitation=invite-two#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 
-afterEach(() => {
+afterEach(async () => {
+  document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+  );
+  await new Promise((resolve) => window.setTimeout(resolve, 20));
   if (component) {
-    unmount(component);
+    await unmount(component);
     component = null;
   }
   document.body.innerHTML = '';
@@ -304,6 +309,7 @@ describe('InventoryAccessManager', () => {
     clickButton('Share invitation');
     await flush();
     expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: inviteUrl }));
+    expect(document.body.textContent).toContain('Invitation shared.');
   });
 
   it('clears a prior one-time link before a later creation attempt fails', async () => {
@@ -335,7 +341,39 @@ describe('InventoryAccessManager', () => {
     clickButton('Revoke');
     await flush();
 
+    expect(calls).not.toContain('revoke:tenant-one:inventory-one:principal-two:viewer');
+    expect(document.body.querySelector('[role="alertdialog"]')?.textContent).toContain('Revoke access');
+    clickButton('Revoke access');
+    await flush();
+
     expect(calls).toContain('revoke:tenant-one:inventory-one:principal-two:viewer');
+  });
+
+  it('clears a pending revoke when the inventory context changes', async () => {
+    const { repository, calls } = fakeAccessRepository();
+
+    component = mount(InventoryAccessManagerTestHarness, {
+      target: document.body,
+      props: {
+        initialTenant: tenant('tenant-one'),
+        initialInventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository
+      }
+    });
+    await flush();
+
+    clickButton('Revoke');
+    await flush();
+    expect(document.body.querySelector('[role="alertdialog"]')).not.toBeNull();
+
+    (component as unknown as { setContext: (tenant: Tenant, inventory: Inventory) => void }).setContext(
+      tenant('tenant-two'),
+      inventory('tenant-two', 'inventory-two', ['view', 'share'])
+    );
+    await flush();
+
+    expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+    expect(calls.some((call) => call.startsWith('revoke:'))).toBe(false);
   });
 
   it('exposes route-backed invitation action links and opens them in-app', async () => {
@@ -399,9 +437,10 @@ describe('InventoryAccessManager', () => {
     await flush();
 
     expect(document.body.textContent).toContain('Expire invitation');
-    expect(document.activeElement?.textContent).toContain('Expire invitation');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     clickButton('Expire');
     await flush();
+    await flushDialogClose();
     expect(fake.calls).toContain('expire:tenant-one:inventory-one:invite-one:1970-01-01T00:00:00.000Z');
 
     await unmount(component);
@@ -428,6 +467,7 @@ describe('InventoryAccessManager', () => {
     );
     clickButton('Cancel invitation');
     await flush();
+    await flushDialogClose();
     expect(fake.calls).toContain('cancel:tenant-one:inventory-one:invite-one');
     expect(document.body.textContent).not.toContain('friend@example.test');
 
@@ -451,8 +491,28 @@ describe('InventoryAccessManager', () => {
     expect(document.body.textContent).toContain('Delete invitation');
     clickButton('Delete');
     await flush();
+    await flushDialogClose();
     expect(fake.calls).toContain('delete-invitation:tenant-one:inventory-one:invite-one');
     expect(closed).toEqual(['expire', 'cancel', 'delete']);
+  });
+
+  it('moves focus to the Sharing heading when a deep-linked invitation confirmation closes', async () => {
+    component = mount(InventoryAccessManager, {
+      target: document.body,
+      props: {
+        tenant: tenant('tenant-one'),
+        inventory: inventory('tenant-one', 'inventory-one', ['view', 'share']),
+        repository: fakeAccessRepository().repository,
+        accessInvitationAction: 'expire',
+        accessInvitationId: 'invite-one'
+      }
+    });
+    await flush();
+
+    requiredElement('[role="alertdialog"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flushDialogClose();
+
+    expect(document.activeElement).toBe(requiredElement('#settings-access'));
   });
 
   it('shows an unavailable invitation action route when the target is not loaded', async () => {
@@ -476,7 +536,7 @@ describe('InventoryAccessManager', () => {
 
     expect(document.body.textContent).toContain('Invitation unavailable');
     link('Back to invitations').click();
-    await flush();
+    await flushDialogClose();
     expect(closed).toBe(1);
   });
 
@@ -663,7 +723,10 @@ async function setInput(selector: string, value: string): Promise<void> {
 }
 
 function clickButton(text: string): void {
-  const control = Array.from(document.body.querySelectorAll<HTMLElement>('button, a')).find((candidate) => candidate.textContent === text);
+  const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
+  const control = Array.from((dialog ?? document.body).querySelectorAll<HTMLElement>('button, a')).find(
+    (candidate) => candidate.textContent === text
+  );
   if (!control) {
     throw new Error(`Missing control ${text}`);
   }
@@ -671,7 +734,10 @@ function clickButton(text: string): void {
 }
 
 function link(text: string): HTMLAnchorElement {
-  const target = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('a')).find((candidate) => candidate.textContent === text);
+  const dialog = document.body.querySelector<HTMLElement>('[role="alertdialog"]');
+  const target = Array.from((dialog ?? document.body).querySelectorAll<HTMLAnchorElement>('a')).find(
+    (candidate) => candidate.textContent === text
+  );
   if (!target) {
     throw new Error(`Missing link ${text}`);
   }
@@ -705,20 +771,16 @@ function restoreClipboard(): void {
   Reflect.deleteProperty(Navigator.prototype, 'clipboard');
 }
 
-function stubShare(share: typeof navigator.share | undefined): void {
-  Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value: share });
-}
-
-function restoreShare(): void {
-  if (originalShareDescriptor) Object.defineProperty(Navigator.prototype, 'share', originalShareDescriptor);
-  else delete (Navigator.prototype as unknown as { share?: typeof navigator.share }).share;
-}
-
 async function flush(): Promise<void> {
   await Promise.resolve();
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+async function flushDialogClose(): Promise<void> {
+  await new Promise((resolve) => window.setTimeout(resolve, 25));
+  await flush();
 }
 
 function tenant(id: string): Tenant {
@@ -803,6 +865,15 @@ function fakeAccessRepository(options: { hasMore?: boolean; invitationStatus?: I
       }
     }
   };
+}
+
+function stubShare(share: typeof navigator.share | undefined): void {
+  Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value: share });
+}
+
+function restoreShare(): void {
+  if (originalShareDescriptor) Object.defineProperty(Navigator.prototype, 'share', originalShareDescriptor);
+  else delete (Navigator.prototype as unknown as { share?: typeof navigator.share }).share;
 }
 
 function invitation(

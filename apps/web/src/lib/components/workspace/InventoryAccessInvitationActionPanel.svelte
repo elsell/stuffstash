@@ -6,64 +6,109 @@
     action: AccessInvitationRouteAction;
     invitation: InventoryAccessInvitation | null;
     busy: boolean;
+    error: string;
     accessHref: string;
-    panelElement: HTMLElement | null;
     onClose: (event: MouseEvent) => void;
-    onConfirm: (action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation) => Promise<void>;
+    onDismiss: () => void;
+    onCloseAutoFocus: (event: Event) => void;
+    onConfirm: (action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation) => Promise<boolean>;
   };
+
+  export function invitationActionFocusTarget(
+    trigger: HTMLElement | null,
+    fallback: HTMLElement | null
+  ): HTMLElement | null {
+    return trigger?.isConnected ? trigger : fallback;
+  }
 </script>
 
 <script lang="ts">
-  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import { onDestroy } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { invitationActionConfirmation, invitationActionIsAvailable } from '$lib/application/workspaceInvitationActions';
+  import WorkspaceConfirmationDialog from './action-surface/WorkspaceConfirmationDialog.svelte';
 
   let {
-    action,
+    action: routeAction,
     invitation,
     busy,
+    error,
     accessHref,
-    panelElement = $bindable(),
     onClose,
+    onDismiss,
+    onCloseAutoFocus,
     onConfirm
   }: InventoryAccessInvitationActionPanelProps = $props();
 
-  let confirmation = $derived(invitation ? invitationActionConfirmation(action, invitation, busy) : null);
+  let available = $derived(Boolean(invitation && invitationActionIsAvailable(routeAction, invitation)));
+  let confirmation = $derived(invitation ? invitationActionConfirmation(routeAction, invitation, busy) : null);
+  let title = $derived(available ? confirmation?.title ?? 'Confirm invitation action' : 'Invitation unavailable');
+  let description = $derived(
+    available
+      ? confirmation?.description ?? ''
+      : 'This invitation is not available in the current access list.'
+  );
+  let open = $state(true);
+  let dismissAfterClose = false;
+  let dismissTimer: number | null = null;
+
+  onDestroy(() => {
+    if (dismissTimer !== null) window.clearTimeout(dismissTimer);
+  });
+
+  function requestDismiss(): void {
+    dismissAfterClose = true;
+    open = false;
+  }
+
+  function handleClose(event: MouseEvent): void {
+    onClose(event);
+    if (event.defaultPrevented) requestDismiss();
+  }
+
+  function handleCloseAutoFocus(event: Event): void {
+    onCloseAutoFocus(event);
+    if (!dismissAfterClose) return;
+    dismissAfterClose = false;
+    if (dismissTimer !== null) window.clearTimeout(dismissTimer);
+    dismissTimer = window.setTimeout(() => {
+      dismissTimer = null;
+      onDismiss();
+    }, 16);
+  }
+
+  async function confirm(): Promise<void> {
+    if (available && invitation && await onConfirm(routeAction, invitation)) requestDismiss();
+  }
 </script>
 
-<section
-  bind:this={panelElement}
-  class="settings-panel archive-confirmation"
-  aria-labelledby="access-invitation-action-title"
-  tabindex="-1"
+<WorkspaceConfirmationDialog
+  {open}
+  {title}
+  {description}
+  {busy}
+  onOpenChange={(nextOpen) => { if (!nextOpen) requestDismiss(); }}
+  onCloseAutoFocus={handleCloseAutoFocus}
 >
-  {#if invitation && invitationActionIsAvailable(action, invitation)}
-    <div class="settings-panel-heading">
-      <Trash2 aria-hidden="true" />
-      <div>
-        <h3 id="access-invitation-action-title">{confirmation?.title}</h3>
-        <p>{invitation.email}</p>
-      </div>
-    </div>
-    <p class="muted-note">{confirmation?.description}</p>
-    <div class="heading-actions">
-      <Button.Root href={accessHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
+  {#snippet children()}
+    {#if invitation}<p class="muted-note">{invitation.email}</p>{/if}
+    {#if error}<p class="denied-note" role="alert">{error}</p>{/if}
+  {/snippet}
+  {#snippet cancel()}
+    <Button.Root href={accessHref} variant="outline" class="min-h-11" disabled={busy} onclick={handleClose} autofocus>
+      {available ? 'Cancel' : 'Back to invitations'}
+    </Button.Root>
+  {/snippet}
+  {#snippet action()}
+    {#if available && invitation}
       <Button.Root
         variant={confirmation?.destructive ? 'destructive' : 'secondary'}
+        class="min-h-11"
         disabled={confirmation?.disabled}
-        onclick={() => { void onConfirm(action, invitation); }}
+        onclick={() => { void confirm(); }}
       >
         {confirmation?.buttonLabel}
       </Button.Root>
-    </div>
-  {:else}
-    <div class="settings-panel-heading">
-      <Trash2 aria-hidden="true" />
-      <div>
-        <h3 id="access-invitation-action-title">Invitation unavailable</h3>
-        <p>This invitation is not available in the current access list.</p>
-      </div>
-    </div>
-    <Button.Root href={accessHref} variant="outline" onclick={onClose}>Back to invitations</Button.Root>
-  {/if}
-</section>
+    {/if}
+  {/snippet}
+</WorkspaceConfirmationDialog>

@@ -3,7 +3,6 @@
   import Link2 from '@lucide/svelte/icons/link-2';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import UserPlus from '@lucide/svelte/icons/user-plus';
-  import { tick } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
@@ -27,8 +26,9 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
-  import InventoryAccessInvitationActionPanel from './InventoryAccessInvitationActionPanel.svelte';
+  import InventoryAccessInvitationActionPanel, { invitationActionFocusTarget } from './InventoryAccessInvitationActionPanel.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
+  import WorkspaceConfirmationDialog from './action-surface/WorkspaceConfirmationDialog.svelte';
 
   let {
     tenant,
@@ -71,12 +71,15 @@
   let invitationEmail = $state('');
   let invitationRelationship = $state<InventoryAccessRelationship>('viewer');
   let inviteLink = $state('');
+  let revokeTarget = $state<InventoryAccessGrant | null>(null);
+  let revokeError = $state('');
+  let invitationActionTrigger = $state<HTMLElement | null>(null);
+  let sharingHeading = $state<HTMLHeadingElement | null>(null);
   let busy = $state(false);
   let loaded = $state(false);
   let message = $state('');
   let error = $state('');
   let requestId = 0;
-  let invitationConfirmationElement = $state<HTMLElement | null>(null);
 
   let canShare = $derived(hasAccessPermission(inventory?.access, 'share'));
   let accessStatus = $derived(inventoryAccessManagerAccessStatus({ hasInventory: Boolean(inventory), canShare }));
@@ -90,16 +93,16 @@
   let hasInvitationActionRoute = $derived(
     accessInvitationAction === 'expire' || accessInvitationAction === 'cancel' || accessInvitationAction === 'delete'
   );
-  let invitationActionRouteKey = $derived(accessInvitationAction ? `${accessInvitationAction}:${accessInvitationId ?? ''}` : '');
   let lastLoadedContextKey = '';
   let lastLoadedInvitationStatus = $state<InvitationStatusFilter | null>(null);
-  let lastInvitationActionRouteKey = '';
 
   $effect(() => {
     const nextContextKey = contextKey;
     const nextInvitationStatus = invitationStatus;
     if (!nextContextKey) {
       requestId += 1;
+      revokeTarget = null;
+      revokeError = '';
       grants = [];
       invitations = [];
       grantNextCursor = null;
@@ -114,6 +117,8 @@
     }
     if (nextContextKey !== lastLoadedContextKey) {
       requestId += 1;
+      revokeTarget = null;
+      revokeError = '';
       grants = [];
       invitations = [];
       grantNextCursor = null;
@@ -134,19 +139,6 @@
       lastLoadedInvitationStatus = nextInvitationStatus;
       void loadInvitations(nextContextKey, nextInvitationStatus);
     }
-  });
-
-  $effect(() => {
-    const routeKey = invitationActionRouteKey;
-    if (!routeKey) {
-      lastInvitationActionRouteKey = '';
-      return;
-    }
-    if (routeKey === lastInvitationActionRouteKey) {
-      return;
-    }
-    lastInvitationActionRouteKey = routeKey;
-    void tick().then(() => invitationConfirmationElement?.focus());
   });
 
   async function loadAccess(expectedContext = contextKey, status = invitationStatus): Promise<void> {
@@ -267,7 +259,9 @@
 
   async function revokeGrant(grant: InventoryAccessGrant): Promise<void> {
     const context = snapshotContext(contextKey);
-    if (!context) {
+    if (!context || grant.tenantId !== context.tenantId || grant.inventoryId !== context.inventoryId) {
+      revokeTarget = null;
+      revokeError = '';
       return;
     }
     await mutate(context.key, async () => {
@@ -277,7 +271,12 @@
       }
       grants = grants.filter((candidate) => !sameGrant(candidate, grant));
       message = `Revoked ${grant.relationship} access.`;
+      revokeTarget = null;
     });
+    if (revokeTarget && error) {
+      revokeError = error;
+      error = '';
+    }
   }
 
   async function invite(): Promise<void> {
@@ -318,23 +317,28 @@
   }
 
   async function shareInviteLink(): Promise<void> {
-    if (!inviteLink || typeof navigator === 'undefined' || typeof navigator.share !== 'function') return;
+    if (!inviteLink || typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+      return;
+    }
     try {
       await navigator.share({ title: 'Stuff Stash invitation', text: 'You’ve been invited to a Stuff Stash inventory.', url: inviteLink });
       message = 'Invitation shared.';
       error = '';
     } catch (caught) {
-      if (caught instanceof DOMException && caught.name === 'AbortError') return;
+      if (caught instanceof DOMException && caught.name === 'AbortError') {
+        return;
+      }
       message = '';
       error = 'Invitation not shared. Copy the link instead.';
     }
   }
 
-  async function expireInvitation(invitation: InventoryAccessInvitation): Promise<void> {
+  async function expireInvitation(invitation: InventoryAccessInvitation): Promise<boolean> {
     const context = snapshotContext(contextKey);
     if (!context) {
-      return;
+      return false;
     }
+    let succeeded = false;
     await mutate(context.key, async () => {
       const updated = await repository.updateInventoryAccessInvitationExpiration(
         context.tenantId,
@@ -347,15 +351,17 @@
       }
       invitations = reconcileInvitationForCurrentFilter(updated);
       message = 'Invitation expiration updated.';
-      onInvitationActionClose();
+      succeeded = true;
     });
+    return succeeded;
   }
 
-  async function cancelInvitation(invitation: InventoryAccessInvitation): Promise<void> {
+  async function cancelInvitation(invitation: InventoryAccessInvitation): Promise<boolean> {
     const context = snapshotContext(contextKey);
     if (!context) {
-      return;
+      return false;
     }
+    let succeeded = false;
     await mutate(context.key, async () => {
       await repository.cancelInventoryAccessInvitation(context.tenantId, context.inventoryId, invitation.id);
       if (!sameContext(context.requestId, context.key)) {
@@ -363,15 +369,17 @@
       }
       invitations = reconcileInvitationForCurrentFilter({ ...invitation, status: 'cancelled' });
       message = 'Invitation cancelled.';
-      onInvitationActionClose();
+      succeeded = true;
     });
+    return succeeded;
   }
 
-  async function deleteInvitation(invitation: InventoryAccessInvitation): Promise<void> {
+  async function deleteInvitation(invitation: InventoryAccessInvitation): Promise<boolean> {
     const context = snapshotContext(contextKey);
     if (!context) {
-      return;
+      return false;
     }
+    let succeeded = false;
     await mutate(context.key, async () => {
       await repository.deleteInventoryAccessInvitation(context.tenantId, context.inventoryId, invitation.id);
       if (!sameContext(context.requestId, context.key)) {
@@ -379,8 +387,9 @@
       }
       invitations = invitations.filter((candidate) => candidate.id !== invitation.id);
       message = 'Invitation deleted.';
-      onInvitationActionClose();
+      succeeded = true;
     });
+    return succeeded;
   }
 
   async function mutate(expectedContext: string, action: () => Promise<void>): Promise<void> {
@@ -428,7 +437,15 @@
       return;
     }
     event.preventDefault();
+    invitationActionTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     onInvitationActionOpen(action, invitation.id);
+  }
+
+  function restoreInvitationActionFocus(event: Event): void {
+    event.preventDefault();
+    const trigger = invitationActionTrigger;
+    invitationActionTrigger = null;
+    invitationActionFocusTarget(trigger, sharingHeading)?.focus();
   }
 
   function closeInvitationAction(event: MouseEvent): void {
@@ -436,17 +453,17 @@
       return;
     }
     event.preventDefault();
-    onInvitationActionClose();
   }
 
-  async function confirmInvitationAction(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): Promise<void> {
+  async function confirmInvitationAction(action: AccessInvitationRouteAction, invitation: InventoryAccessInvitation): Promise<boolean> {
     if (action === 'expire') {
-      await expireInvitation(invitation);
+      return expireInvitation(invitation);
     } else if (action === 'cancel') {
-      await cancelInvitation(invitation);
+      return cancelInvitation(invitation);
     } else if (action === 'delete') {
-      await deleteInvitation(invitation);
+      return deleteInvitation(invitation);
     }
+    return false;
   }
 
   function snapshotContext(expectedContext: string): { key: string; requestId: number; tenantId: string; inventoryId: string } | null {
@@ -494,7 +511,7 @@
   <div class="settings-panel-heading">
     <UserPlus aria-hidden="true" />
     <div>
-      <h2 id="settings-access">Sharing</h2>
+      <h2 id="settings-access" bind:this={sharingHeading} tabindex="-1">Sharing</h2>
       <p>{canShare ? 'Manage direct grants and invite links for this inventory.' : 'Sharing requires inventory share access.'}</p>
     </div>
   </div>
@@ -529,9 +546,11 @@
         action={accessInvitationAction}
         invitation={routeInvitation}
         {busy}
+        error={operationStatus?.message ?? ''}
         accessHref={accessHref()}
-        bind:panelElement={invitationConfirmationElement}
         onClose={closeInvitationAction}
+        onDismiss={onInvitationActionClose}
+        onCloseAutoFocus={restoreInvitationActionFocus}
         onConfirm={confirmInvitationAction}
       />
     {/if}
@@ -583,7 +602,7 @@
                 <strong>{grant.principalId}</strong>
                 <small>{grant.relationship}</small>
               </span>
-              <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void revokeGrant(grant); }}>Revoke</Button.Root>
+              <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { revokeError = ''; revokeTarget = grant; }}>Revoke</Button.Root>
             </div>
           {/each}
           {#if grantNextCursor}
@@ -644,5 +663,12 @@
         {/if}
       </div>
     </div>
+    {#if revokeTarget}
+      <WorkspaceConfirmationDialog open title="Revoke access" description={`Remove ${revokeTarget.relationship} access for ${revokeTarget.principalId}?`} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
+        {#if revokeError}<p class="denied-note" role="alert">{revokeError}</p>{/if}
+        {#snippet cancel()}<Button.Root variant="outline" autofocus disabled={busy} onclick={() => { revokeTarget = null; revokeError = ''; }}>Cancel</Button.Root>{/snippet}
+        {#snippet action()}<Button.Root variant="destructive" disabled={busy} onclick={() => { if (revokeTarget) void revokeGrant(revokeTarget); }}>Revoke access</Button.Root>{/snippet}
+      </WorkspaceConfirmationDialog>
+    {/if}
   {/if}
 </section>

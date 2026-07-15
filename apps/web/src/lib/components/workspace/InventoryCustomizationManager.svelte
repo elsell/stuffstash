@@ -1,6 +1,5 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
-  import { tick } from 'svelte';
   import Shapes from '@lucide/svelte/icons/shapes';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -34,7 +33,7 @@
   import { hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import ChoiceGrid from './ChoiceGrid.svelte';
-  import InventoryCustomizationArchivePanel from './InventoryCustomizationArchivePanel.svelte';
+  import InventoryCustomizationArchivePanel, { customizationArchiveFocusTarget } from './InventoryCustomizationArchivePanel.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -78,8 +77,8 @@
   let fieldApplicability = $state<CustomFieldApplicability>('all_assets');
   let fieldTargets = $state<string[]>([]);
   let enumOptions = $state('');
-  let archiveConfirmationElement = $state<HTMLElement | null>(null);
-  let lastArchiveRouteKey = $state('');
+  let archiveActionTrigger = $state<HTMLElement | null>(null);
+  let customizationHeading = $state<HTMLHeadingElement | null>(null);
   const fieldTypeOptions = customizationFieldTypeOptions();
   const applicabilityOptions = customizationApplicabilityOptions();
 
@@ -105,13 +104,6 @@
       : null
   );
   let hasArchiveRoute = $derived(archiveAction === 'archive_asset_type' || archiveAction === 'archive_field_definition');
-  let archiveRouteKey = $derived(
-    archiveAction === 'archive_asset_type'
-      ? `${archiveAction}:${archiveAssetTypeId ?? ''}`
-      : archiveAction === 'archive_field_definition'
-        ? `${archiveAction}:${archiveFieldDefinitionId ?? ''}`
-        : ''
-  );
 
   $effect(() => {
     assetTypes = initialAssetTypes;
@@ -129,19 +121,6 @@
     if (!canScope(fieldScope)) {
       selectFieldScope(fallbackScope);
     }
-  });
-
-  $effect(() => {
-    const routeKey = archiveRouteKey;
-    if (!routeKey) {
-      lastArchiveRouteKey = '';
-      return;
-    }
-    if (routeKey === lastArchiveRouteKey) {
-      return;
-    }
-    lastArchiveRouteKey = routeKey;
-    void tick().then(() => archiveConfirmationElement?.focus());
   });
 
   async function createAssetType(): Promise<void> {
@@ -206,8 +185,8 @@
     }
   }
 
-  async function archiveAssetType(assetType: CustomAssetType): Promise<void> {
-    if (!tenant || !inventory || !canScope(assetType.scope)) return;
+  async function archiveAssetType(assetType: CustomAssetType): Promise<boolean> {
+    if (!tenant || !inventory || !canScope(assetType.scope)) return false;
     busy = true;
     error = '';
     try {
@@ -217,16 +196,17 @@
       assetTypes = nextAssetTypes;
       fieldTargets = nextFieldTargets;
       onSchemaChange(nextAssetTypes, fieldDefinitions);
-      onArchiveActionClose();
+      return true;
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Unable to archive custom asset type.';
+      return false;
     } finally {
       busy = false;
     }
   }
 
-  async function archiveFieldDefinition(definition: CustomFieldDefinition): Promise<void> {
-    if (!tenant || !inventory || !canScope(definition.scope)) return;
+  async function archiveFieldDefinition(definition: CustomFieldDefinition): Promise<boolean> {
+    if (!tenant || !inventory || !canScope(definition.scope)) return false;
     busy = true;
     error = '';
     try {
@@ -234,9 +214,10 @@
       const nextFieldDefinitions = fieldDefinitions.map((candidate) => candidate.id === archived.id ? archived : candidate);
       fieldDefinitions = nextFieldDefinitions;
       onSchemaChange(assetTypes, nextFieldDefinitions);
-      onArchiveActionClose();
+      return true;
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Unable to archive custom field.';
+      return false;
     } finally {
       busy = false;
     }
@@ -295,7 +276,15 @@
       return;
     }
     event.preventDefault();
+    archiveActionTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     onArchiveActionOpen(action, id);
+  }
+
+  function restoreArchiveActionFocus(event: Event): void {
+    event.preventDefault();
+    const trigger = archiveActionTrigger;
+    archiveActionTrigger = null;
+    customizationArchiveFocusTarget(trigger, customizationHeading)?.focus();
   }
 
   function closeArchiveAction(event: MouseEvent): void {
@@ -303,7 +292,6 @@
       return;
     }
     event.preventDefault();
-    onArchiveActionClose();
   }
 </script>
 
@@ -311,7 +299,7 @@
   <div class="settings-panel-heading">
     <Shapes aria-hidden="true" />
     <div>
-      <h2 id="settings-customization">Custom fields</h2>
+      <h2 id="settings-customization" bind:this={customizationHeading} tabindex="-1">Custom fields</h2>
       <p>Types and fields available to this inventory.</p>
     </div>
   </div>
@@ -324,10 +312,12 @@
         assetType={routeArchiveAssetType}
         fieldDefinition={routeArchiveFieldDefinition}
         {busy}
+        error={operationStatus?.message ?? ''}
         fieldsHref={fieldsHref()}
-        bind:panelElement={archiveConfirmationElement}
         canArchiveScope={canScope}
         onClose={closeArchiveAction}
+        onDismiss={onArchiveActionClose}
+        onCloseAutoFocus={restoreArchiveActionFocus}
         onArchiveAssetType={archiveAssetType}
         onArchiveFieldDefinition={archiveFieldDefinition}
       />

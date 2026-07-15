@@ -6,9 +6,13 @@ import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCusto
 
 let component: ReturnType<typeof mount> | null = null;
 
-afterEach(() => {
+afterEach(async () => {
+  document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+  );
+  await new Promise((resolve) => window.setTimeout(resolve, 20));
   if (component) {
-    unmount(component);
+    await unmount(component);
     document.body.innerHTML = '';
     component = null;
   }
@@ -380,11 +384,12 @@ describe('InventoryCustomizationManager', () => {
     await flush();
 
     expect(document.body.textContent).toContain('Archive asset type');
-    expect(document.activeElement?.textContent).toContain('Archive asset type');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
 
     clickExactButton('Archive');
     await flush();
+    await flushDialogClose();
 
     expect(calls).toEqual(['archive-type:type-medicine:inventory']);
     expect(closed).toBe(1);
@@ -422,11 +427,11 @@ describe('InventoryCustomizationManager', () => {
     await flush();
 
     expect(document.body.textContent).toContain('Archive field definition');
-    expect(document.activeElement?.textContent).toContain('Archive field definition');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
 
     link('Cancel').click();
-    await flush();
+    await flushDialogClose();
 
     expect(closed).toBe(1);
     expect(calls).toEqual([]);
@@ -453,6 +458,7 @@ describe('InventoryCustomizationManager', () => {
 
     clickExactButton('Archive');
     await flush();
+    await flushDialogClose();
 
     expect(calls).toEqual(['archive-field:field-expiration:inventory']);
     expect(closed).toBe(2);
@@ -480,9 +486,33 @@ describe('InventoryCustomizationManager', () => {
 
     expect(document.body.textContent).toContain('Archive target unavailable');
     link('Back to fields').click();
-    await flush();
+    await flushDialogClose();
 
     expect(closed).toBe(1);
+  });
+
+  it('moves focus to the Custom fields heading when a deep-linked archive confirmation closes', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [customAssetType()],
+        initialFieldDefinitions: [customFieldDefinition()],
+        archiveAction: 'archive_asset_type',
+        archiveAssetTypeId: 'type-medicine',
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
+    await flushDialogClose();
+
+    expect(document.activeElement).toBe(document.getElementById('settings-customization'));
   });
 });
 
@@ -605,4 +635,9 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+async function flushDialogClose(): Promise<void> {
+  await new Promise((resolve) => window.setTimeout(resolve, 25));
+  await flush();
 }
