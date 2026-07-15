@@ -177,7 +177,7 @@ The web app reads `/config.json` at runtime. It is not configured through
 | `oidcClientId` | yes | Browser OIDC client ID. |
 | `oidcRedirectUri` | yes | Browser redirect URI after OIDC sign-in. |
 | `mediaUploadPolicy.supportedContentTypes` | no | Allowed upload content types. Defaults to JPEG, PNG, WebP, and PDF. |
-| `mediaUploadPolicy.maxBytes` | no | Client upload limit. Defaults to `5242880`. |
+| `mediaUploadPolicy.maxBytes` | no | Client upload limit. Defaults to `26214400` (25 MiB), matching the API attachment default. |
 
 Example:
 
@@ -189,7 +189,7 @@ Example:
   "oidcRedirectUri": "https://stuffstash.example.test/callback",
   "mediaUploadPolicy": {
     "supportedContentTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-    "maxBytes": 5242880
+    "maxBytes": 26214400
   }
 }
 ```

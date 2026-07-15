@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import developmentRuntimeConfig from '../../static/config.json';
 import { applyRuntimeConfigOverrides, parseRuntimeConfig } from './runtimeConfig';
 
 describe('parseRuntimeConfig', () => {
+  it('keeps the development Files workflow aligned with the initial API attachment types', () => {
+    const parsed = parseRuntimeConfig(developmentRuntimeConfig);
+
+    expect(parsed.mediaUploadPolicy).toEqual({
+      supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+      maxBytes: 25 * 1024 * 1024
+    });
+  });
+
   it('normalizes required runtime values', () => {
     expect(
       parseRuntimeConfig({
@@ -18,7 +28,7 @@ describe('parseRuntimeConfig', () => {
       invitationAllowInsecureLocalHTTP: false,
       mediaUploadPolicy: {
         supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
-        maxBytes: 5242880
+        maxBytes: 25 * 1024 * 1024
       }
     });
   });

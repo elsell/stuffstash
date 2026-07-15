@@ -483,7 +483,7 @@ export type ParentTargetViewModel = AssetViewModel & { kind: 'location' | 'conta
 export const assetKinds: AssetKind[] = ['item', 'container', 'location'];
 export const defaultMediaUploadPolicy: MediaUploadPolicy = {
   supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
-  maxBytes: 5 * 1024 * 1024
+  maxBytes: 25 * 1024 * 1024
 };
 
 export function assetKindLabel(kind: AssetKind): string {

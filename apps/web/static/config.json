@@ -5,7 +5,7 @@
   "oidcRedirectUri": "http://localhost:5173/callback",
   "invitationAllowInsecureLocalHTTP": true,
   "mediaUploadPolicy": {
-    "supportedContentTypes": ["image/jpeg", "image/png", "image/webp"],
-    "maxBytes": 5242880
+    "supportedContentTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"],
+    "maxBytes": 26214400
   }
 }
