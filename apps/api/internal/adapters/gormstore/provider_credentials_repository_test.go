@@ -39,7 +39,7 @@ func TestProviderCredentialRepositoryReplacesAndReadsActiveCredentialByScope(t *
 	}
 
 	var superseded providerCredentialModel
-	if err := store.db.WithContext(ctx).Where("id = ?", "credential-one").First(&superseded).Error; err != nil {
+	if err := store.db.WithContext(ctx).Where(&providerCredentialModel{ID: "credential-one"}).First(&superseded).Error; err != nil {
 		t.Fatalf("load superseded credential: %v", err)
 	}
 	if superseded.SupersededAt == nil {
@@ -180,7 +180,7 @@ func TestProviderCredentialRepositoryStoresOnlySealedMaterial(t *testing.T) {
 	}
 
 	var model providerCredentialModel
-	if err := store.db.WithContext(ctx).Where("id = ?", "credential-one").First(&model).Error; err != nil {
+	if err := store.db.WithContext(ctx).Where(&providerCredentialModel{ID: "credential-one"}).First(&model).Error; err != nil {
 		t.Fatalf("load credential model: %v", err)
 	}
 	if bytes.Contains(model.Ciphertext, rawSecret) || bytes.Contains(model.Nonce, rawSecret) || model.KeyID == string(rawSecret) {

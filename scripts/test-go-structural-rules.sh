@@ -75,3 +75,19 @@ EOF
 assert_rejected apps/api/internal/app/assets/commands.go
 
 scripts/check-go-structural-rules.sh apps/api/internal/ports/assets.go
+
+mkdir -p apps/api/internal/adapters/gormstore
+cat > apps/api/internal/adapters/gormstore/raw_query.go <<'EOF'
+package gormstore
+func rawQuery(db DB) { db.Where("tenant_id = ? AND id = ?", "tenant", "resource") }
+EOF
+if scripts/check-go-structural-rules.sh apps/api/internal/adapters/gormstore/raw_query.go >/dev/null 2>&1; then
+  echo "expected raw GORM query fragments to be rejected" >&2
+  exit 1
+fi
+
+cat > apps/api/internal/adapters/gormstore/typed_query.go <<'EOF'
+package gormstore
+func typedQuery(db DB) { db.Where(&resourceModel{TenantID: "tenant", ID: "resource"}) }
+EOF
+scripts/check-go-structural-rules.sh apps/api/internal/adapters/gormstore/typed_query.go

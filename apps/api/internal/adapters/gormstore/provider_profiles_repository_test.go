@@ -165,7 +165,7 @@ func TestProviderProfileRepositoryReplacesCredentialAndUpdatesProfileStatus(t *t
 		t.Fatalf("unexpected active credential: found=%t credential=%+v", found, active)
 	}
 	var superseded providerCredentialModel
-	if err := store.db.WithContext(ctx).Where("id = ?", "credential-one").First(&superseded).Error; err != nil {
+	if err := store.db.WithContext(ctx).Where(&providerCredentialModel{ID: "credential-one"}).First(&superseded).Error; err != nil {
 		t.Fatalf("load superseded credential: %v", err)
 	}
 	if superseded.SupersededAt == nil {
