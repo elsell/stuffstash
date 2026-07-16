@@ -30,6 +30,8 @@ development loops.
   configuration, and operator scripts needed to start that release. Public
   quick-start documentation must use this bundle instead of cloning a moving
   branch.
+- A release bundle must embed the API and web digest references produced by
+  that release, even when the tracked env example is updated later by PR.
 - Production documentation deployment must wait for the main-branch Release
   workflow to finish successfully so newly documented release assets exist
   before the public quick start points to them.
@@ -37,10 +39,9 @@ development loops.
   to LAN exposure by setting one documented bind address before startup.
 - Compose must declare a stable project name so release-bundle directory names
   do not change the names of persistent volumes during upgrades.
-- The shared HTTPS hostname must be a DNS name, not an IP literal. The
-  preflight check must reject an IP literal because Go OIDC discovery omits TLS
-  SNI for IP addresses and the Caddy internal-PKI route cannot serve that
-  request reliably.
+- The shared HTTPS hostname must be a valid DNS name, not an IP literal, URL,
+  port, or userinfo value. The preflight check must reject malformed DNS labels
+  and IP literals because OIDC and TLS require one unambiguous host.
 - A private Dex config must remain private on the host. Compose must stage it
   into a named volume with ownership and mode readable by the non-root Dex
   process rather than requiring a world-readable host file.
@@ -57,6 +58,9 @@ development loops.
 - The bundled Dex config is a first-run example only. Public docs must link to
   an operator-safe recipe for replacing static users and clients before
   household use.
+- Strict preflight must reject the bundled Dex emails, client secret, user IDs,
+  and known password hash. Renaming a public example account must not make its
+  public password acceptable for household use.
 - Dex operator guidance must be honest that Dex has no built-in user-management
   UI in this topology. If persistent Dex storage is introduced later, the spec
   must define its storage mode, backup requirements, and user-management
@@ -72,6 +76,12 @@ development loops.
 - Public documentation must keep the first-run path concise and sequential.
   Certificate trust, LAN exposure, secrets, backup, and upgrade detail must be
   visually separated or linked from the quick start.
+- After creating `.env` and before preflight, the quick start must tell
+  remote-server users to use loopback-preserving SSH forwarding for a trial or
+  complete the hardened LAN DNS, binding, and private Dex flow instead of
+  following same-machine `.localhost` instructions. The LAN branch must replace
+  the trial path, require secret replacement, end at the configured DNS URL, and
+  explain how the browser device receives the Caddy root.
 
 ## Verification
 

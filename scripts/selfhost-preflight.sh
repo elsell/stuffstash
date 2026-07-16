@@ -60,11 +60,22 @@ for name in "${required[@]}"; do
   [ -n "${!name:-}" ] || fail "$name is empty"
 done
 
-case "$STUFF_STASH_SELFHOST_HOSTNAME" in
-  *:*) fail "use a DNS hostname, not an IP address" ;;
-  *[!0-9.]* ) ;;
-  *) fail "use a DNS hostname, not an IP address" ;;
-esac
+valid_dns_hostname() {
+  local hostname="$1" label
+  local labels=()
+  [ "${#hostname}" -le 253 ] || return 1
+  [[ "$hostname" == *.* ]] || return 1
+  [[ "$hostname" != .* && "$hostname" != *. ]] || return 1
+  [[ ! "$hostname" =~ ^[0-9.]+$ ]] || return 1
+  IFS='.' read -r -a labels <<< "$hostname"
+  for label in "${labels[@]}"; do
+    [ "${#label}" -ge 1 ] && [ "${#label}" -le 63 ] || return 1
+    [[ "$label" =~ ^[A-Za-z0-9]$|^[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9]$ ]] || return 1
+  done
+}
+
+valid_dns_hostname "$STUFF_STASH_SELFHOST_HOSTNAME" ||
+  fail "use a valid DNS hostname, not an IP address or URL"
 
 expect_value() {
   local name="$1" expected="$2"
@@ -104,7 +115,14 @@ if [ "$trial" -ne 1 ]; then
     mode="$(stat -f '%Lp' "$dex_config" 2>/dev/null || true)"
   fi
   [ "$mode" = "600" ] || fail "private Dex config must have mode 600"
-  if grep -Eq 'owner@example\.com|viewer@example\.com|stuff-stash-local-secret' "$dex_config"; then
+  if grep -Fq \
+    -e 'owner@example.com' \
+    -e 'viewer@example.com' \
+    -e 'stuff-stash-local-secret' \
+    -e '$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W' \
+    -e '11111111-1111-1111-1111-111111111111' \
+    -e '22222222-2222-2222-2222-222222222222' \
+    "$dex_config"; then
     fail "private Dex config still contains example identities or client secrets"
   fi
   dex_has_line() {

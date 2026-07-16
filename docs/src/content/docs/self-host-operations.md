@@ -16,7 +16,8 @@ mkdir -p .stuffstash/selfhost/caddy
 docker compose -f compose.selfhost.yaml cp caddy:/data/caddy/pki/authorities/local/root.crt .stuffstash/selfhost/caddy/root.crt
 ```
 
-Import `root.crt` on every device that opens Stuff Stash.
+Import `root.crt` on every device that opens Stuff Stash. When the browser is on
+another machine, copy the exported file from the server before importing it.
 
 <details>
 <summary>macOS</summary>
@@ -88,27 +89,42 @@ Generate URL-safe passwords with `openssl rand -hex 24`. Generate the provider
 credential key with `openssl rand -base64 32`. Keep `.env` and the private Dex
 config out of Git.
 
+## Try From Another Machine
+
+For a remote trial without exposing example credentials to your LAN, forward
+the four loopback ports from the browser machine:
+
+```sh
+ssh -N -L 8081:127.0.0.1:8081 -L 8080:127.0.0.1:8080 \
+  -L 5556:127.0.0.1:5556 -L 3900:127.0.0.1:3900 user@server
+```
+
+Keep that terminal open and continue the quick start with its default URLs.
+
 ## Use Stuff Stash On Your LAN
 
 :::caution[Use DNS, not an IP address]
 OIDC discovery requires a DNS hostname. A raw LAN IP is unsupported.
 :::
 
-1. Create a local DNS record, such as `stuffstash.home.arpa`, pointing to the server.
-2. In `.env`, replace every `stuffstash.localhost` with that DNS name and set
+This hardened path replaces the remaining trial steps.
+
+1. Complete steps 1 and 2 of [Before Household Use](#before-household-use).
+2. Create a local DNS record, such as `stuffstash.home.arpa`, pointing to the server.
+3. In `.env`, replace every `stuffstash.localhost` with that DNS name and set
    `STUFF_STASH_BIND_ADDRESS` to the server's LAN address. Use `0.0.0.0` only
    when the server address is not stable.
-3. Make the same hostname changes in your private Dex config.
-4. Allow TCP ports `8081`, `8080`, `5556`, and `3900` through the server firewall.
-5. Stop, check, and start the stack:
+4. Make the same hostname changes in your private Dex config.
+5. Allow TCP ports `8081`, `8080`, `5556`, and `3900` through the server firewall.
+6. Check and start the stack:
 
 ```sh
-docker compose -f compose.selfhost.yaml down
 ./scripts/selfhost-preflight.sh
 docker compose -f compose.selfhost.yaml up -d
 ```
 
-Trust the Caddy root on each client device.
+Open `https://stuffstash.home.arpa:8081`, using your DNS name, then export and
+trust the Caddy root on each client device.
 
 The default bind address is `127.0.0.1`, so a new install is reachable only from
 the server itself.

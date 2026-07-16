@@ -24,6 +24,17 @@ Use `shasum -a 256 -c stuffstash-selfhost.tar.gz.sha256` for the checksum.
 
 ```sh
 cp .env.example .env
+```
+
+:::note[Remote server?]
+If the browser is on another device, use an [SSH
+trial](../self-host-operations/#try-from-another-machine). For permanent LAN
+access, follow the [hardened LAN
+setup](../self-host-operations/#use-stuff-stash-on-your-lan) instead of the
+remaining trial steps. Same-machine trials can keep the defaults.
+:::
+
+```sh
 ./scripts/selfhost-preflight.sh --trial
 ```
 

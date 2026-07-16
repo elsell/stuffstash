@@ -44,6 +44,17 @@ sed -i.bak \
   "$tmp_dir/dex-private.yaml"
 chmod 600 "$tmp_dir/dex-private.yaml"
 sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-private.yaml|" "$tmp_dir/.env"
+if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
+  "$repo_root/scripts/selfhost-preflight.sh" --env-file "$tmp_dir/.env" >/dev/null 2>&1; then
+  echo "strict preflight accepted the bundled Dex password hash" >&2
+  exit 1
+fi
+
+sed -i.bak \
+  -e 's|[$]2a[$]10[$]2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W|$2a$10$e6Kyp/nZqCGBTYEYLBeEy.47O8wZ0ncGjdJSf18fb0KkwzCZXoyGO|g' \
+  -e 's/11111111-1111-1111-1111-111111111111/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/g' \
+  -e 's/22222222-2222-2222-2222-222222222222/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/g' \
+  "$tmp_dir/dex-private.yaml"
 SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
   "$repo_root/scripts/selfhost-preflight.sh" --env-file "$tmp_dir/.env" >/dev/null
 
@@ -82,6 +93,22 @@ if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 S
   exit 1
 fi
 grep -q 'DNS hostname' "$tmp_dir/output"
+
+for malformed_hostname in \
+  'good.example@evil.example' \
+  'good.example:444' \
+  'good..example' \
+  '-good.example' \
+  'good-.example' \
+  'good example'; do
+  cp "$repo_root/.env.example" "$tmp_dir/malformed-host.env"
+  sed -i.bak "s|stuffstash\.localhost|$malformed_hostname|g" "$tmp_dir/malformed-host.env"
+  if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
+    "$repo_root/scripts/selfhost-preflight.sh" --trial --env-file "$tmp_dir/malformed-host.env" >/dev/null 2>&1; then
+    echo "preflight accepted malformed hostname: $malformed_hostname" >&2
+    exit 1
+  fi
+done
 
 cp "$repo_root/.env.example" "$tmp_dir/.env"
 sed -i.bak 's/^STUFF_STASH_BIND_ADDRESS=.*/STUFF_STASH_BIND_ADDRESS=0.0.0.0/' "$tmp_dir/.env"

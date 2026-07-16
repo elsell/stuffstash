@@ -211,6 +211,8 @@ jobs:
         run: |
           scripts/build-selfhost-release.sh \
             --version "${{ needs.validate.outputs.next_tag }}" \
+            --api-image "${{ steps.api_image.outputs.image_ref }}" \
+            --web-image "${{ steps.web_image.outputs.image_ref }}" \
             --output release-dist
 
       - name: Create GitHub release
