@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { onDestroy, tick } from 'svelte';
   import X from '@lucide/svelte/icons/x';
@@ -49,6 +50,7 @@
     customFieldDefinitions,
     assetTags = [],
     saving,
+    restoreFocusOnClose = true,
     onClose,
     onSave
   }: {
@@ -62,6 +64,7 @@
     customFieldDefinitions: CustomFieldDefinition[];
     assetTags?: AssetTag[];
     saving: boolean;
+    restoreFocusOnClose?: boolean;
     onClose: () => void;
     onSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
   } = $props();
@@ -118,7 +121,7 @@
       revokePhotoPreviews(selectedPhotos);
       selectedPhotos = [];
       photoError = '';
-      returnFocusElement?.focus();
+      if (restoreFocusOnClose) addReturnFocusTarget(returnFocusElement)?.focus();
       returnFocusElement = null;
     } else if (open && initialKind !== lastInitialKind) {
       kind = initialKind;

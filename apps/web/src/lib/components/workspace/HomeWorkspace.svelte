@@ -101,7 +101,7 @@
     onOpenLocations?: () => void;
     onOpenAsset: (asset: Asset) => void;
     onReturnAsset?: (asset: Asset) => Promise<void>;
-    onOpenAdd: (kind?: 'item' | 'location') => void;
+    onOpenAdd: (kind?: 'item' | 'location', parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onSelectLifecycle: (lifecycleState: AssetLifecycleFilter) => void;
     onTagSearch?: (tag: AssetTag) => void;
   } = $props();
@@ -137,7 +137,7 @@
       return;
     }
     event.preventDefault();
-    onOpenAdd(kind);
+    onOpenAdd(kind, null, event.currentTarget as HTMLElement);
   }
 
   function openAsset(event: MouseEvent, asset: Asset): void {

@@ -74,7 +74,7 @@
     onRetry: () => void;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: 'item' | 'location') => void;
+    onOpenAdd: (kind: 'item' | 'location', parentAssetId?: string | null, opener?: HTMLElement | null) => void;
   } = $props();
 
   const scopes = browseFilterOptions.scopes;
@@ -134,7 +134,7 @@
   function openAdd(event: MouseEvent, kind: 'item' | 'location'): void {
     if (!shouldHandleWorkspaceLinkClick(event)) return;
     event.preventDefault();
-    onOpenAdd(kind);
+    onOpenAdd(kind, null, event.currentTarget as HTMLElement);
   }
 
   function open(event: MouseEvent, asset: Asset): void {

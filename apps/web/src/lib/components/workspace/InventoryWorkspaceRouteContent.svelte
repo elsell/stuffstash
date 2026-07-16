@@ -109,7 +109,7 @@
     onBrowseRetry: () => Promise<void>;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => Promise<void>;
-    onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null) => void;
+    onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onCloseLocation: () => void;
     onCloseAssetDetail: () => void;
     onAssetActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
@@ -306,7 +306,7 @@
     onRetry={handlers.onBrowseRetry}
     onSearch={() => { void handlers.onSearch(); }}
     onOpenAsset={handlers.onOpenSearchAsset}
-    onOpenAdd={(kind) => handlers.onOpenAdd(kind)}
+    onOpenAdd={(kind, parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
   />
 {:else if route.mode === 'import'}
   <InventoryImportWorkspace
@@ -366,7 +366,7 @@
     onOpenLocations={handlers.onOpenLocations}
     onOpenAsset={handlers.onOpenAsset}
     onReturnAsset={handlers.onHomeAssetReturn}
-    onOpenAdd={(kind = 'location') => handlers.onOpenAdd(kind)}
+    onOpenAdd={(kind = 'location', parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
     onSelectLifecycle={(lifecycleState) => { void handlers.onSelectLifecycle(lifecycleState); }}
     onTagSearch={handlers.onAssetTagSearch}
   />

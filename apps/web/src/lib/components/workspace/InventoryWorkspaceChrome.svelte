@@ -22,7 +22,7 @@
     onModeChange: (mode: WorkspaceMode) => void;
     onSearch: () => void;
     onOpenSearchAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: AssetKind) => void;
+    onOpenAdd: (kind: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onOpenAccountSettings: () => void;
     onSignOut: () => void;
     children?: Snippet;
@@ -116,7 +116,7 @@
         {settingsSection}
         {canCreateAsset}
         {onModeChange}
-        onOpenAdd={() => onOpenAdd('item')}
+        onOpenAdd={(opener) => onOpenAdd('item', null, opener)}
       />
     </div>
   {/if}

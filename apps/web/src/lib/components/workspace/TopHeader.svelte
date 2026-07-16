@@ -46,7 +46,7 @@
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: AssetKind) => void;
+    onOpenAdd: (kind: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onOpenSettings: () => void;
     onSignOut: () => void;
     onMobileSurfaceOpenChange?: (open: boolean) => void;

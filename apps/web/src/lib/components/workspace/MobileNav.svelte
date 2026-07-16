@@ -27,7 +27,7 @@
     settingsSection: SettingsSection;
     canCreateAsset: boolean;
     onModeChange: (mode: WorkspaceMode) => void;
-    onOpenAdd: () => void;
+    onOpenAdd: (opener: HTMLElement) => void;
   } = $props();
 
   const addDeniedNoteId = 'mobile-add-denied';
@@ -68,7 +68,7 @@
       return;
     }
     event.preventDefault();
-    onOpenAdd();
+    onOpenAdd(event.currentTarget as HTMLElement);
   }
 </script>
 
@@ -86,6 +86,7 @@
   <Button.Root
     href={addHref()}
     class="mobile-add"
+    data-workspace-add-trigger="mobile"
     disabled={!addAvailability.canOpen}
     aria-label="Add asset"
     aria-describedby={addAvailability.disabledReason ? addDeniedNoteId : undefined}

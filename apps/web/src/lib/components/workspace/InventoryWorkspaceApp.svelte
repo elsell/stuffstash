@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { operationRefreshWarning, safeOperationFailureDescription } from '$lib/application/workspaceOperationNotifications';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { afterNavigate } from '$app/navigation';
-  import { onMount, setContext } from 'svelte';
+  import { onMount, setContext, tick } from 'svelte';
   import { assetThumbnailLoaderContext, type AssetThumbnailLoader } from '$lib/ports/assetThumbnailLoader';
   import {
     detailAssetList,
@@ -124,6 +125,7 @@
   let addParentAssetId = $state<string | null>(null);
   let addReturnLocationId = $state<string | null>(null);
   let addReturnAssetId = $state<string | null>(null);
+  let addReturnFocusElement: HTMLElement | null = null;
   let assetAction = $state<AssetRouteAction>(null);
   let attachmentId = $state<string | null>(null);
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
@@ -292,7 +294,8 @@
       if (result.error) {
         error = result.error;
       }
-      if (result.closeAdd) {
+      const restoreAddFocus = result.closeAdd;
+      if (restoreAddFocus) {
         addOpen = false;
       }
       if (result.mode) {
@@ -319,6 +322,7 @@
       if (result.route) {
         replaceRoute(result.route);
       }
+      if (restoreAddFocus) void restoreAddFocusAfterRoute(false, true);
       return result.saveResult;
     } catch (caught) {
       if (handleSessionExpired(caught)) {
@@ -1410,7 +1414,8 @@
     });
   }
 
-  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null): void {
+  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null, opener: HTMLElement | null = null): void {
+    addReturnFocusElement = opener;
     addReturnLocationId = parentAssetId && selectedLocationId ? selectedLocationId : mode === 'location' ? selectedLocationId : null;
     addReturnAssetId = !addReturnLocationId && mode === 'asset' ? selectedAssetId : null;
     navigateTo({
@@ -1426,9 +1431,15 @@
     const closeRoute = workspaceAddCloseRoute(data.context, { mode, selectedLocationId: addReturnLocationId, selectedAssetId: addReturnAssetId });
     addOpen = false;
     replaceRoute(closeRoute);
-    if (typeof window !== 'undefined') {
-      void applyRoute(currentWorkspaceRoute());
-    }
+    if (typeof window !== 'undefined') void restoreAddFocusAfterRoute(true);
+  }
+
+  async function restoreAddFocusAfterRoute(applyCurrentRoute: boolean, preferResult = false): Promise<void> {
+    const returnFocusElement = addReturnFocusElement;
+    addReturnFocusElement = null;
+    if (applyCurrentRoute) await applyRoute(currentWorkspaceRoute());
+    await tick();
+    addReturnFocusTarget(returnFocusElement, document, undefined, preferResult)?.focus();
   }
 
   function addCloseHref(): string {

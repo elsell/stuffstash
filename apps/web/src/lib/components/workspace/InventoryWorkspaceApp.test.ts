@@ -1385,7 +1385,8 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Garage');
     });
 
-    controlContaining('Add item here').click();
+    const invokingControl = controlContaining('Add item here');
+    invokingControl.click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
@@ -1396,13 +1397,68 @@ describe('InventoryWorkspaceApp route application', () => {
     expect(controlContaining('Cancel').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
     );
+    const cancelFocus = recordFocusCalls();
     controlContaining('Cancel').click();
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
-      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain('Main storage area');
+    try {
+      await waitFor(() => {
+        expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.body.textContent).toContain('Main storage area');
+        expect((document.activeElement as HTMLElement | null)?.dataset.workspaceAddReturnFocus).toBe('location-item');
+        expect(document.activeElement?.textContent).toContain('Add item here');
+        expect(cancelFocus.calls.filter((element) => element.dataset.workspaceAddReturnFocus === 'location-item')).toHaveLength(1);
+      });
+    } finally {
+      cancelFocus.restore();
+    }
+  });
+
+  it('restores Add focus exactly once after Escape', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+    await waitFor(() => expect(controlContaining('Add item here')).toBeTruthy());
+    const opener = controlContaining('Add item here');
+    opener.click();
+    await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="dialog"]')).toBeTruthy());
+    const focus = recordFocusCalls();
+    document.body.querySelector<HTMLElement>('[role="dialog"]')!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
+    try {
+      await waitFor(() => {
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect((document.activeElement as HTMLElement | null)?.dataset.workspaceAddReturnFocus).toBe('location-item');
+        expect(focus.calls.filter((element) => element.dataset.workspaceAddReturnFocus === 'location-item')).toHaveLength(1);
+      });
+    } finally {
+      focus.restore();
+    }
+  });
+
+  it('restores the mobile Add opener exactly once across the shell breakpoint', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(max-width: 900px)', media: query, onchange: null,
+        addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn()
+      }))
     });
+    const opener = document.body.querySelector<HTMLElement>('[data-workspace-add-trigger="mobile"]');
+    if (!opener) throw new Error('Missing mobile Add opener');
+    opener.click();
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const focus = recordFocusCalls();
+    controlContaining('Cancel').click();
+    try {
+      await waitFor(() => {
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.activeElement).toBe(opener);
+        expect(focus.calls.filter((element) => element.dataset.workspaceAddTrigger === 'mobile')).toHaveLength(1);
+      });
+    } finally {
+      focus.restore();
+    }
   });
 
   it('keeps global add and feedback overlays outside the product shell', async () => {
@@ -1426,19 +1482,59 @@ describe('InventoryWorkspaceApp route application', () => {
     await tick();
 
     const saveButton = await waitForSaveButton();
+    const savedFocus = recordFocusCalls();
     saveButton.click();
 
-    await waitFor(() => {
-      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain('Saved Camera bag.');
-      expect(document.body.textContent).toContain('View asset');
-      expect(productShell ? isInert(productShell) : true).toBe(false);
-      expect(productShell?.getAttribute('aria-hidden')).toBeNull();
-    });
+    try {
+      await waitFor(() => {
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.body.textContent).toContain('Saved Camera bag.');
+        expect(document.body.textContent).toContain('View asset');
+        expect(productShell ? isInert(productShell) : true).toBe(false);
+        expect(productShell?.getAttribute('aria-hidden')).toBeNull();
+        expect((document.activeElement as HTMLElement | null)?.hasAttribute('data-workspace-add-result-focus')).toBe(true);
+        expect(savedFocus.calls.filter((element) => element.hasAttribute('data-workspace-add-result-focus'))).toHaveLength(1);
+      });
+    } finally {
+      savedFocus.restore();
+    }
 
     const toast = document.body.querySelector<HTMLElement>('.stuffstash-toast');
     expect(toast).toBeTruthy();
     expect(productShell?.contains(toast)).toBe(false);
+  });
+
+  it('focuses the created detail exactly once after a mobile Save without relying on tap focus', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(max-width: 900px)', media: query, onchange: null,
+        addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn()
+      }))
+    });
+    const opener = document.body.querySelector<HTMLElement>('[data-workspace-add-trigger="mobile"]');
+    if (!opener) throw new Error('Missing mobile Add opener');
+    expect(document.activeElement).not.toBe(opener);
+    opener.click();
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Mobile camera bag');
+    await tick();
+    const focus = recordFocusCalls();
+    (await waitForSaveButton()).click();
+    try {
+      await waitFor(() => {
+        const resultTarget = document.body.querySelector<HTMLElement>('[data-workspace-add-result-focus]');
+        expect(resultTarget?.textContent).toContain('Mobile camera bag');
+        expect(document.activeElement).toBe(resultTarget);
+        expect(focus.calls.filter((element) => element.hasAttribute('data-workspace-add-result-focus'))).toHaveLength(1);
+        expect(document.body.querySelector('[data-workspace-add-trigger="mobile"]')).toBeNull();
+      });
+    } finally {
+      focus.restore();
+    }
   });
 
   it('offers target-scoped Undo after a supported mutation and Redo after compensation', async () => {
@@ -2267,6 +2363,19 @@ function controlContaining(text: string): HTMLElement {
     throw new Error(`Missing control containing ${text}`);
   }
   return control;
+}
+
+function recordFocusCalls(): { calls: HTMLElement[]; restore: () => void } {
+  const calls: HTMLElement[] = [];
+  const nativeFocus = HTMLElement.prototype.focus;
+  const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
+    this: HTMLElement,
+    options?: FocusOptions
+  ) {
+    calls.push(this);
+    nativeFocus.call(this, options);
+  });
+  return { calls, restore: () => spy.mockRestore() };
 }
 
 function settingsLink(label: string): HTMLAnchorElement {

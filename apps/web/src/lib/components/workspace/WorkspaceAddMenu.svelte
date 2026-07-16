@@ -20,7 +20,7 @@
     canOpen: boolean;
     disabledReason?: string;
     disablePortal?: boolean;
-    onOpenAdd: (kind: AssetKind) => void;
+    onOpenAdd: (kind: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
   } = $props();
 
   let open = $state(false);
@@ -38,7 +38,7 @@
     if (shouldHandleWorkspaceLinkClick(event)) {
       event.preventDefault();
       open = false;
-      onOpenAdd(option.kind);
+      onOpenAdd(option.kind, null, document.querySelector<HTMLElement>('[data-workspace-add-trigger="desktop"]'));
     }
     if (typeof primitiveOnClick === 'function') primitiveOnClick(event);
   }

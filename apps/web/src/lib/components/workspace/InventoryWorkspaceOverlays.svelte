@@ -95,6 +95,7 @@
   {customFieldDefinitions}
   {assetTags}
   {saving}
+  restoreFocusOnClose={false}
   onClose={onAddClose}
   onSave={onAddSave}
 />

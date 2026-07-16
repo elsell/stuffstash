@@ -105,7 +105,7 @@
     onActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onActionClose: () => void;
     onOpenAsset?: (asset: Asset) => void;
-    onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
+    onOpenAdd?: (kind: 'item', parentAssetId: string, opener?: HTMLElement | null) => void;
     onMoveHere?: (asset: Asset) => Promise<void>;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
@@ -657,7 +657,7 @@
       <div class="asset-detail-copy">
         <div class="detail-title-row">
           <div>
-            <h1 id="asset-title" tabindex="-1">{asset.title}</h1>
+            <h1 id="asset-title" data-workspace-add-result-focus tabindex="-1">{asset.title}</h1>
             <p>{asset.containmentTrail}</p>
             <AssetTagChips tags={asset.tags ?? []} onTagSelect={onTagSearch} />
           </div>

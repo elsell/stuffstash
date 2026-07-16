@@ -43,7 +43,7 @@
     onOpenLocation: (asset: Asset) => void;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
+    onOpenAdd?: (kind: 'item', parentAssetId: string, opener?: HTMLElement | null) => void;
     onOpenMoveHere?: () => void;
     onCloseMoveHere?: () => void;
     onMoveHere?: (asset: Asset) => Promise<void>;
@@ -74,7 +74,7 @@
     <AssetThumb asset={location} size="lg" />
     <div class="location-identity">
       <span class="location-kind-label">Location</span>
-      <h1 id="location-title">{location.title}</h1>
+      <h1 id="location-title" data-workspace-add-result-focus tabindex="-1">{location.title}</h1>
       {#if location.description}<p>{location.description}</p>{/if}
     </div>
     {#if canEdit}

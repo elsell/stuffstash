@@ -9,7 +9,7 @@
     saving: boolean;
     moveHereOpen: boolean;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: 'item', parentAssetId: string) => void;
+    onOpenAdd: (kind: 'item', parentAssetId: string, opener?: HTMLElement | null) => void;
     onOpenMoveHere: () => void;
     onCloseMoveHere: () => void;
     onMoveHere: (asset: Asset) => Promise<void>;
@@ -96,7 +96,7 @@
   function openAdd(event: MouseEvent): void {
     if (!canAddHere || !shouldHandleWorkspaceLinkClick(event)) return;
     event.preventDefault();
-    onOpenAdd('item', target.id);
+    onOpenAdd('item', target.id, event.currentTarget as HTMLElement);
   }
 
   function openMove(event: MouseEvent): void {
