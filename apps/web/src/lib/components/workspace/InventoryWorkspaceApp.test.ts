@@ -385,6 +385,8 @@ async function mountWorkspace(
   window.history.replaceState({}, '', path);
   installMatchMedia();
   toaster = mount(Toaster, { target: document.body });
+  // Let Sonner reset its singleton store before the workspace can publish.
+  await tick();
   component = mount(InventoryWorkspaceApp, {
     target: document.body,
     props: {
@@ -430,12 +432,12 @@ async function waitFor(assertion: () => void): Promise<void> {
 }
 
 afterEach(() => {
-  toast.dismiss();
   if (component) {
     unmount(component);
     component = null;
   }
   if (toaster) {
+    toast.dismiss();
     unmount(toaster);
     toaster = null;
   }
