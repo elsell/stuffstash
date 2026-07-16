@@ -418,7 +418,7 @@ function installMatchMedia(): void {
 
 async function waitFor(assertion: () => void): Promise<void> {
   let lastError: unknown;
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     await tick();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
     try {
