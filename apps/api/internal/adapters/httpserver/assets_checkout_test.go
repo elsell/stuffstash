@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,6 +19,7 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 		},
 		ids: []string{
 			"socket-set", "op-socket-set", "audit-socket-set",
+			"attachment-socket-set", "audit-attachment-socket-set",
 			"checkout-socket-set", "op-checkout-socket-set", "audit-checkout-socket-set",
 			"op-return-socket-set", "audit-return-socket-set",
 			"op-return-socket-set-two", "audit-return-socket-set-two", "audit-return-details-socket-set",
@@ -41,6 +43,16 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	}
 	created := decodeAsset(t, create)
 	assetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + created.Data.ID
+	photoContent := pngAttachmentContent()
+	photo := performRequest(server, http.MethodPost, assetPath+"/attachments", "Bearer dev:owner", map[string]any{
+		"fileName":      "socket-set.png",
+		"contentType":   "image/png",
+		"contentBase64": base64.StdEncoding.EncodeToString(photoContent),
+	})
+	if photo.Code != http.StatusCreated {
+		t.Fatalf("expected attachment status %d, got %d with body %s", http.StatusCreated, photo.Code, photo.Body.String())
+	}
+	createdPhoto := decodeAttachment(t, photo)
 
 	checkout := performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner:owner@example.test", map[string]any{"details": "  using at my desk  "})
 	if checkout.Code != http.StatusCreated {
@@ -95,6 +107,9 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	checkedOutListBody := decodeCheckedOutAssetList(t, checkedOutList)
 	if len(checkedOutListBody.Data) != 1 || checkedOutListBody.Data[0].Asset.ID != created.Data.ID || checkedOutListBody.Data[0].Checkout.ID != checkedOut.Data.ID {
 		t.Fatalf("unexpected checked-out list: %+v", checkedOutListBody.Data)
+	}
+	if checkedOutListBody.Data[0].Asset.PrimaryPhoto == nil || checkedOutListBody.Data[0].Asset.PrimaryPhoto.ID != createdPhoto.Data.ID {
+		t.Fatalf("expected checked-out list primary photo %q, got %+v", createdPhoto.Data.ID, checkedOutListBody.Data[0].Asset.PrimaryPhoto)
 	}
 	if checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipalID != "owner" || checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipal == nil || checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipal.Email != "owner@example.test" {
 		t.Fatalf("expected checked-out list principal profile, got %+v", checkedOutListBody.Data[0].Checkout)

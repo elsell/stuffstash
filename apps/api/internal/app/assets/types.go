@@ -151,10 +151,11 @@ type AssetCheckoutHistoryResult struct {
 }
 
 type CheckedOutAssetsResult struct {
-	Items      []ports.CheckedOutAsset
-	Limit      int
-	NextCursor *string
-	HasMore    bool
+	Items         []ports.CheckedOutAsset
+	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
+	Limit         int
+	NextCursor    *string
+	HasMore       bool
 }
 
 type PreparedCheckoutOperation struct {

@@ -202,10 +202,19 @@ Web requirements:
 - Return from asset detail must be one visible action when the asset is currently checked out.
 - Checkout and return details must be optional and must not block the fastest checkout or return path.
 - Asset cards, recent assets, search results, location contents, checked-out browsing surfaces, archived asset rows, and asset detail must show a compact checked-out indicator when an asset has an open checkout.
+- The checked-out asset projection must include the same safe primary-photo
+  summary used by ordinary asset lists so Home and checked-out browsing can
+  recognize the asset without issuing per-asset detail requests.
 - The checked-out indicator must not hide the asset's normal location or imply that the asset moved.
 - The selected-inventory browsing experience must provide a checked-out surface or filter that includes assets with open checkout records regardless of lifecycle.
+- On a dedicated checked-out surface, the open checkout indicator is the primary status. An `active` lifecycle badge must be suppressed as redundant; an `archived` lifecycle badge must remain visible because it changes recovery expectations.
 - The asset detail workspace must expose checkout history through the same safe-history design principles used for audit history: compact rows, safe actor labels, timestamps, and bounded details.
 - Checkout-aware search filters must be available from the web search experience without requiring users to know API query parameters.
+- Web Home must show each checked-out asset as a compact photo-first row. An
+  editor sees a trailing `Return` action with an asset-specific accessible name;
+  activating it returns the asset immediately with no confirmation or required
+  details. Viewers do not see the mutation action. The row disappears after a
+  successful return and the normal saved feedback remains perceivable.
 
 ## Mobile UX
 

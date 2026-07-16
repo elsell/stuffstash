@@ -139,7 +139,7 @@ func RegisterCheckedOutAssets(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 		return &dto.ListCheckedOutAssetsOutput{Body: shared.SuccessEnvelope[[]dto.CheckedOutAssetResponse]{
-			Data: mapper.CheckedOutAssetsToResponse(result.Items, resolveCheckedOutAssetPrincipals(ctx, application, result.Items)),
+			Data: mapper.CheckedOutAssetsToResponse(result.Items, result.PrimaryPhotos, resolveCheckedOutAssetPrincipals(ctx, application, result.Items)),
 			Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 		}}, nil
 	}, huma.OperationTags("assets"), shared.SecuredOperation)
