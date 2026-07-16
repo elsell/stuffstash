@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +18,7 @@ import {
 } from '../../application/home/HomeDashboardQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { AssetCard } from '../components/AssetCard';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { assetDetailHref } from './AssetDetailNavigation';
@@ -197,6 +197,8 @@ function Dashboard({
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
+      keyboardDismissMode={appKeyboardDismissMode()}
+      keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
@@ -451,7 +453,7 @@ function ReturnDetailsSheet({
             {pendingReturn?.asset.title}
           </Text>
         </View>
-        <TextInput
+        <AppTextInput
           multiline
           editable={!pendingReturn?.isSaving}
           onChangeText={onChangeDetails}

@@ -17,7 +17,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View
 } from 'react-native';
@@ -96,6 +95,7 @@ import {
 } from './AssetWorkspaceStatusPresentation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 import { useAppFeedback } from '../feedback/AppFeedback';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type InventoryMapScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
@@ -646,7 +646,7 @@ export function InventoryMapScreen({
         </View>
         <View style={styles.searchBar}>
           <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
-          <TextInput
+          <AppTextInput
             accessibilityLabel="Find in inventory map"
             autoCapitalize="none"
             onChangeText={setQuery}
@@ -1017,6 +1017,7 @@ function InventoryMapColumn({
       <FlatList
         data={displayedColumn.assets}
         keyExtractor={(asset) => asset.id}
+        keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={!mapVerticalScrollLocked && !exiting}
         showsVerticalScrollIndicator={false}

@@ -24,6 +24,7 @@ import { SearchHeader } from './SearchScreen';
 import { createBrowseHeaderStyles } from './BrowseHeader';
 import { InventoryMapHeaderActions } from './InventoryMapScreen';
 import { darkPalette, lightPalette } from '../theme/tokens';
+import { AppTextInput } from '../components/AppTextInput';
 
 vi.mock('expo-router', () => ({
   router: { navigate: vi.fn(), push: vi.fn() },
@@ -340,9 +341,10 @@ describe('SearchScreen presentation helpers', () => {
       searchInputFocused: true,
       searchInputRef: inputRef
     });
-    const input = findFirstByType(header, 'TextInput');
+    const input = findFirstByProp(header, 'accessibilityLabel', 'Search names, places, or tags');
     const text = collectText(header);
 
+    expect(input?.type).toBe(AppTextInput);
     expect(input?.props?.ref).toBe(inputRef);
     expect(input?.props?.value).toBe('bike pump');
     expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.accessibilityState)

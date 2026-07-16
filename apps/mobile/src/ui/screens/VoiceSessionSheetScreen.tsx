@@ -8,13 +8,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
 import { useAppServices } from '../navigation/AppServicesContext';
@@ -307,6 +307,8 @@ function VoiceSessionSheet({
               styles.sessionContent,
               !body.hasBodyContent && styles.emptySessionContent
             ]}
+            keyboardDismissMode={appKeyboardDismissMode()}
+            keyboardShouldPersistTaps="handled"
           >
             {session.transcript ? (
               <View style={styles.sessionSection}>
@@ -599,7 +601,7 @@ function EditablePlanCommandFields({
   if (editing) {
     return (
       <View style={styles.inlineNameEditor}>
-        <TextInput
+        <AppTextInput
           accessibilityLabel="Proposed item name"
           autoFocus
           maxLength={200}
@@ -711,7 +713,7 @@ function ParentPicker({
             <X color={palette.textMuted} size={21} strokeWidth={2.4} />
           </Pressable>
         </View>
-        <TextInput
+        <AppTextInput
           accessibilityLabel="Search containing locations"
           autoCapitalize="none"
           onChangeText={onChangeQuery}
@@ -720,7 +722,7 @@ function ParentPicker({
           style={styles.parentSearchInput}
           value={query}
         />
-        <ScrollView contentContainerStyle={styles.parentPickerList} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
           <ParentOption
             label="Inventory root"
             meta="No containing location"

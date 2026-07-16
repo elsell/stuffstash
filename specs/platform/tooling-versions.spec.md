@@ -48,6 +48,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - React Native Image Viewing for mobile draft photo preview carousel: `react-native-image-viewing 0.2.2`.
 - React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
 - React Native Worklets for Expo SDK 55 Reanimated: `react-native-worklets 0.7.4`.
+- React Native Keyboard Controller: `react-native-keyboard-controller 1.20.7`. This is the Expo SDK 55-compatible native integration selected by Expo's version check; its keyboard-attached extension supplies the project-owned iOS dismissal bar across single-line and multiline fields, bottom tabs, native stacks and sheets, and React Native modals, where React Native `0.83` core `InputAccessoryView` and view-hierarchy-bound sticky toolbars have documented or physically verified gaps. It reuses the already-pinned Reanimated runtime and remains hidden behind mobile UI adapter components.
 - React Navigation native runtime for Expo Router and dirty native-stack prevent-remove coordination: `@react-navigation/native 7.2.6`. It is a direct mobile dependency because the editor uses its public `usePreventRemove` hook; relying on Expo Router's transitive installation would make that safety boundary implicit and unstable.
 - React Navigation bottom tabs transitive dependency for Expo Router: `@react-navigation/bottom-tabs 7.17.0`.
 - React Navigation native stack transitive override for Expo Router peer alignment: `@react-navigation/native-stack 7.3.16`.
@@ -130,6 +131,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Tooling changes must be atomic conventional commits.
 - The Go structural checker must inspect GORM adapter source with the Go AST and reject string-literal query fragments passed as the first argument to `Where`, `Order`, or `Joins`. This rule is scoped to `apps/api/internal/adapters/gormstore/*.go` so unrelated methods with the same names are not rejected.
 - Generated artifacts must include drift checks once generation is introduced.
+- The mobile UI structural checker must reject direct `TextInput` JSX usage in production mobile source outside the project-owned `AppTextInput` framework adapter. The checker must run in pre-commit and the blocking required-checks workflow so newly added fields cannot bypass the shared keyboard, accessibility, and dismissal contract.
 - Release version planning must be done by repository-owned scripts using Conventional Commit messages and SemVer. Do not add external release automation dependencies for version calculation.
 - A release commit on `main` must only create a new tag and GitHub release when commits since the last SemVer tag require a release.
 - Release image publication must produce immutable image digests. GitOps deployment state must prefer digests over mutable tags.

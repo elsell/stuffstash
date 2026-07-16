@@ -3,10 +3,10 @@ import { router } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
-  TextInput,
   useWindowDimensions,
   View
 } from 'react-native';
+import type { TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
 import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
@@ -28,6 +28,7 @@ import type {
 import type { LocationsQuery, LocationsViewModel } from '../../application/locations/LocationsQuery';
 import type { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
@@ -490,6 +491,7 @@ export function SearchScreen({
         keyExtractor={keyBrowseListItem}
         columnWrapperStyle={numColumns === 2 ? styles.cardRow : undefined}
         contentContainerStyle={styles.content}
+        keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
         numColumns={numColumns}
         refreshing={isRefreshing}

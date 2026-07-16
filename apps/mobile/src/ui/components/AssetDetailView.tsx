@@ -28,6 +28,7 @@ import {
   shouldShowContainedContentsSearch
 } from './AssetContainedWorkspace';
 import { assetDetailUpdatedMetadata } from './AssetDetailPresentation';
+import { appKeyboardDismissMode } from './AppTextInput';
 
 export {
   containedAssetRowAccessibilityLabel,
@@ -107,6 +108,8 @@ export function AssetDetailView({
       contentContainerStyle={styles.content}
       data={workspaceItems}
       keyExtractor={(item) => item.key}
+      keyboardDismissMode={appKeyboardDismissMode()}
+      keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl}
       renderItem={({ item }) => (
         <ContainedWorkspaceListItemView

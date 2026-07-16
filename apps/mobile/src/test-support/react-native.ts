@@ -24,6 +24,7 @@ export const AccessibilityInfo = {
 };
 export const Appearance = { setColorScheme() {} };
 export const Platform = { OS: 'ios', select: <T>(values: { ios?: T; default?: T }) => values.ios ?? values.default };
+export const PlatformColor = (name: string) => `platform:${name}`;
 export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 };
 export const findNodeHandle = () => 1;
 export const useWindowDimensions = () => ({ fontScale: 1, height: 844, width: 390 });

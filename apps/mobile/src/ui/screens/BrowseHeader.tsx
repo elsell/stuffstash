@@ -9,9 +9,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
+import type { TextInput } from 'react-native';
 import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
@@ -32,6 +32,7 @@ import { BrowseSurfaceControl } from './InventoryMapScreen';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
 import { radius, spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
+import { AppTextInput } from '../components/AppTextInput';
 
 type TagFilterStatus = 'loading' | 'ready' | 'error';
 
@@ -181,7 +182,7 @@ export function SearchHeader({
 
       <View style={[styles.searchBar, searchInputFocused ? styles.searchBarFocused : null]}>
         <Search color={palette.textMuted} size={19} strokeWidth={2.25} />
-        <TextInput
+        <AppTextInput
           accessibilityLabel="Search names, places, or tags"
           autoCapitalize="none"
           ref={searchInputRef}

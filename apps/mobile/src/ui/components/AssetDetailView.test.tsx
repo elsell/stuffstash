@@ -6,6 +6,7 @@ import {
   containedAssetRowAccessibilityLabel,
   containedWorkspaceItems
 } from './AssetDetailView';
+import { AppTextInput } from './AppTextInput';
 
 vi.mock('react', () => ({
   useState: <Value,>(initial: Value) => [initial, vi.fn()]
@@ -314,7 +315,9 @@ describe('AssetDetailView', () => {
     const large = AssetDetailView({ asset: placeDetail({ spaces: twentySpaces }), onAddHere: vi.fn() });
     const small = AssetDetailView({ asset: placeDetail({ spaces: twentySpaces.slice(0, 19) }), onAddHere: vi.fn() });
 
-    expect(findFirstByProp(large, 'accessibilityLabel', 'Search contents')?.type).toBe('TextInput');
+    expect(findFirstByProp(large, 'accessibilityLabel', 'Search contents')?.type).toBe(AppTextInput);
+    expect(large.props.keyboardDismissMode).toBe('interactive');
+    expect(large.props.keyboardShouldPersistTaps).toBe('handled');
     expect(findFirstByProp(small, 'accessibilityLabel', 'Search contents')).toBeUndefined();
   });
 

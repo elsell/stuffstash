@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ManageProviderProfileCommand } from '../../application/providerProfiles/ManageProviderProfileCommand';
 import type {
   ProviderCredentialPurpose,
@@ -10,6 +10,7 @@ import { useAppFeedback } from '../feedback/AppFeedback';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useSettingsListStyles } from './SettingsList';
 import { ProviderStateView, readableError, useProviderSettings } from './ProviderSettingsSupport';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type ProviderEditorProps = {
   readonly manageCommand: ManageProviderProfileCommand;
@@ -95,7 +96,7 @@ function CredentialForm({
   }
 
   return (
-    <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardShouldPersistTaps="handled" style={styles.shell}>
+    <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.shell}>
       <Text accessibilityRole="header" style={styles.detailTitle}>Replace Credential</Text>
       <Text style={styles.detailSubtitle}>{profile.displayName}. Secrets are sent directly to your Stuff Stash server and aren’t stored on this device.</Text>
       {profile.credentialPurpose === 'server_adc' ? (
@@ -103,7 +104,7 @@ function CredentialForm({
       ) : (
         <View>
           <Text style={local.label}>{credentialLabel(profile.credentialPurpose)}</Text>
-          <TextInput
+          <AppTextInput
             accessibilityLabel={credentialLabel(profile.credentialPurpose)}
             autoCapitalize="none"
             autoCorrect={false}
@@ -158,11 +159,11 @@ function PromptForm({
   }
 
   return (
-    <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardShouldPersistTaps="handled" style={styles.shell}>
+    <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.shell}>
       <Text accessibilityRole="header" style={styles.detailTitle}>Prompt Guidance</Text>
       <Text style={styles.detailSubtitle}>Optional tenant guidance for {profile.displayName}. Existing hidden prompt text is never returned to the phone.</Text>
       <Text style={local.label}>New prompt guidance</Text>
-      <TextInput accessibilityLabel="New prompt guidance" multiline onChangeText={setValue} style={[local.input, local.multiline]} value={value} />
+      <AppTextInput accessibilityLabel="New prompt guidance" multiline onChangeText={setValue} style={[local.input, local.multiline]} value={value} />
       <View style={local.actions}>
         <Pressable accessibilityRole="button" disabled={saving} onPress={onCancel} style={local.secondaryButton}><Text style={styles.actionText}>Cancel</Text></Pressable>
         <Pressable accessibilityRole="button" accessibilityState={{ busy: saving, disabled: saving }} disabled={saving} onPress={() => void save()} style={local.primaryButton}><Text style={local.primaryText}>{saving ? 'Saving…' : 'Save Guidance'}</Text></Pressable>

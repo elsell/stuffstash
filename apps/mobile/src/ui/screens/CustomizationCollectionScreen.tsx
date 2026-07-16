@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight, Plus, Search } from 'lucide-react-native';
 import type { CustomizationContextQuery } from '../../application/customization/CustomizationContextQuery';
 import type { CustomizationCollectionQuery } from '../../application/customization/CustomizationQueries';
@@ -15,6 +15,7 @@ import { SettingsLoadingRow, SettingsSection, SettingsSeparator, useSettingsList
 import { DeniedSettingsState } from './ScopedSettingsScreens';
 import { tagColorName } from '../components/TagColorPicker';
 import { SettingsSegmentedControl } from '../components/SettingsSegmentedControl';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type Row = AssetTagDefinition | CustomDefinition;
 
@@ -87,9 +88,9 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery, kind
   if (status === 'denied') return <DeniedSettingsState message="You don’t have permission to view these settings." />;
   if (!context) return null;
 
-  return <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.action} />} style={settings.styles.shell}>
+  return <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.action} />} style={settings.styles.shell}>
     <View style={[styles.toolbar, settings.styles.contentBlock]}>
-      <View style={styles.searchShell}><Search color={colors.textMuted} size={18} /><TextInput accessibilityLabel={`Search ${plural(kind)}`} onChangeText={setSearch} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`} placeholderTextColor={colors.textMuted} style={styles.searchInput} value={search} /></View>
+      <View style={styles.searchShell}><Search color={colors.textMuted} size={18} /><AppTextInput accessibilityLabel={`Search ${plural(kind)}`} onChangeText={setSearch} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`} placeholderTextColor={colors.textMuted} style={styles.searchInput} value={search} /></View>
       {canEdit && lifecycle === 'active' ? <Pressable accessibilityLabel={`Add ${singular(kind)}`} accessibilityRole="button" onPress={onAdd} style={styles.addButton}><Plus color={colors.onAction} size={19} /><Text style={styles.addText}>Add</Text></Pressable> : null}
     </View>
     {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value={lifecycle} /></View> : null}

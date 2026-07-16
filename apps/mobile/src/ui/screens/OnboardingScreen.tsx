@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +17,7 @@ import {
   OnboardingStartState
 } from '../../application/onboarding/OnboardingCommand';
 import { BrandMark } from '../components/BrandMark';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 
@@ -132,6 +132,7 @@ export function OnboardingScreen({
       >
         <ScrollView
           contentContainerStyle={styles.content}
+          keyboardDismissMode={appKeyboardDismissMode()}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brandRow}>
@@ -331,7 +332,7 @@ function OnboardingTextInput({
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
+      <AppTextInput
         {...inputProps}
         autoCorrect={false}
         placeholderTextColor={colors.textMuted}

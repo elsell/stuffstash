@@ -8,12 +8,16 @@ import { AppearanceProvider, useAppearance } from '../ui/theme/AppearanceContext
 import {
   createAssetNativeSheetOptions
 } from '../ui/screens/AssetNativeSheetOptions';
+import { AppKeyboardAccessory } from '../ui/components/AppKeyboardAccessory';
+import { AppKeyboardProvider } from '../ui/components/AppKeyboardProvider';
 
 export default function RootLayout() {
   return (
-    <AppearanceProvider controller={getAppearancePreferenceController()}>
-      <ThemedApp />
-    </AppearanceProvider>
+    <AppKeyboardProvider>
+      <AppearanceProvider controller={getAppearancePreferenceController()}>
+        <ThemedApp />
+      </AppearanceProvider>
+    </AppKeyboardProvider>
   );
 }
 
@@ -134,6 +138,7 @@ function ThemedApp() {
           }}
         />
       </Stack>
+      <AppKeyboardAccessory />
     </AppServicesProvider>
     </InventoryInvitationLinkProvider>
   );

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Check, Palette, X } from 'lucide-react-native';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { FullSpectrumTagColorPicker } from './FullSpectrumTagColorPicker';
 import { tagColorModalLayout } from './TagColorPickerPresentation';
+import { AppTextInput, appKeyboardDismissMode } from './AppTextInput';
 
 export const tagColorChoices = [
   '#2F80ED',
@@ -111,9 +112,9 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           <View style={styles.pickerSurface}>
             <FullSpectrumTagColorPicker compact={modalLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={setCustomDraft} />
           </View>
-          <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.supplementaryContent} keyboardShouldPersistTaps="handled" style={styles.supplementaryScroll}>
+          <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.supplementaryContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.supplementaryScroll}>
             <Text style={styles.inputLabel}>Hex color</Text>
-            <TextInput accessibilityLabel="Custom tag color hex value" autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder="#2F80ED" placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
+            <AppTextInput accessibilityLabel="Custom tag color hex value" autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder="#2F80ED" placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
             {!validDraft ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Enter a #RRGGBB color.</Text> : null}
             <Pressable accessibilityRole="button" onPress={() => setCustomDraft('')} style={styles.clearAction}><Text style={styles.clearActionText}>Clear color</Text></Pressable>
           </ScrollView>

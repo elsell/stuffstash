@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { Check, Copy, Send, X } from 'lucide-react-native';
@@ -25,6 +24,7 @@ import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { SettingsSection, useSettingsListStyles } from './SettingsList';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 export function InventorySharingScreen({
   cancelCommand,
@@ -160,6 +160,7 @@ export function InventorySharingScreen({
   return (
     <ScrollView
       contentContainerStyle={settingsStyles.content}
+      keyboardDismissMode={appKeyboardDismissMode()}
       keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={palette.action} />}
       style={settingsStyles.shell}
@@ -172,7 +173,7 @@ export function InventorySharingScreen({
       <SettingsSection title="New Invitation">
         <View style={styles.form}>
           <Text style={styles.label}>Email</Text>
-          <TextInput
+          <AppTextInput
             autoCapitalize="none"
             autoComplete="email"
             accessibilityLabel="Invitee email"

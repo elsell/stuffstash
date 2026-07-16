@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
-import { AccessibilityInfo, Alert, findNodeHandle, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Alert, findNodeHandle, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View, type TextInput } from 'react-native';
 import { ChevronDown, ChevronLeft } from 'lucide-react-native';
 import type { CustomizationContextQuery } from '../../application/customization/CustomizationContextQuery';
 import type { CustomizationCollectionQuery } from '../../application/customization/CustomizationQueries';
@@ -22,6 +22,7 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { SettingsActionRow, SettingsLoadingRow, SettingsSection, SettingsSeparator, SettingsValueRow, useSettingsListStyles } from './SettingsList';
 import { DeniedSettingsState } from './ScopedSettingsScreens';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 
 type EditorRecord = AssetTagDefinition | CustomDefinition;
 
@@ -197,7 +198,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
     }}], { onDismiss: () => { if (workflowRef.current.cancelLifecycleConfirmation()) setLifecycleBusy(false); } });
   }
 
-  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={settings.styles.shell}><ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardShouldPersistTaps="handled">
+  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={settings.styles.shell}><ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
     {draftDenied ? <View accessibilityLiveRegion="assertive" style={styles.errorSummary}><Text accessibilityRole="header" style={styles.errorTitle}>Access changed</Text><Text style={styles.errorText}>Your change was not saved. Your draft is shown below and is read-only.</Text><Text style={styles.errorText}>Ask a household manager to restore your access, then refresh access.</Text><Pressable accessibilityRole="button" onPress={() => void refreshDraftAccess()} style={settings.styles.retryButton}><Text style={settings.styles.retryText}>Refresh access</Text></Pressable></View> : error ? <View accessibilityLiveRegion="assertive" ref={errorSummaryRef} style={styles.errorSummary}><Text accessibilityRole="header" style={styles.errorTitle}>{errorTitle}</Text><Text style={styles.errorText}>{error}</Text></View> : null}
     <SettingsSection title={mode === 'create' ? `New ${label(kind)}` : label(kind)}>
       {editorMutable ? <CustomizationLabeledInput error={nameTouched && !name.trim() ? 'Name is required.' : undefined} label="Name" onChangeText={(value) => { setNameTouched(true); const next = withEditorName(editorDraft, value); setName(next.name); setKey(next.key); }} required value={name} editable /> : <CustomizationReadOnlyValue label="Name" value={name} />}

@@ -9,7 +9,8 @@ const testState = vi.hoisted(() => ({
 const routerPush = vi.hoisted(() => vi.fn());
 const useFocusEffectMock = vi.hoisted(() => vi.fn());
 
-vi.mock('react', () => ({
+vi.mock('react', async (importOriginal) => ({
+  ...await importOriginal<typeof import('react')>(),
   useCallback: <T,>(callback: T) => callback,
   useEffect: vi.fn(),
   useRef: <T,>(value: T) => ({ current: value }),
@@ -43,6 +44,7 @@ vi.mock('react-native', () => ({
   ActivityIndicator: 'ActivityIndicator',
   Image: 'Image',
   Modal: 'Modal',
+  Platform: { OS: 'ios' },
   Pressable: 'Pressable',
   RefreshControl: 'RefreshControl',
   ScrollView: 'ScrollView',

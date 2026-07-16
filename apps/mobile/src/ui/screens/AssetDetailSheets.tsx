@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { Check } from 'lucide-react-native';
@@ -21,6 +20,7 @@ import {
 } from '../../application/assets/AssetTagDraftResolution';
 import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
 import { TagColorPicker } from '../components/TagColorPicker';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import {
   assetEditContext,
   canSaveEditAsset,
@@ -82,7 +82,7 @@ export function EditAssetSheet({
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <Text style={styles.sheetTitle}>Edit asset</Text>
-      <ScrollView contentContainerStyle={styles.editScrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.editScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
           <Text style={styles.readOnlyContextValue}>
@@ -93,7 +93,7 @@ export function EditAssetSheet({
           <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
         </View>
         <Text style={styles.inputLabel}>Name</Text>
-        <TextInput
+        <AppTextInput
           autoCapitalize="sentences"
           editable={!isSaving}
           onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -101,7 +101,7 @@ export function EditAssetSheet({
           value={draft?.title ?? ''}
         />
         <Text style={styles.inputLabel}>Description</Text>
-        <TextInput
+        <AppTextInput
           editable={!isSaving}
           multiline
           onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -242,7 +242,7 @@ function EditTagPicker({
         })}
       </View>
       <View style={styles.newTagRow}>
-        <TextInput
+        <AppTextInput
           accessibilityLabel="New tag name"
           editable={!disabled}
           onChangeText={setNewTagName}
@@ -251,7 +251,7 @@ function EditTagPicker({
           style={[styles.input, styles.newTagNameInput]}
           value={newTagName}
         />
-        <TextInput
+        <AppTextInput
           accessibilityLabel="New tag color"
           autoCapitalize="characters"
           editable={!disabled}
@@ -319,7 +319,7 @@ export function MoveAssetSheet({
       <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
       {placement ? <PlacementPanel preview={placement} /> : null}
       <Text style={styles.inputLabel}>Put in</Text>
-      <TextInput
+      <AppTextInput
         autoCapitalize="sentences"
         editable={!isSaving}
         onChangeText={onChangeQuery}
@@ -328,7 +328,7 @@ export function MoveAssetSheet({
         style={styles.input}
         value={draft?.query ?? ''}
       />
-      <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
             <View style={styles.createKindSegment} accessibilityRole="tablist">
@@ -413,7 +413,7 @@ export function MoveThingsHereSheet({
       <Text style={styles.sheetTitle}>Move something here</Text>
       <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
       <Text style={styles.inputLabel}>Find item, box, or place</Text>
-      <TextInput
+      <AppTextInput
         autoCapitalize="sentences"
         editable={!isSaving}
         onChangeText={onChangeQuery}
@@ -422,7 +422,7 @@ export function MoveThingsHereSheet({
         style={styles.input}
         value={draft?.query ?? ''}
       />
-      <ScrollView style={styles.parentList} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {draft?.matches.length === 0 ? (
           <View style={styles.parentEmptyState}>
             <Text style={styles.parentTitle}>{emptyState.title}</Text>
