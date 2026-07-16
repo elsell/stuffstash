@@ -70,4 +70,9 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
 
       - name: Start and verify self-host topology
-        run: scripts/verify-selfhost-runtime.sh
+        run: |
+          scripts/build-selfhost-release.sh --version ci --output selfhost-runtime-dist
+          mkdir selfhost-runtime-dist/extracted
+          tar -xzf selfhost-runtime-dist/stuffstash-selfhost.tar.gz -C selfhost-runtime-dist/extracted
+          SELFHOST_RUNTIME_ROOT="$PWD/selfhost-runtime-dist/extracted/stuffstash-selfhost" \
+            scripts/verify-selfhost-runtime.sh

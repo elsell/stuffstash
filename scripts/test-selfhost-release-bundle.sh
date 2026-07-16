@@ -16,8 +16,15 @@ for required in \
   stuffstash-selfhost/.env.example \
   stuffstash-selfhost/compose.selfhost.yaml \
   stuffstash-selfhost/scripts/selfhost-preflight.sh \
+  stuffstash-selfhost/scripts/configure-garage-cors.mjs \
   stuffstash-selfhost/deploy/selfhost/caddy/Caddyfile \
   stuffstash-selfhost/deploy/selfhost/dex/config.yaml \
+  stuffstash-selfhost/deploy/selfhost/garage/garage.toml \
+  stuffstash-selfhost/deploy/dex/theme/styles.css \
+  stuffstash-selfhost/deploy/dex/templates/header.html \
+  stuffstash-selfhost/deploy/dex/templates/login.html \
+  stuffstash-selfhost/deploy/dex/templates/password.html \
+  stuffstash-selfhost/docs/public/brand/stuff-stash-glyph.png \
   stuffstash-selfhost/VERSION; do
   grep -qx "$required" <<<"$archive_entries" || {
     echo "release bundle missing $required" >&2

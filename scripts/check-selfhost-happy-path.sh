@@ -226,9 +226,16 @@ test -x scripts/verify-selfhost-runtime.sh ||
 grep -q 'scripts/verify-selfhost-runtime.sh' .github/workflows/ci.yml ||
   fail "CI must run the self-host topology"
 
+grep -q 'SELFHOST_RUNTIME_ROOT=.*selfhost-runtime-dist/extracted/stuffstash-selfhost' .github/workflows/ci.yml ||
+  fail "CI must run the extracted self-host release bundle"
+
 grep -q 'scripts/build-selfhost-release.sh' .github/workflows/release.yml &&
   grep -q 'stuffstash-selfhost.tar.gz.sha256' .github/workflows/release.yml ||
   fail "releases must attach a checksummed self-host bundle"
+
+grep -q 'workflow_run:' .github/workflows/docs-pages.yml &&
+  grep -q 'workflows: \[Release\]' .github/workflows/docs-pages.yml ||
+  fail "production docs must wait for release assets"
 
 scripts/test-selfhost-preflight.sh
 scripts/test-selfhost-release-bundle.sh
