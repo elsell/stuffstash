@@ -240,6 +240,10 @@ grep -q 'scripts/verify-selfhost-runtime.sh' .github/workflows/ci.yml ||
 grep -q 'SELFHOST_RUNTIME_ROOT=.*selfhost-runtime-dist/extracted/stuffstash-selfhost' .github/workflows/ci.yml ||
   fail "CI must run the extracted self-host release bundle"
 
+grep -q -- '--api-image' .github/workflows/ci.yml &&
+  grep -q -- '--web-image' .github/workflows/ci.yml ||
+  fail "CI must build the self-host bundle with immutable image references"
+
 grep -q 'scripts/build-selfhost-release.sh' .github/workflows/release.yml &&
   grep -q 'stuffstash-selfhost.tar.gz.sha256' .github/workflows/release.yml ||
   fail "releases must attach a checksummed self-host bundle"

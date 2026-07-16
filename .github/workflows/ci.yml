@@ -71,7 +71,13 @@ jobs:
 
       - name: Start and verify self-host topology
         run: |
-          scripts/build-selfhost-release.sh --version ci --output selfhost-runtime-dist
+          api_image="$(sed -n 's/^STUFF_STASH_API_IMAGE=//p' .env.example)"
+          web_image="$(sed -n 's/^STUFF_STASH_WEB_IMAGE=//p' .env.example)"
+          scripts/build-selfhost-release.sh \
+            --version ci \
+            --api-image "$api_image" \
+            --web-image "$web_image" \
+            --output selfhost-runtime-dist
           mkdir selfhost-runtime-dist/extracted
           tar -xzf selfhost-runtime-dist/stuffstash-selfhost.tar.gz -C selfhost-runtime-dist/extracted
           SELFHOST_RUNTIME_ROOT="$PWD/selfhost-runtime-dist/extracted/stuffstash-selfhost" \
