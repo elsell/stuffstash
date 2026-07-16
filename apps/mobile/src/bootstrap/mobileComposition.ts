@@ -8,12 +8,16 @@ import { ApiAssetOperationReversalRepository } from '../adapters/assets/ApiAsset
 import { ApiAssetCheckoutHistoryRepository } from '../adapters/audit/ApiAssetCheckoutHistoryRepository';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
+import { ApiInventoryInvitationRepository } from '../adapters/invitations/ApiInventoryInvitationRepository';
 import { ApiOnboardingGateway } from '../adapters/onboarding/ApiOnboardingGateway';
 import { FileSystemConnectionProfileStore } from '../adapters/onboarding/FileSystemConnectionProfileStore';
 import { ExpoPhotoSelectionProvider } from '../adapters/photos/ExpoPhotoSelectionProvider';
 import { ApiProviderProfileRepository } from '../adapters/providerProfiles/ApiProviderProfileRepository';
 import { ExpoSettingsDiagnosticsProvider } from '../adapters/settings/ExpoSettingsDiagnosticsProvider';
 import { FileSystemAppearancePreferenceStore } from '../adapters/settings/FileSystemAppearancePreferenceStore';
+import { ApiSettingsScopeRepository } from '../adapters/settings/ApiSettingsScopeRepository';
+import { ApiInventoryInvitationManagementRepository } from '../adapters/sharing/ApiInventoryInvitationManagementRepository';
+import { ExpoInvitationLinkActions } from '../adapters/sharing/ExpoInvitationLinkActions';
 import { ExpoVoiceAudioPlayer, ExpoVoiceAudioRecorder } from '../adapters/voice/ExpoVoiceAudio';
 import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketRealtimeVoiceTransport';
 import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
@@ -46,11 +50,18 @@ import {
 import { OnboardingCommand } from '../application/onboarding/OnboardingCommand';
 import { ManageProviderProfileCommand } from '../application/providerProfiles/ManageProviderProfileCommand';
 import { ProviderProfileSettingsQuery } from '../application/providerProfiles/ProviderProfileSettingsQuery';
-import { ProviderProfileVoiceReadinessCheck } from '../application/providerProfiles/ProviderProfileVoiceReadinessCheck';
 import { TestProviderProfileCommand } from '../application/providerProfiles/TestProviderProfileCommand';
 import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
+import { AcceptInventoryInvitationCommand } from '../application/invitations/AcceptInventoryInvitationCommand';
+import { PreviewInventoryInvitationQuery } from '../application/invitations/PreviewInventoryInvitationQuery';
 import { SettingsQuery } from '../application/settings/SettingsQuery';
 import { AppearancePreferenceController } from '../application/settings/AppearancePreference';
+import {
+  CancelInventoryInvitationCommand,
+  CreateInventoryInvitationCommand,
+  ListInventoryInvitationsQuery,
+  type InvitationLinkActions
+} from '../application/sharing/InventorySharing';
 import { VoiceInteractionPreviewQuery } from '../application/voice/VoiceInteractionPreviewQuery';
 import { RealtimeVoiceSessionController } from '../application/voice/RealtimeVoiceSession';
 import {
@@ -85,7 +96,13 @@ export type MobileComposition = {
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly locationsQuery: LocationsQuery;
   readonly locationAssetsQuery: LocationAssetsQuery;
+  readonly previewInventoryInvitationQuery: PreviewInventoryInvitationQuery;
+  readonly acceptInventoryInvitationCommand: AcceptInventoryInvitationCommand;
   readonly settingsQuery: SettingsQuery;
+  readonly listInventoryInvitationsQuery: ListInventoryInvitationsQuery;
+  readonly createInventoryInvitationCommand: CreateInventoryInvitationCommand;
+  readonly cancelInventoryInvitationCommand: CancelInventoryInvitationCommand;
+  readonly invitationLinkActions: InvitationLinkActions;
   readonly providerProfileSettingsQuery: ProviderProfileSettingsQuery;
   readonly manageProviderProfileCommand: ManageProviderProfileCommand;
   readonly testProviderProfileCommand: TestProviderProfileCommand;
@@ -154,11 +171,17 @@ export function createMobileComposition(
     serviceScopeId,
     directUploadPolicy
   );
+  const inventoryInvitations = new ApiInventoryInvitationRepository(client);
+  const managedInvitations = new ApiInventoryInvitationManagementRepository(
+    client,
+    runtimeSeed.invitationOrigin,
+    runtimeSeed.invitationAllowInsecureLocalHTTP
+  );
   const assetActivity = new ApiAssetActivityRepository(client);
   const assetChangeReversal = new ApiAssetOperationReversalRepository(client);
   const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
-  const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
+  const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries);
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(serviceScopeId);
 
@@ -168,7 +191,7 @@ export function createMobileComposition(
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetActivityQuery: new AssetActivityQuery(assetActivity),
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
-    assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries),
+    assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries, inventorySummaries),
     assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),
@@ -187,10 +210,17 @@ export function createMobileComposition(
     photoSelectionQuery: new PhotoSelectionQuery(new ExpoPhotoSelectionProvider()),
     locationsQuery: new LocationsQuery(inventorySummaries),
     locationAssetsQuery: new LocationAssetsQuery(inventorySummaries),
+    previewInventoryInvitationQuery: new PreviewInventoryInvitationQuery(inventoryInvitations),
+    acceptInventoryInvitationCommand: new AcceptInventoryInvitationCommand(inventoryInvitations),
     settingsQuery: new SettingsQuery(
       principals,
-      new ExpoSettingsDiagnosticsProvider(config)
+      new ExpoSettingsDiagnosticsProvider(config),
+      new ApiSettingsScopeRepository(client, inventorySummaries)
     ),
+    listInventoryInvitationsQuery: new ListInventoryInvitationsQuery(managedInvitations),
+    createInventoryInvitationCommand: new CreateInventoryInvitationCommand(managedInvitations),
+    cancelInventoryInvitationCommand: new CancelInventoryInvitationCommand(managedInvitations),
+    invitationLinkActions: new ExpoInvitationLinkActions(),
     providerProfileSettingsQuery,
     manageProviderProfileCommand: new ManageProviderProfileCommand(providerProfiles),
     testProviderProfileCommand: new TestProviderProfileCommand(providerProfiles),
@@ -206,8 +236,7 @@ export function createMobileComposition(
       }),
       new ExpoVoiceAudioPlayer(),
       {
-        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
-        readinessChecker: new ProviderProfileVoiceReadinessCheck(providerProfileSettingsQuery)
+        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
       }
     ),
     authSessionController,

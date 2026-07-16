@@ -110,6 +110,19 @@ class FakeProviderProfileClient {
 }
 
 describe('ApiProviderProfileRepository', () => {
+  it('resolves the active tenant for every operation after an in-session tenant switch', async () => {
+    const client = new FakeProviderProfileClient();
+    const scope = new FakeProviderTenantScope('tenant-home');
+    const repository = new ApiProviderProfileRepository(client, scope);
+
+    await repository.listProviderProfiles();
+    expect(client.listedTenantId).toBe('tenant-home');
+
+    scope.tenantId = 'tenant-cabin';
+    await repository.testProviderProfile('profile-language');
+    expect(client.testedTenantId).toBe('tenant-cabin');
+  });
+
   it('maps provider profiles to safe mobile summaries', async () => {
     const client = new FakeProviderProfileClient();
     client.profiles = [
@@ -287,6 +300,14 @@ describe('ApiProviderProfileRepository', () => {
     });
   });
 });
+
+class FakeProviderTenantScope {
+  constructor(public tenantId: string) {}
+
+  async getCurrentTenantId(): Promise<string> {
+    return this.tenantId;
+  }
+}
 
 function providerProfile(): ProviderProfile {
   return {

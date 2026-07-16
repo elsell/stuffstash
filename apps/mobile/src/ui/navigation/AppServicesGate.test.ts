@@ -3,7 +3,8 @@ import { ConnectionProfile } from '../../application/onboarding/ConnectionProfil
 import { MobileComposition } from '../../bootstrap/mobileComposition';
 import {
   appServicesStateAfterAuthenticationRequired,
-  appServicesStateAfterReset,
+  appServicesStateAfterServerChange,
+  appServicesStateAfterSignOut,
   appServicesStateAfterStartupError,
   appServicesStateFromOnboardingStart
 } from './AppServicesGate';
@@ -36,14 +37,26 @@ describe('AppServicesGate', () => {
     expect(state.composition).toEqual({ profile });
   });
 
-  it('returns to instance onboarding after startup errors and reset', () => {
+  it('returns to instance onboarding after startup errors and an explicit server change', () => {
     expect(appServicesStateAfterStartupError()).toEqual({
       status: 'onboarding',
       onboardingState: { step: 'instance' }
     });
-    expect(appServicesStateAfterReset()).toEqual({
+    expect(appServicesStateAfterServerChange()).toEqual({
       status: 'onboarding',
       onboardingState: { step: 'instance' }
+    });
+  });
+
+  it('returns to sign-in while preserving the server and tenant hint after sign out', () => {
+    const profile = {
+      apiBaseUrl: 'http://localhost:8080',
+      tenantId: 'tenant-home'
+    };
+
+    expect(appServicesStateAfterSignOut(profile)).toEqual({
+      status: 'onboarding',
+      onboardingState: { step: 'signIn', profile }
     });
   });
 

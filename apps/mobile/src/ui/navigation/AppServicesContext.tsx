@@ -14,15 +14,23 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import {
   appServicesStateAfterAuthenticationRequired,
-  appServicesStateAfterReset,
+  appServicesStateAfterServerChange,
+  appServicesStateAfterSignOut,
   appServicesStateAfterStartupError,
   appServicesStateFromOnboardingStart,
   AppServicesGateState
 } from './AppServicesGate';
 import { VoiceInteractionStateProvider } from './VoiceInteractionStateContext';
+import { useInventoryInvitationLink } from './InventoryInvitationLinkContext';
 
 const AppServicesContext = createContext<MobileComposition | null>(null);
-const AppConnectionActionsContext = createContext<{ readonly resetConnectionProfile: () => Promise<void> } | null>(null);
+
+export type AppConnectionActions = {
+  readonly signOut: () => Promise<void>;
+  readonly changeServer: () => Promise<void>;
+};
+
+const AppConnectionActionsContext = createContext<AppConnectionActions | null>(null);
 
 type AppServicesProviderProps = {
   readonly children: ReactNode;
@@ -37,6 +45,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
 }
 
 function AppServicesProviderInner({ children }: AppServicesProviderProps) {
+  const invitationLink = useInventoryInvitationLink();
   const onboardingCommand = useMemo(() => createOnboardingCommand(), []);
   const [state, setState] = useState<AppServicesState>({ status: 'loading' });
   const feedback = useAppFeedback();
@@ -103,6 +112,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
         command={onboardingCommand}
         initialApiBaseUrl={createSeedConnectionProfile()?.apiBaseUrl}
         initialState={state.onboardingState}
+        invitationPending={Boolean(invitationLink.reference)}
         onComplete={(profile) => {
           authPromptVisibleRef.current = false;
           setState({ status: 'ready', composition: buildComposition(profile) });
@@ -115,14 +125,28 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   }
 
   const mobileComposition = state.composition;
+  const signOut = async (): Promise<void> => {
+    const profile = await getConnectionProfileStore().load();
+    if (!profile) {
+      await onboardingCommand.reset();
+      setState(appServicesStateAfterServerChange());
+      return;
+    }
+
+    await onboardingCommand.expireSession({ profile });
+    setState(appServicesStateAfterSignOut(profile));
+  };
+  const changeServer = async (): Promise<void> => {
+    await onboardingCommand.reset();
+    setState(appServicesStateAfterServerChange());
+  };
+
   return (
     <AppServicesContext.Provider value={mobileComposition}>
       <AppConnectionActionsContext.Provider
         value={{
-          resetConnectionProfile: async () => {
-            await onboardingCommand.reset();
-            setState(appServicesStateAfterReset());
-          }
+          signOut,
+          changeServer
         }}
       >
         <VoiceInteractionStateProvider
@@ -146,7 +170,7 @@ export function useAppServices(): MobileComposition {
   return services;
 }
 
-export function useAppConnectionActions(): { readonly resetConnectionProfile: () => Promise<void> } {
+export function useAppConnectionActions(): AppConnectionActions {
   const actions = useContext(AppConnectionActionsContext);
   if (actions === null) {
     throw new Error('App connection actions are not available.');

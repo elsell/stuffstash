@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { getAppearancePreferenceController } from '../bootstrap/mobileComposition';
 import { AppServicesProvider } from '../ui/navigation/AppServicesContext';
+import { InventoryInvitationLinkProvider } from '../ui/navigation/InventoryInvitationLinkContext';
 import { AppearanceProvider, useAppearance } from '../ui/theme/AppearanceContext';
 import {
   createAssetNativeSheetOptions
@@ -29,6 +30,7 @@ function ThemedApp() {
   }
 
   return (
+    <InventoryInvitationLinkProvider>
     <AppServicesProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
@@ -58,8 +60,22 @@ function ThemedApp() {
             sheetLargestUndimmedDetentIndex: 'none'
           }}
         />
-        <Stack.Screen name="settings" options={{ title: 'Settings' }} />
-        <Stack.Screen name="provider-profiles" options={{ title: 'Voice providers' }} />
+        <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
+        <Stack.Screen name="settings/account" options={{ title: 'Account' }} />
+        <Stack.Screen name="settings/appearance" options={{ title: 'Appearance' }} />
+        <Stack.Screen name="settings/sharing" options={{ title: 'Sharing' }} />
+        <Stack.Screen name="settings/connection" options={{ title: 'Stuff Stash Server' }} />
+        <Stack.Screen name="settings/about" options={{ title: 'About' }} />
+        <Stack.Screen name="settings/diagnostics" options={{ title: 'Diagnostics' }} />
+        <Stack.Screen name="invitations/accept" options={{ title: 'Invitation' }} />
+        <Stack.Screen name="settings/voice/index" options={{ title: 'Voice Setup' }} />
+        <Stack.Screen name="settings/voice/[capability]" options={{ title: 'Voice Stage' }} />
+        <Stack.Screen name="settings/voice/profiles/index" options={{ title: 'Provider Profiles' }} />
+        <Stack.Screen name="settings/voice/profiles/add" options={{ title: 'Add Profile' }} />
+        <Stack.Screen name="settings/voice/profiles/[providerProfileId]/index" options={{ title: 'Provider Profile' }} />
+        <Stack.Screen name="settings/voice/profiles/[providerProfileId]/credential" options={{ title: 'Credential' }} />
+        <Stack.Screen name="settings/voice/profiles/[providerProfileId]/prompt" options={{ title: 'Prompt Guidance' }} />
+        <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />
         <Stack.Screen
           name="assets/[assetId]/edit"
           options={sheetOptions.edit}
@@ -91,5 +107,6 @@ function ThemedApp() {
         />
       </Stack>
     </AppServicesProvider>
+    </InventoryInvitationLinkProvider>
   );
 }
