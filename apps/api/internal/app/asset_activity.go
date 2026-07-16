@@ -103,7 +103,7 @@ func (a App) ListAssetActivity(ctx context.Context, input ListAssetActivityInput
 func (a App) projectAssetActivityEntry(ctx context.Context, input ListAssetActivityInput, record audit.Record, canUndo bool) audit.AssetActivityEntry {
 	entry := audit.AssetActivityEntry{
 		ID: record.ID, PrincipalID: record.PrincipalID, Action: record.Action, Category: record.Action.AssetActivityCategory(), Source: record.Source,
-		OccurredAt: record.OccurredAt, RequestID: record.RequestID, Changes: projectAssetActivityChanges(record), TechnicalMetadata: map[string]string{},
+		OccurredAt: record.OccurredAt, RequestID: record.RequestID, Changes: projectAssetActivityChanges(record), TechnicalMetadata: projectAssetActivityTechnicalMetadata(record),
 	}
 	operationID := strings.TrimSpace(record.Metadata["operation_id"])
 	if canUndo && operationID != "" && a.undoables != nil {
@@ -113,6 +113,17 @@ func (a App) projectAssetActivityEntry(ctx context.Context, input ListAssetActiv
 		}
 	}
 	return entry
+}
+
+func projectAssetActivityTechnicalMetadata(record audit.Record) map[string]string {
+	technical := map[string]string{}
+	if action, ok := audit.NewAction(record.Metadata["original_action"]); ok {
+		technical["original_action"] = action.String()
+	}
+	if targetType, ok := audit.NewTargetType(record.Metadata["target_type"]); ok {
+		technical["target_type"] = targetType.String()
+	}
+	return technical
 }
 
 func projectAssetActivityChanges(record audit.Record) []audit.AssetActivityChange {

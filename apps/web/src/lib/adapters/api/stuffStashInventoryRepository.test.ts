@@ -373,6 +373,31 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
+  it('creates a tenant with its first inventory without dropping existing tenant access', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.createTenantWithInventory({ tenantName: 'Workshop', inventoryName: 'Tools' });
+
+    expect(data.context.selectedTenantId).toBe('tenant-created');
+    expect(data.context.selectedInventoryId).toBe('inventory-created-new-tenant');
+    expect(data.context.tenants.map((tenant) => tenant.id)).toEqual([
+      'tenant-home',
+      'tenant-cabin',
+      'tenant-empty',
+      'tenant-created'
+    ]);
+    expect(data.context.inventories.map((inventory) => inventory.id)).toEqual(['inventory-created-new-tenant']);
+    expect(await requests.find((request) => request.method === 'POST' && new URL(request.url).pathname === '/tenants')?.json()).toEqual({
+      name: 'Workshop'
+    });
+    expect(
+      await requests.find(
+        (request) => request.method === 'POST' && new URL(request.url).pathname === '/tenants/tenant-created/inventories'
+      )?.json()
+    ).toEqual({ name: 'Tools' });
+  });
+
   it('loads asset detail by ID through the generated client path', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
@@ -435,6 +460,25 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     expect(results[2]?.asset).not.toHaveProperty('photo');
   });
 
+  it('hydrates primary photos for Browse search results', async () => {
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-passport'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const page = await repository.browseAssets({
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'passport', tagIds: [],
+      lifecycleState: 'all', checkoutState: 'any', scope: 'all', sort: 'updated_desc', mode: 'fuzzy', limit: 20
+    });
+
+    expect(page.assets[0]).toMatchObject({
+      id: 'asset-passport',
+      photo: expect.objectContaining({ assetId: 'asset-passport', alt: 'Passport' })
+    });
+    expect(page.searchResults[0]?.asset.photo).toMatchObject({ assetId: 'asset-passport' });
+    expect(requests.some((request) =>
+      request.url.includes('/assets/asset-passport/attachments/attachment-one/thumbnail?variant=small')
+    )).toBe(true);
+  });
+
   it('updates asset detail and movement through the generated client path', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
@@ -464,22 +508,16 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     });
   });
 
-  it('moves an asset while preserving its editable fields', async () => {
+  it('moves an asset with a parent-only generated update payload', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
 
-    const asset = await repository.moveAsset('tenant-home', 'inventory-household', 'asset-passport', 'asset-safe');
+    await expect(
+      repository.moveAsset('tenant-home', 'inventory-household', 'asset-passport', 'asset-safe')
+    ).resolves.toMatchObject({ id: 'asset-passport', parentAssetId: 'asset-safe' });
 
-    expect(asset).toMatchObject({ id: 'asset-passport', parentAssetId: 'asset-safe' });
-    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport',
-      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
-    ]);
-    expect(await requests[1]?.json()).toMatchObject({
-      title: 'Passport',
-      description: '',
-      parentAssetId: 'asset-safe'
-    });
+    expect(requests).toHaveLength(1);
+    expect(await requests[0]?.json()).toEqual({ parentAssetId: 'asset-safe' });
   });
 
   it('applies target-scoped Undo and Redo through generated client paths', async () => {

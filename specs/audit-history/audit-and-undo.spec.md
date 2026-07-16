@@ -28,6 +28,8 @@ The second implementation slice defines undo and redo for a narrow set of asset 
 - Audit behavior must be behind ports and adapters.
 - Audit writing must be part of the application operation boundary.
 - Audit records must preserve tenant and inventory isolation.
+- Tenant audit history reads must return tenant-scoped records only. They must not include records for every inventory inside the tenant.
+- Inventory audit history reads must return records scoped to the requested tenant and requested inventory only.
 - Audit records must be append-only through application ports. The first slice must not expose update or delete behavior for audit records.
 - Append-only audit persistence must reject duplicate audit record IDs instead of overwriting existing records. This applies to durable adapters and in-memory adapters used for local runs and tests.
 - Audit records must be cursor paginated.
@@ -38,6 +40,7 @@ The second implementation slice defines undo and redo for a narrow set of asset 
 - The append-only audit stream and the homeowner-facing asset activity projection are separate read models. Filtering activity must never delete, rewrite, or suppress records in the raw audit stream.
 - Asset activity must default to meaningful state changes so routine read audit records cannot bury a recent edit, move, lifecycle action, checkout action, return action, undo, or redo.
 - Asset activity must support an explicit `all` view for authorized technical review of every asset-targeted audit record.
+- Successful undo and redo records must target the affected asset in the durable audit stream, retain the operation ID in safe metadata, and appear newest-first in that asset's `changes` activity view. An operation from another tenant, inventory, or asset must never be joined into the requested asset activity.
 - Asset activity must be cursor-paginated newest-first by `(occurredAt, id)`. Cursor scope must include tenant ID, inventory ID, asset ID, and activity view.
 - Asset activity reads must require `inventory.view`, verify that the asset belongs to the requested tenant and inventory, and return the same safe not-found behavior used by asset detail reads.
 - Audit read responses must use the standard API success and error envelopes.
@@ -234,6 +237,8 @@ The first slice may expose only `undo` and `redo` endpoints. Listing undoable op
 
 - A successful supported asset action whose response includes an undoable operation ID must show a time-bounded success notification with an `Undo` action. Supported web actions are create, edit, move, archive, restore, checkout, and return, including one-click return from Home.
 - The notification action must apply the exact operation ID returned by that mutation; the web client must not infer a global "last action" or discover an operation by timing.
+- Successful create, changed update, archive, and restore responses must include the operation ID created atomically with the mutation as `undoableOperationId`; a normalized no-op update is the only successful update response that omits it. Ordinary reads must never include an operation ID.
+- Asset create, archive, and restore application commands must expose one operation-aware result contract. Asset-only compatibility facades that discard the operation identifier are forbidden; callers needing only the asset must still consume the operation-aware result explicitly.
 - While Undo or Redo is being applied, repeated activation for the same operation must be suppressed and the action must remain screen-reader announced as in progress.
 - Successful Undo must reconcile the affected asset, checked-out collection, selected detail, and active lifecycle collection from the API result, then offer a time-bounded `Redo` action for the same operation ID. Successful Redo must perform the symmetric reconciliation and offer `Undo` again.
 - Undo/Redo must stay behind the web inventory repository port. The Svelte component must not call the generated API client directly.
@@ -304,6 +309,8 @@ The full audited action set should eventually include:
 - Tests must verify tenant and inventory isolation for audit reads.
 - Tests must verify pagination for audit reads, including `(occurredAt, id)` ordering.
 - Tests must verify newest-first cursor pagination for asset activity and reject cursors reused across tenants, inventories, assets, or activity views.
+- Tests must verify edit, undo, and redo appear newest-first in the affected asset's activity and that same-timestamp cursor boundaries neither duplicate nor skip records.
+- Tests must verify create, changed update, archive, and restore client responses preserve `undoableOperationId`, while a normalized no-op update omits it.
 - Tests must verify that `change` activity still returns a recent edit after more than one page of read audit records, while `all` activity preserves authorized access to those reads.
 - Tests must verify that activity returns safe structured title, description-changed, tag-count, parent, lifecycle, and checkout summaries without leaking unsafe metadata or undo snapshots.
 - Tests must verify activity undo status only resolves operations from the same tenant and inventory.

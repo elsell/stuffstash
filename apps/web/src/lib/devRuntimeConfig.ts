@@ -26,27 +26,38 @@ export function resolveDevRuntimeConfig(
 }
 
 function trustedPrivateLanOrigin(host: string): string | undefined {
-  const trimmedHost = host.trim();
-  if (!trimmedHost) {
+  if (!host || host !== host.trim()) {
     return undefined;
   }
-  try {
-    const url = new URL(`http://${trimmedHost}`);
-    return isPrivateIPv4(url.hostname) ? url.origin : undefined;
-  } catch {
+  const match = /^(\d{1,3}(?:\.\d{1,3}){3})(?::(\d{1,5}))?$/.exec(host);
+  if (!match) {
     return undefined;
   }
+  const address = match[1];
+  const octets = address.split('.');
+  if (!octets.every(isCanonicalOctet) || !isTrustedPrivateIPv4(octets.map(Number))) {
+    return undefined;
+  }
+  const port = match[2];
+  if (port && (!isCanonicalDecimal(port) || Number(port) < 1 || Number(port) > 65535)) {
+    return undefined;
+  }
+  return `http://${address}${port ? `:${port}` : ''}`;
 }
 
-function isPrivateIPv4(hostname: string): boolean {
-  const octets = hostname.split('.').map(Number);
-  if (octets.length !== 4 || octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) {
-    return false;
-  }
+function isTrustedPrivateIPv4(octets: number[]): boolean {
   return octets[0] === 10
     || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31)
     || (octets[0] === 192 && octets[1] === 168)
     || (octets[0] === 169 && octets[1] === 254);
+}
+
+function isCanonicalOctet(value: string): boolean {
+  return isCanonicalDecimal(value) && Number(value) <= 255;
+}
+
+function isCanonicalDecimal(value: string): boolean {
+  return String(Number(value)) === value;
 }
 
 function normalizedOrigin(value: string | undefined): string | undefined {

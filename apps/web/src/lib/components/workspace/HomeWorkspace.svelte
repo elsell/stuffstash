@@ -78,7 +78,6 @@
     recentAssets,
     archivedAssets,
     checkedOutAssets = [],
-    browseMode = 'home',
     canCreateAsset = true,
     canEditAsset = false,
     onOpenLocation,
@@ -96,14 +95,13 @@
     recentAssets: AssetViewModel[];
     archivedAssets: Asset[];
     checkedOutAssets?: Asset[];
-    browseMode?: 'home' | 'locations';
     canCreateAsset?: boolean;
     canEditAsset?: boolean;
     onOpenLocation: (asset: Asset) => void;
     onOpenLocations?: () => void;
     onOpenAsset: (asset: Asset) => void;
     onReturnAsset?: (asset: Asset) => Promise<void>;
-    onOpenAdd: (kind?: 'item' | 'location') => void;
+    onOpenAdd: (kind?: 'item' | 'location', parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onSelectLifecycle: (lifecycleState: AssetLifecycleFilter) => void;
     onTagSearch?: (tag: AssetTag) => void;
   } = $props();
@@ -114,13 +112,13 @@
   let routeInventoryId = $derived(
     inventoryId || locations[0]?.location.inventoryId || recentAssets[0]?.inventoryId || archivedAssets[0]?.inventoryId || null
   );
-  let headingPresentation = $derived(homeHeadingPresentation(lifecycleState, browseMode));
+  let headingPresentation = $derived(homeHeadingPresentation(lifecycleState));
   let lifecycleOptions = $derived(homeLifecycleOptions(routeTenantId, routeInventoryId));
   const addDenied = homeCreateLocationDenied();
   const recentEmpty = homeRecentEmptyState();
   const archivedEmpty = homeArchivedEmptyState();
-  let locationsEmpty = $derived(homeLocationsEmptyState(browseMode));
-  let displayedLocations = $derived(homeLocationPreview(locations, browseMode));
+  let locationsEmpty = $derived(homeLocationsEmptyState());
+  let displayedLocations = $derived(homeLocationPreview(locations));
   let returningAssetId = $state<string | null>(null);
 
   function addLocationHref(): string {
@@ -139,7 +137,7 @@
       return;
     }
     event.preventDefault();
-    onOpenAdd(kind);
+    onOpenAdd(kind, null, event.currentTarget as HTMLElement);
   }
 
   function openAsset(event: MouseEvent, asset: Asset): void {
@@ -194,14 +192,12 @@
       <p>{headingPresentation.description}</p>
     </div>
     <div class="heading-actions">
-      {#if browseMode === 'home'}
-        <SegmentedControl
-          label="Asset lifecycle"
-          value={lifecycleState}
-          options={lifecycleOptions}
-          onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
-        />
-      {/if}
+      <SegmentedControl
+        label="Asset lifecycle"
+        value={lifecycleState}
+        options={lifecycleOptions}
+        onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
+      />
       {#if lifecycleState === 'active'}
         <Button.Root
           href={addLocationHref()}
@@ -217,7 +213,7 @@
     </div>
   </div>
 
-  {#if lifecycleState === 'active' && browseMode === 'home'}
+  {#if lifecycleState === 'active'}
     <section class="recent-section" aria-labelledby="recent-title">
       <div class="section-heading compact recent-heading">
         <h2 id="recent-title">Recently changed</h2>
@@ -344,7 +340,7 @@
         aria-describedby={!canCreateAsset ? addDenied.id : undefined}
         onclick={(event) => openAdd(event, 'location')}
       >{locationsEmpty.actionLabel}</Button.Root>
-      {#if browseMode === 'home' && canCreateAsset && locationsEmpty.secondaryActionLabel}
+      {#if canCreateAsset && locationsEmpty.secondaryActionLabel}
         <Button.Root
           href={addItemHref()}
           variant="outline"
@@ -356,16 +352,14 @@
       {/if}
     </div>
   {:else}
-    {#if browseMode === 'home'}
-      <div class="section-heading compact locations-heading">
-        <h2>Places</h2>
-        {#if locations.length > displayedLocations.length}
-          <Button.Root href={homeLocationsHref(routeTenantId, routeInventoryId)} variant="ghost" onclick={openLocations}>
-            View all places
-          </Button.Root>
-        {/if}
-      </div>
-    {/if}
+    <div class="section-heading compact locations-heading">
+      <h2>Places</h2>
+      {#if locations.length > displayedLocations.length}
+        <Button.Root href={homeLocationsHref(routeTenantId, routeInventoryId)} variant="ghost" onclick={openLocations}>
+          View all places
+        </Button.Root>
+      {/if}
+    </div>
     <div class="location-grid">
       {#each displayedLocations as summary}
         <Button.Root

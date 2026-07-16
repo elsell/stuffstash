@@ -19,10 +19,12 @@
     disablePortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
+    onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onModeChange: (mode: WorkspaceMode) => void;
     onSearch: () => void;
     onOpenSearchAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: AssetKind) => void;
+    onOpenAdd: (kind: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onOpenAccountSettings: () => void;
     onSignOut: () => void;
     children?: Snippet;
@@ -52,6 +54,8 @@
     disablePortal = false,
     onSelectTenant,
     onSelectInventory,
+    onCreateTenantWithInventory,
+    onCreateInventory,
     onModeChange,
     onSearch,
     onOpenSearchAsset,
@@ -75,6 +79,8 @@
     {userLabel}
     {onSelectTenant}
     {onSelectInventory}
+    {onCreateTenantWithInventory}
+    {onCreateInventory}
     {onModeChange}
     {onOpenAccountSettings}
     {onSignOut}
@@ -91,9 +97,11 @@
       {canCreateAsset}
       {userLabel}
       {disablePortal}
-      showSearch={mode !== 'search' && mode !== 'browse'}
+      showSearch={mode !== 'browse'}
       {onSelectTenant}
       {onSelectInventory}
+      {onCreateTenantWithInventory}
+      {onCreateInventory}
       {onSearch}
       onOpenAsset={onOpenSearchAsset}
       {onOpenAdd}
@@ -116,7 +124,7 @@
         {settingsSection}
         {canCreateAsset}
         {onModeChange}
-        onOpenAdd={() => onOpenAdd('item')}
+        onOpenAdd={(opener) => onOpenAdd('item', null, opener)}
       />
     </div>
   {/if}

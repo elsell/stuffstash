@@ -29,6 +29,8 @@ func TestStorePersistsAndScopesAuditRecords(t *testing.T) {
 	occurredAt := time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC)
 
 	for _, record := range []audit.Record{
+		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FA1", tenantOne, "", audit.ActionTenantCreated, occurredAt.Add(-time.Second)),
+		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FA2", tenantTwo, "", audit.ActionTenantCreated, occurredAt.Add(-time.Second)),
 		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantOne, inventoryOne, audit.ActionAssetUpdated, occurredAt),
 		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantOne, inventoryOne, audit.ActionAssetCreated, occurredAt),
 		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantOne, inventoryTwo, audit.ActionAssetMoved, occurredAt.Add(time.Second)),
@@ -62,8 +64,8 @@ func TestStorePersistsAndScopesAuditRecords(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list tenant audit records: %v", err)
 	}
-	if len(tenantPage) != 3 {
-		t.Fatalf("expected tenant page to include only tenant one records, got %+v", tenantPage)
+	if len(tenantPage) != 1 || tenantPage[0].ID != audit.ID("01ARZ3NDEKTSV4RRFFQ69G5FA1") {
+		t.Fatalf("expected tenant page to include only tenant-scoped records, got %+v", tenantPage)
 	}
 }
 
@@ -148,6 +150,32 @@ func TestStoreFiltersAssetChangesBeforePaginationAndUsesNewestFirstCursor(t *tes
 	}
 	if len(second) != 1 || second[0].ID.String() != changeIDs[0] {
 		t.Fatalf("unexpected second changes page: %+v", second)
+	}
+}
+
+func TestStoreAssetActivityCursorUsesIDToPageSameTimestampWithoutDuplicates(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAX")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+	occurredAt := time.Date(2026, 7, 14, 10, 0, 0, 123, time.UTC)
+	ids := []string{"01ARZ3NDEKTSV4RRFFQ69G7C00", "01ARZ3NDEKTSV4RRFFQ69G7C01", "01ARZ3NDEKTSV4RRFFQ69G7C02"}
+	for _, id := range ids {
+		record := auditRecordAt(t, id, tenantID, inventoryID, audit.ActionAssetUpdated, occurredAt)
+		record.TargetID = "asset-one"
+		if err := store.SaveAuditRecord(ctx, record); err != nil {
+			t.Fatalf("save same-time activity %s: %v", id, err)
+		}
+	}
+	first, err := store.ListAssetAuditRecords(ctx, tenantID, inventoryID, "asset-one", ports.AssetAuditRecordListRequest{Actions: audit.AssetActivityChangeActions(), Limit: 2})
+	if err != nil || len(first) != 2 || first[0].ID.String() != ids[2] || first[1].ID.String() != ids[1] {
+		t.Fatalf("unexpected first same-time page: %+v, %v", first, err)
+	}
+	second, err := store.ListAssetAuditRecords(ctx, tenantID, inventoryID, "asset-one", ports.AssetAuditRecordListRequest{Actions: audit.AssetActivityChangeActions(), BeforeOccurredAt: first[1].OccurredAt, BeforeRecordID: first[1].ID, Limit: 2})
+	if err != nil || len(second) != 1 || second[0].ID.String() != ids[0] {
+		t.Fatalf("unexpected second same-time page: %+v, %v", second, err)
 	}
 }
 

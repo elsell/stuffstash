@@ -24,7 +24,7 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
 - The web app must live in `apps/web`.
 - The web app must be independently buildable and deployable from the Go API.
 - The Go API must not embed or serve the production web bundle as the primary deployment model.
-- The first web flow must support creating an inventory, creating an asset in that inventory, and browsing assets in that inventory.
+- The first web flow must support guided tenant and inventory setup, creating an inventory, creating an asset in that inventory, and browsing assets in that inventory.
 - The web tracer bullet must use Dex OIDC from the start.
 - The web app must use Authorization Code with PKCE for local Dex sign-in.
 - The web app must not use the Dex password grant.
@@ -54,6 +54,7 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
   stderr before nginx opens its compiled default log paths, so the read-only
   root filesystem does not produce startup log alerts.
 - Static web responses must include conservative browser security headers, including content type sniffing protection, frame denial, a restrictive referrer policy, a restrictive permissions policy, and a content security policy that only permits the configured API and OIDC issuer origins.
+- The document shell must also declare `no-referrer` through a referrer meta policy so local development and static-file fallback navigation do not disclose inventory routes before response-header composition is available. Production response headers remain authoritative.
 - The web static image build must derive a CSP hash for SvelteKit's generated bootstrap script from the built `index.html` and must not use a broad `script-src 'unsafe-inline'` policy.
 - The web static runtime must support self-hosted API, OIDC, and media origins
   without rebuilding source for each household deployment. If CSP values are
@@ -90,6 +91,12 @@ The first local web client must be a public OIDC client:
   environment overrides must always win. This request-derived behavior is a
   development-server convenience only; mounted production runtime
   configuration remains authoritative.
+  Request-derived trust is limited to canonical dotted-decimal IPv4 hosts in
+  RFC 1918 space or `169.254.0.0/16`, with an optional canonical decimal port.
+  The raw Host header must be validated before URL parsing. Abbreviated,
+  integer, hexadecimal, octal-like, credential-bearing, path/query-bearing,
+  malformed-port, out-of-range, loopback, public, and IPv6 forms—including
+  IPv6 loopback, ULA, and link-local—must fail closed to the tracked defaults.
 
 For local browser development, the API must be configured to trust the same issuer and client ID as the browser flow. The local development topology may run infrastructure in Docker while running the API and web dev server as host processes when that is the simplest way to make issuer discovery work for both browser and API verifier.
 
@@ -154,14 +161,27 @@ The first web user flow is:
 1. Start the web dev server.
 2. Sign in with local Dex.
 3. See the authenticated identity.
-4. Create an inventory.
-5. Select or see that inventory.
-6. Create an asset inside the inventory.
-7. Browse the inventory's assets.
-8. Refresh the page and keep the signed-in browser session if the token is still valid.
-9. Sign out locally.
+4. If no usable tenant and inventory exists, complete a guided setup that asks for a tenant name and an inventory name.
+5. If a tenant exists but has no inventory and the caller can create inventories there, complete a guided inventory setup that asks for the inventory name.
+6. Select or see the created inventory.
+7. Create an asset inside the inventory.
+8. Browse the inventory's assets.
+9. Refresh the page and keep the signed-in browser session if the token is still valid.
+10. Sign out locally.
 
 Inventory creation and asset creation are inseparable for this tracer bullet. If one is present, the other must be present enough for a user to prove the loop.
+
+The web app must not auto-create a tenant or inventory with hard-coded names such as `Home` or `Household`. New users must name the tenant and inventory before the app creates them. Empty names must be rejected in the client before the API call is attempted.
+
+The current public API creates a tenant and then creates its first inventory as separate calls. Until an atomic tenant-with-first-inventory application command and REST endpoint are specified, the web adapter may keep that two-step workflow, but the UI must not present hard-coded fallback names or silently hide failures. A failed inventory creation after tenant creation may leave an empty tenant that can be completed through the same guided inventory setup flow.
+
+The tenant and inventory switcher must provide creation affordances for authenticated users:
+
+- Users may create a new tenant and its first inventory from the switcher.
+- Users may create another inventory inside the selected tenant from the switcher when their effective tenant permissions include `create_inventory`.
+- Creation forms must keep tenant and inventory names user-entered, trim surrounding whitespace, show validation and API failures inline, and navigate to the created inventory after success.
+- Creation controls must not be shown as available when the selected tenant does not grant inventory creation.
+- The closed switcher state must remain a compact single row after these actions are added.
 
 The first asset create form may support only the base asset fields needed by the API:
 

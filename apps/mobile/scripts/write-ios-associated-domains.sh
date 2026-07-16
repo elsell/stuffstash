@@ -8,7 +8,7 @@ allow_insecure_local_http="${EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_L
 
 is_private_local_host() {
   candidate="$1"
-  [ "$candidate" = localhost ] && return 0
+  { [ "$candidate" = localhost ] || [ "$candidate" = '[::1]' ]; } && return 0
   case "$candidate" in *[!0-9.]*|'') return 1 ;; esac
   old_ifs=$IFS
   IFS=.
@@ -54,6 +54,12 @@ else
           exit 1
           ;;
       esac
+      case "$domain" in
+        *[!A-Za-z0-9.-]*|.*|*.|*..*)
+          echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must be a standard-port HTTPS origin.' >&2
+          exit 1
+          ;;
+      esac
       ;;
     http://*)
       if [ "$required" = true ] || [ "$allow_insecure_local_http" != true ]; then
@@ -62,13 +68,22 @@ else
       fi
       authority="${origin#http://}"
       case "$authority" in
-        ''|*/*|*'?'*|*'#'*|*'@'*|*:*:*)
+        ''|*/*|*'?'*|*'#'*|*'@'*)
           echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must be a private local HTTP origin.' >&2
           exit 1
           ;;
       esac
-      host="${authority%%:*}"
-      if [ "$host" != "$authority" ]; then
+      if [ "$authority" = '[::1]' ]; then
+        host='[::1]'
+      elif [ "${authority#'[::1]:'}" != "$authority" ]; then
+        host='[::1]'
+        port="${authority#'[::1]:'}"
+        case "$port" in ''|*[!0-9]*) echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must be a private local HTTP origin.' >&2; exit 1 ;; esac
+      else
+        case "$authority" in *:*:*) echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must be a private local HTTP origin.' >&2; exit 1 ;; esac
+        host="${authority%%:*}"
+      fi
+      if [ "$host" != "$authority" ] && [ "$host" != '[::1]' ]; then
         port="${authority##*:}"
         case "$port" in ''|*[!0-9]*) echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must be a private local HTTP origin.' >&2; exit 1 ;; esac
       fi

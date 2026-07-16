@@ -171,8 +171,9 @@ jobs:
 
       - name: Sign images
         run: |
-          cosign sign --yes "${{ steps.api_image.outputs.image_ref }}"
-          cosign sign --yes "${{ steps.web_image.outputs.image_ref }}"
+          scripts/sign-release-images.sh \
+            "${{ steps.api_image.outputs.image_ref }}" \
+            "${{ steps.web_image.outputs.image_ref }}"
 
       - name: Verify image signatures
         run: |
@@ -198,74 +199,6 @@ jobs:
           subject-name: ${{ steps.web_image.outputs.image }}
           subject-digest: ${{ steps.web_image.outputs.digest }}
           push-to-registry: true
-
-      - name: Update self-host image digests
-        run: |
-          node scripts/update-selfhost-image-refs.mjs \
-            --api-image "${{ steps.api_image.outputs.image_ref }}" \
-            --web-image "${{ steps.web_image.outputs.image_ref }}"
-
-      - name: Open self-host image digest update PR
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .env.example
-          if git diff --cached --quiet; then
-            echo "Self-host image digests are already current."
-            exit 0
-          fi
-          digest_branch="release/self-host-images-${{ needs.validate.outputs.next_tag }}"
-          git commit -m "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}"
-          digest_sha="$(git rev-parse HEAD)"
-          if git ls-remote --exit-code --heads origin "$digest_branch" >/dev/null; then
-            git fetch origin "refs/heads/$digest_branch:refs/remotes/origin/$digest_branch"
-            git push --force-with-lease=refs/heads/"$digest_branch" origin HEAD:"$digest_branch"
-          else
-            git push origin HEAD:"$digest_branch"
-          fi
-
-          {
-            printf '%s\n\n' "Updates \`.env.example\` to the image digests published for \`${{ needs.validate.outputs.next_tag }}\`."
-            printf '%s\n' "- API image: \`${{ steps.api_image.outputs.image_ref }}\`"
-            printf '%s\n' "- Web image: \`${{ steps.web_image.outputs.image_ref }}\`"
-          } > digest-pr-body.md
-
-          existing_pr="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
-          if [ -n "$existing_pr" ]; then
-            pr_number="$existing_pr"
-            gh pr edit "$existing_pr" \
-              --title "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}" \
-              --body-file digest-pr-body.md
-          else
-            gh pr create \
-              --base main \
-              --head "$digest_branch" \
-              --title "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}" \
-              --body-file digest-pr-body.md
-            pr_number="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
-            if [ -z "$pr_number" ]; then
-              echo "Could not find digest update PR for $digest_branch." >&2
-              exit 1
-            fi
-          fi
-
-          gh workflow run ci.yml --ref "$digest_branch"
-          ci_run_id=""
-          for _ in $(seq 1 30); do
-            ci_run_id="$(gh run list --workflow CI --branch "$digest_branch" --event workflow_dispatch --limit 20 --json databaseId,headSha --jq ".[] | select(.headSha == \"$digest_sha\") | .databaseId" | head -n 1)"
-            if [ -n "$ci_run_id" ]; then
-              break
-            fi
-            sleep 5
-          done
-          if [ -z "$ci_run_id" ]; then
-            echo "Could not find dispatched CI run for $digest_branch at $digest_sha." >&2
-            exit 1
-          fi
-          gh run watch "$ci_run_id" --exit-status --interval 10
-          gh pr merge "$pr_number" --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - name: Create release tag
         run: |
@@ -305,5 +238,60 @@ jobs:
             --notes-file release-notes.md \
             release-dist/stuffstash-selfhost.tar.gz \
             release-dist/stuffstash-selfhost.tar.gz.sha256
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Update self-host image digests
+        continue-on-error: true
+        run: |
+          node scripts/update-selfhost-image-refs.mjs \
+            --api-image "${{ steps.api_image.outputs.image_ref }}" \
+            --web-image "${{ steps.web_image.outputs.image_ref }}"
+
+      - name: Open self-host image digest update PR
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .env.example
+          if git diff --cached --quiet; then
+            echo "Self-host image digests are already current."
+            exit 0
+          fi
+          digest_branch="release/self-host-images-${{ needs.validate.outputs.next_tag }}"
+          git commit -m "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}"
+          if git ls-remote --exit-code --heads origin "$digest_branch" >/dev/null; then
+            git fetch origin "refs/heads/$digest_branch:refs/remotes/origin/$digest_branch"
+            git push --force-with-lease=refs/heads/"$digest_branch" origin HEAD:"$digest_branch"
+          else
+            git push origin HEAD:"$digest_branch"
+          fi
+
+          {
+            printf '%s\n\n' "Updates \`.env.example\` to the image digests published for \`${{ needs.validate.outputs.next_tag }}\`."
+            printf '%s\n' "- API image: \`${{ steps.api_image.outputs.image_ref }}\`"
+            printf '%s\n' "- Web image: \`${{ steps.web_image.outputs.image_ref }}\`"
+          } > digest-pr-body.md
+
+          existing_pr="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
+          if [ -n "$existing_pr" ]; then
+            pr_number="$existing_pr"
+            gh pr edit "$existing_pr" \
+              --title "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}" \
+              --body-file digest-pr-body.md
+          else
+            gh pr create \
+              --base main \
+              --head "$digest_branch" \
+              --title "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}" \
+              --body-file digest-pr-body.md
+            pr_number="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
+            if [ -z "$pr_number" ]; then
+              echo "Could not find digest update PR for $digest_branch." >&2
+              exit 1
+            fi
+          fi
+
+          gh pr merge "$pr_number" --auto --squash --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}

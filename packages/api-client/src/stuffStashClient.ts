@@ -98,7 +98,7 @@ export interface AssetActivityEntry {
   requestId?: string;
   changes: AssetActivityChange[];
   undo?: { operationId: string; status: 'available' | 'undone' | 'redone' };
-  technical: Record<string, string>;
+  technicalMetadata: Record<string, string>;
 }
 
 export interface Tenant {
@@ -1951,7 +1951,7 @@ function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
       operationId: response.undo.operationId,
       status: response.undo.status as 'available' | 'undone' | 'redone'
     } : undefined,
-    technical: response.technical ?? {}
+    technicalMetadata: response.technicalMetadata ?? {}
   };
 }
 

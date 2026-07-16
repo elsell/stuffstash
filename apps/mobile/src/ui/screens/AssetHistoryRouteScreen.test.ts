@@ -20,7 +20,7 @@ describe('AssetHistoryRouteScreen presentation', () => {
   it('uses safe non-retry states for denied and missing History', () => {
     expect(historyLoadError({ status: 403 })).toMatchObject({ title: 'History unavailable', canRetry: false });
     expect(historyLoadError({ status: 404 })).toMatchObject({ title: 'History unavailable', canRetry: false });
-    expect(historyLoadError(new Error('Network unavailable'))).toEqual({ title: 'Could not load History', message: 'Network unavailable', canRetry: true });
+    expect(historyLoadError(new Error('GET https://internal.example.test failed with diagnostic token'))).toEqual({ title: 'Could not load History', message: 'History could not be loaded. Try again.', canRetry: true });
   });
 
   it('builds the collapsed disclosure content from safe identifiers', () => {
@@ -64,9 +64,9 @@ describe('AssetHistoryRouteScreen presentation', () => {
       message: 'This item changed afterward, so this change can’t be safely reverted.',
       isTerminal: true
     });
-    expect(historyRevertFailure(new Error('Network unavailable'))).toEqual({
+    expect(historyRevertFailure(new Error('POST https://internal.example.test failed with diagnostic token'))).toEqual({
       title: 'Could not revert change',
-      message: 'Network unavailable',
+      message: 'The change could not be reverted. Try again.',
       isTerminal: false
     });
     expect(historyRevertFailure({ status: 403 })).toEqual({

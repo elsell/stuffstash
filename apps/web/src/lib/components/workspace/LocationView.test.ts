@@ -117,6 +117,12 @@ describe('LocationView', () => {
     expect(link('Edit location').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/garage/edit'
     );
+    expect(link('Move place').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/garage/move'
+    );
+    expect(link('Archive').getAttribute('href')).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/garage/archive'
+    );
     expect(link('Shelf').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/garage-shelf'
     );
@@ -244,6 +250,8 @@ describe('LocationView', () => {
     });
 
     expect(document.body.textContent).not.toContain('Edit location');
+    expect(document.body.textContent).not.toContain('Move place');
+    expect(document.body.textContent).not.toContain('Archive');
   });
 
   it('uses a denied empty-state note when location creation access is missing', () => {

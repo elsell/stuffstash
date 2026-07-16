@@ -8,11 +8,11 @@ output="$tmp_directory/StuffStash.entitlements"
 writer="$repo_root/apps/mobile/scripts/write-ios-associated-domains.sh"
 
 EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='https://stash.example.test' "$writer" "$output"
-plutil -lint "$output" >/dev/null
+python3 -c 'import plistlib, sys; plistlib.load(open(sys.argv[1], "rb"))' "$output"
 grep -q '<string>applinks:stash.example.test</string>' "$output"
 
 EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='' "$writer" "$output"
-plutil -lint "$output" >/dev/null
+python3 -c 'import plistlib, sys; plistlib.load(open(sys.argv[1], "rb"))' "$output"
 if grep -q 'com.apple.developer.associated-domains' "$output"; then
   echo 'an unconfigured development build received an associated-domain entitlement' >&2
   exit 1
@@ -28,10 +28,22 @@ if EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='https://stash.example.test:8443' "
   exit 1
 fi
 
+for invalid_origin in \
+  'https://user:secret@stash.example.test' \
+  'https://stash.example.test/path' \
+  'https://stash.example.test?query=yes' \
+  'https://stash.example.test#fragment' \
+  'https://stash example.test'; do
+  if EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN="$invalid_origin" "$writer" "$output" >/dev/null 2>&1; then
+    echo "an iOS build accepted invalid invitation origin: $invalid_origin" >&2
+    exit 1
+  fi
+done
+
 EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='http://192.168.1.117:5173' \
   EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP=true \
   "$writer" "$output"
-plutil -lint "$output" >/dev/null
+python3 -c 'import plistlib, sys; plistlib.load(open(sys.argv[1], "rb"))' "$output"
 if grep -q 'com.apple.developer.associated-domains' "$output"; then
   echo 'a private HTTP development origin received an associated-domain entitlement' >&2
   exit 1
@@ -48,6 +60,15 @@ if EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='http://8.8.8.8:5173' \
   EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP=true \
   "$writer" "$output" >/dev/null 2>&1; then
   echo 'an iOS build accepted public HTTP with local opt-in' >&2
+  exit 1
+fi
+
+EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='http://[::1]:5173' \
+  EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP=true \
+  "$writer" "$output"
+python3 -c 'import plistlib, sys; plistlib.load(open(sys.argv[1], "rb"))' "$output"
+if grep -q 'com.apple.developer.associated-domains' "$output"; then
+  echo 'an IPv6 loopback HTTP development origin received an associated-domain entitlement' >&2
   exit 1
 fi
 

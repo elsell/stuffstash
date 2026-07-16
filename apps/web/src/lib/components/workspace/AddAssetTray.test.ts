@@ -606,8 +606,6 @@ describe('AddAssetTray', () => {
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) throw new Error('Missing dialog');
-    const closeButton = document.body.querySelector<HTMLElement>('button[aria-label="Close add tray"], a[aria-label="Close add tray"]');
-    expect(closeButton).toBeNull();
     expect(dialog.getAttribute('aria-modal')).toBe('true');
 
     link('Cancel').click();

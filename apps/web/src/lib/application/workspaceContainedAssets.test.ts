@@ -48,6 +48,14 @@ describe('container workspace presentation', () => {
     ]);
   });
 
+  it('never treats matching parent ids from another tenant or inventory as children', () => {
+    const crossTenant = { ...asset('foreign-tenant', 'Foreign tenant', 'item', cabinet.id), tenantId: 'tenant-two' };
+    const crossInventory = { ...asset('foreign-inventory', 'Foreign inventory', 'item', cabinet.id), inventoryId: 'inventory-two' };
+
+    expect(containedWorkspaceChildren(cabinet, [...assets, crossTenant, crossInventory]).map((child) => child.id))
+      .toEqual(['bin-2', 'bin-10', 'drill']);
+  });
+
   it('offers only assets that can move into the target without duplicates or cycles', () => {
     const page = moveHereCandidatePage(cabinet, assets, '', 10);
 

@@ -31,6 +31,8 @@ func TestListAssetActivityDefaultsToChangesProjectsSafeFieldsAndPaginates(t *tes
 		"previous_checkout_state":  "available",
 		"new_checkout_state":       "checked_out",
 		"operation_id":             "operation-one",
+		"original_action":          "asset.updated",
+		"target_type":              "asset",
 		"credential":               "must-not-leak",
 	}
 	viewed := assetActivityRecord(t, "audit-viewed", audit.ActionAssetViewed, base.Add(2*time.Minute))
@@ -66,6 +68,9 @@ func TestListAssetActivityDefaultsToChangesProjectsSafeFieldsAndPaginates(t *tes
 	}
 	if entry.TechnicalMetadata["credential"] != "" || entry.TechnicalMetadata["operation_id"] != "" {
 		t.Fatalf("unsafe metadata leaked: %+v", entry.TechnicalMetadata)
+	}
+	if entry.TechnicalMetadata["original_action"] != "asset.updated" || entry.TechnicalMetadata["target_type"] != "asset" {
+		t.Fatalf("expected validated safe technical metadata, got %+v", entry.TechnicalMetadata)
 	}
 
 	second, err := application.ListAssetActivity(context.Background(), ListAssetActivityInput{
@@ -154,6 +159,27 @@ func TestListAssetActivityRequiresConcreteAsset(t *testing.T) {
 	})
 	if !errors.Is(err, ErrNotFound) {
 		t.Fatalf("expected missing asset to fail, got %v", err)
+	}
+}
+
+func TestListAssetActivityIncludesOnlySameScopeUndoAndRedoRecords(t *testing.T) {
+	base := time.Date(2026, 7, 14, 12, 0, 0, 0, time.UTC)
+	undo := assetActivityRecord(t, "audit-undo", audit.ActionUndoableOperationUndone, base)
+	undo.Metadata = map[string]string{"operation_id": "operation-one"}
+	wrongInventory := undo
+	wrongInventory.ID = "audit-wrong-inventory"
+	wrongInventory.InventoryID = "inventory-two"
+	wrongAsset := undo
+	wrongAsset.ID = "audit-wrong-asset"
+	wrongAsset.TargetID = "asset-two"
+	application := assetActivityApplication(&fakeAssetRepository{items: map[asset.ID]asset.Asset{
+		"asset-one": assetItem("asset-one", "tenant-one", "inventory-one", asset.KindItem, ""),
+	}}, []audit.Record{undo, wrongInventory, wrongAsset})
+	page, err := application.ListAssetActivity(context.Background(), ListAssetActivityInput{
+		Principal: identity.Principal{ID: "viewer"}, TenantID: "tenant-one", InventoryID: "inventory-one", AssetID: "asset-one", Limit: 10,
+	})
+	if err != nil || len(page.Items) != 1 || page.Items[0].Action != audit.ActionUndoableOperationUndone {
+		t.Fatalf("expected only same-scope undo record, page=%+v err=%v", page, err)
 	}
 }
 

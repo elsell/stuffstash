@@ -1297,12 +1297,15 @@ export interface components {
         };
         AssetActivityChangeResponse: {
             currentValue?: string;
-            field: string;
+            /** @enum {string} */
+            field: "title" | "description" | "tags" | "parent" | "lifecycle_state" | "checkout_state";
             previousValue?: string;
         };
         AssetActivityResponse: {
-            action: string;
-            category: string;
+            /** @enum {string} */
+            action: "asset.created" | "asset.updated" | "asset.moved" | "asset.archived" | "asset.restored" | "asset.deleted" | "asset.checked_out" | "asset.returned" | "asset.return_details_updated" | "asset.viewed" | "asset.listed" | "asset.searched" | "audit_record.listed" | "undoable_operation.undone" | "undoable_operation.redone";
+            /** @enum {string} */
+            category: "change" | "read";
             changes: components["schemas"]["AssetActivityChangeResponse"][] | null;
             id: string;
             /** Format: date-time */
@@ -1310,15 +1313,17 @@ export interface components {
             principal?: components["schemas"]["AuditPrincipalResponse"];
             principalId: string;
             requestId?: string;
-            source: string;
-            technical: {
+            /** @enum {string} */
+            source: "api" | "conversation" | "mcp" | "import" | "background_job" | "system";
+            technicalMetadata: {
                 [key: string]: string;
             };
             undo?: components["schemas"]["AssetActivityUndoResponse"];
         };
         AssetActivityUndoResponse: {
             operationId: string;
-            status: string;
+            /** @enum {string} */
+            status: "available" | "undone" | "redone";
         };
         AssetCheckoutPrincipalResponse: {
             email?: string;

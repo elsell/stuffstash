@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import type { WorkspaceMode } from '$lib/domain/inventory';
 import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
@@ -25,23 +26,42 @@ describe('workspace route state', () => {
     );
   });
 
+  it('normalizes duplicate and empty Browse tag query values at the route boundary', () => {
+    const route = parseWorkspaceRoute(new URL(
+      'https://app.test/tenants/tenant_1/inventories/inv_1/browse?tag=&tag=tag_2&tag=tag_2&tag=tag_1'
+    ));
+    expect(route.browseTagIds).toEqual(['tag_2', 'tag_1']);
+    expect(workspaceRouteHref(route, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?tag=tag_2&tag=tag_1'
+    );
+  });
+
   it('parses legacy Locations and Search routes as Browse compatibility state', () => {
-    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'))).toMatchObject({
+    const locationsAlias = parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'));
+    expect(locationsAlias).toMatchObject({
       mode: 'browse',
       browseScope: 'places',
       compatibilityAlias: true
     });
-    expect(
-      parseWorkspaceRoute(
-        new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&checkout=checked_out')
-      )
-    ).toMatchObject({
+    expect(workspaceRouteHref(locationsAlias, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?scope=places'
+    );
+
+    const searchAlias = parseWorkspaceRoute(
+      new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&tagId=tag_tools&tagId=tag_camping&lifecycle=all&checkout=checked_out')
+    );
+    expect(searchAlias).toMatchObject({
       mode: 'browse',
       searchQuery: 'drill',
+      browseTagIds: ['tag_tools', 'tag_camping'],
       searchLifecycleState: 'all',
       searchCheckoutState: 'checked_out',
       compatibilityAlias: true
     });
+    expect(workspaceRouteHref(searchAlias, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?q=drill&tag=tag_tools&tag=tag_camping&lifecycle=all&availability=checked_out'
+    );
+    expectTypeOf<Extract<WorkspaceMode, 'search' | 'locations'>>().toEqualTypeOf<never>();
   });
 
   it('parses a tenant inventory location deep link', () => {
@@ -249,16 +269,12 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset 1', action: 'edit' }, 'tenant 1', 'inv 1')).toBe(
       '/tenants/tenant%201/inventories/inv%201/assets/asset%201/edit'
     );
-    expect(workspaceRouteHref({ mode: 'search', searchQuery: 'garage shelf', searchLifecycleState: 'archived' }, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/search?q=garage+shelf&lifecycle=archived'
-    );
     expect(workspaceRouteHref({ action: 'add', addKind: 'location' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/location'
     );
     expect(workspaceRouteHref({ action: 'add', addKind: 'item', addParentAssetId: 'location 1' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/item?parent=location+1'
     );
-    expect(workspaceRouteHref({ mode: 'locations' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/locations');
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'
     );
@@ -354,8 +370,8 @@ describe('workspace route state', () => {
       action: 'edit'
     });
 
-    expect(workspaceRouteHref({ mode: 'search', inventoryId: 'inv_1', searchQuery: 'drill' }, null, null)).toBe(
-      '/inventories/inv_1/search?q=drill'
+    expect(workspaceRouteHref({ mode: 'browse', inventoryId: 'inv_1', searchQuery: 'drill' }, null, null)).toBe(
+      '/inventories/inv_1/browse?q=drill'
     );
   });
 

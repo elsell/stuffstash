@@ -43,8 +43,17 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 	if updateFirstAsset.Code != http.StatusOK {
 		t.Fatalf("expected first asset update status %d, got %d with body %s", http.StatusOK, updateFirstAsset.Code, updateFirstAsset.Body.String())
 	}
-	if decoded := decodeAsset(t, updateFirstAsset); decoded.Data.UndoableOperationID == "" {
-		t.Fatalf("expected update response to expose undoable operation, got %+v", decoded.Data)
+	updateOperationID := decodeAsset(t, updateFirstAsset).Data.UndoableOperationID
+	if updateOperationID == "" {
+		t.Fatal("expected update response to expose undoable operation")
+	}
+	undoFirstAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/undoable-operations/"+updateOperationID+"/undo", "Bearer dev:owner", nil)
+	if undoFirstAsset.Code != http.StatusOK {
+		t.Fatalf("expected undo status %d, got %d with body %s", http.StatusOK, undoFirstAsset.Code, undoFirstAsset.Body.String())
+	}
+	redoFirstAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/undoable-operations/"+updateOperationID+"/redo", "Bearer dev:owner", nil)
+	if redoFirstAsset.Code != http.StatusOK {
+		t.Fatalf("expected redo status %d, got %d with body %s", http.StatusOK, redoFirstAsset.Code, redoFirstAsset.Body.String())
 	}
 	secondAsset := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
 		"kind":  "item",
@@ -74,6 +83,10 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 	})
 	if viewerGrant.Code != http.StatusCreated {
 		t.Fatalf("expected viewer grant status %d, got %d with body %s", http.StatusCreated, viewerGrant.Code, viewerGrant.Body.String())
+	}
+	otherTenantList := performRequest(server, http.MethodGet, "/me/tenants", "Bearer dev:other-owner", nil)
+	if otherTenantList.Code != http.StatusOK {
+		t.Fatalf("expected other tenant list status %d, got %d with body %s", http.StatusOK, otherTenantList.Code, otherTenantList.Body.String())
 	}
 
 	firstPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/audit-records?limit=1", "Bearer dev:viewer-user", nil)
@@ -118,17 +131,24 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 		t.Fatalf("expected asset activity status %d, got %d with body %s", http.StatusOK, activityResponse.Code, activityResponse.Body.String())
 	}
 	activity := decodeAssetActivityList(t, activityResponse)
-	if len(activity.Data) != 1 || activity.Data[0].Action != "asset.updated" || activity.Data[0].Category != "change" {
+	if len(activity.Data) != 1 || activity.Data[0].Action != "undoable_operation.redone" || activity.Data[0].Category != "change" {
 		t.Fatalf("expected latest meaningful change, got %+v", activity.Data)
-	}
-	if len(activity.Data[0].Changes) != 1 || activity.Data[0].Changes[0].Field != "title" || activity.Data[0].Changes[0].PreviousValue != "Drill" || activity.Data[0].Changes[0].CurrentValue != "Drill Kit" {
-		t.Fatalf("expected safe title change, got %+v", activity.Data[0].Changes)
 	}
 	if activity.Data[0].Undo != nil {
 		t.Fatalf("expected viewer history to omit unauthorized undo, got %+v", activity.Data[0].Undo)
 	}
 	if activity.Meta.Pagination == nil || !activity.Meta.Pagination.HasMore || activity.Meta.Pagination.NextCursor == nil {
 		t.Fatalf("expected activity cursor, got %+v", activity.Meta.Pagination)
+	}
+	secondActivityResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/asset-one/activity?limit=1&cursor="+*activity.Meta.Pagination.NextCursor, "Bearer dev:viewer-user", nil)
+	secondActivity := decodeAssetActivityList(t, secondActivityResponse)
+	if secondActivityResponse.Code != http.StatusOK || len(secondActivity.Data) != 1 || secondActivity.Data[0].Action != "undoable_operation.undone" || secondActivity.Meta.Pagination == nil || secondActivity.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected undo as second activity page, status=%d body=%+v", secondActivityResponse.Code, secondActivity)
+	}
+	thirdActivityResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/asset-one/activity?limit=1&cursor="+*secondActivity.Meta.Pagination.NextCursor, "Bearer dev:viewer-user", nil)
+	thirdActivity := decodeAssetActivityList(t, thirdActivityResponse)
+	if thirdActivityResponse.Code != http.StatusOK || len(thirdActivity.Data) != 1 || thirdActivity.Data[0].Action != "asset.updated" || len(thirdActivity.Data[0].Changes) != 1 || thirdActivity.Data[0].Changes[0].Field != "title" || thirdActivity.Data[0].Changes[0].PreviousValue != "Drill" || thirdActivity.Data[0].Changes[0].CurrentValue != "Drill Kit" {
+		t.Fatalf("expected edit as third activity page, status=%d body=%+v", thirdActivityResponse.Code, thirdActivity)
 	}
 	allActivityResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/asset-one/activity?view=all&limit=10", "Bearer dev:viewer-user", nil)
 	if allActivityResponse.Code != http.StatusOK {
@@ -179,11 +199,13 @@ func TestAuditRecordEndpointsEnforceScopeAndPagination(t *testing.T) {
 		t.Fatalf("expected tenant audit status %d, got %d with body %s", http.StatusOK, tenantAudit.Code, tenantAudit.Body.String())
 	}
 	tenantAuditBody := decodeAuditRecordList(t, tenantAudit)
-	if len(tenantAuditBody.Data) < 3 {
-		t.Fatalf("expected tenant audit to include state changes, got %+v", tenantAuditBody.Data)
-	}
-	if auditRecordsContainTarget(tenantAuditBody.Data, "other-tenant-asset") {
-		t.Fatalf("expected tenant audit to exclude other tenant records, got %+v", tenantAuditBody.Data)
+	for _, record := range tenantAuditBody.Data {
+		if record.InventoryID != "" {
+			t.Fatalf("expected tenant audit to exclude inventory-scoped records, got %+v", tenantAuditBody.Data)
+		}
+		if record.TenantID != tenantID {
+			t.Fatalf("expected tenant audit to exclude other tenant-scoped records, got %+v", tenantAuditBody.Data)
+		}
 	}
 
 	viewerTenantAudit := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/audit-records", "Bearer dev:viewer-user", nil)

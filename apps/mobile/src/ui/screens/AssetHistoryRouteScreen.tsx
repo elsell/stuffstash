@@ -195,7 +195,8 @@ function CenteredState({ label, palette, styles }: { readonly label: string; rea
 }
 
 function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+  void error;
+  return fallback;
 }
 
 function createStyles(colors: MobileColorPalette) {

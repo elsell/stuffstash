@@ -3,6 +3,7 @@ import { addReturnFocusTarget } from './workspaceAddFocus';
 
 describe('Add return focus', () => {
   afterEach(() => { document.body.innerHTML = ''; });
+
   it('keeps a connected opener and falls back to the durable responsive Add trigger', () => {
     const desktop = document.createElement('button');
     desktop.dataset.workspaceAddTrigger = 'desktop';
@@ -35,5 +36,15 @@ describe('Add return focus', () => {
     } finally {
       Object.defineProperty(window, 'matchMedia', { configurable: true, value: originalMatchMedia });
     }
+  });
+
+  it('prefers the focused result after a successful save', () => {
+    const opener = document.createElement('button');
+    opener.dataset.workspaceAddTrigger = 'mobile';
+    const result = document.createElement('h1');
+    result.dataset.workspaceAddResultFocus = '';
+    document.body.append(opener, result);
+
+    expect(addReturnFocusTarget(opener, document, true, true)).toBe(result);
   });
 });

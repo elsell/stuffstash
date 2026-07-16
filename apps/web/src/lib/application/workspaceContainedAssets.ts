@@ -86,7 +86,12 @@ export function containableWorkspaceSections(target: Asset, assets: Asset[]): Co
 
 export function containedWorkspaceChildren(target: Asset, assets: Asset[]): AssetViewModel[] {
   return assets
-    .filter((candidate) => candidate.parentAssetId === target.id && candidate.lifecycleState === 'active')
+    .filter((candidate) =>
+      candidate.parentAssetId === target.id &&
+      candidate.lifecycleState === 'active' &&
+      candidate.tenantId === target.tenantId &&
+      candidate.inventoryId === target.inventoryId
+    )
     .map((candidate) => withTrail(candidate, assets))
     .sort(compareContainedAsset);
 }

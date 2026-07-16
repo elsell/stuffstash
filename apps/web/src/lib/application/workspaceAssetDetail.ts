@@ -1,5 +1,6 @@
 import type { Asset, AssetAttachment, AssetCheckout, CustomFieldDefinition, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import { isAuthenticationRequiredError } from './authenticationRequired';
 import { replaceWorkspaceAsset } from './workspaceAssetWorkflow';
 
 type AssetDetailRepository = Pick<InventoryRepository, 'getAsset' | 'listAssetAttachments' | 'listAssetCheckoutHistory'>;
@@ -67,14 +68,30 @@ export async function loadWorkspaceAssetDetail(
       error: ''
     };
   } catch (caught) {
+    if (isAuthenticationRequiredError(caught)) throw caught;
     return {
       loaded: false,
       asset: null,
       attachments: [],
       checkoutHistory: [],
-      error: caught instanceof Error ? caught.message : 'Asset could not be loaded.'
+      error: assetDetailFailureMessage(caught)
     };
   }
+}
+
+export function assetDetailFailureMessage(caught: unknown): string {
+  const safeForUser = typeof caught === 'object' && caught !== null &&
+    (caught as { safeForUser?: unknown }).safeForUser === true;
+  if (safeForUser && caught instanceof Error && caught.message.trim() && !isGenericAdapterMessage(caught)) {
+    return caught.message.trim();
+  }
+  return 'Asset details could not be loaded. Try again.';
+}
+
+function isGenericAdapterMessage(caught: Error): boolean {
+  const status = 'status' in caught && typeof caught.status === 'number' ? caught.status : 0;
+  if (status !== 400 && status !== 422) return false;
+  return /^(bad request|invalid request|unprocessable entity|validation failed|request failed)\.?$/i.test(caught.message.trim());
 }
 
 export function refreshWorkspaceAssetAttachments(

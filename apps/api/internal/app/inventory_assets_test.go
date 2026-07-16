@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
-	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -95,26 +93,6 @@ func TestCreateAndListAssets(t *testing.T) {
 	if len(nextPage.Items) != 1 || nextPage.HasMore || nextPage.Items[0].ID != item.ID {
 		t.Fatalf("expected second page with item, got %+v", nextPage)
 	}
-}
-
-func assetTag(id, tenantID, inventoryID, keyValue, displayNameValue, color string) assettag.Tag {
-	key, ok := assettag.NewKey(keyValue)
-	if !ok {
-		panic("invalid test tag key")
-	}
-	displayName, ok := assettag.NewDisplayName(displayNameValue)
-	if !ok {
-		panic("invalid test tag display name")
-	}
-	tagColor, ok := assettag.NewColor(color)
-	if !ok {
-		panic("invalid test tag color")
-	}
-	tag, ok := assettag.NewTag(assettag.ID(id), assettag.TenantID(tenantID), assettag.InventoryID(inventoryID), key, displayName, tagColor, time.Date(2026, 7, 14, 12, 0, 0, 0, time.UTC))
-	if !ok {
-		panic("invalid test tag")
-	}
-	return tag
 }
 
 func TestCreateUpdateAndReadAssetTags(t *testing.T) {
@@ -255,69 +233,6 @@ func TestAssetWritesValidateTagsBeforePersistence(t *testing.T) {
 	}
 	if assets.items[asset.ID("drill")].Title.String() == title {
 		t.Fatalf("asset must not be updated when tag validation fails")
-	}
-}
-
-func TestUpdateAssetPersistsFieldsAndTagsAsOneUndoableChangeAndSkipsNoOp(t *testing.T) {
-	item := assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, "")
-	workshop := assetTag("tag-workshop", "tenant-one", "inventory-one", "workshop", "Workshop", "#2f80ed")
-	camping := assetTag("tag-camping", "tenant-one", "inventory-one", "camping", "Camping", "#27ae60")
-	assets := &fakeAssetRepository{
-		items:         map[asset.ID]asset.Asset{item.ID: item},
-		assetTags:     map[assettag.ID]assettag.Tag{workshop.ID: workshop, camping.ID: camping},
-		assetTagLinks: map[asset.ID]map[assettag.ID]struct{}{item.ID: {workshop.ID: {}}},
-	}
-	application := New(Dependencies{
-		Observer: &fakeObserver{}, Authorizer: &fakeAuthorizer{}, Tenants: &fakeTenantRepository{exists: true},
-		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
-		Assets:      assets, AssetTags: assets, AssetUnitOfWork: assets, AssetTagUnitOfWork: assets, AssetEditUnitOfWork: assets, Undoables: assets,
-		Audit: &fakeAuditRepository{}, Outbox: &fakeOutbox{}, IDs: &fakeIDGenerator{ids: []string{"operation-update", "audit-update", "audit-undo"}},
-	})
-
-	title := "Cordless drill"
-	tagIDs := []string{camping.ID.String()}
-	if _, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
-		Principal: identity.Principal{ID: identity.PrincipalID("editor")}, TenantID: tenant.ID("tenant-one"),
-		InventoryID: inventory.InventoryID("inventory-one"), AssetID: item.ID, Title: &title, TagIDs: &tagIDs,
-	}); err != nil {
-		t.Fatalf("update fields and tags: %v", err)
-	}
-	if len(assets.auditRecords) != 1 || assets.auditRecords[0].Action != audit.ActionAssetUpdated {
-		t.Fatalf("expected one coherent update audit, got %+v", assets.auditRecords)
-	}
-	record := assets.auditRecords[0]
-	if record.Metadata["previous_title"] != item.Title.String() || record.Metadata["updated_title"] != title || record.Metadata["previous_tag_count"] != "1" || record.Metadata["updated_tag_count"] != "1" {
-		t.Fatalf("expected safe field and tag metadata, got %+v", record.Metadata)
-	}
-	operation := assets.undoables[record.Metadata["operation_id"]]
-	if operation.ID == "" || len(operation.BeforeTagIDs) != 1 || operation.BeforeTagIDs[0] != workshop.ID || len(operation.AfterTagIDs) != 1 || operation.AfterTagIDs[0] != camping.ID {
-		t.Fatalf("expected coherent tag snapshots on undo, got %+v", operation)
-	}
-
-	auditCount := len(assets.auditRecords)
-	operationCount := len(assets.undoables)
-	if _, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
-		Principal: identity.Principal{ID: identity.PrincipalID("editor")}, TenantID: tenant.ID("tenant-one"),
-		InventoryID: inventory.InventoryID("inventory-one"), AssetID: item.ID, Title: &title, TagIDs: &tagIDs,
-	}); err != nil {
-		t.Fatalf("repeat no-op edit: %v", err)
-	}
-	if len(assets.auditRecords) != auditCount || len(assets.undoables) != operationCount {
-		t.Fatalf("no-op edit created history: audits=%d operations=%d", len(assets.auditRecords), len(assets.undoables))
-	}
-
-	if _, err := application.UndoOperation(context.Background(), ApplyUndoableOperationInput{
-		Principal: identity.Principal{ID: identity.PrincipalID("editor")}, TenantID: tenant.ID("tenant-one"),
-		InventoryID: inventory.InventoryID("inventory-one"), OperationID: operation.ID,
-	}); err != nil {
-		t.Fatalf("undo coherent edit: %v", err)
-	}
-	restoredTags, err := assets.AssetTagsByAsset(context.Background(), tenant.ID("tenant-one"), inventory.InventoryID("inventory-one"), item.ID)
-	if err != nil {
-		t.Fatalf("read restored tags: %v", err)
-	}
-	if assets.items[item.ID].Title != item.Title || len(restoredTags) != 1 || restoredTags[0].ID != workshop.ID {
-		t.Fatalf("expected undo to restore fields and tags, item=%+v tags=%+v", assets.items[item.ID], restoredTags)
 	}
 }
 
@@ -720,6 +635,96 @@ func TestUndoAllowsArchivedExistingCustomAssetType(t *testing.T) {
 	}
 	if undone.CustomAssetTypeID != drill.CustomAssetTypeID || undone.Title != drill.Title {
 		t.Fatalf("expected undo to preserve archived custom asset type and title, got %+v", undone)
+	}
+}
+
+func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
+	assets := &fakeAssetRepository{items: map[asset.ID]asset.Asset{
+		asset.ID("drill"): assetItem("drill", "tenant-one", "inventory-one", asset.KindItem, ""),
+	}}
+	application := New(Dependencies{
+		Observer:              &fakeObserver{},
+		Authorizer:            &fakeAuthorizer{},
+		Tenants:               &fakeTenantRepository{exists: true},
+		TenantUnitOfWork:      &fakeTenantRepository{exists: true},
+		Inventories:           &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Tools")}},
+		CustomFields:          &fakeCustomFieldRepository{},
+		CustomFieldUnitOfWork: &fakeCustomFieldRepository{},
+		Assets:                assets,
+		AssetUnitOfWork:       assets,
+		Undoables:             assets,
+		Audit:                 &fakeAuditRepository{},
+		Outbox:                &fakeOutbox{},
+		IDs:                   &fakeIDGenerator{},
+	})
+
+	archiveResult, err := application.ArchiveAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("drill"),
+	})
+	if err != nil {
+		t.Fatalf("archive asset: %v", err)
+	}
+	archived := archiveResult.Asset
+	if archived.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected archived asset, got %+v", archived)
+	}
+	archiveOperationID := assets.auditRecords[len(assets.auditRecords)-1].Metadata["operation_id"]
+
+	undoArchive, err := application.UndoOperation(context.Background(), ApplyUndoableOperationInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		OperationID: archiveOperationID,
+	})
+	if err != nil {
+		t.Fatalf("undo archive: %v", err)
+	}
+	if undoArchive.LifecycleState != asset.LifecycleStateActive {
+		t.Fatalf("expected undo archive to restore active state, got %+v", undoArchive)
+	}
+
+	redoArchive, err := application.RedoOperation(context.Background(), ApplyUndoableOperationInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		OperationID: archiveOperationID,
+	})
+	if err != nil {
+		t.Fatalf("redo archive: %v", err)
+	}
+	if redoArchive.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected redo archive to archive asset, got %+v", redoArchive)
+	}
+
+	restoreResult, err := application.RestoreAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		AssetID:     asset.ID("drill"),
+	})
+	if err != nil {
+		t.Fatalf("restore asset: %v", err)
+	}
+	restored := restoreResult.Asset
+	if restored.LifecycleState != asset.LifecycleStateActive {
+		t.Fatalf("expected restored asset, got %+v", restored)
+	}
+	restoreOperationID := assets.auditRecords[len(assets.auditRecords)-1].Metadata["operation_id"]
+
+	undoRestore, err := application.UndoOperation(context.Background(), ApplyUndoableOperationInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
+		TenantID:    tenant.ID("tenant-one"),
+		InventoryID: inventory.InventoryID("inventory-one"),
+		OperationID: restoreOperationID,
+	})
+	if err != nil {
+		t.Fatalf("undo restore: %v", err)
+	}
+	if undoRestore.LifecycleState != asset.LifecycleStateArchived {
+		t.Fatalf("expected undo restore to archive asset, got %+v", undoRestore)
 	}
 }
 

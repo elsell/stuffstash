@@ -167,6 +167,72 @@ describe('WorkspaceContextSwitcher', () => {
     expect(document.activeElement?.textContent).toContain('Garage');
   });
 
+  it('creates a new inventory from the selected tenant', async () => {
+    const submissions: Array<[string, string]> = [];
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps({
+        tenants: [{ ...tenant, access: { relationship: 'owner', permissions: ['view', 'create_inventory'] } }],
+        onCreateInventory: async (tenantId, inventoryName) => {
+          submissions.push([tenantId, inventoryName]);
+        }
+      })
+    });
+
+    buttonContaining('Garage').click();
+    await tick();
+    buttonContaining('New inventory').click();
+    await tick();
+    inputWithLabel('Inventory name').value = ' Tools ';
+    inputWithLabel('Inventory name').dispatchEvent(new Event('input', { bubbles: true }));
+    buttonContaining('Create inventory').click();
+    await tick();
+
+    expect(submissions).toEqual([[tenant.id, 'Tools']]);
+  });
+
+  it('creates a new tenant with its first inventory from the tenant list', async () => {
+    const submissions: Array<{ tenantName: string; inventoryName: string }> = [];
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps({
+        onCreateTenantWithInventory: async (input) => {
+          submissions.push(input);
+        }
+      })
+    });
+
+    buttonContaining('Garage').click();
+    await tick();
+    buttonContaining('Switch tenant').click();
+    await tick();
+    buttonContaining('New tenant').click();
+    await tick();
+    inputWithLabel('Tenant name').value = ' Cabin ';
+    inputWithLabel('Tenant name').dispatchEvent(new Event('input', { bubbles: true }));
+    inputWithLabel('Inventory name').value = ' Workshop ';
+    inputWithLabel('Inventory name').dispatchEvent(new Event('input', { bubbles: true }));
+    buttonContaining('Create workspace').click();
+    await tick();
+
+    expect(submissions).toEqual([{ tenantName: 'Cabin', inventoryName: 'Workshop' }]);
+  });
+
+  it('does not show inventory creation when the selected tenant cannot create inventories', async () => {
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps({
+        tenants: [{ ...tenant, access: { relationship: 'viewer', permissions: ['view'] } }],
+        onCreateInventory: async () => {}
+      })
+    });
+
+    buttonContaining('Garage').click();
+    await tick();
+
+    expect(document.body.textContent).not.toContain('New inventory');
+  });
+
   it('focuses the replacement inventory list after an async tenant switch', async () => {
     vi.useFakeTimers();
     component = mount(WorkspaceContextSwitcherHarness, {
@@ -302,4 +368,17 @@ function currentLinkContaining(text: string): HTMLAnchorElement {
     throw new Error(`Missing current link containing ${text}`);
   }
   return link;
+}
+
+function inputWithLabel(label: string): HTMLInputElement {
+  const labels = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label'));
+  const match = labels.find((candidate) => candidate.textContent?.includes(label));
+  if (!match?.htmlFor) {
+    throw new Error(`Missing label ${label}`);
+  }
+  const input = document.getElementById(match.htmlFor);
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error(`Missing input for ${label}`);
+  }
+  return input;
 }

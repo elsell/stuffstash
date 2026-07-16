@@ -124,13 +124,18 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Container image overrides must still be pinned with `@sha256:`.
 - New tools must be added here before use.
 - Tooling changes must be atomic conventional commits.
+- The Go structural checker must inspect GORM adapter source with the Go AST and reject string-literal query fragments passed as the first argument to `Where`, `Order`, or `Joins`. This rule is scoped to `apps/api/internal/adapters/gormstore/*.go` so unrelated methods with the same names are not rejected.
 - Generated artifacts must include drift checks once generation is introduced.
 - Release version planning must be done by repository-owned scripts using Conventional Commit messages and SemVer. Do not add external release automation dependencies for version calculation.
 - A release commit on `main` must only create a new tag and GitHub release when commits since the last SemVer tag require a release.
 - Release image publication must produce immutable image digests. GitOps deployment state must prefer digests over mutable tags.
 - Release builds must publish build provenance attestations for the container image before deployment automation consumes the image.
+- Release image signing must retry transient GitHub Actions OIDC token retrieval failures before failing the release. Retries must be limited, must not hide non-OIDC signing failures, and must preserve keyless Sigstore signing and verification.
+- Release tag and GitHub release creation must happen after image signing, signature verification, and attestations succeed. Self-host image digest update pull requests are follow-up deployment-state automation and must not block release tag or GitHub release creation.
+- Release automation that opens a self-host image digest update pull request may request auto-merge, but it must not treat digest PR check completion or merge completion as part of release success.
 - Release validation must build the API release binary from the `apps/api` module with workspace mode disabled before any image publication job runs.
 - Pull requests targeting `main` must run a blocking CI gate before merge. The gate must include dependency age checking, repository script tests, Go formatting and structural boundary checks for changed Go files, API tests, API release build validation, web tests, web static checks, web build validation, mobile tests, mobile static checks, generated API client tests, generated API client static checks, generated API client drift checks, documentation dependency installation, and documentation build validation.
+- Repository script tests run by the blocking CI gate must be portable to the pinned Linux runner without assuming developer-machine utilities such as Ripgrep or Apple's `plutil`. Structural text checks must use runner-standard tools, and Apple property-list fixtures must be validated with Python's standard-library `plistlib`.
 - Web browser E2E smoke tests may remain outside the blocking gate until the suite is made deterministic and green enough for routine pull request use.
 - The `main` branch protection rule must require the `Required checks` status, require branches to be up to date before merging, and include administrators.
 - Dependency freshness must be checked mechanically for npm and Go modules.

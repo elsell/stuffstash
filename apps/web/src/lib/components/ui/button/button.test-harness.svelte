@@ -37,7 +37,6 @@
 	<BusyButtonContent busy={false} icon={Check} label="Confirm connection" busyLabel="Confirming connection" />
 </Button>
 <Button data-testid="route-close" href="/assets/example" role="button" tabindex={-1}>Close route</Button>
-<Button data-testid="outline-button" variant="outline">Cancel</Button>
 <Button data-testid="busy-button" disabled>
 	<BusyButtonContent busy={true} icon={Check} label="Confirm connection" busyLabel="Confirming connection" />
 </Button>

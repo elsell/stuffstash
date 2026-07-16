@@ -56,6 +56,8 @@ var assetActivityChangeActions = []Action{
 	ActionAssetCheckedOut,
 	ActionAssetReturned,
 	ActionAssetReturnDetailsUpdated,
+	ActionUndoableOperationUndone,
+	ActionUndoableOperationRedone,
 }
 
 func AssetActivityChangeActions() []Action {

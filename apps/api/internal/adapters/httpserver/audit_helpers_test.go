@@ -42,17 +42,17 @@ type assetActivityUndoResponse struct {
 }
 
 type assetActivityResponse struct {
-	ID          string                        `json:"id"`
-	PrincipalID string                        `json:"principalId"`
-	Principal   *principalResponse            `json:"principal,omitempty"`
-	Action      string                        `json:"action"`
-	Category    string                        `json:"category"`
-	Source      string                        `json:"source"`
-	OccurredAt  string                        `json:"occurredAt"`
-	RequestID   string                        `json:"requestId,omitempty"`
-	Changes     []assetActivityChangeResponse `json:"changes"`
-	Undo        *assetActivityUndoResponse    `json:"undo,omitempty"`
-	Technical   map[string]string             `json:"technical"`
+	ID                string                        `json:"id"`
+	PrincipalID       string                        `json:"principalId"`
+	Principal         *principalResponse            `json:"principal,omitempty"`
+	Action            string                        `json:"action"`
+	Category          string                        `json:"category"`
+	Source            string                        `json:"source"`
+	OccurredAt        string                        `json:"occurredAt"`
+	RequestID         string                        `json:"requestId,omitempty"`
+	Changes           []assetActivityChangeResponse `json:"changes"`
+	Undo              *assetActivityUndoResponse    `json:"undo,omitempty"`
+	TechnicalMetadata map[string]string             `json:"technicalMetadata"`
 }
 
 type assetActivityListBody struct {

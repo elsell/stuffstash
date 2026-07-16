@@ -29,7 +29,7 @@ export class ApiAssetActivityRepository implements AssetActivityRepository {
         requestId: entry.requestId,
         changes: entry.changes.map((change) => ({ ...change })),
         undo: entry.undo ? { ...entry.undo } : undefined,
-        technical: { ...entry.technical }
+        technical: { ...entry.technicalMetadata }
       })),
       nextCursor: page.pagination.nextCursor ?? undefined,
       hasMore: page.pagination.hasMore

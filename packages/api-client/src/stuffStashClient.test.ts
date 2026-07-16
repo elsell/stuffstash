@@ -464,6 +464,7 @@ describe('StuffStashClient', () => {
         title: 'Ibuprofen',
         description: '',
         lifecycleState: 'active',
+        undoableOperationId: 'operation-edit-one',
         customAssetTypeId: 'type-medicine',
         customFields: { 'expiration-date': '2027-01-01', count: 2 },
         tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
@@ -489,6 +490,7 @@ describe('StuffStashClient', () => {
         tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
+      undoableOperationId: 'operation-edit-one',
       customAssetTypeId: 'type-medicine',
       customFields: { 'expiration-date': '2027-01-01', count: 2 },
       tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
@@ -500,6 +502,7 @@ describe('StuffStashClient', () => {
         tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
+      undoableOperationId: 'operation-edit-one',
       customAssetTypeId: 'type-medicine',
       customFields: { 'expiration-date': '2027-01-01', count: 2 }
     });
@@ -782,6 +785,7 @@ describe('StuffStashClient', () => {
         title: 'Fertilizer',
         description: '',
         lifecycleState: 'archived',
+        undoableOperationId: 'operation-lifecycle-one',
         customFields: {}
       },
       meta: {}
@@ -801,10 +805,12 @@ describe('StuffStashClient', () => {
 
     await expect(client.archiveAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
       id: 'asset-one',
-      lifecycleState: 'archived'
+      lifecycleState: 'archived',
+      undoableOperationId: 'operation-lifecycle-one'
     });
     await expect(client.restoreAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
-      id: 'asset-one'
+      id: 'asset-one',
+      undoableOperationId: 'operation-lifecycle-one'
     });
     await expect(client.deleteAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toBeUndefined();
 
@@ -1338,7 +1344,7 @@ describe('StuffStashClient', () => {
           data: [{
             id: 'activity-one', principalId: 'principal-one', action: 'asset.updated', category: 'change', source: 'api',
             occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title', previousValue: 'Drill', currentValue: 'Driver' }],
-            undo: { operationId: 'operation-one', status: 'available' }, technical: {}
+            undo: { operationId: 'operation-one', status: 'available' }, technicalMetadata: { target_type: 'asset' }
           }],
           meta: { pagination: { limit: 20, nextCursor: 'next-page', hasMore: true } }
         });
@@ -1348,7 +1354,7 @@ describe('StuffStashClient', () => {
     await expect(client.listAssetActivity('tenant-one', 'inventory-one', 'asset-one', {
       view: 'changes', limit: 20, cursor: 'cursor-one'
     })).resolves.toMatchObject({
-      items: [{ id: 'activity-one', category: 'change', changes: [{ field: 'title' }], undo: { operationId: 'operation-one', status: 'available' } }],
+      items: [{ id: 'activity-one', category: 'change', changes: [{ field: 'title' }], undo: { operationId: 'operation-one', status: 'available' }, technicalMetadata: { target_type: 'asset' } }],
       pagination: { nextCursor: 'next-page', hasMore: true }
     });
     expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/activity?view=changes&limit=20&cursor=cursor-one');

@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
+  import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { onDestroy, tick } from 'svelte';
+  import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
@@ -37,7 +38,6 @@
   import { formatBytes } from './formatBytes';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
-  import WorkspaceTaskSheet from './action-surface/WorkspaceTaskSheet.svelte';
 
   let {
     open,
@@ -50,6 +50,7 @@
     customFieldDefinitions,
     assetTags = [],
     saving,
+    restoreFocusOnClose = true,
     onClose,
     onSave
   }: {
@@ -63,6 +64,7 @@
     customFieldDefinitions: CustomFieldDefinition[];
     assetTags?: AssetTag[];
     saving: boolean;
+    restoreFocusOnClose?: boolean;
     onClose: () => void;
     onSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
   } = $props();
@@ -85,6 +87,7 @@
   let lastInitialKind = $state<AssetKind>('item');
   let lastInitialParentAssetId = $state<string | null>(null);
   let wasOpen = $state(false);
+  let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
   const assetKindOptions = assetKindControlOptions();
@@ -105,18 +108,6 @@
     })
   );
   let photoSummary = $derived(addPhotoCountLabel(selectedPhotos.length));
-  let hasDraft = $derived(
-    title.trim().length > 0 ||
-    description.trim().length > 0 ||
-    parentAssetId !== (validInitialParentId(initialParentAssetId) ?? '') ||
-    quickParentEnabled ||
-    quickParentTitle.trim().length > 0 ||
-    customAssetTypeId.length > 0 ||
-    Object.values(customFieldValues).some((value) => value.length > 0) ||
-    selectedTagIds.length > 0 ||
-    newTags.length > 0 ||
-    selectedPhotos.length > 0
-  );
   let quickParentNameError = quickParentMissingNameMessage();
 
   $effect(() => {
@@ -130,7 +121,7 @@
       revokePhotoPreviews(selectedPhotos);
       selectedPhotos = [];
       photoError = '';
-      addReturnFocusTarget(returnFocusElement)?.focus();
+      if (restoreFocusOnClose) addReturnFocusTarget(returnFocusElement)?.focus();
       returnFocusElement = null;
     } else if (open && initialKind !== lastInitialKind) {
       kind = initialKind;
@@ -209,6 +200,36 @@
     fileInputKey += 1;
     lastInitialKind = nextKind;
     lastInitialParentAssetId = initialParentAssetId;
+  }
+
+  function handleDialogKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab' || !dialogElement) {
+      return;
+    }
+    const focusable = Array.from(
+      dialogElement.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true');
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialogElement.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function closeFromLink(event: MouseEvent): void {
@@ -314,8 +335,22 @@
 </script>
 
 {#if open}
-  <WorkspaceTaskSheet open title={kindCopy.heading} description="Add the details now; you can refine them later." busy={saving} dismissible={!hasDraft} {closeHref} closeLabel="Close add tray" initialFocusSelector="#asset-title" onCloseLink={closeFromLink} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
-    <div class="add-tray-form" data-parent-search-active={parentSearchPicking ? 'true' : undefined}>
+  <div class="tray-backdrop" role="presentation" onclick={onClose}></div>
+  <div
+    bind:this={dialogElement}
+    class="add-tray"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="add-title"
+    data-parent-search-active={parentSearchPicking ? 'true' : undefined}
+    tabindex="-1"
+    onkeydown={handleDialogKeydown}
+  >
+    <div class="section-heading compact">
+      <h2 id="add-title">{kindCopy.heading}</h2>
+      <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
+    </div>
+
     <div class="add-tray-body">
       <div class="add-summary">
         <p class="visually-hidden" aria-live="polite" aria-atomic="true">
@@ -436,10 +471,10 @@
         onRemove={removePhoto}
       />
     </div>
-    </div>
-    {#snippet footer()}
-      <Button.Root href={closeHref} variant="outline" disabled={saving} onclick={closeFromLink}>Cancel</Button.Root>
+
+    <div class="tray-actions">
+      <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
       <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
-    {/snippet}
-  </WorkspaceTaskSheet>
+    </div>
+  </div>
 {/if}

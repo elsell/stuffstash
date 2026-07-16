@@ -267,13 +267,18 @@ export class SeededInventoryRepository
 
   async moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset> {
     const asset = await this.getAsset(tenantId, inventoryId, assetId);
-    return this.updateAsset(tenantId, inventoryId, assetId, {
-      title: asset.title,
-      description: asset.description,
-      parentAssetId,
-      customFields: asset.customFields,
-      tagIds: asset.tags?.map((tag) => tag.id)
-    });
+    this.validateAssetParent(tenantId, inventoryId, assetId, parentAssetId);
+    const moved: Asset = { ...asset, parentAssetId, updatedAt: new Date().toISOString() };
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.map((candidate) =>
+        candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === assetId
+          ? moved
+          : candidate
+      )
+    };
+    this.recordAssetAudit(moved, 'asset.moved');
+    return moved;
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
@@ -665,7 +670,7 @@ export class SeededInventoryRepository
   }
 
   async listTenantAuditRecords(tenantId: string, cursor?: string, _signal?: AbortSignal): Promise<AuditRecordPage> {
-    const records = this.auditRecords.filter((record) => record.tenantId === tenantId);
+    const records = this.auditRecords.filter((record) => record.tenantId === tenantId && !record.inventoryId);
     return page(records, cursor);
   }
 

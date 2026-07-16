@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { AssetAttachment, AssetViewModel } from '$lib/domain/inventory';
 import {
   buildDetailPhotos,
-  photoGalleryEmptyMessage,
   photoUploadUnavailableReason,
   supportedAttachmentContentType,
   supportedImageContentType,
@@ -100,8 +99,7 @@ describe('workspace asset media helpers', () => {
     expect(photoUploadUnavailableReason({ canEditAsset: true, lifecycleState: 'active', isSaving: false, supportedImageTypeCount: 1 })).toBe('');
   });
 
-  it('builds asset media empty and unsupported type presentation', () => {
-    expect(photoGalleryEmptyMessage()).toBe('No photos yet.');
+  it('builds unsupported type presentation', () => {
     expect(unsupportedAttachmentTypeMessage()).toBe('Unsupported file type.');
     expect(unsupportedImageTypeMessage()).toBe('Unsupported image type.');
   });

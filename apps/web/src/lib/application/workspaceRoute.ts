@@ -123,7 +123,11 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     browseSurface: parseBrowseSurface(url.searchParams.get('surface')),
     browseScope: parseBrowseScope(url.searchParams.get('scope')),
     browseSort: parseBrowseSort(url.searchParams.get('sort')),
-    browseTagIds: url.searchParams.getAll('tag').filter(Boolean)
+    browseTagIds: Array.from(new Set(
+      [...url.searchParams.getAll('tag'), ...url.searchParams.getAll('tagId')]
+        .map((id) => id.trim())
+        .filter(Boolean)
+    ))
   };
 
   if (segments.length === 0) {
@@ -353,13 +357,13 @@ export function workspaceRouteHref(
     if (next.browseSurface !== 'list') search.set('surface', next.browseSurface);
     if (next.browseScope !== 'all') search.set('scope', next.browseScope);
     if (next.searchQuery.trim()) search.set('q', next.searchQuery.trim());
-    for (const tagId of next.browseTagIds) search.append('tag', tagId);
+    for (const tagId of Array.from(new Set(next.browseTagIds.map((id) => id.trim()).filter(Boolean)))) {
+      search.append('tag', tagId);
+    }
     if (next.searchLifecycleState !== 'active') search.set('lifecycle', next.searchLifecycleState);
     if (next.searchCheckoutState !== 'any') search.set('availability', next.searchCheckoutState);
     if (next.browseSort !== 'updated_desc') search.set('sort', next.browseSort);
     if (next.searchMode !== 'fuzzy') search.set('mode', next.searchMode);
-  } else if (inventoryId && next.mode === 'locations') {
-    path += '/locations';
   } else if (inventoryId && next.mode === 'location' && next.locationId) {
     path += `/locations/${encodeURIComponent(next.locationId)}`;
     if ((next.assetAction ?? next.action) === 'edit') {
@@ -382,20 +386,6 @@ export function workspaceRouteHref(
     }
     if (action && !isLocationEdit) {
       path += `/${action}`;
-    }
-  } else if (inventoryId && next.mode === 'search') {
-    path += '/search';
-    if (next.searchQuery.trim()) {
-      search.set('q', next.searchQuery.trim());
-    }
-    if (next.searchLifecycleState !== 'active') {
-      search.set('lifecycle', next.searchLifecycleState);
-    }
-    if (next.searchMode !== 'fuzzy') {
-      search.set('mode', next.searchMode);
-    }
-    if (next.searchCheckoutState !== 'any') {
-      search.set('checkout', next.searchCheckoutState);
     }
   } else if (inventoryId && next.mode === 'settings') {
     path += '/settings';

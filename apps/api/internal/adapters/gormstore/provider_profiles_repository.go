@@ -11,6 +11,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (s Store) SaveProviderProfile(ctx context.Context, profile agentmodel.ProviderProfile, auditRecord audit.Record) error {
@@ -70,7 +71,11 @@ func (s Store) ProviderProfileByID(ctx context.Context, tenantID tenant.ID, prof
 
 func (s Store) ListProviderProfiles(ctx context.Context, tenantID tenant.ID) ([]agentmodel.ProviderProfile, error) {
 	var models []providerProfileModel
-	if err := s.db.WithContext(ctx).Where(&providerProfileModel{TenantID: tenantID.String()}).Order("created_at ASC, id ASC").Find(&models).Error; err != nil {
+	if err := s.db.WithContext(ctx).
+		Where(&providerProfileModel{TenantID: tenantID.String()}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).
+		Find(&models).Error; err != nil {
 		return nil, err
 	}
 	profiles := make([]agentmodel.ProviderProfile, 0, len(models))

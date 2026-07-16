@@ -25,6 +25,8 @@
     disablePortal = false,
     onSelectTenant,
     onSelectInventory,
+    onCreateTenantWithInventory,
+    onCreateInventory,
     onSearch,
     onOpenAsset,
     onOpenAdd,
@@ -44,9 +46,11 @@
     disablePortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
+    onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: AssetKind) => void;
+    onOpenAdd: (kind: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onOpenSettings: () => void;
     onSignOut: () => void;
     onMobileSurfaceOpenChange?: (open: boolean) => void;
@@ -150,6 +154,8 @@
       {selectedInventoryId}
       {onSelectTenant}
       {onSelectInventory}
+      {onCreateTenantWithInventory}
+      {onCreateInventory}
       onOpenChange={onMobileSurfaceOpenChange}
     />
   </div>

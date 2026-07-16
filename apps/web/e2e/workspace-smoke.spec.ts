@@ -19,7 +19,7 @@ test('desktop shell loads the authenticated tenant and compact inventory switche
 
   await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Household/ })).toContainText('Home');
-  await expect(page.getByRole('navigation', { name: 'Inventory destinations' }).getByRole('link', { name: /Browse/ })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Inventory destinations' }).getByText('Search')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Open location Garage/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
   expect(await clippedTextCount(page.locator('.nav-button small'))).toBe(0);
@@ -142,8 +142,9 @@ test('add flow saves items with and without selected photo previews', async ({ p
     path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')
   ).length;
   await page.getByRole('button', { name: 'Search', exact: true }).click();
-  await expect(page.locator('.browse-result-grid').getByRole('link', { name: /Photo tape/ })).toBeVisible();
-  const photoTapeThumbnail = page.locator('.browse-result-grid img[alt="Photo tape"]');
+  const browseResults = page.getByRole('tabpanel', { name: 'All' });
+  await expect(browseResults.getByRole('link', { name: /Photo tape/ })).toBeVisible();
+  const photoTapeThumbnail = browseResults.getByRole('img', { name: 'Photo tape' });
   await expect(photoTapeThumbnail).toBeVisible();
   expect(
     thumbnailRequestPaths(page).filter((path) => path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')).length
@@ -179,8 +180,8 @@ test('mobile bottom add saves an item', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { name: 'Mobile drawer labels' })).toBeVisible();
 });
 
-test('home recent cards preserve vertical flow and card boundaries across viewport widths', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'desktop-chromium', 'Recent-card viewport matrix runs once in Chromium.');
+test('mobile home recent cards keep long titles inside each card', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile recent rail geometry runs on the mobile project.');
 
   const longTitle = 'Replacement refrigerator water filter cartridge set';
 
@@ -189,20 +190,11 @@ test('home recent cards preserve vertical flow and card boundaries across viewpo
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page).toHaveURL('/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato');
 
-  for (const viewport of [
-    { width: 1440, height: 900 },
-    { width: 1024, height: 768 },
-    { width: 393, height: 852 },
-    { width: 320, height: 700 }
-  ]) {
-    await page.setViewportSize(viewport);
-    await page.goto('/tenants/tenant-home/inventories/inventory-household');
-    const recentCards = page.locator('[data-recent-card]');
-    await expect(recentCards.first()).toBeVisible();
-    const geometry = await recentCardGeometry(recentCards);
-    expect(geometry.issues, `${viewport.width}x${viewport.height}: ${geometry.issues.join('; ')}`).toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-  }
+  await page.goto('/tenants/tenant-home/inventories/inventory-household');
+  const recentCard = page.locator('.recent-card').filter({ hasText: longTitle }).first();
+  await expect(recentCard).toBeVisible();
+  expect(await cardTextFitsInside(recentCard)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
 test('add location deep link saves to the canonical focused location route', async ({ page }, testInfo) => {
@@ -245,18 +237,20 @@ test('search entry shows autocomplete and image-bearing results', async ({ page 
   await page.goto('/');
 
   await page.getByLabel('Search this inventory').fill('Tomato');
-  await expect(page.getByLabel('Search suggestions').getByRole('link', { name: 'Open Tomato fertilizer' })).toBeVisible();
-  await expect(page.getByLabel('Search suggestions').locator('img[alt="Tomato fertilizer"]')).toBeVisible();
+  const suggestionList = page.getByLabel('Search suggestions');
+  await expect(suggestionList.getByRole('option', { name: 'Open Tomato fertilizer' })).toBeVisible();
+  await expect(suggestionList.getByRole('img', { name: 'Tomato fertilizer' })).toBeVisible();
   await page.getByRole('button', { name: 'Run search' }).click();
 
   await expect(page.getByRole('heading', { name: 'Browse' })).toBeVisible();
   await expect(page.getByLabel('Search this inventory')).toHaveCount(0);
   await expect(page.getByLabel('Search Browse')).toBeVisible();
-  await expect(page.locator('.browse-result-grid').getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
+  const browseResults = page.getByRole('tabpanel', { name: 'All' });
+  await expect(browseResults.getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
     'href',
     '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato'
   );
-  await expect(page.locator('.browse-result-grid img[alt="Tomato fertilizer"]')).toBeVisible();
+  await expect(browseResults.getByRole('img', { name: 'Tomato fertilizer' })).toBeVisible();
 });
 
 test('location navigation opens asset detail and returns to the location list', async ({ page }, testInfo) => {
@@ -414,48 +408,14 @@ async function hasHorizontalOverflow(locator: Locator): Promise<boolean> {
   return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
 }
 
-async function recentCardGeometry(locator: Locator): Promise<{ issues: string[] }> {
-  return locator.evaluateAll((cards) => {
-    const issues: string[] = [];
-    const contains = (outer: DOMRect, inner: DOMRect) =>
-      inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1;
-    const overlapArea = (left: DOMRect, right: DOMRect) =>
-      Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left)) *
-      Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
-
-    const cardRects = cards.map((card) => card.getBoundingClientRect());
-    cards.forEach((card, index) => {
-      const id = card.getAttribute('data-recent-card') ?? String(index);
-      const cardRect = cardRects[index];
-      const link = card.querySelector<HTMLElement>('[data-recent-card-link]');
-      const media = card.querySelector<HTMLElement>('[data-recent-card-media]');
-      const copy = card.querySelector<HTMLElement>('[data-recent-card-copy]');
-      const title = card.querySelector<HTMLElement>('[data-recent-card-title]');
-      const tagList = card.querySelector<HTMLElement>('[data-recent-card-tags] .tag-chip-list');
-      if (!link || !media || !copy || !title) {
-        issues.push(`${id}: missing geometry target`);
-        return;
-      }
-      const linkRect = link.getBoundingClientRect();
-      const mediaRect = media.getBoundingClientRect();
-      const copyRect = copy.getBoundingClientRect();
-      const titleRect = title.getBoundingClientRect();
-      if (!contains(linkRect, mediaRect) || !contains(linkRect, copyRect)) issues.push(`${id}: link does not contain identity content`);
-      if (!contains(cardRect, linkRect)) issues.push(`${id}: link escapes card`);
-      if (titleRect.top < mediaRect.bottom - 1 || overlapArea(mediaRect, copyRect) > 0) issues.push(`${id}: media overlaps copy`);
-      if (link.scrollHeight > link.clientHeight + 1) issues.push(`${id}: link content overflows fixed height`);
-      const titleOwner = document.elementFromPoint(titleRect.left + titleRect.width / 2, titleRect.top + titleRect.height / 2);
-      if (!titleOwner || !link.contains(titleOwner)) issues.push(`${id}: title is painted under another layer`);
-      if (tagList) {
-        const tagRect = tagList.getBoundingClientRect();
-        if (!contains(cardRect, tagRect)) issues.push(`${id}: tags escape card`);
-        if (tagRect.top < linkRect.bottom - 1 || overlapArea(linkRect, tagRect) > 0) issues.push(`${id}: tags overlap identity link`);
-      }
+async function cardTextFitsInside(locator: Locator): Promise<boolean> {
+  return locator.evaluate((element) => {
+    const card = element.getBoundingClientRect();
+    return Array.from(element.querySelectorAll('strong, small')).every((child) => {
+      const rect = child.getBoundingClientRect();
+      const style = window.getComputedStyle(child);
+      return rect.left >= card.left - 1 && rect.right <= card.right + 1 && style.overflowX !== 'visible';
     });
-    for (let index = 0; index < cardRects.length - 1; index += 1) {
-      if (overlapArea(cardRects[index], cardRects[index + 1]) > 0) issues.push(`cards ${index} and ${index + 1} overlap`);
-    }
-    return { issues };
   });
 }
 

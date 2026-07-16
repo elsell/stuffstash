@@ -151,7 +151,7 @@ Import job counts must include:
 ## User Experience
 
 Web and mobile clients must show assigned tags as compact chips in asset list and detail views.
-Mobile home recently changed cards must also show assigned tags as compact chips when space allows.
+Web home recently added cards and mobile home recently changed cards must also show assigned tags as compact chips when space allows.
 When a search result matched because of a tag display name or tag key, web and mobile clients must present that match as `Tag` in result metadata instead of exposing raw transport field names such as `tag_display_name` or `tag_key`.
 
 Tag chips must:
@@ -184,8 +184,9 @@ The first inline creation behavior may create the tag immediately before saving 
 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.
 
-Mobile Browse must keep the first viewport focused on inventory content rather than summoning the keyboard. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. The primary `All`, `Places`, `Containers`, and `Items` scope control must remain visible outside secondary Filters. Lifecycle, availability, and tag browse controls must be disclosed through the compact Filters control; Sort must use its own control.
-Mobile tag browse controls must behave as multi-select filters over the current result set. Selecting or clearing a tag must not change the text in the search field. Selected tags must compose with the current text query and other filters, and more than one tag may be selected at once.
+Mobile Browse must keep the first viewport focused on inventory content rather than summoning the keyboard. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. The primary `All`, `Places`, `Containers`, and `Items` scope control must remain visible outside secondary Filters. Lifecycle, availability, and tag browse controls must be disclosed through the compact Filters control; Sort must use its own control. Tag browse suggestions must be sorted alphabetically by display label so the filter sheet is predictable.
+Web and mobile tag browse controls must behave as multi-select filters over the current result set. Selecting or clearing a tag must not change the text in the search field. Selected tags must compose with the current text query and other filters, and more than one tag may be selected at once.
+Web tag browse filters must use durable route state with repeatable tag identifiers so refresh, back navigation, and shared links preserve the selected tag filter set without replacing the text query.
 When mobile opens search from a known tag chip with selected tag IDs, the search text input must not auto-focus. Tag-driven navigation is a browse/filter entry point, not a text-entry entry point.
 Mobile filter controls must use consistent titled groups and shared option controls. The secondary filter groups are `Tags`, `Status`, and `Availability`; option copy must use consistent noun or adjective labels such as `Active`, `Archived`, `Any`, `Checked out`, and `Available`. Applied tags must remain visible by display name as removable tokens when the sheet is closed. Filter selection must use accessible selected semantics and a non-color state indicator.
 

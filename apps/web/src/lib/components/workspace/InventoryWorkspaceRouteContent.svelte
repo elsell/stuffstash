@@ -55,6 +55,7 @@
 
   export type RouteContentRouteState = {
     routeUnavailable: string;
+    assetDetailLoading: boolean;
     mode: WorkspaceMode;
     searchResults: SearchResult[];
     searchSuggestions: Asset[];
@@ -93,7 +94,6 @@
 
   export type RouteContentHandlers = {
     onHome: (event: MouseEvent) => void;
-    onCreateStarterInventory: () => Promise<void>;
     onOpenLocation: (asset: Asset) => void;
     onOpenLocations?: () => void;
     onBrowseStateChange: (state: {
@@ -108,7 +108,7 @@
     onBrowseRetry: () => Promise<void>;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => Promise<void>;
-    onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null) => void;
+    onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onCloseLocation: () => void;
     onCloseAssetDetail: () => void;
     onAssetActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
@@ -166,6 +166,7 @@
     workspaceUnavailableRoutePresentation
   } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import AssetDetail from './AssetDetail.svelte';
   import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
@@ -206,23 +207,14 @@
     <div class="empty-state spacious">
       <h1>{noInventoryPresentation.title}</h1>
       <p>{noInventoryPresentation.message}</p>
-      {#if noInventoryPresentation.actionLabel}
-        <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>{noInventoryPresentation.actionLabel}</Button.Root>
-      {/if}
     </div>
   </section>
-{:else if route.mode === 'location' && !workspace.selectedLocation}
-  <section class="workspace-main" aria-live="polite" aria-busy="true">
-    <div class="empty-state spacious" role="status">
-      <h1>Opening location…</h1>
-      <p>Loading this place and what it contains.</p>
-    </div>
-  </section>
-{:else if route.mode === 'asset' && !workspace.selectedAsset}
-  <section class="workspace-main" aria-live="polite" aria-busy="true">
-    <div class="empty-state spacious" role="status">
-      <h1>Opening asset…</h1>
-      <p>Loading details and photos.</p>
+{:else if route.assetDetailLoading}
+  <section class="workspace-main" aria-busy="true">
+    <div class="empty-state spacious" role="status" aria-live="polite">
+      <LoaderCircle class="size-6 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
+      <h1>Loading asset details</h1>
+      <p>Getting the latest details and files.</p>
     </div>
   </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}
@@ -263,7 +255,7 @@
     onBack={handlers.onCloseAssetDetail}
     onActionOpen={handlers.onAssetActionOpen}
     onActionClose={handlers.onAssetActionClose}
-    onOpenAsset={(asset) => { void handlers.onOpenAsset(asset); }}
+    onOpenAsset={(asset) => asset.kind === 'location' ? handlers.onOpenLocation(asset) : void handlers.onOpenAsset(asset)}
     onOpenAdd={handlers.onOpenAdd}
     onMoveHere={handlers.onMoveAssetHere}
     onSave={handlers.onAssetSave}
@@ -279,7 +271,7 @@
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
     onTagSearch={handlers.onAssetTagSearch}
   />
-{:else if route.mode === 'browse' || route.mode === 'search'}
+{:else if route.mode === 'browse'}
   <BrowsePanel
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
@@ -310,7 +302,7 @@
     onRetry={handlers.onBrowseRetry}
     onSearch={() => { void handlers.onSearch(); }}
     onOpenAsset={handlers.onOpenSearchAsset}
-    onOpenAdd={(kind) => handlers.onOpenAdd(kind)}
+    onOpenAdd={(kind, parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
   />
 {:else if route.mode === 'import'}
   <InventoryImportWorkspace
@@ -360,7 +352,6 @@
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
     lifecycleState={workspace.data.context.assetLifecycleState}
-    browseMode={route.mode === 'locations' ? 'locations' : 'home'}
     locations={topLevelLocations(workspace.assets)}
     recentAssets={recentlyChangedAssets(workspace.assets)}
     archivedAssets={workspace.assets}
@@ -371,7 +362,7 @@
     onOpenLocations={handlers.onOpenLocations}
     onOpenAsset={handlers.onOpenAsset}
     onReturnAsset={handlers.onHomeAssetReturn}
-    onOpenAdd={(kind = 'location') => handlers.onOpenAdd(kind)}
+    onOpenAdd={(kind = 'location', parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
     onSelectLifecycle={(lifecycleState) => { void handlers.onSelectLifecycle(lifecycleState); }}
     onTagSearch={handlers.onAssetTagSearch}
   />

@@ -51,9 +51,6 @@ describe('InventoryWorkspaceChrome', () => {
         onModeChange: (mode) => {
           selectedModes.push(mode);
         },
-        onOpenAccountSettings: () => {
-          selectedModes.push('settings');
-        },
         onOpenAdd: (kind) => {
           addKinds.push(kind);
         }
@@ -62,11 +59,15 @@ describe('InventoryWorkspaceChrome', () => {
 
     linkContaining('Browse').click();
     document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.click();
-    expect(document.body.querySelector<HTMLButtonElement>('.header-add')?.getAttribute('aria-haspopup')).toBe('menu');
+    document.body.querySelector<HTMLButtonElement>('.header-add')?.click();
+    await waitForAddMenu();
+    const locationAction = addMenuItemContaining('Location');
+    expect(locationAction.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/add/location');
+    locationAction.click();
 
     expect(selectedModes).toContain('browse');
     expect(addKinds).toContain('item');
-
+    expect(addKinds).toContain('location');
   });
 
   it('keeps search suggestions image-ready and updates the bound search query', async () => {
@@ -118,10 +119,10 @@ describe('InventoryWorkspaceChrome', () => {
     expect(isInert(mobileNavigation!)).toBe(true);
   });
 
-  it('suppresses bottom navigation on focused asset and place task surfaces', () => {
+  it.each(['asset', 'location'] as const)('suppresses bottom navigation on focused %s task surfaces', (mode) => {
     component = mount(InventoryWorkspaceChromeHarness, {
       target: document.body,
-      props: chromeProps({ mode: 'asset' })
+      props: chromeProps({ mode })
     });
 
     expect(document.body.querySelector('[aria-label="Mobile navigation"]')).toBeNull();
@@ -219,4 +220,13 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+async function waitForAddMenu(): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (!document.body.querySelector('[role="menu"]')) {
+    if (Date.now() >= deadline) throw new Error('Timed out waiting for Add menu');
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+    await flush();
+  }
 }

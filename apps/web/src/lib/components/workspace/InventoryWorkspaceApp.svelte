@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { operationRefreshWarning, safeOperationFailureDescription } from '$lib/application/workspaceOperationNotifications';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { afterNavigate } from '$app/navigation';
   import { onMount, setContext, tick } from 'svelte';
-  import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { assetThumbnailLoaderContext, type AssetThumbnailLoader } from '$lib/ports/assetThumbnailLoader';
   import {
     detailAssetList,
@@ -27,12 +28,17 @@
   } from '$lib/application/workspaceAppNavigation';
   import {
     applyLoadedWorkspaceAssetDetail,
+    assetDetailFailureMessage,
     loadWorkspaceAssetDetail,
     refreshWorkspaceAssetAttachments
   } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { reconcilePendingAssetTagDrafts } from '$lib/application/workspaceTagDrafts';
-  import { buildSearchSuggestions } from '$lib/application/workspaceSearch';
+  import {
+    browseSearchRoute,
+    buildSearchSuggestions,
+    loadBrowsePage as executeBrowsePageLoad
+  } from '$lib/application/workspaceSearch';
   import { browseFailureMessage } from '$lib/application/workspaceBrowsePresentation';
   import {
     type AssetRouteAction,
@@ -74,8 +80,8 @@
     type SearchMode,
     type SearchResult,
     type SelectedAttachment,
-  type UpdateAssetDraft,
-  type UndoableOperationDirection,
+    type UpdateAssetDraft,
+    type UndoableOperationDirection,
     type WorkspaceData,
     type WorkspaceMode
   } from '$lib/domain/inventory';
@@ -88,6 +94,7 @@
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
   import InventoryWorkspaceRouteContent from './InventoryWorkspaceRouteContent.svelte';
+  import WorkspaceSetupPanel from './WorkspaceSetupPanel.svelte';
 
   let {
     repository,
@@ -125,6 +132,7 @@
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
   let busy = $state(false);
   let notification = $state<WorkspaceNotification | null>(null);
+  let refreshWarning = $state<WorkspaceNotification | null>(null);
   let error = $state('');
   let searchQuery = $state('');
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
@@ -161,6 +169,7 @@
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
   let assetDetailRequestId = 0;
+  let assetDetailLoading = $state(false);
   let applyingRoute = false;
   let activeRouteApplicationKey: string | null = null;
   let queuedRoute: { route: WorkspaceRouteState; href: string } | null = null;
@@ -245,15 +254,38 @@
     });
   }
 
-  async function createStarterInventory(): Promise<void> {
-    await run(async () => {
-      data = data.context.selectedTenantId
-        ? await repository.createInventory(data.context.selectedTenantId, 'Household')
-        : await repository.createTenantWithInventory({ tenantName: 'Home', inventoryName: 'Household' });
+  async function createStarterInventory(input: { tenantName: string; inventoryName: string }): Promise<void> {
+    const created = data.context.selectedTenantId
+      ? () => repository.createInventory(data.context.selectedTenantId, input.inventoryName)
+      : () => repository.createTenantWithInventory({ tenantName: input.tenantName, inventoryName: input.inventoryName });
+    await createWorkspaceContext(created, input.inventoryName);
+  }
+
+  async function createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<void> {
+    await createWorkspaceContext(() => repository.createTenantWithInventory(input), input.inventoryName, true);
+  }
+
+  async function createInventoryInTenant(tenantId: string, inventoryName: string): Promise<void> {
+    await createWorkspaceContext(() => repository.createInventory(tenantId, inventoryName), inventoryName, true);
+  }
+
+  async function createWorkspaceContext(loadCreatedWorkspace: () => Promise<WorkspaceData>, inventoryName: string, rethrow = false): Promise<void> {
+    busy = true;
+    error = '';
+    notification = null;
+    try {
+      data = await loadCreatedWorkspace();
       routeUnavailable = '';
+      invalidateAssetDetailLoad();
+      resetSearchState();
       mode = 'home';
+      selectedLocationId = null;
+      selectedAssetId = null;
+      loadedAssetDetail = null;
+      selectedAssetAttachments = [];
+      selectedAssetCheckoutHistory = [];
       replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
-      setSuccessNotification('Created Household.', {
+      setSuccessNotification(`Created ${inventoryName}.`, {
         label: 'Open inventory',
         href: workspaceRouteHref(
           { mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId },
@@ -261,7 +293,17 @@
           data.context.selectedInventoryId
         )
       });
-    });
+    } catch (caught) {
+      if (handleSessionExpired(caught)) {
+        return;
+      }
+      error = caught instanceof Error ? caught.message : 'Action failed.';
+      if (rethrow) {
+        throw new Error(error);
+      }
+    } finally {
+      busy = false;
+    }
   }
 
   async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
@@ -275,21 +317,19 @@
     }
     busy = true;
     error = '';
+    refreshWarning = null;
     notification = null;
     try {
       const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
       data = result.data;
       if (result.message) {
-        setMutationSuccessNotification(
-          result.message,
-          result.selectedAsset,
-          result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined
-        );
+        setMutationSuccessNotification(result.message, result.selectedAsset, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
       }
       if (result.error) {
         error = result.error;
       }
-      if (result.closeAdd) {
+      const restoreAddFocus = result.closeAdd;
+      if (restoreAddFocus) {
         addOpen = false;
       }
       if (result.mode) {
@@ -316,6 +356,7 @@
       if (result.route) {
         replaceRoute(result.route);
       }
+      if (restoreAddFocus) void restoreAddFocusAfterRoute(false, true);
       return result.saveResult;
     } catch (caught) {
       if (handleSessionExpired(caught)) {
@@ -362,11 +403,7 @@
         }
       };
       loadedAssetDetail = asset;
-      setMutationSuccessNotification(
-        `Saved ${asset.title}.`,
-        asset,
-        asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined
-      );
+      setMutationSuccessNotification(`Saved ${asset.title}.`, asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -402,7 +439,7 @@
       closeAssetActionRoute();
     } catch (caught) {
       if (handleSessionExpired(caught)) return;
-      const reason = caught instanceof Error ? caught.message : 'Choose another asset and try again.';
+      const reason = safeOperationFailureDescription(caught);
       throw new Error(`Move not saved. ${candidate.title} stayed where it was. ${reason}`);
     } finally {
       busy = false;
@@ -421,11 +458,11 @@
   }
 
   async function search(): Promise<void> {
-    navigateTo({
-      mode: 'browse', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId,
-      searchQuery: searchQuery.trim(), searchLifecycleState, searchMode, searchCheckoutState,
-      browseSurface: 'list', browseScope, browseSort, browseTagIds: searchTagIds
-    });
+    navigateTo(browseSearchRoute(data.context.selectedTenantId, data.context.selectedInventoryId, {
+      query: searchQuery, lifecycleState: searchLifecycleState, mode: searchMode,
+      checkoutState: searchCheckoutState, surface: 'list', scope: browseScope,
+      sort: browseSort, selectedTagIds: searchTagIds
+    }));
   }
 
   async function loadBrowsePage(append = false): Promise<void> {
@@ -438,23 +475,19 @@
     searchError = '';
     browseErrorPhase = null;
     try {
-      const page = await repository.browseAssets({
-        tenantId, inventoryId, query: searchQuery, tagIds: searchTagIds, lifecycleState: searchLifecycleState,
-        checkoutState: searchCheckoutState, scope: browseScope, sort: browseSort, mode: searchMode, limit: 20,
-        cursor: append ? browseNextCursor ?? undefined : undefined
+      const page = await executeBrowsePageLoad(repository, {
+        tenantId, inventoryId, query: searchQuery, selectedTagIds: searchTagIds,
+        lifecycleState: searchLifecycleState, checkoutState: searchCheckoutState, scope: browseScope,
+        sort: browseSort, mode: searchMode, append, cursor: append ? browseNextCursor ?? undefined : undefined,
+        currentAssets: browseAssets, currentSearchResults: searchResults, currentInventoryEmpty: browseInventoryEmpty
       });
-      const checksDefaultInventoryEmptiness = !append && !searchQuery.trim() && searchTagIds.length === 0 &&
-        browseScope === 'all' && searchLifecycleState === 'active' && searchCheckoutState === 'any';
-      const inventoryEmpty = checksDefaultInventoryEmptiness && page.assets.length === 0
-        ? !(await repository.hasAnyAssets(tenantId, inventoryId))
-        : page.assets.length > 0 ? false : browseInventoryEmpty;
       if (requestId !== browseRequestId) return;
-      browseAssets = append ? [...browseAssets, ...page.assets] : page.assets;
-      searchResults = append ? [...searchResults, ...page.searchResults] : page.searchResults;
+      browseAssets = page.assets;
+      searchResults = page.searchResults;
       browseNextCursor = page.nextCursor;
       browseHasMore = page.hasMore;
-      browseInventoryEmpty = inventoryEmpty;
-      searchSubmitted = !!searchQuery.trim() || searchTagIds.length > 0;
+      browseInventoryEmpty = page.inventoryEmpty;
+      searchSubmitted = page.submitted;
     } catch (caught) {
       if (requestId !== browseRequestId || handleSessionExpired(caught)) return;
       const phase = append ? 'append' : browseAssets.length > 0 ? 'replacement' : 'initial';
@@ -523,10 +556,10 @@
       throw new Error(error);
     }
     await run(async () => {
-      const archived = await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
+      const result = await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setMutationSuccessNotification(`Archived ${asset.title}.`, archived, {
+      setMutationSuccessNotification(`Archived ${asset.title}.`, result, {
         label: 'View archived',
         href: workspaceRouteHref(
           { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
@@ -534,7 +567,7 @@
           asset.inventoryId
         )
       });
-    }, { rethrow: true });
+    });
   }
 
   async function restoreSelectedAsset(): Promise<void> {
@@ -547,11 +580,11 @@
       throw new Error(error);
     }
     await run(async () => {
-      const restored = await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
+      const result = await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setMutationSuccessNotification(`Restored ${asset.title}.`, restored, viewAssetAction(restored));
-    }, { rethrow: true });
+      setMutationSuccessNotification(`Restored ${asset.title}.`, result, viewAssetAction(asset));
+    });
   }
 
   async function deleteSelectedAsset(): Promise<void> {
@@ -568,7 +601,7 @@
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
       setSuccessNotification(`Deleted ${asset.title}.`);
-    }, { rethrow: true });
+    });
   }
 
   async function checkoutSelectedAsset(details: string): Promise<void> {
@@ -587,8 +620,8 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setMutationSuccessNotification(`Checked out ${refreshed.title}.`, checkout, viewAssetAction(refreshed));
-    }, { rethrow: true });
+      setMutationSuccessNotification(`Checked out ${refreshed.title}.`, { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
+    });
   }
 
   async function returnSelectedAsset(details: string): Promise<void> {
@@ -601,14 +634,14 @@
       throw new Error(error);
     }
     await run(async () => {
-      const checkout = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
       const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
       selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setMutationSuccessNotification(`Returned ${refreshed.title}.`, checkout, viewAssetAction(refreshed));
-    }, { rethrow: true });
+      setMutationSuccessNotification(`Returned ${refreshed.title}.`, { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
+    });
   }
 
   async function returnAssetFromHome(asset: Asset): Promise<void> {
@@ -617,10 +650,10 @@
       return;
     }
     await run(async () => {
-      const checkout = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
+      const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
       const returnedAsset: Asset = { ...asset, currentCheckout: undefined };
       data = replaceWorkspaceAsset(data, returnedAsset);
-      setMutationSuccessNotification(`Returned ${returnedAsset.title}.`, checkout, viewAssetAction(returnedAsset));
+      setMutationSuccessNotification(`Returned ${returnedAsset.title}.`, { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
     });
   }
 
@@ -643,9 +676,15 @@
     }
     await run(async () => {
       await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
-      await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
+      removeSelectedAttachment(attachment);
       setSuccessNotification(`Deleted ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
-    }, { rethrow: true });
+      void refreshSelectedAttachments(
+        attachment.tenantId,
+        attachment.inventoryId,
+        attachment.assetId,
+        [attachment.id]
+      ).catch(() => {});
+    }, { rethrow: true, propagateSessionExpiry: true });
   }
 
   async function uploadSelectedAttachment(attachment: SelectedAttachment): Promise<void> {
@@ -657,21 +696,17 @@
       error = 'You do not have permission to edit assets in this inventory.';
       throw new Error(error);
     }
-    busy = true;
-    notification = null;
-    try {
+    await run(async () => {
       await repository.uploadAssetAttachment(asset.tenantId, asset.inventoryId, asset.id, attachment);
       await refreshSelectedAttachments(asset.tenantId, asset.inventoryId, asset.id);
       setSuccessNotification(`Uploaded ${attachment.name}.`, viewAssetAction(asset));
-    } catch (caught) {
-      if (handleSessionExpired(caught)) return;
-      throw caught instanceof Error ? caught : new Error('Attachment upload failed.');
-    } finally {
-      busy = false;
-    }
+    });
   }
 
-  async function run(task: () => Promise<void>, options: { rethrow?: boolean } = {}): Promise<void> {
+  async function run(
+    task: () => Promise<void>,
+    options: { rethrow?: boolean; propagateSessionExpiry?: boolean } = {}
+  ): Promise<void> {
     busy = true;
     error = '';
     notification = null;
@@ -679,6 +714,9 @@
       await task();
     } catch (caught) {
       if (handleSessionExpired(caught)) {
+        if (options.propagateSessionExpiry) {
+          throw caught;
+        }
         return;
       }
       const taskError = caught instanceof Error ? caught.message : 'Action failed.';
@@ -697,7 +735,7 @@
 
   function setMutationSuccessNotification(
     title: string,
-    result: { tenantId: string; inventoryId: string; undoableOperationId?: string } | null | undefined,
+    result: Pick<Asset, 'tenantId' | 'inventoryId' | 'undoableOperationId'> | null | undefined,
     fallbackAction?: WorkspaceNotificationAction
   ): void {
     if (!result?.undoableOperationId) {
@@ -735,7 +773,10 @@
     };
     try {
       const asset = await repository.applyAssetOperation(tenantId, inventoryId, operationId, direction);
-      await refreshSelectedAssetLifecycle();
+      data = replaceWorkspaceAsset(data, asset);
+      if (asset.lifecycleState !== data.context.assetLifecycleState) {
+        data = { ...data, assets: data.assets.filter((candidate) => candidate.id !== asset.id) };
+      }
       if (selectedAssetId === asset.id || selectedLocationId === asset.id) {
         if (asset.lifecycleState === data.context.assetLifecycleState) {
           loadedAssetDetail = asset;
@@ -744,8 +785,7 @@
         }
       }
       const inverse: UndoableOperationDirection = direction === 'undo' ? 'redo' : 'undo';
-      busy = false;
-      notification = {
+      const successNotification: WorkspaceNotification = {
         id: `asset-operation:${operationId}`,
         kind: 'success',
         title: `${direction === 'undo' ? 'Undid' : 'Redid'} change to ${asset.title}.`,
@@ -755,6 +795,21 @@
           onClick: () => applyUndoableAssetOperation(tenantId, inventoryId, operationId, inverse)
         }
       };
+      notification = successNotification;
+      try {
+        await refreshSelectedAssetLifecycle();
+        if ((selectedAssetId === asset.id || selectedLocationId === asset.id) && asset.lifecycleState === data.context.assetLifecycleState) {
+          const refreshedAsset = await repository.getAsset(tenantId, inventoryId, asset.id);
+          data = replaceWorkspaceAsset(data, refreshedAsset);
+          loadedAssetDetail = refreshedAsset;
+          if (selectedAssetId === asset.id) {
+            selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(tenantId, inventoryId, asset.id);
+          }
+        }
+      } catch (refreshError) {
+        if (handleSessionExpired(refreshError)) return;
+        refreshWarning = operationRefreshWarning(operationId, successNotification.title, successNotification.action!);
+      }
     } catch (caught) {
       if (handleSessionExpired(caught)) return;
       try {
@@ -762,17 +817,16 @@
       } catch (refreshError) {
         if (handleSessionExpired(refreshError)) return;
       }
-      busy = false;
       notification = {
         id: `asset-operation:${operationId}`,
         kind: 'error',
         title: direction === 'undo' ? 'Couldn’t undo change.' : 'Couldn’t redo change.',
-        description: caught instanceof Error ? caught.message : 'The saved operation is no longer available.',
+        description: safeOperationFailureDescription(caught),
         important: true,
         duration: Infinity
       };
     } finally {
-      if (busy) busy = false;
+      busy = false;
     }
   }
 
@@ -876,9 +930,30 @@
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
     const routeKey = routeApplicationKey(route);
     if (activeRouteApplicationKey) {
-      if (routeKey === activeRouteApplicationKey) {
+      if (assetDetailLoading && routeKey !== activeRouteApplicationKey) {
+        invalidateAssetDetailLoad();
+        busy = false;
+        activeRouteApplicationKey = null;
+        applyingRoute = false;
         queuedRoute = null;
+        await applyRoute(route);
+        return;
+      }
+      if (routeKey === activeRouteApplicationKey) {
+        if (queuedRoute) {
+          invalidateAssetDetailLoad();
+          routeUnavailable = '';
+          mode = route.mode;
+          settingsSection = route.settingsSection;
+          assetDetailLoading = route.mode === 'asset';
+          queuedRoute = { route, href: currentWorkspaceHref() };
+        }
       } else {
+        invalidateAssetDetailLoad();
+        routeUnavailable = '';
+        mode = route.mode;
+        settingsSection = route.settingsSection;
+        assetDetailLoading = route.mode === 'asset';
         browseRequestId += 1;
         browseBusy = false;
         browseLoadingMore = false;
@@ -937,7 +1012,7 @@
         }
       }
 
-      if (route.mode !== 'search' && route.mode !== 'browse' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
+      if (route.mode !== 'browse' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
       const addRoute = resolveWorkspaceAddRoute(route, {
@@ -966,27 +1041,28 @@
         replaceRoute(addRoute.replacementRoute);
       }
 
-      if (route.mode === 'locations') {
-        invalidateAssetDetailLoad();
-        selectedLocationId = null;
-        selectedAssetId = null;
-        loadedAssetDetail = null;
-        selectedAssetAttachments = [];
-        selectedAssetCheckoutHistory = [];
-        attachmentId = null;
-        attachmentAction = null;
-        mode = 'locations';
-        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
-        return;
-      }
-
       if (route.mode === 'location' && route.locationId) {
-        const location = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        const knownLocation = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        let location = knownLocation;
+        if (!location && data.context.selectedTenantId && data.context.selectedInventoryId) {
+          try {
+            const candidate = await repository.getAsset(
+              data.context.selectedTenantId,
+              data.context.selectedInventoryId,
+              route.locationId
+            );
+            if (candidate.kind === 'location' && candidate.lifecycleState === data.context.assetLifecycleState) {
+              location = candidate;
+            }
+          } catch (caught) {
+            if (handleSessionExpired(caught)) return;
+          }
+        }
         if (location) {
           invalidateAssetDetailLoad();
           selectedLocationId = location.id;
           selectedAssetId = null;
-          loadedAssetDetail = null;
+          loadedAssetDetail = knownLocation ? null : location;
           selectedAssetAttachments = [];
           selectedAssetCheckoutHistory = [];
           attachmentId = null;
@@ -1017,6 +1093,7 @@
           loaded = await loadAssetDetail(data.context.selectedTenantId, data.context.selectedInventoryId, route.assetId);
         }
         if (!loaded) {
+          if (activeRouteApplicationKey !== routeKey || queuedRoute) return;
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
         }
@@ -1070,13 +1147,12 @@
         return;
       }
 
-      if (route.mode === 'browse' || route.mode === 'search') {
+      if (route.mode === 'browse') {
         mode = 'browse';
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
-        selectedAssetCheckoutHistory = [];
         selectedAssetCheckoutHistory = [];
         if (route.browseSurface === 'map') await loadBrowseMap();
         else await loadBrowsePage(false);
@@ -1104,13 +1180,13 @@
     } finally {
       if (activeRouteApplicationKey === routeKey) {
         activeRouteApplicationKey = null;
-      }
-      applyingRoute = false;
-      const nextRoute = queuedRoute;
-      queuedRoute = null;
-      if (nextRoute) {
-        window.history.replaceState({}, '', nextRoute.href);
-        void applyRoute(currentWorkspaceRoute());
+        applyingRoute = false;
+        const nextRoute = queuedRoute;
+        queuedRoute = null;
+        if (nextRoute) {
+          window.history.replaceState({}, '', nextRoute.href);
+          void applyRoute(currentWorkspaceRoute());
+        }
       }
     }
   }
@@ -1158,7 +1234,6 @@
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
     selectedAssetCheckoutHistory = [];
-    selectedAssetCheckoutHistory = [];
     searchResults = [];
     searchSubmitted = false;
   }
@@ -1183,19 +1258,16 @@
     sort?: BrowseSort;
     selectedTagIds?: string[];
   }): void {
-    navigateTo({
-      mode: 'browse',
-      tenantId: data.context.selectedTenantId,
-      inventoryId: data.context.selectedInventoryId,
-      browseSurface: next.surface ?? browseSurface,
-      browseScope: next.scope ?? browseScope,
-      browseSort: next.sort ?? browseSort,
-      browseTagIds: next.selectedTagIds ?? searchTagIds,
-      searchQuery,
-      searchLifecycleState: next.lifecycleState ?? searchLifecycleState,
-      searchCheckoutState: next.checkoutState ?? searchCheckoutState,
-      searchMode
-    });
+    navigateTo(browseSearchRoute(data.context.selectedTenantId, data.context.selectedInventoryId, {
+      query: searchQuery,
+      lifecycleState: next.lifecycleState ?? searchLifecycleState,
+      mode: searchMode,
+      checkoutState: next.checkoutState ?? searchCheckoutState,
+      surface: next.surface ?? browseSurface,
+      scope: next.scope ?? browseScope,
+      sort: next.sort ?? browseSort,
+      selectedTagIds: next.selectedTagIds ?? searchTagIds
+    }));
   }
 
   function openImportSource(source: ImportSourceRoute): void {
@@ -1376,10 +1448,8 @@
     });
   }
 
-  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null): void {
-    addReturnFocusElement = typeof document !== 'undefined' && document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null, opener: HTMLElement | null = null): void {
+    addReturnFocusElement = opener;
     addReturnLocationId = parentAssetId && selectedLocationId ? selectedLocationId : mode === 'location' ? selectedLocationId : null;
     addReturnAssetId = !addReturnLocationId && mode === 'asset' ? selectedAssetId : null;
     navigateTo({
@@ -1392,18 +1462,18 @@
   }
 
   function closeAdd(): void {
-    const returnFocusElement = addReturnFocusElement;
-    addReturnFocusElement = null;
     const closeRoute = workspaceAddCloseRoute(data.context, { mode, selectedLocationId: addReturnLocationId, selectedAssetId: addReturnAssetId });
     addOpen = false;
     replaceRoute(closeRoute);
-    if (typeof window !== 'undefined') {
-      void (async () => {
-        await applyRoute(currentWorkspaceRoute());
-        await tick();
-        addReturnFocusTarget(returnFocusElement)?.focus();
-      })();
-    }
+    if (typeof window !== 'undefined') void restoreAddFocusAfterRoute(true);
+  }
+
+  async function restoreAddFocusAfterRoute(applyCurrentRoute: boolean, preferResult = false): Promise<void> {
+    const returnFocusElement = addReturnFocusElement;
+    addReturnFocusElement = null;
+    if (applyCurrentRoute) await applyRoute(currentWorkspaceRoute());
+    await tick();
+    addReturnFocusTarget(returnFocusElement, document, undefined, preferResult)?.focus();
   }
 
   function addCloseHref(): string {
@@ -1525,6 +1595,7 @@
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {
     const requestId = ++assetDetailRequestId;
+    assetDetailLoading = true;
     busy = true;
     error = '';
     selectedLocationId = null;
@@ -1558,10 +1629,13 @@
       if (handleSessionExpired(caught)) {
         return false;
       }
-      error = caught instanceof Error ? caught.message : 'Unable to load asset.';
+      error = assetDetailFailureMessage(caught);
       return false;
     } finally {
-      busy = false;
+      if (requestId === assetDetailRequestId) {
+        assetDetailLoading = false;
+        busy = false;
+      }
     }
   }
 
@@ -1576,9 +1650,31 @@
     );
   }
 
-  async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+  function selectedAssetMatches(tenantId: string, inventoryId: string, assetId: string): boolean {
+    return data.context.selectedTenantId === tenantId && selectedInventory?.id === inventoryId && selectedAssetId === assetId;
+  }
+
+  function removeSelectedAttachment(attachment: AssetAttachment): void {
+    if (!selectedAssetMatches(attachment.tenantId, attachment.inventoryId, attachment.assetId)) {
+      return;
+    }
+    selectedAssetAttachments = selectedAssetAttachments.filter((candidate) => candidate.id !== attachment.id);
+  }
+
+  async function refreshSelectedAttachments(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    excludedAttachmentIds: string[] = []
+  ): Promise<void> {
     try {
-      selectedAssetAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+      const refreshedAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+      if (!selectedAssetMatches(tenantId, inventoryId, assetId)) {
+        return;
+      }
+      selectedAssetAttachments = refreshedAttachments.filter(
+        (attachment) => !excludedAttachmentIds.includes(attachment.id)
+      );
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -1635,6 +1731,7 @@
 
   function invalidateAssetDetailLoad(): void {
     assetDetailRequestId += 1;
+    assetDetailLoading = false;
   }
 
   function updateCustomizationContext(assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]): void {
@@ -1650,7 +1747,26 @@
 
 </script>
 
-<InventoryWorkspaceChrome
+{#if data.context.inventories.length === 0 && canCreateStarter}
+  <main class="setup-shell">
+    <div class="brand-lockup setup-lockup">
+      <div class="brand-mark" aria-hidden="true"><span></span></div>
+      <div>
+        <strong>Stuff Stash</strong>
+        <p>{userLabel}</p>
+      </div>
+    </div>
+    <WorkspaceSetupPanel
+      mode={data.context.selectedTenantId ? 'inventory' : 'tenant_and_inventory'}
+      tenantName={selectedTenant?.name}
+      {busy}
+      {error}
+      submitLabel={data.context.selectedTenantId ? 'Create inventory' : 'Create workspace'}
+      onSubmit={createStarterInventory}
+    />
+  </main>
+{:else}
+  <InventoryWorkspaceChrome
     tenants={data.context.tenants}
     inventories={data.context.inventories}
     selectedTenantId={data.context.selectedTenantId}
@@ -1665,6 +1781,8 @@
     modalOpen={modalSurfaceOpen}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
+    onCreateTenantWithInventory={createTenantWithInventory}
+    onCreateInventory={createInventoryInTenant}
     onModeChange={navigateMode}
     onSearch={() => { void search(); }}
     onOpenSearchAsset={openSearchAsset}
@@ -1688,6 +1806,7 @@
     status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed }}
     route={{
       routeUnavailable,
+      assetDetailLoading,
       mode,
       searchResults,
       searchSuggestions,
@@ -1725,7 +1844,6 @@
     bind:searchCheckoutState
     handlers={{
       onHome: openHome,
-      onCreateStarterInventory: createStarterInventory,
       onOpenLocation: openLocation,
       onOpenLocations: () => updateBrowseState({ scope: 'places' }),
       onBrowseStateChange: updateBrowseState,
@@ -1770,24 +1888,25 @@
       onCustomizationChange: updateCustomizationContext,
       onSelectLifecycle: selectAssetLifecycle
     }}
+    />
+  </InventoryWorkspaceChrome>
+
+  <InventoryWorkspaceOverlays
+    {addOpen}
+    {createAssetAllowed}
+    {addKind}
+    {addParentAssetId}
+    addCloseHref={addCloseHref()}
+    parentTargets={parentTargets(assets)}
+    mediaPolicy={data.context.mediaUploadPolicy}
+    customAssetTypes={data.context.customAssetTypes}
+    customFieldDefinitions={data.context.customFieldDefinitions}
+    assetTags={data.context.assetTags ?? []}
+    saving={busy}
+    {notification}
+    {refreshWarning}
+    {error}
+    onAddClose={closeAdd}
+    onAddSave={createAsset}
   />
-
-</InventoryWorkspaceChrome>
-
-<InventoryWorkspaceOverlays
-  {addOpen}
-  {createAssetAllowed}
-  {addKind}
-  {addParentAssetId}
-  addCloseHref={addCloseHref()}
-  parentTargets={parentTargets(assets)}
-  mediaPolicy={data.context.mediaUploadPolicy}
-  customAssetTypes={data.context.customAssetTypes}
-  customFieldDefinitions={data.context.customFieldDefinitions}
-  assetTags={data.context.assetTags ?? []}
-  saving={busy}
-  {notification}
-  {error}
-  onAddClose={closeAdd}
-  onAddSave={createAsset}
-/>
+{/if}

@@ -23,7 +23,6 @@
     uploadBusy = false,
     retryPhotoName = '',
     removePhotoHref = '',
-    removePhotoButton = $bindable(null),
     children,
     onChoosePhoto,
     onSelectPhoto,
@@ -39,7 +38,6 @@
     uploadBusy?: boolean;
     retryPhotoName?: string;
     removePhotoHref?: string;
-    removePhotoButton?: HTMLElement | null;
     children?: Snippet;
     onChoosePhoto: () => void;
     onSelectPhoto: (photoId: string) => void;
@@ -73,7 +71,6 @@
       </Button.Root>
       {#if heroPhoto && removePhotoHref}
         <Button.Root
-          bind:ref={removePhotoButton}
           href={removePhotoHref}
           variant="outline"
           aria-label={`Remove photo ${heroPhoto.fileName}`}

@@ -32,7 +32,7 @@ export type WorkspaceEventName =
 	  | 'workspace.asset_checkout_failed'
 	  | 'workspace.asset_return_started'
 	  | 'workspace.asset_returned'
-	  | 'workspace.asset_return_failed'
+  | 'workspace.asset_return_failed'
 	  | 'workspace.asset_operation_apply_started'
 	  | 'workspace.asset_operation_applied'
 	  | 'workspace.asset_operation_apply_failed'

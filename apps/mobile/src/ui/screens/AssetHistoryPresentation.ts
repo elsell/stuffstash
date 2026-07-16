@@ -18,7 +18,7 @@ export function historyLoadError(error: unknown): { readonly title: string; read
   const status = typeof error === 'object' && error !== null && 'status' in error ? error.status : undefined;
   if (status === 401 || status === 403) return { title: 'History unavailable', message: 'You do not have access to this item’s History.', canRetry: false };
   if (status === 404) return { title: 'History unavailable', message: 'This item is unavailable or you no longer have access.', canRetry: false };
-  return { title: 'Could not load History', message: error instanceof Error ? error.message : 'History could not be loaded.', canRetry: true };
+  return { title: 'Could not load History', message: 'History could not be loaded. Try again.', canRetry: true };
 }
 
 export function historyRevertConfirmation(entry: AssetActivityEntry): {
@@ -84,7 +84,7 @@ export function historyRevertFailure(error: unknown): { readonly title: string; 
   }
   return {
     title: 'Could not revert change',
-    message: error instanceof Error ? error.message : 'The change could not be reverted.',
+    message: 'The change could not be reverted. Try again.',
     isTerminal: false
   };
 }

@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import type { Asset, SearchRequest, SearchResult } from '$lib/domain/inventory';
+import type { Asset, AssetTag } from '$lib/domain/inventory';
+import type { BrowseAssetsRequest, InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
 import {
+  browseEmptyPresentation,
+  browseFilterOptions,
+  browseFiltersAreDirty,
+  browseFilterCount,
+  browseSearchHref,
+  browseSearchRoute,
+  buildAppliedBrowseFilters,
   buildSearchSuggestions,
-  executeWorkspaceSearch,
-	  searchAssetHref,
-	  searchCheckoutFilterOptions,
-	  searchFilterHref,
-  searchLifecycleFilterOptions,
-  searchMatchFieldLabel,
-  searchModeFilterOptions,
-  searchPanelStatus
+  executeBrowseSearch,
+  filterBrowseAssets,
+  loadBrowsePage,
+  mergeBrowseSearchState,
+  normalizeBrowseTagIds,
+  searchAssetHref
 } from './workspaceSearch';
 
 const assets: Asset[] = [
@@ -30,15 +36,6 @@ function asset(id: string, title: string, description: string, customAssetTypeLa
     parentAssetId: null,
     lifecycleState: id === 'archived' ? 'archived' : 'active',
     customAssetTypeLabel
-  };
-}
-
-function searchResult(assetResult: Asset): SearchResult {
-  return {
-    type: 'asset',
-    asset: assetResult,
-    inventory: { id: assetResult.inventoryId, name: 'Household' },
-    matches: [{ field: 'title', value: assetResult.title }]
   };
 }
 
@@ -65,234 +62,145 @@ describe('workspace search helpers', () => {
   });
 
   it('derives canonical hrefs for asset and location search hits', () => {
-    expect(searchAssetHref(asset('drill', 'Cordless drill', 'Power tool'))).toBe('/tenants/tenant-home/inventories/inventory-household/assets/drill');
+    expect(searchAssetHref(asset('drill', 'Cordless drill', 'Power tool'))).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/assets/drill'
+    );
     expect(searchAssetHref({ ...asset('garage', 'Garage', 'Place'), kind: 'location' })).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/garage'
     );
   });
 
-  it('derives canonical hrefs for search filters', () => {
-    expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'archived', 'fuzzy', 'any')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
-    );
-    expect(searchFilterHref('tenant-home', 'inventory-household', 'garage shelf', 'active', 'exact', 'any')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&mode=exact'
-    );
-    expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy', 'checked_out')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/browse?lifecycle=all&availability=checked_out'
-    );
-    expect(searchFilterHref('tenant-home', 'inventory-household', '', 'all', 'fuzzy', 'any')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/browse?lifecycle=all'
-    );
-  });
-
-  it('builds route-backed search filter options with stable labels', () => {
-    expect(
-      searchLifecycleFilterOptions({
-        tenantId: 'tenant-home',
-	        inventoryId: 'inventory-household',
-	        query: 'garage shelf',
-	        mode: 'fuzzy',
-	        checkoutState: 'any'
-      })
-    ).toEqual([
-      {
-        value: 'active',
-        label: 'Active',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf'
-      },
-      {
-        value: 'archived',
-        label: 'Archived',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
-      },
-      {
-        value: 'all',
-        label: 'All',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=all'
-      }
-    ]);
-    expect(
-      searchModeFilterOptions({
-        tenantId: 'tenant-home',
-	        inventoryId: 'inventory-household',
-	        query: 'garage shelf',
-	        lifecycleState: 'archived',
-	        checkoutState: 'any'
-      })
-    ).toEqual([
-      {
-        value: 'fuzzy',
-        label: 'Contains',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived'
-      },
-      {
-        value: 'exact',
-        label: 'Exact',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&mode=exact'
-	      }
-	    ]);
-    expect(
-      searchCheckoutFilterOptions({
-        tenantId: 'tenant-home',
-        inventoryId: 'inventory-household',
-        query: 'garage shelf',
-        lifecycleState: 'archived',
-        mode: 'exact'
-      })
-    ).toEqual([
-      {
-        value: 'any',
-        label: 'Any',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&mode=exact'
-      },
-      {
-        value: 'checked_out',
-        label: 'Checked out',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&availability=checked_out&mode=exact'
-      },
-      {
-        value: 'available',
-        label: 'Available',
-        href: '/tenants/tenant-home/inventories/inventory-household/browse?q=garage+shelf&lifecycle=archived&availability=available&mode=exact'
-      }
-    ]);
-  });
-
-  it('builds search panel status presentation for transient and empty states', () => {
-    expect(searchPanelStatus({ error: 'Search service unavailable.', busy: false, submitted: true, query: 'box', resultCount: 0, lifecycleState: 'active' })).toEqual({
-      kind: 'error',
-      title: 'Search failed',
-      message: 'Search service unavailable.',
-      role: 'alert'
-    });
-    expect(searchPanelStatus({ error: '', busy: true, submitted: false, query: 'box', resultCount: 0, lifecycleState: 'active' })).toEqual({
-      kind: 'busy',
-      title: 'Searching',
-      message: '',
-      role: 'status'
-    });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: false, query: '', resultCount: 0, lifecycleState: 'active' })).toEqual({
-      kind: 'first-run',
-      title: 'Search this inventory',
-      message: 'Use asset, location, container, custom field, or attachment terms.'
-    });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: '  box  ', resultCount: 0, lifecycleState: 'archived' })).toEqual({
-      kind: 'empty',
-      title: 'No results for "box"',
-      message: 'No authorized archived assets matched this query.'
-    });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: '', resultCount: 0, lifecycleState: 'all' })).toEqual({
-      kind: 'empty',
-      title: 'No results',
-      message: 'No authorized assets matched this query.'
-    });
-    expect(searchPanelStatus({ error: '', busy: false, submitted: true, query: 'box', resultCount: 1, lifecycleState: 'all' }).kind).toBe('none');
-  });
-
-  it('labels tag-backed search match fields for users', () => {
-    expect(searchMatchFieldLabel('tag_display_name')).toBe('Tag');
-    expect(searchMatchFieldLabel('tag_key')).toBe('Tag');
-    expect(searchMatchFieldLabel('title')).toBe('Title');
-    expect(searchMatchFieldLabel('attachment_file_name')).toBe('Attachment');
-    expect(searchMatchFieldLabel(undefined)).toBe('Match');
-  });
-
-  it('normalizes blank searches without calling the repository', async () => {
-    const result = await executeWorkspaceSearch({
-      repository: {
-        searchAssets: async () => {
-          throw new Error('should not search');
-        }
-      },
-      tenantId: 'tenant-home',
-      inventoryId: 'inventory-household',
-      query: '   ',
-      lifecycleState: 'active',
-      mode: 'fuzzy',
-      checkoutState: 'any'
-    });
-
-    expect(result).toEqual({ query: '', results: [], submitted: false, error: '' });
-  });
-
-  it('executes repository-backed search with trimmed query and explicit filters', async () => {
-    const requests: SearchRequest[] = [];
-    const result = await executeWorkspaceSearch({
-      repository: {
-        searchAssets: async (request) => {
-          requests.push(request);
-          return [searchResult(assets[0]!)];
-        }
-      },
-      tenantId: 'tenant-home',
-      inventoryId: 'inventory-household',
-      query: ' tape ',
+  it('normalizes Browse search navigation and derives its canonical href', () => {
+    const route = browseSearchRoute('tenant-home', 'inventory-household', {
+      query: '  drill  ',
       lifecycleState: 'all',
       mode: 'exact',
-      checkoutState: 'checked_out'
+      checkoutState: 'available',
+      scope: 'items',
+      sort: 'id_asc',
+      selectedTagIds: ['tag-tools']
     });
 
-    expect(requests).toEqual([
-      {
-        tenantId: 'tenant-home',
-        inventoryId: 'inventory-household',
-        query: 'tape',
-        lifecycleState: 'all',
-        mode: 'exact',
-        checkoutState: 'checked_out'
-      }
+    expect(route).toMatchObject({
+      mode: 'browse',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      searchQuery: 'drill',
+      searchLifecycleState: 'all',
+      searchMode: 'exact',
+      searchCheckoutState: 'available',
+      browseSurface: 'list',
+      browseScope: 'items',
+      browseSort: 'id_asc',
+      browseTagIds: ['tag-tools']
+    });
+    expect(browseSearchHref('tenant-home', 'inventory-household', {
+      query: '  drill  ', lifecycleState: 'all', mode: 'exact', checkoutState: 'available',
+      scope: 'items', sort: 'id_asc', selectedTagIds: ['tag-tools']
+    })).toBe(
+      '/tenants/tenant-home/inventories/inventory-household/browse?scope=items&q=drill&tag=tag-tools&lifecycle=all&availability=available&sort=id_asc&mode=exact'
+    );
+  });
+
+  it('executes Browse requests through the repository boundary with canonical request state', async () => {
+    const requests: BrowseAssetsRequest[] = [];
+    const repository: InventoryBrowseRepository = {
+      async browseAssets(request) {
+        requests.push(request);
+        return { assets: [], searchResults: [], nextCursor: null, hasMore: false };
+      },
+      async hasAnyAssets() { return false; },
+      async loadActiveContainmentMap() { return []; }
+    };
+
+    await executeBrowseSearch(repository, {
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '  drill  ', tagIds: ['tag-tools'],
+      lifecycleState: 'active', checkoutState: 'checked_out', scope: 'all', sort: 'updated_desc', mode: 'fuzzy', cursor: 'next'
+    });
+
+    expect(requests).toEqual([{
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: 'drill', tagIds: ['tag-tools'],
+      lifecycleState: 'active', checkoutState: 'checked_out', scope: 'all', sort: 'updated_desc', mode: 'fuzzy',
+      limit: 20, cursor: 'next'
+    }]);
+  });
+
+  it('owns Browse filter options and applied-filter presentation outside components', () => {
+    const tags: AssetTag[] = [
+      { id: 'tag-z', key: 'zippers', displayName: 'Zippers' },
+      { id: 'tag-ten', key: 'bin-10', displayName: 'Bin 10' },
+      { id: 'tag-eight', key: 'bin-8', displayName: 'Bin 8' },
+      { id: 'tag-a', key: 'adapters', displayName: 'Adapters' }
+    ];
+
+    expect(browseFilterOptions.scopes.map((option) => option.label)).toEqual(['All', 'Places', 'Containers', 'Items']);
+    expect(buildAppliedBrowseFilters('archived', 'checked_out', ['tag-z', 'tag-ten', 'tag-eight', 'tag-a'], tags)).toEqual([
+      { key: 'lifecycle', label: 'Status: Archived' },
+      { key: 'availability', label: 'Availability: Checked out' },
+      { key: 'tag:tag-a', label: 'Tag: Adapters' },
+      { key: 'tag:tag-eight', label: 'Tag: Bin 8' },
+      { key: 'tag:tag-ten', label: 'Tag: Bin 10' },
+      { key: 'tag:tag-z', label: 'Tag: Zippers' }
     ]);
-    expect(result).toMatchObject({ query: 'tape', results: [searchResult(assets[0]!)], submitted: true, error: '' });
+
+    expect(normalizeBrowseTagIds(['', 'tag-a', 'tag-a', 'missing'])).toEqual(['tag-a', 'missing']);
+    expect(browseFilterCount('active', 'any', ['', 'tag-a', 'tag-a', 'missing'])).toBe(2);
+    expect(buildAppliedBrowseFilters('active', 'any', ['', 'tag-a', 'tag-a', 'missing'], tags)).toEqual([
+      { key: 'tag:tag-a', label: 'Tag: Adapters' },
+      { key: 'tag:missing', label: 'Unavailable tag: missing' }
+    ]);
   });
 
-  it('keeps failed searches in a submitted state with a calm error message', async () => {
-    const result = await executeWorkspaceSearch({
-      repository: {
-        searchAssets: async () => {
-          throw new Error('Search service unavailable.');
-        }
-      },
-      tenantId: 'tenant-home',
-      inventoryId: 'inventory-household',
-      query: 'drill',
-      lifecycleState: 'active',
-      mode: 'fuzzy',
-      checkoutState: 'any'
+  it('derives Browse filtering, dirty state, route merging, and empty presentation outside components', () => {
+    const tagged = { ...assets[0]!, tags: [{ id: 'tag-tools', key: 'tools', displayName: 'Tools' }] };
+    const checkedOut = { ...assets[1]!, currentCheckout: { id: 'checkout-1', state: 'open' as const, checkedOutAt: '2026-07-15T00:00:00Z', checkedOutByPrincipalId: 'Alex' } };
+    expect(filterBrowseAssets([tagged, checkedOut, assets[3]!], {
+      scope: 'items', lifecycleState: 'active', checkoutState: 'available', selectedTagIds: ['tag-tools']
+    })).toEqual([tagged]);
+    expect(browseFiltersAreDirty('active', 'all', 'any', 'any', ['tag-tools'], ['tag-tools'])).toBe(true);
+    expect(mergeBrowseSearchState({
+      query: 'drill', lifecycleState: 'active', mode: 'fuzzy', checkoutState: 'any', surface: 'list',
+      scope: 'all', sort: 'updated_desc', selectedTagIds: ['tag-tools']
+    }, { scope: 'items', selectedTagIds: ['', 'tag-tools', 'tag-tools'] })).toMatchObject({
+      query: 'drill', scope: 'items', selectedTagIds: ['tag-tools']
     });
-
-    expect(result).toEqual({
-      query: 'drill',
-      results: [],
-      submitted: true,
-      error: 'Search service unavailable.'
+    expect(browseEmptyPresentation(true, '', 'all', 'active', 'any', [], true)).toEqual({
+      kind: 'inventory', title: 'No stuff here yet', description: 'Add an item or location to start this inventory.',
+      showCreateActions: true, showClearSearch: false
+    });
+    expect(browseEmptyPresentation(false, ' drill ', 'items', 'active', 'any', [], true)).toMatchObject({
+      kind: 'query', title: 'No results for “drill”', showClearSearch: true
     });
   });
 
-  it('replaces unsafe server search failures with a recovery-oriented message', async () => {
-    const serverError = new Error('Internal server error.') as Error & { safeForUser: boolean; status: number };
-    serverError.safeForUser = false;
-    serverError.status = 500;
-
-    const result = await executeWorkspaceSearch({
-      repository: {
-        searchAssets: async () => {
-          throw serverError;
-        }
+  it('loads and merges Browse pages while deriving submitted and inventory-empty state', async () => {
+    const requests: BrowseAssetsRequest[] = [];
+    let emptinessChecks = 0;
+    const repository: InventoryBrowseRepository = {
+      async browseAssets(request) {
+        requests.push(request);
+        return request.cursor
+          ? { assets: [assets[1]!], searchResults: [], nextCursor: null, hasMore: false }
+          : { assets: [], searchResults: [], nextCursor: 'next', hasMore: true };
       },
-      tenantId: 'tenant-home',
-      inventoryId: 'inventory-household',
-      query: 'fertilizer',
-      lifecycleState: 'active',
-      mode: 'fuzzy',
-      checkoutState: 'any'
-    });
+      async hasAnyAssets() { emptinessChecks += 1; return false; },
+      async loadActiveContainmentMap() { return []; }
+    };
 
-    expect(result).toEqual({
-      query: 'fertilizer',
-      results: [],
-      submitted: true,
-      error: 'Search could not complete. Try again, or check the server logs if it keeps happening.'
+    const initial = await loadBrowsePage(repository, {
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', selectedTagIds: [], lifecycleState: 'active',
+      checkoutState: 'any', scope: 'all', sort: 'updated_desc', mode: 'fuzzy', append: false,
+      currentAssets: [assets[0]!], currentSearchResults: [], currentInventoryEmpty: false
     });
+    expect(initial).toMatchObject({ assets: [], searchResults: [], nextCursor: 'next', hasMore: true, inventoryEmpty: true, submitted: false });
+    expect(emptinessChecks).toBe(1);
+
+    const appended = await loadBrowsePage(repository, {
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: ' tape ', selectedTagIds: ['tag-tools'], lifecycleState: 'active',
+      checkoutState: 'any', scope: 'items', sort: 'updated_desc', mode: 'fuzzy', append: true, cursor: 'next',
+      currentAssets: [assets[0]!], currentSearchResults: [], currentInventoryEmpty: true
+    });
+    expect(appended).toMatchObject({ assets: [assets[0], assets[1]], inventoryEmpty: false, submitted: true });
+    expect(emptinessChecks).toBe(1);
   });
 });

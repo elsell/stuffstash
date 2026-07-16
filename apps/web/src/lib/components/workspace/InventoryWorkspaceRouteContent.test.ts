@@ -176,7 +176,7 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(searchedTags).toEqual([['tag-tools']]);
   });
 
-  it('renders the no-inventory branch with starter inventory affordances', async () => {
+  it('renders the no-inventory branch without hard-coded starter names', async () => {
     const props = await routeContentProps();
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
@@ -198,7 +198,8 @@ describe('InventoryWorkspaceRouteContent', () => {
     });
 
     expect(document.body.textContent).toContain('No inventory yet');
-    expect(document.body.textContent).toContain('Create Household');
+    expect(document.body.textContent).toContain('Create the first inventory for this tenant.');
+    expect(document.body.textContent).not.toContain('Create Household');
   });
 
   it('renders the no-inventory branch without a starter action when creation is unavailable', async () => {
@@ -243,19 +244,6 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Storage bin');
   });
 
-  it('renders the top-level locations route without the recent rail', async () => {
-    component = mount(InventoryWorkspaceRouteContent, {
-      target: document.body,
-      props: await routeContentProps({
-        route: { mode: 'locations' }
-      })
-    });
-
-    expect(document.body.querySelector('#home-title')?.textContent).toBe('Locations');
-    expect(document.body.textContent).toContain('The places where your things live.');
-    expect(document.body.textContent).not.toContain('Recently changed');
-  });
-
   it('renders the asset detail branch with action route state', async () => {
     const props = await routeContentProps();
     component = mount(InventoryWorkspaceRouteContent, {
@@ -269,6 +257,50 @@ describe('InventoryWorkspaceRouteContent', () => {
 
     expect(document.body.textContent).toContain('Passport');
     expect(document.body.textContent).toContain('Edit asset');
+  });
+
+  it('opens a location child from a container through location navigation', async () => {
+    const base = await routeContentProps();
+    const container = asset('container-one', 'Tool cabinet', 'container');
+    const nestedLocation = asset('location-nested', 'Nested place', 'location', container.id);
+    const assets = [...base.workspace.data.assets, container, nestedLocation];
+    const openedLocations: string[] = [];
+    const openedAssets: string[] = [];
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({
+        route: { mode: 'asset' },
+        workspace: {
+          data: { ...base.workspace.data, assets },
+          assets,
+          detailAssets: assets,
+          selectedAsset: container
+        },
+        handlers: {
+          onOpenLocation: (candidate) => openedLocations.push(candidate.id),
+          onOpenAsset: async (candidate) => { openedAssets.push(candidate.id); }
+        }
+      })
+    });
+
+    link('Nested place').click();
+    await tick();
+
+    expect(openedLocations).toEqual(['location-nested']);
+    expect(openedAssets).toEqual([]);
+  });
+
+  it('renders an accessible busy status while asset details load', async () => {
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({ route: { mode: 'asset', assetDetailLoading: true } })
+    });
+
+    const status = document.body.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('Loading asset details');
+    expect(status?.getAttribute('aria-live')).toBe('polite');
+    expect(status?.closest('[aria-busy]')?.getAttribute('aria-busy')).toBe('true');
+    expect(document.body.textContent).not.toContain('Recently changed');
   });
 
   it('renders import and settings branches with their routed sections', async () => {
@@ -351,6 +383,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
     },
     route: {
       routeUnavailable: '',
+      assetDetailLoading: false,
       mode: 'home' as WorkspaceMode,
       searchResults: [],
       searchSuggestions: [],
@@ -391,7 +424,6 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
 	    searchCheckoutState: 'any',
     handlers: {
       onHome: () => {},
-      onCreateStarterInventory: async () => {},
       onOpenLocation: () => {},
       onBrowseStateChange: () => {},
       onBrowseLoadMore: async () => {},
