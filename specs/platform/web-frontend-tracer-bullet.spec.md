@@ -54,6 +54,7 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
   stderr before nginx opens its compiled default log paths, so the read-only
   root filesystem does not produce startup log alerts.
 - Static web responses must include conservative browser security headers, including content type sniffing protection, frame denial, a restrictive referrer policy, a restrictive permissions policy, and a content security policy that only permits the configured API and OIDC issuer origins.
+- The document shell must also declare `no-referrer` through a referrer meta policy so local development and static-file fallback navigation do not disclose inventory routes before response-header composition is available. Production response headers remain authoritative.
 - The web static image build must derive a CSP hash for SvelteKit's generated bootstrap script from the built `index.html` and must not use a broad `script-src 'unsafe-inline'` policy.
 - The web static runtime must support self-hosted API, OIDC, and media origins
   without rebuilding source for each household deployment. If CSP values are
