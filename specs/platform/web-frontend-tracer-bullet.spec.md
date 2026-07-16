@@ -104,6 +104,8 @@ The first runtime config shape is:
 
 `invitationAllowInsecureLocalHTTP` defaults to `false`. When explicitly enabled at the web runtime composition boundary, invitation-link validation may accept HTTP only for `localhost`, IP loopback, and IPv4 RFC 1918 addresses. It must continue to reject public HTTP hosts and public IP addresses. This switch must be configured consistently with the API invitation-link switch for local browser acceptance.
 
+The checked-in local development runtime configuration explicitly enables this switch so the bundled LAN development flow remains usable. A regression test must parse that shipped file through the production runtime-config parser and prove both the explicit invitation opt-in and the API-aligned attachment policy; test-only fixture parsing is not sufficient evidence.
+
 The runtime config may be served as a static file by the web app in local development. It must not be compiled into frontend source code as the only configuration mechanism.
 
 For the local-cluster production-style deployment, the runtime configuration is mounted over the static image's default `config.json` at runtime:

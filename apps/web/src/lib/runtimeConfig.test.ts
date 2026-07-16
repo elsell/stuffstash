@@ -3,9 +3,10 @@ import developmentRuntimeConfig from '../../static/config.json';
 import { applyRuntimeConfigOverrides, parseRuntimeConfig } from './runtimeConfig';
 
 describe('parseRuntimeConfig', () => {
-  it('keeps the development Files workflow aligned with the initial API attachment types', () => {
+  it('keeps the shipped development security switch and attachment policy aligned with local APIs', () => {
     const parsed = parseRuntimeConfig(developmentRuntimeConfig);
 
+    expect(parsed.invitationAllowInsecureLocalHTTP).toBe(true);
     expect(parsed.mediaUploadPolicy).toEqual({
       supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
       maxBytes: 25 * 1024 * 1024
