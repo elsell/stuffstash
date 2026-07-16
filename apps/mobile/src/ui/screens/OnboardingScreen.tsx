@@ -11,7 +11,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Check, ExternalLink, Server, ShieldCheck } from 'lucide-react-native';
+import { Check, ExternalLink, MailCheck, Server, ShieldCheck } from 'lucide-react-native';
 import { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
 import {
   OnboardingCommand,
@@ -25,6 +25,7 @@ type OnboardingScreenProps = {
   readonly command: OnboardingCommand;
   readonly initialApiBaseUrl?: string;
   readonly initialState: OnboardingStartState;
+  readonly invitationPending?: boolean;
   readonly onStateChange: (state: OnboardingStartState) => void;
   readonly onComplete: (profile: ConnectionProfile) => void;
 };
@@ -33,6 +34,7 @@ export function OnboardingScreen({
   command,
   initialApiBaseUrl,
   initialState,
+  invitationPending = false,
   onStateChange,
   onComplete
 }: OnboardingScreenProps) {
@@ -136,6 +138,14 @@ export function OnboardingScreen({
             <BrandMark showWordmark />
           </View>
           <OnboardingProgress currentStep={initialState.step} />
+          {invitationPending ? (
+            <View accessibilityRole="summary" style={styles.invitationNotice}>
+              <MailCheck color={colors.action} size={20} />
+              <Text style={styles.invitationNoticeText}>
+                Your invitation is waiting. Finish signing in to review it.
+              </Text>
+            </View>
+          ) : null}
           <Text style={styles.title}>{titleForStep(initialState.step)}</Text>
           <Text style={styles.subtitle}>{subtitleForStep(initialState)}</Text>
 
@@ -459,6 +469,22 @@ function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0,
     lineHeight: 38,
     marginBottom: spacing.sm
+  },
+  invitationNotice: {
+    alignItems: 'center',
+    backgroundColor: colors.brandDustyBlueSoft,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    marginBottom: spacing.md,
+    padding: spacing.md
+  },
+  invitationNoticeText: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 21,
+    marginLeft: spacing.sm
   },
   subtitle: {
     color: colors.textMuted,
