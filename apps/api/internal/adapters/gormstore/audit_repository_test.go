@@ -29,6 +29,8 @@ func TestStorePersistsAndScopesAuditRecords(t *testing.T) {
 	occurredAt := time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC)
 
 	for _, record := range []audit.Record{
+		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FA1", tenantOne, "", audit.ActionTenantCreated, occurredAt.Add(-time.Second)),
+		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FA2", tenantTwo, "", audit.ActionTenantCreated, occurredAt.Add(-time.Second)),
 		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB1", tenantOne, inventoryOne, audit.ActionAssetUpdated, occurredAt),
 		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB0", tenantOne, inventoryOne, audit.ActionAssetCreated, occurredAt),
 		auditRecordAt(t, "01ARZ3NDEKTSV4RRFFQ69G5FB2", tenantOne, inventoryTwo, audit.ActionAssetMoved, occurredAt.Add(time.Second)),
@@ -62,8 +64,8 @@ func TestStorePersistsAndScopesAuditRecords(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list tenant audit records: %v", err)
 	}
-	if len(tenantPage) != 3 {
-		t.Fatalf("expected tenant page to include only tenant one records, got %+v", tenantPage)
+	if len(tenantPage) != 1 || tenantPage[0].ID != audit.ID("01ARZ3NDEKTSV4RRFFQ69G5FA1") {
+		t.Fatalf("expected tenant page to include only tenant-scoped records, got %+v", tenantPage)
 	}
 }
 

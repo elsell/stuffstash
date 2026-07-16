@@ -1,0 +1,28 @@
+services:
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:?set GO_BUILDER_IMAGE in .env}
+        RUNTIME_IMAGE: ${RUNTIME_IMAGE:?set RUNTIME_IMAGE in .env}
+    image: stuff-stash:local
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GO_BUILDER_IMAGE: ${GO_BUILDER_IMAGE:?set GO_BUILDER_IMAGE in .env}
+        RUNTIME_IMAGE: ${RUNTIME_IMAGE:?set RUNTIME_IMAGE in .env}
+    image: stuff-stash:local
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        NODE_BUILDER_IMAGE: ${NODE_BUILDER_IMAGE:?set NODE_BUILDER_IMAGE in .env}
+        WEB_RUNTIME_IMAGE: ${WEB_RUNTIME_IMAGE:?set WEB_RUNTIME_IMAGE in .env}
+        PNPM_VERSION: ${PNPM_VERSION:?set PNPM_VERSION in .env}
+    image: stuff-stash-web:local

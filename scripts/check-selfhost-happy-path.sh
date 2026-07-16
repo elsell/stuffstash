@@ -53,6 +53,43 @@ fi
 grep -q 'spicedb-postgres' "$compose_file" ||
   fail "self-host SpiceDB must use Postgres datastore service"
 
+grep -q '^STUFF_STASH_API_IMAGE=ghcr.io/.*/stuffstash@sha256:' .env.example ||
+  fail "self-host API image must default to a published digest-pinned image"
+
+grep -q '^STUFF_STASH_WEB_IMAGE=ghcr.io/.*/stuffstash-web@sha256:' .env.example ||
+  fail "self-host web image must default to a published digest-pinned image"
+
+if awk '
+  /^[[:space:]]+migration:$/ { in_target=1; target="migration"; next }
+  /^[[:space:]]+app:$/ { in_target=1; target="app"; next }
+  /^[[:space:]]+web:$/ { in_target=1; target="web"; next }
+  /^[[:space:]][a-zA-Z0-9_-]+:$/ { if (in_target) in_target=0 }
+  in_target && /^[[:space:]]+build:/ { found=target }
+  END { exit found ? 0 : 1 }
+' "$compose_file"; then
+  fail "self-host API and web services must not build from source by default"
+fi
+
+awk '
+  /^[[:space:]]+postgres:$/ { in_pg=1; service="postgres"; found=0; next }
+  /^[[:space:]]+spicedb-postgres:$/ { in_pg=1; service="spicedb-postgres"; found=0; next }
+  /^[[:space:]][a-zA-Z0-9_-]+:$/ {
+    if (in_pg && !found) {
+      printf "%s missing PGDATA under mounted volume\n", service > "/dev/stderr"
+      exit 1
+    }
+    in_pg=0
+  }
+  in_pg && /PGDATA:[[:space:]]+\/var\/lib\/postgresql\/data\// { found=1 }
+  END {
+    if (in_pg && !found) {
+      printf "%s missing PGDATA under mounted volume\n", service > "/dev/stderr"
+      exit 1
+    }
+  }
+' "$compose_file" ||
+  fail "self-host Postgres services must set PGDATA under their mounted data volumes"
+
 grep -q './deploy/selfhost/garage/garage.toml:/etc/garage.toml:ro' "$compose_file" ||
   fail "self-host Garage must use a self-host Garage config path"
 
@@ -113,12 +150,18 @@ if docker compose version >/dev/null 2>&1; then
     fail "rendered Compose config must include SpiceDB datastore Postgres"
   grep -q 'caddy:2.10.2@sha256:' "$config_output" ||
     fail "rendered Compose config must include pinned Caddy"
+  grep -q 'PGDATA: /var/lib/postgresql/data/' "$config_output" ||
+    fail "rendered Compose config must persist Postgres PGDATA under the mounted data volume"
   cleanup_compose_config
   trap - EXIT
 fi
 
 grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres, SpiceDB, and Garage' "$self_host_doc" ||
   fail "self-host docs must lead with durable Docker Compose, HTTPS, and bundled Dex"
+
+if grep -q 'docker compose -f compose.selfhost.yaml up --build' "$self_host_doc"; then
+  fail "self-host docs must not tell operators to build source images by default"
+fi
 
 if grep -q '^## Compose Evaluation' "$self_host_doc"; then
   fail "self-host docs must not present contributor evaluation as a public happy path"
@@ -130,3 +173,6 @@ fi
 
 grep -qi 'bundled Dex' "$topology_spec" ||
   fail "topology spec must require bundled Dex in the self-host happy path"
+
+grep -qi 'Garage direct browser upload must work' specs/platform/self-hosting.spec.md ||
+  fail "self-hosting spec must require Garage direct browser upload"

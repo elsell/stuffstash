@@ -14,6 +14,9 @@ export const config: RuntimeConfig = {
 export function fakeFetch(
   options: {
     directUploadUrl?: string;
+    directUploadMethod?: string;
+    directUploadHeaders?: Record<string, string>;
+    directUploadFormFields?: Record<string, string>;
     directUploadRejected?: boolean;
     directUploadThrows?: boolean;
     primaryPhotoAssetIds?: string[];
@@ -24,9 +27,25 @@ export function fakeFetch(
   } = {}
 ): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
+  let createdTenant = false;
+  let createdNewTenantInventory = false;
   return {
     requests,
     fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      const inputUrl = input instanceof Request ? input.url : input.toString();
+      if ((init?.body instanceof FormData) && inputUrl === 'https://uploads.local/object-one') {
+        const headers = new Headers(init.headers);
+        if (!headers.has('Content-Type')) {
+          headers.set('Content-Type', 'multipart/form-data; boundary=stuffstash-test');
+        }
+        const request = new Request(input, { ...init, body: undefined, headers });
+        Object.defineProperty(request, 'capturedFormData', { value: init.body });
+        requests.push(request);
+        if (options.directUploadThrows) {
+          throw new TypeError('Failed to fetch');
+        }
+        return new Response(null, { status: options.directUploadRejected ? 403 : 204 });
+      }
       const request = new Request(input, init);
       requests.push(request);
       const url = new URL(request.url);
@@ -36,11 +55,20 @@ export function fakeFetch(
         return envelope({ id: 'principal-one', email: 'person@example.test' });
       }
       if (request.method === 'GET' && path === '/me/tenants') {
-        return envelope([
+        const tenants = [
           tenant('tenant-home', 'Home', ['view', 'create_inventory']),
           tenant('tenant-cabin', 'Cabin', ['view']),
           tenant('tenant-empty', 'Empty', ['view', 'create_inventory'])
-        ]);
+        ];
+        if (createdTenant) {
+          tenants.push(tenant('tenant-created', 'Workshop', ['view', 'create_inventory']));
+        }
+        return envelope(tenants);
+      }
+      if (request.method === 'POST' && path === '/tenants') {
+        const body = (await request.clone().json()) as { name: string };
+        createdTenant = true;
+        return envelope(tenant('tenant-created', body.name, ['view', 'create_inventory']), 201);
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories') {
         return envelope([inventory('inventory-household', 'tenant-home', 'Household', ['view', 'create_asset'])]);
@@ -56,6 +84,18 @@ export function fakeFetch(
           (candidate) => candidate.method === 'POST' && new URL(candidate.url).pathname === '/tenants/tenant-empty/inventories'
         );
         return envelope(created ? [inventory('inventory-created', 'tenant-empty', 'Household', ['view', 'create_asset'])] : []);
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-created/inventories') {
+        const body = (await request.clone().json()) as { name: string };
+        createdNewTenantInventory = true;
+        return envelope(inventory('inventory-created-new-tenant', 'tenant-created', body.name, ['view', 'create_asset']), 201);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-created/inventories') {
+        return envelope(
+          createdNewTenantInventory
+            ? [inventory('inventory-created-new-tenant', 'tenant-created', 'Tools', ['view', 'create_asset'])]
+            : []
+        );
       }
       if (request.method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
         return envelope([asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
@@ -114,6 +154,15 @@ export function fakeFetch(
       if (request.method === 'GET' && path === '/tenants/tenant-empty/inventories/inventory-created/tags') {
         return envelope([]);
       }
+      if (request.method === 'GET' && path === '/tenants/tenant-created/inventories/inventory-created-new-tenant/assets') {
+        return envelope([]);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-created/inventories/inventory-created-new-tenant/checked-out-assets') {
+        return envelope([]);
+      }
+      if (request.method === 'GET' && path === '/tenants/tenant-created/inventories/inventory-created-new-tenant/tags') {
+        return envelope([]);
+      }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
         return envelope(
           asset(
@@ -165,16 +214,16 @@ export function fakeFetch(
           {
             uploadId: 'upload-one',
             attachmentId: 'attachment-one',
-            method: 'PUT',
+            method: options.directUploadMethod ?? 'PUT',
             url: options.directUploadUrl ?? 'https://uploads.local/object-one',
-            headers: { 'Content-Type': 'image/jpeg' },
-            formFields: {},
+            headers: options.directUploadHeaders ?? { 'Content-Type': 'image/jpeg' },
+            formFields: options.directUploadFormFields ?? {},
             expiresAt: '2026-06-23T00:15:00Z'
           },
           201
         );
       }
-      if (request.method === 'PUT' && request.url === 'https://uploads.local/object-one') {
+      if ((request.method === 'PUT' || request.method === 'POST') && request.url === 'https://uploads.local/object-one') {
         if (options.directUploadThrows) {
           throw new TypeError('Failed to fetch');
         }

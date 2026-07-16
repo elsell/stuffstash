@@ -607,7 +607,7 @@ export class SeededInventoryRepository
   }
 
   async listTenantAuditRecords(tenantId: string, cursor?: string, _signal?: AbortSignal): Promise<AuditRecordPage> {
-    const records = this.auditRecords.filter((record) => record.tenantId === tenantId);
+    const records = this.auditRecords.filter((record) => record.tenantId === tenantId && !record.inventoryId);
     return page(records, cursor);
   }
 

@@ -64,10 +64,11 @@ export function searchFilterHref(
   query: string,
   lifecycleState: SearchLifecycleFilter,
   mode: SearchMode,
-  checkoutState: SearchCheckoutFilter
+  checkoutState: SearchCheckoutFilter,
+  tagIds: string[] = []
 ): string {
   return workspaceRouteHref(
-    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
+    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchTagIds: tagIds, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
     tenantId,
     inventoryId
   );
@@ -77,13 +78,14 @@ export function searchLifecycleFilterOptions(input: {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   mode: SearchMode;
   checkoutState: SearchCheckoutFilter;
 }): SearchFilterOption<SearchLifecycleFilter>[] {
   return searchLifecycleFilters.map((lifecycleState) => ({
     value: lifecycleState,
     label: searchLifecycleFilterLabel(lifecycleState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode, input.checkoutState)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode, input.checkoutState, input.tagIds)
   }));
 }
 
@@ -91,13 +93,14 @@ export function searchModeFilterOptions(input: {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   checkoutState: SearchCheckoutFilter;
 }): SearchFilterOption<SearchMode>[] {
   return searchModes.map((mode) => ({
     value: mode,
     label: searchModeLabel(mode),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode, input.checkoutState)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode, input.checkoutState, input.tagIds)
   }));
 }
 
@@ -105,13 +108,14 @@ export function searchCheckoutFilterOptions(input: {
   tenantId: string;
   inventoryId: string;
   query: string;
+  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
 }): SearchFilterOption<SearchCheckoutFilter>[] {
   return searchCheckoutFilters.map((checkoutState) => ({
     value: checkoutState,
     label: searchCheckoutFilterLabel(checkoutState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, input.mode, checkoutState)
+    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, input.mode, checkoutState, input.tagIds)
   }));
 }
 
@@ -210,9 +214,28 @@ export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput)
       query,
       results: [],
       submitted: true,
-      error: caught instanceof Error ? caught.message : 'Search failed.'
+      error: searchFailureMessage(caught)
     };
   }
+}
+
+function searchFailureMessage(error: unknown): string {
+  if (!error || typeof error !== 'object') {
+    return 'Search failed.';
+  }
+
+  const safeForUser = 'safeForUser' in error && error.safeForUser === true;
+  if (safeForUser && error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  const status = 'status' in error && typeof error.status === 'number' ? error.status : 0;
+  const message = error instanceof Error ? error.message.trim() : '';
+  if (status >= 500 || message.toLowerCase() === 'internal server error.') {
+    return 'Search could not complete. Try again, or check the server logs if it keeps happening.';
+  }
+
+  return message || 'Search failed.';
 }
 
 function searchLifecycleFilterLabel(lifecycleState: SearchLifecycleFilter): string {

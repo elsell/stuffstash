@@ -139,6 +139,8 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 
 func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
 	audits := &fakeAuditRepository{items: []audit.Record{
+		auditRecord("audit-tenant", "tenant-one", "", audit.ActionTenantCreated),
+		auditRecord("audit-other-tenant", "tenant-two", "", audit.ActionTenantCreated),
 		auditRecord("audit-one", "tenant-one", "inventory-one", audit.ActionAssetCreated),
 		auditRecord("audit-two", "tenant-one", "inventory-one", audit.ActionAssetUpdated),
 		auditRecord("audit-three", "tenant-one", "inventory-two", audit.ActionAssetCreated),
@@ -191,8 +193,8 @@ func TestListAuditRecordsPaginatesAndEnforcesScope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list tenant audit records: %v", err)
 	}
-	if !fakeAuditResultsContain(tenantPage.Items, audit.ID("audit-one")) || !fakeAuditResultsContain(tenantPage.Items, audit.ID("audit-two")) || !fakeAuditResultsContain(tenantPage.Items, audit.ID("audit-three")) {
-		t.Fatalf("expected tenant audit list to exclude other tenant, got %+v", tenantPage.Items)
+	if len(tenantPage.Items) != 1 || tenantPage.Items[0].ID != audit.ID("audit-tenant") {
+		t.Fatalf("expected tenant audit list to include only tenant-scoped records, got %+v", tenantPage.Items)
 	}
 
 	deniedInventory := New(Dependencies{

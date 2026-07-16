@@ -373,6 +373,22 @@ small {
   font-weight: 780;
 }
 
+.context-create-button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.context-create-form {
+  display: grid;
+  gap: 12px;
+}
+
+.context-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .eyebrow {
   font-size: 0.72rem;
   font-weight: 700;
@@ -830,10 +846,15 @@ small {
   white-space: normal;
 }
 
-.recent-card-open {
+.recent-card-open,
+.recent-card-open[data-slot="button"] {
   display: grid;
   width: 100%;
+  height: auto;
+  min-height: 0;
   justify-items: start;
+  align-content: start;
+  align-items: start;
   padding: 0;
   border: 0;
   background: transparent;
@@ -842,7 +863,7 @@ small {
   white-space: normal;
 }
 
-.recent-card span {
+.recent-card-open > .recent-card-body {
   display: grid;
   width: 100%;
   min-width: 0;
@@ -850,7 +871,10 @@ small {
   gap: 3px;
 }
 
-.recent-card .tag-chip-list {
+.recent-card > .tag-chip-list {
+  display: flex;
+  width: auto;
+  max-width: 100%;
   margin-top: 3px;
 }
 
@@ -1963,6 +1987,37 @@ dd {
   gap: 6px;
 }
 
+.field-error,
+.form-error {
+  color: var(--destructive);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.setup-form {
+  display: grid;
+  gap: 14px;
+}
+
+.setup-shell {
+  display: grid;
+  width: min(560px, calc(100vw - 32px));
+  min-height: 100vh;
+  align-content: center;
+  gap: 18px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.setup-lockup {
+  padding-left: 2px;
+}
+
+.setup-lockup p {
+  color: var(--muted-foreground);
+  font-size: 0.86rem;
+}
+
 .tag-chip-list,
 .selected-tag-summary,
 .tag-options {
@@ -2003,6 +2058,24 @@ dd {
   font-weight: 650;
   line-height: 1.2;
   text-decoration: none;
+}
+
+.tag-chip[data-slot="button"] {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 24px;
+  max-width: 100%;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.tag-chip[data-selected="true"] {
+  border-color: color-mix(in oklab, var(--tag-color, var(--primary)) 70%, var(--foreground));
+  background: color-mix(in oklab, var(--tag-color, var(--primary)) 24%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tag-color, var(--primary)) 28%, transparent);
 }
 
 .tag-chip-colored {

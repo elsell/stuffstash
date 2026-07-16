@@ -113,26 +113,9 @@ export class StuffStashInventoryRepository
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = mapTenant(await this.client.createTenant(input.tenantName));
     const inventory = mapInventory(await this.client.createInventory(tenant.id, input.inventoryName));
-    this.selectedTenantId = tenant.id;
-    this.selectedInventoryId = inventory.id;
-    this.rememberSelection();
-    return {
-      context: {
-        principal: mapPrincipal(await this.client.me()),
-        tenants: [tenant],
-        inventories: [inventory],
-        selectedTenantId: tenant.id,
-        selectedInventoryId: inventory.id,
-        assetLifecycleState: 'active',
-        mediaUploadPolicy: this.config.mediaUploadPolicy,
-        customAssetTypes: [],
-        customFieldDefinitions: [],
-        assetTags: [],
-        capability: mapCapability(inventory)
-      },
-      assets: [],
-      checkedOutAssets: []
-    };
+    const principal = mapPrincipal(await this.client.me());
+    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    return this.loadTenantWorkspace(principal, tenants, tenant.id, inventory.id);
   }
 
   async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {
@@ -847,9 +830,9 @@ export class StuffStashInventoryRepository
       for (const [key, value] of Object.entries(upload.formFields)) {
         body.append(key, value);
       }
-      body.append('file', file);
+      body.append('file', await filePart(file), file.name);
       init.body = body;
-      init.headers = upload.headers;
+      init.headers = withoutContentType(upload.headers);
     } else {
       init.body = file;
     }
@@ -857,10 +840,10 @@ export class StuffStashInventoryRepository
     try {
       response = await this.uploadFetch(upload.url, init);
     } catch {
-      throw new DirectUploadTargetUnavailableError();
+      throw new DirectUploadFailedError();
     }
     if (!response.ok) {
-      throw new DirectUploadTargetUnavailableError();
+      throw new DirectUploadFailedError();
     }
   }
 
@@ -918,8 +901,24 @@ class DirectUploadTargetUnavailableError extends Error {
   }
 }
 
+class DirectUploadFailedError extends Error {
+  safeForUser = true as const;
+
+  constructor() {
+    super('Direct upload to media storage failed.');
+  }
+}
+
 function isDirectUploadTargetUnavailable(error: unknown): boolean {
   return error instanceof DirectUploadTargetUnavailableError;
+}
+
+function withoutContentType(headers: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(headers).filter(([key]) => key.toLowerCase() !== 'content-type'));
+}
+
+async function filePart(file: File): Promise<File> {
+  return file;
 }
 
 function isAbortError(error: unknown): boolean {

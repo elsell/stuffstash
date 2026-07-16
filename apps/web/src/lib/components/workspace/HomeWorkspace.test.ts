@@ -370,6 +370,50 @@ describe('HomeWorkspace', () => {
     expect(searchedTags).toEqual(['Camping']);
     expect(openedAssetId).toBe('');
   });
+
+  it('keeps recent card tags in a compact secondary row outside the card opener', () => {
+    const asset: AssetViewModel = {
+      id: 'blankets',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-household',
+      kind: 'item',
+      title: 'Moving Blankets',
+      description: '',
+      parentAssetId: 'garage',
+      lifecycleState: 'active',
+      containmentTrail: 'Garage',
+      tags: [
+        { id: 'tag-packing', key: 'packing', displayName: 'packing material', color: '#2F80ED' },
+        { id: 'tag-moving', key: 'moving', displayName: 'moving', color: '#2E7D32' },
+        { id: 'tag-bulk', key: 'bulk', displayName: 'bulk storage', color: '#7C3AED' }
+      ]
+    };
+
+    component = mount(HomeWorkspace, {
+      target: document.body,
+      props: {
+        lifecycleState: 'active',
+        tenantId: 'tenant-home',
+        inventoryId: 'inventory-household',
+        locations: [],
+        recentAssets: [asset],
+        archivedAssets: [],
+        onOpenLocation: () => {},
+        onOpenAsset: () => {},
+        onOpenAdd: () => {},
+        onSelectLifecycle: () => {},
+        onTagSearch: () => {}
+      }
+    });
+
+    const card = document.body.querySelector<HTMLElement>('.recent-card');
+    const tagList = card?.querySelector<HTMLElement>(':scope > .tag-chip-list');
+    expect(card?.querySelector('.recent-card-open > .recent-card-body')?.textContent).toContain('Moving Blankets');
+    expect(tagList?.textContent).toContain('packing material');
+    expect(tagList?.textContent).toContain('moving');
+    expect(tagList?.textContent).toContain('+1');
+    expect(card?.querySelector('.recent-card-open .tag-chip-list')).toBeNull();
+  });
 });
 
 function link(text: string): HTMLAnchorElement {

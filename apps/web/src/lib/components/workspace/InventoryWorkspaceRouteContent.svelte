@@ -55,6 +55,7 @@
     mode: WorkspaceMode;
     searchResults: SearchResult[];
     searchSuggestions: Asset[];
+    searchTagIds: string[];
     searchSubmitted: boolean;
     searchError: string;
     assetAction: AssetRouteAction;
@@ -80,7 +81,6 @@
 
   export type RouteContentHandlers = {
     onHome: (event: MouseEvent) => void;
-    onCreateStarterInventory: () => Promise<void>;
     onOpenLocation: (asset: Asset) => void;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => Promise<void>;
@@ -180,9 +180,6 @@
     <div class="empty-state spacious">
       <h1>{noInventoryPresentation.title}</h1>
       <p>{noInventoryPresentation.message}</p>
-      {#if noInventoryPresentation.actionLabel}
-        <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>{noInventoryPresentation.actionLabel}</Button.Root>
-      {/if}
     </div>
   </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}
@@ -239,6 +236,7 @@
     bind:checkoutState={searchCheckoutState}
     results={route.searchResults}
     suggestions={route.searchSuggestions}
+    selectedTagIds={route.searchTagIds}
     assetTags={workspace.data.context.assetTags ?? []}
     submitted={route.searchSubmitted}
     error={route.searchError}

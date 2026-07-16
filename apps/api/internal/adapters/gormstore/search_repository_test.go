@@ -5,16 +5,88 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+func TestStoreSearchAssetsReturnsInventoryScopedResultsAndWritesReadAudit(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	authorizer := memory.NewAuthorizer()
+
+	tenantID := tenant.ID("01KX2A1B7D5VYYA70W2NQ4TE5A")
+	inventoryID := inventory.InventoryID("01KX2A1BEGDWWN7P149T1P3R06")
+	principal := identity.Principal{ID: identity.PrincipalID("oidc_owner")}
+
+	saveTenant(t, ctx, store, tenantID, "Household")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Home")
+	if err := authorizer.GrantTenantOwner(ctx, principal, tenantID); err != nil {
+		t.Fatalf("grant tenant owner: %v", err)
+	}
+	if err := authorizer.GrantInventoryOwner(ctx, principal, tenantID, inventoryID); err != nil {
+		t.Fatalf("grant inventory owner: %v", err)
+	}
+
+	item := assetItem("01KX2A34G3TS98AR86N4KQW9QK", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	title, ok := asset.NewTitle("Spring lawn fertilizer in the garage")
+	if !ok {
+		t.Fatal("expected valid title")
+	}
+	item.Title = title
+	if err := createAsset(t, ctx, store, item); err != nil {
+		t.Fatalf("create item: %v", err)
+	}
+
+	application := app.New(app.Dependencies{
+		Authorizer:       authorizer,
+		Users:            store,
+		Tenants:          store,
+		Inventories:      store,
+		Assets:           store,
+		Search:           store,
+		Attachments:      store,
+		Audit:            store,
+		DefaultPageLimit: 50,
+		MaxPageLimit:     100,
+	})
+
+	result, err := application.SearchAssets(ctx, app.SearchAssetsInput{
+		Principal:      principal,
+		TenantID:       tenantID,
+		InventoryIDs:   []inventory.InventoryID{inventoryID},
+		Source:         audit.SourceAPI,
+		RequestID:      "search-request-one",
+		Query:          "fertilizer",
+		LifecycleState: string(ports.AssetLifecycleFilterActive),
+		Mode:           search.ModeFuzzy.String(),
+		CheckoutState:  string(ports.AssetCheckoutStateFilterAny),
+		Limit:          20,
+	})
+	if err != nil {
+		t.Fatalf("search assets: %v", err)
+	}
+	if len(result.Items) != 1 || result.Items[0].Asset.ID != item.ID {
+		t.Fatalf("expected fertilizer search result, got %+v", result.Items)
+	}
+
+	records, err := store.ListInventoryAuditRecords(ctx, tenantID, inventoryID, ports.AuditRecordPageRequest{Limit: 20})
+	if err != nil {
+		t.Fatalf("list inventory audit records: %v", err)
+	}
+	if !auditRecordsIncludeAction(records, audit.ActionAssetSearched) {
+		t.Fatalf("expected inventory search read audit record, got %+v", records)
+	}
+}
 
 func TestStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 	ctx := context.Background()
