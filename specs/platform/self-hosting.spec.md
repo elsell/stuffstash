@@ -30,6 +30,9 @@ development loops.
   configuration, and operator scripts needed to start that release. Public
   quick-start documentation must use this bundle instead of cloning a moving
   branch.
+- Production documentation deployment must wait for the main-branch Release
+  workflow to finish successfully so newly documented release assets exist
+  before the public quick start points to them.
 - The default host port binding must be loopback-only. An operator must opt in
   to LAN exposure by setting one documented bind address before startup.
 - Compose must declare a stable project name so release-bundle directory names
