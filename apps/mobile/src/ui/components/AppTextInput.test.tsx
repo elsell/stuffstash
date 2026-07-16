@@ -2,7 +2,11 @@ import React, { createRef } from 'react';
 import { Platform, type TextInput } from 'react-native';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
-import { resetNativeTestState } from '../../test-support/react-native';
+import {
+  keyboardDismissCount,
+  resetNativeTestState,
+  setKeyboardVisibleForTest
+} from '../../test-support/react-native';
 import {
   keyboardControllerDismissCount,
   resetKeyboardControllerTestState
@@ -118,6 +122,17 @@ describe('AppKeyboardAccessory', () => {
     );
 
     expect(harness.all().filter((node) => node.type === 'KeyboardExtender')).toHaveLength(1);
+    const host = harness.byTestId('app-keyboard-accessory-host');
+    expect(host?.props.style).toEqual(
+      expect.objectContaining({
+        bottom: 0,
+        left: 0,
+        position: 'absolute',
+        right: 0
+      })
+    );
+    expect(host?.props.pointerEvents).toBe('none');
+    expect(host?.props.accessibilityElementsHidden).toBe(true);
     const bar = harness.all().find((node) => node.props.style?.some?.((style: unknown) => (
       typeof style === 'object' && style !== null && 'width' in style && style.width === '100%'
     )));
@@ -136,8 +151,13 @@ describe('AppKeyboardAccessory', () => {
       strokeWidth: 2.2
     });
 
+    await harness.run(() => setKeyboardVisibleForTest(true));
+    expect(harness.byTestId('app-keyboard-accessory-host')?.props.pointerEvents).toBe('box-none');
+    expect(harness.byTestId('app-keyboard-accessory-host')?.props.accessibilityElementsHidden).toBe(false);
+
     await harness.press(action);
-    expect(keyboardControllerDismissCount()).toBe(1);
+    expect(keyboardDismissCount()).toBe(1);
+    expect(keyboardControllerDismissCount()).toBe(0);
     expect(changes).toBe(0);
     expect(submissions).toBe(0);
     expect(harness.byLabel('Description')?.props.value).toBe('Still editing');

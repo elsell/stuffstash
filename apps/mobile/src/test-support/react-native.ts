@@ -3,6 +3,9 @@ type AlertRecord = { readonly title: string; readonly message?: string; readonly
 const alerts: AlertRecord[] = [];
 const focusHandles: unknown[] = [];
 const focusedInputs: string[] = [];
+let keyboardDismissals = 0;
+let keyboardVisible = false;
+const keyboardListeners = new Map<string, Set<() => void>>();
 
 export const View = 'View';
 export const Text = 'Text';
@@ -25,6 +28,16 @@ export const AccessibilityInfo = {
 export const Appearance = { setColorScheme() {} };
 export const Platform = { OS: 'ios', select: <T>(values: { ios?: T; default?: T }) => values.ios ?? values.default };
 export const PlatformColor = (name: string) => `platform:${name}`;
+export const Keyboard = {
+  addListener(event: string, listener: () => void) {
+    const listeners = keyboardListeners.get(event) ?? new Set<() => void>();
+    listeners.add(listener);
+    keyboardListeners.set(event, listeners);
+    return { remove() { listeners.delete(listener); } };
+  },
+  dismiss() { keyboardDismissals += 1; },
+  isVisible() { return keyboardVisible; }
+};
 export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 };
 export const findNodeHandle = () => 1;
 export const useWindowDimensions = () => ({ fontScale: 1, height: 844, width: 390 });
@@ -34,10 +47,16 @@ const animation = () => ({ start(callback?: () => void) { callback?.(); } });
 export const Animated = { Value: AnimatedValue, View: 'AnimatedView', parallel: animation, spring: animation, timing: animation };
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
-export function resetNativeTestState() { alerts.length = 0; focusHandles.length = 0; focusedInputs.length = 0; }
+export function resetNativeTestState() { alerts.length = 0; focusHandles.length = 0; focusedInputs.length = 0; keyboardDismissals = 0; keyboardVisible = false; keyboardListeners.clear(); }
 export function latestAlert() { return alerts.at(-1); }
 export function alertCount() { return alerts.length; }
 export async function pressAlertButton(label: string) { return latestAlert()?.buttons.find((button) => button.text === label)?.onPress?.(); }
 export function focusedAccessibilityHandles() { return [...focusHandles]; }
 export function focusedInputLabels() { return [...focusedInputs]; }
+export function keyboardDismissCount() { return keyboardDismissals; }
+export function setKeyboardVisibleForTest(visible: boolean) {
+  keyboardVisible = visible;
+  const event = visible ? 'keyboardWillShow' : 'keyboardDidHide';
+  keyboardListeners.get(event)?.forEach((listener) => listener());
+}
 import { createElement, forwardRef, useImperativeHandle } from 'react';
