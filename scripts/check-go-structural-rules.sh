@@ -23,7 +23,7 @@ fi
 max_go_file_lines=800
 oversized_files=()
 for file in "${go_files[@]}"; do
-  if head -n 1 "$file" | rg --quiet --regexp '^// Code generated .* DO NOT EDIT\.$'; then
+  if head -n 1 "$file" | grep -Eq '^// Code generated .* DO NOT EDIT\.$'; then
     continue
   fi
   line_count="$(wc -l < "$file" | tr -d '[:space:]')"
@@ -41,12 +41,12 @@ fi
 print_pattern='fmt\.Print(f|ln)?\(|(^|[^[:alnum:]_])println?\('
 sql_pattern='"[^"]*(SELECT|INSERT[[:space:]]+INTO|UPDATE[[:space:]]+[^"]+[[:space:]]+SET|DELETE[[:space:]]+FROM|CREATE[[:space:]]+TABLE|ALTER[[:space:]]+TABLE|DROP[[:space:]]+TABLE)[[:space:]]+'
 
-if rg --line-number --regexp "$print_pattern" "${go_files[@]}"; then
+if grep -En "$print_pattern" "${go_files[@]}"; then
   echo "ad hoc print statements are not allowed; use injected observability ports" >&2
   exit 1
 fi
 
-if rg --ignore-case --line-number --regexp "$sql_pattern" "${go_files[@]}"; then
+if grep -Ein "$sql_pattern" "${go_files[@]}"; then
 	echo "raw SQL in Go application code is not allowed; use GORM behind repositories/adapters" >&2
 	exit 1
 fi
@@ -84,35 +84,35 @@ if [ "$asset_application_touched" = true ]; then
 fi
 
 if [ "$httpserver_touched" = true ]; then
-  if rg --line-number --regexp 'huma\.(Get|Post|Patch|Put|Delete)\(' apps/api/internal/adapters/httpserver/server.go apps/api/internal/adapters/httpserver/api.go; then
+  if grep -En 'huma\.(Get|Post|Patch|Put|Delete)\(' apps/api/internal/adapters/httpserver/server.go apps/api/internal/adapters/httpserver/api.go; then
     echo "httpserver server.go/api.go must compose only; domain route registration belongs under <domain>/routes/" >&2
     exit 1
   fi
 
-  if find apps/api/internal/adapters/httpserver -path '*/routes/*.go' -print0 | xargs -0 rg --line-number --regexp '^type [A-Za-z0-9_]+ (struct|interface)' ; then
+  if find apps/api/internal/adapters/httpserver -path '*/routes/*.go' -print0 | xargs -0 grep -En '^type [A-Za-z0-9_]+ (struct|interface)' ; then
     echo "httpserver route files must not define DTOs or interfaces; use the domain dto/ or mapper/ package" >&2
     exit 1
   fi
 
-  if find apps/api/internal/adapters/httpserver -path '*/dto/*.go' -print0 | xargs -0 rg --line-number --regexp 'internal/(app|domain|ports)' ; then
+  if find apps/api/internal/adapters/httpserver -path '*/dto/*.go' -print0 | xargs -0 grep -En 'internal/(app|domain|ports)' ; then
     echo "httpserver DTO files must not import app, domain, or port packages" >&2
     exit 1
   fi
 
-  if find apps/api/internal/adapters/httpserver -path '*/mapper/*.go' -print0 | xargs -0 rg --line-number --regexp 'huma\.(Get|Post|Patch|Put|Delete)\(' ; then
+  if find apps/api/internal/adapters/httpserver -path '*/mapper/*.go' -print0 | xargs -0 grep -En 'huma\.(Get|Post|Patch|Put|Delete)\(' ; then
     echo "httpserver mapper files must not register routes" >&2
     exit 1
   fi
 
-  if find apps/api/internal/adapters/httpserver -path '*/mapper/*.go' -print0 | xargs -0 rg --line-number --regexp 'internal/app|httpserver/shared|shared\.SuccessEnvelope|PaginatedMeta' ; then
+  if find apps/api/internal/adapters/httpserver -path '*/mapper/*.go' -print0 | xargs -0 grep -En 'internal/app|httpserver/shared|shared\.SuccessEnvelope|PaginatedMeta' ; then
     echo "httpserver mapper files must only translate between domain and DTO shapes; envelopes, app services, and pagination metadata belong in routes" >&2
     exit 1
   fi
 
   if [ -f apps/api/internal/adapters/httpserver/server_test.go ]; then
-    server_test_names="$(rg --only-matching --replace '$1' --regexp '^func (Test[A-Za-z0-9_]+)' apps/api/internal/adapters/httpserver/server_test.go || true)"
+    server_test_names="$(sed -nE 's/^func (Test[A-Za-z0-9_]+).*/\1/p' apps/api/internal/adapters/httpserver/server_test.go)"
     allowed_server_tests='^(TestHealthEndpointReturnsHealthyStatus|TestIndexEndpointReturnsHelpfulLinks|TestUnknownGetPathStillReturnsNotFound|TestOpenAPIIsGenerated)$'
-    unexpected_server_tests="$(printf '%s\n' "$server_test_names" | rg --invert-match --regexp "$allowed_server_tests" || true)"
+    unexpected_server_tests="$(printf '%s\n' "$server_test_names" | grep -Ev "$allowed_server_tests" || true)"
     if [ -n "$unexpected_server_tests" ]; then
       printf '%s\n' "$unexpected_server_tests" >&2
       echo "httpserver/server_test.go must stay limited to platform-level tests; domain endpoint tests belong in focused *_test.go files" >&2
@@ -120,20 +120,20 @@ if [ "$httpserver_touched" = true ]; then
     fi
   fi
 
-  if [ -f apps/api/internal/adapters/httpserver/helpers_test.go ] && rg --line-number --regexp '^(type|func) (asset|auditRecord|customField|inventoryAccess|decodeAsset|decodeAuditRecord|decodeCustomField|decodeInventoryAccess|assertCustomField|assertInventoryAccess)' apps/api/internal/adapters/httpserver/helpers_test.go; then
+  if [ -f apps/api/internal/adapters/httpserver/helpers_test.go ] && grep -En '^(type|func) (asset|auditRecord|customField|inventoryAccess|decodeAsset|decodeAuditRecord|decodeCustomField|decodeInventoryAccess|assertCustomField|assertInventoryAccess)' apps/api/internal/adapters/httpserver/helpers_test.go; then
     echo "httpserver/helpers_test.go must stay limited to cross-cutting test helpers; domain wire helpers belong in focused *_helpers_test.go files" >&2
     exit 1
   fi
 fi
 
 if [ "$gormstore_touched" = true ]; then
-  if [ -f apps/api/internal/adapters/gormstore/store.go ] && rg --line-number --regexp '^func \(s Store\) (Save|Create|Update|List|Claim|Mark|Asset|Tenant|Inventory|Custom|Attachment)' apps/api/internal/adapters/gormstore/store.go; then
+  if [ -f apps/api/internal/adapters/gormstore/store.go ] && grep -En '^func \(s Store\) (Save|Create|Update|List|Claim|Mark|Asset|Tenant|Inventory|Custom|Attachment)' apps/api/internal/adapters/gormstore/store.go; then
     echo "gormstore/store.go must stay limited to Store construction; repository behavior belongs in focused *_repository.go files" >&2
     exit 1
   fi
 
   if [ -f apps/api/internal/adapters/gormstore/store_test.go ]; then
-    store_test_names="$(rg --only-matching --replace '$1' --regexp '^func (Test[A-Za-z0-9_]+)' apps/api/internal/adapters/gormstore/store_test.go || true)"
+    store_test_names="$(sed -nE 's/^func (Test[A-Za-z0-9_]+).*/\1/p' apps/api/internal/adapters/gormstore/store_test.go)"
     if [ -n "$store_test_names" ]; then
       printf '%s\n' "$store_test_names" >&2
       echo "gormstore/store_test.go must stay limited to shared helpers; repository tests belong in focused *_repository_test.go files" >&2
