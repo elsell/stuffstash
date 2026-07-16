@@ -45,6 +45,14 @@ development loops.
 - Public docs must name the persistent volumes and explain which hold Stuff
   Stash metadata, SpiceDB authorization data, Garage metadata, Garage object
   data, and Caddy certificates.
+- Public docs must include a short startup verification path with concrete
+  commands for the browser-facing web app, API health endpoint, Dex discovery,
+  and the expected anonymous Garage response.
+- Public docs must include a concrete LAN or reverse-proxy configuration example
+  that names every `.env` and Dex setting that must share the same public host.
+- Public docs must include straightforward backup, restore, upgrade, and
+  rollback guidance for the Compose topology, including `.env`, private Dex
+  config, database volumes, Garage volumes, and Caddy certificate data.
 
 ## Verification
 
