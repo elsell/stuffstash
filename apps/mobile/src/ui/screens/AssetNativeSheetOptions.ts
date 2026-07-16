@@ -42,10 +42,6 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
       ...baseOptions,
       sheetAllowedDetents: [0.6, 0.9]
     } satisfies AssetNativeSheetOptions,
-    audit: {
-      ...baseOptions,
-      sheetAllowedDetents: [0.58, 0.92]
-    } satisfies AssetNativeSheetOptions,
     checkoutHistory: {
       ...baseOptions,
       sheetAllowedDetents: [0.58, 0.92]
@@ -65,10 +61,6 @@ export const assetMoveNativeSheetOptions: AssetNativeSheetOptions = {
 
 export const assetMoveHereNativeSheetOptions: AssetNativeSheetOptions = {
   ...defaultOptions.moveHere
-};
-
-export const assetAuditNativeSheetOptions: AssetNativeSheetOptions = {
-  ...defaultOptions.audit
 };
 
 export const assetCheckoutHistoryNativeSheetOptions: AssetNativeSheetOptions = {

@@ -72,10 +72,8 @@ function ThemedApp() {
           name="assets/[assetId]/move-here"
           options={sheetOptions.moveHere}
         />
-        <Stack.Screen
-          name="assets/[assetId]/audit"
-          options={sheetOptions.audit}
-        />
+        <Stack.Screen name="assets/[assetId]/history/index" options={{ title: 'History' }} />
+        <Stack.Screen name="assets/[assetId]/history/[activityId]" options={{ title: 'History detail' }} />
         <Stack.Screen
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}

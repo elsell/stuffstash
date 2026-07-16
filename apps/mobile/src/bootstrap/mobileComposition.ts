@@ -3,7 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 import { ApiMobileAuthMetadataGateway } from '../adapters/auth/ApiMobileAuthMetadataGateway';
 import { ExpoOidcNativeClient } from '../adapters/auth/ExpoOidcNativeClient';
 import { ExpoSecureAuthSessionStore } from '../adapters/auth/ExpoSecureAuthSessionStore';
-import { ApiAssetAuditHistoryRepository } from '../adapters/audit/ApiAssetAuditHistoryRepository';
+import { ApiAssetActivityRepository } from '../adapters/audit/ApiAssetActivityRepository';
+import { ApiAssetOperationReversalRepository } from '../adapters/assets/ApiAssetOperationReversalRepository';
 import { ApiAssetCheckoutHistoryRepository } from '../adapters/audit/ApiAssetCheckoutHistoryRepository';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
@@ -21,7 +22,7 @@ import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
 import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
-import { AssetAuditHistoryQuery } from '../application/assets/AssetAuditHistoryQuery';
+import { AssetActivityQuery } from '../application/assets/AssetActivityQuery';
 import { AssetCheckoutCommand } from '../application/assets/AssetCheckoutCommand';
 import { AssetCheckoutHistoryQuery } from '../application/assets/AssetCheckoutHistoryQuery';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
@@ -32,6 +33,8 @@ import { InventoryAssetTagsQuery } from '../application/assets/InventoryAssetTag
 import { InventoryMapQuery } from '../application/assets/InventoryMapQuery';
 import { MoveAssetCommand } from '../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../application/assets/UpdateAssetCommand';
+import { UndoAssetEditCommand } from '../application/assets/UndoAssetEditCommand';
+import { RevertAssetChangeCommand } from '../application/assets/RevertAssetChangeCommand';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
 import { SelectInventoryCommand } from '../application/home/SelectInventoryCommand';
 import { LocationAssetsQuery } from '../application/locations/LocationAssetsQuery';
@@ -61,7 +64,7 @@ export type MobileComposition = {
   readonly homeDashboardQuery: HomeDashboardQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
-  readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
+  readonly assetActivityQuery: AssetActivityQuery;
   readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
@@ -70,6 +73,8 @@ export type MobileComposition = {
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly moveAssetCommand: MoveAssetCommand;
   readonly updateAssetCommand: UpdateAssetCommand;
+  readonly undoAssetEditCommand: UndoAssetEditCommand;
+  readonly revertAssetChangeCommand: RevertAssetChangeCommand;
   readonly inventoryAssetsQuery: InventoryAssetsQuery;
   readonly inventoryAssetTagsQuery: InventoryAssetTagsQuery;
   readonly inventoryMapQuery: InventoryMapQuery;
@@ -149,7 +154,8 @@ export function createMobileComposition(
     serviceScopeId,
     directUploadPolicy
   );
-  const assetAuditHistory = new ApiAssetAuditHistoryRepository(client, inventorySummaries);
+  const assetActivity = new ApiAssetActivityRepository(client);
+  const assetChangeReversal = new ApiAssetOperationReversalRepository(client);
   const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, profile.tenantId ?? '');
@@ -160,7 +166,7 @@ export function createMobileComposition(
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
-    assetAuditHistoryQuery: new AssetAuditHistoryQuery(assetAuditHistory),
+    assetActivityQuery: new AssetActivityQuery(assetActivity),
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries),
     assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
@@ -169,6 +175,8 @@ export function createMobileComposition(
     deleteAssetPhotoCommand: new DeleteAssetPhotoCommand(inventorySummaries),
     moveAssetCommand: new MoveAssetCommand(inventorySummaries),
     updateAssetCommand: new UpdateAssetCommand(inventorySummaries),
+    undoAssetEditCommand: new UndoAssetEditCommand(assetChangeReversal),
+    revertAssetChangeCommand: new RevertAssetChangeCommand(assetChangeReversal),
     inventoryAssetsQuery: new InventoryAssetsQuery(inventorySummaries),
     inventoryAssetTagsQuery: new InventoryAssetTagsQuery(inventorySummaries),
     inventoryMapQuery: new InventoryMapQuery(inventorySummaries),

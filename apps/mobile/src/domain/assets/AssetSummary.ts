@@ -19,6 +19,7 @@ export type AssetSummary = {
   readonly photo?: AssetPhoto;
   readonly currentCheckout?: CurrentCheckoutSummary;
   readonly tags?: readonly AssetTagSummary[];
+  readonly undoableOperationId?: string;
 };
 
 export type AssetLocationTrailSegment = {

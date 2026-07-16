@@ -2,6 +2,7 @@ export type AssetActionCompletion = {
   readonly assetId: string;
   readonly action: 'edit' | 'move';
   readonly message: string;
+  readonly undoableOperationId?: string;
 };
 
 const completions = new Map<string, AssetActionCompletion>();

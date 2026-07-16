@@ -12,12 +12,17 @@ import type {
   InventoryWorkspace
 } from '../home/InventorySummaryRepository';
 import { AssetDetailQuery } from './AssetDetailQuery';
+import type {
+  AssetDetailWorkspaceRepository,
+  AssetDetailWorkspaceSnapshot
+} from './AssetDetailWorkspaceRepository';
 import type { InventoryMapAssetRepository } from './InventoryMapQuery';
 import { toAssetDetailViewModel } from './AssetViewModels';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
   private inventory: InventorySummary;
   private readonly detailAssets = new Map<string, AssetSummary>();
+  defaultSummaryRequestCount = 0;
 
   constructor(permissions: InventorySummary['permissions'] = ['view', 'create_asset', 'edit_asset']) {
     this.inventory = {
@@ -81,6 +86,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
   }
 
   async getDefaultInventorySummary(): Promise<InventorySummary> {
+    this.defaultSummaryRequestCount += 1;
     return this.inventory;
   }
 
@@ -136,6 +142,8 @@ describe('AssetDetailQuery', () => {
     const query = new AssetDetailQuery(new FakeInventorySummaryRepository());
 
     await expect(query.execute('asset-passport')).resolves.toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
       id: 'asset-passport',
       title: 'Passport folder',
       kind: 'container',
@@ -285,6 +293,65 @@ describe('AssetDetailQuery', () => {
       containedSpaces: [{ id: 'asset-cabinet' }],
       containedItems: [{ id: 'asset-hammer', relativePathLabel: 'Cabinet' }]
     });
+  });
+
+  it('opens an active place from one dedicated workspace snapshot without loading summary or Map', async () => {
+    const summaries = new FakeInventorySummaryRepository();
+    const mapAssets = new CountingInventoryMapAssetRepository();
+    const workspace: AssetDetailWorkspaceSnapshot = {
+      tenantId: tenantId('tenant-home'),
+      inventoryId: inventoryId('inventory-home'),
+      permissions: ['view', 'create_asset', 'edit_asset'],
+      asset: {
+        id: assetId('asset-garage'), title: 'Garage', kind: 'location', lifecycleState: 'active',
+        locationLabel: 'Inventory root', locationTrail: ['Home', 'Garage'], parentLocationTrail: [],
+        description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+      },
+      allAssets: [{
+        id: assetId('asset-hammer'), title: 'Hammer', kind: 'item', lifecycleState: 'active',
+        parentAssetId: assetId('asset-garage'), locationLabel: 'Garage', locationTrail: ['Home', 'Garage', 'Hammer'],
+        parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
+        description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+      }]
+    };
+    const workspaces = new FakeAssetDetailWorkspaceRepository(workspace);
+    const query = new AssetDetailQuery(summaries, mapAssets, workspaces);
+
+    await expect(query.execute('asset-garage')).resolves.toMatchObject({
+      id: 'asset-garage',
+      containedItems: [{ id: 'asset-hammer' }]
+    });
+    expect(workspaces.requestedAssetIds).toEqual(['asset-garage']);
+    expect(summaries.defaultSummaryRequestCount).toBe(0);
+    expect(mapAssets.requestCount).toBe(0);
+  });
+
+  it('opens an ordinary item from a target-only workspace without falling back to the default summary', async () => {
+    const summaries = new FakeInventorySummaryRepository();
+    const mapAssets = new CountingInventoryMapAssetRepository();
+    const item: AssetSummary = {
+      id: assetId('asset-hammer'), title: 'Hammer', kind: 'item', lifecycleState: 'active',
+      parentAssetId: assetId('asset-garage'), locationLabel: 'Garage', locationTrail: ['Home', 'Garage', 'Hammer'],
+      parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
+      description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    const workspaces = new FakeAssetDetailWorkspaceRepository({
+      tenantId: tenantId('tenant-home'),
+      inventoryId: inventoryId('inventory-home'),
+      permissions: ['view', 'edit_asset'],
+      asset: item,
+      allAssets: []
+    });
+    const query = new AssetDetailQuery(summaries, mapAssets, workspaces);
+
+    await expect(query.execute('asset-hammer')).resolves.toMatchObject({
+      id: 'asset-hammer',
+      kind: 'item',
+      parentLocationTrail: [{ id: 'asset-garage', title: 'Garage' }]
+    });
+    expect(workspaces.requestedAssetIds).toEqual(['asset-hammer']);
+    expect(summaries.defaultSummaryRequestCount).toBe(0);
+    expect(mapAssets.requestCount).toBe(0);
   });
 
   it('uses the complete detail photo list for map-sourced assets', async () => {
@@ -753,6 +820,96 @@ describe('AssetDetailQuery', () => {
     expect(detail.containedSpaces).toEqual([]);
     expect(detail.containedItems).toEqual([]);
   });
+
+  it('indexes a deep place subtree with linear parent-link reads', () => {
+    const garage: AssetSummary = {
+      id: assetId('asset-garage-linear'), title: 'Garage', kind: 'location', lifecycleState: 'active',
+      locationLabel: 'Inventory root', locationTrail: ['Home', 'Garage'], parentLocationTrail: [],
+      description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    let parentLinkReads = 0;
+    const spaces: AssetSummary[] = [];
+    let parentId = garage.id;
+    for (let index = 0; index < 150; index += 1) {
+      const currentParentId = parentId;
+      const id = assetId(`asset-space-${index.toString()}`);
+      spaces.push({
+        id,
+        title: `Space ${index.toString()}`,
+        kind: 'container',
+        lifecycleState: 'active',
+        get parentAssetId() {
+          parentLinkReads += 1;
+          return currentParentId;
+        },
+        locationLabel: 'Garage',
+        locationTrail: ['Home', 'Garage', `Space ${index.toString()}`],
+        parentLocationTrail: [],
+        description: '',
+        updatedAtLabel: 'Updated today',
+        hasPhoto: false
+      });
+      parentId = id;
+    }
+    const items = Array.from({ length: 150 }, (_, index): AssetSummary => ({
+      id: assetId(`asset-item-${index.toString()}`),
+      title: `Item ${index.toString()}`,
+      kind: 'item',
+      lifecycleState: 'active',
+      get parentAssetId() {
+        parentLinkReads += 1;
+        return parentId;
+      },
+      locationLabel: 'Deep space',
+      locationTrail: ['Home', 'Garage', 'Deep space', `Item ${index.toString()}`],
+      parentLocationTrail: [],
+      description: '',
+      updatedAtLabel: 'Updated today',
+      hasPhoto: false
+    }));
+
+    const detail = toAssetDetailViewModel(garage, { allAssets: [...spaces, ...items] });
+
+    expect(detail.containedItems).toHaveLength(150);
+    expect(detail.containedItems[0]?.relativePath).toHaveLength(150);
+    expect(parentLinkReads).toBeLessThanOrEqual(900);
+  });
+
+  it('terminates cyclic child links and emits each reachable asset at most once', () => {
+    const garage: AssetSummary = {
+      id: assetId('asset-garage-cycle'), title: 'Garage', kind: 'location', lifecycleState: 'active',
+      locationLabel: 'Inventory root', locationTrail: ['Home', 'Garage'], parentLocationTrail: [],
+      description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    const spaceA: AssetSummary = {
+      id: assetId('asset-space-a'), title: 'Space A', kind: 'container', lifecycleState: 'active',
+      parentAssetId: garage.id, locationLabel: 'Garage', locationTrail: ['Home', 'Garage', 'Space A'],
+      parentLocationTrail: [], description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    const cyclicA: AssetSummary = {
+      id: assetId('asset-cycle-a'), title: 'Cycle A', kind: 'container', lifecycleState: 'active',
+      parentAssetId: assetId('asset-cycle-b'), locationLabel: '', locationTrail: [], parentLocationTrail: [],
+      description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+    const cyclicB: AssetSummary = {
+      ...cyclicA,
+      id: assetId('asset-cycle-b'),
+      title: 'Cycle B',
+      parentAssetId: cyclicA.id
+    };
+    const wrench: AssetSummary = {
+      id: assetId('asset-wrench'), title: 'Wrench', kind: 'item', lifecycleState: 'active',
+      parentAssetId: spaceA.id, locationLabel: 'Space A', locationTrail: ['Home', 'Garage', 'Space A', 'Wrench'],
+      parentLocationTrail: [], description: '', updatedAtLabel: 'Updated today', hasPhoto: false
+    };
+
+    const detail = toAssetDetailViewModel(garage, {
+      allAssets: [cyclicA, cyclicB, wrench, spaceA, wrench]
+    });
+
+    expect(detail.containedSpaces.map((asset) => asset.id)).toEqual(['asset-space-a']);
+    expect(detail.containedItems.map((asset) => asset.id)).toEqual(['asset-wrench']);
+  });
 });
 
 class FakeInventoryMapAssetRepository implements InventoryMapAssetRepository {
@@ -767,5 +924,25 @@ class FakeInventoryMapAssetRepository implements InventoryMapAssetRepository {
       permissions: ['view', 'create_asset', 'edit_asset'],
       assets: this.assets
     };
+  }
+}
+
+class CountingInventoryMapAssetRepository implements InventoryMapAssetRepository {
+  requestCount = 0;
+
+  listActiveInventoryMapAssets(): ReturnType<InventoryMapAssetRepository['listActiveInventoryMapAssets']> {
+    this.requestCount += 1;
+    return Promise.reject(new Error('Map traversal should not run.'));
+  }
+}
+
+class FakeAssetDetailWorkspaceRepository implements AssetDetailWorkspaceRepository {
+  readonly requestedAssetIds: string[] = [];
+
+  constructor(private readonly snapshot: AssetDetailWorkspaceSnapshot | undefined) {}
+
+  async getAssetDetailWorkspace(selectedAssetId: AssetSummary['id']) {
+    this.requestedAssetIds.push(selectedAssetId);
+    return this.snapshot;
   }
 }

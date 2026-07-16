@@ -5,6 +5,7 @@ import type { AssetDetailViewModel } from './AssetViewModels';
 import { toAssetDetailViewModel } from './AssetViewModels';
 import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
 import type { InventoryMapAssetRepository } from './InventoryMapQuery';
+import type { AssetDetailWorkspaceRepository } from './AssetDetailWorkspaceRepository';
 
 type AssetDetailSource = {
   readonly tenantId: TenantId;
@@ -21,11 +22,20 @@ export type AssetDetailQueryOptions = {
 export class AssetDetailQuery {
   constructor(
     private readonly inventories: InventorySummaryRepository,
-    private readonly mapAssets?: InventoryMapAssetRepository
+    private readonly mapAssets?: InventoryMapAssetRepository,
+    private readonly detailWorkspaces?: AssetDetailWorkspaceRepository
   ) {}
 
   async execute(assetIdValue: string, options: AssetDetailQueryOptions = {}): Promise<AssetDetailViewModel> {
     const selectedAssetId = assetId(assetIdValue);
+
+    if (options.source !== 'map' && this.detailWorkspaces) {
+      const workspace = await this.detailWorkspaces.getAssetDetailWorkspace(selectedAssetId);
+      if (workspace) {
+        return this.buildDetailView(workspace);
+      }
+    }
+
     const inventory = await this.inventories.getDefaultInventorySummary();
 
     if (options.source === 'map') {
@@ -102,6 +112,8 @@ export class AssetDetailQuery {
       : source.asset;
 
     return toAssetDetailViewModel(detailAsset, {
+      tenantId: source.tenantId,
+      inventoryId: source.inventoryId,
       canManageLifecycle: source.permissions.includes('edit_asset'),
       canEditAsset: source.permissions.includes('edit_asset'),
       canCreateAsset: source.permissions.includes('create_asset'),

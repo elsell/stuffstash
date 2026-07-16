@@ -8,7 +8,6 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AssetAuditHistoryQuery } from '../../application/assets/AssetAuditHistoryQuery';
 import { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
@@ -18,7 +17,6 @@ import { InventoryAssetTagsQuery, type AssetTagOptionViewModel } from '../../app
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { reconcileCreatedAssetTags, type CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
-import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
 import {
   AssetCheckoutHistorySheet,
   AssetCheckoutHistorySheetState
@@ -117,7 +115,12 @@ export function AssetEditSheetRouteScreen({
         newTags: normalized.newTags,
         activeTags: state.status === 'ready' ? state.assetTags ?? [] : []
       });
-      recordAssetActionCompletion({ assetId, action: 'edit', message: result.message });
+      recordAssetActionCompletion({
+        assetId,
+        action: 'edit',
+        message: result.message,
+        undoableOperationId: result.undoableOperationId
+      });
       router.back();
     } catch (error) {
       await refreshEditAssetTags(normalizedEditDraft(draft).newTags ?? []);
@@ -378,54 +381,6 @@ export function AssetMoveHereSheetRouteScreen({
           onSelectAsset={(selectedAsset) => setDraft((current) => current ? { ...current, selectedAsset } : current)}
         />
       ) : null}
-    </NativeSheetFrame>
-  );
-}
-
-export function AssetAuditSheetRouteScreen({
-  assetAuditHistoryQuery,
-  assetDetailQuery,
-  assetId
-}: {
-  readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetId: string;
-}) {
-  const [state, setState] = useState<AssetAuditHistorySheetState>({ status: 'loading', assetTitle: 'Asset' });
-
-  useEffect(() => {
-    let isCurrent = true;
-    async function load(): Promise<void> {
-      let loadedTitle = 'Asset';
-      try {
-        const asset = await assetDetailQuery.execute(assetId);
-        loadedTitle = asset.title;
-        if (isCurrent) {
-          setState({ status: 'loading', assetTitle: asset.title });
-        }
-        const history = await assetAuditHistoryQuery.execute({ assetId, limit: 20 });
-        if (isCurrent) {
-          setState({ status: 'ready', assetTitle: asset.title, history });
-        }
-      } catch (error) {
-        if (isCurrent) {
-          setState({
-            status: 'error',
-            assetTitle: loadedTitle,
-            message: readableError(error, 'Audit history failed.')
-          });
-        }
-      }
-    }
-    void load();
-    return () => {
-      isCurrent = false;
-    };
-  }, [assetAuditHistoryQuery, assetDetailQuery, assetId]);
-
-  return (
-    <NativeSheetFrame title="Audit history">
-      <AssetAuditHistorySheet state={state} onClose={() => router.back()} />
     </NativeSheetFrame>
   );
 }
