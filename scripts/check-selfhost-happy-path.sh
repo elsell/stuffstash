@@ -175,12 +175,30 @@ if docker compose version >/dev/null 2>&1; then
   trap - EXIT
 fi
 
-grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres, SpiceDB, and Garage' "$self_host_doc" ||
+grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres' "$self_host_doc" &&
+  grep -q 'SpiceDB, Garage, and the web app' "$self_host_doc" ||
   fail "self-host docs must lead with durable Docker Compose, HTTPS, and bundled Dex"
 
 if grep -q 'docker compose -f compose.selfhost.yaml up --build' "$self_host_doc"; then
   fail "self-host docs must not tell operators to build source images by default"
 fi
+
+if grep -q 'git clone .*stuffstash' "$self_host_doc"; then
+  fail "self-host docs must use an immutable release bundle, not a moving branch"
+fi
+
+grep -q 'releases/latest/download/stuffstash-selfhost.tar.gz' "$self_host_doc" ||
+  fail "self-host docs must download the release bundle"
+
+grep -q './scripts/selfhost-preflight.sh --trial' "$self_host_doc" ||
+  fail "self-host quick start must run trial preflight"
+
+if grep -qi 'LAN IP or DNS\|IP or DNS' "$self_host_doc"; then
+  fail "self-host docs must not claim that IP-literal OIDC works"
+fi
+
+test -f docs/src/content/docs/self-host-operations.md ||
+  fail "self-host operator guidance must be linked from the quick start"
 
 if grep -q '^## Compose Evaluation' "$self_host_doc"; then
   fail "self-host docs must not present contributor evaluation as a public happy path"
