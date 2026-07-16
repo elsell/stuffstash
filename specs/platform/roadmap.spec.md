@@ -23,11 +23,15 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The current focus is closing the first conversational inventory gaps through the mobile app first, while preserving the promoted SvelteKit web inventory workspace direction as a later parallel surface.
+The immediate mobile trust focus is replacing bounded raw asset audit rows with a production-shaped, change-first History journey. The slice must preserve the complete audit stream while adding typed cursor-paginated asset activity, atomic field/tag edits with coherent audit and undo behavior, explicit tenant/inventory/asset scope, safe structured changes, immediate saved/Undo feedback, and a native accessible History list/detail flow.
+
+The immediate cross-platform access focus is completing clickable inventory invitation links. The backend token and acceptance primitives already exist; the current slice must add a canonical environment-configured HTTPS link, authenticated safe preview, OIDC/deep-link return behavior, permission-gated creation and one-time copy/share UX on web and mobile, explicit acceptance, terminal failure states, and verified post-accept inventory entry with two identities.
+
+The current focus is completing a production-capability audit and repair pass of the promoted SvelteKit web workspace, with screenshot-backed desktop/mobile verification and deliberate parity with the native mobile product. Home/Browse information architecture and transient-surface behavior are unified. The immediate repair slice consolidates the shell, Home, Browse, detail, settings, import, auth, and transient surfaces onto one native visual foundation with consistent typography, spacing, density, surface hierarchy, photo treatment, and responsive behavior.
 
 The conversational goal is to move from the first realtime read-only voice slice toward a phone-testable, production-shaped mobile voice loop backed by tenant-configured provider profiles, encrypted provider credentials, a reusable tool catalog, approval-backed write action plans, and stronger agent-loop/session state.
 
-The web goal remains important but is not the immediate starting point. It still needs a production-shaped path through:
+The web audit and Browse parity work needs a production-shaped path through:
 
 - a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
 - clear separation between generated API DTOs and frontend domain models,
@@ -103,6 +107,7 @@ The web goal remains important but is not the immediate starting point. It still
 - Mobile Browse now uses a content-first inventory hierarchy with visible kind scope, separate applied filters and sort, a native filter sheet, complete deep-link filter state, resilient loading/error/empty states, adaptive two-column asset density, one-column place rows, appearance-aware semantic colors, and no photo-readiness or update-time clutter on result cards.
 - Realtime voice sessions now persist durable safe session metadata through a repository port with memory and GORM adapters, including session scope, selected provider profile IDs, lifecycle state, timestamps, and safe failure codes without storing raw audio, transcripts, prompts, model responses, generated speech, credentials, bearer tokens, or provider session IDs.
 - Mobile provider-profile management now exposes safe tenant-scoped provider profile metadata, recommended profile creation, credential replacement, prompt-template replacement, lifecycle actions, safe provider tests, readiness summaries, and a voice-sheet recovery action that opens Voice providers when readiness fails before recording.
+- Mobile Settings now uses a native grouped hierarchy with dedicated account, appearance, server, diagnostics, about, Voice Setup, capability, and provider-profile destinations; Voice administration follows the current tenant dynamically, is permission-gated at every deep link, and has screenshot-backed light/dark and Dynamic Type verification.
 - Mobile individual asset detail now works as a production-shaped asset workspace: shared detail routes from home, inventory lists, search, and location lists; photo-first carousel/strip with add, local reorder preview, viewer, safe metadata, removal, direct-upload progress and retry; edit and move sheets backed by application commands and generated API adapters; lifecycle overflow with archive/restore/permanent delete confirmations; bounded safe audit history; and spatial container/location contents with Add item here and Move things here actions.
 - Mobile realtime voice cancellation now has an application boundary, recorder cleanup path, WebSocket abort path that sends `session.cancel` when session-bound, safe terminal cancelled state, API `session.cancelled` response for pre-processing cancellation, and focused mobile/API tests.
 - Mobile realtime voice can now expose a bounded `propose_action_plan` native tool, persist a proposed action plan through the application boundary, stream a safe `action.plan.proposed` WebSocket event, and render the proposal in the mobile voice sheet review stage without executing inventory writes.
@@ -124,22 +129,28 @@ The web goal remains important but is not the immediate starting point. It still
 - The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md` and has been promoted into `apps/web` with frontend domain, port, API adapter, seeded adapter, and focused workspace components.
 - The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
 - Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
-- Invitation acceptance links exist for sharing, but they are not a primary authentication mechanism.
+- Inventory invitation token creation and API acceptance exist, but clients still expose a bare token instead of a clickable link and have no web/mobile preview-and-accept journey.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
 - API-key-backed speech synthesis adapters and the external MCP server are not yet complete. Checkout history is available to the internal agent tool catalog, but the public MCP transport still depends on the external MCP server work.
 
 ## Next Work
 
-1. Deepen the production mobile voice session surface.
+1. Complete the mobile asset History and atomic edit refactor.
+   - Use `specs/audit-history/audit-and-undo.spec.md`, `specs/assets/asset-model.spec.md`, `specs/platform/rest-api-initial-slice.spec.md`, and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
+   - Prove change-first activity after noisy reads, raw audit preservation, safe cursor scoping, one coherent edit/audit/operation, saved Undo feedback, and native accessibility behavior.
+2. Complete clickable web and mobile inventory invitations.
+   - Use `specs/identity-access/tenant-inventory-access.spec.md`, `specs/identity-access/authentication-flow.spec.md`, `specs/identity-access/mobile-oidc-authentication.spec.md`, and the web/mobile platform specs as the source of truth.
+   - Prove canonical link creation, token redaction, sign-in return, authenticated preview, explicit acceptance, terminal states, and post-accept inventory entry with two identities.
+3. Deepen the production mobile voice session surface.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
-2. Implement the external Stuff Stash MCP server.
+4. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-3. Resume promoted web workspace work after the mobile voice path is testable from the app.
+5. Complete unified Home/Browse web parity and the remaining screenshot-backed audit closure matrix.
    - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
-   - Prioritize media attachment management, browser-level coverage, tenant-first switching, search, inventory settings, and sharing/access management.
+   - Prioritize the shared transient-surface migration, containable workspaces, media attachment management, browser-level coverage, tenant-first switching, inventory settings, and sharing/access management.
 
 ## Later Work
 

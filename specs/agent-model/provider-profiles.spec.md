@@ -229,6 +229,20 @@ Realtime provider resolution must prefer explicit selected profiles when present
 
 Provider setup UI must present the voice pipeline as the primary mental model. The normal view must show the three slots in order, their selected provider, readiness, direct fix actions, and duplicate warnings. A separate profile inventory or advanced tab may list all profiles, including inactive or archived profiles, but it must not be the first or only way to understand voice readiness.
 
+The mobile Settings experience must call the normal destination `Voice Setup` and identify the tenant whose shared configuration is being changed. The normal destination must explain the three slots in user-facing language before exposing provider kinds, model identifiers, credentials, or lifecycle state. Each slot must remain directly actionable, but advanced provider-profile inventory and lifecycle management must live behind a separate disclosure destination.
+
+Mobile provider-profile queries and commands must resolve tenant scope from the currently selected inventory workspace for every operation. They must not capture the onboarding tenant hint once at application composition time because the user may switch to an inventory in another visible tenant without rebuilding the composition. Cross-tenant inventory switching must update Settings scope, voice readiness, provider listing, tests, lifecycle changes, credentials, prompt changes, and voice-provider selection together. Tenant access metadata returned by the API is authoritative; mobile must use the selected tenant's `configure` permission to expose management UI and must not infer tenant configuration permission from an inventory role label.
+
+The administrative provider-profile readiness query requires tenant configuration permission and therefore must not be used as a prerequisite that prevents an otherwise authorized non-configurer from starting voice. Ordinary voice callers must rely on the safe realtime-session startup result or a future separately specified non-administrative availability contract. Mobile may show administrative readiness in Settings only to tenant configurators.
+
+Mobile must not mix an `Add` action into a segmented control that otherwise switches between setup and profile subviews. Profile creation belongs in a clearly labeled navigation-bar or list action from the advanced provider-profile inventory. Profile detail must group configuration, credential status, test state, and lifecycle actions without presenting credential replacement, prompt editing, enable or disable, archive, and testing as an undifferentiated action grid.
+
+The mobile profile-creation flow must communicate the server contract that the disabled profile record is created before credential replacement. After record creation, the UI must describe the profile as a draft until credentials, testing, enablement, and selection are complete. Leaving the credential step must not imply that profile creation was canceled; it must offer a clear path to keep or archive the draft.
+
+Provider credential and prompt editing must use dedicated stack or native sheet forms with persistent labels and explicit Save and Cancel actions. Repeated controls must include the affected profile and slot in their accessibility labels. Test and save results must use the shared mobile feedback surface and update durable safe status metadata on refresh.
+
+Voice setup, provider inventory, profile detail, creation, credential editing, and prompt editing must support the full Dynamic Type range. At accessibility sizes, slot headers, readiness, facts, choices, and actions must stack; primary labels must not be clipped or broken into unreadable fragments; and every interactive target must remain at least 44 by 44 points.
+
 ## Provider Testing
 
 Provider profile test operations must run through provider ports and adapters.

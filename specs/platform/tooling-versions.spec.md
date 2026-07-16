@@ -33,6 +33,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo development client for local physical-device SDK 55 testing: `expo-dev-client 55.0.35`.
 - Expo Metro runtime for Expo Router: `@expo/metro-runtime 55.0.11`.
 - Expo Linking for Expo Router: `expo-linking 55.0.15`.
+- Expo Clipboard for one-time mobile invitation-link copy actions: `expo-clipboard 55.0.13`.
 - Expo Constants for Expo Router: `expo-constants 55.0.16`.
 - Expo Audio for mobile voice recording and playback: `expo-audio 55.0.14`.
 - Expo FileSystem for mobile durable connection profile storage: `expo-file-system 55.0.22`.
