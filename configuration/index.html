@@ -358,7 +358,17 @@ SQLite file mount explicitly.</p>
 
 
 
-<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT</code></td><td><code dir="auto">25</code></td><td>Authorization outbox events claimed per drain.</td></tr><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL</code></td><td><code dir="auto">10s</code></td><td>Background authorization outbox drain interval.</td></tr><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE</code></td><td><code dir="auto">30s</code></td><td>Lease duration for claimed authorization outbox events.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_LIMIT</code></td><td><code dir="auto">25</code></td><td>Blob-deletion outbox events claimed per drain.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL</code></td><td><code dir="auto">10s</code></td><td>Background blob-deletion outbox drain interval.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE</code></td><td><code dir="auto">30s</code></td><td>Lease duration for claimed blob-deletion outbox events.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS</code></td><td><code dir="auto">5</code></td><td>Attempts before blob-deletion work is treated as terminal.</td></tr><tr><td><code dir="auto">STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS</code></td><td><code dir="auto">900</code></td><td>Seconds before stored import source credentials are considered expired.</td></tr><tr><td><code dir="auto">STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS</code></td><td><code dir="auto">60</code></td><td>Seconds between background cleanup passes for expired import source credentials.</td></tr><tr><td><code dir="auto">STUFF_STASH_INVITATION_TTL</code></td><td><code dir="auto">168h</code></td><td>Default inventory invitation token lifetime.</td></tr><tr><td><code dir="auto">STUFF_STASH_DEFAULT_PAGE_LIMIT</code></td><td><code dir="auto">50</code></td><td>Default API collection page size.</td></tr><tr><td><code dir="auto">STUFF_STASH_MAX_PAGE_LIMIT</code></td><td><code dir="auto">100</code></td><td>Maximum accepted API collection page size.</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Default</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_LIMIT</code></td><td><code dir="auto">25</code></td><td>Authorization outbox events claimed per drain.</td></tr><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_DRAIN_INTERVAL</code></td><td><code dir="auto">10s</code></td><td>Background authorization outbox drain interval.</td></tr><tr><td><code dir="auto">STUFF_STASH_AUTHORIZATION_OUTBOX_CLAIM_LEASE</code></td><td><code dir="auto">30s</code></td><td>Lease duration for claimed authorization outbox events.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_LIMIT</code></td><td><code dir="auto">25</code></td><td>Blob-deletion outbox events claimed per drain.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_DRAIN_INTERVAL</code></td><td><code dir="auto">10s</code></td><td>Background blob-deletion outbox drain interval.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_CLAIM_LEASE</code></td><td><code dir="auto">30s</code></td><td>Lease duration for claimed blob-deletion outbox events.</td></tr><tr><td><code dir="auto">STUFF_STASH_BLOB_DELETION_OUTBOX_MAX_ATTEMPTS</code></td><td><code dir="auto">5</code></td><td>Attempts before blob-deletion work is treated as terminal.</td></tr><tr><td><code dir="auto">STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS</code></td><td><code dir="auto">900</code></td><td>Seconds before stored import source credentials are considered expired.</td></tr><tr><td><code dir="auto">STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS</code></td><td><code dir="auto">60</code></td><td>Seconds between background cleanup passes for expired import source credentials.</td></tr><tr><td><code dir="auto">STUFF_STASH_INVITATION_TTL</code></td><td><code dir="auto">168h</code></td><td>Default inventory invitation token lifetime.</td></tr><tr><td><code dir="auto">STUFF_STASH_INVITATION_PUBLIC_BASE_URL</code></td><td>empty</td><td>Public web URL used to create clickable inventory invitation links. Required to create invitations; use HTTPS outside explicit local development.</td></tr><tr><td><code dir="auto">STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP</code></td><td><code dir="auto">false</code></td><td>Allows a loopback or private RFC 1918 LAN HTTP invitation URL for explicit local development only. Do not enable in deployed environments.</td></tr><tr><td><code dir="auto">STUFF_STASH_DEFAULT_PAGE_LIMIT</code></td><td><code dir="auto">50</code></td><td>Default API collection page size.</td></tr><tr><td><code dir="auto">STUFF_STASH_MAX_PAGE_LIMIT</code></td><td><code dir="auto">100</code></td><td>Maximum accepted API collection page size.</td></tr></tbody></table>
 <div class="sl-heading-wrapper level-h2"><h2 id="api-media-storage">API: Media Storage</h2><a class="sl-anchor-link" href="#api-media-storage"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “API: Media Storage”</span></a></div>
 
 
@@ -603,7 +613,42 @@ These Expo public variables are optional development defaults only.</p>
 
 
 
-<table><thead><tr><th>Variable</th><th>Required</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_API_BASE_URL</code></td><td>no</td><td>Optional API base URL seed shown on first launch.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_TENANT_ID</code></td><td>no</td><td>Optional initial tenant selection hint.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED</code></td><td>no</td><td>Enables mobile voice developer diagnostics.</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Required</th><th>Purpose</th></tr></thead><tbody><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_API_BASE_URL</code></td><td>no</td><td>Optional API base URL seed shown on first launch.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_TENANT_ID</code></td><td>no</td><td>Optional initial tenant selection hint.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED</code></td><td>no</td><td>Enables mobile voice developer diagnostics.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN</code></td><td>production links</td><td>HTTPS web origin whose <code dir="auto">/invitations/accept</code> links open in an installed mobile build. Production EAS builds require it; local builds may omit it and use the custom scheme.</td></tr><tr><td><code dir="auto">EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP</code></td><td>no</td><td>Explicitly permits a configured loopback or private RFC 1918 HTTP invitation origin in non-production builds for browser acceptance from local devices.</td></tr><tr><td><code dir="auto">STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS</code></td><td>no</td><td>Set to <code dir="auto">true</code> in any non-EAS release pipeline that must include invitation universal/app links. The build fails if the invitation origin is missing.</td></tr></tbody></table>
+<p>The web server publishes the platform association documents at
+<code dir="auto">/.well-known/apple-app-site-association</code> and <code dir="auto">/.well-known/assetlinks.json</code>.
+Set <code dir="auto">STUFF_STASH_MOBILE_IOS_APP_ID</code> to the built app’s Team ID and bundle ID,
+and set <code dir="auto">STUFF_STASH_MOBILE_ANDROID_SHA256_CERT_FINGERPRINT</code> to the SHA-256
+fingerprint of the certificate that signs the Android build. Both signing
+identities are deployment-specific. When an iOS App ID or Android fingerprint is
+not configured, the server publishes an empty relationship for that platform,
+so it leaves web links in the browser instead of claiming an identity that cannot
+be verified.</p>
+<p>The mobile invitation origin must use standard HTTPS on port 443 and must match
+the origin used in generated invitation links for verified native app linking.
+Associated domains cannot encode a custom port. With the explicit insecure-local
+switch, a non-production build may trust loopback or private RFC 1918 HTTP for
+browser acceptance, but it emits no iOS associated-domain or Android verified
+app-link declaration. The default self-host <code dir="auto">:8081</code> origin is suitable for browser
+and local custom-scheme testing; put the web service on standard HTTPS (directly or
+through a reverse proxy) before building a mobile app that claims its links.
+Apple must also be able to retrieve the association document over publicly
+trusted HTTPS. Private hostnames and self-signed certificates are appropriate
+for custom-scheme development, not production universal-link verification.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="docs-build-config">Docs Build Config</h2><a class="sl-anchor-link" href="#docs-build-config"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Docs Build Config”</span></a></div>
 
 
