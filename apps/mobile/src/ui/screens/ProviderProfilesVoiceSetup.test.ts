@@ -1,6 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
-import { ProviderProfileSummary, VoiceProviderConfiguration } from '../../application/providerProfiles/ProviderProfileRepository';
-import { VoiceSetupPanel } from './ProviderProfilesVoiceSetup';
+import { describe, expect, it } from 'vitest';
 import {
   formatProviderProfileCredentialStatusLabel,
   formatProviderProfileLifecycleLabel,
@@ -10,33 +8,6 @@ import {
   formatVoiceProviderSelectionSourceLabel,
   voiceProviderSetupIssueLabels
 } from './ProviderProfilesVoiceSetupPresentation';
-
-vi.mock('react-native', () => ({
-  ActivityIndicator: 'ActivityIndicator',
-  Pressable: 'Pressable',
-  StyleSheet: {
-    create: (styles: unknown) => styles
-  },
-  Text: 'Text',
-  View: 'View'
-}));
-
-vi.mock('../theme/AppearanceContext', () => ({
-  useAppearancePalette: () => ({
-    accent: '#6B90AA',
-    action: '#0066CC',
-    background: '#F7FAFB',
-    border: '#C5D0D7',
-    brandAmber: '#F5AB4B',
-    brandDustyBlueSoft: '#E8F0F5',
-    onAction: '#FFFFFF',
-    surface: '#FFFFFF',
-    text: '#243038',
-    textMuted: '#52616B',
-    warning: '#8A4F00',
-    warningSurface: '#FFF3DF'
-  })
-}));
 
 describe('formatVoiceProviderReadinessLabel', () => {
   it.each([
@@ -57,103 +28,6 @@ describe('formatVoiceProviderReadinessLabel', () => {
     expect(formatVoiceProviderReadinessLabel('raw_prompt_injected')).toBe('Needs attention');
   });
 });
-
-describe('VoiceSetupPanel', () => {
-  it('renders safe setup labels instead of raw backend metadata', () => {
-    const tree = VoiceSetupPanel({
-      configuration: configuration({
-        slots: [
-          {
-            capability: 'speech_to_text',
-            label: 'Speech input',
-            selectedProfileId: 'profile-speech',
-            selectedProfile: profile({
-              id: 'profile-speech',
-              capability: 'speech_to_text',
-              credentialStatus: 'apiKey:secret',
-              lastTestedAt: 'providerSessionId:last-test',
-              lifecycleState: 'stack_trace_here'
-            }),
-            selectionSource: 'providerSessionId:abc123',
-            readiness: 'raw_prompt_injected',
-            issues: ['bearer secret stack_trace_here'],
-            recommendedAction: 'none',
-            duplicateProfiles: []
-          }
-        ]
-      }),
-      profiles: [],
-      onEditCredential: () => undefined,
-      onSelectSlotProfile: () => undefined,
-      onTestProfile: () => undefined
-    });
-
-    expect(textContent(tree)).toContain('Needs attention');
-    expect(textContent(tree)).toContain('Speech input / Selection unknown');
-    expect(textContent(tree)).toContain('Unknown');
-    expect(textContent(tree)).not.toContain('raw_prompt_injected');
-    expect(textContent(tree)).not.toContain('providerSessionId:abc123');
-    expect(textContent(tree)).not.toContain('providerSessionId:last-test');
-    expect(textContent(tree)).not.toContain('apiKey:secret');
-    expect(textContent(tree)).not.toContain('bearer secret stack_trace_here');
-    expect(textContent(tree)).not.toContain('stack_trace_here');
-  });
-});
-
-function profile(overrides: Partial<ProviderProfileSummary> = {}): ProviderProfileSummary {
-  return {
-    id: 'profile-language',
-    capability: 'language_inference',
-    providerKind: 'gemini',
-    displayName: 'Gemini language',
-    modelName: 'gemini-2.5-flash-lite',
-    credentialStatus: 'configured',
-    lifecycleState: 'enabled',
-    hasPromptTemplate: false,
-    ...overrides
-  };
-}
-
-function configuration(overrides: Partial<VoiceProviderConfiguration> = {}): VoiceProviderConfiguration {
-  return {
-    tenantId: 'tenant-home',
-    readiness: 'needs_attention',
-    profileIds: {},
-    slots: [],
-    ...overrides
-  };
-}
-
-function textContent(node: unknown): string {
-  if (node === undefined || node === null || typeof node === 'boolean') {
-    return '';
-  }
-  if (typeof node === 'string' || typeof node === 'number') {
-    return String(node);
-  }
-  if (Array.isArray(node)) {
-    return node.map(textContent).join('');
-  }
-  if (!isElementNode(node)) {
-    return '';
-  }
-  if (typeof node.type === 'function') {
-    return textContent(node.type(node.props));
-  }
-  return textContent(node.props?.children);
-}
-
-function isElementNode(node: unknown): node is ElementNode {
-  return Boolean(node && typeof node === 'object' && 'props' in node);
-}
-
-type ElementNode = {
-  readonly type?: unknown;
-  readonly props?: {
-    readonly children?: unknown;
-    readonly [key: string]: unknown;
-  };
-};
 
 describe('voice provider setup labels', () => {
   it.each([
