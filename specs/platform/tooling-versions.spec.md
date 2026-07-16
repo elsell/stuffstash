@@ -124,6 +124,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Container image overrides must still be pinned with `@sha256:`.
 - New tools must be added here before use.
 - Tooling changes must be atomic conventional commits.
+- The Go structural checker must inspect GORM adapter source with the Go AST and reject string-literal query fragments passed as the first argument to `Where`, `Order`, or `Joins`. This rule is scoped to `apps/api/internal/adapters/gormstore/*.go` so unrelated methods with the same names are not rejected.
 - Generated artifacts must include drift checks once generation is introduced.
 - Release version planning must be done by repository-owned scripts using Conventional Commit messages and SemVer. Do not add external release automation dependencies for version calculation.
 - A release commit on `main` must only create a new tag and GitHub release when commits since the last SemVer tag require a release.
