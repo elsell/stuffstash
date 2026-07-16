@@ -81,6 +81,21 @@ The first local web client must be a public OIDC client:
   opt-in through local environment variables or generated ignored local config;
   personal LAN IPs must not be committed to tracked runtime config or Dex
   fixture files.
+- When the Vite development server receives a runtime-config request through a
+  private LAN IP, it must derive the browser-facing web, API, and Dex origins
+  from that request if no explicit development origin or per-service override
+  is configured. This keeps the OIDC authorization request and callback on the
+  same browser origin without committing a personal LAN address. Loopback and
+  untrusted hostnames must keep the tracked runtime defaults, and explicit
+  environment overrides must always win. This request-derived behavior is a
+  development-server convenience only; mounted production runtime
+  configuration remains authoritative.
+  Request-derived trust is limited to canonical dotted-decimal IPv4 hosts in
+  RFC 1918 space or `169.254.0.0/16`, with an optional canonical decimal port.
+  The raw Host header must be validated before URL parsing. Abbreviated,
+  integer, hexadecimal, octal-like, credential-bearing, path/query-bearing,
+  malformed-port, out-of-range, loopback, public, and IPv6 forms—including
+  IPv6 loopback, ULA, and link-local—must fail closed to the tracked defaults.
 
 For local browser development, the API must be configured to trust the same issuer and client ID as the browser flow. The local development topology may run infrastructure in Docker while running the API and web dev server as host processes when that is the simplest way to make issuer discovery work for both browser and API verifier.
 
