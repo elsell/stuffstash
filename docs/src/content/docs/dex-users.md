@@ -47,12 +47,14 @@ The bundled web client is public and needs no secret. Keep these values aligned:
 ```
 
 ```text
+STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-web-local
 STUFF_STASH_WEB_OIDC_CLIENT_ID=stuff-stash-web-local
-STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-web-local
+STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-web-local,stuff-stash-mobile-local
 ```
 
 Remove the example confidential client, or replace its known secret. Add mobile
-or other client IDs only when matching clients exist in Dex.
+or other client IDs only when matching clients exist in Dex. Keep
+`stuff-stash-mobile-local` when the bundled mobile client remains enabled.
 
 For LAN hostname changes, follow [Use Stuff Stash On Your
 LAN](../self-host-operations/#use-stuff-stash-on-your-lan).
@@ -60,6 +62,7 @@ LAN](../self-host-operations/#use-stuff-stash-on-your-lan).
 ## 4. Apply And Test
 
 ```sh
+docker compose -f compose.selfhost.yaml down
 ./scripts/selfhost-preflight.sh
 docker compose -f compose.selfhost.yaml up -d
 ```

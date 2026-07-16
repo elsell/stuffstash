@@ -72,6 +72,7 @@ root.
 3. Run the strict check, then restart:
 
 ```sh
+docker compose -f compose.selfhost.yaml down
 ./scripts/selfhost-preflight.sh
 docker compose -f compose.selfhost.yaml up -d
 ```
@@ -92,13 +93,20 @@ OIDC discovery requires a DNS hostname. A raw LAN IP is unsupported.
    when the server address is not stable.
 3. Make the same hostname changes in your private Dex config.
 4. Allow TCP ports `8081`, `8080`, `5556`, and `3900` through the server firewall.
-5. Run `./scripts/selfhost-preflight.sh`, restart, and trust the Caddy root on
-   each client device.
+5. Stop, check, and start the stack:
+
+```sh
+docker compose -f compose.selfhost.yaml down
+./scripts/selfhost-preflight.sh
+docker compose -f compose.selfhost.yaml up -d
+```
+
+Trust the Caddy root on each client device.
 
 The default bind address is `127.0.0.1`, so a new install is reachable only from
 the server itself.
 
-## Back Up
+## What To Back Up
 
 Back up `.env`, your private Dex config, and these Docker volumes together:
 
@@ -116,16 +124,23 @@ backup.
 
 ## Upgrade
 
-1. Back up the deployment.
+1. Make a cold backup of the files and volumes listed above.
 2. In an empty directory, download and verify the latest release bundle using
    the commands in [Download](../self-hosting/#1-download).
-3. Move your `.env` and private Dex config into the new bundle directory.
-4. Run `./scripts/selfhost-preflight.sh`.
-5. From the old directory, run `docker compose -f compose.selfhost.yaml down`.
-6. From the new directory, run `docker compose -f compose.selfhost.yaml up -d`.
+3. Copy the new `.env.example` to `.env`, then carry forward your changed values
+   from the old `.env`. Move the private Dex config too. Do not overwrite the
+   new example wholesale; a release may add required settings.
+4. From the old directory, run `docker compose -f compose.selfhost.yaml down`.
+5. From the new directory, run `./scripts/selfhost-preflight.sh`.
+6. Run `docker compose -f compose.selfhost.yaml up -d`.
 
 The Compose project name is fixed, so the new bundle reuses the existing data
 volumes. Check the app and an uploaded image after every upgrade.
+
+:::caution[Rollback needs the backup]
+Database migrations may not run backward. Restore the pre-upgrade volumes before
+starting the previous bundle.
+:::
 
 ## Remove Everything
 

@@ -9,8 +9,8 @@ SpiceDB, Garage, and the web app. You need Docker with Compose and `curl`.
 ## 1. Download
 
 ```sh
-curl -LO https://github.com/elsell/stuffstash/releases/latest/download/stuffstash-selfhost.tar.gz
-curl -LO https://github.com/elsell/stuffstash/releases/latest/download/stuffstash-selfhost.tar.gz.sha256
+curl -fLO https://github.com/elsell/stuffstash/releases/latest/download/stuffstash-selfhost.tar.gz
+curl -fLO https://github.com/elsell/stuffstash/releases/latest/download/stuffstash-selfhost.tar.gz.sha256
 sha256sum -c stuffstash-selfhost.tar.gz.sha256
 tar -xzf stuffstash-selfhost.tar.gz
 cd stuffstash-selfhost
@@ -35,16 +35,15 @@ Trial mode allows the example users and secrets. It is only for evaluation.
 docker compose -f compose.selfhost.yaml up -d
 ```
 
-Open [https://stuffstash.localhost:8081](https://stuffstash.localhost:8081), then
-sign in:
+Before opening the app, [trust Caddy's local certificate
+authority](../self-host-operations/#trust-the-local-certificate). Then open
+[https://stuffstash.localhost:8081](https://stuffstash.localhost:8081) and sign
+in:
 
 ```text
 Email: owner@example.com
 Password: password
 ```
-
-If the browser rejects the local certificate, follow
-[Trust The Local Certificate](../self-host-operations/#trust-the-local-certificate).
 
 :::caution[Before adding household data]
 Replace the example [Dex users and clients](../dex-users/) and complete the
