@@ -14,8 +14,7 @@ describe('workspace route recovery presentation', () => {
   it('derives no-inventory setup and denied presentation', () => {
     expect(workspaceNoInventoryPresentation('tenant-home', true)).toEqual({
       title: 'No inventory yet',
-      message: 'Create the first inventory for this tenant.',
-      actionLabel: 'Create Household'
+      message: 'Create the first inventory for this tenant.'
     });
     expect(workspaceNoInventoryPresentation(null, true).message).toBe('Create your first tenant and inventory.');
     expect(workspaceNoInventoryPresentation('tenant-home', false)).toEqual({

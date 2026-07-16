@@ -123,7 +123,11 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     browseSurface: parseBrowseSurface(url.searchParams.get('surface')),
     browseScope: parseBrowseScope(url.searchParams.get('scope')),
     browseSort: parseBrowseSort(url.searchParams.get('sort')),
-    browseTagIds: Array.from(new Set(url.searchParams.getAll('tag').map((id) => id.trim()).filter(Boolean)))
+    browseTagIds: Array.from(new Set(
+      [...url.searchParams.getAll('tag'), ...url.searchParams.getAll('tagId')]
+        .map((id) => id.trim())
+        .filter(Boolean)
+    ))
   };
 
   if (segments.length === 0) {

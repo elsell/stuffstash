@@ -94,7 +94,6 @@
 
   export type RouteContentHandlers = {
     onHome: (event: MouseEvent) => void;
-    onCreateStarterInventory: () => Promise<void>;
     onOpenLocation: (asset: Asset) => void;
     onOpenLocations?: () => void;
     onBrowseStateChange: (state: {
@@ -208,9 +207,6 @@
     <div class="empty-state spacious">
       <h1>{noInventoryPresentation.title}</h1>
       <p>{noInventoryPresentation.message}</p>
-      {#if noInventoryPresentation.actionLabel}
-        <Button.Root onclick={() => { void handlers.onCreateStarterInventory(); }}>{noInventoryPresentation.actionLabel}</Button.Root>
-      {/if}
     </div>
   </section>
 {:else if route.assetDetailLoading}

@@ -23,6 +23,8 @@
     disableAccountPortal = false,
     onSelectTenant,
     onSelectInventory,
+    onCreateTenantWithInventory,
+    onCreateInventory,
     onModeChange,
     onOpenAccountSettings,
     onSignOut
@@ -37,6 +39,8 @@
     disableAccountPortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
+    onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onModeChange: (mode: WorkspaceMode) => void;
     onOpenAccountSettings: () => void;
     onSignOut: () => void;
@@ -87,6 +91,8 @@
     {selectedInventoryId}
     {onSelectTenant}
     {onSelectInventory}
+    {onCreateTenantWithInventory}
+    {onCreateInventory}
   />
 
   <nav class="side-nav-groups" aria-label="Inventory destinations">

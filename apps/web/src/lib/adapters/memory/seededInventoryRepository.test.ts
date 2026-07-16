@@ -471,11 +471,11 @@ describe('SeededInventoryRepository tenant selection', () => {
     await repository.createInventory(createdTenantId, 'Attic');
     const tenantAudit = await repository.listTenantAuditRecords(createdTenantId);
 
-    expect(tenantAudit.items.map((record) => record.action)).toEqual(['inventory.created', 'inventory.created', 'tenant.created']);
+    expect(tenantAudit.items.map((record) => record.action)).toEqual(['tenant.created']);
     expect(tenantAudit.items[0]).toMatchObject({
       tenantId: createdTenantId,
-      action: 'inventory.created',
-      targetType: 'inventory'
+      action: 'tenant.created',
+      targetType: 'tenant'
     });
   });
 

@@ -19,6 +19,8 @@
     disablePortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
+    onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onModeChange: (mode: WorkspaceMode) => void;
     onSearch: () => void;
     onOpenSearchAsset: (asset: Asset) => void;
@@ -52,6 +54,8 @@
     disablePortal = false,
     onSelectTenant,
     onSelectInventory,
+    onCreateTenantWithInventory,
+    onCreateInventory,
     onModeChange,
     onSearch,
     onOpenSearchAsset,
@@ -75,6 +79,8 @@
     {userLabel}
     {onSelectTenant}
     {onSelectInventory}
+    {onCreateTenantWithInventory}
+    {onCreateInventory}
     {onModeChange}
     {onOpenAccountSettings}
     {onSignOut}
@@ -94,6 +100,8 @@
       showSearch={mode !== 'browse'}
       {onSelectTenant}
       {onSelectInventory}
+      {onCreateTenantWithInventory}
+      {onCreateInventory}
       {onSearch}
       onOpenAsset={onOpenSearchAsset}
       {onOpenAdd}

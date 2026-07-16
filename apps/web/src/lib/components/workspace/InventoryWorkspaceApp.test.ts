@@ -537,6 +537,77 @@ afterEach(() => {
 });
 
 describe('InventoryWorkspaceApp route application', () => {
+  it('guides a new user through naming the first tenant and inventory', async () => {
+    await mountWorkspace('/', new SeededInventoryRepository({
+      principal: { id: 'principal-one', email: 'owner@example.test' },
+      tenants: [],
+      inventories: [],
+      customAssetTypes: [],
+      customFieldDefinitions: [],
+      assets: []
+    }));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Set up your workspace');
+    });
+
+    inputWithLabel('Tenant name').value = ' Cabin ';
+    inputWithLabel('Tenant name').dispatchEvent(new Event('input', { bubbles: true }));
+    inputWithLabel('Inventory name').value = ' Tools ';
+    inputWithLabel('Inventory name').dispatchEvent(new Event('input', { bubbles: true }));
+    buttonContaining('Create workspace').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toMatch(/^\/tenants\/tenant-\d+\/inventories\/inventory-\d+$/);
+      expect(document.body.textContent).toContain('Tools');
+      expect(document.body.textContent).toContain('Cabin');
+    });
+  });
+
+  it('guides a user through naming the first inventory for an existing tenant', async () => {
+    await mountWorkspace('/', new SeededInventoryRepository({
+      principal: { id: 'principal-one', email: 'owner@example.test' },
+      tenants: [{ id: 'tenant-empty', name: 'Cabin', access: { relationship: 'owner', permissions: ['view', 'create_inventory'] } }],
+      inventories: [],
+      customAssetTypes: [],
+      customFieldDefinitions: [],
+      assets: []
+    }));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Create an inventory');
+      expect(document.body.textContent).toContain('Name the first inventory for Cabin.');
+      expect(document.body.textContent).not.toContain('Tenant name');
+    });
+
+    inputWithLabel('Inventory name').value = ' Tools ';
+    inputWithLabel('Inventory name').dispatchEvent(new Event('input', { bubbles: true }));
+    buttonContaining('Create inventory').click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toMatch(/^\/tenants\/tenant-empty\/inventories\/inventory-\d+$/);
+      expect(document.body.textContent).toContain('Tools');
+    });
+  });
+
+  it('shows the no-inventory denied state when the selected tenant cannot create inventories', async () => {
+    await mountWorkspace('/', new SeededInventoryRepository({
+      principal: { id: 'principal-one', email: 'viewer@example.test' },
+      tenants: [{ id: 'tenant-viewer', name: 'Shared', access: { relationship: 'viewer', permissions: ['view'] } }],
+      inventories: [],
+      customAssetTypes: [],
+      customFieldDefinitions: [],
+      assets: []
+    }));
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('No inventory yet');
+      expect(document.body.textContent).toContain('You can view this tenant, but you cannot create inventories in it.');
+      expect(document.body.textContent).not.toContain('Create workspace');
+      expect(document.body.textContent).not.toContain('Create inventory');
+    });
+  });
+
   it('normalizes the authenticated root workspace to the selected inventory URL', async () => {
     await mountWorkspace('/');
 
@@ -2297,6 +2368,19 @@ describe('InventoryWorkspaceApp route application', () => {
     expect(savedAssets).toHaveLength(1);
   });
 });
+
+function inputWithLabel(label: string): HTMLInputElement {
+  const labels = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label'));
+  const match = labels.find((candidate) => candidate.textContent?.includes(label));
+  if (!match?.htmlFor) {
+    throw new Error(`Missing label ${label}`);
+  }
+  const input = document.getElementById(match.htmlFor);
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error(`Missing input for ${label}`);
+  }
+  return input;
+}
 
 function setInputValue(input: HTMLInputElement, value: string): void {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;

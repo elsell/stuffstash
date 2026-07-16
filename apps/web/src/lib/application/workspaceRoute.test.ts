@@ -48,17 +48,18 @@ describe('workspace route state', () => {
     );
 
     const searchAlias = parseWorkspaceRoute(
-      new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&checkout=checked_out')
+      new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&tagId=tag_tools&tagId=tag_camping&lifecycle=all&checkout=checked_out')
     );
     expect(searchAlias).toMatchObject({
       mode: 'browse',
       searchQuery: 'drill',
+      browseTagIds: ['tag_tools', 'tag_camping'],
       searchLifecycleState: 'all',
       searchCheckoutState: 'checked_out',
       compatibilityAlias: true
     });
     expect(workspaceRouteHref(searchAlias, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/browse?q=drill&lifecycle=all&availability=checked_out'
+      '/tenants/tenant_1/inventories/inv_1/browse?q=drill&tag=tag_tools&tag=tag_camping&lifecycle=all&availability=checked_out'
     );
     expectTypeOf<Extract<WorkspaceMode, 'search' | 'locations'>>().toEqualTypeOf<never>();
   });

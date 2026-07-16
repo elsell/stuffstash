@@ -5,6 +5,10 @@
   import Check from '@lucide/svelte/icons/check';
   import Package from '@lucide/svelte/icons/package';
   import {
+    validateWorkspaceSetupDraft,
+    type WorkspaceSetupMode
+  } from '$lib/application/workspaceOnboarding';
+  import {
     contextSwitcherPresentation,
     inventoryContextOptions,
     tenantContextOptions,
@@ -13,7 +17,9 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Popover from '$lib/components/ui/popover/index.js';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
-  import type { Inventory, Tenant } from '$lib/domain/inventory';
+  import { Input } from '$lib/components/ui/input/index.js';
+  import { Label } from '$lib/components/ui/label/index.js';
+  import { canCreateInventory, type Inventory, type Tenant } from '$lib/domain/inventory';
   import { cn } from '$lib/utils.js';
 
   let {
@@ -25,6 +31,8 @@
     disablePortal = false,
     onSelectTenant,
     onSelectInventory,
+    onCreateTenantWithInventory,
+    onCreateInventory,
     onOpenChange: notifyOpenChange
   }: {
     tenants: Tenant[];
@@ -35,16 +43,27 @@
     disablePortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
+    onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
+    onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onOpenChange?: (open: boolean) => void;
   } = $props();
 
   let open = $state(false);
   let showingTenants = $state(false);
+  let createMode = $state<WorkspaceSetupMode | null>(null);
+  let tenantDraft = $state('');
+  let inventoryDraft = $state('');
+  let tenantError = $state('');
+  let inventoryError = $state('');
+  let createError = $state('');
+  let creating = $state(false);
   let selectedTenant = $derived(tenants.find((tenant) => tenant.id === selectedTenantId) ?? null);
   let selectedInventory = $derived(inventories.find((inventory) => inventory.id === selectedInventoryId) ?? null);
   let tenantOptions = $derived(tenantContextOptions({ tenants, inventories, selectedTenantId }));
   let inventoryOptions = $derived(inventoryContextOptions({ tenants, inventories, selectedTenantId, selectedInventoryId }));
   let presentation = $derived(contextSwitcherPresentation({ selectedTenant, selectedInventory }));
+  let canCreateInventoryInSelectedTenant = $derived(Boolean(selectedTenant && canCreateInventory(selectedTenant) && onCreateInventory));
+  let canCreateTenant = $derived(Boolean(onCreateTenantWithInventory));
 
   let panelElement: HTMLDivElement | null = $state(null);
   let lastFocusedTenantId = $state(initialSelectedTenantId());
@@ -65,6 +84,7 @@
     notifyOpenChange?.(nextOpen);
     if (!nextOpen) {
       showingTenants = false;
+      resetCreateForm();
     }
   }
 
@@ -83,6 +103,7 @@
   function chooseTenant(tenantId: string): void {
     const tenantAlreadySelected = tenantId === selectedTenantId;
     showingTenants = false;
+    resetCreateForm();
     onSelectTenant(tenantId);
     if (tenantAlreadySelected) {
       void focusPanel();
@@ -105,6 +126,70 @@
       mobileTrigger && 'mobile-context-trigger'
     );
   }
+
+  function openInventoryCreate(): void {
+    createMode = 'inventory';
+    showingTenants = false;
+    tenantDraft = '';
+    inventoryDraft = '';
+    clearCreateErrors();
+    void focusPanel();
+  }
+
+  function openTenantCreate(): void {
+    createMode = 'tenant_and_inventory';
+    showingTenants = false;
+    tenantDraft = '';
+    inventoryDraft = '';
+    clearCreateErrors();
+    void focusPanel();
+  }
+
+  function cancelCreate(): void {
+    resetCreateForm();
+    void focusPanel();
+  }
+
+  async function submitCreate(): Promise<void> {
+    if (!createMode) {
+      return;
+    }
+    const validation = validateWorkspaceSetupDraft(createMode, { tenantName: tenantDraft, inventoryName: inventoryDraft });
+    tenantError = validation.tenantError;
+    inventoryError = validation.inventoryError;
+    createError = '';
+    if (!validation.valid) {
+      return;
+    }
+    creating = true;
+    try {
+      if (createMode === 'tenant_and_inventory') {
+        await onCreateTenantWithInventory?.({ tenantName: validation.tenantName, inventoryName: validation.inventoryName });
+      } else if (selectedTenant) {
+        await onCreateInventory?.(selectedTenant.id, validation.inventoryName);
+      }
+      handleOpenChange(false);
+    } catch (caught) {
+      createError = caught instanceof Error ? caught.message : 'Could not create workspace.';
+    } finally {
+      creating = false;
+    }
+  }
+
+  function clearCreateErrors(): void {
+    tenantError = '';
+    inventoryError = '';
+    createError = '';
+  }
+
+  function resetCreateForm(): void {
+    createMode = null;
+    tenantDraft = '';
+    inventoryDraft = '';
+    clearCreateErrors();
+    creating = false;
+  }
+
 </script>
 
 {#snippet trigger()}
@@ -128,7 +213,37 @@
         {/if}
       </div>
 
-      {#if showingTenants}
+      {#if createMode}
+        <form class="context-create-form" onsubmit={(event) => { event.preventDefault(); void submitCreate(); }}>
+          {#if createMode === 'tenant_and_inventory'}
+            <div class="field-stack">
+              <Label for="context-tenant-name">Tenant name</Label>
+              <Input
+                id="context-tenant-name"
+                bind:value={tenantDraft}
+                aria-invalid={tenantError ? 'true' : undefined}
+                aria-describedby={tenantError ? 'context-tenant-error' : undefined}
+              />
+              {#if tenantError}<p id="context-tenant-error" class="field-error">{tenantError}</p>{/if}
+            </div>
+          {/if}
+          <div class="field-stack">
+            <Label for="context-inventory-name">Inventory name</Label>
+            <Input
+              id="context-inventory-name"
+              bind:value={inventoryDraft}
+              aria-invalid={inventoryError ? 'true' : undefined}
+              aria-describedby={inventoryError ? 'context-inventory-error' : undefined}
+            />
+            {#if inventoryError}<p id="context-inventory-error" class="field-error">{inventoryError}</p>{/if}
+          </div>
+          {#if createError}<p class="form-error" role="alert">{createError}</p>{/if}
+          <div class="context-create-actions">
+            <Button.Root type="button" variant="ghost" onclick={cancelCreate}>Cancel</Button.Root>
+            <Button.Root type="submit" disabled={creating}>{creating ? 'Creating...' : createMode === 'tenant_and_inventory' ? 'Create workspace' : 'Create inventory'}</Button.Root>
+          </div>
+        </form>
+      {:else if showingTenants}
         <p class="context-section-label">Tenants</p>
         <div class="context-option-list" aria-label="Tenants">
           {#each tenantOptions as tenant}
@@ -146,6 +261,9 @@
             </Button.Root>
           {/each}
         </div>
+        {#if canCreateTenant}
+          <Button.Root variant="ghost" class="context-create-button" onclick={openTenantCreate}>New tenant</Button.Root>
+        {/if}
       {:else if inventoryOptions.length > 0}
         <p class="context-section-label">Inventories</p>
         <div class="context-option-list" aria-label="Inventories">
@@ -166,8 +284,14 @@
             </Button.Root>
           {/each}
         </div>
+        {#if canCreateInventoryInSelectedTenant}
+          <Button.Root variant="ghost" class="context-create-button" onclick={openInventoryCreate}>New inventory</Button.Root>
+        {/if}
       {:else}
         <p class="muted small-copy">{presentation.emptyInventoryMessage}</p>
+        {#if canCreateInventoryInSelectedTenant}
+          <Button.Root variant="ghost" class="context-create-button" onclick={openInventoryCreate}>New inventory</Button.Root>
+        {/if}
       {/if}
 {/snippet}
 
