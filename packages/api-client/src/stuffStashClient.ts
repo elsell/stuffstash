@@ -43,7 +43,19 @@ export interface InventoryAccessInvitation {
   expiresAt: string;
   inviterPrincipalId: string;
   acceptedPrincipalId?: string;
-  acceptanceToken?: string;
+}
+
+export interface CreatedInventoryAccessInvitation extends InventoryAccessInvitation {
+  inviteUrl: string;
+}
+
+export interface InventoryAccessInvitationPreview {
+  inventoryId: string;
+  inventoryName: string;
+  relationship: InventoryAccessRelationship;
+  status: InvitationStatus;
+  isExpired: boolean;
+  expiresAt: string;
 }
 
 export interface InvitationAcceptance {
@@ -64,6 +76,29 @@ export interface AuditRecord {
   occurredAt: string;
   requestId?: string;
   metadata: Record<string, string>;
+}
+
+export type AssetActivityView = 'changes' | 'all';
+export type AssetActivityCategory = 'change' | 'read';
+
+export interface AssetActivityChange {
+  field: 'title' | 'description' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
+  previousValue?: string;
+  currentValue?: string;
+}
+
+export interface AssetActivityEntry {
+  id: string;
+  principalId: string;
+  principal?: Principal;
+  action: string;
+  category: AssetActivityCategory;
+  source: string;
+  occurredAt: string;
+  requestId?: string;
+  changes: AssetActivityChange[];
+  undo?: { operationId: string; status: 'available' | 'undone' | 'redone' };
+  technicalMetadata: Record<string, string>;
 }
 
 export interface Tenant {
@@ -100,6 +135,7 @@ export interface Asset {
   updatedAt: string;
   primaryPhoto?: AssetPrimaryPhoto;
   currentCheckout?: CurrentCheckout;
+  undoableOperationId?: string;
 }
 
 export interface CompactAssetTag {
@@ -603,8 +639,11 @@ type AttachmentResponse = components['schemas']['AttachmentResponse'];
 type DirectUploadResponse = components['schemas']['DirectUploadResponse'];
 type GrantResponse = components['schemas']['GrantResponse'];
 type InvitationResponse = components['schemas']['InvitationResponse'];
+type CreatedInvitationResponse = components['schemas']['CreatedInvitationResponse'];
 type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceResponse'];
+type InvitationPreviewResponse = components['schemas']['InvitationPreviewResponse'];
 type RecordResponse = components['schemas']['RecordResponse'];
+type AssetActivityResponse = components['schemas']['AssetActivityResponse'];
 type AssetTypeResponse = components['schemas']['AssetTypeResponse'];
 type DefinitionResponse = components['schemas']['DefinitionResponse'];
 type ProviderProfileResponse = components['schemas']['ProviderProfileResponse'];
@@ -1278,7 +1317,7 @@ export class StuffStashClient {
     tenantId: string,
     inventoryId: string,
     input: { email: string; relationship: InventoryAccessRelationship }
-  ): Promise<InventoryAccessInvitation> {
+  ): Promise<CreatedInventoryAccessInvitation> {
     const envelope = await this.unwrap(
       this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations', {
         headers: await this.authHeaders(),
@@ -1286,7 +1325,7 @@ export class StuffStashClient {
         body: input
       })
     );
-    return mapInvitation(envelope.data);
+    return mapCreatedInvitation(envelope.data);
   }
 
   async updateInventoryAccessInvitationExpiration(
@@ -1321,6 +1360,22 @@ export class StuffStashClient {
         params: { path: { tenantId, inventoryId, invitationId } }
       })
     );
+  }
+
+  async previewInventoryAccessInvitation(
+    tenantId: string,
+    inventoryId: string,
+    invitationId: string,
+    acceptanceToken: string
+  ): Promise<InventoryAccessInvitationPreview> {
+    const envelope = await this.unwrap(
+      this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, invitationId } },
+        body: { acceptanceToken }
+      })
+    );
+    return mapInvitationPreview(envelope.data);
   }
 
   async acceptInventoryAccessInvitation(
@@ -1396,6 +1451,26 @@ export class StuffStashClient {
       })
     );
     return mapPage(envelope, mapAuditRecord);
+  }
+
+  async listAssetActivity(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    input: { view?: AssetActivityView; limit?: number; cursor?: string } = {},
+    signal?: AbortSignal
+  ): Promise<Page<AssetActivityEntry>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId, assetId },
+          query: { view: input.view, limit: input.limit, cursor: input.cursor }
+        },
+        signal
+      })
+    );
+    return mapPage(envelope, mapAssetActivity);
   }
 
   async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
@@ -1803,7 +1878,7 @@ function mapGrant(response: GrantResponse): InventoryAccessGrant {
 }
 
 function mapInvitation(response: InvitationResponse): InventoryAccessInvitation {
-  return {
+  const invitation: InventoryAccessInvitation = {
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId,
@@ -1812,9 +1887,24 @@ function mapInvitation(response: InvitationResponse): InventoryAccessInvitation 
     status: mapInvitationStatus(response.status),
     isExpired: response.isExpired,
     expiresAt: response.expiresAt,
-    inviterPrincipalId: response.inviterPrincipalId,
-    acceptedPrincipalId: response.acceptedPrincipalId,
-    acceptanceToken: response.acceptanceToken
+    inviterPrincipalId: response.inviterPrincipalId
+  };
+  if (response.acceptedPrincipalId) invitation.acceptedPrincipalId = response.acceptedPrincipalId;
+  return invitation;
+}
+
+function mapCreatedInvitation(response: CreatedInvitationResponse): CreatedInventoryAccessInvitation {
+  return { ...mapInvitation(response), inviteUrl: response.inviteUrl };
+}
+
+function mapInvitationPreview(response: InvitationPreviewResponse): InventoryAccessInvitationPreview {
+  return {
+    inventoryId: response.inventoryId,
+    inventoryName: response.inventoryName,
+    relationship: mapInventoryAccessRelationship(response.relationship),
+    status: mapInvitationStatus(response.status),
+    isExpired: response.isExpired,
+    expiresAt: response.expiresAt
   };
 }
 
@@ -1842,6 +1932,29 @@ function mapAuditRecord(response: RecordResponse): AuditRecord {
   };
 }
 
+function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
+  return {
+    id: response.id,
+    principalId: response.principalId,
+    principal: response.principal ? mapPrincipal(response.principal) : undefined,
+    action: response.action,
+    category: response.category as AssetActivityCategory,
+    source: response.source,
+    occurredAt: response.occurredAt,
+    requestId: response.requestId,
+    changes: (response.changes ?? []).map((change) => ({
+      field: change.field as AssetActivityChange['field'],
+      previousValue: change.previousValue,
+      currentValue: change.currentValue
+    })),
+    undo: response.undo ? {
+      operationId: response.undo.operationId,
+      status: response.undo.status as 'available' | 'undone' | 'redone'
+    } : undefined,
+    technicalMetadata: response.technicalMetadata ?? {}
+  };
+}
+
 function mapAsset(response: AssetResponse): Asset {
   return {
     id: response.id,
@@ -1858,7 +1971,8 @@ function mapAsset(response: AssetResponse): Asset {
     createdAt: response.createdAt,
     updatedAt: response.updatedAt,
     primaryPhoto: mapAssetPrimaryPhoto(response.primaryPhoto),
-    currentCheckout: mapCurrentCheckout(response.currentCheckout)
+    currentCheckout: mapCurrentCheckout(response.currentCheckout),
+    undoableOperationId: response.undoableOperationId
   };
 }
 

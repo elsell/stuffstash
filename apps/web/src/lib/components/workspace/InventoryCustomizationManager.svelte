@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
-  import { tick } from 'svelte';
   import Shapes from '@lucide/svelte/icons/shapes';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -34,7 +34,7 @@
   import { hasAccessPermission } from '$lib/domain/inventory';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import ChoiceGrid from './ChoiceGrid.svelte';
-  import InventoryCustomizationArchivePanel from './InventoryCustomizationArchivePanel.svelte';
+  import InventoryCustomizationArchivePanel, { customizationArchiveFocusTarget } from './InventoryCustomizationArchivePanel.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
@@ -78,8 +78,8 @@
   let fieldApplicability = $state<CustomFieldApplicability>('all_assets');
   let fieldTargets = $state<string[]>([]);
   let enumOptions = $state('');
-  let archiveConfirmationElement = $state<HTMLElement | null>(null);
-  let lastArchiveRouteKey = $state('');
+  let archiveActionTrigger = $state<HTMLElement | null>(null);
+  let customizationHeading = $state<HTMLHeadingElement | null>(null);
   const fieldTypeOptions = customizationFieldTypeOptions();
   const applicabilityOptions = customizationApplicabilityOptions();
 
@@ -105,13 +105,6 @@
       : null
   );
   let hasArchiveRoute = $derived(archiveAction === 'archive_asset_type' || archiveAction === 'archive_field_definition');
-  let archiveRouteKey = $derived(
-    archiveAction === 'archive_asset_type'
-      ? `${archiveAction}:${archiveAssetTypeId ?? ''}`
-      : archiveAction === 'archive_field_definition'
-        ? `${archiveAction}:${archiveFieldDefinitionId ?? ''}`
-        : ''
-  );
 
   $effect(() => {
     assetTypes = initialAssetTypes;
@@ -129,19 +122,6 @@
     if (!canScope(fieldScope)) {
       selectFieldScope(fallbackScope);
     }
-  });
-
-  $effect(() => {
-    const routeKey = archiveRouteKey;
-    if (!routeKey) {
-      lastArchiveRouteKey = '';
-      return;
-    }
-    if (routeKey === lastArchiveRouteKey) {
-      return;
-    }
-    lastArchiveRouteKey = routeKey;
-    void tick().then(() => archiveConfirmationElement?.focus());
   });
 
   async function createAssetType(): Promise<void> {
@@ -164,7 +144,7 @@
       typeName = '';
       typeDescription = '';
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to create custom asset type.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom asset type could not be created. Try again.');
     } finally {
       busy = false;
     }
@@ -200,14 +180,14 @@
       fieldTargets = [];
       enumOptions = '';
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to create custom field.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom field could not be created. Try again.');
     } finally {
       busy = false;
     }
   }
 
-  async function archiveAssetType(assetType: CustomAssetType): Promise<void> {
-    if (!tenant || !inventory || !canScope(assetType.scope)) return;
+  async function archiveAssetType(assetType: CustomAssetType): Promise<boolean> {
+    if (!tenant || !inventory || !canScope(assetType.scope)) return false;
     busy = true;
     error = '';
     try {
@@ -217,16 +197,17 @@
       assetTypes = nextAssetTypes;
       fieldTargets = nextFieldTargets;
       onSchemaChange(nextAssetTypes, fieldDefinitions);
-      onArchiveActionClose();
+      return true;
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to archive custom asset type.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom asset type could not be archived. Try again.');
+      return false;
     } finally {
       busy = false;
     }
   }
 
-  async function archiveFieldDefinition(definition: CustomFieldDefinition): Promise<void> {
-    if (!tenant || !inventory || !canScope(definition.scope)) return;
+  async function archiveFieldDefinition(definition: CustomFieldDefinition): Promise<boolean> {
+    if (!tenant || !inventory || !canScope(definition.scope)) return false;
     busy = true;
     error = '';
     try {
@@ -234,9 +215,10 @@
       const nextFieldDefinitions = fieldDefinitions.map((candidate) => candidate.id === archived.id ? archived : candidate);
       fieldDefinitions = nextFieldDefinitions;
       onSchemaChange(assetTypes, nextFieldDefinitions);
-      onArchiveActionClose();
+      return true;
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : 'Unable to archive custom field.';
+      error = safeWorkspaceErrorMessage(caught, 'Custom field could not be archived. Try again.');
+      return false;
     } finally {
       busy = false;
     }
@@ -295,7 +277,15 @@
       return;
     }
     event.preventDefault();
+    archiveActionTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     onArchiveActionOpen(action, id);
+  }
+
+  function restoreArchiveActionFocus(event: Event): void {
+    event.preventDefault();
+    const trigger = archiveActionTrigger;
+    archiveActionTrigger = null;
+    customizationArchiveFocusTarget(trigger, customizationHeading)?.focus();
   }
 
   function closeArchiveAction(event: MouseEvent): void {
@@ -303,15 +293,14 @@
       return;
     }
     event.preventDefault();
-    onArchiveActionClose();
   }
 </script>
 
-<section class="settings-panel wide" aria-labelledby="settings-customization">
+<section class="settings-panel wide customization-panel" aria-labelledby="settings-customization">
   <div class="settings-panel-heading">
     <Shapes aria-hidden="true" />
     <div>
-      <h2 id="settings-customization">Custom fields</h2>
+      <h2 id="settings-customization" bind:this={customizationHeading} tabindex="-1">Custom fields</h2>
       <p>Types and fields available to this inventory.</p>
     </div>
   </div>
@@ -324,18 +313,23 @@
         assetType={routeArchiveAssetType}
         fieldDefinition={routeArchiveFieldDefinition}
         {busy}
+        error={operationStatus?.message ?? ''}
         fieldsHref={fieldsHref()}
-        bind:panelElement={archiveConfirmationElement}
         canArchiveScope={canScope}
         onClose={closeArchiveAction}
+        onDismiss={onArchiveActionClose}
+        onCloseAutoFocus={restoreArchiveActionFocus}
         onArchiveAssetType={archiveAssetType}
         onArchiveFieldDefinition={archiveFieldDefinition}
       />
     {/if}
 
     <div class="customization-grid">
-      <div class="customization-column">
-        <h3>Asset types</h3>
+      <section class="customization-column customization-surface" aria-labelledby="custom-asset-types-title">
+        <div class="customization-surface-heading">
+          <h3 id="custom-asset-types-title">Asset types</h3>
+          <span aria-label={`${activeAssetTypes.length} custom asset types`}>{activeAssetTypes.length}</span>
+        </div>
         <SegmentedControl
           label="Custom type scope"
           value={typeScope}
@@ -357,6 +351,9 @@
         <Button.Root disabled={busy || !typeKey.trim() || !typeName.trim() || !canScope(typeScope)} onclick={() => { void createAssetType(); }}>Create type</Button.Root>
 
         <div class="schema-list" aria-label="Custom asset types">
+          {#if activeAssetTypes.length === 0}
+            <p class="schema-empty">No custom asset types yet.</p>
+          {:else}
           {#each activeAssetTypes as assetType}
             <article class="schema-row">
               <div>
@@ -378,11 +375,15 @@
               </div>
             </article>
           {/each}
+          {/if}
         </div>
-      </div>
+      </section>
 
-      <div class="customization-column">
-        <h3>Field definitions</h3>
+      <section class="customization-column customization-surface" aria-labelledby="custom-field-definitions-title">
+        <div class="customization-surface-heading">
+          <h3 id="custom-field-definitions-title">Field definitions</h3>
+          <span aria-label={`${activeFieldDefinitions.length} custom fields`}>{activeFieldDefinitions.length}</span>
+        </div>
         <SegmentedControl
           label="Custom field scope"
           value={fieldScope}
@@ -435,6 +436,9 @@
         <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim() || !canScope(fieldScope)} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>
 
         <div class="schema-list" aria-label="Custom field definitions">
+          {#if activeFieldDefinitions.length === 0}
+            <p class="schema-empty">No custom fields yet.</p>
+          {:else}
           {#each activeFieldDefinitions as definition}
             <article class="schema-row">
               <div>
@@ -456,8 +460,9 @@
               </div>
             </article>
           {/each}
+          {/if}
         </div>
-      </div>
+      </section>
     </div>
   {/if}
 

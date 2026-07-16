@@ -2,8 +2,7 @@ import type { AssetCardViewModel } from '../assets/AssetViewModels';
 import { toAssetCardViewModel } from '../assets/AssetViewModels';
 import { createInventoryOverview } from '../../domain/inventories/InventorySummary';
 import type { AccessRole } from '../../domain/inventories/InventorySummary';
-import type { LocationSummary } from '../../domain/locations/LocationSummary';
-import { InventorySummaryRepository } from './InventorySummaryRepository';
+import { HomeDashboardSnapshotRepository } from './InventorySummaryRepository';
 
 export type HomeDashboardInventoryViewModel = {
   readonly id: string;
@@ -19,19 +18,6 @@ export type HomeDashboardTenantViewModel = {
   readonly name: string;
 };
 
-export type HomeDashboardLocationViewModel = {
-  readonly id: string;
-  readonly title: string;
-  readonly description: string;
-  readonly containedAssetCountLabel: string;
-  readonly recentAssetLabel: string;
-  readonly photoLabel: string;
-  readonly photo?: {
-    readonly uri: string;
-    readonly headers?: Readonly<Record<string, string>>;
-  };
-};
-
 export type HomeDashboardViewModel = {
   readonly tenantId: string;
   readonly tenantName: string;
@@ -40,8 +26,6 @@ export type HomeDashboardViewModel = {
   readonly tenants: readonly HomeDashboardTenantViewModel[];
   readonly inventories: readonly HomeDashboardInventoryViewModel[];
   readonly canAdd: boolean;
-  readonly topLocations: readonly HomeDashboardLocationViewModel[];
-  readonly locations: readonly HomeDashboardLocationViewModel[];
   readonly recentAssets: readonly AssetCardViewModel[];
   readonly checkedOutAssets: readonly AssetCardViewModel[];
   readonly assetTags: readonly {
@@ -53,10 +37,10 @@ export type HomeDashboardViewModel = {
 };
 
 export class HomeDashboardQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: HomeDashboardSnapshotRepository) {}
 
   async execute(): Promise<HomeDashboardViewModel> {
-    const workspace = await this.inventories.getInventoryWorkspace();
+    const { checkedOutAssets, workspace } = await this.inventories.getHomeDashboardSnapshot();
     const inventory =
       workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
       workspace.inventories[0];
@@ -72,10 +56,6 @@ export class HomeDashboardQuery {
     }
 
     const overview = createInventoryOverview(tenant, inventory, workspace.inventories);
-
-    const checkedOutAssets = this.inventories.getCheckedOutAssetSummaries
-      ? await this.inventories.getCheckedOutAssetSummaries()
-      : inventory.assets.filter((item) => item.currentCheckout);
 
     return {
       tenantId: tenant.id,
@@ -97,25 +77,11 @@ export class HomeDashboardQuery {
         updatedAtLabel: item.updatedAtLabel
       })),
       canAdd: inventory.permissions.includes('create_asset'),
-      topLocations: overview.locations.slice(0, 3).map(toLocationViewModel),
-      locations: overview.locations.map(toLocationViewModel),
       recentAssets: inventory.assets.slice(0, 10).map(toAssetCardViewModel),
       checkedOutAssets: checkedOutAssets.slice(0, 10).map(toAssetCardViewModel),
       assetTags: [...(inventory.assetTags ?? [])]
     };
   }
-}
-
-function toLocationViewModel(location: LocationSummary): HomeDashboardLocationViewModel {
-  return {
-    id: location.id,
-    title: location.title,
-    description: location.description,
-    containedAssetCountLabel: location.containedAssetCount.toString(),
-    recentAssetLabel: location.recentAssetTitles.join(', '),
-    photoLabel: location.hasPhoto ? 'Photo ready' : 'Needs photo',
-    photo: location.photo
-  };
 }
 
 function labelAccessRole(role: AccessRole): string {

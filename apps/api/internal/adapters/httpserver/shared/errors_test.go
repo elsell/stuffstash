@@ -108,3 +108,35 @@ func TestToHumaErrorMapsSpecificApplicationErrorVocabulary(t *testing.T) {
 		})
 	}
 }
+
+func TestToHumaErrorMapsInvitationErrorsWithoutLeakingIdentity(t *testing.T) {
+	previous := huma.NewError
+	huma.NewError = NewErrorEnvelope
+	t.Cleanup(func() {
+		huma.NewError = previous
+	})
+
+	tests := []struct {
+		name    string
+		err     error
+		status  int
+		code    string
+		message string
+	}{
+		{name: "invalid", err: app.ErrInvitationInvalid, status: http.StatusNotFound, code: "invitation_invalid", message: "This invitation link is invalid."},
+		{name: "email mismatch", err: app.ErrInvitationEmailMismatch, status: http.StatusForbidden, code: "invitation_email_mismatch", message: "This invitation belongs to another signed-in account."},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			response := ToHumaError(tc.err)
+			envelope, ok := response.(*ErrorEnvelope)
+			if !ok {
+				t.Fatalf("expected ErrorEnvelope, got %T", response)
+			}
+			if envelope.GetStatus() != tc.status || envelope.BodyError.Code != tc.code || envelope.BodyError.Message != tc.message || len(envelope.BodyError.Details) != 0 {
+				t.Fatalf("unexpected invitation error envelope: %+v", envelope)
+			}
+		})
+	}
+}

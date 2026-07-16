@@ -49,7 +49,8 @@ import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
 import { useAppFeedback } from '../feedback/AppFeedback';
-import { colors, radius, spacing } from '../theme/tokens';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import {
   assertSelectableParent,
   ParentSelection,
@@ -66,6 +67,7 @@ type AddAssetScreenProps = {
   readonly createAssetCommand: CreateAssetCommand;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly initialParent?: ParentSelection;
+  readonly onDismiss?: () => void;
   readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
 };
@@ -100,9 +102,12 @@ export function AddAssetScreen({
   createAssetCommand,
   dashboardQuery,
   initialParent,
+  onDismiss = () => router.back(),
   parentLookupQuery,
   photoSelectionQuery
 }: AddAssetScreenProps) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const feedback = useAppFeedback();
   const safeAreaInsets = useSafeAreaInsets();
   const bottomChromeAllowance = safeAreaInsets.bottom + addSheetBottomChromePadding;
@@ -469,6 +474,16 @@ export function AddAssetScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
+      <View style={styles.dismissRow}>
+        <Pressable
+          accessibilityLabel="Close Add"
+          accessibilityRole="button"
+          onPress={onDismiss}
+          style={styles.dismissButton}
+        >
+          <X color={colors.text} size={22} strokeWidth={2.4} />
+        </Pressable>
+      </View>
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -655,6 +670,8 @@ function PhotoCapture({
   readonly onRemovePhoto: (photoId: string) => void;
   readonly photos: readonly SelectedAssetPhoto[];
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   return (
     <View style={styles.photoPanel}>
       <Text style={styles.photoSectionTitle}>Photos</Text>
@@ -712,6 +729,8 @@ function PhotoPreviewItem({
   readonly photo: SelectedAssetPhoto;
   readonly photoCount: number;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const isDragging = draggingPhotoId === photo.id;
   const dragState = useRef({ isDragging: false, didMove: false });
   const suppressNextPress = useRef(false);
@@ -899,6 +918,8 @@ function ParentPicker({
   readonly parentAssetId: string | undefined;
   readonly query: string;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const normalizedQuery = normalizeParentName(query);
   const exactParent = [createdParent, ...matches].filter(isParentSelection).find(
     (parent) => normalizeParentName(parent.title) === normalizedQuery
@@ -1010,6 +1031,8 @@ function AssetTagPicker({
   readonly selectedTagIds: readonly string[];
   readonly onChange: (tagIds: readonly string[]) => void;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('');
   const selected = new Set(selectedTagIds);
@@ -1127,7 +1150,7 @@ function AssetTagPicker({
           <Text style={styles.newTagButtonText}>Add</Text>
         </Pressable>
       </View>
-      <TagColorPicker value={newTagColor} onChange={setNewTagColor} />
+      <TagColorPicker palette={colors} value={newTagColor} onChange={setNewTagColor} />
     </View>
   );
 }
@@ -1143,6 +1166,7 @@ function KeyboardDismissBar({
   readonly keyboardHeight: number;
   readonly visible: boolean;
 }) {
+  const styles = createStyles(useAppearanceAwarePalette());
   if (Platform.OS !== 'ios' || !visible) {
     return null;
   }
@@ -1179,6 +1203,8 @@ function ParentOption({
   readonly meta: string;
   readonly onPress: () => void;
 }) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   return (
     <Pressable
       accessibilityRole="button"
@@ -1221,10 +1247,25 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background
+  },
+  dismissRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    minHeight: 44,
+    paddingHorizontal: spacing.sm
+  },
+  dismissButton: {
+    alignItems: 'center',
+    borderRadius: 22,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44
   },
   content: {
     padding: spacing.lg,
@@ -1655,4 +1696,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   }
-});
+  });
+}

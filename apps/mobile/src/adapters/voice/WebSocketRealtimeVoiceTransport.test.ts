@@ -150,6 +150,10 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       fileName: 'water-bottle.jpg',
       contentType: 'image/jpeg',
       sizeBytes: 123
+    }], [{
+      commandId: 'cmd-water-bottle',
+      title: 'Insulated water bottle',
+      parent: { kind: 'root' }
     }]);
     await expect(transport.cancelActionPlan('plan-1')).rejects.toThrow('not active');
     socket.receive({ type: 'action.plan.approved', seq: 9, sessionId: 'session-1', planId: 'plan-1', status: 'approved' });
@@ -214,6 +218,11 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         fileName: 'water-bottle.jpg',
         contentType: 'image/jpeg',
         sizeBytes: 123
+      }],
+      commandEdits: [{
+        commandId: 'cmd-water-bottle',
+        title: 'Insulated water bottle',
+        parent: { kind: 'root' }
       }]
     });
     expect(events).toEqual([

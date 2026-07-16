@@ -64,8 +64,8 @@ describe('InventoryWorkspaceRouteContent', () => {
 
     const mainText = document.body.querySelector('.workspace-main')?.textContent ?? '';
     expect(mainText.indexOf('Recent')).toBeGreaterThanOrEqual(0);
-    expect(mainText.indexOf('Locations')).toBeGreaterThanOrEqual(0);
-    expect(mainText.indexOf('Recent')).toBeLessThan(mainText.indexOf('Locations'));
+    expect(mainText.indexOf('Places')).toBeGreaterThanOrEqual(0);
+    expect(mainText.indexOf('Recent')).toBeLessThan(mainText.indexOf('Places'));
 
     link('Add location').click();
     await tick();
@@ -110,7 +110,7 @@ describe('InventoryWorkspaceRouteContent', () => {
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
       props: await routeContentProps({
-        route: { mode: 'search' },
+        route: { mode: 'browse' },
         searchQuery: 'pass',
         handlers: {
           onSearch: async () => {
@@ -120,25 +120,25 @@ describe('InventoryWorkspaceRouteContent', () => {
       })
     });
 
-    const search = document.body.querySelector<HTMLInputElement>('#search-page-query');
+    const search = document.body.querySelector<HTMLInputElement>('input[aria-label="Search Browse"]');
     if (!search) {
       throw new Error('Missing workspace search input');
     }
     search.value = 'passport';
     search.dispatchEvent(new InputEvent('input', { bubbles: true }));
-    document.body.querySelector<HTMLFormElement>('form.search-panel')?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+    document.body.querySelector<HTMLFormElement>('form.browse-search')?.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
     await tick();
 
     expect(searched).toBe(true);
   });
 
   it('threads active inventory tags into search browsing filters', async () => {
-    const searchedTags: string[] = [];
+    const searchedTags: string[][] = [];
     const props = await routeContentProps({
-      route: { mode: 'search' },
+      route: { mode: 'browse' },
       handlers: {
-        onAssetTagSearch: async (tag) => {
-          searchedTags.push(tag.displayName);
+        onBrowseStateChange: (state) => {
+          searchedTags.push(state.selectedTagIds ?? []);
         }
       }
     });
@@ -162,12 +162,18 @@ describe('InventoryWorkspaceRouteContent', () => {
       }
     });
 
-    const tagFilter = document.body.querySelector<HTMLElement>('[aria-label="Browse by tag"]');
+    const filterTrigger = document.body.querySelector<HTMLButtonElement>('.browse-filter-trigger');
+    if (!filterTrigger) throw new Error('Missing Browse filter trigger');
+    filterTrigger.click();
+    await tick();
+    await tick();
+    const tagFilter = document.body.querySelector<HTMLElement>('.browse-filter-popover');
     expect(tagFilter?.textContent).toContain('Tools');
-    document.body.querySelector<HTMLButtonElement>('button[aria-label="Search for tag Tools"]')?.click();
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('.browse-filter-popover button')).find((button) => button.textContent?.includes('Tools'))?.click();
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((button) => button.textContent?.includes('Apply filters'))?.click();
     await tick();
 
-    expect(searchedTags).toEqual(['Tools']);
+    expect(searchedTags).toEqual([['tag-tools']]);
   });
 
   it('renders the no-inventory branch without hard-coded starter names', async () => {
@@ -238,19 +244,6 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Storage bin');
   });
 
-  it('renders the top-level locations route without the recent rail', async () => {
-    component = mount(InventoryWorkspaceRouteContent, {
-      target: document.body,
-      props: await routeContentProps({
-        route: { mode: 'locations' }
-      })
-    });
-
-    expect(document.body.querySelector('#home-title')?.textContent).toBe('Locations');
-    expect(document.body.textContent).toContain('The places where your things live.');
-    expect(document.body.textContent).not.toContain('Recently added');
-  });
-
   it('renders the asset detail branch with action route state', async () => {
     const props = await routeContentProps();
     component = mount(InventoryWorkspaceRouteContent, {
@@ -264,6 +257,50 @@ describe('InventoryWorkspaceRouteContent', () => {
 
     expect(document.body.textContent).toContain('Passport');
     expect(document.body.textContent).toContain('Edit asset');
+  });
+
+  it('opens a location child from a container through location navigation', async () => {
+    const base = await routeContentProps();
+    const container = asset('container-one', 'Tool cabinet', 'container');
+    const nestedLocation = asset('location-nested', 'Nested place', 'location', container.id);
+    const assets = [...base.workspace.data.assets, container, nestedLocation];
+    const openedLocations: string[] = [];
+    const openedAssets: string[] = [];
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({
+        route: { mode: 'asset' },
+        workspace: {
+          data: { ...base.workspace.data, assets },
+          assets,
+          detailAssets: assets,
+          selectedAsset: container
+        },
+        handlers: {
+          onOpenLocation: (candidate) => openedLocations.push(candidate.id),
+          onOpenAsset: async (candidate) => { openedAssets.push(candidate.id); }
+        }
+      })
+    });
+
+    link('Nested place').click();
+    await tick();
+
+    expect(openedLocations).toEqual(['location-nested']);
+    expect(openedAssets).toEqual([]);
+  });
+
+  it('renders an accessible busy status while asset details load', async () => {
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({ route: { mode: 'asset', assetDetailLoading: true } })
+    });
+
+    const status = document.body.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('Loading asset details');
+    expect(status?.getAttribute('aria-live')).toBe('polite');
+    expect(status?.closest('[aria-busy]')?.getAttribute('aria-busy')).toBe('true');
+    expect(document.body.textContent).not.toContain('Recently changed');
   });
 
   it('renders import and settings branches with their routed sections', async () => {
@@ -346,12 +383,22 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
     },
     route: {
       routeUnavailable: '',
+      assetDetailLoading: false,
       mode: 'home' as WorkspaceMode,
       searchResults: [],
       searchSuggestions: [],
-      searchTagIds: [],
       searchSubmitted: false,
       searchError: '',
+      browseSurface: 'list',
+      browseScope: 'all',
+      browseSort: 'updated_desc',
+      browseTagIds: [],
+      browseAssets: data.assets,
+      browseInventoryEmpty: false,
+      browseHasMore: false,
+      browseLoadingMore: false,
+      browseBusy: false,
+      browseErrorPhase: null,
       assetAction: null,
       attachmentId: null,
       attachmentAction: null,
@@ -378,6 +425,9 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
     handlers: {
       onHome: () => {},
       onOpenLocation: () => {},
+      onBrowseStateChange: () => {},
+      onBrowseLoadMore: async () => {},
+      onBrowseRetry: async () => {},
       onEditLocation: () => {},
       onOpenAsset: async () => {},
       onOpenAdd: () => {},
@@ -386,11 +436,13 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       onAssetActionOpen: () => {},
       onAssetActionClose: () => {},
       onAssetSave: async () => {},
+	    onMoveAssetHere: async () => {},
 	      onAssetArchive: async () => {},
 	      onAssetRestore: async () => {},
 	      onAssetDelete: async () => {},
 	      onAssetCheckout: async () => {},
 	      onAssetReturn: async () => {},
+	      onHomeAssetReturn: async () => {},
 	      onAssetUploadAttachment: async () => {},
       onAssetArchiveAttachment: async () => {},
       onAttachmentDeleteOpen: () => {},

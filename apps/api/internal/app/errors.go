@@ -22,6 +22,8 @@ var (
 	ErrAttachmentContentMismatch        = fmt.Errorf("%w: attachment content type mismatch", ErrInvalidInput)
 	ErrAttachmentContentEmpty           = fmt.Errorf("%w: empty attachment content", ErrInvalidInput)
 	ErrAttachmentTooLarge               = fmt.Errorf("%w: attachment too large", ErrInvalidInput)
+	ErrInvitationInvalid                = fmt.Errorf("%w: invalid invitation", ErrNotFound)
+	ErrInvitationEmailMismatch          = fmt.Errorf("%w: invitation email mismatch", ErrUnauthorized)
 )
 
 type ImportSourceInvalidInputError struct {

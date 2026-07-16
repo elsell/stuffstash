@@ -1,57 +1,73 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReactNode, RefObject } from 'react';
-import { router, useFocusEffect } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
   TextInput,
+  useWindowDimensions,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
 import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
+import type { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
+import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
+import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
+import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
+import type {
+  AssetTagOptionViewModel,
+  InventoryAssetTagsQuery
+} from '../../application/assets/InventoryAssetTagsQuery';
 import type {
   AssetBrowseCheckoutFilter,
   AssetBrowseLifecycleFilter,
   AssetBrowseSort
 } from '../../application/home/InventorySummaryRepository';
-import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
-import type { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
-import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
-import {
-  LocationBrowserItemViewModel,
-  LocationsQuery
-} from '../../application/locations/LocationsQuery';
-import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
-import type { InventoryAssetTagsQuery, AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
-import { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
+import type { LocationsQuery, LocationsViewModel } from '../../application/locations/LocationsQuery';
+import type { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { assetDetailHref } from './AssetDetailNavigation';
+import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
+import { BrowsePlaceRow } from './BrowsePlaceRow';
 import {
+  BrowseEmptyState,
+  BrowseLoadError,
+  BrowsePaginationRetry
+} from './BrowseResultStates';
+import {
+  BrowseDraftFilters,
+  SearchHeader
+} from './BrowseHeader';
+import type { InventoryMapSurface } from './InventoryMapPresentation';
+import { InventoryMapScreen } from './InventoryMapScreen';
+import {
+  browseFilterCount,
+  browseColumnCount,
+  browseContinuationCriteria,
+  browseGridCardWidth,
+  browseLoadingFlagsForRefresh,
+  BrowseFilterToken,
+  BrowsePlaceItemViewModel,
   BrowseScope,
   browseScopeToKind,
-  buildBrowseScopeOptions,
-  focusSearchInput,
-  locationRowsFromAssetCards,
-  searchResultSummaryLabel,
-  shouldAutoFocusSearchInput
+  cancelPendingBrowseSearch,
+  canLoadNextBrowsePage,
+  locationRowsFromAssetCards
 } from './SearchScreenPresentation';
-import { BrowseSurfaceControl, InventoryMapScreen } from './InventoryMapScreen';
-import type { InventoryMapSurface } from './InventoryMapPresentation';
-import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
+import { createSearchScreenStyles } from './SearchScreen.styles';
+
+export { SearchHeader } from './BrowseHeader';
 
 type SearchScreenProps = {
   readonly initialScope?: BrowseScope;
   readonly initialQuery?: string;
   readonly initialTagIds?: readonly string[];
+  readonly initialLifecycleState?: AssetBrowseLifecycleFilter;
+  readonly initialCheckoutState?: AssetBrowseCheckoutFilter;
+  readonly initialSort?: AssetBrowseSort;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
@@ -67,36 +83,50 @@ type SearchScreenProps = {
 type BrowseResults = {
   readonly scope: BrowseScope;
   readonly query: string;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
+  readonly sort: AssetBrowseSort;
+  readonly tagIds: readonly string[];
   readonly assets: readonly AssetCardViewModel[];
-  readonly locations: readonly LocationBrowserItemViewModel[];
+  readonly locations: readonly BrowsePlaceItemViewModel[];
   readonly nextCursor?: string;
   readonly hasMore: boolean;
 };
 
+type BrowseErrorPhase = 'initial' | 'replacement' | 'pagination';
+
 type BrowseState =
-  | { readonly status: 'loading'; readonly results: BrowseResults }
+  | { readonly status: 'loading'; readonly results: BrowseResults; readonly isInitial: boolean }
   | { readonly status: 'ready'; readonly results: BrowseResults }
-  | { readonly status: 'error'; readonly message: string; readonly results: BrowseResults };
+  | { readonly status: 'error'; readonly message: string; readonly phase: BrowseErrorPhase; readonly results: BrowseResults };
 
 type BrowseListItem =
   | { readonly type: 'asset'; readonly asset: AssetCardViewModel }
-  | { readonly type: 'place'; readonly location: LocationBrowserItemViewModel };
+  | { readonly type: 'place'; readonly location: BrowsePlaceItemViewModel };
 
 const pageSize = 20;
-const compactControlHitSlop = { top: 6, bottom: 6, left: 6, right: 6 } as const;
 
-const emptyResults: BrowseResults = {
-  scope: 'all',
-  query: '',
-  assets: [],
-  locations: [],
-  hasMore: false
-};
+function emptyResults(scope: BrowseScope = 'all', query = ''): BrowseResults {
+  return {
+    scope,
+    query,
+    lifecycleState: 'active',
+    checkoutState: 'any',
+    sort: 'updated_desc',
+    tagIds: [],
+    assets: [],
+    locations: [],
+    hasMore: false
+  };
+}
 
 export function SearchScreen({
   initialScope = 'all',
   initialQuery = '',
   initialTagIds = [],
+  initialLifecycleState = 'active',
+  initialCheckoutState = 'any',
+  initialSort = 'updated_desc',
   addAssetPhotosCommand,
   assetCheckoutCommand,
   assetDetailQuery,
@@ -108,127 +138,149 @@ export function SearchScreen({
   photoSelectionQuery,
   searchAssetsQuery
 }: SearchScreenProps) {
+  const { fontScale, width } = useWindowDimensions();
+  const palette = useAppearancePalette();
+  const styles = useMemo(() => createSearchScreenStyles(palette), [palette]);
+  const normalizedInitialTags = useMemo(() => uniqueTagIds(initialTagIds), [initialTagIds.join('|')]);
   const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<BrowseScope>(initialScope);
-  const mapPathStore = useRef(new Map<string, readonly string[]>());
   const [surface, setSurface] = useState<InventoryMapSurface>('list');
-  const [lifecycleState, setLifecycleState] = useState<AssetBrowseLifecycleFilter>('active');
-  const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>('any');
-  const [sort, setSort] = useState<AssetBrowseSort>('updated_desc');
-  const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults });
-  const [tagFilters, setTagFilters] = useState<readonly AssetTagOptionViewModel[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(initialTagIds);
+  const [lifecycleState, setLifecycleState] = useState<AssetBrowseLifecycleFilter>(initialLifecycleState);
+  const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>(initialCheckoutState);
+  const [sort, setSort] = useState<AssetBrowseSort>(initialSort);
+  const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(normalizedInitialTags);
+  const [filterDraft, setFilterDraft] = useState<BrowseDraftFilters>({
+    lifecycleState: initialLifecycleState,
+    checkoutState: initialCheckoutState,
+    tagIds: normalizedInitialTags
+  });
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [state, setState] = useState<BrowseState>({ status: 'loading', results: emptyResults(initialScope), isInitial: true });
+  const [tagFilters, setTagFilters] = useState<readonly AssetTagOptionViewModel[]>([]);
+  const [tagFilterStatus, setTagFilterStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [inventoryContext, setInventoryContext] = useState<LocationsViewModel>();
+  const [inventoryContextStatus, setInventoryContextStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const requestSequence = useRef(0);
-  const searchInputRef = useRef<TextInput>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const requestSequence = useRef(0);
+  const queryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const mapPathStore = useRef(new Map<string, readonly string[]>());
+  const searchInputRef = useRef<TextInput>(null);
+  const lastRequestedQuery = useRef(initialQuery.trim());
+  const latestResults = useRef<BrowseResults>(emptyResults(initialScope));
+  const locationCatalog = useRef<Promise<LocationsViewModel> | undefined>(undefined);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!shouldAutoFocusSearchInput(initialTagIds)) {
-        return undefined;
-      }
-      const focusTimer = setTimeout(() => {
-        focusSearchInput(searchInputRef);
-      }, 120);
-
-      return () => {
-        clearTimeout(focusTimer);
-      };
-    }, [initialTagIds.join('|')])
-  );
+  useEffect(() => () => {
+    if (queryTimer.current) clearTimeout(queryTimer.current);
+  }, []);
 
   useEffect(() => {
     const nextQuery = initialQuery.trim();
-    const nextTagIds = uniqueTagIds(initialTagIds);
-    setScope(initialScope);
+    cancelPendingBrowseSearch(queryTimer, nextQuery);
+    const nextTags = uniqueTagIds(initialTagIds);
     setQuery(nextQuery);
-    setSelectedTagIds(nextTagIds);
-    void loadFirstPage({ query: nextQuery, scope: initialScope, tagIds: nextTagIds });
-  }, [initialQuery, initialScope, initialTagIds.join('|'), locationsQuery, searchAssetsQuery]);
+    setScope(initialScope);
+    setLifecycleState(initialLifecycleState);
+    setCheckoutState(initialCheckoutState);
+    setSort(initialSort);
+    setSelectedTagIds(nextTags);
+    setFilterDraft({ lifecycleState: initialLifecycleState, checkoutState: initialCheckoutState, tagIds: nextTags });
+    lastRequestedQuery.current = nextQuery;
+    void loadFirstPage({
+      query: nextQuery,
+      scope: initialScope,
+      lifecycleState: initialLifecycleState,
+      checkoutState: initialCheckoutState,
+      sort: initialSort,
+      tagIds: nextTags
+    });
+  }, [
+    initialQuery,
+    initialScope,
+    initialLifecycleState,
+    initialCheckoutState,
+    initialSort,
+    initialTagIds.join('|'),
+    locationsQuery,
+    searchAssetsQuery
+  ]);
 
   useEffect(() => {
-    let isCurrent = true;
+    void loadTagFilters();
+    void loadLocationCatalog().catch(() => undefined);
+  }, [inventoryAssetTagsQuery, locationsQuery]);
 
-    inventoryAssetTagsQuery
-      .execute()
-      .then((tags) => {
-        if (isCurrent) {
-          setTagFilters(tags);
-        }
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setTagFilters([]);
-        }
-      });
+  async function loadTagFilters(): Promise<void> {
+    setTagFilterStatus('loading');
+    try {
+      setTagFilters(await inventoryAssetTagsQuery.execute());
+      setTagFilterStatus('ready');
+    } catch {
+      setTagFilterStatus('error');
+    }
+  }
 
-    return () => {
-      isCurrent = false;
-    };
-  }, [inventoryAssetTagsQuery]);
+  async function loadLocationCatalog(force = false): Promise<LocationsViewModel> {
+    if (force || !locationCatalog.current) {
+      setInventoryContextStatus('loading');
+      locationCatalog.current = locationsQuery.execute();
+    }
+    try {
+      const catalog = await locationCatalog.current;
+      setInventoryContext(catalog);
+      setInventoryContextStatus('ready');
+      return catalog;
+    } catch (error) {
+      locationCatalog.current = undefined;
+      setInventoryContextStatus('error');
+      throw error;
+    }
+  }
 
-  async function loadFirstPage(next: {
-    readonly query?: string;
-    readonly lifecycleState?: AssetBrowseLifecycleFilter;
-    readonly checkoutState?: AssetBrowseCheckoutFilter;
-    readonly scope?: BrowseScope;
-    readonly sort?: AssetBrowseSort;
-    readonly tagIds?: readonly string[];
-  } = {}): Promise<void> {
+  async function loadFirstPage(next: Partial<{
+    readonly query: string;
+    readonly lifecycleState: AssetBrowseLifecycleFilter;
+    readonly checkoutState: AssetBrowseCheckoutFilter;
+    readonly scope: BrowseScope;
+    readonly sort: AssetBrowseSort;
+    readonly tagIds: readonly string[];
+  }> = {}): Promise<void> {
     const requestId = nextRequestId(requestSequence);
-    const nextQuery = next.query ?? query;
-    const nextLifecycleState = next.lifecycleState ?? lifecycleState;
-    const nextCheckoutState = next.checkoutState ?? checkoutState;
-    const nextScope = next.scope ?? scope;
-    const nextSort = next.sort ?? sort;
-    const nextTagIds = next.tagIds ?? selectedTagIds;
-    const loadingResults: BrowseResults = {
-      scope: nextScope,
-      query: nextQuery.trim(),
-      assets: [],
-      locations: [],
-      hasMore: false
+    const input = {
+      query: next.query ?? query,
+      lifecycleState: next.lifecycleState ?? lifecycleState,
+      checkoutState: next.checkoutState ?? checkoutState,
+      scope: next.scope ?? scope,
+      sort: next.sort ?? sort,
+      tagIds: next.tagIds ?? selectedTagIds
     };
-
+    const previous = latestResults.current;
+    const hasPrevious = browseResultCount(previous) > 0;
+    const loadingResults = hasPrevious ? previous : emptyResults(input.scope, input.query.trim());
     setIsLoadingMore(false);
     setIsRefreshing(false);
-    setState({ status: 'loading', results: loadingResults });
+    setState({ status: 'loading', results: loadingResults, isInitial: !hasPrevious });
 
     try {
-      const results = await loadBrowseResults({
-        query: nextQuery,
-        lifecycleState: nextLifecycleState,
-        checkoutState: nextCheckoutState,
-        scope: nextScope,
-        sort: nextSort,
-        tagIds: nextTagIds
-      });
+      const results = await loadBrowseResults(input);
       if (isCurrentRequest(requestSequence, requestId)) {
+        latestResults.current = results;
         setState({ status: 'ready', results });
       }
     } catch (error) {
       if (isCurrentRequest(requestSequence, requestId)) {
         setState({
           status: 'error',
-          message: readableError(error, 'Browse failed.'),
+          phase: hasPrevious ? 'replacement' : 'initial',
+          message: readableError(error, 'This inventory could not be loaded.'),
           results: loadingResults
         });
       }
     }
   }
 
-  async function loadBrowseResults({
-    cursor,
-    lifecycleState: nextLifecycleState,
-    checkoutState: nextCheckoutState,
-    query: nextQuery,
-    scope: nextScope,
-    sort: nextSort,
-    tagIds
-  }: {
+  async function loadBrowseResults(input: {
     readonly cursor?: string;
     readonly lifecycleState: AssetBrowseLifecycleFilter;
     readonly checkoutState: AssetBrowseCheckoutFilter;
@@ -237,46 +289,40 @@ export function SearchScreen({
     readonly sort: AssetBrowseSort;
     readonly tagIds: readonly string[];
   }): Promise<BrowseResults> {
-    if (nextScope === 'places') {
-      const [results, locations] = await Promise.all([
-        searchAssetsQuery.execute({
-          query: nextQuery,
-          cursor,
-          lifecycleState: nextLifecycleState,
-          checkoutState: nextCheckoutState,
-          kind: browseScopeToKind(nextScope),
-          sort: nextSort,
-          limit: pageSize,
-          tagIds
-        }),
-        locationsQuery.execute()
-      ]);
+    const results = await searchAssetsQuery.execute({
+      query: input.query,
+      cursor: input.cursor,
+      lifecycleState: input.lifecycleState,
+      checkoutState: input.checkoutState,
+      kind: browseScopeToKind(input.scope),
+      sort: input.sort,
+      limit: pageSize,
+      tagIds: input.tagIds
+    });
+    if (input.scope !== 'places') {
       return {
-        scope: nextScope,
+        scope: input.scope,
         query: results.query,
-        assets: [],
-        locations: locationRowsFromAssetCards(results.assets, locations.locations),
+        lifecycleState: input.lifecycleState,
+        checkoutState: input.checkoutState,
+        sort: input.sort,
+        tagIds: input.tagIds,
+        assets: results.assets,
+        locations: [],
         nextCursor: results.nextCursor,
         hasMore: results.hasMore
       };
     }
-
-    const results = await searchAssetsQuery.execute({
-      query: nextQuery,
-      cursor,
-      lifecycleState: nextLifecycleState,
-      checkoutState: nextCheckoutState,
-      kind: browseScopeToKind(nextScope),
-      sort: nextSort,
-      limit: pageSize,
-      tagIds
-    });
-
+    const catalog = await loadLocationCatalog();
     return {
-      scope: nextScope,
+      scope: input.scope,
       query: results.query,
-      assets: results.assets,
-      locations: [],
+      lifecycleState: input.lifecycleState,
+      checkoutState: input.checkoutState,
+      sort: input.sort,
+      tagIds: input.tagIds,
+      assets: [],
+      locations: locationRowsFromAssetCards(results.assets, catalog.locations),
       nextCursor: results.nextCursor,
       hasMore: results.hasMore
     };
@@ -284,138 +330,136 @@ export function SearchScreen({
 
   async function refreshResults(): Promise<void> {
     const requestId = nextRequestId(requestSequence);
-    setIsRefreshing(true);
-
+    const loadingFlags = browseLoadingFlagsForRefresh();
+    setIsLoadingMore(loadingFlags.isLoadingMore);
+    setIsRefreshing(loadingFlags.isRefreshing);
     try {
-      const results = await loadBrowseResults({
-        query: state.results.query,
-        lifecycleState,
-        checkoutState,
-        scope,
-        sort,
-        tagIds: selectedTagIds
-      });
+      if (scope === 'places') await loadLocationCatalog(true);
+      const results = await loadBrowseResults({ query: lastRequestedQuery.current, lifecycleState, checkoutState, scope, sort, tagIds: selectedTagIds });
       if (isCurrentRequest(requestSequence, requestId)) {
-        setQuery(state.results.query);
+        latestResults.current = results;
         setState({ status: 'ready', results });
       }
     } catch (error) {
       if (isCurrentRequest(requestSequence, requestId)) {
-        setState({
-          status: 'error',
-          message: readableError(error, 'Refresh failed.'),
-          results: state.results
-        });
+        setState({ status: 'error', phase: 'replacement', message: readableError(error, 'This inventory could not be refreshed.'), results: latestResults.current });
       }
     } finally {
-      if (isCurrentRequest(requestSequence, requestId)) {
-        setIsRefreshing(false);
-      }
+      if (isCurrentRequest(requestSequence, requestId)) setIsRefreshing(false);
     }
   }
 
   async function loadNextPage(): Promise<void> {
-    if (
-      state.status === 'loading' ||
-      !state.results.hasMore ||
-      !state.results.nextCursor ||
-      isRefreshing ||
-      isLoadingMore
-    ) {
-      return;
-    }
-
+    const current = latestResults.current;
+    const canPage = canLoadNextBrowsePage(
+      state.status,
+      state.status === 'error' ? state.phase : undefined
+    );
+    if (!canPage || !current.hasMore || !current.nextCursor || isRefreshing || isLoadingMore) return;
     const requestId = nextRequestId(requestSequence);
     setIsLoadingMore(true);
-
     try {
       const nextPage = await loadBrowseResults({
-        query: state.results.query,
-        cursor: state.results.nextCursor,
-        lifecycleState,
-        checkoutState,
-        scope,
-        sort,
-        tagIds: selectedTagIds
+        ...browseContinuationCriteria(current),
+        cursor: current.nextCursor,
       });
       if (isCurrentRequest(requestSequence, requestId)) {
-        setState({
-          status: 'ready',
-          results: {
-            ...nextPage,
-            assets: [...state.results.assets, ...nextPage.assets],
-            locations: [...state.results.locations, ...nextPage.locations]
-          }
-        });
+        const results = {
+          ...nextPage,
+          assets: [...current.assets, ...nextPage.assets],
+          locations: [...current.locations, ...nextPage.locations]
+        };
+        latestResults.current = results;
+        setState({ status: 'ready', results });
       }
     } catch (error) {
       if (isCurrentRequest(requestSequence, requestId)) {
-        setState({
-          status: 'error',
-          message: readableError(error, 'Could not load more assets.'),
-          results: state.results
-        });
+        setState({ status: 'error', phase: 'pagination', message: readableError(error, 'More items could not be loaded.'), results: current });
       }
     } finally {
-      if (isCurrentRequest(requestSequence, requestId)) {
-        setIsLoadingMore(false);
-      }
+      if (isCurrentRequest(requestSequence, requestId)) setIsLoadingMore(false);
     }
   }
 
-  function submitSearch(): void {
-    focusSearchInput(searchInputRef);
-    void loadFirstPage({ query });
+  function scheduleSearch(nextQuery: string): void {
+    setQuery(nextQuery);
+    if (queryTimer.current) clearTimeout(queryTimer.current);
+    if (nextQuery.trim() === lastRequestedQuery.current) return;
+    queryTimer.current = setTimeout(() => submitQuery(nextQuery), 300);
+  }
+
+  function submitQuery(nextQuery = query): void {
+    if (queryTimer.current) clearTimeout(queryTimer.current);
+    const normalized = nextQuery.trim();
+    lastRequestedQuery.current = normalized;
+    void loadFirstPage({ query: normalized });
+  }
+
+  function cancelPendingSearch(): string {
+    const normalized = cancelPendingBrowseSearch(queryTimer, query);
+    lastRequestedQuery.current = normalized;
+    return normalized;
   }
 
   function clearSearch(): void {
     setQuery('');
-    void loadFirstPage({ query: '' });
-  }
-
-  function searchByTag(tag: AssetTagOptionViewModel): void {
-    const nextTagIds = toggleTagId(selectedTagIds, tag.id);
-    setSelectedTagIds(nextTagIds);
-    void loadFirstPage({ tagIds: nextTagIds });
+    submitQuery('');
   }
 
   function updateScope(nextScope: BrowseScope): void {
+    const nextQuery = cancelPendingSearch();
     setScope(nextScope);
-    void loadFirstPage({ scope: nextScope });
-  }
-
-  function updateLifecycleState(nextLifecycleState: AssetBrowseLifecycleFilter): void {
-    setLifecycleState(nextLifecycleState);
-    void loadFirstPage({ lifecycleState: nextLifecycleState });
-  }
-
-  function updateCheckoutState(nextCheckoutState: AssetBrowseCheckoutFilter): void {
-    setCheckoutState(nextCheckoutState);
-    void loadFirstPage({ checkoutState: nextCheckoutState });
+    void loadFirstPage({ query: nextQuery, scope: nextScope });
   }
 
   function updateSort(nextSort: AssetBrowseSort): void {
+    const nextQuery = cancelPendingSearch();
     setSort(nextSort);
-    void loadFirstPage({ sort: nextSort });
+    void loadFirstPage({ query: nextQuery, sort: nextSort });
+  }
+
+  function openFilters(expanded: boolean): void {
+    if (expanded) setFilterDraft({ lifecycleState, checkoutState, tagIds: selectedTagIds });
+    setFiltersExpanded(expanded);
+  }
+
+  function applyFilters(filters: BrowseDraftFilters): void {
+    const nextQuery = cancelPendingSearch();
+    setLifecycleState(filters.lifecycleState);
+    setCheckoutState(filters.checkoutState);
+    setSelectedTagIds(filters.tagIds);
+    setFiltersExpanded(false);
+    void loadFirstPage({ ...filters, query: nextQuery });
   }
 
   function clearFilters(): void {
-    setScope('all');
-    setLifecycleState('active');
-    setCheckoutState('any');
-    setSort('updated_desc');
-    setSelectedTagIds([]);
-    void loadFirstPage({
-      scope: 'all',
-      lifecycleState: 'active',
-      checkoutState: 'any',
-      sort: 'updated_desc',
-      tagIds: []
-    });
+    applyFilters({ lifecycleState: 'active', checkoutState: 'any', tagIds: [] });
+  }
+
+  function removeFilter(token: BrowseFilterToken): void {
+    const next = {
+      lifecycleState: token.type === 'lifecycle' ? 'active' as const : lifecycleState,
+      checkoutState: token.type === 'checkout' ? 'any' as const : checkoutState,
+      tagIds: token.type === 'tag' ? selectedTagIds.filter((id) => id !== token.tagId) : selectedTagIds
+    };
+    applyFilters(next);
+  }
+
+  function retryResults(): void {
+    if (state.status === 'error' && state.phase === 'pagination') {
+      void loadNextPage();
+      return;
+    }
+    void loadFirstPage();
   }
 
   const listItems = toBrowseListItems(state.results);
-  const isPlacesScope = scope === 'places';
+  const resultScope = state.results.scope;
+  const numColumns = browseColumnCount({ fontScale, scope: resultScope, width });
+  const gridCardWidth = browseGridCardWidth(width, numColumns);
+  const hasActiveFilters = browseFilterCount({ lifecycleState, checkoutState, tagIds: selectedTagIds }) > 0;
+  const isInitialError = state.status === 'error' && state.phase === 'initial';
+  const isPaginationError = state.status === 'error' && state.phase === 'pagination';
 
   if (surface === 'map') {
     return (
@@ -425,11 +469,13 @@ export function SearchScreen({
           assetCheckoutCommand={assetCheckoutCommand}
           assetDetailQuery={assetDetailQuery}
           assetLifecycleCommand={assetLifecycleCommand}
+          canAdd={inventoryContext?.canAdd ?? false}
           deleteAssetPhotoCommand={deleteAssetPhotoCommand}
           inventoryMapQuery={inventoryMapQuery}
           pathStore={mapPathStore}
           photoSelectionQuery={photoSelectionQuery}
           selectedSurface={surface}
+          onAdd={() => router.navigate('/add')}
           onChangeSurface={setSurface}
         />
       </SafeAreaView>
@@ -439,528 +485,127 @@ export function SearchScreen({
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       <FlatList
-        key={isPlacesScope ? 'places' : 'assets'}
+        key={`${resultScope}:${numColumns.toString()}`}
         data={listItems}
         keyExtractor={keyBrowseListItem}
-        columnWrapperStyle={isPlacesScope ? undefined : styles.cardRow}
+        columnWrapperStyle={numColumns === 2 ? styles.cardRow : undefined}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        numColumns={isPlacesScope ? 1 : 2}
+        numColumns={numColumns}
         refreshing={isRefreshing}
-        onEndReached={loadNextPage}
+        onEndReached={() => void loadNextPage()}
         onEndReachedThreshold={0.55}
-        onRefresh={refreshResults}
-        ListFooterComponent={
-          isLoadingMore ? (
-            <View style={styles.footer}>
-              <ActivityIndicator color={colors.accent} />
-            </View>
-          ) : null
-        }
+        onRefresh={() => void refreshResults()}
         ListHeaderComponent={
           <SearchHeader
+            canAdd={inventoryContext?.canAdd ?? false}
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}
             checkoutState={checkoutState}
             filtersExpanded={filtersExpanded}
+            filterDraft={filterDraft}
+            inventoryContext={inventoryContext?.inventoryName}
+            inventoryContextStatus={inventoryContextStatus}
+            palette={palette}
             query={query}
             resultCount={listItems.length}
             scope={scope}
             selectedSurface={surface}
+            selectedTagIds={selectedTagIds}
             searchInputRef={searchInputRef}
             searchInputFocused={isSearchFocused}
             sort={sort}
-            statusMessage={state.status === 'error' ? state.message : undefined}
+            statusMessage={state.status === 'error' && state.phase === 'replacement' ? state.message : undefined}
             submittedQuery={state.results.query}
-            selectedTagIds={selectedTagIds}
             tagFilters={tagFilters}
-            onChangeSurface={setSurface}
-            onChangeLifecycleState={updateLifecycleState}
-            onChangeCheckoutState={updateCheckoutState}
-            onChangeQuery={setQuery}
+            tagFilterStatus={tagFilterStatus}
+            onApplyFilters={applyFilters}
+            onAdd={() => router.navigate('/add')}
+            onChangeDraftCheckoutState={(value) => setFilterDraft((draft) => ({ ...draft, checkoutState: value }))}
+            onChangeDraftLifecycleState={(value) => setFilterDraft((draft) => ({ ...draft, lifecycleState: value }))}
+            onChangeDraftTagIds={(value) => setFilterDraft((draft) => ({ ...draft, tagIds: value }))}
+            onChangeQuery={scheduleSearch}
             onChangeScope={updateScope}
             onChangeSort={updateSort}
-            onClearQuery={clearSearch}
+            onChangeSurface={setSurface}
             onClearFilters={clearFilters}
-            onToggleTag={searchByTag}
+            onClearQuery={clearSearch}
+            onRemoveFilter={removeFilter}
+            onRetryResults={retryResults}
+            onRetryInventoryContext={() => void loadLocationCatalog(true).catch(() => undefined)}
+            onRetryTags={() => void loadTagFilters()}
             onSearchBlur={() => setIsSearchFocused(false)}
             onSearchFocus={() => setIsSearchFocused(true)}
-            onSubmit={submitSearch}
-            onToggleFilters={setFiltersExpanded}
+            onSubmit={() => submitQuery()}
+            onToggleFilters={openFilters}
           />
         }
         ListEmptyComponent={
-          state.status === 'loading' ? null : (
-            <EmptyBrowseState
-              query={state.results.query}
-              scope={scope}
-              filtersActive={hasActiveFilters({ checkoutState, lifecycleState, scope, sort, tagCount: selectedTagIds.length })}
-              onClearFilters={clearFilters}
-              onClearSearch={clearSearch}
+          state.status === 'loading' ? null : isInitialError ? (
+            <BrowseLoadError message={state.message} palette={palette} onRetry={retryResults} />
+          ) : state.results.query.trim() ? (
+            <BrowseEmptyState kind="search" palette={palette} query={state.results.query} onClearSearch={clearSearch} />
+          ) : hasActiveFilters ? (
+            <BrowseEmptyState kind="filters" palette={palette} onClearFilters={clearFilters} />
+          ) : (
+            <BrowseEmptyState
+              kind="inventory"
+              inventoryName={inventoryContext?.inventoryName ?? 'this inventory'}
+              palette={palette}
+              onAdd={inventoryContext?.canAdd ? () => router.navigate('/add') : undefined}
             />
           )
         }
-        renderItem={({ item }) => {
-          if (item.type === 'place') {
-            return <PlaceRow location={item.location} />;
-          }
-
-          return (
-            <AssetCard
-              asset={item.asset}
-              onPress={() => router.push(`/assets/${item.asset.id}`)}
-              onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
-            />
-          );
-        }}
+        ListFooterComponent={
+          isPaginationError ? (
+            <BrowsePaginationRetry message={state.message} palette={palette} onRetry={retryResults} />
+          ) : isLoadingMore ? (
+            <View style={styles.footer}><ActivityIndicator color={palette.accent} /></View>
+          ) : null
+        }
+        renderItem={({ item }) => item.type === 'place' ? (
+          <BrowsePlaceRow
+            location={item.location}
+            palette={palette}
+            onPress={() => router.push(assetDetailHref(item.location.id))}
+          />
+        ) : (
+          <AssetCard
+            asset={item.asset}
+            palette={palette}
+            style={gridCardWidth
+              ? { maxWidth: gridCardWidth, minWidth: gridCardWidth, width: gridCardWidth }
+              : styles.singleCardRow}
+            onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
+            onPress={() => router.push(assetDetailHref(item.asset.id))}
+            onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
+          />
+        )}
       />
     </SafeAreaView>
   );
 }
 
-export function SearchHeader({
-  isLoading,
-  lifecycleState,
-  checkoutState,
-  filtersExpanded,
-  query,
-  resultCount,
-  scope,
-  selectedSurface,
-  selectedTagIds,
-  searchInputRef,
-  searchInputFocused,
-  sort,
-  statusMessage,
-  submittedQuery,
-  tagFilters,
-  onChangeSurface,
-  onChangeLifecycleState,
-  onChangeCheckoutState,
-  onChangeQuery,
-  onChangeScope,
-  onChangeSort,
-  onClearQuery,
-  onClearFilters,
-  onToggleTag,
-  onSearchBlur,
-  onSearchFocus,
-  onSubmit,
-  onToggleFilters
-}: {
-  readonly isLoading: boolean;
-  readonly lifecycleState: AssetBrowseLifecycleFilter;
-  readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly filtersExpanded: boolean;
-  readonly query: string;
-  readonly resultCount: number;
-  readonly scope: BrowseScope;
-  readonly selectedSurface: InventoryMapSurface;
-  readonly selectedTagIds: readonly string[];
-  readonly searchInputRef: RefObject<TextInput | null>;
-  readonly searchInputFocused: boolean;
-  readonly sort: AssetBrowseSort;
-  readonly statusMessage?: string;
-  readonly submittedQuery: string;
-  readonly tagFilters?: readonly AssetTagOptionViewModel[];
-  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
-  readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
-  readonly onChangeCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
-  readonly onChangeQuery: (query: string) => void;
-  readonly onChangeScope: (scope: BrowseScope) => void;
-  readonly onChangeSort: (sort: AssetBrowseSort) => void;
-  readonly onClearQuery: () => void;
-  readonly onClearFilters: () => void;
-  readonly onToggleTag?: (tag: AssetTagOptionViewModel) => void;
-  readonly onSearchBlur: () => void;
-  readonly onSearchFocus: () => void;
-  readonly onSubmit: () => void;
-  readonly onToggleFilters: (expanded: boolean) => void;
-}) {
-  const summaryLabel = searchResultSummaryLabel({
-    lifecycleState,
-    query: submittedQuery,
-    resultCount,
-    scope,
-    sort
-  });
-  const sortedTagFilters = [...(tagFilters ?? [])].sort(compareTagOptions);
-  const selectedTagIdSet = new Set(selectedTagIds);
-  const filtersActive = hasActiveFilters({ checkoutState, lifecycleState, scope, sort, tagCount: selectedTagIds.length });
-
-  return (
-    <View>
-      <View style={styles.headerTopRow}>
-        <View style={styles.titleBlock}>
-          <Text style={styles.title}>Browse</Text>
-          <Text numberOfLines={1} style={styles.resultCount}>{summaryLabel}</Text>
-        </View>
-        <BrowseSurfaceControl selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
-      </View>
-      <View style={[styles.searchBar, searchInputFocused ? styles.searchBarFocused : null]}>
-        <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
-        <TextInput
-          accessibilityLabel="Search inventory"
-          autoCapitalize="none"
-          ref={searchInputRef}
-          onChangeText={onChangeQuery}
-          onBlur={onSearchBlur}
-          onFocus={onSearchFocus}
-          onSubmitEditing={onSubmit}
-          placeholder="Search things, places, tags"
-          placeholderTextColor={colors.textMuted}
-          returnKeyType="search"
-          style={styles.searchInput}
-          value={query}
-        />
-        {query.length > 0 ? (
-          <Pressable
-            accessibilityLabel="Clear search"
-            accessibilityRole="button"
-            hitSlop={10}
-            onPress={onClearQuery}
-            style={styles.clearButton}
-          >
-            <X color={colors.textMuted} size={18} strokeWidth={2.5} />
-          </Pressable>
-        ) : null}
-        {isLoading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
-      </View>
-      <View style={styles.filterSummaryRow}>
-        <Pressable
-          accessibilityLabel={filtersExpanded ? 'Hide filters' : 'Show filters'}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: filtersExpanded }}
-          hitSlop={compactControlHitSlop}
-          onPress={() => onToggleFilters(!filtersExpanded)}
-          style={styles.filterToggle}
-        >
-          <SlidersHorizontal color={colors.action} size={17} strokeWidth={2.5} />
-          <Text style={styles.filterToggleText}>Filters</Text>
-        </Pressable>
-        <Text numberOfLines={1} style={styles.filterSummaryText}>
-          {filterSummary({ checkoutState, lifecycleState, scope, sort, tagCount: selectedTagIds.length })}
-        </Text>
-      </View>
-      {filtersExpanded ? (
-        <View>
-          <View style={styles.filterActionsRow}>
-            <Text style={styles.filterActionsTitle}>Filters</Text>
-            <Pressable
-              accessibilityLabel="Clear filters"
-              accessibilityRole="button"
-              disabled={!filtersActive}
-              hitSlop={compactControlHitSlop}
-              onPress={onClearFilters}
-              style={[styles.clearFiltersButton, !filtersActive ? styles.clearFiltersButtonDisabled : null]}
-            >
-              <Text style={[styles.clearFiltersText, !filtersActive ? styles.clearFiltersTextDisabled : null]}>
-                Clear filters
-              </Text>
-            </Pressable>
-          </View>
-          <FilterSection title="Scope">
-            <ScopeControl selectedScope={scope} onChangeScope={onChangeScope} />
-          </FilterSection>
-          {sortedTagFilters.length > 0 && onToggleTag ? (
-            <FilterSection title="Tags">
-              <ScrollView
-                accessibilityLabel="Tag filters"
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.optionScroller}
-              >
-                {sortedTagFilters.map((tag) => (
-                  <OptionChip
-                    key={tag.id}
-                    label={tag.label}
-                    color={tag.color}
-                    selected={selectedTagIdSet.has(tag.id)}
-                    accessibilityLabel={`Filter by tag ${tag.label}`}
-                    onPress={() => onToggleTag(tag)}
-                  />
-                ))}
-              </ScrollView>
-            </FilterSection>
-          ) : null}
-          <RefinementBar
-            lifecycleState={lifecycleState}
-            checkoutState={checkoutState}
-            searchMode={submittedQuery.trim().length > 0}
-            sort={sort}
-            onChangeLifecycleState={onChangeLifecycleState}
-            onChangeCheckoutState={onChangeCheckoutState}
-            onChangeSort={onChangeSort}
-          />
-        </View>
-      ) : null}
-      {statusMessage ? <Text style={styles.errorText}>{statusMessage}</Text> : null}
-    </View>
-  );
-}
-
-function compareTagOptions(left: AssetTagOptionViewModel, right: AssetTagOptionViewModel): number {
-  return left.label.localeCompare(right.label, undefined, { sensitivity: 'base' });
-}
-
-function filterSummary({
-  checkoutState,
-  lifecycleState,
-  scope,
-  sort,
-  tagCount
-}: {
-  readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly lifecycleState: AssetBrowseLifecycleFilter;
-  readonly scope: BrowseScope;
-  readonly sort: AssetBrowseSort;
-  readonly tagCount: number;
-}): string {
-  const scopeLabel = buildBrowseScopeOptions().find((option) => option.value === scope)?.label ?? 'All';
-  const tagLabel = tagCount === 0 ? 'No tags' : tagCount === 1 ? '1 tag' : `${tagCount} tags`;
-  const lifecycleLabel = lifecycleState === 'active' ? 'Active' : lifecycleState === 'archived' ? 'Archived' : 'All';
-  const checkoutLabel = checkoutState === 'checked_out' ? 'Checked out' : checkoutState === 'available' ? 'Available' : 'Any';
-  const sortLabel = sort === 'id_asc' ? 'Stable' : 'Recent';
-  return `${scopeLabel} · ${tagLabel} · ${lifecycleLabel} · ${checkoutLabel} · ${sortLabel}`;
-}
-
-function hasActiveFilters({
-  checkoutState,
-  lifecycleState,
-  scope,
-  sort,
-  tagCount
-}: {
-  readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly lifecycleState: AssetBrowseLifecycleFilter;
-  readonly scope: BrowseScope;
-  readonly sort: AssetBrowseSort;
-  readonly tagCount: number;
-}): boolean {
-  return scope !== 'all' || lifecycleState !== 'active' || checkoutState !== 'any' || sort !== 'updated_desc' || tagCount > 0;
-}
-
-function uniqueTagIds(tagIds: readonly string[]): readonly string[] {
-  return [...new Set(tagIds.map((id) => id.trim()).filter((id) => id.length > 0))];
-}
-
-function toggleTagId(tagIds: readonly string[], tagId: string): readonly string[] {
-  return tagIds.includes(tagId)
-    ? tagIds.filter((id) => id !== tagId)
-    : [...tagIds, tagId];
-}
-
-function ScopeControl({
-  selectedScope,
-  onChangeScope
-}: {
-  readonly selectedScope: BrowseScope;
-  readonly onChangeScope: (scope: BrowseScope) => void;
-}) {
-  return (
-    <View style={styles.optionGroup}>
-      {buildBrowseScopeOptions().map((option) => {
-        const selected = option.value === selectedScope;
-        return (
-          <OptionChip
-            key={option.value}
-            label={option.label}
-            selected={selected}
-            onPress={() => onChangeScope(option.value)}
-          />
-        );
-      })}
-    </View>
-  );
-}
-
-function RefinementBar({
-  checkoutState,
-  lifecycleState,
-  searchMode,
-  sort,
-  onChangeCheckoutState,
-  onChangeLifecycleState,
-  onChangeSort
-}: {
-  readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly lifecycleState: AssetBrowseLifecycleFilter;
-  readonly searchMode: boolean;
-  readonly sort: AssetBrowseSort;
-  readonly onChangeCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
-  readonly onChangeLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
-  readonly onChangeSort: (sort: AssetBrowseSort) => void;
-}) {
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.refinementSections}
-    >
-      <FilterSection title="Status" horizontal>
-        <OptionChip label="Active" selected={lifecycleState === 'active'} onPress={() => onChangeLifecycleState('active')} />
-        <OptionChip label="Archived" selected={lifecycleState === 'archived'} onPress={() => onChangeLifecycleState('archived')} />
-        <OptionChip label="All" selected={lifecycleState === 'all'} onPress={() => onChangeLifecycleState('all')} />
-      </FilterSection>
-      <FilterSection title="Checkout" horizontal>
-        <OptionChip label="Any" selected={checkoutState === 'any'} onPress={() => onChangeCheckoutState('any')} />
-        <OptionChip label="Checked out" selected={checkoutState === 'checked_out'} onPress={() => onChangeCheckoutState('checked_out')} />
-        <OptionChip label="Available" selected={checkoutState === 'available'} onPress={() => onChangeCheckoutState('available')} />
-      </FilterSection>
-      {!searchMode ? (
-        <FilterSection title="Sort" horizontal>
-          <OptionChip label="Recent" selected={sort === 'updated_desc'} onPress={() => onChangeSort('updated_desc')} />
-          <OptionChip label="Stable" selected={sort === 'id_asc'} onPress={() => onChangeSort('id_asc')} />
-        </FilterSection>
-      ) : null}
-    </ScrollView>
-  );
-}
-
-function FilterSection({
-  title,
-  children,
-  horizontal = false,
-  accessibilityLabel
-}: {
-  readonly title: string;
-  readonly children: ReactNode;
-  readonly horizontal?: boolean;
-  readonly accessibilityLabel?: string;
-}) {
-  return (
-    <View style={horizontal ? styles.filterSectionHorizontal : styles.filterSection} accessibilityLabel={accessibilityLabel}>
-      <Text style={styles.filterSectionTitle}>{title}</Text>
-      <View style={horizontal ? styles.optionGroupHorizontal : undefined}>
-        {children}
-      </View>
-    </View>
-  );
-}
-
-function OptionChip({
-  label,
-  selected,
-  color,
-  accessibilityLabel,
-  onPress
-}: {
-  readonly label: string;
-  readonly selected: boolean;
-  readonly color?: string;
-  readonly accessibilityLabel?: string;
-  readonly onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      hitSlop={compactControlHitSlop}
-      onPress={onPress}
-      style={[
-        styles.filterChip,
-        color ? { borderColor: color } : null,
-        selected ? styles.filterChipSelected : null,
-        selected && color ? { backgroundColor: `${color}1F`, borderColor: color } : null
-      ]}
-    >
-      <Text style={[styles.filterChipText, selected ? styles.filterChipTextSelected : null]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function PlaceRow({ location }: { readonly location: LocationBrowserItemViewModel }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => router.push(`/locations/${location.id}`)}
-      style={styles.placeRow}
-    >
-      <View style={styles.placeImageFrame}>
-        {location.photo ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            source={{ uri: location.photo.uri, headers: location.photo.headers }}
-            style={styles.placeImage}
-          />
-        ) : (
-          <Text style={styles.placeImageLabel}>Place</Text>
-        )}
-      </View>
-      <View style={styles.placeBody}>
-        <View style={styles.placeHeader}>
-          <Text numberOfLines={1} style={styles.placeTitle}>{location.title}</Text>
-          <Text style={location.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
-            {location.photoLabel}
-          </Text>
-        </View>
-        {location.description ? (
-          <Text numberOfLines={2} style={styles.placeDescription}>{location.description}</Text>
-        ) : null}
-        <Text style={styles.placeCount}>{location.containedAssetCountLabel}</Text>
-        <Text numberOfLines={1} style={styles.recentAssetLabel}>{location.recentAssetLabel}</Text>
-      </View>
-    </Pressable>
-  );
-}
-
-function EmptyBrowseState({
-  query,
-  scope,
-  filtersActive,
-  onClearFilters,
-  onClearSearch
-}: {
-  readonly query: string;
-  readonly scope: BrowseScope;
-  readonly filtersActive: boolean;
-  readonly onClearFilters: () => void;
-  readonly onClearSearch: () => void;
-}) {
-  const hasQuery = query.trim().length > 0;
-  return (
-    <View style={styles.emptyPanel}>
-      <Text style={styles.emptyTitle}>
-        {hasQuery ? `No matches for "${query}"` : filtersActive ? 'No matches for these filters' : `No ${scope === 'all' ? 'things' : scope} yet`}
-      </Text>
-      <Text style={styles.emptyText}>
-        {hasQuery
-          ? 'Try a broader search or switch scopes.'
-          : filtersActive
-            ? 'Clear filters or choose fewer tags.'
-            : 'New inventory activity will appear here.'}
-      </Text>
-      {hasQuery ? (
-        <Pressable accessibilityRole="button" onPress={onClearSearch} style={styles.emptyAction}>
-          <Text style={styles.emptyActionText}>Clear search</Text>
-        </Pressable>
-      ) : null}
-      {!hasQuery && filtersActive ? (
-        <Pressable accessibilityRole="button" onPress={onClearFilters} style={styles.emptyAction}>
-          <Text style={styles.emptyActionText}>Clear filters</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 function toBrowseListItems(results: BrowseResults): readonly BrowseListItem[] {
-  if (results.scope === 'places') {
-    return results.locations.map((location) => ({ type: 'place', location }));
-  }
-
-  return results.assets.map((asset) => ({ type: 'asset', asset }));
+  return results.scope === 'places'
+    ? results.locations.map((location) => ({ type: 'place' as const, location }))
+    : results.assets.map((asset) => ({ type: 'asset' as const, asset }));
 }
 
 function keyBrowseListItem(item: BrowseListItem): string {
   return item.type === 'place' ? `place:${item.location.id}` : `asset:${item.asset.id}`;
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+function browseResultCount(results: BrowseResults): number {
+  return results.assets.length + results.locations.length;
+}
+
+function uniqueTagIds(tagIds: readonly string[]): readonly string[] {
+  return [...new Set(tagIds.map((id) => id.trim()).filter(Boolean))];
+}
+
+function readableError(_error: unknown, fallback: string): string {
+  return fallback;
 }
 
 function nextRequestId(requestSequence: { current: number }): number {
@@ -968,327 +613,6 @@ function nextRequestId(requestSequence: { current: number }): number {
   return requestSequence.current;
 }
 
-function isCurrentRequest(
-  requestSequence: { readonly current: number },
-  requestId: number
-): boolean {
+function isCurrentRequest(requestSequence: { readonly current: number }, requestId: number): boolean {
   return requestSequence.current === requestId;
 }
-
-const styles = StyleSheet.create({
-  shell: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
-  content: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xl
-  },
-  headerTopRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.xs
-  },
-  titleBlock: {
-    flex: 1,
-    minWidth: 0
-  },
-  title: {
-    color: colors.text,
-    fontSize: 25,
-    fontWeight: '900',
-    letterSpacing: 0,
-    lineHeight: 30
-  },
-  searchBar: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 44,
-    paddingHorizontal: spacing.sm
-  },
-  searchBarFocused: {
-    borderColor: colors.focusRing,
-    borderWidth: 2
-  },
-  searchInput: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 15,
-    minHeight: 44,
-    paddingVertical: 0
-  },
-  clearButton: {
-    alignItems: 'center',
-    minHeight: 44,
-    minWidth: 32,
-    justifyContent: 'center'
-  },
-  filterSection: {
-    gap: spacing.xs,
-    marginTop: spacing.xs
-  },
-  filterSectionHorizontal: {
-    gap: spacing.xs,
-    marginRight: spacing.md
-  },
-  filterSectionTitle: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  optionGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs
-  },
-  optionGroupHorizontal: {
-    flexDirection: 'row',
-    gap: spacing.xs
-  },
-  filterSummaryRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs
-  },
-  filterToggle: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    minHeight: 34,
-    paddingHorizontal: spacing.sm
-  },
-  filterToggleText: {
-    color: colors.action,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  filterSummaryText: {
-    color: colors.textMuted,
-    flex: 1,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  filterActionsRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.sm
-  },
-  filterActionsTitle: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  clearFiltersButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 32,
-    paddingHorizontal: spacing.sm
-  },
-  clearFiltersButtonDisabled: {
-    opacity: 0.5
-  },
-  clearFiltersText: {
-    color: colors.action,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  clearFiltersTextDisabled: {
-    color: colors.textMuted
-  },
-  refinementSections: {
-    gap: spacing.sm,
-    paddingBottom: spacing.xs,
-    paddingTop: spacing.sm
-  },
-  optionScroller: {
-    gap: spacing.xs,
-    minWidth: '100%',
-    paddingBottom: 2
-  },
-  filterChip: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    minHeight: 34,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm
-  },
-  filterChipSelected: {
-    backgroundColor: colors.selected,
-    borderColor: colors.accent
-  },
-  filterChipText: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  filterChipTextSelected: {
-    color: colors.accentStrong
-  },
-  errorText: {
-    color: colors.warning,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: spacing.sm
-  },
-  resultCount: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0,
-    marginTop: 0
-  },
-  emptyPanel: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    gap: spacing.xs,
-    padding: spacing.md
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  emptyText: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 22
-  },
-  emptyAction: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.action,
-    borderRadius: radius.sm,
-    marginTop: spacing.sm,
-    minHeight: 38,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md
-  },
-  emptyActionText: {
-    color: colors.onAction,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: spacing.md
-  },
-  cardRow: {
-    gap: spacing.sm,
-    marginBottom: spacing.sm
-  },
-  placeRow: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-    padding: spacing.sm
-  },
-  placeImageFrame: {
-    alignItems: 'center',
-    aspectRatio: 1,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    justifyContent: 'center',
-    overflow: 'hidden',
-    width: 92
-  },
-  placeImageLabel: {
-    color: colors.accentStrong,
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  placeImage: {
-    height: '100%',
-    width: '100%'
-  },
-  placeBody: {
-    flex: 1,
-    gap: 3,
-    justifyContent: 'center',
-    minWidth: 0
-  },
-  placeHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.sm
-  },
-  placeTitle: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  placeDescription: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18
-  },
-  placeCount: {
-    color: colors.accentStrong,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  recentAssetLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17
-  },
-  photoReady: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    color: colors.accentStrong,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 4
-  },
-  photoNeeded: {
-    backgroundColor: colors.warningSurface,
-    borderRadius: radius.sm,
-    color: colors.warning,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 4
-  }
-});

@@ -17,6 +17,7 @@ class FakeAssetUpdateRepository {
       description: input.description ?? '',
       locationLabel: 'Kitchen',
       locationTrail: ['Home', 'Kitchen', input.title ?? 'Water bottle'],
+      parentLocationTrail: [],
       updatedAtLabel: 'Updated now',
       hasPhoto: false
     };

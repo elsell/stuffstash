@@ -35,6 +35,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
       lifecycleState: 'active',
       locationLabel: 'Inventory root',
       locationTrail: ['Home', input.title],
+      parentLocationTrail: [],
       description: input.description,
       updatedAtLabel: 'Updated now',
       hasPhoto: false
@@ -89,6 +90,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
         lifecycleState: 'active',
         locationLabel: 'Home',
         locationTrail: ['Home', 'Garage'],
+        parentLocationTrail: [],
         description: 'Shelves and bins.',
         updatedAtLabel: 'Updated today',
         hasPhoto: false
@@ -100,6 +102,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
         lifecycleState: 'active',
         locationLabel: 'Garage',
         locationTrail: ['Home', 'Garage', 'Furnace filters'],
+        parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
         description: 'MERV 11 three-pack.',
         updatedAtLabel: 'Updated today',
         hasPhoto: false
@@ -150,6 +153,10 @@ describe('LocationAssetsQuery', () => {
           canAddContainedAssets: false,
           containedAssetsLabel: '0 things inside',
           containedAssets: [],
+          containedSpaces: [],
+          containedSpacesLabel: '0 spaces',
+          containedItems: [],
+          containedItemsLabel: '0 items',
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           imagePlaceholderLabel: 'Item'

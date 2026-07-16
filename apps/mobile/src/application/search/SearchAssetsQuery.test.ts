@@ -186,6 +186,39 @@ describe('SearchAssetsQuery', () => {
     });
   });
 
+  it('maps structured parent breadcrumbs on search result card view models', async () => {
+    const repository = new FakeInventorySummaryRepository([
+      {
+        assets: [asset('asset-hand-towels', 'Christmas hand towels', 'item', 'Holiday / seasonal bin')],
+        hasMore: false
+      }
+    ]);
+    const query = new SearchAssetsQuery(repository);
+
+    await expect(
+      query.execute({
+        query: 'christmas',
+        lifecycleState: 'active',
+        checkoutState: 'any',
+        kind: 'all',
+        sort: 'updated_desc'
+      })
+    ).resolves.toMatchObject({
+      assets: [
+        {
+          id: 'asset-hand-towels',
+          parentLocationTrail: [
+            {
+              id: 'asset-holiday-seasonal-bin',
+              title: 'Holiday / seasonal bin',
+              isImmediateParent: true
+            }
+          ]
+        }
+      ]
+    });
+  });
+
   it('omits search match labels when browse results have no search metadata', async () => {
     const repository = new FakeInventorySummaryRepository([
       {
@@ -220,6 +253,9 @@ function asset(
     lifecycleState: 'active',
     locationLabel,
     locationTrail: ['Home', locationLabel, title],
+    parentLocationTrail: locationLabel === 'Inventory root'
+      ? []
+      : [{ id: assetId(`asset-${locationLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`), title: locationLabel }],
     customType: kind === 'container' ? 'Documents' : undefined,
     description: `${title} description.`,
     updatedAtLabel: 'Updated today',

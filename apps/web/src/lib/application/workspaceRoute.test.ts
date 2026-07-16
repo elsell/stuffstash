@@ -1,10 +1,73 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import type { WorkspaceMode } from '$lib/domain/inventory';
 import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
+  it('parses and formats the canonical Browse state', () => {
+    const route = parseWorkspaceRoute(
+      new URL(
+        'https://app.test/tenants/tenant_1/inventories/inv_1/browse?surface=map&scope=containers&q=paint&tag=tag_2&tag=tag_1&lifecycle=all&availability=available&sort=id_asc&mode=exact'
+      )
+    );
+
+    expect(route).toMatchObject({
+      mode: 'browse',
+      browseSurface: 'map',
+      browseScope: 'containers',
+      searchQuery: 'paint',
+      browseTagIds: ['tag_2', 'tag_1'],
+      searchLifecycleState: 'all',
+      searchCheckoutState: 'available',
+      browseSort: 'id_asc',
+      searchMode: 'exact'
+    });
+    expect(workspaceRouteHref(route, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?surface=map&scope=containers&q=paint&tag=tag_2&tag=tag_1&lifecycle=all&availability=available&sort=id_asc&mode=exact'
+    );
+  });
+
+  it('normalizes duplicate and empty Browse tag query values at the route boundary', () => {
+    const route = parseWorkspaceRoute(new URL(
+      'https://app.test/tenants/tenant_1/inventories/inv_1/browse?tag=&tag=tag_2&tag=tag_2&tag=tag_1'
+    ));
+    expect(route.browseTagIds).toEqual(['tag_2', 'tag_1']);
+    expect(workspaceRouteHref(route, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?tag=tag_2&tag=tag_1'
+    );
+  });
+
+  it('parses legacy Locations and Search routes as Browse compatibility state', () => {
+    const locationsAlias = parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'));
+    expect(locationsAlias).toMatchObject({
+      mode: 'browse',
+      browseScope: 'places',
+      compatibilityAlias: true
+    });
+    expect(workspaceRouteHref(locationsAlias, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?scope=places'
+    );
+
+    const searchAlias = parseWorkspaceRoute(
+      new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&tagId=tag_tools&tagId=tag_camping&lifecycle=all&checkout=checked_out')
+    );
+    expect(searchAlias).toMatchObject({
+      mode: 'browse',
+      searchQuery: 'drill',
+      browseTagIds: ['tag_tools', 'tag_camping'],
+      searchLifecycleState: 'all',
+      searchCheckoutState: 'checked_out',
+      compatibilityAlias: true
+    });
+    expect(workspaceRouteHref(searchAlias, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/browse?q=drill&tag=tag_tools&tag=tag_camping&lifecycle=all&availability=checked_out'
+    );
+    expectTypeOf<Extract<WorkspaceMode, 'search' | 'locations'>>().toEqualTypeOf<never>();
+  });
+
   it('parses a tenant inventory location deep link', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations'))).toMatchObject({
-      mode: 'locations',
+      mode: 'browse',
+      browseScope: 'places',
       tenantId: 'tenant_1',
       inventoryId: 'inv_1'
     });
@@ -26,14 +89,13 @@ describe('workspace route state', () => {
       assetAction: 'edit'
     });
 
-    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact&tagId=tag_tools&tagId=tag_camping'))).toMatchObject({
-      mode: 'search',
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/search?q=drill&lifecycle=all&mode=exact'))).toMatchObject({
+      mode: 'browse',
       tenantId: 'tenant_1',
       lifecycleState: 'active',
       searchQuery: 'drill',
       searchLifecycleState: 'all',
-      searchMode: 'exact',
-      searchTagIds: ['tag_tools', 'tag_camping']
+      searchMode: 'exact'
     });
   });
 
@@ -49,11 +111,27 @@ describe('workspace route state', () => {
     });
   });
 
+  it('parses and builds the canonical location move-here route', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations/location_1/move-here'))).toMatchObject({
+      mode: 'location',
+      locationId: 'location_1',
+      assetAction: 'move-here'
+    });
+    expect(workspaceRouteHref({ mode: 'location', locationId: 'location_1', assetAction: 'move-here' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/locations/location_1/move-here'
+    );
+  });
+
   it('parses durable asset actions and settings sections', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'))).toMatchObject({
       mode: 'asset',
       assetId: 'asset_1',
       assetAction: 'move'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/move-here'))).toMatchObject({
+      mode: 'asset',
+      assetId: 'asset_1',
+      assetAction: 'move-here'
     });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/delete'))).toMatchObject({
       mode: 'asset',
@@ -191,21 +269,17 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset 1', action: 'edit' }, 'tenant 1', 'inv 1')).toBe(
       '/tenants/tenant%201/inventories/inv%201/assets/asset%201/edit'
     );
-    expect(workspaceRouteHref({ mode: 'search', searchQuery: 'garage shelf', searchLifecycleState: 'archived' }, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/search?q=garage+shelf&lifecycle=archived'
-    );
-    expect(workspaceRouteHref({ mode: 'search', searchQuery: 'garage shelf', searchTagIds: ['tag_tools', 'tag_camping'] }, 'tenant_1', 'inv_1')).toBe(
-      '/tenants/tenant_1/inventories/inv_1/search?q=garage+shelf&tagId=tag_tools&tagId=tag_camping'
-    );
     expect(workspaceRouteHref({ action: 'add', addKind: 'location' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/location'
     );
     expect(workspaceRouteHref({ action: 'add', addKind: 'item', addParentAssetId: 'location 1' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/add/item?parent=location+1'
     );
-    expect(workspaceRouteHref({ mode: 'locations' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/locations');
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'
+    );
+    expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move-here' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move-here'
     );
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'archive' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/archive'
@@ -296,8 +370,8 @@ describe('workspace route state', () => {
       action: 'edit'
     });
 
-    expect(workspaceRouteHref({ mode: 'search', inventoryId: 'inv_1', searchQuery: 'drill' }, null, null)).toBe(
-      '/inventories/inv_1/search?q=drill'
+    expect(workspaceRouteHref({ mode: 'browse', inventoryId: 'inv_1', searchQuery: 'drill' }, null, null)).toBe(
+      '/inventories/inv_1/browse?q=drill'
     );
   });
 

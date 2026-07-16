@@ -139,7 +139,8 @@ Rules:
 
 - Attachment detail requires `inventory.view`.
 - Attachment archive/restore/hard delete requires `inventory.edit_asset`.
-- Attachment create, list, detail, content download, archive, restore, and hard delete require the parent asset to be active.
+- Attachment list, detail, content download, thumbnail generation, and model-image preparation require the parent asset to exist and may read attachments from active or archived parent assets when the principal has `inventory.view`.
+- Attachment create, direct-upload initiation and completion, archive, restore, and hard delete require the parent asset to be active.
 - Archived attachments are hidden from normal attachment lists.
 - Attachment hard delete must delete blob content through the blob storage port before removing attachment metadata.
 - Blob deletion failure must stop metadata removal so the system does not create orphaned blob content.

@@ -13,6 +13,7 @@ import type {
   AssetSearchResult as ApiSearchResult,
   InventoryAccessGrant as ApiInventoryAccessGrant,
   InventoryAccessInvitation as ApiInventoryAccessInvitation,
+  CreatedInventoryAccessInvitation as ApiCreatedInventoryAccessInvitation,
   Inventory as ApiInventory,
   Principal as ApiPrincipal,
   Tenant as ApiTenant
@@ -86,7 +87,9 @@ export function mapAsset(asset: ApiAsset): Asset {
     customAssetTypeId: asset.customAssetTypeId,
     customFields: asset.customFields,
     tags: (asset.tags ?? []).map(mapAssetTagSummary),
+    primaryPhotoId: asset.primaryPhoto?.id,
     currentCheckout: mapCurrentCheckout(asset.currentCheckout),
+    undoableOperationId: asset.undoableOperationId,
     updatedAt: undefined
   };
 }
@@ -130,7 +133,8 @@ export function mapAssetCheckout(checkout: ApiAssetCheckout): AssetCheckout {
     returnedByPrincipalId: checkout.returnedByPrincipalId,
     returnDetails: checkout.returnDetails,
     createdAt: checkout.createdAt,
-    updatedAt: checkout.updatedAt
+    updatedAt: checkout.updatedAt,
+    undoableOperationId: checkout.undoableOperationId
   };
 }
 
@@ -194,11 +198,11 @@ export function mapInventoryAccessInvitation(invitation: ApiInventoryAccessInvit
 }
 
 export function mapCreatedInventoryAccessInvitation(
-  invitation: ApiInventoryAccessInvitation
+  invitation: ApiCreatedInventoryAccessInvitation
 ): CreatedInventoryAccessInvitation {
   return {
     invitation: mapInventoryAccessInvitation(invitation),
-    acceptanceToken: invitation.acceptanceToken
+    inviteUrl: invitation.inviteUrl
   };
 }
 

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import AssetDetail from './AssetDetail.svelte';
 import type {
+  Asset,
   AssetAttachment,
   AssetViewModel,
   CustomFieldDefinition,
@@ -22,7 +23,14 @@ afterEach(() => {
 });
 
 describe('AssetDetail', () => {
-  it('scrolls route-opened action panels into view after focusing them', async () => {
+  it('uses verb-form copy for the check-out command', () => {
+    mountAssetDetail();
+
+    expect(controls('Check out')).toHaveLength(1);
+    expect(controls('Checkout')).toHaveLength(0);
+  });
+
+  it('opens route actions as modal task sheets without scrolling the page', async () => {
     const scrollIntoView = vi.fn();
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView });
@@ -30,8 +38,10 @@ describe('AssetDetail', () => {
       mountAssetDetail({ action: 'edit' });
       await flush();
 
-      expect(document.activeElement).toBe(requiredElement('.detail-action-panel'));
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', inline: 'nearest' });
+      const dialog = requiredElement('[role="dialog"]');
+      expect(dialog.getAttribute('aria-modal')).toBe('true');
+      expect(document.activeElement).toBe(requiredElement('#edit-asset-title'));
+      expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: originalScrollIntoView });
     }
@@ -109,6 +119,33 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Edit actions require asset edit access.');
   });
 
+  it('shows populated custom fields and collapses unset fields by default', () => {
+    mountAssetDetail({
+      asset: { ...asset(), customFields: { serial: 'ABC-123' } },
+      customFieldDefinitions: [customFieldDefinition('serial', 'Serial number'), customFieldDefinition('purchase-store', 'Purchase store')]
+    });
+
+    expect(document.body.querySelector('[aria-label="Custom field values"]')?.textContent).toContain('Serial number ABC-123');
+    expect(document.body.textContent).toContain('Show 1 unset field');
+    expect(document.body.querySelector<HTMLDetailsElement>('.unset-field-disclosure')?.open).toBe(false);
+  });
+
+  it('renders container contents and opens a deep-linked move-here sheet', async () => {
+    const container = { ...asset(), id: 'container-one', title: 'Tool cabinet', kind: 'container' as const, parentAssetId: null };
+    const child: Asset = { ...asset(), id: 'child-one', title: 'Drill', kind: 'item', parentAssetId: container.id };
+    mountAssetDetail({
+      asset: container,
+      action: 'move-here',
+      canCreate: true,
+      workspaceAssets: [container, child]
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Inside Tool cabinet');
+    expect(document.body.textContent).toContain('Drill');
+    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Move items here');
+  });
+
   it('searches by detail tag without opening another action', async () => {
     const searchedTags: string[] = [];
     mountAssetDetail({
@@ -137,7 +174,7 @@ describe('AssetDetail', () => {
     });
 
     expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
-    expect(document.body.textContent).toContain('No photos yet.');
+    expect(document.body.textContent).not.toContain('No photos yet.');
   });
 
   it('ignores image attachments owned by a different asset', () => {
@@ -151,7 +188,7 @@ describe('AssetDetail', () => {
     });
 
     expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
-    expect(document.body.textContent).toContain('No photos yet.');
+    expect(document.body.textContent).not.toContain('No photos yet.');
     expect(document.body.textContent).not.toContain('wrong.jpg');
   });
 
@@ -185,13 +222,39 @@ describe('AssetDetail', () => {
 
     expect((requiredElement('#edit-asset-title') as HTMLInputElement).value).toBe('Current asset');
     expect((requiredElement('#edit-custom-field-expiration-date') as HTMLInputElement).value).toBe('2028-02-02');
-    expect(document.activeElement).toBe(requiredElement('.detail-action-panel'));
-    expect(
-      Boolean(
-        requiredElement('.detail-action-panel').compareDocumentPosition(requiredElement('#asset-description-title')) &
-          Node.DOCUMENT_POSITION_FOLLOWING
-      )
-    ).toBe(true);
+    expect(requiredElement('[role="dialog"]').getAttribute('aria-modal')).toBe('true');
+    expect(document.activeElement).toBe(requiredElement('#edit-asset-title'));
+  });
+
+  it('keeps focused custom-field controls mounted while their draft values change', async () => {
+    mountAssetDetail({
+      action: 'edit',
+      asset: {
+        ...asset(),
+        customFields: { 'serial-number': 'ABC-123', 'purchase-store': '' }
+      },
+      customFieldDefinitions: [
+        customFieldDefinition('serial-number', 'Serial number'),
+        customFieldDefinition('purchase-store', 'Purchase store')
+      ]
+    });
+    await flush();
+
+    const populated = requiredElement('#edit-custom-field-serial-number') as HTMLInputElement;
+    populated.focus();
+    setInputValue(populated, '');
+    await flush();
+    expect(populated.isConnected).toBe(true);
+    expect(document.activeElement).toBe(populated);
+
+    const disclosure = requiredElement('.edit-empty-fields') as HTMLDetailsElement;
+    disclosure.open = true;
+    const empty = requiredElement('#edit-custom-field-purchase-store') as HTMLInputElement;
+    empty.focus();
+    setInputValue(empty, 'Corner shop');
+    await flush();
+    expect(empty.isConnected).toBe(true);
+    expect(document.activeElement).toBe(empty);
   });
 
   it('preserves custom field values when moving an asset', async () => {
@@ -221,6 +284,7 @@ describe('AssetDetail', () => {
     clickFirst('Move');
     await flush();
     clickFirst('Inventory root');
+    await flush();
     clickLast('Move');
     await flush();
 
@@ -475,6 +539,17 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).not.toContain('Edit asset');
   });
 
+  it('restores focus to the owning detail heading when the invoking action disappears', async () => {
+    mountAssetDetail({ action: 'edit' });
+    await flush();
+
+    link('Edit').remove();
+    link('Cancel').click();
+    await flush();
+
+    expect(document.activeElement).toBe(requiredElement('#asset-title'));
+  });
+
   it('preserves modified clicks on asset action cancel links', async () => {
     let actionClosed = false;
     mountAssetDetail({
@@ -496,6 +571,83 @@ describe('AssetDetail', () => {
     expect(actionClosed).toBe(false);
     expect(componentPreventedModifiedClick).toBe(false);
     expect(document.body.textContent).toContain('Move asset');
+  });
+
+  it('opens durable removal for the selected existing photo and restores focus after cancel', async () => {
+    let openedAttachmentId = '';
+    mountAssetDetail({
+      attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')],
+      onAttachmentDeleteOpen: (attachmentId) => { openedAttachmentId = attachmentId; }
+    });
+
+    const remove = document.body.querySelector<HTMLAnchorElement>('a[aria-label="Remove photo front.jpg"]');
+    if (!remove) throw new Error('Missing photo removal link');
+    expect(remove.getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/photo-one/delete'
+    );
+    remove.click();
+    expect(openedAttachmentId).toBe('photo-one');
+    await flush();
+    link('Cancel').click();
+    await flush();
+    expect(document.activeElement).toBe(remove);
+  });
+
+  it('does not expose photo removal without edit availability', () => {
+    for (const props of [{ canEdit: false }, { saving: true }]) {
+      mountAssetDetail({ ...props, attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')] });
+      expect(document.body.querySelector('[aria-label="Remove photo front.jpg"]')).toBeNull();
+      if (component) { unmount(component); component = null; }
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('removes a successfully deleted selected primary photo without waiting for refreshed asset metadata', async () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        photo: { id: 'photo-one', assetId: 'asset-one', url: 'blob:front', alt: 'Front photo' }
+      },
+      attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')]
+    });
+
+    (requiredElement('[aria-label="Remove photo front.jpg"]') as HTMLElement).click();
+    await flush();
+    clickLast('Delete');
+    await flush();
+
+    expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+    expect(document.body.querySelector('[aria-label="Remove photo front.jpg"]')).toBeNull();
+  });
+
+  it('keeps photo removal retryable while sanitizing unsafe failures and preserving explicitly safe failures', async () => {
+    for (const failure of [
+      { error: new Error('blob host 10.0.0.8 refused deletion'), expected: 'Unable to delete attachment.', rejected: '10.0.0.8' },
+      {
+        error: Object.assign(new Error('The retention policy prevents deletion.'), { safeForUser: true }),
+        expected: 'The retention policy prevents deletion.',
+        rejected: ''
+      }
+    ]) {
+      mountAssetDetail({
+        attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')],
+        onDeleteAttachment: async () => { throw failure.error; }
+      });
+      (requiredElement('[aria-label="Remove photo front.jpg"]') as HTMLElement).click();
+      await flush();
+      clickLast('Delete');
+      await flush();
+
+      const dialog = requiredElement('[role="alertdialog"]');
+      expect(dialog.textContent).toContain('Delete attachment');
+      expect(dialog.textContent).toContain('Delete front.jpg permanently?');
+      expect(dialog.textContent).toContain(failure.expected);
+      if (failure.rejected) expect(dialog.textContent).not.toContain(failure.rejected);
+      expect(buttons('Delete').at(-1)?.disabled).toBe(false);
+
+      if (component) { unmount(component); component = null; }
+      document.body.innerHTML = '';
+    }
   });
 
   it('uses the focused location route for location action cancel links', async () => {
@@ -581,6 +733,54 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Attachment must be 4 B or smaller.');
   });
 
+  it('keeps a failed photo locally available for retry', async () => {
+    let attempts = 0;
+    let releaseRetry = () => {};
+    mountAssetDetail({
+      onUploadAttachment: () => {
+        attempts += 1;
+        if (attempts === 1) return Promise.reject(Object.assign(new Error('Photo upload interrupted. Try again.'), { safeForUser: true }));
+        return new Promise<void>((resolve) => { releaseRetry = resolve; });
+      }
+    });
+
+    chooseAttachment(new File(['photo'], 'shelf.jpg', { type: 'image/jpeg' }), 'Choose photo');
+    await flush();
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Photo upload interrupted. Try again.');
+    expect(buttonWithLabel('Retry shelf.jpg')).not.toBeNull();
+
+    const retry = buttonWithLabel('Retry shelf.jpg');
+    retry.click();
+    retry.click();
+    await tick();
+    expect(attempts).toBe(2);
+    expect(document.body.querySelector('[role="status"]')?.textContent).toContain('Uploading photo');
+    releaseRetry();
+    await flush();
+    expect(document.body.querySelector('[aria-label="Retry shelf.jpg"]')).toBeNull();
+  });
+
+  it('hides unsafe upload details and disables a second selection while uploading', async () => {
+    let releaseUpload = () => {};
+    mountAssetDetail({
+      onUploadAttachment: () => new Promise<void>((resolve) => { releaseUpload = resolve; })
+    });
+    chooseAttachment(new File(['photo'], 'shelf.jpg', { type: 'image/jpeg' }), 'Choose photo');
+    await tick();
+    expect(buttons('Add photo')[0]?.disabled).toBe(true);
+    expect(document.body.textContent).toContain('Photo upload is already in progress.');
+    releaseUpload();
+    await flush();
+
+    unmount(component!); component = null; document.body.innerHTML = '';
+    const unsafe = Object.assign(new Error('storage host 10.0.0.8 failed'), { safeForUser: false });
+    mountAssetDetail({ onUploadAttachment: async () => { throw unsafe; } });
+    chooseAttachment(new File(['photo'], 'shelf.jpg', { type: 'image/jpeg' }), 'Choose photo');
+    await flush();
+    expect(document.body.textContent).toContain('Unable to upload photo.');
+    expect(document.body.textContent).not.toContain('10.0.0.8');
+  });
+
   it('explains disabled photo upload states', () => {
     const cases: Array<{
       name: string;
@@ -617,7 +817,7 @@ describe('AssetDetail', () => {
       document.body.innerHTML = '';
       mountAssetDetail(testCase.props);
 
-      expect(buttons('Add photo'), testCase.name).toHaveLength(2);
+      expect(buttons('Add photo'), testCase.name).toHaveLength(1);
       for (const button of buttons('Add photo')) {
         expect(button.disabled, testCase.name).toBe(true);
         expect(button.getAttribute('aria-describedby'), testCase.name).toBe('asset-photo-upload-disabled');
@@ -659,17 +859,36 @@ describe('AssetDetail', () => {
     await flush();
 
     expect(uploadCount).toBe(0);
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Unsupported file type.');
+    const filesSection = document.body.querySelector('.attachment-section');
+    expect(filesSection?.querySelector('[role="alert"]')?.textContent).toContain('Unsupported file type.');
+    expect(document.body.querySelector('.asset-photo-panel')?.textContent).not.toContain('Unsupported file type.');
+  });
+
+  it('keeps archive failures visible beside the file that was not archived', async () => {
+    mountAssetDetail({
+      attachments: [attachment('manual', 'manual.pdf', 'application/pdf')],
+      onArchiveAttachment: async () => {
+        throw Object.assign(new Error('Unable to archive manual.pdf.'), { safeForUser: true });
+      }
+    });
+
+    clickLast('Archive');
+    await flush();
+
+    const filesSection = document.body.querySelector('.attachment-section');
+    expect(filesSection?.querySelector('[role="alert"]')?.textContent).toContain('Unable to archive manual.pdf.');
   });
 });
 
 function mountAssetDetail(
   props: Partial<{
     asset: AssetViewModel;
-    action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
+    action: 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
     attachmentId: string | null;
     attachmentAction: 'delete' | null;
     canEdit: boolean;
+    canCreate: boolean;
+    workspaceAssets: Asset[];
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
@@ -677,8 +896,11 @@ function mountAssetDetail(
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
+    onActionOpen: (action: 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
     onActionClose: () => void;
+    onOpenAsset: (asset: Asset) => void;
+    onOpenAdd: (kind: 'item', parentAssetId: string) => void;
+    onMoveHere: (asset: Asset) => Promise<void>;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -742,6 +964,22 @@ function asset(): AssetViewModel {
     customAssetTypeLabel: 'Medicine',
     customFields: { 'expiration-date': '2027-01-01' },
     containmentTrail: 'Hall closet'
+  };
+}
+
+function customFieldDefinition(key: string, displayName: string): CustomFieldDefinition {
+  return {
+    id: `field-${key}`,
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    scope: 'inventory',
+    key,
+    displayName,
+    type: 'text',
+    enumOptions: [],
+    applicability: 'all_assets',
+    customAssetTypeIds: [],
+    lifecycleState: 'active'
   };
 }
 

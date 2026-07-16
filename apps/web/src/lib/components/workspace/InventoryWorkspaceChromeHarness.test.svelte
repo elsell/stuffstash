@@ -14,12 +14,14 @@
     searchQuery = $bindable(''),
     canCreateAsset,
     modalOpen,
+    disablePortal,
     onSelectTenant,
     onSelectInventory,
     onModeChange,
     onSearch,
     onOpenSearchAsset,
     onOpenAdd,
+    onOpenAccountSettings,
     onSignOut
   }: InventoryWorkspaceChromeProps = $props();
 </script>
@@ -39,15 +41,17 @@
   bind:searchQuery
   {canCreateAsset}
   {modalOpen}
+  {disablePortal}
   {onSelectTenant}
   {onSelectInventory}
   {onModeChange}
   {onSearch}
   {onOpenSearchAsset}
   {onOpenAdd}
+  {onOpenAccountSettings}
   {onSignOut}
 >
-  <main class="workspace-main" aria-labelledby="fixture-main-title">
+  <section class="workspace-main" aria-labelledby="fixture-main-title">
     <h1 id="fixture-main-title">Fixture workspace</h1>
-  </main>
+  </section>
 </InventoryWorkspaceChrome>

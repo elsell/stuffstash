@@ -7,7 +7,8 @@ import {
   View
 } from 'react-native';
 import type { AssetCheckoutHistoryViewModel } from '../../application/assets/AssetCheckoutHistoryQuery';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type AssetCheckoutHistorySheetState =
   | { readonly status: 'closed' }
@@ -22,6 +23,7 @@ export function AssetCheckoutHistorySheet({
   readonly onClose: () => void;
   readonly state: AssetCheckoutHistorySheetState;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.sheet}>
       <View style={styles.headerRow}>
@@ -43,15 +45,18 @@ export function AssetCheckoutHistorySheet({
 }
 
 function LoadingHistory() {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.action} />
+      <ActivityIndicator color={palette.action} />
       <Text style={styles.stateText}>Loading checkout history</Text>
     </View>
   );
 }
 
 function ErrorHistory({ message }: { readonly message: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load checkout history</Text>
@@ -61,6 +66,7 @@ function ErrorHistory({ message }: { readonly message: string }) {
 }
 
 function ReadyHistory({ history }: { readonly history: AssetCheckoutHistoryViewModel }) {
+  const styles = useStyles();
   if (history.records.length === 0) {
     return (
       <View style={styles.centerState}>
@@ -109,7 +115,12 @@ function ReadyHistory({ history }: { readonly history: AssetCheckoutHistoryViewM
   );
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     flex: 1,
@@ -271,4 +282,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     textAlign: 'center'
   }
-});
+  });
+}

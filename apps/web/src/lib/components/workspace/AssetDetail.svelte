@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
-  import Image from '@lucide/svelte/icons/image';
   import LogOut from '@lucide/svelte/icons/log-out';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
@@ -18,17 +18,19 @@
     assetDetailHref,
     attachmentDeleteHref as assetAttachmentDeleteHref
   } from '$lib/application/workspaceAssetActions';
-  import { assetDescriptionText, assetEditUnavailableStatus } from '$lib/application/workspaceAssetDetail';
+  import { assetDescriptionText, assetEditUnavailableStatus, partitionAssetDetailFields } from '$lib/application/workspaceAssetDetail';
   import {
     buildDetailPhotos,
     photoUploadUnavailableReason,
     supportedAttachmentContentType,
     supportedImageContentType,
     unsupportedAttachmentTypeMessage,
-    unsupportedImageTypeMessage
+    unsupportedImageTypeMessage,
+    userSafeMediaErrorMessage
   } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
 	  import type {
+	    Asset,
 	    AssetAttachment,
 	    AssetCheckout,
 	    AssetViewModel,
@@ -42,15 +44,18 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
-  import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID } from './AssetDetailHero.svelte';
+  import AssetDetailHero from './AssetDetailHero.svelte';
   import AssetTagChips from './AssetTagChips.svelte';
-  import AssetFilesSection from './AssetFilesSection.svelte';
+  import AssetFilesSection, { type AssetFilesError } from './AssetFilesSection.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
+  import ContainedAssetWorkspace from './ContainedAssetWorkspace.svelte';
   import { formatBytes } from './formatBytes';
 
   let {
     asset,
     canEdit,
+    canCreate = false,
+    workspaceAssets = [],
     action = null,
     attachmentId = null,
     attachmentAction = null,
@@ -65,6 +70,9 @@
     onBack,
     onActionOpen,
     onActionClose,
+    onOpenAsset = () => {},
+    onOpenAdd = () => {},
+    onMoveHere = async () => {},
     onSave,
     onArchive,
     onRestore,
@@ -80,6 +88,8 @@
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
+    canCreate?: boolean;
+    workspaceAssets?: Asset[];
     action?: AssetRouteAction;
     attachmentId?: string | null;
     attachmentAction?: AttachmentRouteAction;
@@ -92,8 +102,11 @@
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
+    onActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onActionClose: () => void;
+    onOpenAsset?: (asset: Asset) => void;
+    onOpenAdd?: (kind: 'item', parentAssetId: string, opener?: HTMLElement | null) => void;
+    onMoveHere?: (asset: Asset) => Promise<void>;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -118,36 +131,43 @@
   let selectedTagIds = $state<string[]>([]);
   let newTags = $state<AssetTagDraft[]>([]);
   let saveError = $state('');
-  let uploadError = $state('');
+  let photoUploadError = $state('');
+  let fileError = $state<AssetFilesError | null>(null);
+  let failedPhotoUpload = $state<SelectedAttachment | null>(null);
+  let photoUploading = $state(false);
   let photoInput = $state<HTMLInputElement | null>(null);
   let fileInput = $state<HTMLInputElement | null>(null);
   let selectedAttachment = $state<AssetAttachment | null>(null);
   let selectedPhotoId = $state<string | null>(null);
+  let removedPhotoIds = $state<string[]>([]);
+  let removalScopeAssetId = $state('');
   let lastRouteActionKey = $state('');
-  let actionPanelElement = $state<HTMLElement | null>(null);
-  let shouldScrollRouteActionPanel = false;
+  let actionReturnFocus = $state<HTMLElement | null>(null);
+  let actionReturnHref = $state('');
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
-  let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
+  let photoAttachments = $derived(
+    attachments.filter((attachment) => attachment.contentType.startsWith('image/') && !removedPhotoIds.includes(attachment.id))
+  );
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
-  let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
+  let photoSourceAsset = $derived(
+    asset.photo && removedPhotoIds.includes(asset.photo.id) ? { ...asset, photo: undefined } : asset
+  );
+  let detailPhotos = $derived(buildDetailPhotos(photoSourceAsset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
-  let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && imageContentTypes.length > 0);
+  let heroPhotoAttachment = $derived(heroPhoto ? photoAttachments.find((attachment) => attachment.id === heroPhoto.id) ?? null : null);
+  let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && !photoUploading && imageContentTypes.length > 0);
   let editUnavailableStatus = $derived(assetEditUnavailableStatus(canEdit));
   let descriptionText = $derived(assetDescriptionText(asset.description));
   let photoUploadDisabledReason = $derived(
-    photoUploadUnavailableReason({
-      canEditAsset: canEdit,
-      lifecycleState: asset.lifecycleState,
-      isSaving: saving,
-      supportedImageTypeCount: imageContentTypes.length
-    })
-  );
-  let photoUploadDescribedBy = $derived(
-    [
-      photoUploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '',
-      uploadError ? PHOTO_UPLOAD_ERROR_ID : ''
-    ].filter(Boolean).join(' ')
+    photoUploading
+      ? 'Photo upload is already in progress.'
+      : photoUploadUnavailableReason({
+          canEditAsset: canEdit,
+          lifecycleState: asset.lifecycleState,
+          isSaving: saving,
+          supportedImageTypeCount: imageContentTypes.length
+        })
   );
   let displayFields = $derived(
     customFieldDefinitions.filter(
@@ -156,6 +176,17 @@
         (!!asset.customAssetTypeId && definition.customAssetTypeIds.includes(asset.customAssetTypeId))
     )
   );
+  let detailFieldGroups = $derived(partitionAssetDetailFields(displayFields, asset.customFields));
+
+  $effect(() => {
+    if (!removalScopeAssetId) {
+      removalScopeAssetId = asset.id;
+    } else if (removalScopeAssetId !== asset.id) {
+      removalScopeAssetId = asset.id;
+      removedPhotoIds = [];
+      selectedPhotoId = null;
+    }
+  });
 
   $effect(() => {
     const attachmentKey = attachmentAction === 'delete' ? attachments.map((attachment) => attachment.id).join(',') : 'none';
@@ -164,62 +195,42 @@
       return;
     }
     const initializingWithoutRouteAction = lastRouteActionKey === '' && !action && !attachmentAction;
-    const routeOpenedActionPanel = panel === 'none';
     lastRouteActionKey = actionKey;
+    saveError = '';
     if (attachmentAction === 'delete' && canEdit) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
       const routeAttachment = attachments.find((attachment) => attachment.id === attachmentId) ?? null;
       selectedAttachment = routeAttachment;
+      actionReturnHref = routeAttachment ? attachmentDeleteHref(routeAttachment) : '';
       panel = routeAttachment ? 'attachment-delete' : 'none';
     } else if (action === 'edit' && canEdit && asset.lifecycleState === 'active') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('edit');
       openEdit(false);
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('move');
       openMove(false);
+    } else if (action === 'move-here' && canEdit && asset.kind === 'container' && asset.lifecycleState === 'active') {
+      panel = 'none';
     } else if (action === 'archive' && canEdit && asset.lifecycleState === 'active') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('archive');
       panel = 'archive';
     } else if (action === 'restore' && canEdit && asset.lifecycleState === 'archived') {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('restore');
       panel = 'restore';
     } else if (action === 'delete' && canEdit) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('delete');
       panel = 'delete';
     } else if (action === 'checkout' && actionIsAvailable('checkout')) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('checkout');
       checkoutDetails = '';
       panel = 'checkout';
     } else if (action === 'return' && actionIsAvailable('return')) {
-      shouldScrollRouteActionPanel = routeOpenedActionPanel;
+      actionReturnHref = actionHref('return');
       checkoutDetails = '';
       panel = 'return';
     } else if (!action && !attachmentAction && !initializingWithoutRouteAction) {
       panel = 'none';
       selectedAttachment = null;
-      shouldScrollRouteActionPanel = false;
-    }
-  });
-
-  $effect(() => {
-    if (
-      (panel === 'edit' ||
-        panel === 'move' ||
-        panel === 'archive' ||
-        panel === 'restore' ||
-        panel === 'delete' ||
-        panel === 'checkout' ||
-        panel === 'return' ||
-        panel === 'attachment-delete') &&
-      actionPanelElement
-    ) {
-      actionPanelElement.focus();
-      if (shouldScrollRouteActionPanel && typeof actionPanelElement.scrollIntoView === 'function') {
-        actionPanelElement.scrollIntoView({ block: 'start', inline: 'nearest' });
-        shouldScrollRouteActionPanel = false;
-      } else if (shouldScrollRouteActionPanel) {
-        shouldScrollRouteActionPanel = false;
-      }
+      actionReturnHref = '';
     }
   });
 
@@ -276,6 +287,9 @@
       return;
     }
     event.preventDefault();
+    saveError = '';
+    actionReturnFocus = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    actionReturnHref = actionHref(nextAction);
     if (nextAction === 'edit') {
       openEdit();
     } else if (nextAction === 'move') {
@@ -337,6 +351,7 @@
   function closePanel(): void {
     const previousPanel = panel;
     panel = 'none';
+    saveError = '';
     selectedAttachment = null;
     if (
       previousPanel === 'edit' ||
@@ -359,6 +374,27 @@
     }
     event.preventDefault();
     closePanel();
+  }
+
+  function restoreActionFocus(event: Event): void {
+    event.preventDefault();
+    const target = actionReturnFocus;
+    const href = actionReturnHref;
+    actionReturnFocus = null;
+    actionReturnHref = '';
+    void tick().then(() => {
+      const hrefFallback = href
+        ? Array.from(document.querySelectorAll<HTMLElement>('[href]')).find(
+            (candidate) => candidate.getAttribute('href') === href
+          ) ?? null
+        : null;
+      const pageFallback = document.querySelector<HTMLElement>('#asset-title, main h1');
+      const focusTarget = target?.isConnected ? target : hrefFallback ?? pageFallback;
+      if (focusTarget && focusTarget === pageFallback && !focusTarget.hasAttribute('tabindex')) {
+        focusTarget.setAttribute('tabindex', '-1');
+      }
+      focusTarget?.focus();
+    });
   }
 
   async function archive(): Promise<void> {
@@ -409,16 +445,20 @@
   }
 
   async function archiveAttachment(attachment: AssetAttachment): Promise<void> {
-    saveError = '';
+    fileError = null;
     try {
       await onArchiveAttachment(attachment);
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to archive attachment.';
+      fileError = {
+        operation: 'archive',
+        attachmentId: attachment.id,
+        message: userSafeMediaErrorMessage(caught, 'Unable to archive file.')
+      };
     }
   }
 
-  async function uploadAttachment(event: Event, fallbackMessage = 'Unable to upload attachment.'): Promise<void> {
-    uploadError = '';
+  async function uploadAttachment(event: Event): Promise<void> {
+    fileError = null;
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -426,12 +466,12 @@
     }
     const contentType = file.type;
     if (!supportedAttachmentContentType(mediaPolicy.supportedContentTypes, contentType)) {
-      uploadError = unsupportedAttachmentTypeMessage();
+      fileError = { operation: 'upload', message: unsupportedAttachmentTypeMessage() };
       input.value = '';
       return;
     }
     if (file.size > mediaPolicy.maxBytes) {
-      uploadError = `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.`;
+      fileError = { operation: 'upload', message: `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.` };
       input.value = '';
       return;
     }
@@ -445,13 +485,14 @@
       });
       input.value = '';
     } catch (caught) {
-      uploadError = caught instanceof Error ? caught.message : fallbackMessage;
+      fileError = { operation: 'upload', message: userSafeMediaErrorMessage(caught, 'Unable to upload file.') };
       input.value = '';
     }
   }
 
   async function uploadPhotoAttachment(event: Event): Promise<void> {
-    uploadError = '';
+    photoUploadError = '';
+    failedPhotoUpload = null;
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -459,11 +500,39 @@
     }
     const contentType = file.type;
     if (!supportedImageContentType(imageContentTypes, contentType)) {
-      uploadError = unsupportedImageTypeMessage();
+      photoUploadError = unsupportedImageTypeMessage();
       input.value = '';
       return;
     }
-    await uploadAttachment(event, 'Unable to upload photo.');
+    if (file.size > mediaPolicy.maxBytes) {
+      photoUploadError = `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.`;
+      input.value = '';
+      return;
+    }
+    const attachment: SelectedAttachment = {
+      id: createClientAttachmentId(),
+      name: file.name,
+      sizeBytes: file.size,
+      contentType,
+      file
+    };
+    await uploadPhoto(attachment);
+    input.value = '';
+  }
+
+  async function uploadPhoto(attachment: SelectedAttachment): Promise<void> {
+    if (photoUploading) return;
+    photoUploading = true;
+    photoUploadError = '';
+    try {
+      await onUploadAttachment(attachment);
+      failedPhotoUpload = null;
+    } catch (caught) {
+      failedPhotoUpload = attachment;
+      photoUploadError = userSafeMediaErrorMessage(caught, 'Unable to upload photo.');
+    } finally {
+      photoUploading = false;
+    }
   }
 
   async function removeAttachment(): Promise<void> {
@@ -472,12 +541,17 @@
     }
     saveError = '';
     try {
-      await onDeleteAttachment(selectedAttachment);
+      const deletedAttachment = selectedAttachment;
+      await onDeleteAttachment(deletedAttachment);
+      if (deletedAttachment.contentType.startsWith('image/')) {
+        removedPhotoIds = [...removedPhotoIds, deletedAttachment.id];
+        selectedPhotoId = null;
+      }
       selectedAttachment = null;
       panel = 'none';
       onAttachmentDeleteClose();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to delete attachment.';
+      saveError = userSafeMediaErrorMessage(caught, 'Unable to delete attachment.');
     }
   }
 
@@ -489,6 +563,8 @@
       return;
     }
     event.preventDefault();
+    actionReturnFocus = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    actionReturnHref = attachmentDeleteHref(attachment);
     selectedAttachment = attachment;
     panel = 'attachment-delete';
     onAttachmentDeleteOpen(attachment.id);
@@ -569,14 +645,19 @@
       photos={detailPhotos}
       {canAddPhoto}
       uploadDisabledReason={photoUploadDisabledReason}
-      {uploadError}
+      uploadError={photoUploadError}
+      uploadBusy={photoUploading}
+      retryPhotoName={failedPhotoUpload?.name ?? ''}
+      removePhotoHref={heroPhotoAttachment && canEdit && asset.lifecycleState === 'active' && !saving ? attachmentDeleteHref(heroPhotoAttachment) : ''}
       onChoosePhoto={() => photoInput?.click()}
       onSelectPhoto={(photoId) => { selectedPhotoId = photoId; }}
+      onRetryPhoto={() => { if (failedPhotoUpload) void uploadPhoto(failedPhotoUpload); }}
+      onRemovePhoto={(event) => { if (heroPhotoAttachment) openAttachmentDelete(event, heroPhotoAttachment); }}
     >
       <div class="asset-detail-copy">
         <div class="detail-title-row">
           <div>
-            <h1 id="asset-title">{asset.title}</h1>
+            <h1 id="asset-title" data-workspace-add-result-focus tabindex="-1">{asset.title}</h1>
             <p>{asset.containmentTrail}</p>
             <AssetTagChips tags={asset.tags ?? []} onTagSelect={onTagSearch} />
           </div>
@@ -616,16 +697,8 @@
 	              variant="outline"
 	              disabled={!actionIsAvailable('checkout')}
 	              onclick={(event) => openAction(event, 'checkout')}
-	            ><LogOut /> Checkout</Button.Root>
+	            ><LogOut /> Check out</Button.Root>
 	          {/if}
-	          <Button.Root
-	            variant="outline"
-            disabled={!canAddPhoto}
-            aria-describedby={photoUploadDescribedBy || undefined}
-            onclick={() => photoInput?.click()}
-          >
-            <Image /> Add photo
-          </Button.Root>
           {#if asset.lifecycleState === 'active'}
             <Button.Root
               href={actionHref('archive')}
@@ -647,10 +720,24 @@
         {/if}
       </div>
     </AssetDetailHero>
+    {#if asset.kind === 'container'}
+      <ContainedAssetWorkspace
+        target={asset}
+        assets={workspaceAssets}
+        {canCreate}
+        {canEdit}
+        {saving}
+        moveHereOpen={action === 'move-here'}
+        {onOpenAsset}
+        {onOpenAdd}
+        onOpenMoveHere={() => onActionOpen('move-here')}
+        onCloseMoveHere={onActionClose}
+        {onMoveHere}
+      />
+    {/if}
   <div class="asset-detail-sections">
       <AssetDetailActionPanel
         {panel}
-        bind:panelElement={actionPanelElement}
         {asset}
         {parentTargets}
         {selectedAttachment}
@@ -668,6 +755,8 @@
         bind:checkoutDetails
         {customFieldValues}
         onClose={closeAction}
+        onDismiss={closePanel}
+        onCloseAutoFocus={restoreActionFocus}
         onSave={save}
         onArchive={archive}
         onRestore={restore}
@@ -683,15 +772,25 @@
     <section class="detail-section" aria-labelledby="asset-description-title">
       <h2 id="asset-description-title">Details</h2>
       <p>{descriptionText}</p>
-      {#if displayFields.length > 0}
+      {#if detailFieldGroups.populated.length > 0}
         <dl class="detail-list custom-detail-list" aria-label="Custom field values">
-          {#each displayFields as field}
+          {#each detailFieldGroups.populated as field}
             <div>
               <dt>{field.displayName}</dt>
-              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key]) || 'Not set'}</dd>
+              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key])}</dd>
             </div>
           {/each}
         </dl>
+      {/if}
+      {#if detailFieldGroups.unset.length > 0}
+        <details class="unset-field-disclosure">
+          <summary>Show {detailFieldGroups.unset.length} unset {detailFieldGroups.unset.length === 1 ? 'field' : 'fields'}</summary>
+          <dl class="detail-list custom-detail-list" aria-label="Unset custom fields">
+            {#each detailFieldGroups.unset as field}
+              <div><dt>{field.displayName}</dt><dd>Not set</dd></div>
+            {/each}
+          </dl>
+        </details>
       {/if}
     </section>
     <AssetFilesSection
@@ -699,6 +798,7 @@
       {canEdit}
       {saving}
       active={asset.lifecycleState === 'active'}
+      error={fileError}
       onChooseFile={() => fileInput?.click()}
       onArchiveAttachment={(attachment) => { void archiveAttachment(attachment); }}
       onOpenAttachmentDelete={openAttachmentDelete}

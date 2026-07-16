@@ -3,11 +3,12 @@ import {
   containedAssets,
   detailAssetList,
   filterAssets,
+  homeLocationPreview,
   labelAsset,
   labelAssets,
   moveParentTargets,
   parentTargets,
-  recentlyAddedAssets,
+  recentlyChangedAssets,
   selectedAssetForDetail,
   topLevelLocations,
   withTrail
@@ -105,8 +106,35 @@ const customAssetTypes: CustomAssetType[] = [
 ];
 
 describe('workspace domain helpers', () => {
+  it('limits only the home location preview', () => {
+    const locations = Array.from({ length: 12 }, (_, index) => ({
+      location: {
+        id: `location-${index}`,
+        tenantId: 'tenant-one',
+        inventoryId: 'inventory-one',
+        kind: 'location' as const,
+        title: `Location ${index}`,
+        description: '',
+        parentAssetId: null,
+        lifecycleState: 'active' as const
+      },
+      assetCount: index
+    }));
+
+    expect(homeLocationPreview(locations)).toHaveLength(9);
+  });
   it('derives top-level active locations and contained asset counts', () => {
     expect(topLevelLocations(assets)).toEqual([{ location: assets[0], assetCount: 2 }]);
+  });
+
+  it('sorts top-level locations with case-insensitive natural title order', () => {
+    const locations = [
+      { ...assets[0]!, id: 'bin-10', title: 'Bin 10' },
+      { ...assets[0]!, id: 'attic', title: 'attic' },
+      { ...assets[0]!, id: 'bin-8', title: 'Bin 8' }
+    ];
+
+    expect(topLevelLocations(locations).map((summary) => summary.location.title)).toEqual(['attic', 'Bin 8', 'Bin 10']);
   });
 
   it('builds containment trails without exposing API DTOs to components', () => {
@@ -124,11 +152,35 @@ describe('workspace domain helpers', () => {
 
   it('keeps valid parent targets to active containers and locations', () => {
     expect(parentTargets(assets).map((asset) => asset.id)).toEqual(['garage', 'toolbox', 'basement', 'basement-toolbox']);
-    expect(recentlyAddedAssets(assets).map((asset) => asset.id)).toEqual(['toolbox', 'drill', 'basement-toolbox']);
-    expect(recentlyAddedAssets(assets).map((asset) => asset.containmentTrail)).toEqual([
+    expect(recentlyChangedAssets(assets).map((asset) => asset.id)).toEqual([
+      'toolbox',
+      'garage',
+      'drill',
+      'basement-toolbox',
+      'basement'
+    ]);
+    expect(recentlyChangedAssets(assets).map((asset) => asset.containmentTrail)).toEqual([
       'Garage',
+      'Inventory root',
       'Garage / Toolbox',
-      'Garage / Basement'
+      'Garage / Basement',
+      'Garage'
+    ]);
+  });
+
+  it('orders recently changed places, containers, and items by update time with undated records last', () => {
+    const recentCandidates: Asset[] = [
+      { ...assets[1]!, id: 'undated', updatedAt: undefined },
+      { ...assets[2]!, id: 'newest', updatedAt: '2026-07-14T12:00:00Z' },
+      { ...assets[3]!, id: 'location-newest', updatedAt: '2026-07-14T13:00:00Z' },
+      { ...assets[4]!, id: 'older', updatedAt: '2026-07-13T12:00:00Z' }
+    ];
+
+    expect(recentlyChangedAssets(recentCandidates).map((asset) => asset.id)).toEqual([
+      'location-newest',
+      'newest',
+      'older',
+      'undated'
     ]);
   });
 

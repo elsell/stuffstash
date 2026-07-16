@@ -74,6 +74,15 @@ Local Compose provides Dex for realistic OIDC verification without requiring a G
 - The API must receive only bearer ID tokens from the verifier script. It must not call Dex-specific APIs from application code.
 - The verifier may use the OAuth password grant against Dex because it is a test harness. User-facing clients must use a browser or native-app OIDC flow when those clients are built.
 
+### Local Dex Sign-In Surface
+
+- The bundled Dex browser surface must use provider-neutral Stuff Stash branding. It must identify the product as `Stuff Stash` without exposing Dex, connector, fixture, or deployment terminology to the person signing in.
+- The branding layer must use the built-in template contract from the immutable, digest-pinned Dex image. Stuff Stash may supply a minimal compatible theme, but must not fetch floating templates or assets during build or startup.
+- The local, self-host, and generated LAN Dex configurations must use the same `frontend.issuer` and theme contract so sign-in does not change character between supported topologies. Container configurations use the pinned image's `/srv/dex/web`; the host-binary workflow must materialize the same repository-owned frontend inputs under the ignored local runtime directory and point `frontend.dir` there.
+- The theme must reuse the approved Stuff Stash glyph, system typography, restrained system-like color, and a calm centered form surface. It must not introduce provider-specific marketing or decorative identity-provider chrome.
+- Every visible form control must keep an accessible label, a visible keyboard focus indicator, and a minimum 44 CSS-pixel action height. The surface must reflow without horizontal overflow at 320 CSS pixels and at browser zoom equivalent to a 720-by-450 CSS-pixel viewport.
+- Invalid credentials must remain visibly associated with the sign-in form and must not reveal whether an account exists.
+
 ## Temporary Kubernetes Dex Fixture
 
 The local Kubernetes deployment may temporarily run Dex beside Stuff Stash to prove production-shaped OIDC discovery, JWKS verification, issuer checks, and audience checks before Google OIDC is configured.
@@ -118,3 +127,15 @@ Stuff Stash must keep a durable user profile row for authenticated principals.
 - The local Dex verification path must run the same happy-path API user flow and authorization adversary checks as the local-dev verifier.
 - The OIDC adapter must have fake-backed tests for valid tokens, verifier failures, empty issuer or subject claims, provider-specific subject characters, malformed authorization headers, and unsupported schemes.
 - Authentication tests must use fakes or local adapters, not mocks.
+- Repository checks must prove the tracked local and self-host Dex configs, generated LAN and host-binary configs, Compose mounts, materialized host frontend, and minimal theme stay aligned with the pinned Dex frontend contract.
+- When Dex is available, startup verification must load discovery and a real browser authorization flow, then confirm the branded sign-in surface and its theme assets are served successfully.
+
+## Invitation Return-To Safety
+
+- Web sign-in started from an invitation route must preserve the same-origin invitation path, query, and fragment through the OIDC round trip.
+- The invitation fragment must remain only in browser session state and must never be appended to the OIDC authorization or token request.
+- Once a valid invitation is parsed, the browser must immediately remove its token fragment from visible history while retaining the complete return-to value only in session-scoped state for sign-in completion.
+- Return-to restoration must accept only an app-local absolute path beginning with `/`; absolute URLs, protocol-relative values, backslash variants, control characters, and callback recursion must normalize to `/`.
+- Callback completion must remove the stored return-to value after one use whether restoration succeeds or falls back safely.
+- Sign-out must clear pending invitation return state.
+- Tests must prove a token-bearing fragment survives a valid callback, never reaches provider requests, cannot create an open redirect, and is cleared after use.

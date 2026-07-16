@@ -2,6 +2,9 @@ import type {
   AssetKind,
   AssetLifecycleFilter,
   AuditScope,
+  BrowseScope,
+  BrowseSort,
+  BrowseSurface,
   InvitationStatusFilter,
   SearchCheckoutFilter,
   SearchLifecycleFilter,
@@ -10,7 +13,7 @@ import type {
 } from '$lib/domain/inventory';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
-export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
+export type AssetRouteAction = 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
 export type AttachmentRouteAction = 'delete' | null;
 export type AccessInvitationRouteAction = 'expire' | 'cancel' | 'delete' | null;
 export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
@@ -43,10 +46,14 @@ export interface WorkspaceRouteState {
   importTab: ImportDetailTabRoute | null;
   lifecycleState: AssetLifecycleFilter;
   searchQuery: string;
-  searchTagIds: string[];
   searchLifecycleState: SearchLifecycleFilter;
   searchMode: SearchMode;
   searchCheckoutState: SearchCheckoutFilter;
+  browseSurface: BrowseSurface;
+  browseScope: BrowseScope;
+  browseSort: BrowseSort;
+  browseTagIds: string[];
+  compatibilityAlias: boolean;
 }
 
 export const defaultWorkspaceRoute: WorkspaceRouteState = {
@@ -74,14 +81,18 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   importTab: null,
   lifecycleState: 'active',
   searchQuery: '',
-  searchTagIds: [],
   searchLifecycleState: 'active',
   searchMode: 'fuzzy',
-  searchCheckoutState: 'any'
+  searchCheckoutState: 'any',
+  browseSurface: 'list',
+  browseScope: 'all',
+  browseSort: 'updated_desc',
+  browseTagIds: [],
+  compatibilityAlias: false
 };
 
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
-const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete', 'checkout', 'return']);
+const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'move-here', 'archive', 'restore', 'delete', 'checkout', 'return']);
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 'cancel', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
@@ -93,6 +104,9 @@ const lifecycleFilters = new Set<AssetLifecycleFilter>(['active', 'archived']);
 const searchLifecycleFilters = new Set<SearchLifecycleFilter>(['active', 'archived', 'all']);
 const searchModes = new Set<SearchMode>(['fuzzy', 'exact']);
 const searchCheckoutFilters = new Set<SearchCheckoutFilter>(['any', 'checked_out', 'available']);
+const browseSurfaces = new Set<BrowseSurface>(['list', 'map']);
+const browseScopes = new Set<BrowseScope>(['all', 'places', 'containers', 'items']);
+const browseSorts = new Set<BrowseSort>(['updated_desc', 'id_asc']);
 
 export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
   const segments = safePathSegments(url.pathname);
@@ -104,9 +118,16 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     lifecycleState: parseLifecycle(url.searchParams.get('lifecycle')),
     searchLifecycleState: parseSearchLifecycle(url.searchParams.get('lifecycle')),
     searchQuery: url.searchParams.get('q') ?? '',
-    searchTagIds: parseSearchTagIds(url.searchParams.getAll('tagId')),
     searchMode: parseSearchMode(url.searchParams.get('mode')),
-    searchCheckoutState: parseSearchCheckout(url.searchParams.get('checkout'))
+    searchCheckoutState: parseSearchCheckout(url.searchParams.get('availability') ?? url.searchParams.get('checkout')),
+    browseSurface: parseBrowseSurface(url.searchParams.get('surface')),
+    browseScope: parseBrowseScope(url.searchParams.get('scope')),
+    browseSort: parseBrowseSort(url.searchParams.get('sort')),
+    browseTagIds: Array.from(new Set(
+      [...url.searchParams.getAll('tag'), ...url.searchParams.getAll('tagId')]
+        .map((id) => id.trim())
+        .filter(Boolean)
+    ))
   };
 
   if (segments.length === 0) {
@@ -126,8 +147,11 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
   const section = segments[inventoryOffset.nextIndex];
   const remaining = segments.length - inventoryOffset.nextIndex;
+  if (section === 'browse' && remaining === 1) {
+    return { ...route, mode: 'browse', lifecycleState: 'active' };
+  }
   if (section === 'locations' && remaining === 1) {
-    return { ...route, mode: 'locations' };
+    return { ...route, mode: 'browse', browseScope: 'places', compatibilityAlias: true };
   }
   if (section === 'locations' && (remaining === 2 || remaining === 3) && segments[inventoryOffset.nextIndex + 1]) {
     const action = parseLocationAction(segments[inventoryOffset.nextIndex + 2]);
@@ -139,7 +163,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
       mode: action === 'edit' ? 'asset' : 'location',
       locationId: segments[inventoryOffset.nextIndex + 1],
       assetId: action === 'edit' ? segments[inventoryOffset.nextIndex + 1] : null,
-      action,
+      action: action === 'edit' ? 'edit' : null,
       assetAction: action
     };
   }
@@ -176,7 +200,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     };
   }
   if (section === 'search') {
-    return remaining === 1 ? { ...route, mode: 'search', lifecycleState: 'active' } : route;
+    return remaining === 1 ? { ...route, mode: 'browse', lifecycleState: 'active', compatibilityAlias: true } : route;
   }
   if (section === 'settings') {
     if (remaining > 5) {
@@ -283,8 +307,8 @@ function parseAccessInvitationAction(value: string | undefined): AccessInvitatio
   return accessInvitationActions.has(value as AccessInvitationRouteAction) ? (value as AccessInvitationRouteAction) : null;
 }
 
-function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit'> | null {
-  return value === 'edit' ? 'edit' : null;
+function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit' | 'move-here'> | null {
+  return value === 'edit' || value === 'move-here' ? value : null;
 }
 
 function parseSettingsSection(value: string | undefined): SettingsSection {
@@ -328,12 +352,24 @@ export function workspaceRouteHref(
     path = `/inventories/${encodeURIComponent(inventoryId)}`;
   }
 
-  if (inventoryId && next.mode === 'locations') {
-    path += '/locations';
+  if (inventoryId && next.mode === 'browse') {
+    path += '/browse';
+    if (next.browseSurface !== 'list') search.set('surface', next.browseSurface);
+    if (next.browseScope !== 'all') search.set('scope', next.browseScope);
+    if (next.searchQuery.trim()) search.set('q', next.searchQuery.trim());
+    for (const tagId of Array.from(new Set(next.browseTagIds.map((id) => id.trim()).filter(Boolean)))) {
+      search.append('tag', tagId);
+    }
+    if (next.searchLifecycleState !== 'active') search.set('lifecycle', next.searchLifecycleState);
+    if (next.searchCheckoutState !== 'any') search.set('availability', next.searchCheckoutState);
+    if (next.browseSort !== 'updated_desc') search.set('sort', next.browseSort);
+    if (next.searchMode !== 'fuzzy') search.set('mode', next.searchMode);
   } else if (inventoryId && next.mode === 'location' && next.locationId) {
     path += `/locations/${encodeURIComponent(next.locationId)}`;
     if ((next.assetAction ?? next.action) === 'edit') {
       path += '/edit';
+    } else if (next.assetAction === 'move-here') {
+      path += '/move-here';
     }
   } else if (inventoryId && next.mode === 'asset' && next.assetId) {
     const action = next.assetAction ?? (next.action === 'edit' ? 'edit' : null);
@@ -350,23 +386,6 @@ export function workspaceRouteHref(
     }
     if (action && !isLocationEdit) {
       path += `/${action}`;
-    }
-  } else if (inventoryId && next.mode === 'search') {
-    path += '/search';
-    if (next.searchQuery.trim()) {
-      search.set('q', next.searchQuery.trim());
-    }
-    for (const tagId of uniqueSearchTagIds(next.searchTagIds ?? [])) {
-      search.append('tagId', tagId);
-    }
-    if (next.searchLifecycleState !== 'active') {
-      search.set('lifecycle', next.searchLifecycleState);
-    }
-    if (next.searchMode !== 'fuzzy') {
-      search.set('mode', next.searchMode);
-    }
-    if (next.searchCheckoutState !== 'any') {
-      search.set('checkout', next.searchCheckoutState);
     }
   } else if (inventoryId && next.mode === 'settings') {
     path += '/settings';
@@ -431,12 +450,16 @@ function parseSearchCheckout(value: string | null): SearchCheckoutFilter {
   return searchCheckoutFilters.has(value as SearchCheckoutFilter) ? (value as SearchCheckoutFilter) : 'any';
 }
 
-function parseSearchTagIds(values: string[]): string[] {
-  return uniqueSearchTagIds(values);
+function parseBrowseSurface(value: string | null): BrowseSurface {
+  return browseSurfaces.has(value as BrowseSurface) ? (value as BrowseSurface) : 'list';
 }
 
-function uniqueSearchTagIds(values: string[]): string[] {
-  return Array.from(new Set(values.map((value) => value.trim()).filter((value) => value.length > 0)));
+function parseBrowseScope(value: string | null): BrowseScope {
+  return browseScopes.has(value as BrowseScope) ? (value as BrowseScope) : 'all';
+}
+
+function parseBrowseSort(value: string | null): BrowseSort {
+  return browseSorts.has(value as BrowseSort) ? (value as BrowseSort) : 'updated_desc';
 }
 
 function parseInvitationStatus(value: string | null): InvitationStatusFilter {

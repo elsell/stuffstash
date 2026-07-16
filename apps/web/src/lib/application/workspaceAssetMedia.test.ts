@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { AssetAttachment, AssetViewModel } from '$lib/domain/inventory';
 import {
   buildDetailPhotos,
-  photoGalleryEmptyMessage,
   photoUploadUnavailableReason,
   supportedAttachmentContentType,
   supportedImageContentType,
   unsupportedAttachmentTypeMessage,
-  unsupportedImageTypeMessage
+  unsupportedImageTypeMessage,
+  userSafeMediaErrorMessage
 } from './workspaceAssetMedia';
 
 describe('workspace asset media helpers', () => {
@@ -99,10 +99,17 @@ describe('workspace asset media helpers', () => {
     expect(photoUploadUnavailableReason({ canEditAsset: true, lifecycleState: 'active', isSaving: false, supportedImageTypeCount: 1 })).toBe('');
   });
 
-  it('builds asset media empty and unsupported type presentation', () => {
-    expect(photoGalleryEmptyMessage()).toBe('No photos yet.');
+  it('builds unsupported type presentation', () => {
     expect(unsupportedAttachmentTypeMessage()).toBe('Unsupported file type.');
     expect(unsupportedImageTypeMessage()).toBe('Unsupported image type.');
+  });
+
+  it('preserves explicitly safe upload errors and hides unsafe server details', () => {
+    const safe = Object.assign(new Error('The file content does not match JPEG.'), { safeForUser: true });
+    const unsafe = Object.assign(new Error('database host 10.0.0.8 failed'), { safeForUser: false });
+    expect(userSafeMediaErrorMessage(safe, 'Unable to upload photo.')).toBe('The file content does not match JPEG.');
+    expect(userSafeMediaErrorMessage(unsafe, 'Unable to upload photo.')).toBe('Unable to upload photo.');
+    expect(userSafeMediaErrorMessage(new Error('fetch failed at internal proxy'), 'Unable to upload photo.')).toBe('Unable to upload photo.');
   });
 });
 

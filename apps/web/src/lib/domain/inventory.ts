@@ -1,11 +1,15 @@
 export type AssetKind = 'item' | 'container' | 'location';
 export type AssetLifecycleState = 'active' | 'archived';
+export type UndoableOperationDirection = 'undo' | 'redo';
 export type AssetLifecycleFilter = AssetLifecycleState;
 export type SearchLifecycleFilter = AssetLifecycleFilter | 'all';
 export type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
 export type SearchMode = 'fuzzy' | 'exact';
 export type SearchCheckoutFilter = 'any' | 'checked_out' | 'available';
-export type WorkspaceMode = 'home' | 'locations' | 'location' | 'asset' | 'search' | 'import' | 'settings';
+export type BrowseSurface = 'list' | 'map';
+export type BrowseScope = 'all' | 'places' | 'containers' | 'items';
+export type BrowseSort = 'updated_desc' | 'id_asc';
+export type WorkspaceMode = 'home' | 'browse' | 'location' | 'asset' | 'import' | 'settings';
 export type Capability = 'editor' | 'viewer';
 export const inventoryAccessRelationships = ['viewer', 'editor'] as const;
 export type InventoryAccessRelationship = (typeof inventoryAccessRelationships)[number];
@@ -129,7 +133,7 @@ export interface InventoryAccessInvitation {
 
 export interface CreatedInventoryAccessInvitation {
   invitation: InventoryAccessInvitation;
-  acceptanceToken?: string;
+  inviteUrl: string;
 }
 
 export type AuditScope = 'inventory' | 'tenant';
@@ -192,8 +196,10 @@ export interface Asset {
   customAssetTypeLabel?: string;
   tags?: AssetTag[];
   photo?: AssetPhoto;
+  primaryPhotoId?: string;
   photoUnavailable?: boolean;
   currentCheckout?: CurrentCheckout;
+  undoableOperationId?: string;
   updatedAt?: string;
 }
 
@@ -218,6 +224,7 @@ export interface AssetCheckout extends CurrentCheckout {
   returnDetails?: string;
   createdAt: string;
   updatedAt: string;
+  undoableOperationId?: string;
 }
 
 export interface CheckedOutAsset {
@@ -477,7 +484,7 @@ export type ParentTargetViewModel = AssetViewModel & { kind: 'location' | 'conta
 export const assetKinds: AssetKind[] = ['item', 'container', 'location'];
 export const defaultMediaUploadPolicy: MediaUploadPolicy = {
   supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
-  maxBytes: 5 * 1024 * 1024
+  maxBytes: 25 * 1024 * 1024
 };
 
 export function assetKindLabel(kind: AssetKind): string {

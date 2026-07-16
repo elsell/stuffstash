@@ -1,10 +1,14 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const webOrigin = normalizedOrigin(process.env.STUFF_STASH_WEB_ORIGIN || 'http://localhost:5173');
 const apiOrigin = normalizedOrigin(process.env.STUFF_STASH_API_ORIGIN || originWithPort(webOrigin, '8080'));
 const issuer = process.env.STUFF_STASH_DEX_ISSUER || 'http://dex:5556/dex';
 const dexHTTPAddr = process.env.STUFF_STASH_DEX_HTTP_ADDR || '0.0.0.0:5556';
+const frontendDir = process.env.STUFF_STASH_DEX_FRONTEND_DIR ?? '/srv/dex/web';
+const frontendOutput = process.env.STUFF_STASH_DEX_FRONTEND_OUT || '';
 const output = process.env.STUFF_STASH_DEX_CONFIG_OUT || '.stuffstash/local/dex/config.yaml';
 const mobileRedirectUri = process.env.STUFF_STASH_OIDC_MOBILE_REDIRECT_URI || 'stuffstash://auth/callback';
 
@@ -21,6 +25,9 @@ issuer: ${quote(issuer)}
 storage:
   type: memory
 
+frontend:
+${frontendDir ? `  dir: ${quote(frontendDir)}\n` : ''}  issuer: Stuff Stash
+${frontendDir ? '  theme: light\n' : ''}
 web:
   http: ${dexHTTPAddr}
   allowedOrigins:
@@ -73,6 +80,9 @@ staticPasswords:
 
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, config);
+if (frontendOutput) {
+  materializeFrontend(frontendOutput);
+}
 console.log(`Wrote ${output}`);
 
 function normalizedOrigin(value) {
@@ -91,4 +101,45 @@ function unique(values) {
 
 function quote(value) {
   return JSON.stringify(value);
+}
+
+function materializeFrontend(destination) {
+  destination = safeFrontendDestination(destination);
+  const source = fileURLToPath(new URL('../deploy/dex', import.meta.url));
+  for (const generatedEntry of ['robots.txt', 'static', 'templates', 'themes']) {
+    rmSync(join(destination, generatedEntry), { recursive: true, force: true });
+  }
+  for (const directory of ['static', 'templates', 'themes/light']) {
+    mkdirSync(join(destination, directory), { recursive: true });
+  }
+  copyFileSync(join(source, 'robots.txt'), join(destination, 'robots.txt'));
+  copyFileSync(join(source, 'static/main.css'), join(destination, 'static/main.css'));
+  for (const template of readdirSync(join(source, 'templates'))) {
+    if (template.endsWith('.html')) {
+      copyFileSync(join(source, 'templates', template), join(destination, 'templates', template));
+    }
+  }
+  copyFileSync(join(source, 'theme/styles.css'), join(destination, 'themes/light/styles.css'));
+  const glyph = fileURLToPath(new URL('../docs/public/brand/stuff-stash-glyph.png', import.meta.url));
+  copyFileSync(glyph, join(destination, 'themes/light/logo.png'));
+  copyFileSync(glyph, join(destination, 'themes/light/favicon.png'));
+}
+
+function safeFrontendDestination(value) {
+  const destination = resolve(value);
+  const workspace = resolve('.');
+  const workspaceRelativePath = relative(workspace, destination);
+  const outsideWorkspace = workspaceRelativePath === '..' || workspaceRelativePath.startsWith(`..${sep}`) || isAbsolute(workspaceRelativePath);
+  const forbidden = new Set([parse(destination).root, workspace, resolve(homedir())]);
+  if (outsideWorkspace || forbidden.has(destination) || basename(destination) !== 'web' || basename(dirname(destination)) !== 'dex') {
+    throw new Error(`refusing unsafe Dex frontend output: ${value}; expected a dedicated dex/web child directory`);
+  }
+  let existingPath = workspace;
+  for (const segment of workspaceRelativePath.split(sep)) {
+    existingPath = join(existingPath, segment);
+    if (existsSync(existingPath) && lstatSync(existingPath).isSymbolicLink()) {
+      throw new Error(`refusing unsafe Dex frontend output: ${value}; symlinked paths are not allowed`);
+    }
+  }
+  return destination;
 }

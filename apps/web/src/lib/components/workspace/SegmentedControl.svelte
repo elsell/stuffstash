@@ -42,6 +42,7 @@
       <Button.Root
         href={option.href}
         variant="ghost"
+        class="h-11 min-w-11"
         disabled={option.disabled}
         aria-current={value === option.value ? 'page' : undefined}
         data-selected={value === option.value}
@@ -58,6 +59,7 @@
       <Button.Root
         type="button"
         variant="ghost"
+        class="h-11 min-w-11"
         disabled={option.disabled}
         aria-pressed={value === option.value}
         data-selected={value === option.value}

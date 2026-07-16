@@ -16,6 +16,7 @@
   import Camera from '@lucide/svelte/icons/camera';
   import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
+  import { onMount } from 'svelte';
   import {
     addPhotoAcceptTypes,
     addPhotoHelpText,
@@ -40,6 +41,7 @@
 
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
+  let cameraAvailable = $state(false);
   let supportedImageTypes = $derived(addSupportedImageTypes(mediaPolicy));
   let acceptTypes = $derived(addPhotoAcceptTypes(supportedImageTypes));
   let supportedTypeLabel = $derived(addPhotoSupportedTypeLabel(supportedImageTypes));
@@ -53,20 +55,29 @@
   function openCameraPicker(): void {
     cameraInput?.click();
   }
+
+  onMount(() => {
+    const captureInput = document.createElement('input');
+    cameraAvailable = typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches &&
+      'capture' in captureInput;
+  });
 </script>
 
 <fieldset class="selection-field attachment-section" aria-describedby={describedBy}>
   <legend>Photos</legend>
   <p id="photo-help" class="selection-summary">{helpText}</p>
   <div class="photo-actions" role="group" aria-label={addPhotoPickerPresentation.actionGroupLabel} aria-describedby={describedBy}>
-    <Button.Root type="button" variant="outline" class="photo-label" aria-describedby={describedBy} onclick={openPhotoPicker}>
+    <Button.Root type="button" variant="outline" class="photo-label min-h-11" aria-describedby={describedBy} onclick={openPhotoPicker}>
       <Upload />
       {addPhotoPickerPresentation.uploadLabel}
     </Button.Root>
-    <Button.Root type="button" variant="outline" class="photo-label" aria-describedby={describedBy} onclick={openCameraPicker}>
-      <Camera />
-      {addPhotoPickerPresentation.cameraLabel}
-    </Button.Root>
+    {#if cameraAvailable}
+      <Button.Root type="button" variant="outline" class="photo-label min-h-11" aria-describedby={describedBy} onclick={openCameraPicker}>
+        <Camera />
+        {addPhotoPickerPresentation.cameraLabel}
+      </Button.Root>
+    {/if}
     <span id="photo-status" class="photo-status" aria-live="polite">{summary}</span>
   </div>
   {#key inputKey}
@@ -81,17 +92,19 @@
       multiple
       onchange={(event) => onFiles(event.currentTarget.files ?? undefined)}
     />
-    <Input
-      id="asset-camera"
-      bind:ref={cameraInput}
-      class="visually-hidden"
-      type="file"
-      tabindex={-1}
-      aria-label={addPhotoPickerPresentation.cameraInputLabel}
-      accept={acceptTypes}
-      capture="environment"
-      onchange={(event) => onFiles(event.currentTarget.files ?? undefined)}
-    />
+    {#if cameraAvailable}
+      <Input
+        id="asset-camera"
+        bind:ref={cameraInput}
+        class="visually-hidden"
+        type="file"
+        tabindex={-1}
+        aria-label={addPhotoPickerPresentation.cameraInputLabel}
+        accept={acceptTypes}
+        capture="environment"
+        onchange={(event) => onFiles(event.currentTarget.files ?? undefined)}
+      />
+    {/if}
   {/key}
 </fieldset>
 
@@ -101,7 +114,7 @@
       <div class="photo-preview" role="listitem">
         <img src={photo.previewUrl} alt={photo.name} />
         <span>{photo.name}</span>
-        <Button.Root variant="ghost" size="icon-xs" aria-label={addPhotoRemoveLabel(photo)} onclick={() => onRemove(photo.id)}><X /></Button.Root>
+        <Button.Root variant="ghost" size="icon-xs" class="size-11" aria-label={addPhotoRemoveLabel(photo)} onclick={() => onRemove(photo.id)}><X /></Button.Root>
       </div>
     {/each}
   </div>

@@ -64,6 +64,9 @@ The first checkout states are:
 - An open checkout is one with state `open`.
 - Checkout requires the asset to exist in the requested tenant and inventory.
 - Checkout requires the asset to be active.
+- Checkout requires a portable asset. Location assets are non-portable place
+  concepts and checkout attempts for them must fail with a safe validation
+  error at the application boundary.
 - Checkout must fail when the asset already has an open checkout.
 - Return requires an open checkout for the requested asset.
 - Return must fail when the asset has no open checkout.
@@ -194,14 +197,24 @@ Checkout and return are primary web asset maintenance actions and must use the s
 
 Web requirements:
 
+- User-facing command labels must use the verb phrase `Check out`; the noun `checkout` remains appropriate for status and history labels.
 - Checkout from asset detail must be one visible action when the asset is active and not currently checked out.
 - Return from asset detail must be one visible action when the asset is currently checked out.
 - Checkout and return details must be optional and must not block the fastest checkout or return path.
 - Asset cards, recent assets, search results, location contents, checked-out browsing surfaces, archived asset rows, and asset detail must show a compact checked-out indicator when an asset has an open checkout.
+- The checked-out asset projection must include the same safe primary-photo
+  summary used by ordinary asset lists so Home and checked-out browsing can
+  recognize the asset without issuing per-asset detail requests.
 - The checked-out indicator must not hide the asset's normal location or imply that the asset moved.
 - The selected-inventory browsing experience must provide a checked-out surface or filter that includes assets with open checkout records regardless of lifecycle.
+- On a dedicated checked-out surface, the open checkout indicator is the primary status. An `active` lifecycle badge must be suppressed as redundant; an `archived` lifecycle badge must remain visible because it changes recovery expectations.
 - The asset detail workspace must expose checkout history through the same safe-history design principles used for audit history: compact rows, safe actor labels, timestamps, and bounded details.
 - Checkout-aware search filters must be available from the web search experience without requiring users to know API query parameters.
+- Web Home must show each checked-out asset as a compact photo-first row. An
+  editor sees a trailing `Return` action with an asset-specific accessible name;
+  activating it returns the asset immediately with no confirmation or required
+  details. Viewers do not see the mutation action. The row disappears after a
+  successful return and the normal saved feedback remains perceivable.
 
 ## Mobile UX
 
@@ -210,7 +223,7 @@ Checkout and return are primary mobile asset maintenance actions.
 Mobile requirements:
 
 - A recently used, searched, scanned, or browsed asset must be check-outable from a fresh app launch in no more than three primary user actions after the app is ready.
-- Checkout from asset detail should be one visible action when the asset is active and not currently checked out.
+- Checkout from asset detail should be one visible action when a portable asset is active and not currently checked out.
 - Return from asset detail should be one visible action when the asset is currently checked out.
 - Checkout details must be optional and must not block the fastest checkout path.
 - After checkout, mobile may offer `Add details` as a secondary follow-up action.
@@ -226,7 +239,7 @@ Permission behavior:
 
 - Viewers may see checkout state and checkout history.
 - Viewers must not see checkout or return mutation actions.
-- Editors may check out active assets when domain invariants allow it.
+- Editors may check out active non-location assets when domain invariants allow it.
 - Editors may return any existing asset with an open checkout, regardless of lifecycle, when domain invariants allow it.
 
 ## Conversational Voice And Text

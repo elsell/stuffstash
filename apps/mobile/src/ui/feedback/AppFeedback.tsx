@@ -1,7 +1,8 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AlertButton, Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import {
   AppNoticeInput,
   AppNoticeTone,
@@ -110,6 +111,8 @@ function AppNotice({
   readonly notice: ActiveNotice;
   readonly onDismiss: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-120)).current;
   const isDismissingRef = useRef(false);
@@ -118,7 +121,7 @@ function AppNotice({
     message: notice.message,
     title: notice.title,
     tone: notice.tone
-  });
+  }, palette);
 
   const dismissWithAnimation = useCallback((afterDismiss?: () => void) => {
     if (isDismissingRef.current) {
@@ -223,7 +226,7 @@ function AppNotice({
           onPress={() => dismissWithAnimation()}
           style={styles.noticeBody}
         >
-          <NoticeToneDot tone={notice.tone} />
+          <NoticeToneDot palette={palette} tone={notice.tone} />
           <View style={styles.noticeText}>
             <Text style={[styles.noticeTitle, { color: presentation.textColor }]}>
               {presentation.title}
@@ -251,20 +254,28 @@ function AppNotice({
   );
 }
 
-function NoticeToneDot({ tone }: { readonly tone: AppNoticeTone }) {
+function NoticeToneDot({
+  palette,
+  tone
+}: {
+  readonly palette: MobileColorPalette;
+  readonly tone: AppNoticeTone;
+}) {
+  const styles = createStyles(palette);
   const backgroundColor =
     tone === 'success'
-      ? colors.success
+      ? palette.success
       : tone === 'warning'
-        ? colors.brandAmber
+        ? palette.brandAmber
         : tone === 'error'
-          ? colors.danger
-          : colors.accent;
+          ? palette.danger
+          : palette.accent;
 
   return <View style={[styles.noticeDot, { backgroundColor }]} />;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   noticeLayer: {
     left: spacing.md,
     position: 'absolute',
@@ -320,4 +331,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 18
   }
-});
+  });
+}

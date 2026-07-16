@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -36,6 +37,15 @@ func (s *Store) ApplyAssetUndoableOperation(_ context.Context, operationID strin
 	current, ok := s.assets[expectedCurrent.ID]
 	if !ok || !memoryAssetsEqual(current, expectedCurrent) {
 		return ports.UndoableOperation{}, asset.Asset{}, ports.ErrConflict
+	}
+	if operation.ReplacesTags {
+		expectedTagIDs := operation.AfterTagIDs
+		if direction == ports.UndoableOperationDirectionRedo {
+			expectedTagIDs = operation.BeforeTagIDs
+		}
+		if !memoryAssetTagAssignmentsMatch(s.assetTagLinks[current.ID], expectedTagIDs) {
+			return ports.UndoableOperation{}, asset.Asset{}, ports.ErrConflict
+		}
 	}
 	if current.TenantID != resulting.TenantID || current.InventoryID != resulting.InventoryID || current.ID != resulting.ID {
 		return ports.UndoableOperation{}, asset.Asset{}, ports.ErrForbidden
@@ -90,10 +100,45 @@ func (s *Store) ApplyAssetUndoableOperation(_ context.Context, operationID strin
 		return ports.UndoableOperation{}, asset.Asset{}, ports.ErrConflict
 	}
 	operation.LastAppliedAt = time.Now().UTC()
+	if operation.ReplacesTags {
+		tagIDs := operation.AfterTagIDs
+		if direction == ports.UndoableOperationDirectionUndo {
+			tagIDs = operation.BeforeTagIDs
+		}
+		links := map[assettag.ID]struct{}{}
+		for _, tagID := range tagIDs {
+			tag, found := s.assetTags[tagID]
+			if !found || tag.TenantID.String() != resulting.TenantID.String() || tag.InventoryID.String() != resulting.InventoryID.String() || tag.LifecycleState != assettag.LifecycleStateActive {
+				return ports.UndoableOperation{}, asset.Asset{}, ports.ErrForbidden
+			}
+			links[tagID] = struct{}{}
+		}
+		if len(links) == 0 {
+			delete(s.assetTagLinks, resulting.ID)
+		} else {
+			s.assetTagLinks[resulting.ID] = links
+		}
+	}
 	s.assets[resulting.ID] = resulting
 	s.auditRecords[auditRecord.ID] = auditRecord
 	s.undoables[operation.ID] = operation
 	return operation, resulting, nil
+}
+
+func memoryAssetTagAssignmentsMatch(actual map[assettag.ID]struct{}, expected []assettag.ID) bool {
+	wanted := make(map[assettag.ID]struct{}, len(expected))
+	for _, tagID := range expected {
+		wanted[tagID] = struct{}{}
+	}
+	if len(actual) != len(wanted) {
+		return false
+	}
+	for tagID := range wanted {
+		if _, ok := actual[tagID]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Store) ApplyAssetCheckoutUndoableOperation(_ context.Context, operationID string, direction ports.UndoableOperationDirection, expectedCurrent asset.Checkout, resulting asset.Checkout, auditRecord audit.Record) (ports.UndoableOperation, asset.Checkout, error) {

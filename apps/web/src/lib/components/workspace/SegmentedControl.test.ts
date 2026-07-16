@@ -31,6 +31,7 @@ describe('SegmentedControl', () => {
 
     const group = namedGroup('Lifecycle');
     expect(group?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
+    expect(group?.querySelectorAll('.h-11.min-w-11')).toHaveLength(2);
     expect(button('Active')?.getAttribute('aria-pressed')).toBe('true');
     expect(button('Archived')?.getAttribute('aria-pressed')).toBe('false');
     expect(button('Archived')?.textContent).toContain('Hidden from default browsing');
@@ -57,6 +58,7 @@ describe('SegmentedControl', () => {
     });
 
     expect(namedGroup('Search mode')?.querySelectorAll('a[data-selected]')).toHaveLength(2);
+    expect(namedGroup('Search mode')?.querySelectorAll('.h-11.min-w-11')).toHaveLength(2);
     expect(link('Assets')?.getAttribute('href')).toBe('/search?mode=assets');
     expect(link('Assets')?.getAttribute('aria-current')).toBe('page');
     expect(link('Locations')?.getAttribute('aria-current')).toBeNull();

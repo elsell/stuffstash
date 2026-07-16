@@ -28,6 +28,14 @@ export function appServicesStateAfterReset(): AppServicesGateState {
   return { status: 'onboarding', onboardingState: { step: 'instance' } };
 }
 
+export function appServicesStateAfterServerChange(): AppServicesGateState {
+  return { status: 'onboarding', onboardingState: { step: 'instance' } };
+}
+
+export function appServicesStateAfterSignOut(profile: ConnectionProfile): AppServicesGateState {
+  return { status: 'onboarding', onboardingState: { step: 'signIn', profile } };
+}
+
 export function appServicesStateAfterAuthenticationRequired(
   profile: ConnectionProfile
 ): AppServicesGateState {

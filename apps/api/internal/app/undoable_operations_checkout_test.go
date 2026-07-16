@@ -63,6 +63,56 @@ func TestUndoReturnReopensCheckout(t *testing.T) {
 	}
 }
 
+func TestUndoReturnRejectsReopeningCheckoutForNonPortableLocation(t *testing.T) {
+	application, repository := checkoutUndoApplication()
+	location := assetItem("asset-one", "tenant-one", "inventory-one", asset.KindLocation, "")
+	repository.items[location.ID] = location
+	open := checkoutUndoRecord(asset.CheckoutStateOpen)
+	returned := open
+	returned.State = asset.CheckoutStateReturned
+	returned.ReturnedAt = open.CheckedOutAt.Add(time.Hour)
+	returned.ReturnedByPrincipal = "editor-two"
+	repository.checkouts = map[asset.CheckoutID]asset.Checkout{returned.ID: returned}
+	repository.undoables = map[string]ports.UndoableOperation{
+		"operation-return": checkoutUndoableOperation("operation-return", audit.ActionAssetReturned, ports.UndoableOperationAvailable, &open, &returned),
+	}
+
+	_, err := application.UndoOperation(context.Background(), checkoutUndoInput("operation-return"))
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected undo return for location to fail with invalid input, got %v", err)
+	}
+	if got := repository.checkouts[returned.ID]; got.State != asset.CheckoutStateReturned {
+		t.Fatalf("expected rejected undo not to reopen checkout, got %+v", got)
+	}
+	if got := repository.undoables["operation-return"]; got.Status != ports.UndoableOperationAvailable {
+		t.Fatalf("expected rejected undo not to change operation status, got %+v", got)
+	}
+}
+
+func TestRedoCheckoutRejectsReopeningCheckoutForNonPortableLocation(t *testing.T) {
+	application, repository := checkoutUndoApplication()
+	location := assetItem("asset-one", "tenant-one", "inventory-one", asset.KindLocation, "")
+	repository.items[location.ID] = location
+	open := checkoutUndoRecord(asset.CheckoutStateOpen)
+	undone := open
+	undone.State = asset.CheckoutStateUndone
+	repository.checkouts = map[asset.CheckoutID]asset.Checkout{undone.ID: undone}
+	repository.undoables = map[string]ports.UndoableOperation{
+		"operation-checkout": checkoutUndoableOperation("operation-checkout", audit.ActionAssetCheckedOut, ports.UndoableOperationUndone, nil, &open),
+	}
+
+	_, err := application.RedoOperation(context.Background(), checkoutUndoInput("operation-checkout"))
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected redo checkout for location to fail with invalid input, got %v", err)
+	}
+	if got := repository.checkouts[undone.ID]; got.State != asset.CheckoutStateUndone {
+		t.Fatalf("expected rejected redo not to reopen checkout, got %+v", got)
+	}
+	if got := repository.undoables["operation-checkout"]; got.Status != ports.UndoableOperationUndone {
+		t.Fatalf("expected rejected redo not to change operation status, got %+v", got)
+	}
+}
+
 func TestRedoReturnReappliesReturn(t *testing.T) {
 	application, repository := checkoutUndoApplication()
 	open := checkoutUndoRecord(asset.CheckoutStateOpen)
@@ -84,6 +134,29 @@ func TestRedoReturnReappliesReturn(t *testing.T) {
 	result := repository.checkouts[open.ID]
 	if result.State != asset.CheckoutStateReturned || result.ReturnedByPrincipal != "editor-two" || result.ReturnDetails.String() != "back" {
 		t.Fatalf("expected returned checkout, got %+v", result)
+	}
+}
+
+func TestRedoReturnCanCloseHistoricalLocationCheckout(t *testing.T) {
+	application, repository := checkoutUndoApplication()
+	location := assetItem("asset-one", "tenant-one", "inventory-one", asset.KindLocation, "")
+	repository.items[location.ID] = location
+	open := checkoutUndoRecord(asset.CheckoutStateOpen)
+	returned := open
+	returned.State = asset.CheckoutStateReturned
+	returned.ReturnedAt = open.CheckedOutAt.Add(time.Hour)
+	returned.ReturnedByPrincipal = "editor-two"
+	repository.checkouts = map[asset.CheckoutID]asset.Checkout{open.ID: open}
+	repository.undoables = map[string]ports.UndoableOperation{
+		"operation-return": checkoutUndoableOperation("operation-return", audit.ActionAssetReturned, ports.UndoableOperationUndone, &open, &returned),
+	}
+
+	_, err := application.RedoOperation(context.Background(), checkoutUndoInput("operation-return"))
+	if err != nil {
+		t.Fatalf("expected redo return to close historical location checkout: %v", err)
+	}
+	if got := repository.checkouts[open.ID]; got.State != asset.CheckoutStateReturned {
+		t.Fatalf("expected historical location checkout to be returned, got %+v", got)
 	}
 }
 

@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import { colors } from '../theme/tokens';
+import { type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import { computeVoiceLevelBarHeights, type VoiceLevelMeterSize } from './VoiceLevelMeterPresentation';
 
 export function VoiceLevelMeter({
@@ -9,6 +10,7 @@ export function VoiceLevelMeter({
   readonly level: number;
   readonly size: VoiceLevelMeterSize;
 }) {
+  const styles = createStyles(useAppearanceAwarePalette());
   const heights = computeVoiceLevelBarHeights(level, size);
   return (
     <View
@@ -30,7 +32,8 @@ export function VoiceLevelMeter({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   bar: {
     backgroundColor: colors.onAction,
     borderRadius: 2,
@@ -55,4 +58,5 @@ const styles = StyleSheet.create({
     gap: 4,
     height: 22
   }
-});
+  });
+}

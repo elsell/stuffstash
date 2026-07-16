@@ -8,7 +8,6 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AssetAuditHistoryQuery } from '../../application/assets/AssetAuditHistoryQuery';
 import { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
@@ -18,7 +17,6 @@ import { InventoryAssetTagsQuery, type AssetTagOptionViewModel } from '../../app
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { reconcileCreatedAssetTags, type CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
-import { AssetAuditHistorySheet, AssetAuditHistorySheetState } from './AssetAuditHistorySheet';
 import {
   AssetCheckoutHistorySheet,
   AssetCheckoutHistorySheetState
@@ -44,7 +42,8 @@ import {
   moveDestinationCreatePlacement,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
-import { colors, spacing } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
 
 type LoadableAssetState =
   | { readonly status: 'loading' }
@@ -116,7 +115,12 @@ export function AssetEditSheetRouteScreen({
         newTags: normalized.newTags,
         activeTags: state.status === 'ready' ? state.assetTags ?? [] : []
       });
-      recordAssetActionCompletion({ assetId, action: 'edit', message: result.message });
+      recordAssetActionCompletion({
+        assetId,
+        action: 'edit',
+        message: result.message,
+        undoableOperationId: result.undoableOperationId
+      });
       router.back();
     } catch (error) {
       await refreshEditAssetTags(normalizedEditDraft(draft).newTags ?? []);
@@ -381,54 +385,6 @@ export function AssetMoveHereSheetRouteScreen({
   );
 }
 
-export function AssetAuditSheetRouteScreen({
-  assetAuditHistoryQuery,
-  assetDetailQuery,
-  assetId
-}: {
-  readonly assetAuditHistoryQuery: AssetAuditHistoryQuery;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetId: string;
-}) {
-  const [state, setState] = useState<AssetAuditHistorySheetState>({ status: 'loading', assetTitle: 'Asset' });
-
-  useEffect(() => {
-    let isCurrent = true;
-    async function load(): Promise<void> {
-      let loadedTitle = 'Asset';
-      try {
-        const asset = await assetDetailQuery.execute(assetId);
-        loadedTitle = asset.title;
-        if (isCurrent) {
-          setState({ status: 'loading', assetTitle: asset.title });
-        }
-        const history = await assetAuditHistoryQuery.execute({ assetId, limit: 20 });
-        if (isCurrent) {
-          setState({ status: 'ready', assetTitle: asset.title, history });
-        }
-      } catch (error) {
-        if (isCurrent) {
-          setState({
-            status: 'error',
-            assetTitle: loadedTitle,
-            message: readableError(error, 'Audit history failed.')
-          });
-        }
-      }
-    }
-    void load();
-    return () => {
-      isCurrent = false;
-    };
-  }, [assetAuditHistoryQuery, assetDetailQuery, assetId]);
-
-  return (
-    <NativeSheetFrame title="Audit history">
-      <AssetAuditHistorySheet state={state} onClose={() => router.back()} />
-    </NativeSheetFrame>
-  );
-}
-
 export function AssetCheckoutHistorySheetRouteScreen({
   assetCheckoutHistoryQuery,
   assetDetailQuery,
@@ -484,6 +440,7 @@ function NativeSheetFrame({
   readonly children: ReactNode;
   readonly title: string;
 }) {
+  const styles = useStyles();
   return (
     <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
       <Stack.Screen options={{ title }} />
@@ -493,15 +450,18 @@ function NativeSheetFrame({
 }
 
 function LoadingState({ label }: { readonly label: string }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.action} />
+      <ActivityIndicator color={palette.action} />
       <Text style={styles.stateText}>{label}</Text>
     </View>
   );
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -521,7 +481,12 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function useStyles() {
+  return createStyles(useAppearancePalette());
+}
+
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   frame: {
     backgroundColor: colors.surface,
     flex: 1
@@ -545,4 +510,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   }
-});
+  });
+}

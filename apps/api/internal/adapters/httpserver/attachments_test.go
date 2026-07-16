@@ -98,20 +98,27 @@ func TestAttachmentUploadListAndDownloadFlow(t *testing.T) {
 	}
 	assertSafeError(t, uploadToArchivedAsset, "resource_not_found", "Resource not found.")
 	listArchivedAssetAttachments := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments", "Bearer dev:owner", nil)
-	if listArchivedAssetAttachments.Code != http.StatusNotFound {
-		t.Fatalf("expected archived asset attachment list status %d, got %d with body %s", http.StatusNotFound, listArchivedAssetAttachments.Code, listArchivedAssetAttachments.Body.String())
+	if listArchivedAssetAttachments.Code != http.StatusOK {
+		t.Fatalf("expected archived asset attachment list status %d, got %d with body %s", http.StatusOK, listArchivedAssetAttachments.Code, listArchivedAssetAttachments.Body.String())
 	}
-	assertSafeError(t, listArchivedAssetAttachments, "resource_not_found", "Resource not found.")
+	archivedList := decodeAttachmentList(t, listArchivedAssetAttachments)
+	if len(archivedList.Data) != 1 || archivedList.Data[0].ID != attachment.Data.ID {
+		t.Fatalf("expected archived parent attachment in list, got %+v", archivedList.Data)
+	}
 	detailArchivedAssetAttachment := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID, "Bearer dev:owner", nil)
-	if detailArchivedAssetAttachment.Code != http.StatusNotFound {
-		t.Fatalf("expected archived asset attachment detail status %d, got %d with body %s", http.StatusNotFound, detailArchivedAssetAttachment.Code, detailArchivedAssetAttachment.Body.String())
+	if detailArchivedAssetAttachment.Code != http.StatusOK {
+		t.Fatalf("expected archived asset attachment detail status %d, got %d with body %s", http.StatusOK, detailArchivedAssetAttachment.Code, detailArchivedAssetAttachment.Body.String())
 	}
-	assertSafeError(t, detailArchivedAssetAttachment, "resource_not_found", "Resource not found.")
+	if archivedDetail := decodeAttachment(t, detailArchivedAssetAttachment); archivedDetail.Data.ID != attachment.Data.ID {
+		t.Fatalf("expected archived parent attachment detail %q, got %+v", attachment.Data.ID, archivedDetail.Data)
+	}
 	downloadArchivedAssetAttachment := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+createdAsset.Data.ID+"/attachments/"+attachment.Data.ID+"/content", "Bearer dev:owner", nil)
-	if downloadArchivedAssetAttachment.Code != http.StatusNotFound {
-		t.Fatalf("expected archived asset attachment download status %d, got %d with body %s", http.StatusNotFound, downloadArchivedAssetAttachment.Code, downloadArchivedAssetAttachment.Body.String())
+	if downloadArchivedAssetAttachment.Code != http.StatusOK {
+		t.Fatalf("expected archived asset attachment download status %d, got %d with body %s", http.StatusOK, downloadArchivedAssetAttachment.Code, downloadArchivedAssetAttachment.Body.String())
 	}
-	assertSafeError(t, downloadArchivedAssetAttachment, "resource_not_found", "Resource not found.")
+	if downloadArchivedAssetAttachment.Header().Get("Content-Type") != "image/png" || !bytes.Equal(downloadArchivedAssetAttachment.Body.Bytes(), content) {
+		t.Fatalf("expected archived asset attachment bytes and type to remain readable")
+	}
 }
 
 func TestAttachmentDirectUploadFlow(t *testing.T) {
@@ -700,6 +707,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 	application := app.New(app.Dependencies{
 		Observer:                  &fakeObserver{},
 		Auth:                      auth.NewLocalDevAuthenticator(),
+		InvitationPublicBaseURL:   "https://stash.example.test/invitations/accept",
 		Authorizer:                authorizer,
 		Users:                     store,
 		Tenants:                   store,

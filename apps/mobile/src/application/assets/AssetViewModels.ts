@@ -7,6 +7,7 @@ export type AssetCardViewModel = {
   readonly customTypeLabel?: string;
   readonly description: string;
   readonly locationTrailLabel: string;
+  readonly parentLocationTrail: readonly AssetParentLocationCrumbViewModel[];
   readonly updatedAtLabel: string;
   readonly photoLabel: string;
   readonly checkedOutLabel?: string;
@@ -17,6 +18,22 @@ export type AssetCardViewModel = {
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };
+};
+
+export type AssetParentLocationCrumbViewModel = {
+  readonly id: string;
+  readonly title: string;
+  readonly isImmediateParent: boolean;
+};
+
+export type AssetRelativePathCrumbViewModel = {
+  readonly id: string;
+  readonly title: string;
+};
+
+export type AssetContainedItemViewModel = AssetCardViewModel & {
+  readonly relativePath: readonly AssetRelativePathCrumbViewModel[];
+  readonly relativePathLabel: string | undefined;
 };
 
 export type AssetTagViewModel = {
@@ -40,6 +57,8 @@ export type AssetPhotoViewModel = {
 };
 
 export type AssetDetailViewModel = {
+  readonly tenantId?: string;
+  readonly inventoryId?: string;
   readonly id: string;
   readonly title: string;
   readonly kind: AssetSummary['kind'];
@@ -49,6 +68,7 @@ export type AssetDetailViewModel = {
   readonly parentAssetId?: string;
   readonly locationTrailLabel: string;
   readonly parentLocationTrailLabel: string;
+  readonly parentLocationTrail: readonly AssetParentLocationCrumbViewModel[];
   readonly lifecycleLabel: string;
   readonly isActive: boolean;
   readonly canEdit: boolean;
@@ -65,6 +85,10 @@ export type AssetDetailViewModel = {
   readonly canReturn: boolean;
   readonly containedAssets: readonly AssetCardViewModel[];
   readonly containedAssetsLabel: string;
+  readonly containedSpaces: readonly AssetCardViewModel[];
+  readonly containedSpacesLabel: string;
+  readonly containedItems: readonly AssetContainedItemViewModel[];
+  readonly containedItemsLabel: string;
   readonly canContainAssets: boolean;
   readonly canAddContainedAssets: boolean;
   readonly updatedAtLabel: string;
@@ -90,18 +114,21 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     customTypeLabel: asset.customType,
     description: asset.description,
     locationTrailLabel: labelLocationTrail(asset.locationTrail),
+    parentLocationTrail: parentLocationTrail(asset),
     updatedAtLabel: asset.updatedAtLabel,
     photoLabel: asset.hasPhoto ? 'Photo ready' : 'Needs photo',
-    checkedOutLabel: asset.currentCheckout ? 'Checked out' : undefined,
+    ...(asset.currentCheckout ? { checkedOutLabel: 'Checked out' } : {}),
     ...(tags.length > 0 ? { tags } : {}),
     imagePlaceholderLabel: placeholderForKind(asset.kind),
-    photo: asset.photo
+    ...(asset.photo ? { photo: asset.photo } : {})
   };
 }
 
 export function toAssetDetailViewModel(
   asset: AssetSummary,
   options: {
+    readonly tenantId?: string;
+    readonly inventoryId?: string;
     readonly canManageLifecycle?: boolean;
     readonly canEditAsset?: boolean;
     readonly canCreateAsset?: boolean;
@@ -116,9 +143,14 @@ export function toAssetDetailViewModel(
     .slice()
     .sort(compareContainedAssetSummaries)
     .map(toAssetCardViewModel);
+  const locationContents = asset.kind === 'location'
+    ? locationWorkspaceContents(asset, options.allAssets ?? [])
+    : { spaces: [], items: [] };
 
   return {
     ...toAssetCardViewModel(asset),
+    tenantId: options.tenantId ?? '',
+    inventoryId: options.inventoryId ?? '',
     kind: asset.kind,
     parentAssetId: asset.parentAssetId,
     parentLocationTrailLabel: labelParentLocationTrail(asset),
@@ -145,14 +177,117 @@ export function toAssetDetailViewModel(
     canDeletePermanently: canManageLifecycle && asset.lifecycleState === 'archived',
     isCheckedOut: asset.currentCheckout !== undefined,
     checkoutLabel: checkoutLabel(asset),
-    checkoutActorLabel: asset.currentCheckout ? `Checked out by ${asset.currentCheckout.checkedOutByPrincipalId}` : undefined,
-    canCheckout: canEditAsset && asset.lifecycleState === 'active' && asset.currentCheckout === undefined,
+    // Principal IDs are authorization identifiers, not safe user-facing names.
+    // Populate an actor label only when the API exposes a resolved safe profile.
+    canCheckout: asset.kind !== 'location'
+      && canEditAsset
+      && asset.lifecycleState === 'active'
+      && asset.currentCheckout === undefined,
     canReturn: canEditAsset && asset.currentCheckout !== undefined,
     containedAssets,
     containedAssetsLabel: containedAssets.length === 1 ? '1 thing inside' : `${containedAssets.length.toString()} things inside`,
+    containedSpaces: locationContents.spaces,
+    containedSpacesLabel: countLabel(locationContents.spaces.length, 'space'),
+    containedItems: locationContents.items,
+    containedItemsLabel: countLabel(locationContents.items.length, 'item'),
     canContainAssets: asset.kind === 'container' || asset.kind === 'location',
     canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
+}
+
+function locationWorkspaceContents(
+  location: AssetSummary,
+  allAssets: readonly AssetSummary[]
+): {
+  readonly spaces: readonly AssetCardViewModel[];
+  readonly items: readonly AssetContainedItemViewModel[];
+} {
+  const childrenByParent = new Map<AssetSummary['id'], AssetSummary[]>();
+  const indexedAssetIds = new Set<AssetSummary['id']>();
+  for (const candidate of allAssets) {
+    if (indexedAssetIds.has(candidate.id)) {
+      continue;
+    }
+    indexedAssetIds.add(candidate.id);
+    const parentAssetId = candidate.parentAssetId;
+    if (!parentAssetId) {
+      continue;
+    }
+    const siblings = childrenByParent.get(parentAssetId) ?? [];
+    siblings.push(candidate);
+    childrenByParent.set(parentAssetId, siblings);
+  }
+  for (const children of childrenByParent.values()) {
+    children.sort(compareContainedAssetSummaries);
+  }
+
+  const spaces: AssetCardViewModel[] = [];
+  const items: AssetContainedItemViewModel[] = [];
+  const visited = new Set<AssetSummary['id']>([location.id]);
+  const pending: Array<{
+    readonly asset: AssetSummary;
+    readonly parentId: AssetSummary['id'];
+    readonly relativePath: readonly AssetRelativePathCrumbViewModel[];
+  }> = [];
+  const rootChildren = childrenByParent.get(location.id) ?? [];
+  for (let index = rootChildren.length - 1; index >= 0; index -= 1) {
+    const child = rootChildren[index];
+    if (child) {
+      pending.push({ asset: child, parentId: location.id, relativePath: [] });
+    }
+  }
+  while (pending.length > 0) {
+    const entry = pending.pop();
+    if (!entry || visited.has(entry.asset.id)) {
+      continue;
+    }
+    visited.add(entry.asset.id);
+    if (entry.asset.kind === 'item') {
+      items.push({
+        ...toAssetCardViewModel(entry.asset),
+        relativePath: entry.relativePath,
+        relativePathLabel: entry.relativePath.length > 0
+          ? entry.relativePath.map((crumb) => crumb.title).join(' / ')
+          : undefined
+      });
+      continue;
+    }
+    if (entry.parentId === location.id) {
+      spaces.push(toAssetCardViewModel(entry.asset));
+    }
+    const childPath = [
+      ...entry.relativePath,
+      { id: entry.asset.id, title: entry.asset.title }
+    ];
+    const children = childrenByParent.get(entry.asset.id) ?? [];
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      const child = children[index];
+      if (child) {
+        pending.push({ asset: child, parentId: entry.asset.id, relativePath: childPath });
+      }
+    }
+  }
+  items.sort(compareContainedItems);
+  return { spaces, items };
+}
+
+function compareContainedItems(
+  left: AssetContainedItemViewModel,
+  right: AssetContainedItemViewModel
+): number {
+  const titleOrder = compareStableText(left.title, right.title);
+  if (titleOrder !== 0) {
+    return titleOrder;
+  }
+  const pathOrder = compareStableText(left.relativePathLabel ?? '', right.relativePathLabel ?? '');
+  if (pathOrder !== 0) {
+    return pathOrder;
+  }
+  return left.id.localeCompare(right.id);
+}
+
+function countLabel(count: number, noun: string): string {
+  return `${count.toString()} ${count === 1 ? noun : `${noun}s`}`;
 }
 
 function checkoutLabel(asset: AssetSummary): string {
@@ -216,17 +351,19 @@ function labelLocationTrail(locationTrail: readonly string[]): string {
 }
 
 function labelParentLocationTrail(asset: AssetSummary): string {
-  if (!asset.parentAssetId) {
+  if (asset.parentLocationTrail.length === 0) {
     return 'Inventory root';
   }
 
-  const localParentTrail = asset.locationTrail.slice(1, -1);
+  return asset.parentLocationTrail.map((segment) => segment.title).join(' / ');
+}
 
-  if (localParentTrail.length === 0) {
-    return 'Inventory root';
-  }
-
-  return localParentTrail.join(' / ');
+function parentLocationTrail(asset: AssetSummary): readonly AssetParentLocationCrumbViewModel[] {
+  return asset.parentLocationTrail.map((segment, index) => ({
+    id: segment.id,
+    title: segment.title,
+    isImmediateParent: index === asset.parentLocationTrail.length - 1
+  }));
 }
 
 function labelAssetKind(kind: AssetSummary['kind']): string {
@@ -236,7 +373,7 @@ function labelAssetKind(kind: AssetSummary['kind']): string {
     case 'item':
       return 'Item';
     case 'location':
-      return 'Location';
+      return 'Place';
   }
 }
 

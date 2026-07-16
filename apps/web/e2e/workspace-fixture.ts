@@ -362,6 +362,10 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     await fulfill(route, []);
     return;
   }
+  if (method === 'GET' && path.endsWith('/checkouts')) {
+    await fulfill(route, []);
+    return;
+  }
   if (method === 'GET' && path.endsWith('/custom-asset-types')) {
     await fulfill(route, []);
     return;

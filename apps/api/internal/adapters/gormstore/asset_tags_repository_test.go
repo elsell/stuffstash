@@ -95,6 +95,35 @@ func TestStoreAssetTagsScopeAndAssignments(t *testing.T) {
 	}
 }
 
+func TestStoreRollsBackDirectAssetEditWhenTagReplacementFails(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+	item := assetItem("asset-one", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	if err := createAsset(t, ctx, store, item); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+	updated := item
+	updated.Title, _ = asset.NewTitle("Changed title")
+	operation := undoableAssetOperation("operation-edit", tenantID, inventoryID, audit.ActionAssetUpdated, &item, updated)
+	err := store.UpdateAssetAndTags(ctx, updated, []assettag.ID{"missing-tag"}, []audit.Record{
+		auditRecord(t, "audit-edit", tenantID, inventoryID, audit.ActionAssetUpdated),
+	}, &operation)
+	if !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("expected invalid tag replacement rejection, got %v", err)
+	}
+	persisted, found, err := store.AssetByID(ctx, tenantID, inventoryID, item.ID)
+	if err != nil || !found || persisted.Title != item.Title {
+		t.Fatalf("expected asset rollback, found=%t asset=%+v err=%v", found, persisted, err)
+	}
+	if _, found, err := store.UndoableOperationByID(ctx, tenantID, inventoryID, operation.ID); err != nil || found {
+		t.Fatalf("expected undo rollback, found=%t err=%v", found, err)
+	}
+}
+
 func assetTag(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, keyValue string, displayNameValue string) assettag.Tag {
 	t.Helper()
 	tagID, ok := assettag.NewID(id)

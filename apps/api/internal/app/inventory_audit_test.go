@@ -75,7 +75,7 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create custom field definition: %v", err)
 	}
-	location, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	locationResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -85,7 +85,8 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create location asset: %v", err)
 	}
-	item, err := application.CreateAsset(context.Background(), CreateAssetInput{
+	location := locationResult.Asset
+	itemResult, err := application.CreateAssetWithOperation(context.Background(), CreateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -95,6 +96,7 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create item asset: %v", err)
 	}
+	item := itemResult.Asset
 	title := "Cordless Drill"
 	if _, err := application.UpdateAsset(context.Background(), UpdateAssetInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("owner")},
@@ -122,15 +124,14 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 		audit.ActionCustomFieldDefinitionCreated,
 		audit.ActionAssetCreated,
 		audit.ActionAssetUpdated,
-		audit.ActionAssetMoved,
 	} {
 		if !collectedAudits.hasAction(expected) {
 			t.Fatalf("expected audit action %s in %+v", expected, collectedAudits.items)
 		}
 	}
-	moved, ok := collectedAudits.recordForAction(audit.ActionAssetMoved)
+	moved, ok := collectedAudits.recordForAction(audit.ActionAssetUpdated)
 	if !ok {
-		t.Fatalf("expected asset moved audit record")
+		t.Fatalf("expected coherent asset update audit record")
 	}
 	if moved.Source != audit.SourceAPI || moved.TargetType != audit.TargetAsset || moved.TargetID != item.ID.String() || moved.Metadata["new_parent"] != location.ID.String() {
 		t.Fatalf("unexpected asset moved record: %+v", moved)

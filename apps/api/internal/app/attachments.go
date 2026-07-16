@@ -211,7 +211,7 @@ func (a App) ListAttachments(ctx context.Context, input ListAttachmentsInput) (L
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return ListAttachmentsResult{}, err
 	}
-	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+	if err := a.ensureReadableAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return ListAttachmentsResult{}, err
 	}
 	limit := pageLimit(a.defaultPageLimit, a.maxPageLimit, input.Limit)
@@ -265,7 +265,7 @@ func (a App) GetAttachment(ctx context.Context, input GetAttachmentInput) (media
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return media.Attachment{}, err
 	}
-	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+	if err := a.ensureReadableAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return media.Attachment{}, err
 	}
 	attachment, found, err := a.attachments.AttachmentByID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
@@ -310,7 +310,7 @@ func (a App) DownloadAttachment(ctx context.Context, input DownloadAttachmentInp
 	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
 		return AttachmentContentResult{}, err
 	}
-	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+	if err := a.ensureReadableAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
 		return AttachmentContentResult{}, err
 	}
 	attachment, found, err := a.attachments.AttachmentByID(ctx, input.TenantID, input.InventoryID, input.AssetID, input.AttachmentID)
@@ -587,6 +587,22 @@ func (a App) ensureActiveAssetForAttachment(ctx context.Context, tenantID tenant
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (a App) ensureReadableAssetForAttachment(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) error {
+	item, found, err := a.assets.AssetByID(ctx, tenantID, inventoryID, assetID)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return ErrNotFound
+	}
+	switch item.LifecycleState {
+	case asset.LifecycleStateActive, asset.LifecycleStateArchived:
+		return nil
+	default:
+		return ErrNotFound
+	}
 }
 
 func contentMatchesType(contentType media.ContentType, content []byte) bool {

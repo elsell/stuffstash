@@ -4,7 +4,6 @@
   import Boxes from '@lucide/svelte/icons/boxes';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import Shield from '@lucide/svelte/icons/shield';
-  import UserRoundCog from '@lucide/svelte/icons/user-round-cog';
   import Users from '@lucide/svelte/icons/users';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -88,7 +87,6 @@
     activity: Activity,
     boxes: Boxes,
     sliders: SlidersHorizontal,
-    'user-cog': UserRoundCog,
     users: Users
   };
 
@@ -99,7 +97,12 @@
       invitationStatus,
       auditScope
     }));
-  let activeSection = $derived(sectionOptions.find((option) => option.current) ?? sectionOptions[0]);
+  let activeSection = $derived(
+    sectionOptions.find((option) => option.current) ??
+      (section === 'administration'
+        ? { label: 'Administration', description: 'No web administration actions are available' }
+        : sectionOptions[0])
+  );
   let shellPresentation = $derived(settingsShellPresentation({ tenant, inventory, activeSection }));
   let overviewPresentation = $derived(settingsOverviewPresentation({
     tenantName: tenant?.name ?? null,
@@ -217,9 +220,7 @@
             <p>{administrationPresentation.description}</p>
           </div>
         </div>
-        <Button.Root variant="outline" disabled={administrationPresentation.actionDisabled}>
-          {administrationPresentation.actionLabel}
-        </Button.Root>
+        <p class="muted-note">Return to Overview, Access, Fields, or Activity to manage this inventory.</p>
       </section>
       {/if}
       </div>

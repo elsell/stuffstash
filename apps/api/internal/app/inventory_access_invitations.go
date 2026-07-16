@@ -4,9 +4,13 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"errors"
+	"net/netip"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -27,8 +31,8 @@ type CreateInventoryAccessInvitationInput struct {
 }
 
 type CreateInventoryAccessInvitationResult struct {
-	Invitation      ports.InventoryAccessInvitation
-	AcceptanceToken string
+	Invitation ports.InventoryAccessInvitation
+	InviteURL  string
 }
 
 type AcceptInventoryAccessInvitationInput struct {
@@ -39,6 +43,23 @@ type AcceptInventoryAccessInvitationInput struct {
 	InventoryID  inventory.InventoryID
 	InvitationID string
 	Token        string
+}
+
+type PreviewInventoryAccessInvitationInput struct {
+	Principal    identity.Principal
+	TenantID     tenant.ID
+	InventoryID  inventory.InventoryID
+	InvitationID string
+	Token        string
+}
+
+type InventoryAccessInvitationPreview struct {
+	InventoryID   inventory.InventoryID
+	InventoryName string
+	Relationship  ports.InventoryAccessRelationship
+	Status        ports.InventoryAccessInvitationStatus
+	ExpiresAt     time.Time
+	IsExpired     bool
 }
 
 type RevokeInventoryAccessInvitationInput struct {
@@ -116,6 +137,10 @@ func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateIn
 		InviterPrincipalID: input.Principal.ID,
 		ExpiresAt:          a.clock.Now().Add(a.invitationTTL),
 	}
+	inviteURL, err := buildInventoryInvitationURL(a.invitationPublicBaseURL, invitation, acceptanceToken, a.invitationAllowInsecureHTTP)
+	if err != nil {
+		return CreateInventoryAccessInvitationResult{}, err
+	}
 	auditRecord, err := a.newAuditRecord(auditRecordInput{
 		Principal:   input.Principal,
 		TenantID:    input.TenantID,
@@ -152,9 +177,118 @@ func (a App) CreateInventoryAccessInvitation(ctx context.Context, input CreateIn
 		},
 	})
 	return CreateInventoryAccessInvitationResult{
-		Invitation:      saved,
-		AcceptanceToken: acceptanceToken,
+		Invitation: saved,
+		InviteURL:  inviteURL,
 	}, nil
+}
+
+func normalizeInvitationPublicBaseURL(value string) string {
+	return strings.TrimSpace(value)
+}
+
+func buildInventoryInvitationURL(baseURL string, invitation ports.InventoryAccessInvitation, acceptanceToken string, allowInsecureLocalHTTP bool) (string, error) {
+	parsed, err := url.Parse(baseURL)
+	if err != nil || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return "", errors.New("invalid invitation public base URL")
+	}
+	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && allowInsecureLocalHTTP && isLocalInvitationHost(parsed.Hostname())) {
+		return "", errors.New("invitation public base URL must use HTTPS")
+	}
+	parsed.Path = "/invitations/accept"
+	parsed.RawPath = ""
+	query := parsed.Query()
+	query.Set("tenant", invitation.TenantID.String())
+	query.Set("inventory", invitation.InventoryID.String())
+	query.Set("invitation", invitation.ID)
+	parsed.RawQuery = query.Encode()
+	parsed.Fragment = "token=" + acceptanceToken
+	return parsed.String(), nil
+}
+
+func isLocalInvitationHost(host string) bool {
+	if host == "localhost" {
+		return true
+	}
+	address, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+	if address.IsLoopback() {
+		return true
+	}
+	if !address.Is4() {
+		return false
+	}
+	octets := address.As4()
+	return octets[0] == 10 ||
+		(octets[0] == 172 && octets[1] >= 16 && octets[1] <= 31) ||
+		(octets[0] == 192 && octets[1] == 168)
+}
+
+func (a App) PreviewInventoryAccessInvitation(ctx context.Context, input PreviewInventoryAccessInvitationInput) (InventoryAccessInvitationPreview, error) {
+	if !isValidInventoryInvitationToken(input.Token) {
+		return InventoryAccessInvitationPreview{}, ErrInvitationInvalid
+	}
+	invitation, found, err := a.inventoryAccess.InventoryAccessInvitationByID(ctx, input.TenantID, input.InventoryID, input.InvitationID)
+	if err != nil {
+		return InventoryAccessInvitationPreview{}, err
+	}
+	if !found || !invitationTokenMatches(invitation.TokenHash, input.Token) {
+		return InventoryAccessInvitationPreview{}, ErrInvitationInvalid
+	}
+	if input.Principal.Email.String() == "" || !strings.EqualFold(input.Principal.Email.String(), invitation.Email.String()) {
+		return InventoryAccessInvitationPreview{}, ErrInvitationEmailMismatch
+	}
+	if invitation.Status == ports.InventoryAccessInvitationAccepted && invitation.AcceptedPrincipalID != input.Principal.ID {
+		return InventoryAccessInvitationPreview{}, ErrInvitationInvalid
+	}
+	item, found, err := a.inventories.InventoryByID(ctx, input.TenantID, input.InventoryID)
+	if err != nil {
+		return InventoryAccessInvitationPreview{}, err
+	}
+	if !found || !item.IsActive() {
+		return InventoryAccessInvitationPreview{}, ErrInvitationInvalid
+	}
+
+	now := a.clock.Now()
+	preview := InventoryAccessInvitationPreview{
+		InventoryID:   item.ID,
+		InventoryName: item.Name.String(),
+		Relationship:  invitation.Relationship,
+		Status:        invitation.Status,
+		ExpiresAt:     invitation.ExpiresAt,
+		IsExpired:     invitation.IsExpired(now),
+	}
+	a.observer.Record(ctx, ports.Event{
+		Name:    ports.EventInventoryInvitationPreviewed,
+		Message: "inventory invitation previewed",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"principal_id":  input.Principal.ID.String(),
+			"invitation_id": invitation.ID,
+			"status":        string(invitation.Status),
+		},
+	})
+	return preview, nil
+}
+
+func invitationTokenMatches(expectedHash string, token string) bool {
+	actualHash := hashInventoryInvitationToken(token)
+	return len(expectedHash) == len(actualHash) && subtle.ConstantTimeCompare([]byte(expectedHash), []byte(actualHash)) == 1
+}
+
+func isValidInventoryInvitationToken(token string) bool {
+	if len(token) != 43 {
+		return false
+	}
+	for _, char := range token {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '-' || char == '_' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func (a App) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptInventoryAccessInvitationInput) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {

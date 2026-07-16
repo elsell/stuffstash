@@ -81,6 +81,50 @@ describe('AssetFilesSection', () => {
     expect(button('Upload file').disabled).toBe(true);
     expect(document.body.textContent).toContain('No active files.');
   });
+
+  it('keeps file-operation failures in the Files section and associates them with upload', () => {
+    component = mount(AssetFilesSection, {
+      target: document.body,
+      props: {
+        attachments: [],
+        canEdit: true,
+        saving: false,
+        active: true,
+        error: { operation: 'upload', message: 'Unable to upload file.' },
+        onChooseFile: () => {},
+        onArchiveAttachment: () => {},
+        onOpenAttachmentDelete: () => {},
+        attachmentDeleteHref: (file) => `/files/${file.id}/delete`
+      }
+    });
+
+    const section = document.body.querySelector('.attachment-section');
+    const alert = section?.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('Unable to upload file.');
+    expect(button('Upload file').getAttribute('aria-describedby')).toBe(alert?.id);
+  });
+
+  it('associates an archive failure only with the affected row action', () => {
+    component = mount(AssetFilesSection, {
+      target: document.body,
+      props: {
+        attachments: [attachment('manual-one', 'manual.pdf')],
+        canEdit: true,
+        saving: false,
+        active: true,
+        error: { operation: 'archive', attachmentId: 'manual-one', message: 'Unable to archive manual.pdf.' },
+        onChooseFile: () => {},
+        onArchiveAttachment: () => {},
+        onOpenAttachmentDelete: () => {},
+        attachmentDeleteHref: (file) => `/files/${file.id}/delete`
+      }
+    });
+
+    const alert = document.body.querySelector<HTMLElement>('[role="alert"]');
+    expect(alert?.textContent).toContain('Unable to archive manual.pdf.');
+    expect(button('Archive').getAttribute('aria-describedby')).toBe(alert?.id);
+    expect(button('Upload file').hasAttribute('aria-describedby')).toBe(false);
+  });
 });
 
 function attachment(id: string, fileName: string, contentType: AttachmentContentType = 'application/pdf', sizeBytes = 512): AssetAttachment {

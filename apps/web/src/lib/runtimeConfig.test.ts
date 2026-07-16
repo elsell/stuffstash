@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import developmentRuntimeConfig from '../../static/config.json';
 import { applyRuntimeConfigOverrides, parseRuntimeConfig } from './runtimeConfig';
 
 describe('parseRuntimeConfig', () => {
+  it('keeps the shipped development security switch and attachment policy aligned with local APIs', () => {
+    const parsed = parseRuntimeConfig(developmentRuntimeConfig);
+
+    expect(parsed.invitationAllowInsecureLocalHTTP).toBe(true);
+    expect(parsed.mediaUploadPolicy).toEqual({
+      supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+      maxBytes: 25 * 1024 * 1024
+    });
+  });
+
   it('normalizes required runtime values', () => {
     expect(
       parseRuntimeConfig({
@@ -15,11 +26,24 @@ describe('parseRuntimeConfig', () => {
       oidcIssuer: 'http://localhost:5556/dex',
       oidcClientId: 'stuff-stash-web-local',
       oidcRedirectUri: 'http://localhost:5173/callback',
+      invitationAllowInsecureLocalHTTP: false,
       mediaUploadPolicy: {
         supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
-        maxBytes: 5242880
+        maxBytes: 25 * 1024 * 1024
       }
     });
+  });
+
+  it('defaults insecure local invitation HTTP off and accepts only an explicit boolean', () => {
+    const base = {
+      apiBaseUrl: 'http://localhost:8080',
+      oidcIssuer: 'http://localhost:5556/dex',
+      oidcClientId: 'stuff-stash-web-local',
+      oidcRedirectUri: 'http://localhost:5173/callback'
+    };
+    expect(parseRuntimeConfig(base).invitationAllowInsecureLocalHTTP).toBe(false);
+    expect(parseRuntimeConfig({ ...base, invitationAllowInsecureLocalHTTP: true }).invitationAllowInsecureLocalHTTP).toBe(true);
+    expect(parseRuntimeConfig({ ...base, invitationAllowInsecureLocalHTTP: 'true' }).invitationAllowInsecureLocalHTTP).toBe(false);
   });
 
   it('accepts runtime media upload policy overrides', () => {

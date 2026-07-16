@@ -1,5 +1,6 @@
 <script lang="ts">
   import Activity from '@lucide/svelte/icons/activity';
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import {
@@ -10,7 +11,11 @@
     type Tenant
   } from '$lib/domain/inventory';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
-  import { auditRecordPresentation, auditStatusPresentation } from '$lib/application/workspaceAuditPresentation';
+  import {
+    auditRecordPresentation,
+    auditStatusPresentation,
+    groupAuditRecordsByDay
+  } from '$lib/application/workspaceAuditPresentation';
   import { settingsAuditScopeOptions } from '$lib/application/workspaceSettingsNavigation';
   import SegmentedControl from './SegmentedControl.svelte';
 
@@ -37,6 +42,10 @@
   let error = $state('');
   let requestId = 0;
   let controller: AbortController | null = null;
+  let visibleRecordCount = $state(20);
+  let visibleRecords = $derived(records.slice(0, visibleRecordCount));
+  let auditDayGroups = $derived(groupAuditRecordsByDay(visibleRecords));
+  let hasBufferedRecords = $derived(visibleRecordCount < records.length);
   let scopeOptions = $derived(
     settingsAuditScopeOptions({
       tenantId: tenant?.id ?? inventory?.tenantId ?? null,
@@ -73,6 +82,7 @@
     records = [];
     nextCursor = null;
     loaded = false;
+    visibleRecordCount = 20;
     error = '';
     if (!contextKey || !canReadScope) {
       controller = null;
@@ -105,6 +115,9 @@
         return;
       }
       records = cursor ? [...records, ...page.items] : page.items;
+      if (cursor) {
+        visibleRecordCount += 20;
+      }
       nextCursor = page.pagination.nextCursor;
       loaded = true;
     } catch (caught) {
@@ -112,7 +125,7 @@
         return;
       }
       if (current === requestId && contextKey === expectedContext) {
-        error = caught instanceof Error ? caught.message : 'Unable to load audit history.';
+        error = safeWorkspaceErrorMessage(caught, 'Activity could not be loaded. Try again.');
       }
     } finally {
       if (controller?.signal === signal) {
@@ -131,6 +144,10 @@
     controller?.abort();
     controller = new AbortController();
     void loadRecords(contextKey, nextCursor, controller.signal);
+  }
+
+  function showMoreBufferedRecords(): void {
+    visibleRecordCount += 20;
   }
 
   function selectScope(nextScope: AuditScope): void {
@@ -160,37 +177,48 @@
     <p class={auditStatus.role === 'alert' ? 'denied-note' : 'muted-note'} role={auditStatus.role}>{auditStatus.message}</p>
   {:else}
     <div class="audit-list" aria-label="Audit records">
-      {#each records as record}
-        {@const presented = auditRecordPresentation(record)}
-        <article class="audit-row">
-          <div data-audit-primary>
-            <strong>{presented.title}</strong>
-            <small class="audit-target">{presented.targetLabel}</small>
-            <small>{presented.occurredAtLabel}</small>
+      {#each auditDayGroups as group}
+        <section class="audit-day-group" aria-labelledby={`audit-day-${group.key}`}>
+          <h3 class="audit-day-heading" id={`audit-day-${group.key}`}>{group.label}</h3>
+          <div class="audit-day-records">
+            {#each group.records as record}
+              {@const presented = auditRecordPresentation(record)}
+              <article class="audit-row">
+                <div data-audit-primary>
+                  <strong>{presented.title}</strong>
+                  <small class="audit-target">{presented.targetLabel}</small>
+                  <small>{presented.occurredAtLabel}</small>
+                </div>
+                <div class="audit-meta">
+                  <Badge variant="outline">{presented.sourceLabel}</Badge>
+                  <small>{presented.actorLabel}</small>
+                  {#if presented.technicalDetails.length > 0}
+                    <details class="audit-technical">
+                      <summary>Technical details</summary>
+                      <dl>
+                        {#each presented.technicalDetails as detail}
+                          <div>
+                            <dt>{detail.label}</dt>
+                            <dd>{detail.value}</dd>
+                          </div>
+                        {/each}
+                      </dl>
+                    </details>
+                  {/if}
+                </div>
+              </article>
+            {/each}
           </div>
-          <div class="audit-meta">
-            <Badge variant="outline">{presented.sourceLabel}</Badge>
-            <small>{presented.actorLabel}</small>
-            {#if presented.technicalDetails.length > 0}
-              <details class="audit-technical">
-                <summary>Technical details</summary>
-                <dl>
-                  {#each presented.technicalDetails as detail}
-                    <div>
-                      <dt>{detail.label}</dt>
-                      <dd>{detail.value}</dd>
-                    </div>
-                  {/each}
-                </dl>
-              </details>
-            {/if}
-          </div>
-        </article>
+        </section>
       {/each}
     </div>
-    {#if nextCursor}
+    {#if hasBufferedRecords}
+      <Button.Root variant="outline" disabled={busy} onclick={showMoreBufferedRecords}>
+        Show more activity
+      </Button.Root>
+    {:else if nextCursor}
       <Button.Root variant="outline" size="sm" disabled={busy} onclick={loadNextPage}>
-        Load more history
+        Load older activity
       </Button.Root>
     {/if}
   {/if}

@@ -28,9 +28,11 @@ import {
   type SelectedAttachment,
   type SelectedPhoto,
   type UpdateAssetDraft,
+  type UndoableOperationDirection,
   type WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryRepository, WorkspaceSeed } from '$lib/ports/inventoryRepository';
+import type { BrowseAssetsPage, BrowseAssetsRequest, InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
 import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
 import type { AuditRecordPage, InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import type {
@@ -47,7 +49,7 @@ type ScopedImportJob = {
 };
 
 export class SeededInventoryRepository
-  implements InventoryRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
 {
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
@@ -71,6 +73,10 @@ export class SeededInventoryRepository
 
   async loadWorkspace(): Promise<WorkspaceData> {
     return this.workspace();
+  }
+
+  async loadAssetThumbnail(asset: Asset): Promise<Asset['photo'] | null> {
+    return asset.photo?.assetId === asset.id ? asset.photo : null;
   }
 
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
@@ -259,6 +265,22 @@ export class SeededInventoryRepository
     return updated;
   }
 
+  async moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    this.validateAssetParent(tenantId, inventoryId, assetId, parentAssetId);
+    const moved: Asset = { ...asset, parentAssetId, updatedAt: new Date().toISOString() };
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.map((candidate) =>
+        candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === assetId
+          ? moved
+          : candidate
+      )
+    };
+    this.recordAssetAudit(moved, 'asset.moved');
+    return moved;
+  }
+
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     const asset = await this.setAssetLifecycle(tenantId, inventoryId, assetId, 'archived');
     this.recordAssetAudit(asset, 'asset.archived');
@@ -345,6 +367,15 @@ export class SeededInventoryRepository
     });
     this.recordAssetAudit(asset, 'asset.returned');
     return returned;
+  }
+
+  async applyAssetOperation(
+    _tenantId: string,
+    _inventoryId: string,
+    _operationId: string,
+    _direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    throw new Error('This saved operation is no longer available.');
   }
 
   async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]> {
@@ -484,6 +515,38 @@ export class SeededInventoryRepository
       },
       matches: [{ field: 'title', value: asset.title }]
     }));
+  }
+
+  async browseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    const results = await this.searchAssets(request);
+    const scoped = results.filter(({ asset }) =>
+      request.scope === 'all' ||
+      (request.scope === 'places' && asset.kind === 'location' && asset.parentAssetId === null) ||
+      (request.scope === 'containers' && asset.kind === 'container') ||
+      (request.scope === 'items' && asset.kind === 'item')
+    );
+    if (!request.query.trim()) {
+      scoped.sort((left, right) => request.sort === 'id_asc'
+        ? left.asset.id.localeCompare(right.asset.id)
+        : (Date.parse(right.asset.updatedAt ?? '') || 0) - (Date.parse(left.asset.updatedAt ?? '') || 0) || right.asset.id.localeCompare(left.asset.id));
+    }
+    const offset = Number.parseInt(request.cursor ?? '0', 10) || 0;
+    const pageResults = scoped.slice(offset, offset + request.limit);
+    const nextOffset = offset + pageResults.length;
+    return {
+      assets: pageResults.map((result) => result.asset),
+      searchResults: pageResults,
+      nextCursor: nextOffset < scoped.length ? String(nextOffset) : null,
+      hasMore: nextOffset < scoped.length
+    };
+  }
+
+  async hasAnyAssets(tenantId: string, inventoryId: string): Promise<boolean> {
+    return this.seed.assets.some((asset) => asset.tenantId === tenantId && asset.inventoryId === inventoryId);
+  }
+
+  async loadActiveContainmentMap(tenantId: string, inventoryId: string): Promise<Asset[]> {
+    return this.seed.assets.filter((asset) => asset.tenantId === tenantId && asset.inventoryId === inventoryId && asset.lifecycleState === 'active');
   }
 
   async listImportJobs(tenantId: string, inventoryId: string): Promise<ImportJob[]> {
@@ -830,7 +893,7 @@ export class SeededInventoryRepository
     email: string,
     relationship: InventoryAccessRelationship
   ): Promise<CreatedInventoryAccessInvitation> {
-    const acceptanceToken = `local-demo-${Date.now()}`;
+    const acceptanceToken = `local_demo_${Date.now().toString(36)}`.padEnd(43, 'x').slice(0, 43);
     const invitation: InventoryAccessInvitation = {
       id: `invitation-${Date.now()}`,
       tenantId,
@@ -851,7 +914,8 @@ export class SeededInventoryRepository
       targetId: invitation.id,
       metadata: { email: invitation.email, relationship }
     });
-    return { invitation, acceptanceToken };
+    const inviteUrl = `https://demo.stuffstash.invalid/invitations/accept?tenant=${encodeURIComponent(tenantId)}&inventory=${encodeURIComponent(inventoryId)}&invitation=${encodeURIComponent(invitation.id)}#token=${acceptanceToken}`;
+    return { invitation, inviteUrl };
   }
 
   async updateInventoryAccessInvitationExpiration(

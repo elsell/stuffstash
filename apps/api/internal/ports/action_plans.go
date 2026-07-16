@@ -73,6 +73,7 @@ type ActionPlanRepository interface {
 	SaveActionPlan(ctx context.Context, record ActionPlanRecord) error
 	ActionPlanByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string) (ActionPlanRecord, bool, error)
 	UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition) (ActionPlanRecord, bool, error)
+	UpdateActionPlanCommandsAndState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, commands []ActionPlanCommandRecord, transition ActionPlanStateTransition) (ActionPlanRecord, bool, error)
 	ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *UndoableOperation) (ActionPlanRecord, bool, error)
 	ExecuteCreateAssetsActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, creates []ActionPlanCreateAssetOperation) (ActionPlanRecord, bool, error)
 	ExecuteCreateAndUpdateAssetsActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ActionPlanStateTransition, creates []ActionPlanCreateAssetOperation, updates []ActionPlanUpdateAssetOperation) (ActionPlanRecord, bool, error)

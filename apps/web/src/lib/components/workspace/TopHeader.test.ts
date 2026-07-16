@@ -47,6 +47,7 @@ function mountHeader(props: Partial<ComponentProps<typeof TopHeader>> = {}) {
       suggestions: [asset('tape', 'Tape measure'), asset('tags', 'Gift tags')],
       query: 'ta',
       canCreateAsset: true,
+      disablePortal: true,
       onSelectTenant: () => {},
       onSelectInventory: () => {},
       onSearch: () => {},
@@ -54,6 +55,9 @@ function mountHeader(props: Partial<ComponentProps<typeof TopHeader>> = {}) {
         selectedAssets.push(selected);
       },
       onOpenAdd: () => {},
+      userLabel: 'owner@example.com',
+      onOpenSettings: () => {},
+      onSignOut: () => {},
       ...props
     }
   });
@@ -71,6 +75,24 @@ afterEach(() => {
 });
 
 describe('TopHeader', () => {
+  it('provides the mobile shell with an account control', () => {
+    mountHeader();
+
+    const account = document.body.querySelector<HTMLButtonElement>('[aria-label="Open account menu"]');
+    expect(account).not.toBeNull();
+    expect(getComputedStyle(account!).minHeight).toBe('44px');
+  });
+
+  it('uses a compact inventory toolbar when the page owns search', () => {
+    mountHeader({ showSearch: false });
+
+    const header = document.querySelector<HTMLElement>('.workspace-header');
+    expect(header?.classList.contains('contextual-toolbar')).toBe(true);
+    expect(header?.querySelector('.desktop-header-context')?.textContent).toContain('Household');
+    expect(header?.querySelector('.global-search-wrap')).toBeNull();
+    expect(header?.textContent).toContain('Add');
+  });
+
   it('opens search suggestions from the keyboard', async () => {
     const { selectedAssets } = mountHeader({
       suggestions: [asset('tape', 'Tape measure', 'blob:tape-photo'), asset('tags', 'Gift tags')]
@@ -87,20 +109,21 @@ describe('TopHeader', () => {
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
 
-    expect(input?.getAttribute('role')).toBeNull();
-    expect(input?.getAttribute('aria-activedescendant')).toBeNull();
-    expect(document.body.querySelector('[role="listbox"]')).toBeNull();
-    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(input?.getAttribute('role')).toBe('combobox');
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
+    expect(document.body.querySelector('[role="listbox"]')).not.toBeNull();
+    expect(document.activeElement).toBe(input);
 
-    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
-    expect(document.activeElement?.id).toBe('global-search-suggestion-1');
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-1');
+    expect(document.activeElement).toBe(input);
 
-    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
     await flush();
-    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
 
-    (document.activeElement as HTMLElement | null)?.click();
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
     await flush();
 
     expect(selectedAssets.map((selected) => selected.id)).toEqual(['tape']);
@@ -216,7 +239,7 @@ describe('TopHeader', () => {
     expect(componentPreventedModifiedClick).toBe(false);
   });
 
-  it('keeps suggestions open when keyboard focus moves into the suggestion list', async () => {
+  it('keeps keyboard focus on the combobox while traversing suggestions', async () => {
     vi.useFakeTimers();
     mountHeader();
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
@@ -228,11 +251,12 @@ describe('TopHeader', () => {
     vi.advanceTimersByTime(160);
     await flush();
 
-    expect(document.activeElement?.id).toBe('global-search-suggestion-0');
+    expect(document.activeElement).toBe(input);
+    expect(input?.getAttribute('aria-activedescendant')).toBe('global-search-suggestion-0');
     expect(document.body.querySelector('#global-search-suggestions')).not.toBeNull();
   });
 
-  it('closes suggestions with Escape from a focused suggestion and returns to the search field', async () => {
+  it('closes suggestions with Escape while focus remains on the search field', async () => {
     mountHeader();
     const input = document.body.querySelector<HTMLInputElement>('input[aria-label="Search this inventory"]');
 
@@ -240,7 +264,7 @@ describe('TopHeader', () => {
     await flush();
     input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flush();
-    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await flush();
 
     expect(document.activeElement).toBe(input);
@@ -260,10 +284,10 @@ describe('TopHeader', () => {
     await flush();
 
     expect(document.body.querySelector('#global-search-suggestions')).toBeNull();
-    expect(input?.getAttribute('aria-expanded')).toBeNull();
+    expect(input?.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('exposes durable add action links from the create menu', async () => {
+  it('exposes durable Add links through a real keyboard menu', async () => {
     const addedKinds: AssetKind[] = [];
     mountHeader({
       onOpenAdd: (kind) => {
@@ -271,57 +295,87 @@ describe('TopHeader', () => {
       }
     });
 
-    buttonContaining('Add').click();
+    const trigger = addTrigger();
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(trigger.classList.contains('min-h-11')).toBe(true);
+
+    trigger.click();
+    await waitForAddMenu();
+
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(document.body.querySelector('[role="menu"]')).not.toBeNull();
+    expect(menuItemContaining('Item').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
+    expect(menuItemContaining('Container').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/container');
+    expect(menuItemContaining('Location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
+    const menu = document.body.querySelector<HTMLElement>('[role="menu"]');
+    menu?.focus();
+    menu?.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }));
     await flush();
+    expect(document.activeElement).toBe(menuItemContaining('Location'));
 
-    expect(document.activeElement?.textContent).toContain('Item');
-    expect(document.body.querySelector('#header-add-menu')?.getAttribute('role')).toBeNull();
-    expect(buttonContaining('Add').getAttribute('aria-haspopup')).toBeNull();
-    expect(linkContaining('Item').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
-    expect(linkContaining('Container').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/container');
-    expect(linkContaining('Location').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/add/location');
-
-    linkContaining('Location').click();
+    menuItemContaining('Location').click();
     await flush();
 
     expect(addedKinds).toEqual(['location']);
-    expect(document.body.querySelector('#header-add-menu')).toBeNull();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('exposes a perceivable disabled reason when header add is unavailable', () => {
     mountHeader({ canCreateAsset: false });
 
-    const trigger = buttonContaining('Add');
+    const trigger = addTrigger();
     expect(trigger.disabled).toBe(true);
     expect(trigger.getAttribute('aria-describedby')).toBe('header-add-denied');
     expect(document.body.querySelector('#header-add-denied')?.textContent).toBe('Adding assets is unavailable for this inventory.');
   });
 
+  it('preserves modified clicks on durable Add menu links', async () => {
+    const addedKinds: AssetKind[] = [];
+    mountHeader({ onOpenAdd: (kind) => addedKinds.push(kind) });
+
+    addTrigger().click();
+    await waitForAddMenu();
+
+    const target = menuItemContaining('Container');
+    let componentPreventedModifiedClick = false;
+    target.addEventListener('click', (event) => {
+      componentPreventedModifiedClick = event.defaultPrevented;
+      event.preventDefault();
+    });
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }));
+
+    expect(addedKinds).toEqual([]);
+    expect(componentPreventedModifiedClick).toBe(false);
+  });
+
   it('does not open the add menu without a selected inventory', () => {
     mountHeader({ inventory: null, canCreateAsset: true });
 
-    const trigger = buttonContaining('Add');
+    const trigger = addTrigger();
     trigger.click();
 
     expect(trigger.disabled).toBe(true);
     expect(trigger.getAttribute('aria-describedby')).toBe('header-add-denied');
     expect(document.body.querySelector('#header-add-denied')?.textContent).toBe('Select an inventory before adding assets.');
-    expect(document.body.querySelector('#header-add-menu')).toBeNull();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('closes the add menu with Escape and restores focus to the trigger', async () => {
+  it('closes the Add menu with Escape and restores focus to its trigger', async () => {
     mountHeader();
 
-    const trigger = buttonContaining('Add');
+    const trigger = addTrigger();
     trigger.focus();
     trigger.click();
+    await waitForAddMenu();
+
+    const menu = document.body.querySelector<HTMLElement>('[role="menu"]');
+    expect(menu).not.toBeNull();
+    menu?.focus();
+    menu?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     await flush();
 
-    expect(document.body.querySelector('#header-add-menu')).not.toBeNull();
-    linkContaining('Item').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await flush();
-
-    expect(document.body.querySelector('#header-add-menu')).toBeNull();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(trigger);
   });
 });
@@ -331,6 +385,29 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+function addTrigger(): HTMLButtonElement {
+  const trigger = document.body.querySelector<HTMLButtonElement>('[data-workspace-add-trigger="desktop"]');
+  if (!trigger) throw new Error('Missing desktop Add trigger');
+  return trigger;
+}
+
+function menuItemContaining(text: string): HTMLAnchorElement {
+  const item = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]')).find((candidate) =>
+    candidate.textContent?.includes(text)
+  );
+  if (!item) throw new Error(`Missing menu item containing ${text}`);
+  return item;
+}
+
+async function waitForAddMenu(): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (!document.body.querySelector('[role="menu"]')) {
+    if (Date.now() >= deadline) throw new Error('Timed out waiting for Add menu');
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+    await flush();
+  }
 }
 
 function buttonContaining(text: string): HTMLButtonElement {

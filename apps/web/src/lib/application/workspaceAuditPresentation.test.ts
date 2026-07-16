@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { auditRecordPresentation, auditStatusPresentation } from './workspaceAuditPresentation';
+import type { AuditRecord } from '$lib/domain/inventory';
+import { auditRecordPresentation, auditStatusPresentation, groupAuditRecordsByDay } from './workspaceAuditPresentation';
 
 describe('workspace audit presentation helpers', () => {
   it('builds missing-context and denied audit status presentation', () => {
@@ -95,7 +96,35 @@ describe('workspace audit presentation helpers', () => {
     expect(presentation.primaryText).not.toContain('oidc_google_provider');
     expect(presentation.technicalDetails).toContainEqual({ label: 'Source', value: 'oidc_google_provider' });
   });
+
+  it('groups records by calendar day in newest-first order', () => {
+    const groups = groupAuditRecordsByDay([
+      record({ id: 'newest', occurredAt: '2026-07-15T18:00:00Z' }),
+      record({ id: 'same-day', occurredAt: '2026-07-15T12:00:00Z' }),
+      record({ id: 'older', occurredAt: '2026-07-14T23:00:00Z' })
+    ], 'en-US', 'UTC');
+
+    expect(groups.map((group) => group.label)).toEqual(['July 15, 2026', 'July 14, 2026']);
+    expect(groups[0]?.records.map((entry) => entry.id)).toEqual(['newest', 'same-day']);
+    expect(groups[1]?.records.map((entry) => entry.id)).toEqual(['older']);
+  });
 });
+
+function record(overrides: Partial<AuditRecord> = {}): AuditRecord {
+  return {
+    id: 'audit-one',
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    principalId: 'principal-owner',
+    action: 'asset.created',
+    source: 'web',
+    targetType: 'asset',
+    targetId: 'asset-one',
+    occurredAt: '2026-07-15T12:00:00Z',
+    metadata: {},
+    ...overrides
+  };
+}
 
 function baseStatus(overrides: Partial<Parameters<typeof auditStatusPresentation>[0]> = {}) {
   return auditStatusPresentation({

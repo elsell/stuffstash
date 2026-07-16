@@ -8,7 +8,7 @@ export interface SettingsNavigationOption<TValue extends string = string> {
   disabled?: boolean;
 }
 
-export type SettingsSectionIcon = 'activity' | 'boxes' | 'sliders' | 'user-cog' | 'users';
+export type SettingsSectionIcon = 'activity' | 'boxes' | 'sliders' | 'users';
 
 export interface SettingsSectionNavigationOption extends SettingsNavigationOption<SettingsSection> {
   description: string;
@@ -43,8 +43,6 @@ export interface SettingsOverviewPresentation {
 export interface SettingsAdministrationPresentation {
   title: string;
   description: string;
-  actionLabel: string;
-  actionDisabled: boolean;
 }
 
 const invitationStatusFilters: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
@@ -53,8 +51,7 @@ const settingsSections: Array<Omit<SettingsSectionNavigationOption, 'href' | 'cu
   { value: 'overview', label: 'Overview', description: 'Inventory context and access summary', icon: 'boxes' },
   { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations', icon: 'users' },
   { value: 'fields', label: 'Fields', description: 'Custom asset types and fields', icon: 'sliders' },
-  { value: 'activity', label: 'Activity', description: 'Audit history for this workspace', icon: 'activity' },
-  { value: 'administration', label: 'Admin', description: 'Tenant and inventory administration', icon: 'user-cog' }
+  { value: 'activity', label: 'Activity', description: 'Audit history for this workspace', icon: 'activity' }
 ];
 
 export function settingsSectionHref(
@@ -186,10 +183,8 @@ export function settingsAdministrationPresentation(input: { canConfigureTenant: 
   return {
     title: 'Administration',
     description: input.canConfigureTenant
-      ? 'Tenant-level administration is planned for this workspace.'
-      : 'Tenant administration is not available for this account.',
-    actionLabel: 'Tenant administration unavailable',
-    actionDisabled: true
+      ? 'There are no administration actions available in the web app yet.'
+      : 'This account does not have access to tenant administration.'
   };
 }
 

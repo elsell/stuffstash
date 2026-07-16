@@ -292,6 +292,19 @@ type realtimeClientMessage struct {
 	Arguments             map[string]interface{}           `json:"arguments"`
 	PhotoAttachments      []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
 	PhotoAttachmentsSet   bool                             `json:"-"`
+	CommandEdits          []realtimeActionPlanCommandEdit  `json:"commandEdits,omitempty"`
+	CommandEditsSet       bool                             `json:"-"`
+}
+
+type realtimeActionPlanCommandEdit struct {
+	CommandID string                    `json:"commandId"`
+	Title     *string                   `json:"title,omitempty"`
+	Parent    *realtimeActionPlanParent `json:"parent,omitempty"`
+}
+
+type realtimeActionPlanParent struct {
+	Kind string `json:"kind"`
+	ID   string `json:"id,omitempty"`
 }
 
 type realtimeInputAudio struct {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/access/dto"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -13,6 +14,24 @@ func GrantToResponse(grant ports.InventoryAccessGrant) dto.GrantResponse {
 		InventoryID:  grant.InventoryID.String(),
 		PrincipalID:  grant.PrincipalID.String(),
 		Relationship: string(grant.Relationship),
+	}
+}
+
+func InvitationPreviewToResponse(
+	inventoryID inventory.InventoryID,
+	inventoryName string,
+	relationship ports.InventoryAccessRelationship,
+	status ports.InventoryAccessInvitationStatus,
+	expiresAt time.Time,
+	isExpired bool,
+) dto.InvitationPreviewResponse {
+	return dto.InvitationPreviewResponse{
+		InventoryID:   inventoryID.String(),
+		InventoryName: inventoryName,
+		Relationship:  string(relationship),
+		Status:        string(status),
+		ExpiresAt:     expiresAt.Format(time.RFC3339),
+		IsExpired:     isExpired,
 	}
 }
 
@@ -40,6 +59,16 @@ func InvitationToResponseAt(invitation ports.InventoryAccessInvitation, now time
 		AcceptedPrincipalID: invitation.AcceptedPrincipalID.String(),
 		ExpiresAt:           invitation.ExpiresAt.Format(time.RFC3339),
 		IsExpired:           invitation.IsExpired(now),
+	}
+}
+
+func CreatedInvitationToResponse(invitation ports.InventoryAccessInvitation, inviteURL string) dto.CreatedInvitationResponse {
+	response := InvitationToResponse(invitation)
+	return dto.CreatedInvitationResponse{
+		ID: response.ID, TenantID: response.TenantID, InventoryID: response.InventoryID,
+		Email: response.Email, Relationship: response.Relationship, Status: response.Status,
+		InviterPrincipalID: response.InviterPrincipalID, AcceptedPrincipalID: response.AcceptedPrincipalID,
+		ExpiresAt: response.ExpiresAt, IsExpired: response.IsExpired, InviteURL: inviteURL,
 	}
 }
 

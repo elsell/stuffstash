@@ -571,7 +571,8 @@ describe('AddAssetTray', () => {
     });
 
     await flush();
-    expect(document.querySelector<HTMLInputElement>('#asset-camera')?.getAttribute('capture')).toBe('environment');
+    expect(document.querySelector<HTMLInputElement>('#asset-camera')).toBeNull();
+    expect(document.body.textContent).toContain('Choose photos');
     uploadPhoto('first.jpg', 'image/jpeg', 1200);
     await flush();
     expect(document.body.textContent).toContain('first.jpg');

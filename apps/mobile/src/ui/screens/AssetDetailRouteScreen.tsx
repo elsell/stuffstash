@@ -5,11 +5,13 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View
 } from 'react-native';
+import { Ellipsis } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AddAssetPhotosCommand,
@@ -18,6 +20,7 @@ import {
 } from '../../application/assets/AddAssetPhotosCommand';
 import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
+import { UndoAssetEditCommand } from '../../application/assets/UndoAssetEditCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
@@ -27,9 +30,11 @@ import {
 } from '../../application/add/PhotoSelectionQuery';
 import {
   AssetDetailView,
+  assetDetailNavigationTitle,
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
+import { AssetDetailRouteErrorState } from './AssetDetailRouteErrorState';
 import {
   assetPhotoViewerModel,
   isAssetPhotoId
@@ -43,6 +48,8 @@ import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
+  assetDetailLoadErrorPresentation,
+  assetDetailOverflowControlState,
   assetLifecycleFailurePresentation,
   assetLifecycleOverflowMenu,
   AssetLifecycleActionKind
@@ -59,13 +66,15 @@ import {
   photoUploadRows
 } from './AssetPhotoUploadProgressPresentation';
 import { useAppFeedback } from '../feedback/AppFeedback';
-import { colors, spacing } from '../theme/tokens';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 
 type AssetDetailRouteScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly undoAssetEditCommand: UndoAssetEditCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly assetId: string;
@@ -74,7 +83,7 @@ type AssetDetailRouteScreenProps = {
 type ScreenState =
   | { readonly status: 'loading' }
   | { readonly status: 'ready'; readonly asset: AssetDetailViewModel }
-  | { readonly status: 'error'; readonly message: string };
+  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly canRetry: boolean };
 
 type PendingAction = 'archive' | 'restore' | 'delete' | 'edit' | 'move' | 'photos' | 'checkout' | 'return';
 
@@ -85,10 +94,13 @@ export function AssetDetailRouteScreen({
   assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
+  undoAssetEditCommand,
   assetId,
   deleteAssetPhotoCommand,
   photoSelectionQuery
 }: AssetDetailRouteScreenProps) {
+  const palette = useAppearanceAwarePalette();
+  const styles = createStyles(palette);
   const feedback = useAppFeedback();
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -117,23 +129,60 @@ export function AssetDetailRouteScreen({
           setScreenState({ status: 'ready', asset });
           const completion = consumeAssetActionCompletion(assetId);
           if (completion) {
-            setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
+            if (completion.action === 'edit') {
+              feedback.showNotice({
+                tone: 'success',
+                title: `Saved "${asset.title}"`,
+                message: 'The change is now in History.',
+                ...(completion.undoableOperationId ? {
+                  action: {
+                    label: 'Undo',
+                    onPress: () => void undoSavedEdit({
+                      operationId: completion.undoableOperationId!,
+                      tenantId: asset.tenantId ?? '',
+                      inventoryId: asset.inventoryId ?? '',
+                      title: asset.title
+                    })
+                  }
+                } : {})
+              });
+            } else {
+              setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
+            }
           }
         }
       })
       .catch((error: unknown) => {
         if (isCurrent) {
-          setScreenState({
-            status: 'error',
-            message: readableError(error, 'Could not load asset.')
-          });
+          setScreenState({ status: 'error', ...assetDetailLoadErrorPresentation(error) });
         }
       });
 
     return () => {
       isCurrent = false;
     };
-  }, [assetDetailQuery, assetId]));
+  }, [assetDetailQuery, assetId, feedback, undoAssetEditCommand]));
+
+  async function undoSavedEdit(input: { readonly tenantId: string; readonly inventoryId: string; readonly operationId: string; readonly title: string }): Promise<void> {
+    try {
+      await undoAssetEditCommand.execute(input);
+      await reloadAsset();
+      feedback.showNotice({ tone: 'success', title: 'Edit undone', message: 'The previous values were reapplied.' });
+    } catch (error) {
+      feedback.showNotice({ tone: 'error', title: 'Could not undo edit', message: readableError(error, 'Undo failed.') });
+    }
+  }
+
+  function openHistory(asset: AssetDetailViewModel): void {
+    if (!asset.tenantId || !asset.inventoryId) {
+      feedback.showNotice({ tone: 'error', title: 'Could not open History', message: 'The item scope is unavailable. Refresh and try again.' });
+      return;
+    }
+    router.push({
+      pathname: '/assets/[assetId]/history',
+      params: { assetId: asset.id, tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetTitle: asset.title }
+    });
+  }
 
   async function refreshAsset(): Promise<void> {
     setIsRefreshing(true);
@@ -156,6 +205,15 @@ export function AssetDetailRouteScreen({
     const asset = await assetDetailQuery.execute(assetId);
     setScreenState({ status: 'ready', asset });
     return asset;
+  }
+
+  async function retryLoad(): Promise<void> {
+    setScreenState({ status: 'loading' });
+    try {
+      await reloadAsset();
+    } catch (error) {
+      setScreenState({ status: 'error', ...assetDetailLoadErrorPresentation(error) });
+    }
   }
 
   function choosePhotos(currentPhotoCount: number): void {
@@ -276,7 +334,15 @@ export function AssetDetailRouteScreen({
     router.push(assetDetailHref(childId));
   }
 
+  function openPlacementAsset(parent: AssetDetailViewModel['parentLocationTrail'][number]): void {
+    setSelectedPhotoId(undefined);
+    router.push(assetDetailHref(parent.id));
+  }
+
   function showMoreActions(asset: AssetDetailViewModel): void {
+    if (assetDetailOverflowControlState(pendingAction !== undefined).disabled) {
+      return;
+    }
     const overflow = assetLifecycleOverflowMenu(asset);
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -288,30 +354,31 @@ export function AssetDetailRouteScreen({
           destructiveButtonIndex: overflow.destructiveIndex
         },
         (index) => {
-          const action = overflow.actionRows[index];
-          if (action) {
-            confirmLifecycleAction(action.kind, asset);
-            return;
-          }
           if (index === overflow.checkoutHistoryIndex) {
             router.push(`/assets/${asset.id}/checkouts`);
             return;
           }
           if (index === overflow.auditIndex) {
-            router.push(`/assets/${asset.id}/audit`);
+            openHistory(asset);
+            return;
+          }
+          const lifecycleActionIndex = overflow.lifecycleActionIndexes.indexOf(index);
+          const action = lifecycleActionIndex >= 0 ? overflow.actionRows[lifecycleActionIndex] : undefined;
+          if (action) {
+            confirmLifecycleAction(action.kind, asset);
           }
         }
       );
       return;
     }
     Alert.alert(overflow.title, overflow.message, [
+      { text: 'Checkout history', onPress: () => router.push(`/assets/${asset.id}/checkouts`) },
+      { text: 'History', onPress: () => openHistory(asset) },
       ...overflow.actionRows.map((action) => ({
         text: action.label,
         style: action.isDestructive ? 'destructive' as const : 'default' as const,
         onPress: () => confirmLifecycleAction(action.kind, asset)
       })),
-      { text: 'Checkout history', onPress: () => router.push(`/assets/${asset.id}/checkouts`) },
-      { text: 'Audit history', onPress: () => router.push(`/assets/${asset.id}/audit`) },
       { text: 'Cancel', style: 'cancel' }
     ]);
   }
@@ -382,11 +449,37 @@ export function AssetDetailRouteScreen({
   }
 
   const presentedWorkspaceStatus = visibleAssetWorkspaceStatus(pendingAction, workspaceStatus);
+  const overflowControlState = assetDetailOverflowControlState(pendingAction !== undefined);
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <Stack.Screen options={{
+        title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
+        ...(screenState.status === 'ready' ? {
+          headerRight: () => (
+            <Pressable
+              accessibilityLabel={`More actions for ${screenState.asset.title}`}
+              accessibilityRole="button"
+              accessibilityState={overflowControlState.accessibilityState}
+              disabled={overflowControlState.disabled}
+              hitSlop={6}
+              onPress={overflowControlState.disabled ? undefined : () => showMoreActions(screenState.asset)}
+              style={styles.headerAction}
+            >
+              <Ellipsis accessible={false} color={palette.action} size={24} strokeWidth={2} />
+            </Pressable>
+          )
+        } : {})
+      }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
+      {screenState.status === 'error' ? (
+        <AssetDetailRouteErrorState
+          canRetry={screenState.canRetry}
+          message={screenState.message}
+          onRetry={() => void retryLoad()}
+          title={screenState.title}
+        />
+      ) : null}
       {screenState.status === 'ready' ? (
         <>
           {(() => {
@@ -402,7 +495,6 @@ export function AssetDetailRouteScreen({
               />
             );
           })()}
-          <Stack.Screen options={{ title: screenState.asset.title }} />
           <AssetDetailView
             asset={screenState.asset}
             canRetryPhotos={photoStatus?.canRetry}
@@ -415,10 +507,10 @@ export function AssetDetailRouteScreen({
             onCheckout={() => void runCheckoutAction('checkout', screenState.asset)}
             onChildPress={openChildAsset}
             onEdit={() => router.push(`/assets/${screenState.asset.id}/edit`)}
-            onMoreActions={() => showMoreActions(screenState.asset)}
             onMove={() => router.push(`/assets/${screenState.asset.id}/move`)}
             onMoveThingsHere={screenState.asset.canAddContainedAssets ? () => router.push(`/assets/${screenState.asset.id}/move-here`) : undefined}
             onPhotoPress={(photoId) => selectAssetPhoto(screenState.asset, photoId)}
+            onParentLocationPress={openPlacementAsset}
             onReturn={() => void runCheckoutAction('return', screenState.asset)}
             onRetryPhotos={() => void retryPhotos()}
             onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
@@ -429,7 +521,7 @@ export function AssetDetailRouteScreen({
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
-                tintColor={colors.action}
+                tintColor={palette.action}
                 onRefresh={refreshAsset}
               />
             }
@@ -441,19 +533,12 @@ export function AssetDetailRouteScreen({
 }
 
 function LoadingState() {
+  const palette = useAppearanceAwarePalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.accent} />
+      <ActivityIndicator color={palette.accent} />
       <Text style={styles.stateText}>Loading asset</Text>
-    </View>
-  );
-}
-
-function ErrorState({ message }: { readonly message: string }) {
-  return (
-    <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>{message}</Text>
     </View>
   );
 }
@@ -462,10 +547,17 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function createStyles(palette: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: palette.background
+  },
+  headerAction: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44
   },
   centerState: {
     alignItems: 'center',
@@ -474,16 +566,10 @@ const styles = StyleSheet.create({
     padding: spacing.lg
   },
   stateText: {
-    color: colors.textMuted,
+    color: palette.textMuted,
     fontSize: 16,
-    lineHeight: 23,
     marginTop: spacing.md,
     textAlign: 'center'
   },
-  errorTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: 0
-  }
-});
+  });
+}

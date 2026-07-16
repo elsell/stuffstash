@@ -12,8 +12,46 @@ describe('mobileRuntimeConfig', () => {
       apiBaseUrl: 'http://192.168.1.97:8080',
       tenantId: 'tenant-home',
       voiceDeveloperDiagnosticsEnabled: false,
-      directUploadLocalDevelopmentTargetsEnabled: false
+      directUploadLocalDevelopmentTargetsEnabled: false,
+      invitationOrigin: undefined,
+      invitationAllowInsecureLocalHTTP: false
     });
+  });
+
+  it('normalizes a configured HTTPS invitation origin', () => {
+    expect(parseMobileRuntimeConfig({
+      apiBaseUrl: 'https://api.example.test',
+      tenantId: 'tenant-home',
+      invitationOrigin: 'https://stash.example.test/'
+    }).invitationOrigin).toBe('https://stash.example.test');
+  });
+
+  it('accepts a private LAN invitation origin only with explicit local-development opt-in', () => {
+    expect(parseMobileRuntimeConfig({
+      apiBaseUrl: 'http://192.168.1.117:8080',
+      tenantId: 'tenant-home',
+      invitationOrigin: 'http://192.168.1.117:5173',
+      invitationAllowInsecureLocalHTTP: 'true'
+    }).invitationOrigin).toBe('http://192.168.1.117:5173');
+
+    expect(() => parseMobileRuntimeConfig({
+      apiBaseUrl: 'http://192.168.1.117:8080',
+      tenantId: 'tenant-home',
+      invitationOrigin: 'http://192.168.1.117:5173'
+    })).toThrow('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN');
+
+    expect(() => parseMobileRuntimeConfig({
+      apiBaseUrl: 'http://192.168.1.117:8080',
+      tenantId: 'tenant-home',
+      invitationOrigin: 'http://8.8.8.8:5173',
+      invitationAllowInsecureLocalHTTP: 'true'
+    })).toThrow('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN');
+  });
+
+  it('rejects an insecure or path-bearing invitation origin', () => {
+    expect(() => parseMobileRuntimeConfig({ apiBaseUrl: 'https://api.example.test', tenantId: 'tenant-home', invitationOrigin: 'http://stash.example.test' })).toThrow('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN');
+    expect(() => parseMobileRuntimeConfig({ apiBaseUrl: 'https://api.example.test', tenantId: 'tenant-home', invitationOrigin: 'https://stash.example.test/path' })).toThrow('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN');
+    expect(() => parseMobileRuntimeConfig({ apiBaseUrl: 'https://api.example.test', tenantId: 'tenant-home', invitationOrigin: 'https://stash.example.test:8443' })).toThrow('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN');
   });
 
   it('parses explicit mobile voice developer diagnostics opt-in', () => {
@@ -88,20 +126,26 @@ describe('mobileRuntimeConfig', () => {
           apiBaseUrl: 'http://192.168.1.117:8080',
           tenantId: 'tenant-home',
           voiceDeveloperDiagnosticsEnabled: 'true',
-          directUploadLocalDevelopmentTargetsEnabled: 'true'
+          directUploadLocalDevelopmentTargetsEnabled: 'true',
+          invitationOrigin: 'https://stash.example.test',
+          invitationAllowInsecureLocalHTTP: 'true'
         },
         {
           apiBaseUrl: undefined,
           tenantId: '',
           voiceDeveloperDiagnosticsEnabled: undefined,
-          directUploadLocalDevelopmentTargetsEnabled: undefined
+          directUploadLocalDevelopmentTargetsEnabled: undefined,
+          invitationOrigin: undefined,
+          invitationAllowInsecureLocalHTTP: undefined
         }
       )
     ).toEqual({
       apiBaseUrl: 'http://192.168.1.117:8080',
       tenantId: 'tenant-home',
       voiceDeveloperDiagnosticsEnabled: 'true',
-      directUploadLocalDevelopmentTargetsEnabled: 'true'
+      directUploadLocalDevelopmentTargetsEnabled: 'true',
+      invitationOrigin: 'https://stash.example.test',
+      invitationAllowInsecureLocalHTTP: 'true'
     });
   });
 });

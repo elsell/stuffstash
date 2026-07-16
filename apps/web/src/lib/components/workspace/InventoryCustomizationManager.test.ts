@@ -6,9 +6,13 @@ import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCusto
 
 let component: ReturnType<typeof mount> | null = null;
 
-afterEach(() => {
+afterEach(async () => {
+  document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+  );
+  await new Promise((resolve) => window.setTimeout(resolve, 20));
   if (component) {
-    unmount(component);
+    await unmount(component);
     document.body.innerHTML = '';
     component = null;
   }
@@ -16,6 +20,58 @@ afterEach(() => {
 });
 
 describe('InventoryCustomizationManager', () => {
+  it('keeps asset types and field definitions in independently sized grouped surfaces', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [],
+        initialFieldDefinitions: [],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    const surfaces = document.body.querySelectorAll('section.customization-surface');
+    expect(surfaces).toHaveLength(2);
+    expect(surfaces[0]?.querySelector('h3')?.textContent).toBe('Asset types');
+    expect(surfaces[1]?.querySelector('h3')?.textContent).toBe('Field definitions');
+    expect(surfaces[0]?.querySelector('[aria-label="0 custom asset types"]')?.textContent).toBe('0');
+    expect(surfaces[1]?.querySelector('[aria-label="0 custom fields"]')?.textContent).toBe('0');
+    expect(surfaces[0]?.textContent).toContain('No custom asset types yet.');
+    expect(surfaces[1]?.textContent).toContain('No custom fields yet.');
+  });
+
+  it('counts only active definitions and removes empty copy when rows are visible', async () => {
+    const medicine = customAssetType();
+    const expiration = customFieldDefinition();
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [medicine, { ...medicine, id: 'type-archived', key: 'archived', lifecycleState: 'archived' }],
+        initialFieldDefinitions: [
+          expiration,
+          { ...expiration, id: 'field-archived', key: 'archived-field', lifecycleState: 'archived' }
+        ],
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    const surfaces = document.body.querySelectorAll('section.customization-surface');
+    expect(surfaces[0]?.querySelector('[aria-label="1 custom asset types"]')?.textContent).toBe('1');
+    expect(surfaces[1]?.querySelector('[aria-label="1 custom fields"]')?.textContent).toBe('1');
+    expect(surfaces[0]?.textContent).toContain('Medicine');
+    expect(surfaces[1]?.textContent).toContain('Expiration date');
+    expect(surfaces[0]?.textContent).not.toContain('No custom asset types yet.');
+    expect(surfaces[1]?.textContent).not.toContain('No custom fields yet.');
+  });
+
   it('renders missing inventory customization status without an alert role', async () => {
     component = mount(InventoryCustomizationManager, {
       target: document.body,
@@ -75,7 +131,8 @@ describe('InventoryCustomizationManager', () => {
     clickExactButton('Create type');
     await flush();
 
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Unexpected repository call.');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Custom asset type could not be created. Try again.');
+    expect(document.body.textContent).not.toContain('Unexpected repository call.');
     expect(exactButton('Create type')).toBeTruthy();
   });
 
@@ -308,7 +365,8 @@ describe('InventoryCustomizationManager', () => {
     expect(openedActions).toEqual(['archive_asset_type:type-medicine']);
     expect(calls).toEqual([]);
 
-    unmount(component);
+    await unmount(component);
+    component = null;
     component = mount(InventoryCustomizationManager, {
       target: document.body,
       props: {
@@ -328,11 +386,12 @@ describe('InventoryCustomizationManager', () => {
     await flush();
 
     expect(document.body.textContent).toContain('Archive asset type');
-    expect(document.activeElement?.textContent).toContain('Archive asset type');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
 
     clickExactButton('Archive');
     await flush();
+    await waitForDialogClose(() => closed === 1);
 
     expect(calls).toEqual(['archive-type:type-medicine:inventory']);
     expect(closed).toBe(1);
@@ -370,16 +429,17 @@ describe('InventoryCustomizationManager', () => {
     await flush();
 
     expect(document.body.textContent).toContain('Archive field definition');
-    expect(document.activeElement?.textContent).toContain('Archive field definition');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(link('Cancel').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
 
     link('Cancel').click();
-    await flush();
+    await waitForDialogClose(() => closed === 1);
 
     expect(closed).toBe(1);
     expect(calls).toEqual([]);
 
-    unmount(component);
+    await unmount(component);
+    component = null;
     document.body.innerHTML = '';
     component = mount(InventoryCustomizationManager, {
       target: document.body,
@@ -401,6 +461,7 @@ describe('InventoryCustomizationManager', () => {
 
     clickExactButton('Archive');
     await flush();
+    await waitForDialogClose(() => closed === 2);
 
     expect(calls).toEqual(['archive-field:field-expiration:inventory']);
     expect(closed).toBe(2);
@@ -428,9 +489,33 @@ describe('InventoryCustomizationManager', () => {
 
     expect(document.body.textContent).toContain('Archive target unavailable');
     link('Back to fields').click();
-    await flush();
+    await waitForDialogClose(() => closed === 1);
 
     expect(closed).toBe(1);
+  });
+
+  it('moves focus to the Custom fields heading when a deep-linked archive confirmation closes', async () => {
+    component = mount(InventoryCustomizationManager, {
+      target: document.body,
+      props: {
+        tenant: tenant(),
+        inventory: inventory(),
+        repository: fakeCustomizationRepository(),
+        initialAssetTypes: [customAssetType()],
+        initialFieldDefinitions: [customFieldDefinition()],
+        archiveAction: 'archive_asset_type',
+        archiveAssetTypeId: 'type-medicine',
+        onSchemaChange: () => {}
+      }
+    });
+    await flush();
+
+    document.body.querySelector<HTMLElement>('[role="alertdialog"]')?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
+    await waitForDialogClose(() => document.activeElement?.id === 'settings-customization');
+
+    expect(document.activeElement).toBe(document.getElementById('settings-customization'));
   });
 });
 
@@ -553,4 +638,15 @@ async function flush(): Promise<void> {
   await tick();
   await Promise.resolve();
   await tick();
+}
+
+async function waitForDialogClose(condition: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    await flush();
+    if (condition() && !document.body.querySelector('[role="alertdialog"]')) {
+      return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+  }
+  throw new Error('Dialog did not finish closing.');
 }

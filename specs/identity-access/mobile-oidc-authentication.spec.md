@@ -61,10 +61,19 @@ production identity-provider provisioning.
   return to the sign-in step. The app must surface this through a native
   blocking dialog with a clear `Sign in` action rather than leaving the user on a
   generic `Could not load` error.
-- Sign-out must clear secure authentication session state, transient PKCE state,
-  selected tenant/inventory preferences, and any in-memory authenticated
-  services. Provider end-session support may be added later through discovery
-  when it is needed.
+- User-initiated `Sign out` must clear secure authentication session state,
+  transient PKCE state, session-only inventory selection, and any in-memory
+  authenticated services while preserving the non-secret saved server URL and
+  tenant hint. It must return the user to the sign-in step for that server.
+- `Change server` is a separate operation. It must sign out, clear the durable
+  non-secret connection profile including the server URL and tenant hint, and
+  return the user to the server-entry step.
+- Neither `Sign out` nor `Change server` deletes server-side tenant, inventory,
+  asset, provider-profile, audit, or identity data. Mobile confirmation copy
+  must name the operation and the local state it clears; a generic `Continue`
+  action is not sufficient for changing servers.
+- Provider end-session support may be added later through discovery when it is
+  needed.
 - The local-development bearer token path may remain as an explicit development
   fallback, but production mobile authentication must not depend on
   `EXPO_PUBLIC_STUFF_STASH_DEV_TOKEN`.
@@ -183,3 +192,20 @@ Local Dex must include a public mobile client for development builds.
 - Local mobile OIDC verification must prove the mobile public client can obtain
   and refresh an ID token through authorization code with PKCE.
 - `pnpm --dir apps/mobile test` and `pnpm --dir apps/mobile check` must pass.
+
+## Invitation Deep Links
+
+- Mobile must recognize both the app-owned `stuffstash://invitations/accept` deep link and configured HTTPS universal/app links whose path is `/invitations/accept`.
+- Build-time associated-domain and Android intent-filter configuration must be derived from an explicit public invitation origin; arbitrary self-hosted origins require a deployment-specific mobile build and must not be silently trusted at runtime.
+- The build-time invitation origin must be an HTTPS origin on the standard HTTPS port with no credentials, path, query, or fragment for verified universal/app links. An explicit non-production local-development switch may instead trust a loopback or RFC 1918 HTTP origin for browser acceptance from a physical device; that origin must produce no iOS associated-domain or Android verified app-link declaration. Expo production builds, and release builds that explicitly require invitation-link support, must fail before native generation when the HTTPS origin is missing or invalid rather than producing an app that silently lacks universal/app-link entitlements.
+- Because the native iOS project is checked in, its build must materialize the same configured origin into the signed `com.apple.developer.associated-domains` entitlement; validating Expo config alone is insufficient.
+- The HTTPS invitation origin must publish an Apple app-site-association document for the built iOS application identifier and an Android Digital Asset Links document for the built Android package and signing-certificate SHA-256 fingerprint. Deployment configuration must generate these documents without requiring source edits, and the web server must serve them as JSON without redirects.
+- The app must parse tenant, inventory, and invitation IDs from the query and the raw acceptance token from the fragment. Missing, duplicate, malformed, or oversized values must fail closed before any API call.
+- Pending invitation material may remain only in memory while the app is active and in the native navigation URL needed to complete the flow. It must never enter the connection profile, AsyncStorage, SecureStore session record, diagnostics, observability, crash messages, or ordinary logs.
+- A foreground invitation link captured while the asynchronous initial-link lookup is still pending must remain authoritative; the late initial-link result must not overwrite it. Likewise, preview or acceptance results from an older invitation must not replace the state for a newer captured invitation.
+- If connection setup or sign-in is required, onboarding must acknowledge that an invitation is waiting and return to its preview after authentication and inventory discovery. Authentication callback handling must not replace or discard the pending invitation route.
+- The invitation screen must use an application query/command and generated-client adapter behind mobile-owned ports. It must provide loading, sign-in-required, preview, email-mismatch, invalid, expired, revoked, cancelled, already-accepted, accepting, retryable-failure, and success states.
+- Acceptance must require an explicit 44-point action. Success must update available tenant/inventory context and offer `Open inventory` without requiring an app restart.
+- The invitation acceptance surface must honor the full platform Dynamic Type range without font-size caps. At accessibility sizes it must switch to a top-aligned, scrollable, reduced-chrome layout whose headings, metadata, and action labels wrap without clipping or hiding the primary action.
+- Mobile must expose inventory sharing from a permission-gated Settings destination. Inviting must support viewer/editor selection, creation, one-time link copy, the native Share sheet, expiration context, and safe retry/error behavior in light, dark, high-contrast, VoiceOver, and accessibility Dynamic Type layouts.
+- Mobile invitation tests must cover parser adversaries, deep-link routing before and after onboarding, matching and mismatched identities, every terminal invitation state, explicit acceptance, context refresh, one-time link visibility, clipboard/share behavior, and token redaction.

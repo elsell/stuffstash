@@ -1,8 +1,18 @@
 package httpserver
 
 import (
+	"context"
 	"net/http"
 	"testing"
+	"time"
+
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestUndoableOperationEndpointsUndoAndRedoAssetCreation(t *testing.T) {
@@ -151,6 +161,137 @@ func TestRedoEndpointRejectsStaleAssetState(t *testing.T) {
 		t.Fatalf("expected stale redo status %d, got %d with body %s", http.StatusBadRequest, redo.Code, redo.Body.String())
 	}
 	assertSafeError(t, redo, "invalid_request", "Invalid request.")
+}
+
+func TestUndoReturnEndpointRejectsReopeningHistoricalLocationCheckout(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	store := memory.NewStore()
+	authorizer := memory.NewAuthorizer()
+	application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{
+		tenants:     []seedTenant{{id: tenantID, name: "Home", owner: "owner"}},
+		inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "House", owner: "owner"}},
+		ids:         []string{"audit-rejected-undo"},
+	}, store, authorizer)
+	location, open, _ := seedHistoricalLocationCheckout(t, store, tenantID, inventoryID, "garage", "")
+	returned := open
+	returned.State = asset.CheckoutStateReturned
+	returned.ReturnedAt = open.CheckedOutAt.Add(time.Hour)
+	returned.ReturnedByPrincipal = "owner"
+	returned.UpdatedAt = returned.ReturnedAt
+	operation := checkoutHTTPTestOperation("return-operation", tenantID, inventoryID, location.ID, audit.ActionAssetReturned, ports.UndoableOperationAvailable, &open, &returned)
+	if err := store.ReturnAsset(context.Background(), open, returned, checkoutHTTPTestAudit("audit-return", tenantID, inventoryID, location.ID, audit.ActionAssetReturned), &operation); err != nil {
+		t.Fatalf("seed historical location return: %v", err)
+	}
+	server := NewServer(":0", application)
+
+	undo := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/undoable-operations/"+operation.ID+"/undo", "Bearer dev:owner", nil)
+	requireStatus(t, undo, http.StatusBadRequest)
+	assertSafeError(t, undo, "invalid_request", "Invalid request.")
+	history := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+location.ID.String()+"/checkouts?limit=10", "Bearer dev:owner", nil)
+	requireStatus(t, history, http.StatusOK)
+	entries := decodeAssetCheckoutList(t, history).Data
+	if len(entries) != 1 || entries[0].State != "returned" {
+		t.Fatalf("expected rejected undo to preserve returned checkout, got %+v", entries)
+	}
+}
+
+func TestRedoCheckoutEndpointRejectsReopeningHistoricalLocationCheckout(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	store := memory.NewStore()
+	authorizer := memory.NewAuthorizer()
+	application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{
+		tenants:     []seedTenant{{id: tenantID, name: "Home", owner: "owner"}},
+		inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "House", owner: "owner"}},
+		ids:         []string{"audit-undo", "audit-rejected-redo"},
+	}, store, authorizer)
+	location, _, operation := seedHistoricalLocationCheckout(t, store, tenantID, inventoryID, "garage", "checkout-operation")
+	server := NewServer(":0", application)
+	operationPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/undoable-operations/" + operation.ID
+
+	undo := performRequest(server, http.MethodPost, operationPath+"/undo", "Bearer dev:owner", nil)
+	requireStatus(t, undo, http.StatusOK)
+	redo := performRequest(server, http.MethodPost, operationPath+"/redo", "Bearer dev:owner", nil)
+	requireStatus(t, redo, http.StatusBadRequest)
+	assertSafeError(t, redo, "invalid_request", "Invalid request.")
+	history := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets/"+location.ID.String()+"/checkouts?limit=10", "Bearer dev:owner", nil)
+	requireStatus(t, history, http.StatusOK)
+	entries := decodeAssetCheckoutList(t, history).Data
+	if len(entries) != 1 || entries[0].State != "undone" {
+		t.Fatalf("expected rejected redo to preserve undone checkout, got %+v", entries)
+	}
+}
+
+func seedHistoricalLocationCheckout(t *testing.T, store *memory.Store, tenantID string, inventoryID string, assetID string, checkoutOperationID string) (asset.Asset, asset.Checkout, ports.UndoableOperation) {
+	t.Helper()
+	now := time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC)
+	location := asset.Asset{
+		ID:             asset.ID(assetID),
+		TenantID:       asset.TenantID(tenantID),
+		InventoryID:    asset.InventoryID(inventoryID),
+		Kind:           asset.KindLocation,
+		Title:          asset.Title("Garage"),
+		LifecycleState: asset.LifecycleStateActive,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+	if err := store.CreateAsset(context.Background(), location, checkoutHTTPTestAudit("audit-location", tenantID, inventoryID, location.ID, audit.ActionAssetCreated), nil); err != nil {
+		t.Fatalf("seed historical location: %v", err)
+	}
+	checkout := asset.Checkout{
+		ID:                    asset.CheckoutID("checkout-" + assetID),
+		TenantID:              asset.TenantID(tenantID),
+		InventoryID:           asset.InventoryID(inventoryID),
+		AssetID:               location.ID,
+		State:                 asset.CheckoutStateOpen,
+		CheckedOutAt:          now,
+		CheckedOutByPrincipal: "owner",
+		CreatedAt:             now,
+		UpdatedAt:             now,
+	}
+	var operation ports.UndoableOperation
+	var operationPointer *ports.UndoableOperation
+	if checkoutOperationID != "" {
+		operation = checkoutHTTPTestOperation(checkoutOperationID, tenantID, inventoryID, location.ID, audit.ActionAssetCheckedOut, ports.UndoableOperationAvailable, nil, &checkout)
+		operationPointer = &operation
+	}
+	if err := store.CheckOutAsset(context.Background(), checkout, checkoutHTTPTestAudit("audit-checkout", tenantID, inventoryID, location.ID, audit.ActionAssetCheckedOut), operationPointer); err != nil {
+		t.Fatalf("seed historical location checkout: %v", err)
+	}
+	return location, checkout, operation
+}
+
+func checkoutHTTPTestOperation(id string, tenantID string, inventoryID string, assetID asset.ID, action audit.Action, status ports.UndoableOperationStatus, before *asset.Checkout, after *asset.Checkout) ports.UndoableOperation {
+	return ports.UndoableOperation{
+		ID:             id,
+		TenantID:       tenant.ID(tenantID),
+		InventoryID:    inventory.InventoryID(inventoryID),
+		PrincipalID:    identity.PrincipalID("owner"),
+		Source:         audit.SourceAPI,
+		TargetType:     audit.TargetAsset,
+		TargetID:       assetID.String(),
+		OriginalAction: action,
+		Status:         status,
+		CreatedAt:      time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC),
+		BeforeCheckout: before,
+		AfterCheckout:  after,
+	}
+}
+
+func checkoutHTTPTestAudit(id string, tenantID string, inventoryID string, assetID asset.ID, action audit.Action) audit.Record {
+	return audit.Record{
+		ID:          audit.ID(id),
+		TenantID:    audit.TenantID(tenantID),
+		InventoryID: audit.InventoryID(inventoryID),
+		PrincipalID: audit.PrincipalID("owner"),
+		Action:      action,
+		Source:      audit.SourceAPI,
+		TargetType:  audit.TargetAsset,
+		TargetID:    assetID.String(),
+		OccurredAt:  time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC),
+		Metadata:    map[string]string{},
+	}
 }
 
 func operationIDForTarget(t *testing.T, records []auditRecordResponse, targetID string) string {

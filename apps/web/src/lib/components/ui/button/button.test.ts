@@ -73,4 +73,12 @@ describe('Button', () => {
 		expect(busy?.querySelector('.busy-button-content')?.children).toHaveLength(2);
 		expect(busy?.disabled).toBe(true);
 	});
+
+	it('forwards primitive role and tab order to route-backed anchors', () => {
+		component = mount(ButtonHarness, { target: document.body });
+
+		const close = document.body.querySelector<HTMLAnchorElement>('[data-testid="route-close"]');
+		expect(close?.getAttribute('role')).toBe('button');
+		expect(close?.getAttribute('tabindex')).toBe('-1');
+	});
 });

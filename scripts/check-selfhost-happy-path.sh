@@ -102,6 +102,9 @@ test -f scripts/configure-garage-cors.mjs ||
 grep -q 'exec nginx -e /dev/stderr -c /tmp/nginx.conf -g "daemon off;"' deploy/web/start-web-runtime.sh ||
   fail "web runtime must send nginx startup errors to stderr for read-only containers"
 
+grep -Fq 'STUFF_STASH_INVITATION_PUBLIC_BASE_URL: ${STUFF_STASH_WEB_ORIGIN:?set STUFF_STASH_WEB_ORIGIN in .env}/invitations/accept' "$compose_file" ||
+  fail "self-host invitation links must derive from the web origin that serves association documents"
+
 grep -q 'SSL_CERT_FILE: /caddy-data/stuffstash-ca-certificates.crt' "$compose_file" ||
   fail "API must trust the Caddy local CA bundle for HTTPS OIDC discovery"
 

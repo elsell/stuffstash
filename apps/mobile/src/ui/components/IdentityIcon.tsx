@@ -9,7 +9,8 @@ import {
   Text,
   View
 } from 'react-native';
-import { colors, spacing } from '../theme/tokens';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 
 export type IdentityKind = 'tenant' | 'inventory';
 
@@ -41,6 +42,8 @@ export function IdentityIcon({
   size = 'md',
   style
 }: IdentityIconProps) {
+  const colors = useAppearanceAwarePalette();
+  const styles = createStyles(colors);
   const metrics = iconSizes[size];
   const Icon = kind === 'tenant' ? Building2 : Package;
   const color = kind === 'tenant' ? colors.onAction : colors.accentStrong;
@@ -71,6 +74,7 @@ export function IdentityLabel({
   style,
   textStyle
 }: IdentityLabelProps) {
+  const styles = createStyles(useAppearanceAwarePalette());
   return (
     <View style={[styles.labelRow, style]}>
       <IdentityIcon kind={kind} size={iconSize} />
@@ -81,7 +85,8 @@ export function IdentityLabel({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   iconFrame: {
     alignItems: 'center',
     justifyContent: 'center'
@@ -105,4 +110,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     minWidth: 0
   }
-});
+  });
+}

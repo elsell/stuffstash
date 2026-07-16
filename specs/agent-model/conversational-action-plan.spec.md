@@ -134,6 +134,12 @@ When a create command places a new asset inside an existing location or containe
 
 Realtime proposal payloads must include enough safe command detail for clients to present the plan clearly. For each command, the payload should include command ID, command kind, summary, title when present, asset kind when present, operation category such as create/use/move/archive/restore, and a safe parent reference summary when present. The payload must not expose raw provider data, prompts, transcripts, credentials, or hidden resource data. Existing asset IDs and internal command IDs may be sent only as opaque plan references needed for accurate approval display; clients must render user-facing titles and summaries rather than raw IDs.
 
+Proposed `create_asset` and `create_location` commands must remain editable during review. A review client must allow the user to edit the proposed title inline and choose the containing parent without leaving the review flow. Parent choices may be inventory root, an authorized visible asset in the same inventory, or an earlier create command in the same plan. In the current authorization model, inventory `view` permission grants visibility to the inventory's tenant-scoped assets; there is no separate per-asset visibility relationship. The review UI must distinguish an existing parent from a parent that the same plan will create.
+
+Edits are draft review state until approval. Approval may include a bounded list of command edits keyed by command ID, containing only an edited title and one mutually exclusive parent reference: `parentAssetId`, `parentCommandId`, or explicit inventory root. The application boundary must reject edits for unknown commands, duplicate command IDs, non-create commands, blank or overlong titles, unknown fields, both parent reference kinds at once, forward or cyclic command references, hidden or cross-inventory existing parents, and edits to a plan that is no longer `proposed`. It must not accept replacement command kinds, arbitrary command arguments, summaries, risks, approval claims, tenant or inventory identifiers, provider data, prompts, transcripts, credentials, or hidden resource data.
+
+Applying reviewed edits and transitioning the plan from `proposed` to `approved` must be one repository operation scoped to the initiating principal, tenant, and inventory. Execution must use the persisted edited command arguments. A failed edit or transition must leave the original proposed plan unchanged and executable only after a later valid approval.
+
 The first executable `move_asset` argument shape is:
 
 - `assetId`: required existing active asset ID in the same inventory.
@@ -199,5 +205,4 @@ The execution service must reject command arguments outside this shape for execu
 
 - What exact command enumeration should exist for the first release?
 - Should action plans expire if not approved within a configured time?
-- Should users be able to edit a proposed plan before approval?
 - Which action plan fields should be persisted long term versus only referenced by audit events?

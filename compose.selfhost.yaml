@@ -62,6 +62,8 @@ services:
       STUFF_STASH_HTTP_ADDR: :8080
       STUFF_STASH_CORS_ALLOWED_ORIGINS: ${STUFF_STASH_WEB_ORIGIN:?set STUFF_STASH_WEB_ORIGIN in .env}
       STUFF_STASH_AUTH_MODE: oidc
+      STUFF_STASH_INVITATION_PUBLIC_BASE_URL: ${STUFF_STASH_WEB_ORIGIN:?set STUFF_STASH_WEB_ORIGIN in .env}/invitations/accept
+      STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP: "false"
       STUFF_STASH_AUTHZ_MODE: spicedb
       STUFF_STASH_REPOSITORY_MODE: postgres
       STUFF_STASH_BLOB_STORAGE_MODE: s3
@@ -106,6 +108,9 @@ services:
       STUFF_STASH_WEB_OIDC_CLIENT_ID: ${STUFF_STASH_WEB_OIDC_CLIENT_ID:?set STUFF_STASH_WEB_OIDC_CLIENT_ID in .env}
       STUFF_STASH_WEB_OIDC_REDIRECT_URI: ${STUFF_STASH_WEB_OIDC_REDIRECT_URI:?set STUFF_STASH_WEB_OIDC_REDIRECT_URI in .env}
       STUFF_STASH_WEB_MEDIA_MAX_BYTES: ${STUFF_STASH_MAX_ATTACHMENT_BYTES:-5242880}
+      STUFF_STASH_MOBILE_IOS_APP_ID: ${STUFF_STASH_MOBILE_IOS_APP_ID:-}
+      STUFF_STASH_MOBILE_ANDROID_PACKAGE: ${STUFF_STASH_MOBILE_ANDROID_PACKAGE:-app.stuffstash.mobile}
+      STUFF_STASH_MOBILE_ANDROID_SHA256_CERT_FINGERPRINT: ${STUFF_STASH_MOBILE_ANDROID_SHA256_CERT_FINGERPRINT:-}
     user: "1001:0"
     read_only: true
     cap_drop:
@@ -128,6 +133,12 @@ services:
       - /etc/dex/config.yaml
     volumes:
       - ${DEX_CONFIG_PATH:-./deploy/selfhost/dex/config.yaml}:/etc/dex/config.yaml:ro
+      - ./deploy/dex/theme/styles.css:/srv/dex/web/themes/light/styles.css:ro
+      - ./docs/public/brand/stuff-stash-glyph.png:/srv/dex/web/themes/light/logo.png:ro
+      - ./docs/public/brand/stuff-stash-glyph.png:/srv/dex/web/themes/light/favicon.png:ro
+      - ./deploy/dex/templates/header.html:/srv/dex/web/templates/header.html:ro
+      - ./deploy/dex/templates/login.html:/srv/dex/web/templates/login.html:ro
+      - ./deploy/dex/templates/password.html:/srv/dex/web/templates/password.html:ro
     healthcheck:
       test:
         - CMD-SHELL

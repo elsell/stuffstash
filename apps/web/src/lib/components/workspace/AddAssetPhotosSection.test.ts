@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mount, unmount } from 'svelte';
+import { mount, tick, unmount } from 'svelte';
 import type { SelectedPhoto } from '$lib/domain/inventory';
 import AddAssetPhotosSection, { type AddAssetPhotosSectionProps } from './AddAssetPhotosSection.svelte';
 
@@ -23,13 +23,12 @@ describe('AddAssetPhotosSection', () => {
     expect(document.body.querySelector('[aria-label="Photo actions"]')?.textContent).toContain('No photos');
     expect(document.body.querySelector('fieldset')?.getAttribute('aria-describedby')).toBe('photo-help photo-status');
     expect(document.body.querySelector('[aria-label="Photo actions"]')?.getAttribute('aria-describedby')).toBe('photo-help photo-status');
-    expect(button('Upload').getAttribute('aria-describedby')).toBe('photo-help photo-status');
-    expect(button('Camera').getAttribute('aria-describedby')).toBe('photo-help photo-status');
+    expect(button('Choose photos').getAttribute('aria-describedby')).toBe('photo-help photo-status');
+    expect(button('Choose photos').classList).toContain('min-h-11');
     expect(document.body.querySelector('#photo-status')?.getAttribute('aria-live')).toBe('polite');
     expect(document.body.querySelector<HTMLInputElement>('#asset-photos')?.getAttribute('accept')).toBe('image/jpeg,image/png,image/webp');
-    expect(document.body.querySelector<HTMLInputElement>('#asset-photos')?.getAttribute('aria-label')).toBe('Upload photos');
-    expect(document.body.querySelector<HTMLInputElement>('#asset-camera')?.getAttribute('capture')).toBe('environment');
-    expect(document.body.querySelector<HTMLInputElement>('#asset-camera')?.getAttribute('aria-label')).toBe('Take photo');
+    expect(document.body.querySelector<HTMLInputElement>('#asset-photos')?.getAttribute('aria-label')).toBe('Choose photos');
+    expect(document.body.querySelector<HTMLInputElement>('#asset-camera')).toBeNull();
     expect(document.body.textContent).toContain('Optional JPEG, PNG, or WebP up to 1 KB.');
   });
 
@@ -42,7 +41,7 @@ describe('AddAssetPhotosSection', () => {
     });
 
     expect(document.body.querySelector<HTMLInputElement>('#asset-photos')?.getAttribute('accept')).toBe('image/png');
-    expect(document.body.querySelector<HTMLInputElement>('#asset-camera')?.getAttribute('accept')).toBe('image/png');
+    expect(document.body.querySelector<HTMLInputElement>('#asset-camera')).toBeNull();
     expect(document.body.textContent).toContain('Optional PNG up to 2 KB.');
   });
 
@@ -64,13 +63,31 @@ describe('AddAssetPhotosSection', () => {
     expect(document.body.querySelector('[role="list"][aria-label="Selected photos"]')?.textContent).toContain('front.jpg');
     expect(document.body.querySelector('[role="listitem"]')?.textContent).toContain('front.jpg');
     expect(document.body.querySelector('fieldset')?.getAttribute('aria-describedby')).toBe('photo-help photo-status photo-error');
-    expect(button('Upload').getAttribute('aria-describedby')).toBe('photo-help photo-status photo-error');
-    expect(button('Camera').getAttribute('aria-describedby')).toBe('photo-help photo-status photo-error');
+    expect(button('Choose photos').getAttribute('aria-describedby')).toBe('photo-help photo-status photo-error');
     expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('back.gif is not a supported image type.');
+    expect(button('Remove front.jpg').classList).toContain('size-11');
 
     button('Remove front.jpg').click();
 
     expect(removedIds).toEqual(['photo-one']);
+  });
+
+  it('offers Take photo only when coarse-pointer media capture is available', async () => {
+    const originalMatchMedia = window.matchMedia;
+    const originalCapture = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'capture');
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: () => ({ matches: true }) });
+    Object.defineProperty(HTMLInputElement.prototype, 'capture', { configurable: true, writable: true, value: '' });
+    try {
+      component = mount(AddAssetPhotosSection, { target: document.body, props: sectionProps() });
+      await tick();
+
+      expect(button('Take photo').getAttribute('aria-describedby')).toBe('photo-help photo-status');
+      expect(document.body.querySelector<HTMLInputElement>('#asset-camera')?.getAttribute('capture')).toBe('environment');
+    } finally {
+      Object.defineProperty(window, 'matchMedia', { configurable: true, value: originalMatchMedia });
+      if (originalCapture) Object.defineProperty(HTMLInputElement.prototype, 'capture', originalCapture);
+      else delete (HTMLInputElement.prototype as { capture?: string }).capture;
+    }
   });
 });
 

@@ -51,6 +51,7 @@
   {inventories}
   {selectedTenantId}
   {selectedInventoryId}
+  disablePortal
   onSelectTenant={selectTenant}
   onSelectInventory={(tenantId, inventoryId) => {
     selectedTenantId = tenantId;

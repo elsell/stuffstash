@@ -5,6 +5,9 @@
 	    AssetCheckout,
     AssetKind,
     AssetTag,
+    BrowseScope,
+    BrowseSort,
+    BrowseSurface,
     CustomAssetType,
     CustomFieldDefinition,
     Inventory,
@@ -52,12 +55,22 @@
 
   export type RouteContentRouteState = {
     routeUnavailable: string;
+    assetDetailLoading: boolean;
     mode: WorkspaceMode;
     searchResults: SearchResult[];
     searchSuggestions: Asset[];
-    searchTagIds: string[];
     searchSubmitted: boolean;
     searchError: string;
+    browseSurface: BrowseSurface;
+    browseScope: BrowseScope;
+    browseSort: BrowseSort;
+    browseTagIds: string[];
+    browseAssets: Asset[];
+    browseInventoryEmpty: boolean;
+    browseHasMore: boolean;
+    browseLoadingMore: boolean;
+    browseBusy: boolean;
+    browseErrorPhase: 'initial' | 'replacement' | 'append' | 'map' | null;
     assetAction: AssetRouteAction;
     attachmentId: string | null;
     attachmentAction: WorkspaceRouteState['attachmentAction'];
@@ -82,19 +95,32 @@
   export type RouteContentHandlers = {
     onHome: (event: MouseEvent) => void;
     onOpenLocation: (asset: Asset) => void;
+    onOpenLocations?: () => void;
+    onBrowseStateChange: (state: {
+      surface?: BrowseSurface;
+      scope?: BrowseScope;
+      lifecycleState?: SearchLifecycleFilter;
+      checkoutState?: SearchCheckoutFilter;
+      sort?: BrowseSort;
+      selectedTagIds?: string[];
+    }) => void;
+    onBrowseLoadMore: () => Promise<void>;
+    onBrowseRetry: () => Promise<void>;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => Promise<void>;
-    onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null) => void;
+    onOpenAdd: (kind?: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
     onCloseLocation: () => void;
     onCloseAssetDetail: () => void;
     onAssetActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onAssetActionClose: () => void;
     onAssetSave: (draft: UpdateAssetDraft) => Promise<void>;
+    onMoveAssetHere: (asset: Asset) => Promise<void>;
     onAssetArchive: () => Promise<void>;
     onAssetRestore: () => Promise<void>;
     onAssetDelete: () => Promise<void>;
     onAssetCheckout: (details: string) => Promise<void>;
     onAssetReturn: (details: string) => Promise<void>;
+    onHomeAssetReturn: (asset: Asset) => Promise<void>;
     onAssetUploadAttachment: (attachment: SelectedAttachment) => Promise<void>;
     onAssetArchiveAttachment: (attachment: AssetAttachment) => Promise<void>;
     onAttachmentDeleteOpen: (attachmentId: string) => void;
@@ -134,18 +160,19 @@
 </script>
 
 <script lang="ts">
-  import { containedAssets, moveParentTargets, recentlyAddedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { moveParentTargets, recentlyChangedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import {
     workspaceNoInventoryPresentation,
     workspaceUnavailableRoutePresentation
   } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import AssetDetail from './AssetDetail.svelte';
+  import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
   import InventoryImportWorkspace from './InventoryImportWorkspace.svelte';
   import InventorySettings from './InventorySettings.svelte';
   import LocationView from './LocationView.svelte';
-  import SearchPanel from './SearchPanel.svelte';
 
   let {
     workspace,
@@ -182,23 +209,38 @@
       <p>{noInventoryPresentation.message}</p>
     </div>
   </section>
+{:else if route.assetDetailLoading}
+  <section class="workspace-main" aria-busy="true">
+    <div class="empty-state spacious" role="status" aria-live="polite">
+      <LoaderCircle class="size-6 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
+      <h1>Loading asset details</h1>
+      <p>Getting the latest details and files.</p>
+    </div>
+  </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}
   <LocationView
     location={workspace.selectedLocation}
-    assets={containedAssets(workspace.assets, workspace.selectedLocation.id)}
+    workspaceAssets={workspace.assets}
     canEdit={status.editAssetAllowed}
     canCreateAsset={status.createAssetAllowed}
+    saving={status.busy}
+    moveHereOpen={route.assetAction === 'move-here'}
     onBack={handlers.onCloseLocation}
     onOpenLocation={handlers.onOpenLocation}
     onEditLocation={handlers.onEditLocation}
     onOpenAsset={handlers.onOpenAsset}
     onOpenAdd={handlers.onOpenAdd}
+    onOpenMoveHere={() => handlers.onAssetActionOpen('move-here')}
+    onCloseMoveHere={handlers.onAssetActionClose}
+    onMoveHere={handlers.onMoveAssetHere}
     onTagSearch={handlers.onAssetTagSearch}
   />
 {:else if route.mode === 'asset' && workspace.selectedAsset}
   <AssetDetail
     asset={withTrail(workspace.selectedAsset, workspace.detailAssets)}
     canEdit={status.editAssetAllowed}
+    canCreate={status.createAssetAllowed}
+    workspaceAssets={workspace.detailAssets}
     parentTargets={moveParentTargets(workspace.detailAssets, workspace.selectedAsset.id)}
     customFieldDefinitions={workspace.data.context.customFieldDefinitions}
     assetTags={workspace.data.context.assetTags ?? []}
@@ -213,6 +255,9 @@
     onBack={handlers.onCloseAssetDetail}
     onActionOpen={handlers.onAssetActionOpen}
     onActionClose={handlers.onAssetActionClose}
+    onOpenAsset={(asset) => asset.kind === 'location' ? handlers.onOpenLocation(asset) : void handlers.onOpenAsset(asset)}
+    onOpenAdd={handlers.onOpenAdd}
+    onMoveHere={handlers.onMoveAssetHere}
     onSave={handlers.onAssetSave}
     onArchive={handlers.onAssetArchive}
     onRestore={handlers.onAssetRestore}
@@ -226,24 +271,38 @@
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
     onTagSearch={handlers.onAssetTagSearch}
   />
-{:else if route.mode === 'search'}
-  <SearchPanel
+{:else if route.mode === 'browse'}
+  <BrowsePanel
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
+    inventoryName={workspace.selectedInventory?.name ?? 'Inventory'}
+    assets={route.browseAssets}
+    placementAssets={workspace.assets}
+    inventoryEmpty={route.browseInventoryEmpty}
     bind:query={searchQuery}
-    bind:lifecycleState={searchLifecycleState}
-    bind:searchMode={searchMode}
-    bind:checkoutState={searchCheckoutState}
     results={route.searchResults}
     suggestions={route.searchSuggestions}
-    selectedTagIds={route.searchTagIds}
     assetTags={workspace.data.context.assetTags ?? []}
     submitted={route.searchSubmitted}
     error={route.searchError}
-    busy={status.busy}
+    busy={route.browseBusy}
+    surface={route.browseSurface}
+    scope={route.browseScope}
+    lifecycleState={searchLifecycleState}
+    {searchMode}
+    checkoutState={searchCheckoutState}
+    sort={route.browseSort}
+    selectedTagIds={route.browseTagIds}
+    canCreateAsset={status.createAssetAllowed}
+    hasMore={route.browseHasMore}
+    loadingMore={route.browseLoadingMore}
+    errorPhase={route.browseErrorPhase}
+    onStateChange={handlers.onBrowseStateChange}
+    onLoadMore={handlers.onBrowseLoadMore}
+    onRetry={handlers.onBrowseRetry}
     onSearch={() => { void handlers.onSearch(); }}
     onOpenAsset={handlers.onOpenSearchAsset}
-    onTagSearch={handlers.onAssetTagSearch}
+    onOpenAdd={(kind, parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
   />
 {:else if route.mode === 'import'}
   <InventoryImportWorkspace
@@ -293,15 +352,17 @@
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
     lifecycleState={workspace.data.context.assetLifecycleState}
-    browseMode={route.mode === 'locations' ? 'locations' : 'home'}
     locations={topLevelLocations(workspace.assets)}
-    recentAssets={recentlyAddedAssets(workspace.assets)}
+    recentAssets={recentlyChangedAssets(workspace.assets)}
     archivedAssets={workspace.assets}
     checkedOutAssets={workspace.data.checkedOutAssets.map((entry) => entry.asset)}
     canCreateAsset={status.createAssetAllowed}
+    canEditAsset={status.editAssetAllowed}
     onOpenLocation={handlers.onOpenLocation}
+    onOpenLocations={handlers.onOpenLocations}
     onOpenAsset={handlers.onOpenAsset}
-    onOpenAdd={(kind = 'location') => handlers.onOpenAdd(kind)}
+    onReturnAsset={handlers.onHomeAssetReturn}
+    onOpenAdd={(kind = 'location', parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
     onSelectLifecycle={(lifecycleState) => { void handlers.onSelectLifecycle(lifecycleState); }}
     onTagSearch={handlers.onAssetTagSearch}
   />

@@ -37,54 +37,55 @@ func (s Store) CreateAssetTag(ctx context.Context, tag assettag.Tag, auditRecord
 
 func (s Store) SetAssetTags(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, tagIDs []assettag.ID, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var count int64
-		if err := tx.Model(&assetModel{}).Where(&assetModel{ID: assetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).Count(&count).Error; err != nil {
+		if err := replaceAssetTagsInTx(tx, tenantID, inventoryID, assetID, tagIDs); err != nil {
 			return err
-		}
-		if count != 1 {
-			return ports.ErrForbidden
-		}
-		unique := map[string]struct{}{}
-		for _, tagID := range tagIDs {
-			if tagID.String() == "" {
-				return ports.ErrForbidden
-			}
-			unique[tagID.String()] = struct{}{}
-		}
-		keys := make([]string, 0, len(unique))
-		for tagID := range unique {
-			keys = append(keys, tagID)
-		}
-		sort.Strings(keys)
-		if len(keys) > 0 {
-			var tagCount int64
-			if err := tx.Model(&assetTagModel{}).
-				Where(&assetTagModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), LifecycleState: assettag.LifecycleStateActive.String()}).
-				Where(clause.IN{Column: clause.Column{Name: "id"}, Values: stringValues(keys)}).
-				Count(&tagCount).Error; err != nil {
-				return err
-			}
-			if tagCount != int64(len(keys)) {
-				return ports.ErrForbidden
-			}
-		}
-		if err := tx.Where(&assetTagAssignmentModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: assetID.String()}).Delete(&assetTagAssignmentModel{}).Error; err != nil {
-			return err
-		}
-		now := time.Now().UTC()
-		for _, tagID := range keys {
-			if err := tx.Create(&assetTagAssignmentModel{
-				TenantID:    tenantID.String(),
-				InventoryID: inventoryID.String(),
-				AssetID:     assetID.String(),
-				TagID:       tagID,
-				CreatedAt:   now,
-			}).Error; err != nil {
-				return err
-			}
 		}
 		return createAuditRecord(tx, auditRecord)
 	})
+}
+
+func replaceAssetTagsInTx(tx *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, tagIDs []assettag.ID) error {
+	var count int64
+	if err := tx.Model(&assetModel{}).Where(&assetModel{ID: assetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).Count(&count).Error; err != nil {
+		return err
+	}
+	if count != 1 {
+		return ports.ErrForbidden
+	}
+	unique := map[string]struct{}{}
+	for _, tagID := range tagIDs {
+		if tagID.String() == "" {
+			return ports.ErrForbidden
+		}
+		unique[tagID.String()] = struct{}{}
+	}
+	keys := make([]string, 0, len(unique))
+	for tagID := range unique {
+		keys = append(keys, tagID)
+	}
+	sort.Strings(keys)
+	if len(keys) > 0 {
+		var tagCount int64
+		if err := tx.Model(&assetTagModel{}).
+			Where(&assetTagModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), LifecycleState: assettag.LifecycleStateActive.String()}).
+			Where(clause.IN{Column: clause.Column{Name: "id"}, Values: stringValues(keys)}).
+			Count(&tagCount).Error; err != nil {
+			return err
+		}
+		if tagCount != int64(len(keys)) {
+			return ports.ErrForbidden
+		}
+	}
+	if err := tx.Where(&assetTagAssignmentModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: assetID.String()}).Delete(&assetTagAssignmentModel{}).Error; err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	for _, tagID := range keys {
+		if err := tx.Create(&assetTagAssignmentModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: assetID.String(), TagID: tagID, CreatedAt: now}).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s Store) UpdateAssetTag(ctx context.Context, tag assettag.Tag, auditRecord audit.Record) error {

@@ -4,80 +4,133 @@
   import { loadRuntimeConfig, type RuntimeConfig } from '$lib/runtimeConfig';
   import AuthSignInScreen from '$lib/components/auth/AuthSignInScreen.svelte';
   import InventoryWorkspaceApp from '$lib/components/workspace/InventoryWorkspaceApp.svelte';
-  import * as Alert from '$lib/components/ui/alert/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
   import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
+  import { BrowserAuthObserver, authFailureAttributes, type AuthObserver } from '$lib/observability/authObserver';
   import type { WorkspaceData } from '$lib/domain/inventory';
   import { hasRecentlyCompletedSignIn } from '$lib/auth';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
+  import {
+    signInFailureMessage,
+    signInPresentation,
+    type SignInFailure,
+    type SignInState
+  } from '$lib/application/signInPresentation';
   import { StuffStashInventoryRepository } from '$lib/adapters/api/stuffStashInventoryRepository';
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+  import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
+  import type { AssetThumbnailLoaderLifecycle } from '$lib/ports/assetThumbnailLoader';
+
+  type WorkspaceRepository = InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & AssetThumbnailLoaderLifecycle;
 
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
-  let repository = $state<(InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository) | null>(null);
+  let repository = $state<WorkspaceRepository | null>(null);
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
-  let error = $state('');
-  let authNotice = $state<'expired' | 'rejected' | null>(null);
+  let authFailure = $state<SignInFailure | null>(null);
+  let workspaceError = $state('');
+  let authNotice = $state<Exclude<SignInState, 'default'> | null>(null);
+  let authObserver: AuthObserver | null = null;
+  let ownedRepository: WorkspaceRepository | null = null;
 
-  onMount(async () => {
-    try {
-      config = await loadRuntimeConfig();
-      session = getStoredSession();
-      if (session) {
-        const observer = new InMemoryWorkspaceObserver();
-        repository = new StuffStashInventoryRepository(config, () => getStoredSession()?.idToken ?? null, observer);
-        workspaceData = await repository.loadWorkspace();
+  onMount(() => {
+    let mounted = true;
+    authObserver = new BrowserAuthObserver();
+    void initialize();
+
+    return () => {
+      mounted = false;
+      releaseOwnedRepository();
+    };
+
+    async function initialize(): Promise<void> {
+      try {
+        const loadedConfig = await loadRuntimeConfig();
+        if (!mounted) return;
+        config = loadedConfig;
+        session = getStoredSession();
+        if (session) {
+          const observer = new InMemoryWorkspaceObserver();
+          const nextRepository = new StuffStashInventoryRepository(
+            loadedConfig,
+            () => getStoredSession()?.idToken ?? null,
+            observer
+          );
+          ownedRepository = nextRepository;
+          const nextWorkspace = await nextRepository.loadWorkspace();
+          if (!mounted) return;
+          repository = nextRepository;
+          workspaceData = nextWorkspace;
+        }
+      } catch (caught) {
+        releaseOwnedRepository();
+        if (!mounted) return;
+        if (isAuthenticationRequiredError(caught)) {
+          expireSession(caught);
+        } else if (session) {
+          authObserver?.record('auth.workspace_load_failed', authFailureAttributes(caught, 'workspace_transport'));
+          workspaceError = signInFailureMessage('workspace');
+        } else {
+          authObserver?.record('auth.runtime_configuration_failed', authFailureAttributes(caught, 'runtime_configuration'));
+          authFailure = 'configuration';
+        }
+      } finally {
+        if (mounted) loading = false;
       }
-    } catch (caught) {
-      if (isAuthenticationRequiredError(caught)) {
-        expireSession();
-      } else {
-        error = caught instanceof Error ? caught.message : 'Unable to load Stuff Stash.';
-      }
-    } finally {
-      loading = false;
     }
   });
+
+  function releaseOwnedRepository(): void {
+    ownedRepository?.dispose();
+    ownedRepository = null;
+  }
 
   async function signIn(): Promise<void> {
     if (config) {
       authNotice = null;
-      await startSignIn(config);
+      authFailure = null;
+      try {
+        await startSignIn(config);
+      } catch (caught) {
+        authObserver?.record('auth.sign_in_start_failed', authFailureAttributes(caught, 'sign_in_navigation'));
+        authFailure = 'start';
+      }
     }
   }
 
   function signOutAndReset(): void {
+    releaseOwnedRepository();
     signOut();
     session = null;
     repository = null;
     workspaceData = null;
-    error = '';
+    authFailure = null;
+    workspaceError = '';
     authNotice = null;
   }
 
-  function expireSession(): void {
+  function expireSession(failure?: unknown): void {
     const notice = hasRecentlyCompletedSignIn() ? 'rejected' : 'expired';
+    authObserver?.record(
+      'auth.session_invalidated',
+      authFailureAttributes(failure, notice === 'rejected' ? 'post_callback_rejected' : 'session_expired')
+    );
+    releaseOwnedRepository();
     signOut();
     session = null;
     repository = null;
     workspaceData = null;
-    error = '';
+    authFailure = null;
+    workspaceError = '';
     authNotice = notice;
   }
 
-  const authTitle = $derived(authNotice === 'expired' ? 'Session expired.' : authNotice === 'rejected' ? 'Sign-in was rejected.' : 'Sign in to continue.');
-  const authDescription = $derived(
-    authNotice === 'expired'
-      ? 'Sign in again to continue.'
-      : authNotice === 'rejected'
-        ? 'Dex completed sign-in, but the API rejected the new session. Check that the API accepts this web client ID.'
-        : 'Use your configured identity provider.'
-  );
+  const authPresentation = $derived(signInPresentation(authNotice ?? 'default'));
+  const authError = $derived(authFailure ? signInFailureMessage(authFailure) : '');
 </script>
 
 <svelte:head>
@@ -94,26 +147,20 @@
   </main>
 {:else if !session}
   <AuthSignInScreen
-    title={authTitle}
-    description={authDescription}
-    {error}
+    title={authPresentation.title}
+    description={authPresentation.description}
+    error={authError}
     canSignIn={Boolean(config)}
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
   <InventoryWorkspaceApp {repository} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
-{:else if error}
+{:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>
       <Card.Content>
-        <p class="muted">{error}</p>
+        <p class="muted" role="alert">{workspaceError}</p>
       </Card.Content>
     </Card.Root>
   </main>
-{/if}
-
-{#if error && repository}
-  <Alert.Root class="toast" variant="destructive">
-    <Alert.Description>{error}</Alert.Description>
-  </Alert.Root>
 {/if}

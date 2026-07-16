@@ -88,6 +88,23 @@ func TestRealtimeVoiceActionPlanApprovalUsesOpenReviewSession(t *testing.T) {
 	assertSafeRealtimeEvents(t, []map[string]any{approved, executed}, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
 }
 
+func TestRealtimeVoiceActionPlanApprovalAcceptsBoundedCreateEdits(t *testing.T) {
+	t.Parallel()
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSession(t)
+	writeRealtimeMessage(t, ctx, connection, map[string]any{
+		"type": "action.plan.approve", "seq": 4, "sessionId": sessionID, "planId": planID,
+		"commandEdits": []map[string]any{{"commandId": "command-id", "title": "Insulated water bottle", "parent": map[string]any{"kind": "root"}}},
+	})
+	approved := readRealtimeMessage(t, ctx, connection)
+	if approved["type"] != "action.plan.approved" || approved["status"] != "approved" {
+		t.Fatalf("expected edited approval, got %+v", approved)
+	}
+	executed := readRealtimeMessage(t, ctx, connection)
+	if executed["type"] != "action.plan.executed" || executed["status"] != "executed" {
+		t.Fatalf("expected edited plan execution, got %+v", executed)
+	}
+}
+
 func TestRealtimeVoiceActionPlanApprovalExecutesMoveAsset(t *testing.T) {
 	t.Parallel()
 
@@ -238,7 +255,7 @@ func TestRealtimeVoiceActionPlanApprovalExecutesRestoreAsset(t *testing.T) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
-		_, err := seedApplication.ArchiveAsset(context.Background(), app.UpdateAssetLifecycleInput{
+		_, err := seedApplication.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
 			Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
 			Source:      audit.SourceAPI,
 			RequestID:   "seed-archive-water-bottle",
@@ -300,7 +317,7 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
-	if _, err := application.ArchiveAsset(context.Background(), app.UpdateAssetLifecycleInput{
+	if _, err := application.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("user-1")},
 		Source:      audit.SourceAPI,
 		RequestID:   "seed-archive-water-bottle",

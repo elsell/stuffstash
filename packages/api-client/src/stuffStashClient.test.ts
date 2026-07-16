@@ -464,6 +464,7 @@ describe('StuffStashClient', () => {
         title: 'Ibuprofen',
         description: '',
         lifecycleState: 'active',
+        undoableOperationId: 'operation-edit-one',
         customAssetTypeId: 'type-medicine',
         customFields: { 'expiration-date': '2027-01-01', count: 2 },
         tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
@@ -489,6 +490,7 @@ describe('StuffStashClient', () => {
         tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
+      undoableOperationId: 'operation-edit-one',
       customAssetTypeId: 'type-medicine',
       customFields: { 'expiration-date': '2027-01-01', count: 2 },
       tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
@@ -500,6 +502,7 @@ describe('StuffStashClient', () => {
         tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
+      undoableOperationId: 'operation-edit-one',
       customAssetTypeId: 'type-medicine',
       customFields: { 'expiration-date': '2027-01-01', count: 2 }
     });
@@ -782,6 +785,7 @@ describe('StuffStashClient', () => {
         title: 'Fertilizer',
         description: '',
         lifecycleState: 'archived',
+        undoableOperationId: 'operation-lifecycle-one',
         customFields: {}
       },
       meta: {}
@@ -801,10 +805,12 @@ describe('StuffStashClient', () => {
 
     await expect(client.archiveAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
       id: 'asset-one',
-      lifecycleState: 'archived'
+      lifecycleState: 'archived',
+      undoableOperationId: 'operation-lifecycle-one'
     });
     await expect(client.restoreAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
-      id: 'asset-one'
+      id: 'asset-one',
+      undoableOperationId: 'operation-lifecycle-one'
     });
     await expect(client.deleteAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toBeUndefined();
 
@@ -1176,8 +1182,7 @@ describe('StuffStashClient', () => {
       status: 'pending',
       isExpired: false,
       expiresAt: '2026-06-30T00:00:00Z',
-      inviterPrincipalId: 'principal-one',
-      acceptanceToken: 'raw-token'
+      inviterPrincipalId: 'principal-one'
     };
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',
@@ -1211,7 +1216,20 @@ describe('StuffStashClient', () => {
             meta: {}
           });
         }
-        return Response.json({ data: invitation, meta: {} }, { status: request.method === 'POST' ? 201 : 200 });
+		if (request.url.endsWith('/preview')) {
+			return Response.json({
+				data: {
+					inventoryId: 'inventory-one',
+					inventoryName: 'Workshop tools',
+					relationship: 'editor',
+					status: 'pending',
+					isExpired: false,
+					expiresAt: '2026-06-30T00:00:00Z'
+				},
+				meta: {}
+			});
+		}
+		return Response.json({ data: request.method === 'POST' ? { ...invitation, inviteUrl: 'https://stash.example.test/invitations/accept#token=raw-token' } : invitation, meta: {} }, { status: request.method === 'POST' ? 201 : 200 });
       }
     });
 
@@ -1223,7 +1241,7 @@ describe('StuffStashClient', () => {
         email: 'person@example.test',
         relationship: 'editor'
       })
-    ).resolves.toEqual(invitation);
+    ).resolves.toEqual({ ...invitation, inviteUrl: 'https://stash.example.test/invitations/accept#token=raw-token' });
     await expect(
       client.updateInventoryAccessInvitationExpiration(
         'tenant-one',
@@ -1234,6 +1252,16 @@ describe('StuffStashClient', () => {
     ).resolves.toEqual(invitation);
     await expect(client.cancelInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one')).resolves.toBeUndefined();
     await expect(client.deleteInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one')).resolves.toBeUndefined();
+    await expect(
+      client.previewInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one', 'raw-token')
+    ).resolves.toEqual({
+      inventoryId: 'inventory-one',
+      inventoryName: 'Workshop tools',
+      relationship: 'editor',
+      status: 'pending',
+      isExpired: false,
+      expiresAt: '2026-06-30T00:00:00Z'
+    });
     await expect(
       client.acceptInventoryAccessInvitation('tenant-one', 'inventory-one', 'invite-one', 'raw-token')
     ).resolves.toMatchObject({
@@ -1247,11 +1275,13 @@ describe('StuffStashClient', () => {
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/expiration',
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/cancel',
       'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one',
+      'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/preview',
       'POST http://api.local/tenants/tenant-one/inventories/inventory-one/access-invitations/invite-one/accept'
     ]);
     expect(await requests[1]?.json()).toEqual({ email: 'person@example.test', relationship: 'editor' });
     expect(await requests[2]?.json()).toEqual({ expiresAt: '2026-07-01T00:00:00Z' });
-    expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
+	expect(await requests[5]?.json()).toEqual({ acceptanceToken: 'raw-token' });
+	expect(await requests[6]?.json()).toEqual({ acceptanceToken: 'raw-token' });
   });
 
   it('lists tenant, inventory, and asset audit records through generated paths', async () => {
@@ -1301,6 +1331,33 @@ describe('StuffStashClient', () => {
       'GET http://api.local/tenants/tenant-one/inventories/inventory-one/audit-records?limit=1&cursor=next-page',
       'GET http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/audit-records?limit=2'
     ]);
+  });
+
+  it('lists typed asset activity with scoped cursor parameters', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        requests.push(new Request(input, init));
+        return Response.json({
+          data: [{
+            id: 'activity-one', principalId: 'principal-one', action: 'asset.updated', category: 'change', source: 'api',
+            occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title', previousValue: 'Drill', currentValue: 'Driver' }],
+            undo: { operationId: 'operation-one', status: 'available' }, technicalMetadata: { target_type: 'asset' }
+          }],
+          meta: { pagination: { limit: 20, nextCursor: 'next-page', hasMore: true } }
+        });
+      }
+    });
+
+    await expect(client.listAssetActivity('tenant-one', 'inventory-one', 'asset-one', {
+      view: 'changes', limit: 20, cursor: 'cursor-one'
+    })).resolves.toMatchObject({
+      items: [{ id: 'activity-one', category: 'change', changes: [{ field: 'title' }], undo: { operationId: 'operation-one', status: 'available' }, technicalMetadata: { target_type: 'asset' } }],
+      pagination: { nextCursor: 'next-page', hasMore: true }
+    });
+    expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/activity?view=changes&limit=20&cursor=cursor-one');
   });
 
   it('manages custom asset types and field definitions through generated paths', async () => {

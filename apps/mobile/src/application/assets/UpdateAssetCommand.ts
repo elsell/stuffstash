@@ -18,6 +18,7 @@ export type UpdateAssetCommandResult = {
   readonly id: string;
   readonly title: string;
   readonly message: string;
+  readonly undoableOperationId?: string;
 };
 
 export class UpdateAssetCommand {
@@ -52,7 +53,8 @@ export class UpdateAssetCommand {
     return {
       id: updated.id,
       title: updated.title,
-      message: `Updated ${updated.title}.`
+      message: `Updated ${updated.title}.`,
+      undoableOperationId: updated.undoableOperationId
     };
   }
 }

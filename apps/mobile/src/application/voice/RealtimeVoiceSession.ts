@@ -49,7 +49,7 @@ export interface RealtimeVoiceTransport {
     onEvent?: (event: VoiceRealtimeEvent) => Promise<void>,
     options?: RealtimeVoiceTransportRunOptions
   ): Promise<void>;
-  approveActionPlan(planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[]): Promise<void>;
+  approveActionPlan(planId: string, photos?: readonly VoiceActionPlanPhotoApprovalRequest[], edits?: readonly VoiceActionPlanCommandEdit[]): Promise<void>;
   cancelActionPlan(planId: string): Promise<void>;
 }
 
@@ -173,6 +173,14 @@ export type VoiceActionPlanPhotoApprovalRequest = {
 };
 
 export type VoiceActionPlanPhotoDrafts = Record<string, readonly CreateInventoryAssetPhotoInput[]>;
+
+export type VoiceActionPlanCommandEdit = {
+  readonly commandId: string;
+  readonly title?: string;
+  readonly parent?:
+    | { readonly kind: 'root' }
+    | { readonly kind: 'asset' | 'command'; readonly id: string };
+};
 
 type VoiceActionPlanExecutedEvent = VoiceRealtimeEventMetadata & {
   readonly type: 'action.plan.executed';
@@ -437,7 +445,7 @@ export class RealtimeVoiceSessionController {
     };
   }
 
-  async approveActionPlan(planId: string, photoDrafts: VoiceActionPlanPhotoDrafts = {}): Promise<void> {
+  async approveActionPlan(planId: string, photoDrafts: VoiceActionPlanPhotoDrafts = {}, edits: readonly VoiceActionPlanCommandEdit[] = []): Promise<void> {
     const safePlanId = usableActionPlanId(planId);
     const boundedDrafts = boundedPhotoDrafts(photoDrafts);
     validatePhotoApprovalMetadata(boundedDrafts);
@@ -445,7 +453,7 @@ export class RealtimeVoiceSessionController {
       this.pendingPhotoDraftsByPlanId.set(safePlanId, boundedDrafts);
     }
     try {
-      await this.transport.approveActionPlan(safePlanId, photoApprovalRequests(boundedDrafts));
+      await this.transport.approveActionPlan(safePlanId, photoApprovalRequests(boundedDrafts), boundedCommandEdits(edits));
     } catch (error) {
       this.pendingPhotoDraftsByPlanId.delete(safePlanId);
       throw error;
@@ -768,6 +776,35 @@ export class RealtimeVoiceSessionController {
       canRetry: hasRetryablePhotos(remaining)
     };
   }
+}
+
+function boundedCommandEdits(edits: readonly VoiceActionPlanCommandEdit[]): readonly VoiceActionPlanCommandEdit[] {
+  if (edits.length > 10) {
+    throw new Error('Too many voice plan edits were provided.');
+  }
+  const seen = new Set<string>();
+  return edits.map((edit) => {
+    const commandId = safeBoundedText(edit.commandId, 80);
+    if (!commandId || seen.has(commandId) || (edit.title === undefined && edit.parent === undefined)) {
+      throw new Error('Voice plan edits could not be reviewed safely.');
+    }
+    seen.add(commandId);
+    const title = edit.title === undefined ? undefined : safeBoundedText(edit.title, 200);
+    if (edit.title !== undefined && !title) {
+      throw new Error('Voice plan edits could not be reviewed safely.');
+    }
+    if (edit.parent?.kind === 'root') {
+      return { commandId, ...(title ? { title } : {}), parent: { kind: 'root' as const } };
+    }
+    if (edit.parent) {
+      const id = safeBoundedText(edit.parent.id, 80);
+      if (!id) {
+        throw new Error('Voice plan edits could not be reviewed safely.');
+      }
+      return { commandId, ...(title ? { title } : {}), parent: { kind: edit.parent.kind, id } };
+    }
+    return { commandId, ...(title ? { title } : {}) };
+  });
 }
 
 function boundedRecordingLevel(value: number): number {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TagColorPicker } from './TagColorPicker';
+import { swatchForeground, TagColorPicker } from './TagColorPicker';
+import { darkPalette } from '../theme/tokens';
 
 vi.mock('lucide-react-native', () => ({
   Check: 'CheckIcon',
@@ -16,6 +17,16 @@ vi.mock('react-native', () => ({
   View: 'View'
 }));
 
+vi.mock('../theme/AppearanceContext', () => ({
+  useAppearancePalette: () => ({
+    action: '#72BCFF',
+    border: '#2B3338',
+    surface: '#1C2023',
+    textMuted: '#B8C4CB',
+    warning: '#FFD28A'
+  })
+}));
+
 type ElementNode = {
   readonly type?: unknown;
   readonly props?: {
@@ -25,6 +36,12 @@ type ElementNode = {
 };
 
 describe('TagColorPicker', () => {
+  it('chooses checkmark contrast from the actual swatch color', () => {
+    expect(swatchForeground('#2F80ED')).toBe('#000000');
+    expect(swatchForeground('#2E7D32')).toBe('#FFFFFF');
+    expect(swatchForeground('#D97706')).toBe('#000000');
+  });
+
   it('offers swatches and clears the optional tag color', () => {
     const changes: string[] = [];
     const picker = TagColorPicker({
@@ -72,6 +89,19 @@ describe('TagColorPicker', () => {
     expect(clear?.props?.accessibilityState).toMatchObject({ disabled: true, selected: false });
     expect(green?.props?.disabled).toBe(true);
     expect(clear?.props?.disabled).toBe(true);
+  });
+
+  it('uses the active appearance palette for neutral controls and labels', () => {
+    const picker = TagColorPicker({
+      value: '',
+      onChange: () => {},
+      palette: darkPalette
+    });
+
+    const clear = findFirstByProp(picker, 'accessibilityLabel', 'No tag color');
+    expect(clear?.props?.style).toContainEqual(
+      expect.objectContaining({ backgroundColor: darkPalette.surface })
+    );
   });
 });
 

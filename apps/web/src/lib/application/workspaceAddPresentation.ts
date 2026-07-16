@@ -44,9 +44,9 @@ export interface AddFormPresentation {
 
 export const addPhotoPickerPresentation: AddPhotoPickerPresentation = {
   actionGroupLabel: 'Photo actions',
-  uploadLabel: 'Upload',
-  cameraLabel: 'Camera',
-  uploadInputLabel: 'Upload photos',
+  uploadLabel: 'Choose photos',
+  cameraLabel: 'Take photo',
+  uploadInputLabel: 'Choose photos',
   cameraInputLabel: 'Take photo',
   selectedListLabel: 'Selected photos'
 };

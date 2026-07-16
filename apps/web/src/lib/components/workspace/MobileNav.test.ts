@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe('MobileNav', () => {
-  it('routes Places to the durable locations destination', () => {
+  it('routes Browse to the durable unified destination', () => {
     let selectedMode: WorkspaceMode | null = null;
     component = mount(MobileNav, {
       target: document.body,
@@ -31,13 +31,13 @@ describe('MobileNav', () => {
       }
     });
 
-    linkContaining('Places').click();
+    linkContaining('Browse').click();
 
-    expect(selectedMode).toBe('locations');
-    expect(linkContaining('Places').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations');
+    expect(selectedMode).toBe('browse');
+    expect(linkContaining('Browse').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/browse');
   });
 
-  it('marks focused locations as the current Places section', () => {
+  it('marks focused locations as the current Browse section', () => {
     component = mount(MobileNav, {
       target: document.body,
       props: {
@@ -51,7 +51,7 @@ describe('MobileNav', () => {
       }
     });
 
-    expect(linkContaining('Places').getAttribute('aria-current')).toBe('page');
+    expect(linkContaining('Browse').getAttribute('aria-current')).toBe('page');
   });
 
   it('exposes hrefs for durable mobile destinations and add action', () => {
@@ -69,7 +69,7 @@ describe('MobileNav', () => {
     });
 
     expect(linkContaining('Home').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one');
-    expect(linkContaining('Search').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/search');
+    expect(linkContaining('Browse').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/browse');
     expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('href')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/add/item'
     );

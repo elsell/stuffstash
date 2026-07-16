@@ -43,7 +43,7 @@
 </script>
 
 {#if suggestions.length > 0}
-  <ul {id} class="search-suggestions" aria-label={label}>
+  <ul {id} class="search-suggestions" role="listbox" aria-label={label}>
     {#each suggestions as suggestion, index}
       <li>
         <Button.Root
@@ -53,6 +53,9 @@
           class="suggestion-row"
           data-active={activeIndex === index}
           aria-label={`Open ${suggestion.title}`}
+          role="option"
+          tabindex={-1}
+          aria-selected={activeIndex === index}
           aria-describedby={suggestion.photoUnavailable ? photoUnavailableId(index) : undefined}
           onfocus={() => onFocusIndex(index)}
           onkeydown={(event) => onSuggestionKeydown(event, index)}

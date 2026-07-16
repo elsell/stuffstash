@@ -4,7 +4,11 @@ import {
   containedAssetActions,
   containedAssetsEmptyState,
   containedAssetRows,
-  containedAssetsSectionHeading
+  containedAssetsSectionHeading,
+  containedItemsEmptyState,
+  containedItemsSectionHeading,
+  containedSpacesEmptyState,
+  containedSpacesSectionHeading
 } from './ContainedAssetsPresentation';
 
 describe('ContainedAssetsPresentation', () => {
@@ -54,6 +58,39 @@ describe('ContainedAssetsPresentation', () => {
     });
   });
 
+  it('uses scoped place headings and counts', () => {
+    expect(containedSpacesSectionHeading({
+      title: 'Garage',
+      containedSpacesLabel: '2 spaces'
+    })).toEqual({ title: 'Spaces in Garage', summary: '2 spaces' });
+    expect(containedItemsSectionHeading({
+      title: 'Garage',
+      containedItemsLabel: '14 items'
+    })).toEqual({ title: 'Items in Garage', summary: '14 items' });
+    expect(containedItemsSectionHeading({
+      title: 'Garage',
+      containedItemsLabel: '14 items'
+    }, { visibleCount: 3, totalCount: 14 })).toEqual({
+      title: 'Items in Garage',
+      summary: '3 of 14 items'
+    });
+  });
+
+  it('uses natural place-specific empty copy', () => {
+    expect(containedSpacesEmptyState()).toEqual({
+      title: 'No spaces here yet',
+      message: 'Containers and nested places will appear here.'
+    });
+    expect(containedItemsEmptyState({ canAddContainedAssets: true })).toEqual({
+      title: 'Nothing here yet',
+      message: 'Add an item here or move items into this place.'
+    });
+    expect(containedItemsEmptyState({ canAddContainedAssets: false })).toEqual({
+      title: 'Nothing here yet',
+      message: 'There are no items in this place.'
+    });
+  });
+
   it('disables contained actions while another asset action is pending', () => {
     const onPress = () => undefined;
 
@@ -79,6 +116,10 @@ describe('ContainedAssetsPresentation', () => {
       customTypeLabel: undefined,
       description: 'AA, AAA, and coin cells.',
       locationTrailLabel: 'Garage / Shelf / Battery bin',
+      parentLocationTrail: [
+        { id: 'asset-garage', title: 'Garage', isImmediateParent: false },
+        { id: 'asset-shelf', title: 'Shelf', isImmediateParent: true }
+      ],
       updatedAtLabel: 'Updated yesterday',
       photoLabel: 'Photo ready',
       imagePlaceholderLabel: 'Box',
@@ -93,7 +134,7 @@ describe('ContainedAssetsPresentation', () => {
     }]);
   });
 
-  it('falls back to kind and photo readiness when a contained row has no description or type', () => {
+  it('falls back to update context instead of photo-readiness metadata', () => {
     expect(containedAssetRows([{
       id: 'asset-spare-key',
       title: 'Spare key',
@@ -101,6 +142,10 @@ describe('ContainedAssetsPresentation', () => {
       customTypeLabel: undefined,
       description: '',
       locationTrailLabel: 'Garage / Shelf / Spare key',
+      parentLocationTrail: [
+        { id: 'asset-garage', title: 'Garage', isImmediateParent: false },
+        { id: 'asset-shelf', title: 'Shelf', isImmediateParent: true }
+      ],
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
       imagePlaceholderLabel: 'Item',
@@ -109,9 +154,32 @@ describe('ContainedAssetsPresentation', () => {
       id: 'asset-spare-key',
       title: 'Spare key',
       eyebrowLabel: 'Item',
-      supportingLabel: 'Needs photo',
+      supportingLabel: 'Updated today',
       imagePlaceholderLabel: 'Item',
       photo: undefined
     }]);
+  });
+
+  it('prioritizes a descendant item relative path as useful place context', () => {
+    expect(containedAssetRows([{
+      id: 'asset-extension-cord',
+      title: 'Extension cord',
+      kindLabel: 'Item',
+      customTypeLabel: undefined,
+      description: 'Outdoor-rated.',
+      locationTrailLabel: 'Garage / Tool cabinet / Drawer 2 / Extension cord',
+      parentLocationTrail: [],
+      updatedAtLabel: 'Updated today',
+      photoLabel: 'Needs photo',
+      imagePlaceholderLabel: 'Item',
+      relativePath: [
+        { id: 'asset-tool-cabinet', title: 'Tool cabinet' },
+        { id: 'asset-drawer-two', title: 'Drawer 2' }
+      ],
+      relativePathLabel: 'Tool cabinet / Drawer 2'
+    }])).toEqual([expect.objectContaining({
+      id: 'asset-extension-cord',
+      supportingLabel: 'Tool cabinet / Drawer 2'
+    })]);
   });
 });

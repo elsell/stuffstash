@@ -136,14 +136,15 @@ test('add flow saves items with and without selected photo previews', async ({ p
   await expect(page.locator('.asset-photo-panel img[alt="Photo tape"]')).toBeVisible();
   expect(signedUploadPuts(page)).toBe(1);
 
-  await page.goto('/tenants/tenant-home/inventories/inventory-household/search');
-  await page.getByLabel('Search query').fill('Photo tape');
+  await page.goto('/tenants/tenant-home/inventories/inventory-household/browse');
+  await page.getByLabel('Search Browse').fill('Photo tape');
   const photoTapeThumbnailRequestsBeforeSearch = thumbnailRequestPaths(page).filter((path) =>
     path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')
   ).length;
   await page.getByRole('button', { name: 'Search', exact: true }).click();
-  await expect(page.locator('.asset-list').getByRole('link', { name: /Photo tape/ })).toBeVisible();
-  const photoTapeThumbnail = page.locator('.asset-list img[alt="Photo tape"]');
+  const browseResults = page.getByRole('tabpanel', { name: 'All' });
+  await expect(browseResults.getByRole('link', { name: /Photo tape/ })).toBeVisible();
+  const photoTapeThumbnail = browseResults.getByRole('img', { name: 'Photo tape' });
   await expect(photoTapeThumbnail).toBeVisible();
   expect(
     thumbnailRequestPaths(page).filter((path) => path.includes('/assets/asset-photo-tape/attachments/attachment-photo/thumbnail')).length
@@ -211,7 +212,7 @@ test('add location deep link saves to the canonical focused location route', asy
   await expect(page.getByRole('heading', { name: 'Garage shelf' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Back/ })).toHaveAttribute(
     'href',
-    '/tenants/tenant-home/inventories/inventory-household/locations'
+    '/tenants/tenant-home/inventories/inventory-household/browse?scope=places'
   );
 });
 
@@ -236,18 +237,20 @@ test('search entry shows autocomplete and image-bearing results', async ({ page 
   await page.goto('/');
 
   await page.getByLabel('Search this inventory').fill('Tomato');
-  await expect(page.getByLabel('Search suggestions').getByRole('link', { name: 'Open Tomato fertilizer' })).toBeVisible();
-  await expect(page.getByLabel('Search suggestions').locator('img[alt="Tomato fertilizer"]')).toBeVisible();
+  const suggestionList = page.getByLabel('Search suggestions');
+  await expect(suggestionList.getByRole('option', { name: 'Open Tomato fertilizer' })).toBeVisible();
+  await expect(suggestionList.getByRole('img', { name: 'Tomato fertilizer' })).toBeVisible();
   await page.getByRole('button', { name: 'Run search' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Browse' })).toBeVisible();
   await expect(page.getByLabel('Search this inventory')).toHaveCount(0);
-  await expect(page.getByLabel('Search query')).toBeVisible();
-  await expect(page.locator('.asset-list').getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
+  await expect(page.getByLabel('Search Browse')).toBeVisible();
+  const browseResults = page.getByRole('tabpanel', { name: 'All' });
+  await expect(browseResults.getByRole('link', { name: /Tomato fertilizer/ })).toHaveAttribute(
     'href',
     '/tenants/tenant-home/inventories/inventory-household/assets/asset-tomato'
   );
-  await expect(page.locator('.asset-list img[alt="Tomato fertilizer"]')).toBeVisible();
+  await expect(browseResults.getByRole('img', { name: 'Tomato fertilizer' })).toBeVisible();
 });
 
 test('location navigation opens asset detail and returns to the location list', async ({ page }, testInfo) => {

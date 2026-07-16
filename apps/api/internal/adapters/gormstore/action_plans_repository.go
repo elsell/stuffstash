@@ -59,6 +59,57 @@ func (s Store) UpdateActionPlanState(ctx context.Context, tenantID tenant.ID, in
 	return s.ActionPlanByID(ctx, tenantID, inventoryID, planID)
 }
 
+func (s Store) UpdateActionPlanCommandsAndState(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, commands []ports.ActionPlanCommandRecord, transition ports.ActionPlanStateTransition) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || len(commands) == 0 || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateProposed || transition.To != actionplan.StateApproved {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	model, err := actionPlanModelFromRecord(ports.ActionPlanRecord{Commands: commands, Risks: []string{}})
+	if err != nil {
+		return ports.ActionPlanRecord{}, false, err
+	}
+	found := false
+	var updated ports.ActionPlanRecord
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		scope := actionPlanModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), ID: strings.TrimSpace(planID), PrincipalID: transition.PrincipalID.String(), State: string(transition.From)}
+		updates := actionPlanStateUpdates(transition)
+		updates["commands"] = model.CommandsJSON
+		result := tx.Model(&actionPlanModel{}).Where(&scope).Where(clause.Lte{Column: clause.Column{Name: "created_at"}, Value: transition.At}).Updates(updates)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected > 0 {
+			found = true
+			var persisted actionPlanModel
+			if err := tx.Where(&actionPlanModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), ID: strings.TrimSpace(planID)}).First(&persisted).Error; err != nil {
+				return err
+			}
+			record, ok, err := actionPlanRecordFromModel(persisted)
+			if err != nil || !ok {
+				return err
+			}
+			updated = record
+			return nil
+		}
+		var existing actionPlanModel
+		err := tx.Where(&actionPlanModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), ID: strings.TrimSpace(planID)}).First(&existing).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		found = true
+		return ports.ErrConflict
+	})
+	if err != nil {
+		return ports.ActionPlanRecord{}, found, err
+	}
+	if !found {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	return updated, true, nil
+}
+
 func (s Store) ExecuteCreateAssetActionPlan(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput

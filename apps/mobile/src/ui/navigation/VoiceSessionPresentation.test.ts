@@ -757,12 +757,14 @@ describe('VoiceSessionPresentation', () => {
         {
           title: 'Living room',
           subtitle: 'Use existing location',
+          editable: false,
           photoDraftEligible: false,
           tone: 'use'
         },
         {
           title: 'Box underneath the TV',
           subtitle: 'Create container',
+          editable: true,
           placement: 'Inside Living room',
           photoDraftEligible: true,
           tone: 'create'
@@ -770,6 +772,7 @@ describe('VoiceSessionPresentation', () => {
         {
           title: 'Apple TV remote',
           subtitle: 'Create item',
+          editable: true,
           placement: 'Inside new Box underneath the TV',
           photoDraftEligible: true,
           tone: 'create'

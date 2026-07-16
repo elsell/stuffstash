@@ -68,6 +68,27 @@ func (s *Store) UpdateActionPlanState(_ context.Context, tenantID tenant.ID, inv
 	return cloneActionPlanRecord(record), true, nil
 }
 
+func (s *Store) UpdateActionPlanCommandsAndState(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, commands []ports.ActionPlanCommandRecord, transition ports.ActionPlanStateTransition) (ports.ActionPlanRecord, bool, error) {
+	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || len(commands) == 0 || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateProposed || transition.To != actionplan.StateApproved {
+		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	record, found := s.actionPlans[planID]
+	if !found || record.TenantID != tenantID || record.InventoryID != inventoryID {
+		return ports.ActionPlanRecord{}, false, nil
+	}
+	if record.PrincipalID != transition.PrincipalID || record.State != transition.From || transition.At.Before(record.CreatedAt) {
+		return ports.ActionPlanRecord{}, true, ports.ErrConflict
+	}
+	record.Commands = cloneActionPlanRecord(ports.ActionPlanRecord{Commands: commands}).Commands
+	record.State = transition.To
+	record.UpdatedAt = transition.At
+	record.ApprovedAt = transition.At
+	s.actionPlans[planID] = record
+	return cloneActionPlanRecord(record), true, nil
+}
+
 func (s *Store) ExecuteCreateAssetActionPlan(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, planID string, transition ports.ActionPlanStateTransition, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) (ports.ActionPlanRecord, bool, error) {
 	if tenantID.String() == "" || inventoryID.String() == "" || strings.TrimSpace(planID) == "" || validateActionPlanTransition(transition) != nil || transition.From != actionplan.StateApproved || transition.To != actionplan.StateExecuted {
 		return ports.ActionPlanRecord{}, false, ports.ErrInvalidProviderInput

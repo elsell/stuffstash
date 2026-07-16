@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,6 +19,7 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 		},
 		ids: []string{
 			"socket-set", "op-socket-set", "audit-socket-set",
+			"attachment-socket-set", "audit-attachment-socket-set",
 			"checkout-socket-set", "op-checkout-socket-set", "audit-checkout-socket-set",
 			"op-return-socket-set", "audit-return-socket-set",
 			"op-return-socket-set-two", "audit-return-socket-set-two", "audit-return-details-socket-set",
@@ -41,6 +43,16 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	}
 	created := decodeAsset(t, create)
 	assetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + created.Data.ID
+	photoContent := pngAttachmentContent()
+	photo := performRequest(server, http.MethodPost, assetPath+"/attachments", "Bearer dev:owner", map[string]any{
+		"fileName":      "socket-set.png",
+		"contentType":   "image/png",
+		"contentBase64": base64.StdEncoding.EncodeToString(photoContent),
+	})
+	if photo.Code != http.StatusCreated {
+		t.Fatalf("expected attachment status %d, got %d with body %s", http.StatusCreated, photo.Code, photo.Body.String())
+	}
+	createdPhoto := decodeAttachment(t, photo)
 
 	checkout := performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner:owner@example.test", map[string]any{"details": "  using at my desk  "})
 	if checkout.Code != http.StatusCreated {
@@ -95,6 +107,9 @@ func TestAssetCheckoutEndpoints(t *testing.T) {
 	checkedOutListBody := decodeCheckedOutAssetList(t, checkedOutList)
 	if len(checkedOutListBody.Data) != 1 || checkedOutListBody.Data[0].Asset.ID != created.Data.ID || checkedOutListBody.Data[0].Checkout.ID != checkedOut.Data.ID {
 		t.Fatalf("unexpected checked-out list: %+v", checkedOutListBody.Data)
+	}
+	if checkedOutListBody.Data[0].Asset.PrimaryPhoto == nil || checkedOutListBody.Data[0].Asset.PrimaryPhoto.ID != createdPhoto.Data.ID {
+		t.Fatalf("expected checked-out list primary photo %q, got %+v", createdPhoto.Data.ID, checkedOutListBody.Data[0].Asset.PrimaryPhoto)
 	}
 	if checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipalID != "owner" || checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipal == nil || checkedOutListBody.Data[0].Checkout.CheckedOutByPrincipal.Email != "owner@example.test" {
 		t.Fatalf("expected checked-out list principal profile, got %+v", checkedOutListBody.Data[0].Checkout)
@@ -339,6 +354,47 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 	requireStatus(t, smuggleDetail, http.StatusOK)
 	if decodeAsset(t, smuggleDetail).Data.CurrentCheckout == nil {
 		t.Fatalf("expected rejected smuggled return not to close checkout")
+	}
+}
+
+func TestAssetCheckoutEndpointRejectsNonPortableLocation(t *testing.T) {
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	server := NewServer(":0", newSeededTestApp(t, seededState{
+		tenants: []seedTenant{
+			{id: tenantID, name: "Home", owner: "owner"},
+		},
+		inventories: []seedInventory{
+			{id: inventoryID, tenantID: tenantID, name: "House", owner: "owner"},
+		},
+		ids: []string{"garage", "op-garage", "audit-garage"},
+	}))
+
+	createdResponse := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets", "Bearer dev:owner", map[string]any{
+		"kind":  "location",
+		"title": "Garage",
+	})
+	requireStatus(t, createdResponse, http.StatusCreated)
+	created := decodeAsset(t, createdResponse)
+	assetPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + created.Data.ID
+
+	checkout := performRequest(server, http.MethodPost, assetPath+"/checkout", "Bearer dev:owner", map[string]any{"details": "attempted place checkout"})
+	requireStatus(t, checkout, http.StatusBadRequest)
+	var body errorResponse
+	decodeBody(t, checkout, &body)
+	if body.Error.Code != "invalid_request" {
+		t.Fatalf("expected safe invalid request error, got %+v", body.Error)
+	}
+
+	detail := performRequest(server, http.MethodGet, assetPath, "Bearer dev:owner", nil)
+	requireStatus(t, detail, http.StatusOK)
+	if decodeAsset(t, detail).Data.CurrentCheckout != nil {
+		t.Fatal("expected rejected location checkout not to create a checkout record")
+	}
+	history := performRequest(server, http.MethodGet, assetPath+"/checkouts?limit=10", "Bearer dev:owner", nil)
+	requireStatus(t, history, http.StatusOK)
+	if got := decodeAssetCheckoutList(t, history).Data; len(got) != 0 {
+		t.Fatalf("expected rejected location checkout not to create checkout history, got %+v", got)
 	}
 }
 

@@ -4,25 +4,147 @@ import type {
   AssetCardViewModel
 } from '../../application/assets/AssetViewModels';
 import type {
+  AssetBrowseCheckoutFilter,
   AssetBrowseKindFilter,
   AssetBrowseLifecycleFilter,
   AssetBrowseSort
 } from '../../application/home/InventorySummaryRepository';
+import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { LocationBrowserItemViewModel } from '../../application/locations/LocationsQuery';
+import { spacing } from '../theme/tokens';
 
 export type BrowseScope = 'all' | 'places' | 'containers' | 'items';
+
+export type BrowsePlaceItemViewModel = Pick<
+  LocationBrowserItemViewModel,
+  'id' | 'title' | 'description' | 'containedAssetCountLabel' | 'recentAssetLabel' | 'photo'
+>;
 
 export type BrowseScopeOption = {
   readonly label: string;
   readonly value: BrowseScope;
 };
 
+export type BrowseSecondaryFilters = {
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
+  readonly tagIds: readonly string[];
+};
+
+export type BrowseFilterToken =
+  | { readonly key: 'lifecycle'; readonly label: string; readonly type: 'lifecycle' }
+  | { readonly key: 'checkout'; readonly label: string; readonly type: 'checkout' }
+  | { readonly key: string; readonly label: string; readonly type: 'tag'; readonly tagId: string };
+
 export function focusSearchInput(inputRef: RefObject<TextInput | null>): void {
   inputRef.current?.focus();
 }
 
-export function shouldAutoFocusSearchInput(initialTagIds: readonly string[]): boolean {
-  return initialTagIds.every((tagId) => tagId.trim().length === 0);
+export function shouldAutoFocusSearchInput(_initialTagIds: readonly string[]): boolean {
+  return false;
+}
+
+export function browseFilterCount(filters: BrowseSecondaryFilters): number {
+  return (filters.lifecycleState === 'active' ? 0 : 1)
+    + (filters.checkoutState === 'any' ? 0 : 1)
+    + filters.tagIds.length;
+}
+
+export function buildBrowseFilterTokens(
+  filters: BrowseSecondaryFilters,
+  tagOptions: readonly AssetTagOptionViewModel[]
+): readonly BrowseFilterToken[] {
+  const tagsById = new Map(tagOptions.map((tag) => [tag.id, tag]));
+  const tokens: BrowseFilterToken[] = [];
+
+  if (filters.lifecycleState !== 'active') {
+    tokens.push({
+      key: 'lifecycle',
+      label: filters.lifecycleState === 'archived' ? 'Archived' : 'All statuses',
+      type: 'lifecycle'
+    });
+  }
+  if (filters.checkoutState !== 'any') {
+    tokens.push({
+      key: 'checkout',
+      label: filters.checkoutState === 'checked_out' ? 'Checked out' : 'Available',
+      type: 'checkout'
+    });
+  }
+  filters.tagIds.forEach((tagId) => {
+    const tag = tagsById.get(tagId);
+    tokens.push({
+      key: `tag:${tagId}`,
+      label: tag?.label ?? 'Tag',
+      type: 'tag',
+      tagId
+    });
+  });
+
+  return tokens;
+}
+
+export function sortLabel(sort: AssetBrowseSort): string {
+  return sort === 'updated_desc' ? 'Recently changed' : 'Default order';
+}
+
+export function browseColumnCount({
+  fontScale,
+  scope,
+  width
+}: {
+  readonly fontScale: number;
+  readonly scope: BrowseScope;
+  readonly width: number;
+}): 1 | 2 {
+  return scope === 'places' || fontScale >= 1.35 || width < 350 ? 1 : 2;
+}
+
+export function browseGridCardWidth(width: number, columnCount: 1 | 2): number | undefined {
+  return columnCount === 2
+    ? Math.floor((width - (spacing.md * 2) - spacing.sm) / 2)
+    : undefined;
+}
+
+export function canLoadNextBrowsePage(
+  status: 'loading' | 'ready' | 'error',
+  errorPhase?: 'initial' | 'replacement' | 'pagination'
+): boolean {
+  return status === 'ready' || (status === 'error' && errorPhase === 'pagination');
+}
+
+export function browseContinuationCriteria(criteria: {
+  readonly query: string;
+  readonly lifecycleState: AssetBrowseLifecycleFilter;
+  readonly checkoutState: AssetBrowseCheckoutFilter;
+  readonly scope: BrowseScope;
+  readonly sort: AssetBrowseSort;
+  readonly tagIds: readonly string[];
+}) {
+  return {
+    query: criteria.query,
+    lifecycleState: criteria.lifecycleState,
+    checkoutState: criteria.checkoutState,
+    scope: criteria.scope,
+    sort: criteria.sort,
+    tagIds: criteria.tagIds
+  } as const;
+}
+
+export function cancelPendingBrowseSearch(
+  timer: { current: ReturnType<typeof setTimeout> | undefined },
+  query: string,
+  clearTimer: (timer: ReturnType<typeof setTimeout>) => void = clearTimeout
+): string {
+  if (timer.current) {
+    clearTimer(timer.current);
+    timer.current = undefined;
+  }
+  return query.trim();
+}
+
+export function browseLoadingFlagsForRefresh() {
+  return { isLoadingMore: false, isRefreshing: true } as const;
 }
 
 export function buildBrowseScopeOptions(): readonly BrowseScopeOption[] {
@@ -61,38 +183,33 @@ export function parseBrowseScope(value: string | readonly string[] | undefined):
 }
 
 export function searchResultSummaryLabel({
+  hasTagFilters,
   lifecycleState,
   query,
   resultCount,
   scope,
   sort
 }: {
+  readonly hasTagFilters?: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly query: string;
   readonly resultCount: number;
   readonly scope: BrowseScope;
   readonly sort: AssetBrowseSort;
 }): string {
-  const scopeLabel = labelScope(scope);
-  const statusLabel = labelLifecycle(lifecycleState);
   const trimmedQuery = query.trim();
-  const queryLabel = trimmedQuery.length > 0 ? ` for "${trimmedQuery}"` : '';
-
-  if (trimmedQuery.length > 0) {
-    return `Showing ${resultCount.toString()} ${statusLabel} ${scopeLabel}${queryLabel} · relevance order`;
+  if (trimmedQuery.length > 0 || hasTagFilters) {
+    return trimmedQuery.length > 0
+      ? `${resultCount.toString()} shown for “${trimmedQuery}” · relevance`
+      : `${resultCount.toString()} shown · relevance`;
   }
-
-  if (scope === 'places') {
-    return `Showing ${resultCount.toString()} ${statusLabel} ${scopeLabel}${queryLabel} · ${labelSort(sort)}`;
-  }
-
-  return `Showing ${resultCount.toString()} ${statusLabel} ${scopeLabel}${queryLabel} · ${labelSort(sort)}`;
+  return `${resultCount.toString()} shown · ${sortLabel(sort)}`;
 }
 
 export function locationRowsFromAssetCards(
   assets: readonly AssetCardViewModel[],
   locations: readonly LocationBrowserItemViewModel[]
-): readonly LocationBrowserItemViewModel[] {
+): readonly BrowsePlaceItemViewModel[] {
   const locationsById = new Map(locations.map((location) => [location.id, location]));
   return assets.map((asset) => {
     const location = locationsById.get(asset.id);
@@ -102,41 +219,7 @@ export function locationRowsFromAssetCards(
       description: asset.description,
       containedAssetCountLabel: location?.containedAssetCountLabel ?? 'Contents not summarized',
       recentAssetLabel: location?.recentAssetLabel ?? asset.locationTrailLabel,
-      photoLabel: asset.photoLabel,
       photo: asset.photo
     };
   });
-}
-
-function labelScope(scope: BrowseScope): string {
-  switch (scope) {
-    case 'all':
-      return 'things';
-    case 'places':
-      return 'places';
-    case 'containers':
-      return 'containers';
-    case 'items':
-      return 'items';
-  }
-}
-
-function labelLifecycle(lifecycleState: AssetBrowseLifecycleFilter): string {
-  switch (lifecycleState) {
-    case 'active':
-      return 'active';
-    case 'archived':
-      return 'archived';
-    case 'all':
-      return 'all';
-  }
-}
-
-function labelSort(sort: AssetBrowseSort): string {
-  switch (sort) {
-    case 'updated_desc':
-      return 'recent first';
-    case 'id_asc':
-      return 'stable order';
-  }
 }

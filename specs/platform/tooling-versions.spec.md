@@ -33,6 +33,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo development client for local physical-device SDK 55 testing: `expo-dev-client 55.0.35`.
 - Expo Metro runtime for Expo Router: `@expo/metro-runtime 55.0.11`.
 - Expo Linking for Expo Router: `expo-linking 55.0.15`.
+- Expo Clipboard for one-time mobile invitation-link copy actions: `expo-clipboard 55.0.13`.
 - Expo Constants for Expo Router: `expo-constants 55.0.16`.
 - Expo Audio for mobile voice recording and playback: `expo-audio 55.0.14`.
 - Expo FileSystem for mobile durable connection profile storage: `expo-file-system 55.0.22`.
@@ -80,7 +81,8 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Tailwind class merge helper: `tailwind-merge 3.6.0`.
 - Class variance helper: `class-variance-authority 0.7.1`.
 - Tailwind variants helper: `tailwind-variants 3.2.2`.
-- Inter variable font package for web UI: `@fontsource-variable/inter 5.2.8`.
+- Web UI typography uses the operating system's native font stack and does not
+  ship a separate font package.
 - Internationalized date helper used by generated UI components: `@internationalized/date 3.12.2`.
 - Svelte icon package used by generated UI components: `@lucide/svelte 1.17.0`.
 - Svelte Sonner toast runtime for web notification feedback: `svelte-sonner 1.1.1`.
@@ -122,6 +124,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Container image overrides must still be pinned with `@sha256:`.
 - New tools must be added here before use.
 - Tooling changes must be atomic conventional commits.
+- The Go structural checker must inspect GORM adapter source with the Go AST and reject string-literal query fragments passed as the first argument to `Where`, `Order`, or `Joins`. This rule is scoped to `apps/api/internal/adapters/gormstore/*.go` so unrelated methods with the same names are not rejected.
 - Generated artifacts must include drift checks once generation is introduced.
 - Release version planning must be done by repository-owned scripts using Conventional Commit messages and SemVer. Do not add external release automation dependencies for version calculation.
 - A release commit on `main` must only create a new tag and GitHub release when commits since the last SemVer tag require a release.
@@ -132,6 +135,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Release automation that opens a self-host image digest update pull request may request auto-merge, but it must not treat digest PR check completion or merge completion as part of release success.
 - Release validation must build the API release binary from the `apps/api` module with workspace mode disabled before any image publication job runs.
 - Pull requests targeting `main` must run a blocking CI gate before merge. The gate must include dependency age checking, repository script tests, Go formatting and structural boundary checks for changed Go files, API tests, API release build validation, web tests, web static checks, web build validation, mobile tests, mobile static checks, generated API client tests, generated API client static checks, generated API client drift checks, documentation dependency installation, and documentation build validation.
+- Repository script tests run by the blocking CI gate must be portable to the pinned Linux runner without assuming developer-machine utilities such as Ripgrep or Apple's `plutil`. Structural text checks must use runner-standard tools, and Apple property-list fixtures must be validated with Python's standard-library `plistlib`.
 - Web browser E2E smoke tests may remain outside the blocking gate until the suite is made deterministic and green enough for routine pull request use.
 - The `main` branch protection rule must require the `Required checks` status, require branches to be up to date before merging, and include administrators.
 - Dependency freshness must be checked mechanically for npm and Go modules.

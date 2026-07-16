@@ -82,6 +82,36 @@ func TestActionPlanRepositoryScopesAndFreezesTransitions(t *testing.T) {
 	}
 }
 
+func TestActionPlanRepositoryAtomicallyEditsCommandsAndApproves(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
+	saveTenant(t, ctx, store, tenant.ID("tenant-other"), "Other")
+	saveInventory(t, ctx, store, "inventory-home", tenant.ID("tenant-home"), "Home")
+	record := gormActionPlanRecord("plan-edited", time.Date(2026, 7, 14, 12, 0, 0, 0, time.UTC))
+	if err := store.SaveActionPlan(ctx, record); err != nil {
+		t.Fatalf("save plan: %v", err)
+	}
+	edited := append([]ports.ActionPlanCommandRecord(nil), record.Commands...)
+	edited[0].ArgumentsJSON = []byte(`{"title":"Insulated water bottle"}`)
+	transition := ports.ActionPlanStateTransition{PrincipalID: record.PrincipalID, From: actionplan.StateProposed, To: actionplan.StateApproved, At: record.CreatedAt.Add(time.Second)}
+	if _, found, err := store.UpdateActionPlanCommandsAndState(ctx, tenant.ID("tenant-other"), record.InventoryID, record.ID, edited, transition); err != nil || found {
+		t.Fatalf("expected cross-tenant edit to miss, found=%t err=%v", found, err)
+	}
+	unchanged, _, _ := store.ActionPlanByID(ctx, record.TenantID, record.InventoryID, record.ID)
+	if unchanged.State != actionplan.StateProposed || string(unchanged.Commands[0].ArgumentsJSON) != `{"name":"water bottle"}` {
+		t.Fatalf("cross-tenant attempt changed plan: %+v", unchanged)
+	}
+	approved, found, err := store.UpdateActionPlanCommandsAndState(ctx, record.TenantID, record.InventoryID, record.ID, edited, transition)
+	if err != nil || !found || approved.State != actionplan.StateApproved || string(approved.Commands[0].ArgumentsJSON) != `{"title":"Insulated water bottle"}` {
+		t.Fatalf("unexpected edited approval found=%t err=%v record=%+v", found, err, approved)
+	}
+	if _, _, err := store.UpdateActionPlanCommandsAndState(ctx, record.TenantID, record.InventoryID, record.ID, record.Commands, transition); err == nil {
+		t.Fatal("expected stale edited approval to conflict")
+	}
+}
+
 func TestActionPlanRepositoryAllowsApprovedPlanToExecuteOrFail(t *testing.T) {
 	t.Parallel()
 

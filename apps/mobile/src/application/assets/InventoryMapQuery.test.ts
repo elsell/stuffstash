@@ -45,7 +45,7 @@ describe('InventoryMapQuery', () => {
         {
           id: 'location-garage',
           title: 'Garage',
-          kindLabel: 'Location',
+          kindLabel: 'Place',
           childCountLabel: '1 inside',
           canContainAssets: true,
           canAddContainedAssets: true
@@ -123,6 +123,7 @@ function asset(
     parentAssetId: parentAssetId ? assetId(parentAssetId) : undefined,
     locationLabel: parentAssetId ? 'Stored' : 'Inventory root',
     locationTrail: parentAssetId ? ['Home', 'Garage', title] : ['Home', title],
+    parentLocationTrail: parentAssetId ? [{ id: assetId(parentAssetId), title: 'Garage' }] : [],
     description: `${title} description.`,
     updatedAtLabel: 'Updated today',
     hasPhoto: false

@@ -23,7 +23,7 @@ describe('InventoryAuditPanel', () => {
       props: { tenant: tenant(['view', 'configure']), inventory: inventory(['view']), repository }
     });
     await flush();
-    clickButton('Load more history');
+    clickButton('Load older activity');
     await flush();
 
     expect(calls).toEqual([
@@ -36,6 +36,51 @@ describe('InventoryAuditPanel', () => {
     expect(auditRow?.querySelector('[data-audit-primary]')?.textContent).not.toContain('asset-one');
     expect(auditRow?.querySelector('[data-audit-primary]')?.textContent).not.toContain('oidc_local_owner_123');
     expect(auditRow?.querySelector('details')?.textContent).toContain('oidc_local_owner_123');
+    expect(document.body.querySelectorAll('.audit-day-group')).toHaveLength(1);
+    expect(document.body.querySelector('.audit-day-heading')?.textContent).toContain('2026');
+  });
+
+  it('reveals buffered activity in bounded groups before loading an older page', async () => {
+    const calls: string[] = [];
+    const repository: InventoryAuditRepository = {
+      listTenantAuditRecords: async () => page(null),
+      listInventoryAuditRecords: async (_tenantId, _inventoryId, cursor) => {
+        calls.push(cursor ?? 'initial');
+        return cursor
+          ? { ...page(null), items: [auditRecord(46)] }
+          : { ...page('next-page'), items: Array.from({ length: 45 }, (_, index) => auditRecord(index + 1)) };
+      }
+    };
+
+    component = mount(InventoryAuditPanel, {
+      target: document.body,
+      props: { tenant: tenant(['view', 'configure']), inventory: inventory(['view']), repository }
+    });
+    await flush();
+
+    expect(document.body.querySelectorAll('.audit-row')).toHaveLength(20);
+    expect(calls).toEqual(['initial']);
+    expect(controlIn(document.body, 'Show more activity')).not.toBeNull();
+    expect(controlIn(document.body, 'Load older activity')).toBeNull();
+
+    clickButton('Show more activity');
+    await flush();
+
+    expect(document.body.querySelectorAll('.audit-row')).toHaveLength(40);
+    expect(calls).toEqual(['initial']);
+    expect(controlIn(document.body, 'Show more activity')).not.toBeNull();
+
+    clickButton('Show more activity');
+    await flush();
+
+    expect(document.body.querySelectorAll('.audit-row')).toHaveLength(45);
+    expect(calls).toEqual(['initial']);
+    expect(controlIn(document.body, 'Load older activity')).not.toBeNull();
+
+    clickButton('Load older activity');
+    await flush();
+
+    expect(calls).toEqual(['initial', 'next-page']);
   });
 
   it('switches to tenant audit only when tenant configure access exists', async () => {
@@ -146,7 +191,7 @@ describe('InventoryAuditPanel', () => {
     const repository: InventoryAuditRepository = {
       listTenantAuditRecords: async () => page(null),
       listInventoryAuditRecords: async () => {
-        throw new Error('Audit service unavailable.');
+        throw new Error('RAW_SENTINEL provider stack');
       }
     };
 
@@ -156,7 +201,8 @@ describe('InventoryAuditPanel', () => {
     });
     await flush();
 
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Audit service unavailable.');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('Activity could not be loaded. Try again.');
+    expect(document.body.textContent).not.toContain('RAW_SENTINEL');
     expect(document.body.textContent).not.toContain('No audit records found.');
   });
 
@@ -218,7 +264,7 @@ describe('InventoryAuditPanel', () => {
     });
     await flush();
 
-    clickButton('Load more history');
+    clickButton('Load older activity');
     await tick();
     unmount(component);
     component = null;
@@ -291,21 +337,23 @@ function fakeAuditRepository(options: { hasMore?: boolean } = {}): { repository:
 
 function page(nextCursor: string | null): AuditRecordPage {
   return {
-    items: [
-      {
-        id: 'audit-one',
-        tenantId: 'tenant-one',
-        inventoryId: 'inventory-one',
-        principalId: 'oidc_local_owner_123',
-        action: 'asset.created',
-        source: 'api',
-        targetType: 'asset',
-        targetId: 'asset-one',
-        occurredAt: '2026-06-24T12:00:00Z',
-        requestId: 'request-one',
-        metadata: { operation_id: 'operation-one' }
-      } satisfies AuditRecord
-    ],
+    items: [auditRecord(1)],
     pagination: { limit: 50, nextCursor, hasMore: nextCursor !== null }
+  };
+}
+
+function auditRecord(index: number): AuditRecord {
+  return {
+    id: `audit-${index}`,
+    tenantId: 'tenant-one',
+    inventoryId: 'inventory-one',
+    principalId: 'oidc_local_owner_123',
+    action: 'asset.created',
+    source: 'api',
+    targetType: 'asset',
+    targetId: `asset-${index}`,
+    occurredAt: '2026-06-24T12:00:00Z',
+    requestId: 'request-one',
+    metadata: { operation_id: 'operation-one' }
   };
 }

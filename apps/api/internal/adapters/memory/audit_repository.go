@@ -65,11 +65,35 @@ func (s *Store) ListAssetAuditRecords(_ context.Context, tenantID tenant.ID, inv
 		if record.TenantID.String() == tenantID.String() &&
 			record.InventoryID.String() == inventoryID.String() &&
 			record.TargetType == audit.TargetAsset &&
-			record.TargetID == targetID {
+			record.TargetID == targetID &&
+			assetAuditActionAllowed(record.Action, request.Actions) &&
+			auditRecordBefore(record, request.BeforeOccurredAt, request.BeforeRecordID) {
 			items = append(items, record)
 		}
 	}
 	return limitedNewestFirstAuditRecords(items, request.Limit), nil
+}
+
+func assetAuditActionAllowed(action audit.Action, allowed []audit.Action) bool {
+	if len(allowed) == 0 {
+		return true
+	}
+	for _, candidate := range allowed {
+		if candidate == action {
+			return true
+		}
+	}
+	return false
+}
+
+func auditRecordBefore(record audit.Record, occurredAt time.Time, id audit.ID) bool {
+	if occurredAt.IsZero() || id.String() == "" {
+		return true
+	}
+	if record.OccurredAt.Before(occurredAt) {
+		return true
+	}
+	return record.OccurredAt.Equal(occurredAt) && record.ID.String() < id.String()
 }
 
 func pagedAuditRecords(items []audit.Record, limit int) []audit.Record {

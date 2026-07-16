@@ -107,16 +107,11 @@ function toInventoryMapAssetViewModel(
 }
 
 function labelParentPlacement(asset: AssetSummary): string {
-  if (!asset.parentAssetId) {
+  if (asset.parentLocationTrail.length === 0) {
     return 'Inventory root';
   }
 
-  const localParentTrail = asset.locationTrail.slice(1, -1);
-  if (localParentTrail.length === 0) {
-    return 'Inventory root';
-  }
-
-  return localParentTrail.join(' / ');
+  return asset.parentLocationTrail.map((segment) => segment.title).join(' / ');
 }
 
 function countChildrenByParent(assets: readonly AssetSummary[]): Map<AssetId, number> {

@@ -1,4 +1,4 @@
-import { colors } from '../theme/tokens';
+import type { MobileColorPalette } from '../theme/tokens';
 
 export type AppNoticeTone = 'success' | 'info' | 'warning' | 'error';
 
@@ -19,10 +19,13 @@ export type AppNoticePresentation = {
   readonly title: string;
 };
 
-export function buildAppNoticePresentation(input: AppNoticeInput): AppNoticePresentation {
+export function buildAppNoticePresentation(
+  input: AppNoticeInput,
+  colors: MobileColorPalette
+): AppNoticePresentation {
   const title = input.title.trim();
   const message = input.message?.trim() || undefined;
-  const palette = noticePalette(input.tone);
+  const palette = noticePalette(input.tone, colors);
 
   return {
     accessibilityLabel: [title, message].filter(Boolean).join('. '),
@@ -35,7 +38,7 @@ export function buildAppNoticePresentation(input: AppNoticeInput): AppNoticePres
   };
 }
 
-function noticePalette(tone: AppNoticeTone): {
+function noticePalette(tone: AppNoticeTone, colors: MobileColorPalette): {
   readonly backgroundColor: string;
   readonly borderColor: string;
   readonly textColor: string;
@@ -43,20 +46,20 @@ function noticePalette(tone: AppNoticeTone): {
   switch (tone) {
     case 'success':
       return {
-        backgroundColor: '#EEF8F3',
-        borderColor: '#BFE4D2',
+        backgroundColor: colors.successSurface,
+        borderColor: colors.successBorder,
         textColor: colors.text
       };
     case 'warning':
       return {
         backgroundColor: colors.warningSurface,
-        borderColor: '#F4D6A3',
+        borderColor: colors.warningBorder,
         textColor: colors.text
       };
     case 'error':
       return {
-        backgroundColor: '#FDECEC',
-        borderColor: '#F1B9B9',
+        backgroundColor: colors.dangerSurface,
+        borderColor: colors.dangerBorder,
         textColor: colors.text
       };
     case 'info':

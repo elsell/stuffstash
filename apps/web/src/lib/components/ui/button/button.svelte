@@ -50,6 +50,8 @@
 		href = undefined,
 		type = "button",
 		disabled,
+		role,
+		tabindex,
 		onclick,
 		onkeydown,
 		children,
@@ -85,8 +87,8 @@
 		{...restProps}
 		href={disabled ? undefined : href}
 		aria-disabled={disabled}
-		role={disabled ? "link" : undefined}
-		tabindex={disabled ? 0 : undefined}
+		role={disabled ? "link" : role}
+		tabindex={disabled ? 0 : tabindex}
 		onclick={handleAnchorClick}
 		onkeydown={handleAnchorKeydown}
 	>
@@ -99,6 +101,7 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
+		{role}
 		{...restProps}
 		{onclick}
 		{onkeydown}

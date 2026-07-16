@@ -1,14 +1,18 @@
 <script lang="ts">
+  import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { operationRefreshWarning, safeOperationFailureDescription } from '$lib/application/workspaceOperationNotifications';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { afterNavigate } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, setContext, tick } from 'svelte';
+  import { assetThumbnailLoaderContext, type AssetThumbnailLoader } from '$lib/ports/assetThumbnailLoader';
   import {
     detailAssetList,
     labelAssets,
     parentTargets,
     selectedAssetForDetail
   } from '$lib/application/workspace';
+  import { accountDisplayLabel } from '$lib/application/workspaceShellNavigation';
   import { resolveWorkspaceAddRoute } from '$lib/application/workspaceAddRoute';
   import {
     assetDetailBackHref as workspaceAssetDetailBackHref,
@@ -24,12 +28,18 @@
   } from '$lib/application/workspaceAppNavigation';
   import {
     applyLoadedWorkspaceAssetDetail,
+    assetDetailFailureMessage,
     loadWorkspaceAssetDetail,
     refreshWorkspaceAssetAttachments
   } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
   import { reconcilePendingAssetTagDrafts } from '$lib/application/workspaceTagDrafts';
-  import { buildSearchSuggestions, executeWorkspaceSearch } from '$lib/application/workspaceSearch';
+  import {
+    browseSearchRoute,
+    buildSearchSuggestions,
+    loadBrowsePage as executeBrowsePageLoad
+  } from '$lib/application/workspaceSearch';
+  import { browseFailureMessage } from '$lib/application/workspaceBrowsePresentation';
   import {
     type AssetRouteAction,
     type ImportSourceRoute,
@@ -59,6 +69,9 @@
     type AssetKind,
     type AssetLifecycleFilter,
     type AssetTag,
+    type BrowseScope,
+    type BrowseSort,
+    type BrowseSurface,
     type CustomAssetType,
     type CustomFieldDefinition,
     type LocationAsset,
@@ -68,6 +81,7 @@
     type SearchResult,
     type SelectedAttachment,
     type UpdateAssetDraft,
+    type UndoableOperationDirection,
     type WorkspaceData,
     type WorkspaceMode
   } from '$lib/domain/inventory';
@@ -75,6 +89,7 @@
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+  import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
   import type { WorkspaceNotification, WorkspaceNotificationAction } from '$lib/components/ui/sonner/index.js';
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
@@ -87,16 +102,23 @@
     onSignOut,
     onSessionExpired = onSignOut
   }: {
-    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
+    repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & AssetThumbnailLoader;
     initialData: WorkspaceData;
     onSignOut: () => void;
     onSessionExpired?: () => void;
   } = $props();
 
+  // svelte-ignore state_referenced_locally -- the repository is immutable for the mounted workspace session.
+  const workspaceRepository = repository;
+  setContext(assetThumbnailLoaderContext, {
+    loadAssetThumbnail: workspaceRepository.loadAssetThumbnail.bind(workspaceRepository)
+  });
+
   // svelte-ignore state_referenced_locally -- initial route data seeds local workspace state.
   const startingData = initialData;
+  const startingRoute = currentWorkspaceRoute();
   let data = $state(startingData);
-  let mode = $state<WorkspaceMode>(startingData.context.inventories.length > 0 ? 'home' : 'settings');
+  let mode = $state<WorkspaceMode>(startingData.context.inventories.length > 0 ? startingRoute.mode : 'settings');
   let selectedLocationId = $state<string | null>(null);
   let selectedAssetId = $state<string | null>(null);
   let addOpen = $state(false);
@@ -104,17 +126,22 @@
   let addParentAssetId = $state<string | null>(null);
   let addReturnLocationId = $state<string | null>(null);
   let addReturnAssetId = $state<string | null>(null);
+  let addReturnFocusElement: HTMLElement | null = null;
   let assetAction = $state<AssetRouteAction>(null);
   let attachmentId = $state<string | null>(null);
   let attachmentAction = $state<WorkspaceRouteState['attachmentAction']>(null);
   let busy = $state(false);
   let notification = $state<WorkspaceNotification | null>(null);
+  let refreshWarning = $state<WorkspaceNotification | null>(null);
   let error = $state('');
   let searchQuery = $state('');
   let searchLifecycleState = $state<SearchLifecycleFilter>('active');
   let searchMode = $state<SearchMode>('fuzzy');
   let searchCheckoutState = $state<SearchCheckoutFilter>('any');
   let searchTagIds = $state<string[]>([]);
+  let browseSurface = $state<BrowseSurface>(startingRoute.browseSurface);
+  let browseScope = $state<BrowseScope>(startingRoute.browseScope);
+  let browseSort = $state<BrowseSort>(startingRoute.browseSort);
   let settingsSection = $state<SettingsSection>('overview');
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let accessInvitationAction = $state<WorkspaceRouteState['accessInvitationAction']>(null);
@@ -129,10 +156,20 @@
   let searchResults = $state<SearchResult[]>([]);
   let searchSubmitted = $state(false);
   let searchError = $state('');
+  let browseAssets = $state<Asset[]>([]);
+  let browseNextCursor = $state<string | null>(null);
+  let browseHasMore = $state(false);
+  let browseLoadingMore = $state(false);
+  let browseBusy = $state(false);
+  let browseRequestId = 0;
+  let browseMapAssets = $state<Asset[]>([]);
+  let browseInventoryEmpty = $state(false);
+  let browseErrorPhase = $state<'initial' | 'replacement' | 'append' | 'map' | null>(null);
   let loadedAssetDetail = $state<Asset | null>(null);
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
   let assetDetailRequestId = 0;
+  let assetDetailLoading = $state(false);
   let applyingRoute = false;
   let activeRouteApplicationKey: string | null = null;
   let queuedRoute: { route: WorkspaceRouteState; href: string } | null = null;
@@ -153,7 +190,11 @@
   let createAssetAllowed = $derived(canCreateAsset(selectedInventory));
   let editAssetAllowed = $derived(canEditAsset(selectedInventory));
   let canCreateStarter = $derived(!data.context.selectedTenantId || canCreateInventory(selectedTenant));
-  let userLabel = $derived(data.context.principal.email ?? data.context.principal.id);
+  let userLabel = $derived(accountDisplayLabel(data.context.principal));
+  let modalSurfaceOpen = $derived(
+    addOpen || assetAction !== null || attachmentAction === 'delete' ||
+    accessInvitationAction !== null || customizationAction !== null
+  );
 
   onMount(() => {
     void applyRoute(currentWorkspaceRoute());
@@ -276,17 +317,19 @@
     }
     busy = true;
     error = '';
+    refreshWarning = null;
     notification = null;
     try {
       const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
       data = result.data;
       if (result.message) {
-        setSuccessNotification(result.message, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
+        setMutationSuccessNotification(result.message, result.selectedAsset, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
       }
       if (result.error) {
         error = result.error;
       }
-      if (result.closeAdd) {
+      const restoreAddFocus = result.closeAdd;
+      if (restoreAddFocus) {
         addOpen = false;
       }
       if (result.mode) {
@@ -313,6 +356,7 @@
       if (result.route) {
         replaceRoute(result.route);
       }
+      if (restoreAddFocus) void restoreAddFocusAfterRoute(false, true);
       return result.saveResult;
     } catch (caught) {
       if (handleSessionExpired(caught)) {
@@ -359,7 +403,7 @@
         }
       };
       loadedAssetDetail = asset;
-      setSuccessNotification(`Saved ${asset.title}.`, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
+      setMutationSuccessNotification(`Saved ${asset.title}.`, asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -380,6 +424,28 @@
     }
   }
 
+  async function moveAssetHere(candidate: Asset): Promise<void> {
+    const target = selectedAsset ?? selectedLocation;
+    if (!target || (target.kind !== 'container' && target.kind !== 'location')) return;
+    if (!editAssetAllowed) {
+      throw new Error('Move not saved. You do not have permission to move assets in this inventory.');
+    }
+    busy = true;
+    notification = null;
+    try {
+      const moved = await repository.moveAsset(candidate.tenantId, candidate.inventoryId, candidate.id, target.id);
+      data = replaceWorkspaceAsset(data, moved);
+      setMutationSuccessNotification(`Moved ${moved.title} into ${target.title}.`, moved, viewAssetAction(moved));
+      closeAssetActionRoute();
+    } catch (caught) {
+      if (handleSessionExpired(caught)) return;
+      const reason = safeOperationFailureDescription(caught);
+      throw new Error(`Move not saved. ${candidate.title} stayed where it was. ${reason}`);
+    } finally {
+      busy = false;
+    }
+  }
+
   function mergeAssetTags(existingTags: NonNullable<WorkspaceData['context']['assetTags']>, nextTags: NonNullable<WorkspaceData['context']['assetTags']>): NonNullable<WorkspaceData['context']['assetTags']> {
     if (nextTags.length === 0) {
       return existingTags;
@@ -392,51 +458,67 @@
   }
 
   async function search(): Promise<void> {
-    busy = true;
-    error = '';
-    notification = null;
+    navigateTo(browseSearchRoute(data.context.selectedTenantId, data.context.selectedInventoryId, {
+      query: searchQuery, lifecycleState: searchLifecycleState, mode: searchMode,
+      checkoutState: searchCheckoutState, surface: 'list', scope: browseScope,
+      sort: browseSort, selectedTagIds: searchTagIds
+    }));
+  }
+
+  async function loadBrowsePage(append = false): Promise<void> {
+    const tenantId = data.context.selectedTenantId;
+    const inventoryId = data.context.selectedInventoryId;
+    if (!tenantId || !inventoryId) return;
+    const requestId = ++browseRequestId;
+    if (append) browseLoadingMore = true;
+    else browseBusy = true;
     searchError = '';
-    searchResults = [];
-    searchSubmitted = true;
+    browseErrorPhase = null;
     try {
-      const result = await executeWorkspaceSearch({
-        repository,
-        tenantId: data.context.selectedTenantId,
-        inventoryId: data.context.selectedInventoryId,
-        query: searchQuery,
-        tagIds: searchTagIds,
-        lifecycleState: searchLifecycleState,
-        mode: searchMode,
-        checkoutState: searchCheckoutState
+      const page = await executeBrowsePageLoad(repository, {
+        tenantId, inventoryId, query: searchQuery, selectedTagIds: searchTagIds,
+        lifecycleState: searchLifecycleState, checkoutState: searchCheckoutState, scope: browseScope,
+        sort: browseSort, mode: searchMode, append, cursor: append ? browseNextCursor ?? undefined : undefined,
+        currentAssets: browseAssets, currentSearchResults: searchResults, currentInventoryEmpty: browseInventoryEmpty
       });
-      searchQuery = result.query;
-      searchResults = result.results;
-      searchSubmitted = result.submitted;
-      searchError = result.error;
-      error = result.error;
-      mode = 'search';
-      if (!applyingRoute) {
-        replaceRoute({
-          mode: 'search',
-          tenantId: data.context.selectedTenantId,
-          inventoryId: data.context.selectedInventoryId,
-          searchQuery: result.query,
-          searchTagIds,
-          searchLifecycleState,
-          searchMode,
-          searchCheckoutState
-        });
-      }
-      if (!result.query && searchTagIds.length === 0) {
-        return;
-      }
+      if (requestId !== browseRequestId) return;
+      browseAssets = page.assets;
+      searchResults = page.searchResults;
+      browseNextCursor = page.nextCursor;
+      browseHasMore = page.hasMore;
+      browseInventoryEmpty = page.inventoryEmpty;
+      searchSubmitted = page.submitted;
     } catch (caught) {
-      if (handleSessionExpired(caught)) {
-        return;
-      }
-      throw caught;
+      if (requestId !== browseRequestId || handleSessionExpired(caught)) return;
+      const phase = append ? 'append' : browseAssets.length > 0 ? 'replacement' : 'initial';
+      searchError = browseFailureMessage(caught, phase);
+      browseErrorPhase = phase;
     } finally {
-      busy = false;
+      if (requestId === browseRequestId) {
+        browseBusy = false;
+        browseLoadingMore = false;
+      }
+    }
+  }
+
+  async function loadBrowseMap(): Promise<void> {
+    const tenantId = data.context.selectedTenantId;
+    const inventoryId = data.context.selectedInventoryId;
+    if (!tenantId || !inventoryId) return;
+    const requestId = ++browseRequestId;
+    browseBusy = true;
+    searchError = '';
+    browseErrorPhase = null;
+    try {
+      const assets = await repository.loadActiveContainmentMap(tenantId, inventoryId);
+      if (requestId === browseRequestId) browseMapAssets = assets;
+    } catch (caught) {
+      if (requestId === browseRequestId && !handleSessionExpired(caught)) {
+        searchError = browseFailureMessage(caught, 'map');
+        browseErrorPhase = 'map';
+      }
+    } finally {
+      if (requestId === browseRequestId) browseBusy = false;
     }
   }
 
@@ -474,10 +556,10 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
+      const result = await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setSuccessNotification(`Archived ${asset.title}.`, {
+      setMutationSuccessNotification(`Archived ${asset.title}.`, result, {
         label: 'View archived',
         href: workspaceRouteHref(
           { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
@@ -498,10 +580,10 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
+      const result = await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setSuccessNotification(`Restored ${asset.title}.`, viewAssetAction(asset));
+      setMutationSuccessNotification(`Restored ${asset.title}.`, result, viewAssetAction(asset));
     });
   }
 
@@ -532,13 +614,13 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.checkoutAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const checkout = await repository.checkoutAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
       const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
       selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setSuccessNotification(`Checked out ${refreshed.title}.`, viewAssetAction(refreshed));
+      setMutationSuccessNotification(`Checked out ${refreshed.title}.`, { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
@@ -552,13 +634,26 @@
       throw new Error(error);
     }
     await run(async () => {
-      await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
+      const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, { details: details || undefined });
       const refreshed = await repository.getAsset(asset.tenantId, asset.inventoryId, asset.id);
       selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(asset.tenantId, asset.inventoryId, asset.id);
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setSuccessNotification(`Returned ${refreshed.title}.`, viewAssetAction(refreshed));
+      setMutationSuccessNotification(`Returned ${refreshed.title}.`, { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
+    });
+  }
+
+  async function returnAssetFromHome(asset: Asset): Promise<void> {
+    if (!editAssetAllowed || !selectedInventory) {
+      error = 'You do not have permission to edit assets in this inventory.';
+      return;
+    }
+    await run(async () => {
+      const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
+      const returnedAsset: Asset = { ...asset, currentCheckout: undefined };
+      data = replaceWorkspaceAsset(data, returnedAsset);
+      setMutationSuccessNotification(`Returned ${returnedAsset.title}.`, { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
     });
   }
 
@@ -571,7 +666,7 @@
       await repository.archiveAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
       setSuccessNotification(`Archived ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
-    });
+    }, { rethrow: true });
   }
 
   async function deleteSelectedAttachment(attachment: AssetAttachment): Promise<void> {
@@ -581,9 +676,15 @@
     }
     await run(async () => {
       await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
-      await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
+      removeSelectedAttachment(attachment);
       setSuccessNotification(`Deleted ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
-    });
+      void refreshSelectedAttachments(
+        attachment.tenantId,
+        attachment.inventoryId,
+        attachment.assetId,
+        [attachment.id]
+      ).catch(() => {});
+    }, { rethrow: true, propagateSessionExpiry: true });
   }
 
   async function uploadSelectedAttachment(attachment: SelectedAttachment): Promise<void> {
@@ -602,7 +703,10 @@
     });
   }
 
-  async function run(task: () => Promise<void>): Promise<void> {
+  async function run(
+    task: () => Promise<void>,
+    options: { rethrow?: boolean; propagateSessionExpiry?: boolean } = {}
+  ): Promise<void> {
     busy = true;
     error = '';
     notification = null;
@@ -610,9 +714,16 @@
       await task();
     } catch (caught) {
       if (handleSessionExpired(caught)) {
+        if (options.propagateSessionExpiry) {
+          throw caught;
+        }
         return;
       }
-      error = caught instanceof Error ? caught.message : 'Action failed.';
+      const taskError = caught instanceof Error ? caught.message : 'Action failed.';
+      if (options.rethrow) {
+        throw caught instanceof Error ? caught : new Error(taskError);
+      }
+      error = taskError;
     } finally {
       busy = false;
     }
@@ -620,6 +731,103 @@
 
   function setSuccessNotification(title: string, action?: WorkspaceNotificationAction): void {
     notification = { kind: 'success', title, action };
+  }
+
+  function setMutationSuccessNotification(
+    title: string,
+    result: Pick<Asset, 'tenantId' | 'inventoryId' | 'undoableOperationId'> | null | undefined,
+    fallbackAction?: WorkspaceNotificationAction
+  ): void {
+    if (!result?.undoableOperationId) {
+      setSuccessNotification(title, fallbackAction);
+      return;
+    }
+    const operationId = result.undoableOperationId;
+    notification = {
+      id: `asset-operation:${operationId}`,
+      kind: 'success',
+      title,
+      duration: 10_000,
+      action: {
+        label: 'Undo',
+        onClick: () => applyUndoableAssetOperation(result.tenantId, result.inventoryId, operationId, 'undo')
+      }
+    };
+  }
+
+  async function applyUndoableAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<void> {
+    if (busy) return;
+    busy = true;
+    error = '';
+    notification = {
+      id: `asset-operation:${operationId}`,
+      kind: 'info',
+      title: direction === 'undo' ? 'Undoing change…' : 'Redoing change…',
+      important: true,
+      duration: Infinity
+    };
+    try {
+      const asset = await repository.applyAssetOperation(tenantId, inventoryId, operationId, direction);
+      data = replaceWorkspaceAsset(data, asset);
+      if (asset.lifecycleState !== data.context.assetLifecycleState) {
+        data = { ...data, assets: data.assets.filter((candidate) => candidate.id !== asset.id) };
+      }
+      if (selectedAssetId === asset.id || selectedLocationId === asset.id) {
+        if (asset.lifecycleState === data.context.assetLifecycleState) {
+          loadedAssetDetail = asset;
+        } else {
+          closeDetailToHome();
+        }
+      }
+      const inverse: UndoableOperationDirection = direction === 'undo' ? 'redo' : 'undo';
+      const successNotification: WorkspaceNotification = {
+        id: `asset-operation:${operationId}`,
+        kind: 'success',
+        title: `${direction === 'undo' ? 'Undid' : 'Redid'} change to ${asset.title}.`,
+        duration: 10_000,
+        action: {
+          label: inverse === 'undo' ? 'Undo' : 'Redo',
+          onClick: () => applyUndoableAssetOperation(tenantId, inventoryId, operationId, inverse)
+        }
+      };
+      notification = successNotification;
+      try {
+        await refreshSelectedAssetLifecycle();
+        if ((selectedAssetId === asset.id || selectedLocationId === asset.id) && asset.lifecycleState === data.context.assetLifecycleState) {
+          const refreshedAsset = await repository.getAsset(tenantId, inventoryId, asset.id);
+          data = replaceWorkspaceAsset(data, refreshedAsset);
+          loadedAssetDetail = refreshedAsset;
+          if (selectedAssetId === asset.id) {
+            selectedAssetCheckoutHistory = await repository.listAssetCheckoutHistory(tenantId, inventoryId, asset.id);
+          }
+        }
+      } catch (refreshError) {
+        if (handleSessionExpired(refreshError)) return;
+        refreshWarning = operationRefreshWarning(operationId, successNotification.title, successNotification.action!);
+      }
+    } catch (caught) {
+      if (handleSessionExpired(caught)) return;
+      try {
+        await refreshSelectedAssetLifecycle();
+      } catch (refreshError) {
+        if (handleSessionExpired(refreshError)) return;
+      }
+      notification = {
+        id: `asset-operation:${operationId}`,
+        kind: 'error',
+        title: direction === 'undo' ? 'Couldn’t undo change.' : 'Couldn’t redo change.',
+        description: safeOperationFailureDescription(caught),
+        important: true,
+        duration: Infinity
+      };
+    } finally {
+      busy = false;
+    }
   }
 
   function viewAssetAction(asset: Asset): WorkspaceNotificationAction {
@@ -722,9 +930,33 @@
   async function applyRoute(route: WorkspaceRouteState): Promise<void> {
     const routeKey = routeApplicationKey(route);
     if (activeRouteApplicationKey) {
-      if (routeKey === activeRouteApplicationKey) {
+      if (assetDetailLoading && routeKey !== activeRouteApplicationKey) {
+        invalidateAssetDetailLoad();
+        busy = false;
+        activeRouteApplicationKey = null;
+        applyingRoute = false;
         queuedRoute = null;
+        await applyRoute(route);
+        return;
+      }
+      if (routeKey === activeRouteApplicationKey) {
+        if (queuedRoute) {
+          invalidateAssetDetailLoad();
+          routeUnavailable = '';
+          mode = route.mode;
+          settingsSection = route.settingsSection;
+          assetDetailLoading = route.mode === 'asset';
+          queuedRoute = { route, href: currentWorkspaceHref() };
+        }
       } else {
+        invalidateAssetDetailLoad();
+        routeUnavailable = '';
+        mode = route.mode;
+        settingsSection = route.settingsSection;
+        assetDetailLoading = route.mode === 'asset';
+        browseRequestId += 1;
+        browseBusy = false;
+        browseLoadingMore = false;
         queuedRoute = { route, href: currentWorkspaceHref() };
       }
       return;
@@ -741,7 +973,10 @@
       attachmentId = route.attachmentId;
       attachmentAction = route.attachmentAction;
       searchQuery = route.searchQuery;
-      searchTagIds = route.searchTagIds;
+      searchTagIds = route.browseTagIds;
+      browseSurface = route.browseSurface;
+      browseScope = route.browseScope;
+      browseSort = route.browseSort;
       searchLifecycleState = route.searchLifecycleState;
       searchMode = route.searchMode;
       searchCheckoutState = route.searchCheckoutState;
@@ -777,7 +1012,7 @@
         }
       }
 
-      if (route.mode !== 'search' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
+      if (route.mode !== 'browse' && route.lifecycleState !== data.context.assetLifecycleState && selectedInventory) {
         await selectAssetLifecycle(route.lifecycleState);
       }
       const addRoute = resolveWorkspaceAddRoute(route, {
@@ -806,32 +1041,42 @@
         replaceRoute(addRoute.replacementRoute);
       }
 
-      if (route.mode === 'locations') {
-        invalidateAssetDetailLoad();
-        selectedLocationId = null;
-        selectedAssetId = null;
-        loadedAssetDetail = null;
-        selectedAssetAttachments = [];
-        selectedAssetCheckoutHistory = [];
-        attachmentId = null;
-        attachmentAction = null;
-        mode = 'locations';
-        canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
-        return;
-      }
-
       if (route.mode === 'location' && route.locationId) {
-        const location = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        const knownLocation = assets.find((candidate) => candidate.id === route.locationId && candidate.kind === 'location');
+        let location = knownLocation;
+        if (!location && data.context.selectedTenantId && data.context.selectedInventoryId) {
+          try {
+            const candidate = await repository.getAsset(
+              data.context.selectedTenantId,
+              data.context.selectedInventoryId,
+              route.locationId
+            );
+            if (candidate.kind === 'location' && candidate.lifecycleState === data.context.assetLifecycleState) {
+              location = candidate;
+            }
+          } catch (caught) {
+            if (handleSessionExpired(caught)) return;
+          }
+        }
         if (location) {
           invalidateAssetDetailLoad();
           selectedLocationId = location.id;
           selectedAssetId = null;
-          loadedAssetDetail = null;
+          loadedAssetDetail = knownLocation ? null : location;
           selectedAssetAttachments = [];
           selectedAssetCheckoutHistory = [];
           attachmentId = null;
           attachmentAction = null;
           mode = 'location';
+          if (route.assetAction === 'move-here' && !assetRouteActionIsAvailable(route.assetAction, selectedInventory, location)) {
+            assetAction = null;
+            replaceRoute({
+              mode: 'location',
+              tenantId: location.tenantId,
+              inventoryId: location.inventoryId,
+              locationId: location.id
+            });
+          }
           canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         } else {
           closeDetailToHome();
@@ -848,6 +1093,7 @@
           loaded = await loadAssetDetail(data.context.selectedTenantId, data.context.selectedInventoryId, route.assetId);
         }
         if (!loaded) {
+          if (activeRouteApplicationKey !== routeKey || queuedRoute) return;
           showUnavailableRoute('That asset is not available in this inventory.');
           return;
         }
@@ -901,21 +1147,15 @@
         return;
       }
 
-      if (route.mode === 'search') {
-        mode = 'search';
+      if (route.mode === 'browse') {
+        mode = 'browse';
         selectedLocationId = null;
         selectedAssetId = null;
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
         selectedAssetCheckoutHistory = [];
-        selectedAssetCheckoutHistory = [];
-        if (route.searchQuery.trim() || route.searchTagIds.length > 0) {
-          await search();
-        } else {
-          searchResults = [];
-          searchSubmitted = false;
-          searchError = '';
-        }
+        if (route.browseSurface === 'map') await loadBrowseMap();
+        else await loadBrowsePage(false);
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
       }
@@ -940,13 +1180,13 @@
     } finally {
       if (activeRouteApplicationKey === routeKey) {
         activeRouteApplicationKey = null;
-      }
-      applyingRoute = false;
-      const nextRoute = queuedRoute;
-      queuedRoute = null;
-      if (nextRoute) {
-        window.history.replaceState({}, '', nextRoute.href);
-        void applyRoute(currentWorkspaceRoute());
+        applyingRoute = false;
+        const nextRoute = queuedRoute;
+        queuedRoute = null;
+        if (nextRoute) {
+          window.history.replaceState({}, '', nextRoute.href);
+          void applyRoute(currentWorkspaceRoute());
+        }
       }
     }
   }
@@ -994,7 +1234,6 @@
     loadedAssetDetail = null;
     selectedAssetAttachments = [];
     selectedAssetCheckoutHistory = [];
-    selectedAssetCheckoutHistory = [];
     searchResults = [];
     searchSubmitted = false;
   }
@@ -1009,6 +1248,26 @@
       importJobId: null,
       importTab: null
     });
+  }
+
+  function updateBrowseState(next: {
+    surface?: BrowseSurface;
+    scope?: BrowseScope;
+    lifecycleState?: SearchLifecycleFilter;
+    checkoutState?: SearchCheckoutFilter;
+    sort?: BrowseSort;
+    selectedTagIds?: string[];
+  }): void {
+    navigateTo(browseSearchRoute(data.context.selectedTenantId, data.context.selectedInventoryId, {
+      query: searchQuery,
+      lifecycleState: next.lifecycleState ?? searchLifecycleState,
+      mode: searchMode,
+      checkoutState: next.checkoutState ?? searchCheckoutState,
+      surface: next.surface ?? browseSurface,
+      scope: next.scope ?? browseScope,
+      sort: next.sort ?? browseSort,
+      selectedTagIds: next.selectedTagIds ?? searchTagIds
+    }));
   }
 
   function openImportSource(source: ImportSourceRoute): void {
@@ -1189,7 +1448,8 @@
     });
   }
 
-  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null): void {
+  function openAdd(kind: AssetKind = 'item', parentAssetId: string | null = null, opener: HTMLElement | null = null): void {
+    addReturnFocusElement = opener;
     addReturnLocationId = parentAssetId && selectedLocationId ? selectedLocationId : mode === 'location' ? selectedLocationId : null;
     addReturnAssetId = !addReturnLocationId && mode === 'asset' ? selectedAssetId : null;
     navigateTo({
@@ -1205,9 +1465,15 @@
     const closeRoute = workspaceAddCloseRoute(data.context, { mode, selectedLocationId: addReturnLocationId, selectedAssetId: addReturnAssetId });
     addOpen = false;
     replaceRoute(closeRoute);
-    if (typeof window !== 'undefined') {
-      void applyRoute(currentWorkspaceRoute());
-    }
+    if (typeof window !== 'undefined') void restoreAddFocusAfterRoute(true);
+  }
+
+  async function restoreAddFocusAfterRoute(applyCurrentRoute: boolean, preferResult = false): Promise<void> {
+    const returnFocusElement = addReturnFocusElement;
+    addReturnFocusElement = null;
+    if (applyCurrentRoute) await applyRoute(currentWorkspaceRoute());
+    await tick();
+    addReturnFocusTarget(returnFocusElement, document, undefined, preferResult)?.focus();
   }
 
   function addCloseHref(): string {
@@ -1215,14 +1481,16 @@
   }
 
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
-    if (selectedAsset) {
-      const isLocationEdit = selectedAsset.kind === 'location' && action === 'edit';
+    const target = selectedAsset ?? selectedLocation;
+    if (target) {
+      const isLocationEdit = target.kind === 'location' && action === 'edit';
+      const isLocationMoveHere = target.kind === 'location' && action === 'move-here';
       navigateTo({
-        mode: 'asset',
-        tenantId: selectedAsset.tenantId,
-        inventoryId: selectedAsset.inventoryId,
-        locationId: isLocationEdit ? selectedAsset.id : null,
-        assetId: selectedAsset.id,
+        mode: isLocationMoveHere ? 'location' : 'asset',
+        tenantId: target.tenantId,
+        inventoryId: target.inventoryId,
+        locationId: isLocationEdit || isLocationMoveHere ? target.id : null,
+        assetId: isLocationMoveHere ? null : target.id,
         assetAction: action,
         action: action === 'edit' ? 'edit' : null
       });
@@ -1244,8 +1512,8 @@
 
   function closeAssetActionRoute(): void {
     assetAction = null;
-    if (selectedAsset) {
-      const closingAsset = selectedAsset;
+    const closingAsset = selectedAsset ?? selectedLocation;
+    if (closingAsset) {
       if (closingAsset.kind === 'location') {
         mode = 'location';
         selectedLocationId = closingAsset.id;
@@ -1327,6 +1595,7 @@
 
   async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {
     const requestId = ++assetDetailRequestId;
+    assetDetailLoading = true;
     busy = true;
     error = '';
     selectedLocationId = null;
@@ -1360,10 +1629,13 @@
       if (handleSessionExpired(caught)) {
         return false;
       }
-      error = caught instanceof Error ? caught.message : 'Unable to load asset.';
+      error = assetDetailFailureMessage(caught);
       return false;
     } finally {
-      busy = false;
+      if (requestId === assetDetailRequestId) {
+        assetDetailLoading = false;
+        busy = false;
+      }
     }
   }
 
@@ -1378,9 +1650,31 @@
     );
   }
 
-  async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+  function selectedAssetMatches(tenantId: string, inventoryId: string, assetId: string): boolean {
+    return data.context.selectedTenantId === tenantId && selectedInventory?.id === inventoryId && selectedAssetId === assetId;
+  }
+
+  function removeSelectedAttachment(attachment: AssetAttachment): void {
+    if (!selectedAssetMatches(attachment.tenantId, attachment.inventoryId, attachment.assetId)) {
+      return;
+    }
+    selectedAssetAttachments = selectedAssetAttachments.filter((candidate) => candidate.id !== attachment.id);
+  }
+
+  async function refreshSelectedAttachments(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    excludedAttachmentIds: string[] = []
+  ): Promise<void> {
     try {
-      selectedAssetAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+      const refreshedAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+      if (!selectedAssetMatches(tenantId, inventoryId, assetId)) {
+        return;
+      }
+      selectedAssetAttachments = refreshedAttachments.filter(
+        (attachment) => !excludedAttachmentIds.includes(attachment.id)
+      );
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -1416,7 +1710,7 @@
   }
 
   function closeLocationToLocations(): void {
-    navigateMode('locations');
+    updateBrowseState({ scope: 'places' });
   }
 
   function closeDetailToPrevious(): void {
@@ -1437,6 +1731,7 @@
 
   function invalidateAssetDetailLoad(): void {
     assetDetailRequestId += 1;
+    assetDetailLoading = false;
   }
 
   function updateCustomizationContext(assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]): void {
@@ -1483,7 +1778,7 @@
     searchSuggestions={searchSuggestions}
     bind:searchQuery
     canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
-    modalOpen={addOpen}
+    modalOpen={modalSurfaceOpen}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
     onCreateTenantWithInventory={createTenantWithInventory}
@@ -1492,6 +1787,7 @@
     onSearch={() => { void search(); }}
     onOpenSearchAsset={openSearchAsset}
     onOpenAdd={openAdd}
+    onOpenAccountSettings={() => openSettingsSection('overview')}
     {onSignOut}
   >
   <InventoryWorkspaceRouteContent
@@ -1510,12 +1806,22 @@
     status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed }}
     route={{
       routeUnavailable,
+      assetDetailLoading,
       mode,
       searchResults,
       searchSuggestions,
-      searchTagIds,
       searchSubmitted,
       searchError,
+      browseSurface,
+      browseScope,
+      browseSort,
+      browseTagIds: searchTagIds,
+      browseAssets: browseSurface === 'map' ? browseMapAssets : browseAssets,
+      browseInventoryEmpty,
+      browseHasMore,
+      browseLoadingMore,
+      browseBusy,
+      browseErrorPhase,
       assetAction,
       attachmentId,
       attachmentAction,
@@ -1539,6 +1845,10 @@
     handlers={{
       onHome: openHome,
       onOpenLocation: openLocation,
+      onOpenLocations: () => updateBrowseState({ scope: 'places' }),
+      onBrowseStateChange: updateBrowseState,
+      onBrowseLoadMore: () => loadBrowsePage(true),
+      onBrowseRetry: () => browseErrorPhase === 'append' ? loadBrowsePage(true) : browseErrorPhase === 'map' ? loadBrowseMap() : loadBrowsePage(false),
       onEditLocation: openLocationEdit,
       onOpenAsset: openAsset,
       onOpenAdd: openAdd,
@@ -1547,11 +1857,13 @@
       onAssetActionOpen: openAssetActionRoute,
       onAssetActionClose: closeAssetActionRoute,
       onAssetSave: updateAsset,
+      onMoveAssetHere: moveAssetHere,
       onAssetArchive: archiveSelectedAsset,
       onAssetRestore: restoreSelectedAsset,
       onAssetDelete: deleteSelectedAsset,
       onAssetCheckout: checkoutSelectedAsset,
       onAssetReturn: returnSelectedAsset,
+      onHomeAssetReturn: returnAssetFromHome,
       onAssetUploadAttachment: uploadSelectedAttachment,
       onAssetArchiveAttachment: archiveSelectedAttachment,
       onAttachmentDeleteOpen: openAttachmentDeleteRoute,
@@ -1592,6 +1904,7 @@
     assetTags={data.context.assetTags ?? []}
     saving={busy}
     {notification}
+    {refreshWarning}
     {error}
     onAddClose={closeAdd}
     onAddSave={createAsset}

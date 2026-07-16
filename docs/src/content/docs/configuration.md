@@ -98,6 +98,8 @@ SQLite file mount explicitly.
 | `STUFF_STASH_IMPORT_JOB_TIMEOUT_SECONDS` | `900` | Seconds before stored import source credentials are considered expired. |
 | `STUFF_STASH_IMPORT_CREDENTIAL_VACUUM_INTERVAL_SECONDS` | `60` | Seconds between background cleanup passes for expired import source credentials. |
 | `STUFF_STASH_INVITATION_TTL` | `168h` | Default inventory invitation token lifetime. |
+| `STUFF_STASH_INVITATION_PUBLIC_BASE_URL` | empty | Public web URL used to create clickable inventory invitation links. Required to create invitations; use HTTPS outside explicit local development. |
+| `STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP` | `false` | Allows a loopback or private RFC 1918 LAN HTTP invitation URL for explicit local development only. Do not enable in deployed environments. |
 | `STUFF_STASH_DEFAULT_PAGE_LIMIT` | `50` | Default API collection page size. |
 | `STUFF_STASH_MAX_PAGE_LIMIT` | `100` | Maximum accepted API collection page size. |
 
@@ -207,6 +209,31 @@ Mobile booleans accept `1`, `true`, `yes`, `0`, `false`, and `no`.
 | `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL` | no | Optional API base URL seed shown on first launch. |
 | `EXPO_PUBLIC_STUFF_STASH_TENANT_ID` | no | Optional initial tenant selection hint. |
 | `EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED` | no | Enables mobile voice developer diagnostics. |
+| `EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN` | production links | HTTPS web origin whose `/invitations/accept` links open in an installed mobile build. Production EAS builds require it; local builds may omit it and use the custom scheme. |
+| `EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP` | no | Explicitly permits a configured loopback or private RFC 1918 HTTP invitation origin in non-production builds for browser acceptance from local devices. |
+| `STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS` | no | Set to `true` in any non-EAS release pipeline that must include invitation universal/app links. The build fails if the invitation origin is missing. |
+
+The web server publishes the platform association documents at
+`/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`.
+Set `STUFF_STASH_MOBILE_IOS_APP_ID` to the built app’s Team ID and bundle ID,
+and set `STUFF_STASH_MOBILE_ANDROID_SHA256_CERT_FINGERPRINT` to the SHA-256
+fingerprint of the certificate that signs the Android build. Both signing
+identities are deployment-specific. When an iOS App ID or Android fingerprint is
+not configured, the server publishes an empty relationship for that platform,
+so it leaves web links in the browser instead of claiming an identity that cannot
+be verified.
+
+The mobile invitation origin must use standard HTTPS on port 443 and must match
+the origin used in generated invitation links for verified native app linking.
+Associated domains cannot encode a custom port. With the explicit insecure-local
+switch, a non-production build may trust loopback or private RFC 1918 HTTP for
+browser acceptance, but it emits no iOS associated-domain or Android verified
+app-link declaration. The default self-host `:8081` origin is suitable for browser
+and local custom-scheme testing; put the web service on standard HTTPS (directly or
+through a reverse proxy) before building a mobile app that claims its links.
+Apple must also be able to retrieve the association document over publicly
+trusted HTTPS. Private hostnames and self-signed certificates are appropriate
+for custom-scheme development, not production universal-link verification.
 
 ## Docs Build Config
 

@@ -139,7 +139,9 @@ describe('InventorySettings', () => {
       }
     });
 
-    expect(document.body.textContent).toContain('Tenant administration unavailable');
+    expect(document.body.textContent).toContain('This account does not have access to tenant administration.');
+    expect(document.body.querySelector('.settings-section-nav')?.textContent).not.toContain('Admin');
+    expect(document.body.querySelector('button[disabled]')).toBeNull();
   });
 
   it('does not treat create-only access as asset edit access', () => {

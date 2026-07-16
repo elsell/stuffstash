@@ -16,6 +16,7 @@ type ListAssetsInput = assetapp.ListAssetsInput
 type GetAssetInput = assetapp.GetAssetInput
 type AssetParentUpdate = assetapp.AssetParentUpdate
 type UpdateAssetInput = assetapp.UpdateAssetInput
+type AssetMutationResult = assetapp.AssetMutationResult
 type UpdateAssetLifecycleInput = assetapp.UpdateAssetLifecycleInput
 type GetAssetResult = assetapp.GetAssetResult
 type ListAssetsResult = assetapp.ListAssetsResult
@@ -34,20 +35,24 @@ type AssetTagLifecycleInput = assetapp.AssetTagLifecycleInput
 type ListAssetTagsResult = assetapp.ListAssetTagsResult
 type GetAssetAssignedTagsInput = assetapp.GetAssetAssignedTagsInput
 
-func (a App) CreateAsset(ctx context.Context, input CreateAssetInput) (asset.Asset, error) {
-	return a.assetService.CreateAsset(ctx, input)
+func (a App) CreateAssetWithOperation(ctx context.Context, input CreateAssetInput) (AssetMutationResult, error) {
+	return a.assetService.CreateAssetWithOperation(ctx, input)
 }
 
 func (a App) UpdateAsset(ctx context.Context, input UpdateAssetInput) (asset.Asset, error) {
 	return a.assetService.UpdateAsset(ctx, input)
 }
 
-func (a App) ArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	return a.assetService.ArchiveAsset(ctx, input)
+func (a App) UpdateAssetWithOperation(ctx context.Context, input UpdateAssetInput) (AssetMutationResult, error) {
+	return a.assetService.UpdateAssetWithOperation(ctx, input)
 }
 
-func (a App) RestoreAsset(ctx context.Context, input UpdateAssetLifecycleInput) (asset.Asset, error) {
-	return a.assetService.RestoreAsset(ctx, input)
+func (a App) ArchiveAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {
+	return a.assetService.ArchiveAssetWithOperation(ctx, input)
+}
+
+func (a App) RestoreAssetWithOperation(ctx context.Context, input UpdateAssetLifecycleInput) (AssetMutationResult, error) {
+	return a.assetService.RestoreAssetWithOperation(ctx, input)
 }
 
 func (a App) GetAsset(ctx context.Context, input GetAssetInput) (asset.Asset, error) {

@@ -5,7 +5,6 @@
 
   export type AssetDetailActionPanelProps = {
     panel: AssetDetailPanel;
-    panelElement: HTMLElement | null;
     asset: AssetViewModel;
     parentTargets: ParentTargetViewModel[];
     selectedAttachment: AssetAttachment | null;
@@ -23,6 +22,8 @@
     checkoutDetails: string;
     customFieldValues: Record<string, string>;
     onClose: (event: MouseEvent) => void;
+    onDismiss: () => void;
+    onCloseAutoFocus: (event: Event) => void;
     onSave: () => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -45,10 +46,11 @@
   import AssetTagSelector from './AssetTagSelector.svelte';
   import CustomFieldControls from './CustomFieldControls.svelte';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
+  import WorkspaceConfirmationDialog from './action-surface/WorkspaceConfirmationDialog.svelte';
+  import WorkspaceTaskSheet from './action-surface/WorkspaceTaskSheet.svelte';
 
   let {
     panel,
-    panelElement = $bindable(),
     asset,
     parentTargets,
     selectedAttachment,
@@ -66,6 +68,8 @@
     checkoutDetails = $bindable(),
     customFieldValues,
     onClose,
+    onDismiss,
+    onCloseAutoFocus,
     onSave,
     onArchive,
     onRestore,
@@ -78,16 +82,29 @@
     onSelectedTagIdsChange = () => {},
     onNewTagsChange = () => {}
   }: AssetDetailActionPanelProps = $props();
+
+  let taskDirty = $derived.by(() => {
+    if (panel === 'edit') {
+      const currentTagIds = (asset.tags ?? []).map((tag) => tag.id).sort().join(',');
+      const nextTagIds = [...selectedTagIds].sort().join(',');
+      return title !== asset.title || description !== asset.description ||
+        applicableFields.some((field) => String(asset.customFields?.[field.key] ?? '') !== (customFieldValues[field.key] ?? '')) ||
+        currentTagIds !== nextTagIds || newTags.length > 0;
+    }
+    if (panel === 'move') return parentAssetId !== asset.parentAssetId;
+    if (panel === 'checkout' || panel === 'return') return checkoutDetails.trim().length > 0;
+    return false;
+  });
+  let populatedFields = $derived(
+    applicableFields.filter((field) => String(asset.customFields?.[field.key] ?? '').trim().length > 0)
+  );
+  let emptyFields = $derived(
+    applicableFields.filter((field) => String(asset.customFields?.[field.key] ?? '').trim().length === 0)
+  );
 </script>
 
 {#if panel === 'edit'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="edit-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="edit-asset-panel-title">Edit asset</h2>
+  <WorkspaceTaskSheet open title="Edit asset" description="Update the name, details, fields, and tags." busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close edit" initialFocusSelector="#edit-asset-title" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
       <Label for="edit-asset-title">Name</Label>
       <Input id="edit-asset-title" bind:value={title} />
@@ -96,13 +113,27 @@
       <Label for="edit-asset-description">Description</Label>
       <Textarea id="edit-asset-description" bind:value={description} />
     </div>
-    <CustomFieldControls
-      fields={applicableFields}
-      values={customFieldValues}
-      idPrefix="edit-custom-field"
-      label="Edit custom fields"
-      onValueChange={onCustomFieldValueChange}
-    />
+    {#if populatedFields.length > 0}
+      <CustomFieldControls
+        fields={populatedFields}
+        values={customFieldValues}
+        idPrefix="edit-custom-field"
+        label="Details"
+        onValueChange={onCustomFieldValueChange}
+      />
+    {/if}
+    {#if emptyFields.length > 0}
+      <details class="edit-empty-fields">
+        <summary>Show {emptyFields.length} empty {emptyFields.length === 1 ? 'field' : 'fields'}</summary>
+        <CustomFieldControls
+          fields={emptyFields}
+          values={customFieldValues}
+          idPrefix="edit-custom-field"
+          label="Empty details"
+          onValueChange={onCustomFieldValueChange}
+        />
+      </details>
+    {/if}
     <AssetTagSelector
       tags={assetTags}
       selectedIds={selectedTagIds}
@@ -110,22 +141,16 @@
       onSelectedIdsChange={onSelectedTagIdsChange}
       onNewTagsChange={onNewTagsChange}
     />
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0} onclick={() => { void onSave(); }}>Save</Button.Root>
-    </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet footer()}
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
+      <Button.Root disabled={saving || title.trim().length === 0 || !taskDirty} onclick={() => { void onSave(); }}>Save</Button.Root>
+    {/snippet}
+  </WorkspaceTaskSheet>
 {:else if panel === 'move'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="move-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="move-asset-panel-title">Move asset</h2>
+  <WorkspaceTaskSheet open title={asset.kind === 'location' ? 'Move place' : 'Move asset'} description={`Choose a new place for ${asset.title}.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close move" initialFocusSelector="#move-parent-search" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <ParentTargetPicker
       legend="Parent"
       searchId="move-parent-search"
@@ -135,122 +160,93 @@
       targets={parentTargets}
       onSelect={onParentSelect}
     />
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving} onclick={() => { void onSave(); }}>Move</Button.Root>
-    </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet footer()}
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
+      <Button.Root disabled={saving || !taskDirty} onclick={() => { void onSave(); }}>Move</Button.Root>
+    {/snippet}
+  </WorkspaceTaskSheet>
 {:else if panel === 'archive'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="archive-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="archive-asset-panel-title">Archive asset</h2>
-    <p>Move {asset.title} out of active browsing?</p>
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root variant="outline" disabled={saving} onclick={() => { void onArchive(); }}>Archive</Button.Root>
-    </div>
+  <WorkspaceConfirmationDialog open title="Archive asset" description={`Move ${asset.title} out of active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root variant="outline" disabled={saving} onclick={() => { void onArchive(); }}>Archive</Button.Root>{/snippet}
+  </WorkspaceConfirmationDialog>
 {:else if panel === 'restore'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="restore-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="restore-asset-panel-title">Restore asset</h2>
-    <p>Return {asset.title} to active browsing?</p>
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving} onclick={() => { void onRestore(); }}>Restore</Button.Root>
-    </div>
+  <WorkspaceConfirmationDialog open title="Restore asset" description={`Return ${asset.title} to active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root disabled={saving} onclick={() => { void onRestore(); }}>Restore</Button.Root>{/snippet}
+  </WorkspaceConfirmationDialog>
 {:else if panel === 'delete'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="delete-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="delete-asset-panel-title">Delete asset</h2>
-    <p>Delete {asset.title} permanently?</p>
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root variant="destructive" disabled={saving} onclick={() => { void onDelete(); }}>Delete</Button.Root>
-    </div>
+  <WorkspaceConfirmationDialog open title="Delete asset" description={`Delete ${asset.title} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDelete(); }}>Delete</Button.Root>{/snippet}
+  </WorkspaceConfirmationDialog>
 {:else if panel === 'checkout'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="checkout-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="checkout-asset-panel-title">Checkout asset</h2>
-    <p>{asset.title} will stay in its home location and be marked as checked out.</p>
+  <WorkspaceTaskSheet open title="Check out asset" description={`${asset.title} will stay in its home location and be marked as checked out.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close check out" initialFocusSelector="#checkout-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
       <Label for="checkout-asset-details">Details</Label>
       <Textarea id="checkout-asset-details" bind:value={checkoutDetails} placeholder="Optional: using at desk, loaned to Sam" />
     </div>
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>Checkout</Button.Root>
-    </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet footer()}
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
+      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>Check out</Button.Root>
+    {/snippet}
+  </WorkspaceTaskSheet>
 {:else if panel === 'return'}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="return-asset-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="return-asset-panel-title">Return asset</h2>
-    <p>Mark {asset.title} as returned.</p>
+  <WorkspaceTaskSheet open title="Return asset" description={`Mark ${asset.title} as returned.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close return" initialFocusSelector="#return-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
       <Label for="return-asset-details">Details</Label>
       <Textarea id="return-asset-details" bind:value={checkoutDetails} placeholder="Optional: back in bin, returned by Alex" />
     </div>
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
+    {#if saveError}
+      <p class="denied-note" role="alert">{saveError}</p>
+    {/if}
+    {#snippet footer()}
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
       <Button.Root disabled={saving} onclick={() => { void onReturn(); }}>Return</Button.Root>
-    </div>
-    {#if saveError}
-      <p class="denied-note" role="alert">{saveError}</p>
-    {/if}
-  </section>
+    {/snippet}
+  </WorkspaceTaskSheet>
 {:else if panel === 'attachment-delete' && selectedAttachment}
-  <section
-    bind:this={panelElement}
-    class="detail-action-panel"
-    aria-labelledby="delete-attachment-panel-title"
-    tabindex="-1"
-  >
-    <h2 id="delete-attachment-panel-title">Delete attachment</h2>
-    <p>Delete {selectedAttachment.fileName} permanently?</p>
-    <div class="tray-actions">
-      <Button.Root href={detailHref} variant="outline" onclick={onClose}>Cancel</Button.Root>
-      <Button.Root variant="destructive" disabled={saving} onclick={() => { void onDeleteAttachment(); }}>Delete</Button.Root>
-    </div>
+  <WorkspaceConfirmationDialog open title="Delete attachment" description={`Delete ${selectedAttachment.fileName} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-  </section>
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDeleteAttachment(); }}>Delete</Button.Root>{/snippet}
+  </WorkspaceConfirmationDialog>
 {/if}
+
+<style>
+  .edit-empty-fields {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .edit-empty-fields summary {
+    display: flex;
+    min-height: 44px;
+    width: fit-content;
+    align-items: center;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .edit-empty-fields[open] summary {
+    margin-bottom: 16px;
+  }
+</style>

@@ -1,17 +1,16 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
-  import MapPin from '@lucide/svelte/icons/map-pin';
-  import Search from '@lucide/svelte/icons/search';
+  import Compass from '@lucide/svelte/icons/compass';
   import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
-  import LogOut from '@lucide/svelte/icons/log-out';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { desktopShellNavigationGroups, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
+  import { desktopShellNavigationGroups, shellModeHref, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
   import type { SettingsSection } from '$lib/application/workspaceRoute';
   import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
+  import AccountMenu from './AccountMenu.svelte';
 
   let {
     tenants,
@@ -21,11 +20,13 @@
     mode,
     settingsSection,
     userLabel,
+    disableAccountPortal = false,
     onSelectTenant,
     onSelectInventory,
     onCreateTenantWithInventory,
     onCreateInventory,
     onModeChange,
+    onOpenAccountSettings,
     onSignOut
   }: {
     tenants: Tenant[];
@@ -35,11 +36,13 @@
     mode: WorkspaceMode;
     settingsSection: SettingsSection;
     userLabel: string;
+    disableAccountPortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
     onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onModeChange: (mode: WorkspaceMode) => void;
+    onOpenAccountSettings: () => void;
     onSignOut: () => void;
   } = $props();
 
@@ -54,11 +57,11 @@
       settingsSection
     })
   );
+  let accountSettingsHref = $derived(shellModeHref('settings', selectedTenantId || null, selectedInventoryId || null));
 
   const destinationIcons: Record<ShellNavigationIcon, Component> = {
     home: Home,
-    locations: MapPin,
-    search: Search,
+    browse: Compass,
     import: Upload,
     settings: Settings
   };
@@ -119,7 +122,12 @@
   </nav>
 
   <div class="side-nav-footer">
-    <p>{userLabel}</p>
-    <Button.Root variant="ghost" size="sm" onclick={onSignOut}><LogOut /> Sign out</Button.Root>
+    <AccountMenu
+      {userLabel}
+      settingsHref={accountSettingsHref}
+      onOpenSettings={onOpenAccountSettings}
+      {onSignOut}
+      disablePortal={disableAccountPortal}
+    />
   </div>
 </aside>

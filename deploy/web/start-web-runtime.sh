@@ -85,6 +85,8 @@ cat > /tmp/stuffstash-config.json <<EOF
 }
 EOF
 
+/usr/local/bin/write-mobile-association-files /tmp
+
 nginx_template="/opt/app-root/etc/nginx.default.d/stuffstash.conf"
 nginx_server_conf="/tmp/stuffstash-server.conf"
 api_origin="$(origin_from_url "$api_base_url")"

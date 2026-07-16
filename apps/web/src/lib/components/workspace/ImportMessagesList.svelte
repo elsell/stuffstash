@@ -39,6 +39,8 @@
   let expanded = $state(false);
   let expandedGroupKeys = $state<string[]>([]);
   let selectedGroupKey = $state<string | null>(null);
+  let issueDialogOpen = $state(false);
+  let issueTitleElement = $state<HTMLElement | null>(null);
   let visibleGroupLimit = $derived(expanded ? EXPANDED_GROUP_LIMIT : COLLAPSED_GROUP_LIMIT);
   let visibleGroups = $derived(groups.slice(0, visibleGroupLimit));
   let hiddenGroupCount = $derived(Math.max(0, groups.length - visibleGroups.length));
@@ -119,6 +121,16 @@
     expandedGroupKeys = groupExpanded(group)
       ? expandedGroupKeys.filter((key) => key !== group.key)
       : [...expandedGroupKeys, group.key];
+  }
+
+  function explainGroup(group: MessageGroup): void {
+    selectedGroupKey = group.key;
+    issueDialogOpen = true;
+  }
+
+  function focusIssueTitle(event: Event): void {
+    event.preventDefault();
+    issueTitleElement?.focus();
   }
 
   function issueGuidance(group: MessageGroup): { meaning: string; impact: string; nextAction: string } {
@@ -221,7 +233,7 @@
             size="sm"
             class="message-detail-button"
             aria-label={`Explain ${group.summary}`}
-            onclick={() => (selectedGroupKey = group.key)}
+            onclick={() => explainGroup(group)}
           >
             Explain
           </Button.Root>
@@ -270,62 +282,65 @@
   {#if truncated}
     <div class="quiet-row"><AlertCircle size={16} aria-hidden="true" /> {truncatedText}</div>
   {/if}
-  <Dialog.Root
-    open={Boolean(selectedGroup)}
-    ariaLabelledBy="issue-detail-title"
-    class="issue-detail-dialog"
-    onDismiss={() => (selectedGroupKey = null)}
-  >
-    {#if selectedGroup}
+  {#if issueDialogOpen && selectedGroup}
+    <Dialog.Root open onOpenChange={(open) => { if (!open) issueDialogOpen = false; }}>
       {@const guidance = issueGuidance(selectedGroup)}
-      <div class="issue-detail-heading">
-        <div>
-          <Badge
-            variant={selectedGroup.severity === 'error' ? 'destructive' : 'secondary'}
-            class={selectedGroup.severity === 'warning' ? 'message-warning-badge' : ''}
-          >
-            {severityLabel(selectedGroup.severity)}
-          </Badge>
-          <h3 id="issue-detail-title">{selectedGroup.summary}</h3>
-          <p>{selectedGroup.cause || groupCountLabel(selectedGroup.messages.length)}</p>
+      <Dialog.Content class="issue-detail-dialog" showCloseButton={false} onOpenAutoFocus={focusIssueTitle}>
+        <Dialog.Header class="issue-detail-heading">
+          <div>
+            <Badge
+              variant={selectedGroup.severity === 'error' ? 'destructive' : 'secondary'}
+              class={selectedGroup.severity === 'warning' ? 'message-warning-badge' : ''}
+            >
+              {severityLabel(selectedGroup.severity)}
+            </Badge>
+            <Dialog.Title bind:ref={issueTitleElement} id="issue-detail-title" tabindex={-1} class="outline-none">
+              {selectedGroup.summary}
+            </Dialog.Title>
+            <Dialog.Description>{selectedGroup.cause || groupCountLabel(selectedGroup.messages.length)}</Dialog.Description>
+          </div>
+          <Dialog.Close>
+            {#snippet child({ props })}
+              <Button.Root {...props} variant="ghost" size="icon" class="size-11" aria-label="Close issue details">
+                <X size={16} aria-hidden="true" />
+              </Button.Root>
+            {/snippet}
+          </Dialog.Close>
+        </Dialog.Header>
+        <div class="issue-detail-grid">
+          <div>
+            <span>Meaning</span>
+            <p>{guidance.meaning}</p>
+          </div>
+          <div>
+            <span>Impact</span>
+            <p>{guidance.impact}</p>
+          </div>
+          <div>
+            <span>Next action</span>
+            <p>{guidance.nextAction}</p>
+          </div>
         </div>
-        <Button.Root variant="ghost" size="icon" aria-label="Close issue details" onclick={() => (selectedGroupKey = null)}>
-          <X size={16} aria-hidden="true" />
-        </Button.Root>
-      </div>
-      <div class="issue-detail-grid">
-        <div>
-          <span>Meaning</span>
-          <p>{guidance.meaning}</p>
+        <div class="issue-detail-records">
+          <h4>Affected records</h4>
+          <div>
+            {#each selectedGroup.messages.slice(0, 8) as message}
+              {@const diagnostic = messageDiagnostic(message, selectedGroup)}
+              <div class="message-row compact">
+                <span>{messageRowLabel(message, selectedGroup)}</span>
+                {#if diagnostic}
+                  <small>{diagnostic}</small>
+                {/if}
+              </div>
+            {/each}
+          </div>
+          {#if selectedGroup.messages.length > 8}
+            <small>{selectedGroup.messages.length - 8} more affected {selectedGroup.messages.length - 8 === 1 ? 'record' : 'records'} in this group.</small>
+          {/if}
         </div>
-        <div>
-          <span>Impact</span>
-          <p>{guidance.impact}</p>
-        </div>
-        <div>
-          <span>Next action</span>
-          <p>{guidance.nextAction}</p>
-        </div>
-      </div>
-      <div class="issue-detail-records">
-        <h4>Affected records</h4>
-        <div>
-          {#each selectedGroup.messages.slice(0, 8) as message}
-            {@const diagnostic = messageDiagnostic(message, selectedGroup)}
-            <div class="message-row compact">
-              <span>{messageRowLabel(message, selectedGroup)}</span>
-              {#if diagnostic}
-                <small>{diagnostic}</small>
-              {/if}
-            </div>
-          {/each}
-        </div>
-        {#if selectedGroup.messages.length > 8}
-          <small>{selectedGroup.messages.length - 8} more affected {selectedGroup.messages.length - 8 === 1 ? 'record' : 'records'} in this group.</small>
-        {/if}
-      </div>
-    {/if}
-  </Dialog.Root>
+      </Dialog.Content>
+    </Dialog.Root>
+  {/if}
 </div>
 
 <style>
@@ -485,7 +500,7 @@
     padding: 0.5rem 0.65rem;
   }
 
-  h3 {
+  :global(.issue-detail-heading h2) {
     font-size: 1rem;
     margin: 0;
   }
@@ -502,63 +517,64 @@
     box-shadow: 0 1.5rem 4rem color-mix(in oklab, var(--foreground) 18%, transparent);
     display: grid;
     gap: 1rem;
-    max-height: min(42rem, calc(100vh - 2rem));
-    max-width: min(36rem, 100%);
+    max-height: min(42rem, calc(100dvh - 2rem));
+    max-width: min(36rem, calc(100% - 2rem));
     padding: 1rem;
   }
 
-  .issue-detail-heading {
+  :global(.issue-detail-heading) {
     align-items: flex-start;
     display: flex;
+    flex-direction: row;
     gap: 0.75rem;
     justify-content: space-between;
   }
 
-  .issue-detail-heading > div {
+  :global(.issue-detail-heading > div) {
     display: grid;
     gap: 0.35rem;
     min-width: 0;
   }
 
-  .issue-detail-heading p,
-  .issue-detail-grid p,
-  .issue-detail-records > small {
+  :global(.issue-detail-heading p),
+  :global(.issue-detail-grid p),
+  :global(.issue-detail-records > small) {
     color: var(--muted-foreground);
     font-size: 0.86rem;
     margin: 0;
     overflow-wrap: anywhere;
   }
 
-  .issue-detail-grid {
+  :global(.issue-detail-grid) {
     display: grid;
     gap: 0.55rem;
   }
 
-  .issue-detail-grid > div {
+  :global(.issue-detail-grid > div) {
     border-top: 1px solid var(--border);
     display: grid;
     gap: 0.18rem;
     padding-top: 0.55rem;
   }
 
-  .issue-detail-grid > div:first-child {
+  :global(.issue-detail-grid > div:first-child) {
     border-top: 0;
     padding-top: 0;
   }
 
-  .issue-detail-grid span {
+  :global(.issue-detail-grid span) {
     color: var(--foreground);
     font-size: 0.78rem;
     font-weight: 700;
     text-transform: uppercase;
   }
 
-  .issue-detail-records {
+  :global(.issue-detail-records) {
     display: grid;
     gap: 0.5rem;
   }
 
-  .issue-detail-records > div {
+  :global(.issue-detail-records > div) {
     display: grid;
     gap: 0.35rem;
   }

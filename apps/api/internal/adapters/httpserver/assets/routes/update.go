@@ -21,7 +21,7 @@ func RegisterUpdate(api huma.API, application app.App) {
 			return nil, err
 		}
 
-		item, err := application.UpdateAsset(ctx, app.UpdateAssetInput{
+		result, err := application.UpdateAssetWithOperation(ctx, app.UpdateAssetInput{
 			Principal:   principal,
 			Source:      audit.SourceAPI,
 			RequestID:   input.RequestID,
@@ -41,6 +41,7 @@ func RegisterUpdate(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
+		item := result.Asset
 		tags, err := application.GetAssetAssignedTags(ctx, app.GetAssetAssignedTagsInput{
 			Principal:   principal,
 			TenantID:    tenant.ID(input.TenantID),
@@ -51,9 +52,11 @@ func RegisterUpdate(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 
+		response := mapper.AssetToResponseWithTags(item, tags, nil, nil, nil)
+		response.UndoableOperationID = result.UndoableOperationID
 		return &dto.UpdateAssetOutput{
 			Body: shared.SuccessEnvelope[dto.AssetResponse]{
-				Data: mapper.AssetToResponseWithTags(item, tags, nil, nil, nil),
+				Data: response,
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil

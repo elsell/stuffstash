@@ -30,7 +30,10 @@ func (s Store) ActiveProviderCredential(ctx context.Context, scope ports.Provide
 		return ports.ProviderCredentialRecord{}, false, err
 	}
 	var model providerCredentialModel
-	err := providerCredentialScopeQuery(s.db.WithContext(ctx), scope).Where("superseded_at IS NULL").Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: true}).First(&model).Error
+	err := providerCredentialScopeQuery(s.db.WithContext(ctx), scope).
+		Where(clause.Eq{Column: clause.Column{Name: "superseded_at"}, Value: nil}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: true}).
+		First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ports.ProviderCredentialRecord{}, false, nil
 	}
@@ -42,7 +45,10 @@ func (s Store) ActiveProviderCredential(ctx context.Context, scope ports.Provide
 
 func (s Store) ActiveProviderCredentialsExist(ctx context.Context) (bool, error) {
 	var count int64
-	if err := s.db.WithContext(ctx).Model(&providerCredentialModel{}).Where("superseded_at IS NULL").Limit(1).Count(&count).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&providerCredentialModel{}).
+		Where(clause.Eq{Column: clause.Column{Name: "superseded_at"}, Value: nil}).
+		Limit(1).
+		Count(&count).Error; err != nil {
 		return false, err
 	}
 	return count > 0, nil
@@ -62,7 +68,7 @@ func (s Store) SupersedeActiveProviderCredential(ctx context.Context, scope port
 
 func supersedeActiveProviderCredentials(tx *gorm.DB, scope ports.ProviderCredentialScope, supersededAt time.Time) error {
 	return providerCredentialScopeQuery(tx.Model(&providerCredentialModel{}), scope).
-		Where("superseded_at IS NULL").
+		Where(clause.Eq{Column: clause.Column{Name: "superseded_at"}, Value: nil}).
 		Updates(map[string]any{
 			"superseded_at": supersededAt,
 			"updated_at":    supersededAt,

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mount, unmount } from 'svelte';
+import { mount, tick, unmount } from 'svelte';
 import SideNav from './SideNav.svelte';
 import type { SettingsSection } from '$lib/application/workspaceRoute';
 import type { Inventory, Tenant, WorkspaceMode } from '$lib/domain/inventory';
@@ -14,9 +14,11 @@ type SideNavProps = {
   mode: WorkspaceMode;
   settingsSection: SettingsSection;
   userLabel: string;
+  disableAccountPortal?: boolean;
   onSelectTenant: (tenantId: string) => void;
   onSelectInventory: (tenantId: string, inventoryId: string) => void;
   onModeChange: (mode: WorkspaceMode) => void;
+  onOpenAccountSettings: () => void;
   onSignOut: () => void;
 };
 
@@ -29,6 +31,40 @@ afterEach(() => {
 });
 
 describe('SideNav', () => {
+  it('exposes the signed-in identity as one account menu entry', () => {
+    component = mount(SideNav, { target: document.body, props: sideNavProps() });
+
+    const account = document.body.querySelector<HTMLButtonElement>('[aria-label="Account menu for owner@example.com"]');
+    expect(account).not.toBeNull();
+    expect(account?.getAttribute('aria-haspopup')).toBe('menu');
+    expect(document.body.querySelector('.side-nav-footer > p')).toBeNull();
+  });
+
+  it('opens canonical Settings overview from an Activity account menu', async () => {
+    let openedSettings = false;
+    component = mount(SideNav, {
+      target: document.body,
+      props: sideNavProps({
+        mode: 'settings',
+        settingsSection: 'activity',
+        disableAccountPortal: true,
+        onOpenAccountSettings: () => {
+          openedSettings = true;
+        }
+      })
+    });
+
+    const trigger = document.body.querySelector<HTMLButtonElement>('[aria-label="Account menu for owner@example.com"]');
+    trigger?.click();
+    await flush();
+    const settings = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]')).find(
+      (candidate) => candidate.textContent?.trim() === 'Settings'
+    );
+    expect(settings?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings');
+    settings?.click();
+    expect(openedSettings).toBe(true);
+  });
+
   it('groups destinations and exposes the current destination', () => {
     component = mount(SideNav, {
       target: document.body,
@@ -36,7 +72,7 @@ describe('SideNav', () => {
     });
 
     expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Home');
-    expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Locations');
+    expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Browse');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Import');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Settings');
     expect(linkContaining('Import').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/import');
@@ -62,7 +98,7 @@ describe('SideNav', () => {
     expect(currentDestinations[0]?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one');
   });
 
-  it('marks focused location routes under the locations destination', () => {
+  it('marks focused location routes under Browse', () => {
     component = mount(SideNav, {
       target: document.body,
       props: sideNavProps({ mode: 'location' })
@@ -70,8 +106,8 @@ describe('SideNav', () => {
 
     const currentDestinations = document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]');
     expect(currentDestinations).toHaveLength(1);
-    expect(currentDestinations[0]?.textContent).toContain('Locations');
-    expect(currentDestinations[0]?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/locations');
+    expect(currentDestinations[0]?.textContent).toContain('Browse');
+    expect(currentDestinations[0]?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/browse');
   });
 
   it('routes destination clicks through the workspace mode callback', () => {
@@ -86,8 +122,8 @@ describe('SideNav', () => {
       })
     });
 
-    linkContaining('Locations').click();
-    expect(selectedMode).toBe('locations');
+    linkContaining('Browse').click();
+    expect(selectedMode).toBe('browse');
 
     linkContaining('Import').click();
     expect(selectedMode).toBe('import');
@@ -114,6 +150,7 @@ function sideNavProps(overrides: Partial<SideNavProps> = {}): SideNavProps {
     onSelectTenant: () => {},
     onSelectInventory: () => {},
     onModeChange: () => {},
+    onOpenAccountSettings: () => {},
     onSignOut: () => {},
     ...overrides
   };
@@ -127,4 +164,11 @@ function linkContaining(text: string): HTMLAnchorElement {
     throw new Error(`Missing link containing ${text}`);
   }
   return link;
+}
+
+async function flush(): Promise<void> {
+  await Promise.resolve();
+  await tick();
+  await Promise.resolve();
+  await tick();
 }

@@ -1,8 +1,6 @@
 import type { Asset, AssetLifecycleFilter, LocationAsset } from '$lib/domain/inventory';
 import { workspaceRouteHref } from './workspaceRoute';
 
-export type HomeBrowseMode = 'home' | 'locations';
-
 export interface HomeHeadingPresentation {
   title: string;
   description: string;
@@ -41,6 +39,10 @@ export function homeAddItemHref(tenantId: string | null, inventoryId: string | n
   return workspaceRouteHref({ action: 'add', addKind: 'item' }, tenantId, inventoryId);
 }
 
+export function homeLocationsHref(tenantId: string | null, inventoryId: string | null): string {
+  return workspaceRouteHref({ mode: 'browse', browseScope: 'places' }, tenantId, inventoryId);
+}
+
 export function homeLifecycleHref(
   tenantId: string | null,
   inventoryId: string | null,
@@ -62,7 +64,7 @@ export function browseLocationHref(location: LocationAsset): string {
 }
 
 export function locationBackHref(location: LocationAsset): string {
-  return workspaceRouteHref({ mode: 'locations' }, location.tenantId, location.inventoryId);
+  return workspaceRouteHref({ mode: 'browse', browseScope: 'places' }, location.tenantId, location.inventoryId);
 }
 
 export function locationEditHref(location: LocationAsset): string {
@@ -85,22 +87,20 @@ export function locationRowHref(asset: Asset): string {
   return asset.kind === 'location' ? browseLocationHref(asset as LocationAsset) : browseAssetHref(asset);
 }
 
-export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter, browseMode: HomeBrowseMode): HomeHeadingPresentation {
+export function visibleAssetCountLabel(count: number): string {
+  return `${count} visible ${count === 1 ? 'asset' : 'assets'}`;
+}
+
+export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter): HomeHeadingPresentation {
   if (lifecycleState === 'archived') {
     return {
       title: 'Archived assets',
       description: 'Assets removed from active browsing.'
     };
   }
-  if (browseMode === 'locations') {
-    return {
-      title: 'Locations',
-      description: 'The places where your things live.'
-    };
-  }
   return {
     title: 'Home',
-    description: 'Recently added and the places where your things live.'
+    description: 'Recently changed and the places where your things live.'
   };
 }
 
@@ -119,14 +119,7 @@ export function homeArchivedEmptyState(): HomeEmptyStatePresentation {
   return { title: 'No archived assets' };
 }
 
-export function homeLocationsEmptyState(browseMode: HomeBrowseMode = 'home'): HomeEmptyStatePresentation {
-  if (browseMode === 'locations') {
-    return {
-      title: 'No locations yet',
-      message: 'Add a location to start browsing by place.',
-      actionLabel: 'Add first location'
-    };
-  }
+export function homeLocationsEmptyState(): HomeEmptyStatePresentation {
   return {
     title: 'No locations yet',
     message: 'Locations make browsing easier, but you can capture an item now.',

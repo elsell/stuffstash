@@ -54,6 +54,7 @@ It does not define mobile UI, conversational inventory, production Google OIDC r
   stderr before nginx opens its compiled default log paths, so the read-only
   root filesystem does not produce startup log alerts.
 - Static web responses must include conservative browser security headers, including content type sniffing protection, frame denial, a restrictive referrer policy, a restrictive permissions policy, and a content security policy that only permits the configured API and OIDC issuer origins.
+- The document shell must also declare `no-referrer` through a referrer meta policy so local development and static-file fallback navigation do not disclose inventory routes before response-header composition is available. Production response headers remain authoritative.
 - The web static image build must derive a CSP hash for SvelteKit's generated bootstrap script from the built `index.html` and must not use a broad `script-src 'unsafe-inline'` policy.
 - The web static runtime must support self-hosted API, OIDC, and media origins
   without rebuilding source for each household deployment. If CSP values are
@@ -81,6 +82,21 @@ The first local web client must be a public OIDC client:
   opt-in through local environment variables or generated ignored local config;
   personal LAN IPs must not be committed to tracked runtime config or Dex
   fixture files.
+- When the Vite development server receives a runtime-config request through a
+  private LAN IP, it must derive the browser-facing web, API, and Dex origins
+  from that request if no explicit development origin or per-service override
+  is configured. This keeps the OIDC authorization request and callback on the
+  same browser origin without committing a personal LAN address. Loopback and
+  untrusted hostnames must keep the tracked runtime defaults, and explicit
+  environment overrides must always win. This request-derived behavior is a
+  development-server convenience only; mounted production runtime
+  configuration remains authoritative.
+  Request-derived trust is limited to canonical dotted-decimal IPv4 hosts in
+  RFC 1918 space or `169.254.0.0/16`, with an optional canonical decimal port.
+  The raw Host header must be validated before URL parsing. Abbreviated,
+  integer, hexadecimal, octal-like, credential-bearing, path/query-bearing,
+  malformed-port, out-of-range, loopback, public, and IPv6 forms—including
+  IPv6 loopback, ULA, and link-local—must fail closed to the tracked defaults.
 
 For local browser development, the API must be configured to trust the same issuer and client ID as the browser flow. The local development topology may run infrastructure in Docker while running the API and web dev server as host processes when that is the simplest way to make issuer discovery work for both browser and API verifier.
 
@@ -97,9 +113,14 @@ The first runtime config shape is:
   "apiBaseUrl": "http://localhost:8080",
   "oidcIssuer": "http://localhost:5556/dex",
   "oidcClientId": "stuff-stash-web-local",
-  "oidcRedirectUri": "http://localhost:5173/callback"
+  "oidcRedirectUri": "http://localhost:5173/callback",
+  "invitationAllowInsecureLocalHTTP": false
 }
 ```
+
+`invitationAllowInsecureLocalHTTP` defaults to `false`. When explicitly enabled at the web runtime composition boundary, invitation-link validation may accept HTTP only for `localhost`, IP loopback, and IPv4 RFC 1918 addresses. It must continue to reject public HTTP hosts and public IP addresses. This switch must be configured consistently with the API invitation-link switch for local browser acceptance.
+
+The checked-in local development runtime configuration explicitly enables this switch so the bundled LAN development flow remains usable. A regression test must parse that shipped file through the production runtime-config parser and prove both the explicit invitation opt-in and the API-aligned attachment policy; test-only fixture parsing is not sufficient evidence.
 
 The runtime config may be served as a static file by the web app in local development. It must not be compiled into frontend source code as the only configuration mechanism.
 

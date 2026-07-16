@@ -55,10 +55,11 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 			return "", err
 		}
 		record, err := application.ApproveActionPlan(ctx, app.ActionPlanDecisionInput{
-			Principal:   session.Principal,
-			TenantID:    session.TenantID,
-			InventoryID: session.InventoryID,
-			PlanID:      planID,
+			Principal:    session.Principal,
+			TenantID:     session.TenantID,
+			InventoryID:  session.InventoryID,
+			PlanID:       planID,
+			CommandEdits: realtimeCommandEditsFromMessage(message.CommandEdits),
 		})
 		if err != nil {
 			return "", err
@@ -107,7 +108,7 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 		*serverSeq = *serverSeq + 1
 		return ports.RealtimeSessionStateCompleted, nil
 	case realtimeClientMessageActionPlanCancel:
-		if message.PhotoAttachmentsSet {
+		if message.PhotoAttachmentsSet || message.CommandEditsSet {
 			return "", ports.ErrInvalidProviderInput
 		}
 		record, err := application.CancelActionPlan(ctx, app.ActionPlanDecisionInput{
@@ -130,6 +131,18 @@ func handleRealtimeActionPlanDecision(ctx context.Context, connection *websocket
 	}
 	*serverSeq = *serverSeq + 1
 	return ports.RealtimeSessionStateCancelled, nil
+}
+
+func realtimeCommandEditsFromMessage(edits []realtimeActionPlanCommandEdit) []app.ActionPlanCommandEditInput {
+	result := make([]app.ActionPlanCommandEditInput, 0, len(edits))
+	for _, edit := range edits {
+		mapped := app.ActionPlanCommandEditInput{CommandID: edit.CommandID, Title: edit.Title}
+		if edit.Parent != nil {
+			mapped.ParentSelection = &app.ActionPlanParentSelectionInput{Kind: edit.Parent.Kind, ID: edit.Parent.ID}
+		}
+		result = append(result, mapped)
+	}
+	return result
 }
 
 func realtimePhotoAttachmentMetadataFromRequests(photos []realtimePhotoAttachmentRequest) []app.ActionPlanPhotoAttachmentMetadata {

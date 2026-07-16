@@ -99,6 +99,44 @@ func TestCheckoutAssetRejectsDuplicateOpenCheckout(t *testing.T) {
 	}
 }
 
+func TestCheckoutAssetRejectsNonPortableLocation(t *testing.T) {
+	ctx := context.Background()
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	assetID := asset.ID("location-one")
+	location := activeCheckoutTestAsset(tenantID, inventoryID, assetID)
+	location.Kind = asset.KindLocation
+	repository := newFakeCheckoutAssetRepository(location)
+	unitOfWork := &fakeCheckoutUnitOfWork{repository: repository}
+	service := New(Dependencies{
+		Observer:        noopObserver{},
+		Authorizer:      allowAuthorizer{},
+		Tenants:         tenantExistsRepository{},
+		Inventories:     inventoryRepository{item: activeCheckoutTestInventory(tenantID, inventoryID)},
+		Assets:          repository,
+		Checkouts:       repository,
+		AssetUnitOfWork: unitOfWork,
+		Undoables:       fakeCheckoutUndoables{},
+		Audit:           auditRepository{},
+		IDs:             &sequenceIDGenerator{ids: []string{"checkout-one", "operation-one", "audit-one"}},
+		Clock:           staticClock{now: time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC)},
+	})
+
+	_, err := service.CheckoutAsset(ctx, CheckoutAssetInput{
+		Principal:   identity.Principal{ID: identity.PrincipalID("editor-one")},
+		Source:      audit.SourceAPI,
+		TenantID:    tenantID,
+		InventoryID: inventoryID,
+		AssetID:     assetID,
+	})
+	if !errors.Is(err, apperrors.ErrInvalidInput) {
+		t.Fatalf("expected non-portable location checkout to fail with invalid input, got %v", err)
+	}
+	if repository.current != nil || len(unitOfWork.auditRecords) != 0 || len(unitOfWork.undoables) != 0 {
+		t.Fatalf("expected rejected location checkout not to mutate state, got checkout=%+v audits=%+v undoables=%+v", repository.current, unitOfWork.auditRecords, unitOfWork.undoables)
+	}
+}
+
 func TestReturnAssetClosesOpenCheckoutByDifferentEditor(t *testing.T) {
 	ctx := context.Background()
 	now := time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC)

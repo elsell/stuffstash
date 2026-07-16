@@ -29,8 +29,11 @@ func (s Store) ImportJobByID(ctx context.Context, tenantID tenant.ID, inventoryI
 		return importjob.Record{}, false, ports.ErrInvalidProviderInput
 	}
 	var model importJobModel
-	err := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND history_removed_at IS NULL", tenantID.String(), inventoryID.String(), jobID.String()).
+	err := activeImportJobQuery(s.db.WithContext(ctx), importJobModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		ID:          jobID.String(),
+	}).
 		First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return importjob.Record{}, false, nil
@@ -54,8 +57,10 @@ func (s Store) ListImportJobs(ctx context.Context, tenantID tenant.ID, inventory
 		limit = 50
 	}
 	var models []importJobModel
-	if err := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND history_removed_at IS NULL", tenantID.String(), inventoryID.String()).
+	if err := activeImportJobQuery(s.db.WithContext(ctx), importJobModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+	}).
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: true}).
 		Limit(limit).
 		Find(&models).Error; err != nil {
@@ -81,8 +86,7 @@ func (s Store) ListImportJobsByStatus(ctx context.Context, page ports.ImportJobS
 		limit = 50
 	}
 	var models []importJobModel
-	if err := s.db.WithContext(ctx).
-		Where("status = ? AND history_removed_at IS NULL", string(page.Status)).
+	if err := activeImportJobQuery(s.db.WithContext(ctx), importJobModel{Status: string(page.Status)}).
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "updated_at"}}).
 		Limit(limit).
 		Find(&models).Error; err != nil {
@@ -104,8 +108,11 @@ func (s Store) UpdateImportJob(ctx context.Context, job importjob.Record) error 
 	if err != nil {
 		return err
 	}
-	result := s.db.WithContext(ctx).Model(&importJobModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND history_removed_at IS NULL", job.TenantID.String(), job.InventoryID.String(), job.ID.String()).
+	result := activeImportJobQuery(s.db.WithContext(ctx).Model(&importJobModel{}), importJobModel{
+		TenantID:    job.TenantID.String(),
+		InventoryID: job.InventoryID.String(),
+		ID:          job.ID.String(),
+	}).
 		Updates(importJobUpdateMap(model))
 	if result.Error != nil {
 		return result.Error
@@ -120,8 +127,12 @@ func (s Store) MarkImportJobHistoryRemoved(ctx context.Context, tenantID tenant.
 	if tenantID.String() == "" || inventoryID.String() == "" || jobID.String() == "" || removedAt.IsZero() || expectedUpdatedAt.IsZero() {
 		return false, ports.ErrInvalidProviderInput
 	}
-	result := s.db.WithContext(ctx).Model(&importJobModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND updated_at = ? AND history_removed_at IS NULL", tenantID.String(), inventoryID.String(), jobID.String(), expectedUpdatedAt.UTC()).
+	result := activeImportJobQuery(s.db.WithContext(ctx).Model(&importJobModel{}), importJobModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		ID:          jobID.String(),
+		UpdatedAt:   expectedUpdatedAt.UTC(),
+	}).
 		Updates(map[string]any{
 			"history_removed_at": removedAt.UTC(),
 			"updated_at":         removedAt.UTC(),
@@ -140,8 +151,12 @@ func (s Store) UpdateImportJobIfStatus(ctx context.Context, job importjob.Record
 	if err != nil {
 		return false, err
 	}
-	result := s.db.WithContext(ctx).Model(&importJobModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND status = ? AND history_removed_at IS NULL", job.TenantID.String(), job.InventoryID.String(), job.ID.String(), string(expected)).
+	result := activeImportJobQuery(s.db.WithContext(ctx).Model(&importJobModel{}), importJobModel{
+		TenantID:    job.TenantID.String(),
+		InventoryID: job.InventoryID.String(),
+		ID:          job.ID.String(),
+		Status:      string(expected),
+	}).
 		Updates(importJobUpdateMap(model))
 	if result.Error != nil {
 		return false, result.Error
@@ -164,8 +179,12 @@ func (s Store) UpdateImportJobProgress(ctx context.Context, tenantID tenant.ID, 
 	var updated bool
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var model importJobModel
-		err := tx.
-			Where("tenant_id = ? AND inventory_id = ? AND id = ? AND updated_at = ? AND history_removed_at IS NULL", tenantID.String(), inventoryID.String(), jobID.String(), expectedUpdatedAt.UTC()).
+		err := activeImportJobQuery(tx, importJobModel{
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+			ID:          jobID.String(),
+			UpdatedAt:   expectedUpdatedAt.UTC(),
+		}).
 			First(&model).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
@@ -193,8 +212,12 @@ func (s Store) UpdateImportJobProgress(ctx context.Context, tenantID tenant.ID, 
 		if err != nil {
 			return err
 		}
-		result := tx.Model(&importJobModel{}).
-			Where("tenant_id = ? AND inventory_id = ? AND id = ? AND updated_at = ? AND history_removed_at IS NULL", tenantID.String(), inventoryID.String(), jobID.String(), expectedUpdatedAt.UTC()).
+		result := activeImportJobQuery(tx.Model(&importJobModel{}), importJobModel{
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+			ID:          jobID.String(),
+			UpdatedAt:   expectedUpdatedAt.UTC(),
+		}).
 			Updates(map[string]any{
 				"progress_phase":        string(progress.Phase),
 				"progress_done":         progress.Done,
@@ -225,13 +248,24 @@ func (s Store) ClaimImportJob(ctx context.Context, job importjob.Record, expecte
 	if err != nil {
 		return false, err
 	}
-	result := s.db.WithContext(ctx).Model(&importJobModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND updated_at = ? AND history_removed_at IS NULL", job.TenantID.String(), job.InventoryID.String(), job.ID.String(), expectedUpdatedAt.UTC()).
+	result := activeImportJobQuery(s.db.WithContext(ctx).Model(&importJobModel{}), importJobModel{
+		TenantID:    job.TenantID.String(),
+		InventoryID: job.InventoryID.String(),
+		ID:          job.ID.String(),
+		UpdatedAt:   expectedUpdatedAt.UTC(),
+	}).
 		Updates(importJobUpdateMap(model))
 	if result.Error != nil {
 		return false, result.Error
 	}
 	return result.RowsAffected == 1, nil
+}
+
+func activeImportJobQuery(db *gorm.DB, scope importJobModel) *gorm.DB {
+	return db.Where(&scope).Where(clause.Eq{
+		Column: clause.Column{Name: "history_removed_at"},
+		Value:  nil,
+	})
 }
 
 func importJobModelFromRecord(job importjob.Record) (importJobModel, error) {

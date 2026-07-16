@@ -104,9 +104,9 @@ describe('workspace add presentation helpers', () => {
   it('builds photo picker labels and supported image type copy', () => {
     expect(addPhotoPickerPresentation).toEqual({
       actionGroupLabel: 'Photo actions',
-      uploadLabel: 'Upload',
-      cameraLabel: 'Camera',
-      uploadInputLabel: 'Upload photos',
+      uploadLabel: 'Choose photos',
+      cameraLabel: 'Take photo',
+      uploadInputLabel: 'Choose photos',
       cameraInputLabel: 'Take photo',
       selectedListLabel: 'Selected photos'
     });

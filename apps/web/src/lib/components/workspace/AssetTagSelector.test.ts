@@ -14,6 +14,18 @@ afterEach(() => {
 });
 
 describe('AssetTagSelector', () => {
+  it('keeps tag choices and color actions at least 44 CSS pixels tall and wide', () => {
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({ tags: [tag('tag-art', 'Art')] })
+    });
+
+    expect(button('Art').classList).toContain('min-h-11');
+    expect(button('Art').classList).toContain('min-w-11');
+    expect(document.body.querySelector('#new-tag-color-picker')?.classList).toContain('size-11');
+    expect(button('Add').classList).toContain('min-h-11');
+  });
+
   it('selects an existing tag instead of staging a duplicate new tag', async () => {
     let selectedIds: string[] = [];
     let newTags: AssetTagDraft[] = [];
@@ -246,6 +258,63 @@ describe('AssetTagSelector', () => {
     await tick();
 
     expect(newTags).toEqual([{ displayName: 'A' }]);
+  });
+
+  it('sorts available tags alphabetically without changing the input array', async () => {
+    const tags = [
+      tag('tag-workshop', 'Workshop'),
+      tag('tag-attic-title', 'Attic'),
+      tag('tag-attic-lower', 'attic'),
+      tag('tag-camping', 'Camping')
+    ];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({ tags })
+    });
+    await tick();
+
+    const optionLabels = Array.from(document.querySelectorAll('.tag-options button')).map((element) => element.textContent?.trim());
+    expect(optionLabels).toEqual(['Attic', 'attic', 'Camping', 'Workshop']);
+    expect(tags.map((item) => item.displayName)).toEqual(['Workshop', 'Attic', 'attic', 'Camping']);
+  });
+
+  it('progressively discloses large naturally sorted tag lists', async () => {
+    const tags = Array.from({ length: 14 }, (_, index) => tag(`tag-${index}`, `Tag ${14 - index}`));
+    component = mount(AssetTagSelector, { target: document.body, props: props({ tags }) });
+    await tick();
+
+    expect(document.querySelectorAll('.tag-options button')).toHaveLength(12);
+    button('Show all 14 tags').click();
+    await tick();
+    expect(document.querySelectorAll('.tag-options button')).toHaveLength(14);
+    expect(Array.from(document.querySelectorAll('.tag-options button')).map((item) => item.textContent?.trim())).toEqual(
+      Array.from({ length: 14 }, (_, index) => `Tag ${index + 1}`)
+    );
+    button('Show fewer tags').click();
+    await tick();
+    expect(document.querySelectorAll('.tag-options button')).toHaveLength(12);
+  });
+
+  it('keeps a selected option beyond the collapsed limit available for deselection', async () => {
+    const tags = Array.from({ length: 14 }, (_, index) => tag(`tag-${index + 1}`, `Tag ${index + 1}`));
+    let selectedIds = ['tag-14'];
+    component = mount(AssetTagSelector, {
+      target: document.body,
+      props: props({
+        tags,
+        selectedIds,
+        onSelectedIdsChange: (ids) => {
+          selectedIds = ids;
+        }
+      })
+    });
+    await tick();
+
+    expect(document.querySelectorAll('.tag-options button')).toHaveLength(13);
+    expect(button('Tag 14').getAttribute('aria-pressed')).toBe('true');
+    button('Tag 14').click();
+
+    expect(selectedIds).toEqual([]);
   });
 });
 

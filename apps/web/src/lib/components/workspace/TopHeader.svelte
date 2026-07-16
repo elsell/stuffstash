@@ -1,16 +1,16 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
-  import { tick } from 'svelte';
-  import Plus from '@lucide/svelte/icons/plus';
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { searchAssetHref } from '$lib/application/workspaceSearch';
-  import { shellAddOptions, type ShellAddOption } from '$lib/application/workspaceShellNavigation';
+  import { shellModeHref } from '$lib/application/workspaceShellNavigation';
   import type { Asset, AssetKind, Inventory, Tenant } from '$lib/domain/inventory';
   import SearchSuggestions from './SearchSuggestions.svelte';
   import WorkspaceContextSwitcher from './WorkspaceContextSwitcher.svelte';
+  import AccountMenu from './AccountMenu.svelte';
+  import WorkspaceAddMenu from './WorkspaceAddMenu.svelte';
 
   let {
     tenants,
@@ -20,7 +20,9 @@
     suggestions,
     query = $bindable(''),
     canCreateAsset,
+    userLabel,
     showSearch = true,
+    disablePortal = false,
     onSelectTenant,
     onSelectInventory,
     onCreateTenantWithInventory,
@@ -28,7 +30,9 @@
     onSearch,
     onOpenAsset,
     onOpenAdd,
-    onMobileContextOpenChange
+    onOpenSettings,
+    onSignOut,
+    onMobileSurfaceOpenChange
   }: {
     tenants: Tenant[];
     inventories: Inventory[];
@@ -37,32 +41,31 @@
     suggestions: Asset[];
     query: string;
     canCreateAsset: boolean;
+    userLabel: string;
     showSearch?: boolean;
+    disablePortal?: boolean;
     onSelectTenant: (tenantId: string) => void;
     onSelectInventory: (tenantId: string, inventoryId: string) => void;
     onCreateTenantWithInventory?: (input: { tenantName: string; inventoryName: string }) => Promise<void>;
     onCreateInventory?: (tenantId: string, inventoryName: string) => Promise<void>;
     onSearch: () => void;
     onOpenAsset: (asset: Asset) => void;
-    onOpenAdd: (kind: AssetKind) => void;
-    onMobileContextOpenChange?: (open: boolean) => void;
+    onOpenAdd: (kind: AssetKind, parentAssetId?: string | null, opener?: HTMLElement | null) => void;
+    onOpenSettings: () => void;
+    onSignOut: () => void;
+    onMobileSurfaceOpenChange?: (open: boolean) => void;
   } = $props();
 
   let selectedInventoryId = $derived(inventory?.id ?? '');
   let searchFocused = $state(false);
   let activeSuggestionIndex = $state(-1);
-  let addMenuOpen = $state(false);
   let searchInput = $state<HTMLInputElement | null>(null);
   let searchRegion = $state<HTMLElement | null>(null);
-  let addMenuRegion = $state<HTMLElement | null>(null);
-  let addTrigger = $state<HTMLButtonElement | null>(null);
-  let addMenuElement = $state<HTMLElement | null>(null);
   let visibleSuggestions = $derived(searchFocused && query.trim().length > 0 ? suggestions.slice(0, 6) : []);
   let showNoSuggestions = $derived(searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0);
   let addAvailability = $derived(workspaceAddAvailability({ hasInventory: !!inventory, canCreateAsset }));
-  let addOptions = $derived(shellAddOptions(selectedTenantId || null, selectedInventoryId || null));
+  let accountSettingsHref = $derived(shellModeHref('settings', selectedTenantId || null, selectedInventoryId || null));
   const suggestionIdPrefix = 'global-search-suggestion';
-  const addDeniedNoteId = 'header-add-denied';
 
   $effect(() => {
     if (activeSuggestionIndex >= visibleSuggestions.length) {
@@ -73,20 +76,15 @@
     }
   });
 
-  function chooseAddKind(event: MouseEvent, option: ShellAddOption): void {
-    if (!shouldHandleWorkspaceLinkClick(event)) {
-      return;
-    }
-    event.preventDefault();
-    closeAddMenu(false);
-    onOpenAdd(option.kind);
-  }
-
   function openSuggestion(event: MouseEvent, asset: Asset): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
       return;
     }
     event.preventDefault();
+    selectSuggestion(asset);
+  }
+
+  function selectSuggestion(asset: Asset): void {
     query = asset.title;
     activeSuggestionIndex = -1;
     searchFocused = false;
@@ -95,19 +93,6 @@
 
   function suggestionId(index: number): string {
     return `${suggestionIdPrefix}-${index}`;
-  }
-
-  function suggestionElement(index: number): HTMLElement | null {
-    if (typeof document === 'undefined') {
-      return null;
-    }
-    return document.getElementById(suggestionId(index));
-  }
-
-  async function focusSuggestion(index: number): Promise<void> {
-    activeSuggestionIndex = index;
-    await tick();
-    suggestionElement(index)?.focus();
   }
 
   function handleSearchKeydown(event: KeyboardEvent): void {
@@ -124,83 +109,24 @@
       return;
     }
 
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       searchFocused = true;
-      void focusSuggestion(0);
-      return;
-    }
-  }
-
-  function handleSuggestionKeydown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      searchInput?.focus();
-      closeSearchSuggestions();
+      activeSuggestionIndex = event.key === 'ArrowDown'
+        ? (activeSuggestionIndex + 1) % visibleSuggestions.length
+        : (activeSuggestionIndex <= 0 ? visibleSuggestions.length - 1 : activeSuggestionIndex - 1);
       return;
     }
 
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'Enter' && activeSuggestionIndex >= 0) {
       event.preventDefault();
-      void focusSuggestion((index + 1) % visibleSuggestions.length);
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (index === 0) {
-        activeSuggestionIndex = -1;
-        searchInput?.focus();
-      } else {
-        void focusSuggestion(index - 1);
-      }
+      selectSuggestion(visibleSuggestions[activeSuggestionIndex]!);
     }
   }
 
   function closeSearchSuggestions(): void {
     searchFocused = false;
     activeSuggestionIndex = -1;
-  }
-
-  function toggleAddMenu(): void {
-    if (addMenuOpen) {
-      closeAddMenu();
-      return;
-    }
-    addMenuOpen = true;
-    void tick().then(() => firstAddMenuItem()?.focus());
-  }
-
-  function closeAddMenu(restoreFocus = true): void {
-    addMenuOpen = false;
-    if (restoreFocus) {
-      void tick().then(() => addTrigger?.focus());
-    }
-  }
-
-  function firstAddMenuItem(): HTMLElement | null {
-    return addMenuElement?.querySelector<HTMLElement>('a[href], button:not([disabled])') ?? null;
-  }
-
-  function handleAddMenuKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeAddMenu();
-    }
-  }
-
-  function handleAddMenuFocusout(event: FocusEvent): void {
-    const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
-    if (nextTarget && addMenuRegion?.contains(nextTarget)) {
-      return;
-    }
-    window.setTimeout(() => {
-      const activeElement = document.activeElement;
-      if (activeElement && addMenuRegion?.contains(activeElement)) {
-        return;
-      }
-      closeAddMenu(false);
-    }, 0);
   }
 
   function handleSearchFocusout(event: FocusEvent): void {
@@ -218,7 +144,7 @@
   }
 </script>
 
-<header class="workspace-header">
+<header class:contextual-toolbar={!showSearch} class="workspace-header">
   <div class="mobile-context">
     <WorkspaceContextSwitcher
       mobile
@@ -230,9 +156,17 @@
       {onSelectInventory}
       {onCreateTenantWithInventory}
       {onCreateInventory}
-      onOpenChange={onMobileContextOpenChange}
+      onOpenChange={onMobileSurfaceOpenChange}
     />
   </div>
+  <AccountMenu
+    mobile
+    {userLabel}
+    settingsHref={accountSettingsHref}
+    {onOpenSettings}
+    {onSignOut}
+    onOpenChange={onMobileSurfaceOpenChange}
+  />
   {#if showSearch}
     <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
       <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>
@@ -241,10 +175,16 @@
           bind:value={query}
           placeholder="Search this inventory"
           aria-label="Search this inventory"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={visibleSuggestions.length > 0}
+          aria-controls={visibleSuggestions.length > 0 ? 'global-search-suggestions' : undefined}
+          aria-activedescendant={activeSuggestionIndex >= 0 ? suggestionId(activeSuggestionIndex) : undefined}
           onfocus={() => { searchFocused = true; }}
+          oninput={() => { activeSuggestionIndex = -1; }}
           onkeydown={handleSearchKeydown}
         />
-        <Button.Root type="submit" variant="ghost" size="icon-sm" aria-label="Run search"><Search /></Button.Root>
+        <Button.Root type="submit" variant="ghost" size="icon" aria-label="Run search"><Search /></Button.Root>
       </form>
       <SearchSuggestions
         id="global-search-suggestions"
@@ -255,35 +195,22 @@
         showEmpty={showNoSuggestions}
         assetHref={searchAssetHref}
         onFocusIndex={(index) => { activeSuggestionIndex = index; }}
-        onSuggestionKeydown={handleSuggestionKeydown}
+        onSuggestionKeydown={() => {}}
         onOpen={openSuggestion}
       />
     </div>
+  {:else if inventory}
+    <p class="desktop-header-context" aria-label={`Current inventory: ${inventory.name}`}>
+      <small>Current inventory</small>
+      <strong>{inventory.name}</strong>
+    </p>
   {/if}
-  <div bind:this={addMenuRegion} class="header-add-wrap" onfocusout={handleAddMenuFocusout}>
-    <Button.Root
-      bind:ref={addTrigger}
-      class="header-add"
-      disabled={!addAvailability.canOpen}
-      aria-describedby={addAvailability.disabledReason ? addDeniedNoteId : undefined}
-      aria-expanded={addMenuOpen}
-      aria-controls="header-add-menu"
-      onclick={toggleAddMenu}
-      onkeydown={handleAddMenuKeydown}
-    >
-      <Plus /> Add
-    </Button.Root>
-    {#if addAvailability.disabledReason}
-      <p id={addDeniedNoteId} class="visually-hidden" role="note">{addAvailability.disabledReason}</p>
-    {/if}
-    {#if addMenuOpen}
-      <div bind:this={addMenuElement} id="header-add-menu" class="add-menu" aria-label="Add asset kind">
-        {#each addOptions as option}
-          <Button.Root href={option.href} variant="ghost" class="add-menu-item" onkeydown={handleAddMenuKeydown} onclick={(event) => chooseAddKind(event, option)}>
-            {option.label}
-          </Button.Root>
-        {/each}
-      </div>
-    {/if}
-  </div>
+  <WorkspaceAddMenu
+    tenantId={selectedTenantId || null}
+    inventoryId={selectedInventoryId || null}
+    canOpen={addAvailability.canOpen}
+    disabledReason={addAvailability.disabledReason}
+    {disablePortal}
+    {onOpenAdd}
+  />
 </header>

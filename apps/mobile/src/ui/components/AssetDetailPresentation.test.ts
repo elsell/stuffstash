@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assetDetailAvailabilityAction,
   assetDetailBadges,
+  assetDetailExceptionMetadataRows,
+  assetDetailIdentity,
   assetDetailLocationContext,
+  assetDetailMaintenanceActions,
   assetDetailMetadataRows,
+  assetDetailPlacement,
   assetDetailSectionOrder,
   assetDetailSectionsPresentation,
+  assetDetailUpdatedMetadata,
   visibleAssetDescription
 } from './AssetDetailPresentation';
 
@@ -69,25 +75,128 @@ describe('AssetDetailPresentation', () => {
     ]);
   });
 
-  it('builds stable metadata rows for the detail page section', () => {
-    expect(assetDetailMetadataRows({
-      checkoutLabel: 'Available',
-      lifecycleLabel: 'Active',
-      updatedAtLabel: 'Updated today'
-    })).toEqual([
-      { label: 'Status', value: 'Active' },
-      { label: 'Checkout', value: 'Available' },
-      { label: 'Updated', value: 'Updated today' }
-    ]);
+  it('presents the user title before secondary classification metadata', () => {
+    expect(assetDetailIdentity({
+      title: 'Family tent',
+      kindLabel: 'Item',
+      customTypeLabel: 'Camping gear'
+    })).toEqual({
+      title: 'Family tent',
+      classificationLabel: 'Item · Camping gear'
+    });
+
+    expect(assetDetailIdentity({
+      title: 'Garage',
+      kindLabel: 'Location',
+      customTypeLabel: undefined
+    })).toEqual({
+      title: 'Garage',
+      classificationLabel: 'Location'
+    });
   });
 
-  it('promotes the location path as spatial context instead of generic metadata', () => {
+  it('keeps normal lifecycle and checkout state out of prominent metadata', () => {
+    expect(assetDetailMetadataRows({
+      checkoutLabel: 'Available',
+      checkoutActorLabel: undefined,
+      isActive: true,
+      isCheckedOut: false,
+      lifecycleLabel: 'Active',
+      updatedAtLabel: 'Updated today'
+    })).toEqual([]);
+  });
+
+  it('shows only exceptional archived and checked-out state near its action', () => {
+    const asset = {
+      checkoutLabel: 'Checked out Jul 14, 2026',
+      checkoutActorLabel: 'Checked out by Alex',
+      isActive: false,
+      isCheckedOut: true,
+      lifecycleLabel: 'Archived'
+    };
+
+    expect(assetDetailExceptionMetadataRows(asset)).toEqual([
+      { label: 'Lifecycle', value: 'Archived' },
+      { label: 'Availability', value: 'Checked out Jul 14, 2026 · Checked out by Alex' }
+    ]);
+    expect(assetDetailMetadataRows({ ...asset, updatedAtLabel: 'Updated yesterday' }))
+      .toEqual(assetDetailExceptionMetadataRows(asset));
+  });
+
+  it('keeps updated-at copy concise and visually separate from status', () => {
+    expect(assetDetailUpdatedMetadata({ updatedAtLabel: 'Updated today' })).toEqual({
+      value: 'Updated today'
+    });
+  });
+
+  it('builds clickable placement from structured parent crumbs without parsing titles', () => {
+    expect(assetDetailPlacement({
+      parentLocationTrail: [
+        { id: 'garage', title: 'Garage / workshop', isImmediateParent: false },
+        { id: 'camp-bin', title: 'Camp bin', isImmediateParent: true }
+      ]
+    })).toEqual({
+      accessibilityLabel: 'Location Garage / workshop, Camp bin',
+      crumbs: [
+        { id: 'garage', title: 'Garage / workshop', isImmediateParent: false },
+        { id: 'camp-bin', title: 'Camp bin', isImmediateParent: true }
+      ]
+    });
+  });
+
+  it('uses calm root-level placement copy instead of exposing inventory internals', () => {
+    expect(assetDetailPlacement({ parentLocationTrail: [] })).toEqual({
+      accessibilityLabel: 'Location No location',
+      crumbs: [],
+      fallbackLabel: 'No location'
+    });
+
     expect(assetDetailLocationContext({
-      locationTrailLabel: 'Office / Filing cabinet'
+      parentLocationTrail: []
     })).toEqual({
       label: 'Location',
-      value: 'Office / Filing cabinet'
+      value: 'No location'
     });
+  });
+
+  it('renders only the applicable direct availability action', () => {
+    expect(assetDetailAvailabilityAction({ canCheckout: true, canReturn: false })).toEqual({
+      id: 'check_out',
+      label: 'Check out'
+    });
+    expect(assetDetailAvailabilityAction({ canCheckout: false, canReturn: true })).toEqual({
+      id: 'return',
+      label: 'Return'
+    });
+    expect(assetDetailAvailabilityAction({ canCheckout: false, canReturn: false })).toBeUndefined();
+  });
+
+  it('prefers Return if inconsistent capabilities claim both actions apply', () => {
+    expect(assetDetailAvailabilityAction({ canCheckout: true, canReturn: true })).toEqual({
+      id: 'return',
+      label: 'Return'
+    });
+  });
+
+  it('shows only applicable maintenance actions and never exceeds three', () => {
+    expect(assetDetailMaintenanceActions({
+      canAddPhotos: true,
+      canEdit: false,
+      canMove: true
+    })).toEqual([
+      { id: 'move', label: 'Move' },
+      { id: 'add_photos', label: 'Add photos' }
+    ]);
+
+    expect(assetDetailMaintenanceActions({
+      canAddPhotos: true,
+      canEdit: true,
+      canMove: true
+    })).toEqual([
+      { id: 'edit', label: 'Edit' },
+      { id: 'move', label: 'Move' },
+      { id: 'add_photos', label: 'Add photos' }
+    ]);
   });
 
   it('collapses empty descriptions instead of rendering placeholder card copy', () => {

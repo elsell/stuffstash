@@ -14,7 +14,6 @@
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
   import { fileToBase64 } from '$lib/application/fileEncoding';
   import { workspaceRouteHref, type ImportDetailTabRoute, type ImportSourceRoute } from '$lib/application/workspaceRoute';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
@@ -104,6 +103,7 @@
   let suppressDetailTabRouteUpdate = false;
   let cancelIntent = $state<{ job: ImportJob } | null>(null);
   let removeIntent = $state<{ job: ImportJob } | null>(null);
+  let confirmationError = $state('');
   let loading = $state(false);
   let busy = $state(false);
   let detailLoading = $state(false);
@@ -372,12 +372,32 @@
 
   function requestSelectedJobCancellation(): void {
     if (!selectedJob || !canCreateImports) return;
-    cancelIntent = { job: selectedJob };
+    requestJobCancellation(selectedJob);
   }
 
   function removeSelectedJobFromHistory(): void {
     if (!selectedJob || !canCreateImports || !canRemoveJobFromHistory(selectedJob)) return;
-    removeIntent = { job: selectedJob };
+    requestJobRemoval(selectedJob);
+  }
+
+  function requestJobCancellation(job: ImportJob): void {
+    confirmationError = '';
+    cancelIntent = { job };
+  }
+
+  function requestJobRemoval(job: ImportJob): void {
+    confirmationError = '';
+    removeIntent = { job };
+  }
+
+  function dismissCancellation(): void {
+    confirmationError = '';
+    cancelIntent = null;
+  }
+
+  function dismissRemoval(): void {
+    confirmationError = '';
+    removeIntent = null;
   }
 
   async function loadJobDetail(job: ImportJob): Promise<void> {
@@ -456,7 +476,7 @@
     const action = startScopedAction();
     if (!action || !canCreateImports) return;
     busy = true;
-    error = '';
+    confirmationError = '';
     notice = '';
     try {
       const next = await repository.cancelImportJob(action.scope.tenantId, action.scope.inventoryId, job.id, mode);
@@ -465,10 +485,11 @@
       if (selectedJob?.id === next.id) {
         selectedJob = next;
       }
+      confirmationError = '';
       cancelIntent = null;
     } catch (cancelError) {
       if (!isCurrentAction(action)) return;
-      error = errorMessage(cancelError, 'Cancellation could not be requested.');
+      confirmationError = errorMessage(cancelError, 'Cancellation could not be requested.');
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -480,11 +501,12 @@
     const action = startScopedAction();
     if (!action || !canCreateImports || !canRemoveJobFromHistory(job)) return;
     busy = true;
-    error = '';
+    confirmationError = '';
     notice = '';
     try {
       await repository.removeImportJobFromHistory(action.scope.tenantId, action.scope.inventoryId, job.id);
       if (!isCurrentAction(action)) return;
+      confirmationError = '';
       jobs = jobs.filter((candidate) => candidate.id !== job.id);
       removeIntent = null;
       if (selectedJob?.id === job.id) {
@@ -495,7 +517,7 @@
       }
     } catch (removeError) {
       if (!isCurrentAction(action)) return;
-      error = errorMessage(removeError, 'Only completed import jobs can be removed from history.');
+      confirmationError = errorMessage(removeError, 'Import run could not be removed. Try again.');
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -842,8 +864,8 @@
         onBeginImport={beginImport}
         onOpenJob={openJob}
         onResumePreviewedJob={resumePreviewedJob}
-        onRequestCancellation={(job) => (cancelIntent = { job })}
-        onRequestRemove={(job) => (removeIntent = { job })}
+        onRequestCancellation={requestJobCancellation}
+        onRequestRemove={requestJobRemoval}
       />
   {:else if step === 'source'}
     <ImportSourceChoiceStep
@@ -911,29 +933,23 @@
     {/if}
   {/if}
 
-  <Dialog.Root
-    open={canViewImports && Boolean(cancelIntent || removeIntent)}
-    ariaLabelledBy={cancelIntent ? 'cancel-import-heading' : 'remove-import-heading'}
-    dismissDisabled={busy}
-    onDismiss={() => {
-      cancelIntent = null;
-      removeIntent = null;
-    }}
-  >
+  {#if canViewImports && (cancelIntent || removeIntent)}
     <ImportJobConfirmationPanel
       cancelJob={cancelIntent?.job ?? null}
       removeJob={removeIntent?.job ?? null}
       {busy}
+      error={confirmationError}
       onCancelJob={(job, mode) => { void cancel(job, mode); }}
-      onDismissCancel={() => (cancelIntent = null)}
+      onDismissCancel={dismissCancellation}
       onRemoveJob={(job) => { void removeFromHistory(job); }}
-      onDismissRemove={() => (removeIntent = null)}
+      onDismissRemove={dismissRemoval}
     />
-  </Dialog.Root>
+  {/if}
 </section>
 
 <style>
   .import-workspace {
+    align-content: start;
     display: grid;
     gap: 1rem;
     margin: 0 auto;
@@ -997,6 +1013,11 @@
   }
 
   @media (max-width: 860px) {
+    .import-toolbar :global([data-slot='button']) {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
     .import-workspace {
       gap: 0.9rem;
       padding: 1rem;

@@ -22,10 +22,17 @@ describe('AuthSignInScreen', () => {
     });
 
     expect(document.body.textContent).toContain('Stuff Stash');
-    expect(document.body.textContent).toContain('Sign in to continue.');
+    expect(document.body.textContent).toContain('Sign in to Stuff Stash');
+    expect(document.body.textContent).toContain('Continue to your secure sign-in page. You’ll return here when you’re done.');
     expect(document.body.textContent).not.toContain('Local demo data');
 
-    buttonContaining('Sign in').click();
+    const shell = document.body.querySelector<HTMLElement>('.auth-shell');
+    const panel = document.body.querySelector<HTMLElement>('.auth-panel');
+    expect(shell).not.toBeNull();
+    expect(panel).not.toBeNull();
+    expect(panel!.dataset.authTrack).toBe('readable');
+    expect(getComputedStyle(buttonContaining('Continue to sign in')).minHeight).toBe('48px');
+    buttonContaining('Continue to sign in').click();
     await flush();
 
     expect(onSignIn).toHaveBeenCalledTimes(1);
@@ -37,13 +44,13 @@ describe('AuthSignInScreen', () => {
       target: document.body,
       props: {
         canSignIn: false,
-        error: 'Unable to load web runtime configuration.',
+        error: 'Stuff Stash isn’t ready to sign you in. Reload the page to try again.',
         onSignIn
       }
     });
 
-    expect(document.body.textContent).toContain('Unable to load web runtime configuration.');
-    expect(buttonContaining('Sign in').disabled).toBe(true);
+    expect(document.body.textContent).toContain('Stuff Stash isn’t ready to sign you in. Reload the page to try again.');
+    expect(buttonContaining('Continue to sign in').disabled).toBe(true);
   });
 
   it('can show a session-expired sign-in prompt', () => {

@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { AssetTagViewModel } from '../../application/assets/AssetViewModels';
-import { colors, radius, spacing } from '../theme/tokens';
+import { lightPalette, radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
 
 type AssetTagChipsProps = {
@@ -9,9 +10,13 @@ type AssetTagChipsProps = {
   readonly compact?: boolean;
   readonly overflowLimit?: number;
   readonly onTagPress?: (tag: AssetTagViewModel) => void;
+  readonly palette?: MobileColorPalette;
 };
 
-export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress }: AssetTagChipsProps) {
+export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress, palette: paletteOverride }: AssetTagChipsProps) {
+  const appearancePalette = useAppearanceAwarePalette();
+  const palette = paletteOverride ?? appearancePalette;
+  const styles = createStyles(palette);
   const presentation = assetTagChipPresentation(tags, overflowLimit);
   const layout = assetTagChipLayoutPresentation(compact);
   if (!presentation.shouldRender) {
@@ -27,6 +32,7 @@ export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress
             key={tag.id}
             tag={tag}
             onTagPress={onTagPress}
+            palette={palette}
             style={[
               styles.tagChip,
               colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
@@ -47,12 +53,15 @@ export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress
 export function TagChip({
   tag,
   onTagPress,
+  palette,
   style
 }: {
   readonly tag: AssetTagViewModel;
   readonly onTagPress?: (tag: AssetTagViewModel) => void;
+  readonly palette?: MobileColorPalette;
   readonly style: StyleProp<ViewStyle>;
 }) {
+  const styles = createStyles(palette ?? lightPalette);
   if (!onTagPress) {
     return (
       <View style={style}>
@@ -74,7 +83,8 @@ export function TagChip({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -94,7 +104,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 5,
     maxWidth: '100%',
-    minHeight: 24,
+    // The six-point hit slop brings interactive chips to a 44-point target.
+    minHeight: 32,
     paddingHorizontal: spacing.xs,
     paddingVertical: 3
   },
@@ -115,4 +126,5 @@ const styles = StyleSheet.create({
   overflowLabel: {
     color: colors.textMuted
   }
-});
+  });
+}

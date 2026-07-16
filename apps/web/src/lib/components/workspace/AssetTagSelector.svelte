@@ -4,6 +4,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import { visibleAssetTagOptions } from '$lib/application/workspaceTagPresentation';
   import {
     assetTagDisplayNameByteLength,
     assetTagDisplayNameMaxLength,
@@ -29,8 +30,10 @@
 
   let newTagName = $state('');
   let newTagColor = $state('');
+  let allTagsVisible = $state(false);
   let selected = $derived(new Set(selectedIds));
   let selectedExistingTags = $derived(tags.filter((tag) => selected.has(tag.id)));
+  let availableTags = $derived(visibleAssetTagOptions(tags, allTagsVisible, selectedIds));
   let hasSelection = $derived(selectedExistingTags.length > 0 || newTags.length > 0);
   let normalizedNewTagColor = $derived(normalizeColor(newTagColor));
   let colorPickerValue = $derived(normalizedNewTagColor ?? '#2F80ED');
@@ -134,7 +137,7 @@
       {#each newTags as tag, index}
         <span class={`tag-chip pending-tag${tag.color ? ' tag-chip-colored' : ''}`} style={tag.color ? `--tag-color: ${tag.color}` : undefined}>
           <span>{tag.displayName}</span>
-          <Button.Root type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${tag.displayName}`} onclick={() => removeNewTag(index)}>
+          <Button.Root type="button" variant="ghost" size="icon-sm" class="size-11" aria-label={`Remove ${tag.displayName}`} onclick={() => removeNewTag(index)}>
             <X />
           </Button.Root>
         </span>
@@ -144,11 +147,11 @@
 
   {#if tags.length > 0}
     <div class="tag-options" aria-label="Available tags">
-      {#each tags as tag}
+      {#each availableTags as tag}
         <Button.Root
           type="button"
           variant={selected.has(tag.id) ? 'default' : 'outline'}
-          class={`tag-option${tag.color ? ' tag-chip-colored' : ''}`}
+          class={`tag-option min-h-11 min-w-11${tag.color ? ' tag-chip-colored' : ''}`}
           style={tag.color ? `--tag-color: ${tag.color}` : undefined}
           aria-pressed={selected.has(tag.id)}
           onclick={() => toggleTag(tag.id)}
@@ -157,6 +160,11 @@
         </Button.Root>
       {/each}
     </div>
+    {#if tags.length > 12}
+      <Button.Root type="button" variant="ghost" class="min-h-11" onclick={() => { allTagsVisible = !allTagsVisible; }}>
+        {allTagsVisible ? 'Show fewer tags' : `Show all ${tags.length} tags`}
+      </Button.Root>
+    {/if}
   {/if}
 
   <div class="new-tag-row">
@@ -171,12 +179,13 @@
         <Input
           id="new-tag-color-picker"
           type="color"
+          class="size-11"
           value={colorPickerValue}
           aria-label="Pick new tag color"
           onchange={chooseColor}
         />
       </div>
     </div>
-    <Button.Root type="button" variant="outline" disabled={!canAddTag} onclick={addTag}><Plus /> Add</Button.Root>
+    <Button.Root type="button" variant="outline" class="min-h-11" disabled={!canAddTag} onclick={addTag}><Plus /> Add</Button.Root>
   </div>
 </fieldset>

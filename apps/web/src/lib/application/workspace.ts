@@ -1,4 +1,5 @@
 import type { Asset, AssetViewModel, CustomAssetType, LocationAsset, LocationSummary, ParentTargetViewModel } from '$lib/domain/inventory';
+import { compareNaturalText } from './textCollation';
 
 export function topLevelLocations(assets: Asset[]): LocationSummary[] {
   return assets
@@ -6,14 +7,34 @@ export function topLevelLocations(assets: Asset[]): LocationSummary[] {
     .map((location) => ({
       location: location as LocationAsset,
       assetCount: containedAssets(assets, location.id).length
-    }));
+    }))
+    .sort((left, right) => compareNaturalText(left.location.title, right.location.title));
 }
 
-export function recentlyAddedAssets(assets: Asset[]): AssetViewModel[] {
+export function homeLocationPreview(locations: LocationSummary[]): LocationSummary[] {
+  return locations.slice(0, 9);
+}
+
+export function recentlyChangedAssets(assets: Asset[]): AssetViewModel[] {
   return assets
-    .filter((asset) => asset.kind !== 'location' && asset.lifecycleState === 'active')
+    .filter((asset) => asset.lifecycleState === 'active')
+    .sort(compareRecentlyChangedAssets)
     .slice(0, 6)
     .map((asset) => withTrail(asset, assets));
+}
+
+function compareRecentlyChangedAssets(left: Asset, right: Asset): number {
+  const leftUpdatedAt = left.updatedAt ? Date.parse(left.updatedAt) : Number.NaN;
+  const rightUpdatedAt = right.updatedAt ? Date.parse(right.updatedAt) : Number.NaN;
+  const leftHasTimestamp = Number.isFinite(leftUpdatedAt);
+  const rightHasTimestamp = Number.isFinite(rightUpdatedAt);
+  if (leftHasTimestamp !== rightHasTimestamp) {
+    return leftHasTimestamp ? -1 : 1;
+  }
+  if (leftHasTimestamp && rightHasTimestamp && leftUpdatedAt !== rightUpdatedAt) {
+    return rightUpdatedAt - leftUpdatedAt;
+  }
+  return right.id.localeCompare(left.id);
 }
 
 export function containedAssets(assets: Asset[], parentAssetId: string): AssetViewModel[] {

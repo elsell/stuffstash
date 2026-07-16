@@ -10,45 +10,47 @@ import (
 )
 
 type Service struct {
-	observer           ports.Observer
-	authorizer         ports.Authorizer
-	tenants            ports.TenantRepository
-	inventories        ports.InventoryRepository
-	customAssetTypes   ports.CustomAssetTypeRepository
-	customFields       ports.CustomFieldDefinitionRepository
-	assets             ports.AssetRepository
-	checkouts          ports.AssetCheckoutRepository
-	attachments        ports.AttachmentRepository
-	assetTags          ports.AssetTagRepository
-	assetUnitOfWork    ports.AssetUnitOfWork
-	assetTagUnitOfWork ports.AssetTagUnitOfWork
-	undoables          ports.UndoableOperationRepository
-	audit              ports.AuditRepository
-	ids                ports.IDGenerator
-	clock              ports.Clock
-	defaultPageLimit   int
-	maxPageLimit       int
+	observer            ports.Observer
+	authorizer          ports.Authorizer
+	tenants             ports.TenantRepository
+	inventories         ports.InventoryRepository
+	customAssetTypes    ports.CustomAssetTypeRepository
+	customFields        ports.CustomFieldDefinitionRepository
+	assets              ports.AssetRepository
+	checkouts           ports.AssetCheckoutRepository
+	attachments         ports.AttachmentRepository
+	assetTags           ports.AssetTagRepository
+	assetUnitOfWork     ports.AssetUnitOfWork
+	assetTagUnitOfWork  ports.AssetTagUnitOfWork
+	assetEditUnitOfWork ports.AssetEditUnitOfWork
+	undoables           ports.UndoableOperationRepository
+	audit               ports.AuditRepository
+	ids                 ports.IDGenerator
+	clock               ports.Clock
+	defaultPageLimit    int
+	maxPageLimit        int
 }
 
 type Dependencies struct {
-	Observer           ports.Observer
-	Authorizer         ports.Authorizer
-	Tenants            ports.TenantRepository
-	Inventories        ports.InventoryRepository
-	CustomAssetTypes   ports.CustomAssetTypeRepository
-	CustomFields       ports.CustomFieldDefinitionRepository
-	Assets             ports.AssetRepository
-	Checkouts          ports.AssetCheckoutRepository
-	Attachments        ports.AttachmentRepository
-	AssetTags          ports.AssetTagRepository
-	AssetUnitOfWork    ports.AssetUnitOfWork
-	AssetTagUnitOfWork ports.AssetTagUnitOfWork
-	Undoables          ports.UndoableOperationRepository
-	Audit              ports.AuditRepository
-	IDs                ports.IDGenerator
-	Clock              ports.Clock
-	DefaultPageLimit   int
-	MaxPageLimit       int
+	Observer            ports.Observer
+	Authorizer          ports.Authorizer
+	Tenants             ports.TenantRepository
+	Inventories         ports.InventoryRepository
+	CustomAssetTypes    ports.CustomAssetTypeRepository
+	CustomFields        ports.CustomFieldDefinitionRepository
+	Assets              ports.AssetRepository
+	Checkouts           ports.AssetCheckoutRepository
+	Attachments         ports.AttachmentRepository
+	AssetTags           ports.AssetTagRepository
+	AssetUnitOfWork     ports.AssetUnitOfWork
+	AssetTagUnitOfWork  ports.AssetTagUnitOfWork
+	AssetEditUnitOfWork ports.AssetEditUnitOfWork
+	Undoables           ports.UndoableOperationRepository
+	Audit               ports.AuditRepository
+	IDs                 ports.IDGenerator
+	Clock               ports.Clock
+	DefaultPageLimit    int
+	MaxPageLimit        int
 }
 
 func New(deps Dependencies) Service {
@@ -57,25 +59,30 @@ func New(deps Dependencies) Service {
 	if observer == nil {
 		observer = noopObserver{}
 	}
+	assetEditUnitOfWork := deps.AssetEditUnitOfWork
+	if assetEditUnitOfWork == nil {
+		assetEditUnitOfWork, _ = deps.AssetUnitOfWork.(ports.AssetEditUnitOfWork)
+	}
 	return Service{
-		observer:           observer,
-		authorizer:         deps.Authorizer,
-		tenants:            deps.Tenants,
-		inventories:        deps.Inventories,
-		customAssetTypes:   deps.CustomAssetTypes,
-		customFields:       deps.CustomFields,
-		assets:             deps.Assets,
-		checkouts:          deps.Checkouts,
-		attachments:        deps.Attachments,
-		assetTags:          deps.AssetTags,
-		assetUnitOfWork:    deps.AssetUnitOfWork,
-		assetTagUnitOfWork: deps.AssetTagUnitOfWork,
-		undoables:          deps.Undoables,
-		audit:              deps.Audit,
-		ids:                deps.IDs,
-		clock:              deps.Clock,
-		defaultPageLimit:   appsupport.NormalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
-		maxPageLimit:       maxPageLimit,
+		observer:            observer,
+		authorizer:          deps.Authorizer,
+		tenants:             deps.Tenants,
+		inventories:         deps.Inventories,
+		customAssetTypes:    deps.CustomAssetTypes,
+		customFields:        deps.CustomFields,
+		assets:              deps.Assets,
+		checkouts:           deps.Checkouts,
+		attachments:         deps.Attachments,
+		assetTags:           deps.AssetTags,
+		assetUnitOfWork:     deps.AssetUnitOfWork,
+		assetTagUnitOfWork:  deps.AssetTagUnitOfWork,
+		assetEditUnitOfWork: assetEditUnitOfWork,
+		undoables:           deps.Undoables,
+		audit:               deps.Audit,
+		ids:                 deps.IDs,
+		clock:               deps.Clock,
+		defaultPageLimit:    appsupport.NormalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit),
+		maxPageLimit:        maxPageLimit,
 	}
 }
 

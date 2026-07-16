@@ -1,5 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography, type MobileColorPalette } from '../theme/tokens';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import glyph from '../../../assets/brand/stuff-stash-glyph.png';
 
 type BrandMarkProps = {
@@ -8,6 +9,7 @@ type BrandMarkProps = {
 };
 
 export function BrandMark({ size = 'md', showWordmark = false }: BrandMarkProps) {
+  const styles = createStyles(useAppearanceAwarePalette());
   const imageStyle = size === 'sm' ? styles.imageSmall : styles.image;
 
   return (
@@ -18,7 +20,8 @@ export function BrandMark({ size = 'md', showWordmark = false }: BrandMarkProps)
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   row: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -40,4 +43,5 @@ const styles = StyleSheet.create({
     fontWeight: typography.wordmarkWeight,
     letterSpacing: 0
   }
-});
+  });
+}

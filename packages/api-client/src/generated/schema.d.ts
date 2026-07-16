@@ -410,6 +410,23 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-expiration"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID access invitations by invitation ID preview */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/archive": {
         parameters: {
             query?: never;
@@ -462,6 +479,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID assets by asset ID */
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID activity */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-activity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive": {
@@ -1261,6 +1295,36 @@ export interface components {
             permissions: string[] | null;
             relationship: string;
         };
+        AssetActivityChangeResponse: {
+            currentValue?: string;
+            /** @enum {string} */
+            field: "title" | "description" | "tags" | "parent" | "lifecycle_state" | "checkout_state";
+            previousValue?: string;
+        };
+        AssetActivityResponse: {
+            /** @enum {string} */
+            action: "asset.created" | "asset.updated" | "asset.moved" | "asset.archived" | "asset.restored" | "asset.deleted" | "asset.checked_out" | "asset.returned" | "asset.return_details_updated" | "asset.viewed" | "asset.listed" | "asset.searched" | "audit_record.listed" | "undoable_operation.undone" | "undoable_operation.redone";
+            /** @enum {string} */
+            category: "change" | "read";
+            changes: components["schemas"]["AssetActivityChangeResponse"][] | null;
+            id: string;
+            /** Format: date-time */
+            occurredAt: string;
+            principal?: components["schemas"]["AuditPrincipalResponse"];
+            principalId: string;
+            requestId?: string;
+            /** @enum {string} */
+            source: "api" | "conversation" | "mcp" | "import" | "background_job" | "system";
+            technicalMetadata: {
+                [key: string]: string;
+            };
+            undo?: components["schemas"]["AssetActivityUndoResponse"];
+        };
+        AssetActivityUndoResponse: {
+            operationId: string;
+            /** @enum {string} */
+            status: "available" | "undone" | "redone";
+        };
         AssetCheckoutPrincipalResponse: {
             email?: string;
             id: string;
@@ -1311,6 +1375,7 @@ export interface components {
             tags: components["schemas"]["CompactTag"][] | null;
             tenantId: string;
             title: string;
+            undoableOperationId?: string;
             updatedAt: string;
         };
         AssetSearchResultResponse: {
@@ -1543,6 +1608,21 @@ export interface components {
             readonly $schema?: string;
             /** @description Tenant name */
             name: string;
+        };
+        CreatedInvitationResponse: {
+            acceptedPrincipalId?: string;
+            email: string;
+            expiresAt: string;
+            id: string;
+            inventoryId: string;
+            inviteUrl: string;
+            inviterPrincipalId: string;
+            isExpired: boolean;
+            /** @enum {string} */
+            relationship: "viewer" | "editor";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
+            tenantId: string;
         };
         CurrentCheckout: {
             checkedOutAt: string;
@@ -1847,8 +1927,17 @@ export interface components {
              */
             relationship: "viewer" | "editor";
         };
+        InvitationPreviewResponse: {
+            expiresAt: string;
+            inventoryId: string;
+            inventoryName: string;
+            isExpired: boolean;
+            /** @enum {string} */
+            relationship: "viewer" | "editor";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
+        };
         InvitationResponse: {
-            acceptanceToken?: string;
             acceptedPrincipalId?: string;
             email: string;
             expiresAt: string;
@@ -1856,8 +1945,10 @@ export interface components {
             inventoryId: string;
             inviterPrincipalId: string;
             isExpired: boolean;
-            relationship: string;
-            status: string;
+            /** @enum {string} */
+            relationship: "viewer" | "editor";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
             tenantId: string;
         };
         Meta: {
@@ -2017,6 +2108,16 @@ export interface components {
             data: components["schemas"]["AttachmentResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeCreatedInvitationResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeCreatedInvitationResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["CreatedInvitationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeDefinitionResponse: {
             /**
              * Format: uri
@@ -2087,6 +2188,16 @@ export interface components {
             data: components["schemas"]["InvitationAcceptanceResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeInvitationPreviewResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeInvitationPreviewResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InvitationPreviewResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeInvitationResponse: {
             /**
              * Format: uri
@@ -2095,6 +2206,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InvitationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListAssetActivityResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListAssetActivityResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["AssetActivityResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListAssetCheckoutResponse: {
@@ -3789,10 +3910,11 @@ export interface operations {
             /** @description Created */
             201: {
                 headers: {
+                    "Cache-Control"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelopeInvitationResponse"];
+                    "application/json": components["schemas"]["SuccessEnvelopeCreatedInvitationResponse"];
                 };
             };
             /** @description Error */
@@ -4002,6 +4124,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeInvitationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-preview": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+                /** @description Optional request correlation ID */
+                "X-Request-ID"?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Invitation ID */
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInvitationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInvitationPreviewResponse"];
                 };
             };
             /** @description Error */
@@ -4257,6 +4424,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-activity": {
+        parameters: {
+            query?: {
+                /** @description Meaningful changes or all technical events */
+                view?: "changes" | "all";
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListAssetActivityResponse"];
                 };
             };
             /** @description Error */

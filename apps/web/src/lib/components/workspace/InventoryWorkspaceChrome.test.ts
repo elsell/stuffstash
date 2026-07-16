@@ -26,8 +26,9 @@ describe('InventoryWorkspaceChrome', () => {
     expect(shell.getAttribute('aria-hidden')).toBeNull();
     expect(document.body.querySelector('[aria-label="Workspace navigation"]')?.textContent).toContain('Stuff Stash');
     expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
-    expect(document.body.querySelector('[aria-label="Mobile navigation"]')?.textContent).toContain('Places');
+    expect(document.body.querySelector('[aria-label="Mobile navigation"]')?.textContent).toContain('Browse');
     expect(document.body.querySelector('.workspace-main')?.textContent).toContain('Fixture workspace');
+    expect(document.body.querySelectorAll('main.workspace-route-content')).toHaveLength(1);
   });
 
   it('hides the background shell from assistive technology while modal overlays are open', () => {
@@ -56,13 +57,15 @@ describe('InventoryWorkspaceChrome', () => {
       })
     });
 
-    linkContaining('Locations').click();
+    linkContaining('Browse').click();
     document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.click();
     document.body.querySelector<HTMLButtonElement>('.header-add')?.click();
-    await tick();
-    addMenuItemContaining('Location').click();
+    await waitForAddMenu();
+    const locationAction = addMenuItemContaining('Location');
+    expect(locationAction.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/add/location');
+    locationAction.click();
 
-    expect(selectedModes).toContain('locations');
+    expect(selectedModes).toContain('browse');
     expect(addKinds).toContain('item');
     expect(addKinds).toContain('location');
   });
@@ -88,14 +91,42 @@ describe('InventoryWorkspaceChrome', () => {
     expect(document.body.querySelector('[data-testid="bound-search-query"]')?.textContent).toBe('saw');
   });
 
-  it('lets the dedicated search route own the search field', () => {
+  it('lets Browse own the search field', () => {
     component = mount(InventoryWorkspaceChromeHarness, {
       target: document.body,
-      props: chromeProps({ mode: 'search' })
+      props: chromeProps({ mode: 'browse' })
     });
 
     expect(document.body.querySelector('input[aria-label="Search this inventory"]')).toBeNull();
     expect(document.body.querySelector('.workspace-header')?.textContent).toContain('Add');
+  });
+
+  it('makes route content and mobile navigation inert while the account sheet is open', async () => {
+    component = mount(InventoryWorkspaceChromeHarness, {
+      target: document.body,
+      props: chromeProps()
+    });
+
+    const account = document.body.querySelector<HTMLButtonElement>('[aria-label="Open account menu"]');
+    account?.click();
+    await flush();
+
+    const routeContent = document.body.querySelector<HTMLElement>('.workspace-route-content');
+    const mobileNavigation = document.body.querySelector<HTMLElement>('.mobile-nav-shell');
+    expect(routeContent?.getAttribute('aria-hidden')).toBe('true');
+    expect(isInert(routeContent!)).toBe(true);
+    expect(mobileNavigation?.getAttribute('aria-hidden')).toBe('true');
+    expect(isInert(mobileNavigation!)).toBe(true);
+  });
+
+  it.each(['asset', 'location'] as const)('suppresses bottom navigation on focused %s task surfaces', (mode) => {
+    component = mount(InventoryWorkspaceChromeHarness, {
+      target: document.body,
+      props: chromeProps({ mode })
+    });
+
+    expect(document.body.querySelector('[aria-label="Mobile navigation"]')).toBeNull();
+    expect(document.body.querySelector('[aria-label="Workspace navigation"]')).not.toBeNull();
   });
 });
 
@@ -138,12 +169,14 @@ function chromeProps(overrides: Partial<InventoryWorkspaceChromeProps> = {}): In
     searchSuggestions: [asset],
     searchQuery: '',
     canCreateAsset: true,
+    disablePortal: true,
     onSelectTenant: () => {},
     onSelectInventory: () => {},
     onModeChange: () => {},
     onSearch: () => {},
     onOpenSearchAsset: () => {},
     onOpenAdd: () => {},
+    onOpenAccountSettings: () => {},
     onSignOut: () => {},
     ...overrides
   };
@@ -180,4 +213,20 @@ function requiredShell(): HTMLElement {
 function isInert(element: HTMLElement): boolean {
   const candidate = element as HTMLElement & { inert?: boolean };
   return typeof candidate.inert === 'boolean' ? candidate.inert : element.hasAttribute('inert');
+}
+
+async function flush(): Promise<void> {
+  await Promise.resolve();
+  await tick();
+  await Promise.resolve();
+  await tick();
+}
+
+async function waitForAddMenu(): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (!document.body.querySelector('[role="menu"]')) {
+    if (Date.now() >= deadline) throw new Error('Timed out waiting for Add menu');
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+    await flush();
+  }
 }

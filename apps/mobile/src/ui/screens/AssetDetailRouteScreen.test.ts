@@ -10,7 +10,6 @@ import {
   recordAssetActionCompletion
 } from './AssetActionCompletion';
 import {
-  assetAuditNativeSheetOptions,
   assetEditNativeSheetOptions,
   assetMoveHereNativeSheetOptions,
   assetMoveNativeSheetOptions
@@ -33,7 +32,6 @@ import {
   movePlacementPreview,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
-import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import {
   assetPhotoViewerModel,
   assetPhotoViewerModelAtIndex,
@@ -50,7 +48,9 @@ import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
   assetLifecycleFailurePresentation,
+  assetDetailLoadErrorPresentation,
   assetLifecycleOverflowMenu,
+  assetDetailOverflowControlState,
   assetLifecycleOverflowPresentation
 } from './AssetLifecyclePresentation';
 import {
@@ -113,6 +113,19 @@ describe('navigateAfterDeletedAsset', () => {
   });
 });
 
+describe('asset detail overflow control', () => {
+  it('exposes pending state as a disabled accessibility control', () => {
+    expect(assetDetailOverflowControlState(false)).toEqual({
+      disabled: false,
+      accessibilityState: { disabled: false }
+    });
+    expect(assetDetailOverflowControlState(true)).toEqual({
+      disabled: true,
+      accessibilityState: { disabled: true }
+    });
+  });
+});
+
 describe('addHereParams', () => {
   it('builds route params that preselect the current container as the Add parent', () => {
     expect(addHereParams({
@@ -124,6 +137,7 @@ describe('addHereParams', () => {
       parentAssetId: 'asset-living-room',
       locationTrailLabel: 'Living room / TV box',
       parentLocationTrailLabel: 'Living room',
+      parentLocationTrail: [{ id: 'asset-living-room', title: 'Living room', isImmediateParent: true }],
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,
@@ -138,6 +152,10 @@ describe('addHereParams', () => {
       canReturn: false,
       containedAssets: [],
       containedAssetsLabel: '0 things inside',
+      containedSpaces: [],
+      containedSpacesLabel: '0 spaces',
+      containedItems: [],
+      containedItemsLabel: '0 items',
       canContainAssets: true,
       canAddContainedAssets: true,
       updatedAtLabel: 'Updated today',
@@ -180,8 +198,7 @@ describe('asset native sheet route options', () => {
     for (const options of [
       assetEditNativeSheetOptions,
       assetMoveNativeSheetOptions,
-      assetMoveHereNativeSheetOptions,
-      assetAuditNativeSheetOptions
+      assetMoveHereNativeSheetOptions
     ]) {
       expect(options.presentation).toBe('formSheet');
       expect(options.headerShown).toBe(false);
@@ -196,7 +213,6 @@ describe('asset native sheet route options', () => {
     expect(assetEditNativeSheetOptions.gestureEnabled).toBe(false);
     expect(assetMoveNativeSheetOptions.gestureEnabled).toBeUndefined();
     expect(assetMoveHereNativeSheetOptions.gestureEnabled).toBeUndefined();
-    expect(assetAuditNativeSheetOptions.gestureEnabled).toBeUndefined();
   });
 });
 
@@ -242,6 +258,10 @@ describe('asset detail move helpers', () => {
       parentAssetId: 'asset-cabinet',
       locationTrailLabel: 'Kitchen / Big cabinet / Mug',
       parentLocationTrailLabel: 'Kitchen / Big cabinet',
+      parentLocationTrail: [
+        { id: 'asset-kitchen', title: 'Kitchen', isImmediateParent: false },
+        { id: 'asset-cabinet', title: 'Big cabinet', isImmediateParent: true }
+      ],
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,
@@ -256,6 +276,10 @@ describe('asset detail move helpers', () => {
       canReturn: false,
       containedAssets: [],
       containedAssetsLabel: '0 things inside',
+      containedSpaces: [],
+      containedSpacesLabel: '0 spaces',
+      containedItems: [],
+      containedItemsLabel: '0 items',
       canContainAssets: false,
       canAddContainedAssets: false,
       updatedAtLabel: 'Updated today',
@@ -350,6 +374,10 @@ describe('asset detail move helpers', () => {
           kindLabel: 'Item',
           description: '',
           locationTrailLabel: 'Kitchen / Cabinet / Mug',
+          parentLocationTrail: [
+            { id: 'asset-kitchen', title: 'Kitchen', isImmediateParent: false },
+            { id: 'asset-cabinet', title: 'Cabinet', isImmediateParent: true }
+          ],
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           imagePlaceholderLabel: 'Item'
@@ -565,6 +593,7 @@ describe('asset workspace status presentation', () => {
       parentAssetId: 'asset-office',
       locationTrailLabel: 'Office / Water bottle',
       parentLocationTrailLabel: 'Office',
+      parentLocationTrail: [{ id: 'asset-office', title: 'Office', isImmediateParent: true }],
       lifecycleLabel: 'Active',
       isActive: true,
       canEdit: true,
@@ -579,6 +608,10 @@ describe('asset workspace status presentation', () => {
       canReturn: false,
       containedAssets: [],
       containedAssetsLabel: '0 things inside',
+      containedSpaces: [],
+      containedSpacesLabel: '0 spaces',
+      containedItems: [],
+      containedItemsLabel: '0 items',
       canContainAssets: false,
       canAddContainedAssets: false,
       updatedAtLabel: 'Updated today',
@@ -600,13 +633,6 @@ describe('asset workspace status presentation', () => {
     });
     expect(visibleAssetWorkspaceStatus('photos', currentStatus)).toBe(currentStatus);
     expect(visibleAssetWorkspaceStatus(undefined, currentStatus)).toBe(currentStatus);
-  });
-});
-
-describe('asset audit history presentation helpers', () => {
-  it('rejects stale audit history requests after close or navigation', () => {
-    expect(isCurrentAuditHistoryRequest(3, 3)).toBe(true);
-    expect(isCurrentAuditHistoryRequest(4, 3)).toBe(false);
   });
 });
 
@@ -836,11 +862,11 @@ describe('asset lifecycle presentation helpers', () => {
       lifecycleLabel: 'Active'
     })).toEqual({
       title: 'Water bottle actions',
-      message: 'Lifecycle actions for this active asset.'
+      message: 'History, lifecycle, and other actions for this asset.'
     });
   });
 
-  it('builds native lifecycle overflow menu ordering and destructive index', () => {
+  it('orders native asset actions as history, lifecycle, destructive, then cancel', () => {
     expect(assetLifecycleOverflowMenu({
       title: 'Tool box',
       lifecycleLabel: 'Archived',
@@ -849,16 +875,17 @@ describe('asset lifecycle presentation helpers', () => {
       canDeletePermanently: true
     })).toEqual({
       title: 'Tool box actions',
-      message: 'Lifecycle actions for this archived asset.',
+      message: 'History, lifecycle, and other actions for this asset.',
       actionRows: [
         { kind: 'restore', label: 'Restore', isDestructive: false },
         { kind: 'delete', label: 'Delete permanently', isDestructive: true }
       ],
-      options: ['Restore', 'Delete permanently', 'Checkout history', 'Audit history', 'Cancel'],
-      checkoutHistoryIndex: 2,
-      auditIndex: 3,
+      options: ['Checkout history', 'History', 'Restore', 'Delete permanently', 'Cancel'],
+      checkoutHistoryIndex: 0,
+      auditIndex: 1,
+      lifecycleActionIndexes: [2, 3],
       cancelIndex: 4,
-      destructiveIndex: 1
+      destructiveIndex: 3
     });
   });
 
@@ -901,6 +928,28 @@ describe('asset lifecycle presentation helpers', () => {
     }, 'Session expired.')).toEqual({
       title: 'Could not restore Water bottle',
       message: 'Session expired.'
+    });
+  });
+});
+
+describe('asset detail load failure presentation', () => {
+  it('uses the same safe unavailable state for denied and missing assets', () => {
+    const denied = assetDetailLoadErrorPresentation({ status: 403 });
+    const missing = assetDetailLoadErrorPresentation(new Error('Asset not found.'));
+
+    expect(denied).toEqual({
+      title: 'Asset unavailable',
+      message: 'This asset is not available in your current inventory.',
+      canRetry: false
+    });
+    expect(missing).toEqual(denied);
+  });
+
+  it('offers retry for recoverable failures without exposing transport copy', () => {
+    expect(assetDetailLoadErrorPresentation(new Error('connect ECONNREFUSED 127.0.0.1'))).toEqual({
+      title: 'Could not load asset',
+      message: 'Check your connection and try again.',
+      canRetry: true
     });
   });
 });

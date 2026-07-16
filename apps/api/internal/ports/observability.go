@@ -31,6 +31,7 @@ const (
 	EventInventoryAccessRevoked               EventName = "inventory_access.revoked"
 	EventInventoryAccessListed                EventName = "inventory_access.listed"
 	EventInventoryInvitationCreated           EventName = "inventory_invitation.created"
+	EventInventoryInvitationPreviewed         EventName = "inventory_invitation.previewed"
 	EventInventoryInvitationViewed            EventName = "inventory_invitation.viewed"
 	EventInventoryInvitationListed            EventName = "inventory_invitation.listed"
 	EventInventoryInvitationAccepted          EventName = "inventory_invitation.accepted"

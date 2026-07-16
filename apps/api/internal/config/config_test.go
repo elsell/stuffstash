@@ -33,6 +33,8 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envBlobDeletionOutboxLease, "")
 	t.Setenv(envBlobDeletionOutboxMaxAttempts, "")
 	t.Setenv(envInvitationTTL, "")
+	t.Setenv(envInvitationPublicBaseURL, "")
+	t.Setenv(envInvitationAllowInsecureLocalHTTP, "")
 	t.Setenv(envDefaultPageLimit, "")
 	t.Setenv(envMaxPageLimit, "")
 	t.Setenv(envBlobStorageMode, "")
@@ -126,6 +128,12 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	}
 	if cfg.InvitationTTL != defaultInvitationTTL {
 		t.Fatalf("expected invitation TTL %s, got %s", defaultInvitationTTL, cfg.InvitationTTL)
+	}
+	if cfg.InvitationPublicBaseURL != defaultInvitationPublicBaseURL {
+		t.Fatalf("expected default invitation public base URL %q, got %q", defaultInvitationPublicBaseURL, cfg.InvitationPublicBaseURL)
+	}
+	if cfg.InvitationAllowInsecureLocalHTTP {
+		t.Fatalf("expected insecure local invitation HTTP to default disabled")
 	}
 	if cfg.DefaultPageLimit != defaultDefaultPageLimit {
 		t.Fatalf("expected default page limit %d, got %d", defaultDefaultPageLimit, cfg.DefaultPageLimit)
@@ -224,6 +232,8 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	t.Setenv(envBlobDeletionOutboxLease, "55s")
 	t.Setenv(envBlobDeletionOutboxMaxAttempts, "3")
 	t.Setenv(envInvitationTTL, "2h")
+	t.Setenv(envInvitationPublicBaseURL, "https://stash.example.test/invitations/accept")
+	t.Setenv(envInvitationAllowInsecureLocalHTTP, "true")
 	t.Setenv(envDefaultPageLimit, "13")
 	t.Setenv(envMaxPageLimit, "27")
 	t.Setenv(envBlobStorageMode, "s3")
@@ -329,6 +339,12 @@ func TestLoadReadsAuthAndSpiceDBConfiguration(t *testing.T) {
 	}
 	if cfg.InvitationTTL.String() != "2h0m0s" {
 		t.Fatalf("expected invitation TTL 2h, got %s", cfg.InvitationTTL)
+	}
+	if cfg.InvitationPublicBaseURL != "https://stash.example.test/invitations/accept" {
+		t.Fatalf("unexpected invitation public base URL %q", cfg.InvitationPublicBaseURL)
+	}
+	if !cfg.InvitationAllowInsecureLocalHTTP {
+		t.Fatalf("expected insecure local invitation HTTP override enabled")
 	}
 	if cfg.DefaultPageLimit != 13 || cfg.MaxPageLimit != 27 {
 		t.Fatalf("unexpected page limits: %+v", cfg)

@@ -1,46 +1,245 @@
-import type { Asset, SearchCheckoutFilter, SearchLifecycleFilter, SearchMode, SearchRequest, SearchResult } from '$lib/domain/inventory';
-import type { InventoryRepository } from '$lib/ports/inventoryRepository';
-import { workspaceRouteHref } from './workspaceRoute';
+import type {
+  Asset, AssetTag, BrowseScope, BrowseSort, BrowseSurface, SearchCheckoutFilter,
+  SearchLifecycleFilter, SearchMode, SearchResult
+} from '$lib/domain/inventory';
+import type { BrowseAssetsRequest, InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
+import { defaultWorkspaceRoute, workspaceRouteHref, type WorkspaceRouteState } from './workspaceRoute';
 import { filterAssets } from './workspace';
+import { compareNaturalText } from './textCollation';
 
-type SearchRepository = Pick<InventoryRepository, 'searchAssets'>;
-
-export interface ExecuteWorkspaceSearchInput {
-  repository: SearchRepository;
-  tenantId: string | null;
-  inventoryId: string | null;
+export interface BrowseSearchState {
   query: string;
-  tagIds?: string[];
   lifecycleState: SearchLifecycleFilter;
   mode: SearchMode;
   checkoutState: SearchCheckoutFilter;
+  surface?: BrowseSurface;
+  scope: BrowseScope;
+  sort: BrowseSort;
+  selectedTagIds: string[];
 }
 
-export interface WorkspaceSearchResultState {
+export type AppliedBrowseFilter = { key: string; label: string };
+
+export type BrowseStateChange = Partial<Pick<
+  BrowseSearchState,
+  'surface' | 'scope' | 'lifecycleState' | 'checkoutState' | 'sort' | 'selectedTagIds'
+>>;
+
+export interface BrowsePageLoadInput {
+  tenantId: string;
+  inventoryId: string;
   query: string;
-  results: SearchResult[];
+  selectedTagIds: string[];
+  lifecycleState: SearchLifecycleFilter;
+  checkoutState: SearchCheckoutFilter;
+  scope: BrowseScope;
+  sort: BrowseSort;
+  mode: SearchMode;
+  append: boolean;
+  cursor?: string;
+  currentAssets: Asset[];
+  currentSearchResults: SearchResult[];
+  currentInventoryEmpty: boolean;
+}
+
+export interface BrowsePageState {
+  assets: Asset[];
+  searchResults: SearchResult[];
+  nextCursor: string | null;
+  hasMore: boolean;
+  inventoryEmpty: boolean;
   submitted: boolean;
-  error: string;
 }
 
-export interface SearchFilterOption<TValue extends string = string> {
-  value: TValue;
-  label: string;
-  href: string;
-}
-
-export type SearchPanelStatusKind = 'none' | 'error' | 'busy' | 'first-run' | 'empty';
-
-export interface SearchPanelStatusPresentation {
-  kind: SearchPanelStatusKind;
+export type BrowseEmptyPresentation = {
+  kind: 'inventory' | 'query' | 'filters';
   title: string;
-  message: string;
-  role?: 'alert' | 'status';
+  description: string;
+  showCreateActions: boolean;
+  showClearSearch: boolean;
+};
+
+export const browseFilterOptions = {
+  scopes: [
+    { value: 'all', label: 'All' }, { value: 'places', label: 'Places' },
+    { value: 'containers', label: 'Containers' }, { value: 'items', label: 'Items' }
+  ] satisfies Array<{ value: BrowseScope; label: string }>,
+  lifecycle: [
+    { value: 'active', label: 'Active' }, { value: 'archived', label: 'Archived' },
+    { value: 'all', label: 'All' }
+  ] satisfies Array<{ value: SearchLifecycleFilter; label: string }>,
+  availability: [
+    { value: 'any', label: 'Any' }, { value: 'available', label: 'Available' },
+    { value: 'checked_out', label: 'Checked out' }
+  ] satisfies Array<{ value: SearchCheckoutFilter; label: string }>
+} as const;
+
+export function browseSearchRoute(
+  tenantId: string | null,
+  inventoryId: string | null,
+  state: BrowseSearchState
+): WorkspaceRouteState {
+  return {
+    ...defaultWorkspaceRoute,
+    mode: 'browse', tenantId, inventoryId,
+    searchQuery: state.query.trim(),
+    searchLifecycleState: state.lifecycleState,
+    searchMode: state.mode,
+    searchCheckoutState: state.checkoutState,
+    browseSurface: state.surface ?? 'list',
+    browseScope: state.scope,
+    browseSort: state.sort,
+    browseTagIds: normalizeBrowseTagIds(state.selectedTagIds),
+    compatibilityAlias: false
+  };
 }
 
-const searchLifecycleFilters: SearchLifecycleFilter[] = ['active', 'archived', 'all'];
-const searchModes: SearchMode[] = ['fuzzy', 'exact'];
-const searchCheckoutFilters: SearchCheckoutFilter[] = ['any', 'checked_out', 'available'];
+export function browseSearchHref(
+  tenantId: string | null,
+  inventoryId: string | null,
+  state: BrowseSearchState
+): string {
+  return workspaceRouteHref(browseSearchRoute(tenantId, inventoryId, state), tenantId, inventoryId);
+}
+
+export async function executeBrowseSearch(
+  repository: InventoryBrowseRepository,
+  request: Omit<BrowseAssetsRequest, 'limit' | 'query'> & { query: string; limit?: number }
+) {
+  return repository.browseAssets({
+    ...request,
+    query: request.query.trim(),
+    limit: request.limit ?? 20
+  });
+}
+
+export function normalizeBrowseTagIds(selectedTagIds: string[]): string[] {
+  return Array.from(new Set(selectedTagIds.map((id) => id.trim()).filter(Boolean)));
+}
+
+export function mergeBrowseSearchState(current: BrowseSearchState, next: BrowseStateChange): BrowseSearchState {
+  return {
+    ...current,
+    ...next,
+    selectedTagIds: normalizeBrowseTagIds(next.selectedTagIds ?? current.selectedTagIds)
+  };
+}
+
+export async function loadBrowsePage(
+  repository: InventoryBrowseRepository,
+  input: BrowsePageLoadInput
+): Promise<BrowsePageState> {
+  const selectedTagIds = normalizeBrowseTagIds(input.selectedTagIds);
+  const page = await executeBrowseSearch(repository, {
+    tenantId: input.tenantId,
+    inventoryId: input.inventoryId,
+    query: input.query,
+    tagIds: selectedTagIds,
+    lifecycleState: input.lifecycleState,
+    checkoutState: input.checkoutState,
+    scope: input.scope,
+    sort: input.sort,
+    mode: input.mode,
+    cursor: input.cursor
+  });
+  const checksDefaultInventoryEmptiness = !input.append && !input.query.trim() && selectedTagIds.length === 0 &&
+    input.scope === 'all' && input.lifecycleState === 'active' && input.checkoutState === 'any';
+  const inventoryEmpty = checksDefaultInventoryEmptiness && page.assets.length === 0
+    ? !(await repository.hasAnyAssets(input.tenantId, input.inventoryId))
+    : page.assets.length > 0 ? false : input.currentInventoryEmpty;
+  return {
+    assets: input.append ? [...input.currentAssets, ...page.assets] : page.assets,
+    searchResults: input.append ? [...input.currentSearchResults, ...page.searchResults] : page.searchResults,
+    nextCursor: page.nextCursor,
+    hasMore: page.hasMore,
+    inventoryEmpty,
+    submitted: !!input.query.trim() || selectedTagIds.length > 0
+  };
+}
+
+export function filterBrowseAssets(
+  assets: Asset[],
+  filters: Pick<BrowseSearchState, 'scope' | 'lifecycleState' | 'checkoutState' | 'selectedTagIds'>
+): Asset[] {
+  const selected = normalizeBrowseTagIds(filters.selectedTagIds);
+  return assets.filter((asset) => {
+    if (filters.scope === 'places' && asset.kind !== 'location') return false;
+    if (filters.scope === 'containers' && asset.kind !== 'container') return false;
+    if (filters.scope === 'items' && asset.kind !== 'item') return false;
+    if (filters.lifecycleState !== 'all' && asset.lifecycleState !== filters.lifecycleState) return false;
+    if (filters.checkoutState === 'checked_out' && !asset.currentCheckout) return false;
+    if (filters.checkoutState === 'available' && asset.currentCheckout) return false;
+    if (selected.length > 0 && !selected.every((id) => asset.tags?.some((tag) => tag.id === id))) return false;
+    return true;
+  });
+}
+
+export function browseFilterCount(
+  lifecycleState: SearchLifecycleFilter,
+  checkoutState: SearchCheckoutFilter,
+  selectedTagIds: string[]
+): number {
+  return (lifecycleState === 'active' ? 0 : 1) + (checkoutState === 'any' ? 0 : 1) +
+    normalizeBrowseTagIds(selectedTagIds).length;
+}
+
+export function browseFiltersAreDirty(
+  draftLifecycleState: SearchLifecycleFilter,
+  lifecycleState: SearchLifecycleFilter,
+  draftCheckoutState: SearchCheckoutFilter,
+  checkoutState: SearchCheckoutFilter,
+  draftTagIds: string[],
+  selectedTagIds: string[]
+): boolean {
+  return draftLifecycleState !== lifecycleState || draftCheckoutState !== checkoutState ||
+    normalizeBrowseTagIds(draftTagIds).sort().join(',') !== normalizeBrowseTagIds(selectedTagIds).sort().join(',');
+}
+
+export function browseEmptyPresentation(
+  inventoryEmpty: boolean,
+  query: string,
+  scope: BrowseScope,
+  lifecycleState: SearchLifecycleFilter,
+  checkoutState: SearchCheckoutFilter,
+  selectedTagIds: string[],
+  canCreateAsset: boolean
+): BrowseEmptyPresentation {
+  const normalizedQuery = query.trim();
+  const defaultEmptyInventory = inventoryEmpty && !normalizedQuery && scope === 'all' && lifecycleState === 'active' &&
+    checkoutState === 'any' && normalizeBrowseTagIds(selectedTagIds).length === 0;
+  if (defaultEmptyInventory) {
+    return {
+      kind: 'inventory', title: 'No stuff here yet',
+      description: canCreateAsset ? 'Add an item or location to start this inventory.' : 'This inventory is empty.',
+      showCreateActions: canCreateAsset, showClearSearch: false
+    };
+  }
+  return normalizedQuery
+    ? { kind: 'query', title: `No results for “${normalizedQuery}”`, description: 'Try another search term or clear a filter.', showCreateActions: false, showClearSearch: true }
+    : { kind: 'filters', title: 'Nothing matches these filters', description: 'Try another scope or clear a filter.', showCreateActions: false, showClearSearch: false };
+}
+
+export function buildAppliedBrowseFilters(
+  lifecycleState: SearchLifecycleFilter,
+  checkoutState: SearchCheckoutFilter,
+  selectedTagIds: string[],
+  assetTags: AssetTag[]
+): AppliedBrowseFilter[] {
+  const lifecycleLabel = browseFilterOptions.lifecycle.find((option) => option.value === lifecycleState)?.label;
+  const availabilityLabel = browseFilterOptions.availability.find((option) => option.value === checkoutState)?.label;
+  const normalizedTagIds = normalizeBrowseTagIds(selectedTagIds);
+  const tagsById = new Map(assetTags.map((tag) => [tag.id, tag]));
+  const selectedTags = assetTags
+    .filter((tag) => normalizedTagIds.includes(tag.id))
+    .sort((left, right) => compareNaturalText(left.displayName, right.displayName));
+  const unavailableTagIds = normalizedTagIds.filter((id) => !tagsById.has(id)).sort(compareNaturalText);
+  return [
+    ...(lifecycleState === 'active' ? [] : [{ key: 'lifecycle', label: `Status: ${lifecycleLabel}` }]),
+    ...(checkoutState === 'any' ? [] : [{ key: 'availability', label: `Availability: ${availabilityLabel}` }]),
+    ...selectedTags.map((tag) => ({ key: `tag:${tag.id}`, label: `Tag: ${tag.displayName}` })),
+    ...unavailableTagIds.map((id) => ({ key: `tag:${id}`, label: `Unavailable tag: ${id}` }))
+  ];
+}
 
 export function buildSearchSuggestions(assets: Asset[], query: string, limit = 6): Asset[] {
   return filterAssets(assets, query).slice(0, limit);
@@ -55,209 +254,9 @@ export function searchAssetHref(asset: Asset): string {
     );
   }
 
-  return workspaceRouteHref({ mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id }, asset.tenantId, asset.inventoryId);
-}
-
-export function searchFilterHref(
-  tenantId: string,
-  inventoryId: string,
-  query: string,
-  lifecycleState: SearchLifecycleFilter,
-  mode: SearchMode,
-  checkoutState: SearchCheckoutFilter,
-  tagIds: string[] = []
-): string {
   return workspaceRouteHref(
-    { mode: 'search', tenantId, inventoryId, searchQuery: query, searchTagIds: tagIds, searchLifecycleState: lifecycleState, searchMode: mode, searchCheckoutState: checkoutState },
-    tenantId,
-    inventoryId
+    { mode: 'asset', tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetId: asset.id },
+    asset.tenantId,
+    asset.inventoryId
   );
-}
-
-export function searchLifecycleFilterOptions(input: {
-  tenantId: string;
-  inventoryId: string;
-  query: string;
-  tagIds?: string[];
-  mode: SearchMode;
-  checkoutState: SearchCheckoutFilter;
-}): SearchFilterOption<SearchLifecycleFilter>[] {
-  return searchLifecycleFilters.map((lifecycleState) => ({
-    value: lifecycleState,
-    label: searchLifecycleFilterLabel(lifecycleState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, lifecycleState, input.mode, input.checkoutState, input.tagIds)
-  }));
-}
-
-export function searchModeFilterOptions(input: {
-  tenantId: string;
-  inventoryId: string;
-  query: string;
-  tagIds?: string[];
-  lifecycleState: SearchLifecycleFilter;
-  checkoutState: SearchCheckoutFilter;
-}): SearchFilterOption<SearchMode>[] {
-  return searchModes.map((mode) => ({
-    value: mode,
-    label: searchModeLabel(mode),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, mode, input.checkoutState, input.tagIds)
-  }));
-}
-
-export function searchCheckoutFilterOptions(input: {
-  tenantId: string;
-  inventoryId: string;
-  query: string;
-  tagIds?: string[];
-  lifecycleState: SearchLifecycleFilter;
-  mode: SearchMode;
-}): SearchFilterOption<SearchCheckoutFilter>[] {
-  return searchCheckoutFilters.map((checkoutState) => ({
-    value: checkoutState,
-    label: searchCheckoutFilterLabel(checkoutState),
-    href: searchFilterHref(input.tenantId, input.inventoryId, input.query, input.lifecycleState, input.mode, checkoutState, input.tagIds)
-  }));
-}
-
-export function searchPanelStatus(input: {
-  error: string;
-  busy: boolean;
-  submitted: boolean;
-  query: string;
-  resultCount: number;
-  lifecycleState: SearchLifecycleFilter;
-}): SearchPanelStatusPresentation {
-  if (input.error) {
-    return { kind: 'error', title: 'Search failed', message: input.error, role: 'alert' };
-  }
-  if (input.busy) {
-    return { kind: 'busy', title: 'Searching', message: '', role: 'status' };
-  }
-  if (!input.submitted) {
-    return {
-      kind: 'first-run',
-      title: 'Search this inventory',
-      message: 'Use asset, location, container, custom field, or attachment terms.'
-    };
-  }
-  if (input.resultCount === 0) {
-    const query = input.query.trim();
-    const querySuffix = query ? ` for "${query}"` : '';
-    return {
-      kind: 'empty',
-      title: `No results${querySuffix}`,
-      message:
-        input.lifecycleState === 'all'
-          ? 'No authorized assets matched this query.'
-          : `No authorized ${input.lifecycleState} assets matched this query.`
-    };
-  }
-  return { kind: 'none', title: '', message: '' };
-}
-
-export function searchMatchFieldLabel(field: string | undefined): string {
-  switch (field) {
-    case 'tag_display_name':
-    case 'tag_key':
-      return 'Tag';
-    case 'title':
-      return 'Title';
-    case 'description':
-      return 'Description';
-    case 'custom_field':
-      return 'Custom field';
-    case 'custom_asset_type_key':
-    case 'custom_asset_type_name':
-      return 'Asset type';
-    case 'attachment_file_name':
-      return 'Attachment';
-    case 'attachment_content_type':
-      return 'Attachment type';
-    case undefined:
-    case '':
-      return 'Match';
-    default:
-      return field
-        .split('_')
-        .filter(Boolean)
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ') || 'Match';
-  }
-}
-
-export async function executeWorkspaceSearch(input: ExecuteWorkspaceSearchInput): Promise<WorkspaceSearchResultState> {
-  const query = input.query.trim();
-  const tagIds = Array.from(new Set((input.tagIds ?? []).map((tagId) => tagId.trim()).filter((tagId) => tagId.length > 0)));
-  if ((!query && tagIds.length === 0) || !input.tenantId || !input.inventoryId) {
-    return { query, results: [], submitted: false, error: '' };
-  }
-
-  const request: SearchRequest = {
-    tenantId: input.tenantId,
-    inventoryId: input.inventoryId,
-    query,
-    ...(tagIds.length > 0 ? { tagIds } : {}),
-    lifecycleState: input.lifecycleState,
-    mode: input.mode,
-    checkoutState: input.checkoutState
-  };
-
-  try {
-    return {
-      query,
-      results: await input.repository.searchAssets(request),
-      submitted: true,
-      error: ''
-    };
-  } catch (caught) {
-    return {
-      query,
-      results: [],
-      submitted: true,
-      error: searchFailureMessage(caught)
-    };
-  }
-}
-
-function searchFailureMessage(error: unknown): string {
-  if (!error || typeof error !== 'object') {
-    return 'Search failed.';
-  }
-
-  const safeForUser = 'safeForUser' in error && error.safeForUser === true;
-  if (safeForUser && error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  const status = 'status' in error && typeof error.status === 'number' ? error.status : 0;
-  const message = error instanceof Error ? error.message.trim() : '';
-  if (status >= 500 || message.toLowerCase() === 'internal server error.') {
-    return 'Search could not complete. Try again, or check the server logs if it keeps happening.';
-  }
-
-  return message || 'Search failed.';
-}
-
-function searchLifecycleFilterLabel(lifecycleState: SearchLifecycleFilter): string {
-  if (lifecycleState === 'archived') {
-    return 'Archived';
-  }
-  if (lifecycleState === 'all') {
-    return 'All';
-  }
-  return 'Active';
-}
-
-function searchModeLabel(mode: SearchMode): string {
-  return mode === 'exact' ? 'Exact' : 'Contains';
-}
-
-function searchCheckoutFilterLabel(checkoutState: SearchCheckoutFilter): string {
-  if (checkoutState === 'checked_out') {
-    return 'Checked out';
-  }
-  if (checkoutState === 'available') {
-    return 'Available';
-  }
-  return 'Any';
 }

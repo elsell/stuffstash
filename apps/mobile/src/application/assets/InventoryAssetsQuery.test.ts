@@ -35,6 +35,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
       lifecycleState: 'active',
       locationLabel: 'Inventory root',
       locationTrail: ['Home', input.title],
+      parentLocationTrail: [],
       description: input.description,
       updatedAtLabel: 'Updated now',
       hasPhoto: false
@@ -79,6 +80,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
         lifecycleState: 'active',
         locationLabel: 'Home',
         locationTrail: ['Home', 'Garage'],
+        parentLocationTrail: [],
         description: 'Shelves and bins.',
         updatedAtLabel: 'Updated today',
         hasPhoto: false
@@ -90,6 +92,7 @@ class FakeInventorySummaryRepository implements InventorySummaryRepository {
         lifecycleState: 'active',
         locationLabel: 'Garage',
         locationTrail: ['Home', 'Garage', 'Furnace filters'],
+        parentLocationTrail: [{ id: assetId('asset-garage'), title: 'Garage' }],
         description: 'MERV 11 three-pack.',
         updatedAtLabel: 'Updated today',
         hasPhoto: false,
@@ -109,10 +112,11 @@ describe('InventoryAssetsQuery', () => {
         {
           id: 'asset-garage',
           title: 'Garage',
-          kindLabel: 'Location',
+          kindLabel: 'Place',
           customTypeLabel: undefined,
           description: 'Shelves and bins.',
           locationTrailLabel: 'Garage',
+          parentLocationTrail: [],
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           imagePlaceholderLabel: 'Place'
@@ -124,6 +128,7 @@ describe('InventoryAssetsQuery', () => {
           customTypeLabel: undefined,
           description: 'MERV 11 three-pack.',
           locationTrailLabel: 'Garage / Furnace filters',
+          parentLocationTrail: [{ id: 'asset-garage', title: 'Garage', isImmediateParent: true }],
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
           tags: [{ id: 'tag-workshop', label: 'Workshop', color: '#2F80ED' }],

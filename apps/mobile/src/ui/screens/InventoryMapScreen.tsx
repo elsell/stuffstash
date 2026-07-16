@@ -42,7 +42,9 @@ import type {
   PhotoSelectionQuery,
   SelectedAssetPhoto
 } from '../../application/add/PhotoSelectionQuery';
-import { colors, radius, spacing } from '../theme/tokens';
+import { radius, spacing } from '../theme/tokens';
+import type { MobileColorPalette } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
 import {
   buildBrowseSurfaceOptions,
   buildInventoryMapEmptyColumnAction,
@@ -53,6 +55,7 @@ import {
   findInventoryMapSearchMatch,
   inventoryMapBranchSwipeOffset,
   inventoryMapGestureConfig,
+  inventoryMapEmbeddedDetailRequest,
   InventoryMapSurface,
   mapOverviewLabel,
   nearestInventoryMapColumnForOffset,
@@ -78,6 +81,7 @@ import {
   assetLifecycleActionRows,
   assetLifecycleConfirmation,
   assetLifecycleFailurePresentation,
+  assetDetailOverflowControlState,
   assetLifecycleOverflowMenu,
   AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
@@ -98,11 +102,13 @@ type InventoryMapScreenProps = {
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly canAdd: boolean;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly inventoryMapQuery: InventoryMapQuery;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly selectedSurface: InventoryMapSurface;
+  readonly onAdd: () => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
 };
 
@@ -147,13 +153,17 @@ export function InventoryMapScreen({
   assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
+  canAdd,
   deleteAssetPhotoCommand,
   inventoryMapQuery,
   pathStore,
   photoSelectionQuery,
   selectedSurface,
+  onAdd,
   onChangeSurface
 }: InventoryMapScreenProps) {
+  const colors = useAppearancePalette();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { width } = useWindowDimensions();
   const safeAreaInsets = useSafeAreaInsets();
   const columnWidth = Math.max(292, Math.min(370, width - 72));
@@ -626,7 +636,13 @@ export function InventoryMapScreen({
               <Text numberOfLines={1} style={styles.overviewText}>{mapOverviewLabel(state.map)}</Text>
             ) : null}
           </View>
-          <BrowseSurfaceControl selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
+          <InventoryMapHeaderActions
+            canAdd={canAdd}
+            palette={colors}
+            selectedSurface={selectedSurface}
+            onAdd={onAdd}
+            onChangeSurface={onChangeSurface}
+          />
         </View>
         <View style={styles.searchBar}>
           <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
@@ -665,9 +681,13 @@ export function InventoryMapScreen({
                 <View key={breadcrumb.key} style={styles.breadcrumbItem}>
                   {index > 0 ? <ChevronRight color={colors.textMuted} size={14} strokeWidth={2.5} /> : null}
                   <Pressable
+                    accessibilityLabel={`Open location ${breadcrumb.title}`}
                     accessibilityRole="button"
                     onPress={() => openBreadcrumb(breadcrumb.level)}
-                    style={styles.breadcrumbButton}
+                    style={({ pressed }) => [
+                      styles.breadcrumbButton,
+                      pressed ? styles.breadcrumbButtonPressed : null
+                    ]}
                   >
                     <Text numberOfLines={1} style={styles.breadcrumbText}>{breadcrumb.title}</Text>
                   </Pressable>
@@ -747,26 +767,68 @@ export function InventoryMapScreen({
   );
 }
 
+export function InventoryMapHeaderActions({
+  canAdd,
+  palette,
+  selectedSurface,
+  onAdd,
+  onChangeSurface
+}: {
+  readonly canAdd: boolean;
+  readonly palette: MobileColorPalette;
+  readonly selectedSurface: InventoryMapSurface;
+  readonly onAdd: () => void;
+  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
+}) {
+  const styles = createStyles(palette);
+  return (
+    <View style={styles.headerActions}>
+      {canAdd ? (
+        <Pressable
+          accessibilityLabel="Add an asset"
+          accessibilityRole="button"
+          onPress={onAdd}
+          style={styles.headerAddButton}
+        >
+          <Plus color={palette.action} size={24} strokeWidth={2.2} />
+        </Pressable>
+      ) : null}
+      <BrowseSurfaceControl
+        palette={palette}
+        selectedSurface={selectedSurface}
+        onChangeSurface={onChangeSurface}
+      />
+    </View>
+  );
+}
+
 export function BrowseSurfaceControl({
+  palette,
   selectedSurface,
   onChangeSurface
 }: {
+  readonly palette: MobileColorPalette;
   readonly selectedSurface: InventoryMapSurface;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
 }) {
+  const styles = createStyles(palette);
   return (
-    <View style={styles.surfaceControl}>
+    <View accessibilityLabel="Browse view" accessibilityRole="tablist" style={[styles.surfaceControl, { backgroundColor: palette.surfaceMuted }]}>
       {buildBrowseSurfaceOptions().map((option) => {
         const selected = option.value === selectedSurface;
         return (
           <Pressable
-            accessibilityRole="button"
+            accessibilityRole="tab"
             accessibilityState={{ selected }}
             key={option.value}
             onPress={() => onChangeSurface(option.value)}
-            style={[styles.surfaceButton, selected ? styles.surfaceButtonSelected : null]}
+            style={({ pressed }) => [
+              styles.surfaceButton,
+              selected ? [styles.surfaceButtonSelected, { backgroundColor: palette.surface }] : null,
+              pressed ? { backgroundColor: palette.selected } : null
+            ]}
           >
-            <Text style={[styles.surfaceText, selected ? styles.surfaceTextSelected : null]}>
+            <Text style={[styles.surfaceText, { color: selected ? palette.text : palette.textMuted }]}>
               {option.label}
             </Text>
           </Pressable>
@@ -817,6 +879,8 @@ function InventoryMapColumn({
   readonly assetsById: ReadonlyMap<string, InventoryMapAssetViewModel>;
   readonly reduceMotionEnabled: boolean;
 }) {
+  const colors = useAppearancePalette();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const entryProgress = useRef(new Animated.Value(reduceMotionEnabled ? 1 : 0)).current;
   const transitionSequence = useRef(0);
   const onColumnExitCompleteRef = useRef(onColumnExitComplete);
@@ -1030,6 +1094,8 @@ function InventoryMapRow({
   readonly reduceMotionEnabled: boolean;
   readonly swipeDragX?: number;
 }) {
+  const colors = useAppearancePalette();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const controlledSwipeOffset = swipeDragX === undefined
     ? 0
     : Math.max(-inventoryMapGestureConfig.branchSwipeRevealWidth, Math.min(0, swipeDragX));
@@ -1251,6 +1317,8 @@ function InventoryMapInfoSheet({
   readonly onClose: () => void;
   readonly onMapChanged: () => void;
 }) {
+  const colors = useAppearancePalette();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const feedback = useAppFeedback();
   const [detailState, setDetailState] = useState<MapSheetDetailState>({ status: 'idle' });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -1451,7 +1519,26 @@ function InventoryMapInfoSheet({
     setSelectedPhotoId(photoId);
   }
 
+  function openEmbeddedDetail(assetId: string): void {
+    const request = inventoryMapEmbeddedDetailRequest(assetId);
+    setSelectedPhotoId(undefined);
+    setPhotoUploads([]);
+    setPhotoStatus(undefined);
+    setWorkspaceStatus(undefined);
+    setDetailState({ status: 'loading' });
+    assetDetailQuery
+      .execute(request.assetId, request.options)
+      .then((nextDetail) => setDetailState({ status: 'ready', asset: nextDetail }))
+      .catch((error) => setDetailState({
+        status: 'error',
+        message: readableError(error, 'Could not load asset details.')
+      }));
+  }
+
   function showMoreActions(detail: AssetDetailViewModel): void {
+    if (assetDetailOverflowControlState(pendingAction !== undefined).disabled) {
+      return;
+    }
     const overflow = assetLifecycleOverflowMenu(detail);
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -1475,7 +1562,10 @@ function InventoryMapInfoSheet({
           }
           if (index === overflow.auditIndex) {
             onClose();
-            router.push(`/assets/${detail.id}/audit`);
+            router.push({
+              pathname: '/assets/[assetId]/history',
+              params: { assetId: detail.id, tenantId: detail.tenantId ?? '', inventoryId: detail.inventoryId ?? '', assetTitle: detail.title }
+            });
           }
         }
       );
@@ -1496,10 +1586,13 @@ function InventoryMapInfoSheet({
         }
       },
       {
-        text: 'Audit history',
+        text: 'History',
         onPress: () => {
           onClose();
-          router.push(`/assets/${detail.id}/audit`);
+          router.push({
+            pathname: '/assets/[assetId]/history',
+            params: { assetId: detail.id, tenantId: detail.tenantId ?? '', inventoryId: detail.inventoryId ?? '', assetTitle: detail.title }
+          });
         }
       },
       { text: 'Cancel', style: 'cancel' }
@@ -1630,19 +1723,7 @@ function InventoryMapInfoSheet({
                   });
                 } : undefined}
                 onAddPhotos={() => choosePhotos(detailState.asset.photos.length)}
-                onChildPress={(assetId) => {
-                  setSelectedPhotoId(undefined);
-                  setPhotoUploads([]);
-                  setPhotoStatus(undefined);
-                  setWorkspaceStatus(undefined);
-                  assetDetailQuery
-                    .execute(assetId)
-                    .then((nextDetail) => setDetailState({ status: 'ready', asset: nextDetail }))
-                    .catch((error) => setDetailState({
-                      status: 'error',
-                      message: readableError(error, 'Could not load asset details.')
-                    }));
-                }}
+                onChildPress={openEmbeddedDetail}
                 onEdit={() => {
                   onClose();
                   router.push(`/assets/${detailState.asset.id}/edit`);
@@ -1658,6 +1739,7 @@ function InventoryMapInfoSheet({
                   router.push(`/assets/${detailState.asset.id}/move-here`);
                 } : undefined}
                 onPhotoPress={(photoId) => selectAssetPhoto(detailState.asset, photoId)}
+                onParentLocationPress={(parent) => openEmbeddedDetail(parent.id)}
                 onRetryPhotos={() => void retryPhotos()}
                 onReturn={() => void runCheckoutAction('return', detailState.asset)}
                 photoUploads={photoUploads}
@@ -1702,7 +1784,8 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     backgroundColor: colors.background,
     flex: 1
@@ -1716,6 +1799,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     marginBottom: spacing.xs
+  },
+  headerActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs
+  },
+  headerAddButton: {
+    alignItems: 'center',
+    borderRadius: 22,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44
   },
   titleBlock: {
     flex: 1,
@@ -1745,11 +1840,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs
   },
   surfaceButtonSelected: {
-    backgroundColor: colors.surface,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }
+    backgroundColor: colors.elevatedSurface
   },
   surfaceText: {
     color: colors.textMuted,
@@ -1762,10 +1853,8 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
-    borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.sm,
     minHeight: 44,
@@ -1797,6 +1886,9 @@ const styles = StyleSheet.create({
     minHeight: 44,
     maxWidth: 150,
     paddingHorizontal: spacing.xs
+  },
+  breadcrumbButtonPressed: {
+    opacity: 0.62
   },
   breadcrumbText: {
     color: colors.accentStrong,
@@ -2067,4 +2159,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0
   }
-});
+  });
+}

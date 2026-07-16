@@ -3,6 +3,13 @@ set -euo pipefail
 
 script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/plan-release.sh"
 workdir="$(mktemp -d)"
+workdir="$(cd "$workdir" && pwd -P)"
+
+while IFS= read -r variable; do
+  if [ -n "$variable" ]; then
+    unset "$variable"
+  fi
+done < <(git rev-parse --local-env-vars 2>/dev/null || true)
 
 cleanup() {
   rm -rf "$workdir"
@@ -29,6 +36,13 @@ git -C "$workdir" init >/dev/null
 git -C "$workdir" config user.name "Stuff Stash Test"
 git -C "$workdir" config user.email "stuffstash@example.test"
 cd "$workdir"
+
+fixture_root="$(git rev-parse --show-toplevel)"
+fixture_root="$(cd "$fixture_root" && pwd -P)"
+if [ "$fixture_root" != "$workdir" ]; then
+  echo "release planner fixture resolved unexpected repository root: $fixture_root" >&2
+  exit 1
+fi
 
 commit "chore: initial repository"
 output="$("$script_path")"

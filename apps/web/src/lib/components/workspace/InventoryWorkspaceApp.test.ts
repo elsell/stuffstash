@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import { Toaster } from '$lib/components/ui/sonner/index.js';
+import { toast } from 'svelte-sonner';
 import {
   ResourcefulImportJobRepository,
   TerminalImportJobRepository,
@@ -18,6 +19,7 @@ import type {
   InvitationStatusFilter,
   SelectedPhoto,
   UpdateAssetDraft,
+  UndoableOperationDirection,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
@@ -101,6 +103,86 @@ class PhotoUploadFailingRepository extends SeededInventoryRepository {
   }
 }
 
+class AttachmentArchiveFailingRepository extends SeededInventoryRepository {
+  async archiveAssetAttachment(): Promise<AssetAttachment> {
+    throw new Error('garage-s3 returned 503 while archiving object 7f8a');
+  }
+}
+
+class AttachmentArchiveExpiredRepository extends SeededInventoryRepository {
+  async archiveAssetAttachment(): Promise<AssetAttachment> {
+    throw new AuthenticationRequiredError('private expired-session diagnostic');
+  }
+}
+
+class HomeReturnFailingRepository extends SeededInventoryRepository {
+  async returnAsset(): Promise<never> {
+    throw new Error('Return failed. Passport stayed checked out.');
+  }
+}
+
+class AttachmentDeleteFailingRepository extends SeededInventoryRepository {
+  constructor(seed: WorkspaceSeed, private readonly failure: Error) {
+    super(seed);
+  }
+
+  override async deleteAssetAttachment(): Promise<void> {
+    throw this.failure;
+  }
+}
+
+type AttachmentRefreshOutcome = 'delayed' | 'failed' | 'expired';
+
+class AttachmentDeleteRefreshRepository extends SeededInventoryRepository {
+  private deletedAssetId = '';
+  private resolveRefresh: ((attachments: AssetAttachment[]) => void) | null = null;
+  readonly refreshStarted: Promise<void>;
+  private markRefreshStarted!: () => void;
+
+  constructor(seed: WorkspaceSeed, private readonly outcome: AttachmentRefreshOutcome) {
+    super(seed);
+    this.refreshStarted = new Promise((resolve) => { this.markRefreshStarted = resolve; });
+  }
+
+  override async deleteAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<void> {
+    await super.deleteAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+    this.deletedAssetId = assetId;
+  }
+
+  override async listAssetAttachments(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string
+  ): Promise<AssetAttachment[]> {
+    if (this.deletedAssetId !== assetId) {
+      return super.listAssetAttachments(tenantId, inventoryId, assetId);
+    }
+    this.markRefreshStarted();
+    if (this.outcome === 'failed') {
+      throw new Error('garage node 10.0.0.9 refused refresh');
+    }
+    if (this.outcome === 'expired') {
+      throw new AuthenticationRequiredError('private refresh diagnostic');
+    }
+    return new Promise((resolve) => { this.resolveRefresh = resolve; });
+  }
+
+  finishRefresh(attachments: AssetAttachment[] = []): void {
+    this.resolveRefresh?.(attachments);
+  }
+}
+
+class UnsafeMoveHereRepository extends SeededInventoryRepository {
+  async moveAsset(): Promise<never> {
+    throw new Error('private database host diagnostic');
+  }
+}
+
 class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
   async selectAssetLifecycle(
     _tenantId: string,
@@ -118,6 +200,56 @@ class LifecycleSelectionExpiredRepository extends SeededInventoryRepository {
     _lifecycleState: AssetLifecycleFilter
   ): Promise<WorkspaceData> {
     throw new AuthenticationRequiredError();
+  }
+}
+
+class BoundedLifecycleLocationRepository extends SeededInventoryRepository {
+  async loadWorkspace(): Promise<WorkspaceData> {
+    const data = await super.loadWorkspace();
+    return { ...data, assets: data.assets.filter((asset) => asset.id !== 'location-garage') };
+  }
+}
+
+class RefreshFailingAfterReturnRepository extends SeededInventoryRepository {
+  private returned = false;
+
+  async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
+    const result = await super.returnAsset(...args);
+    this.returned = true;
+    return { ...result, undoableOperationId: 'operation-home-return' };
+  }
+
+  async getAsset(...args: Parameters<SeededInventoryRepository['getAsset']>) {
+    if (this.returned) throw new Error('Refresh failed after confirmed return.');
+    return super.getAsset(...args);
+  }
+}
+
+class UndoableReturnRepository extends SeededInventoryRepository {
+  readonly operationId = 'operation-return-detail';
+  directions: string[] = [];
+
+  async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
+    const result = await super.returnAsset(...args);
+    return { ...result, undoableOperationId: this.operationId };
+  }
+
+  async applyAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    if (direction === 'undo') {
+      await super.checkoutAsset(tenantId, inventoryId, 'asset-home', { details: 'Reopened by Undo' });
+    } else {
+      await super.returnAsset(tenantId, inventoryId, 'asset-home', {});
+    }
+    const current = await super.getAsset(tenantId, inventoryId, 'asset-home');
+    // The apply-operation endpoint currently returns the asset without checkout
+    // expansion; the selected-detail refresh must supply that relationship.
+    return { ...current, currentCheckout: undefined };
   }
 }
 
@@ -167,6 +299,45 @@ class DelayedAssetRepository extends SeededInventoryRepository {
   }
 }
 
+class UnsafeAssetDetailRepository extends SeededInventoryRepository {
+  async getAsset(): Promise<never> {
+    throw Object.assign(new Error('private database diagnostic must not be shown'), { safeForUser: false as const });
+  }
+}
+
+class ExpiredAssetDetailRepository extends SeededInventoryRepository {
+  async getAsset(): Promise<never> {
+    throw new AuthenticationRequiredError('expired session diagnostic must not be shown');
+  }
+}
+
+class DelayedBrowseRepository extends SeededInventoryRepository {
+  releaseBrowseLoad: (() => void) | null = null;
+
+  async browseAssets(...args: Parameters<SeededInventoryRepository['browseAssets']>) {
+    if (!this.releaseBrowseLoad) {
+      await new Promise<void>((resolve) => {
+        this.releaseBrowseLoad = resolve;
+      });
+    }
+    return super.browseAssets(...args);
+  }
+}
+
+class UnsafeBrowseRepository extends SeededInventoryRepository {
+  private unsafeFailure(): Error & { safeForUser: false } {
+    return Object.assign(new Error('database host 10.0.0.8 rejected the query'), { safeForUser: false as const });
+  }
+
+  async browseAssets(): Promise<never> {
+    throw this.unsafeFailure();
+  }
+
+  async loadActiveContainmentMap(): Promise<never> {
+    throw this.unsafeFailure();
+  }
+}
+
 class AssetUpdateFailingRepository extends SeededInventoryRepository {
   createdTagCount = 0;
 
@@ -185,6 +356,89 @@ class AssetUpdateFailingRepository extends SeededInventoryRepository {
   }
 }
 
+let undoableOperationSequence = 0;
+
+class UndoableCreateRepository extends SeededInventoryRepository {
+  directions: string[] = [];
+  readonly operationId = `operation-create-${++undoableOperationSequence}`;
+  private createdAsset: Asset | null = null;
+
+  async createAsset(...args: Parameters<SeededInventoryRepository['createAsset']>): Promise<Asset> {
+    const created = await super.createAsset(...args);
+    this.createdAsset = created;
+    return { ...created, undoableOperationId: this.operationId };
+  }
+
+  async applyAssetOperation(
+    tenantId: string,
+    inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    if (!this.createdAsset) throw new Error('The saved operation is no longer available.');
+    const asset = direction === 'undo'
+      ? await super.archiveAsset(tenantId, inventoryId, this.createdAsset.id)
+      : await super.restoreAsset(tenantId, inventoryId, this.createdAsset.id);
+    this.createdAsset = asset;
+    return asset;
+  }
+}
+
+class StaleUndoableCreateRepository extends UndoableCreateRepository {
+  async applyAssetOperation(
+    _tenantId: string,
+    _inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    throw Object.assign(new Error('This change is stale because the asset changed later.'), { safeForUser: true as const });
+  }
+}
+
+class RefreshFailingUndoableCreateRepository extends UndoableCreateRepository {
+  private applied = false;
+
+  async applyAssetOperation(...args: Parameters<UndoableCreateRepository['applyAssetOperation']>): Promise<Asset> {
+    const result = await super.applyAssetOperation(...args);
+    this.applied = true;
+    return result;
+  }
+
+  async selectAssetLifecycle(...args: Parameters<SeededInventoryRepository['selectAssetLifecycle']>): Promise<WorkspaceData> {
+    if (this.applied) throw Object.assign(new Error('database host 10.0.0.8 failed'), { safeForUser: false as const });
+    return super.selectAssetLifecycle(...args);
+  }
+}
+
+class UnsafeUndoableCreateRepository extends UndoableCreateRepository {
+  async applyAssetOperation(
+    _tenantId: string,
+    _inventoryId: string,
+    operationId: string,
+    direction: UndoableOperationDirection
+  ): Promise<Asset> {
+    this.directions.push(`${operationId}:${direction}`);
+    throw Object.assign(new Error('database host 10.0.0.8 rejected operation'), { safeForUser: false as const });
+  }
+}
+
+class AuthExpiredRefreshUndoableCreateRepository extends UndoableCreateRepository {
+  private applied = false;
+
+  async applyAssetOperation(...args: Parameters<UndoableCreateRepository['applyAssetOperation']>): Promise<Asset> {
+    const result = await super.applyAssetOperation(...args);
+    this.applied = true;
+    return result;
+  }
+
+  async selectAssetLifecycle(...args: Parameters<SeededInventoryRepository['selectAssetLifecycle']>): Promise<WorkspaceData> {
+    if (this.applied) throw new AuthenticationRequiredError();
+    return super.selectAssetLifecycle(...args);
+  }
+}
+
 async function mountWorkspace(
   path: string,
   repository = new SeededInventoryRepository(structuredClone(seed)),
@@ -193,6 +447,8 @@ async function mountWorkspace(
   window.history.replaceState({}, '', path);
   installMatchMedia();
   toaster = mount(Toaster, { target: document.body });
+  // Let Sonner reset its singleton store before the workspace can publish.
+  await tick();
   component = mount(InventoryWorkspaceApp, {
     target: document.body,
     props: {
@@ -203,6 +459,34 @@ async function mountWorkspace(
     }
   });
   return repository;
+}
+
+async function photoDeletionRepository<T extends SeededInventoryRepository>(repository: T): Promise<{ repository: T; attachment: AssetAttachment }> {
+  const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+    id: 'selected-photo',
+    name: 'front.png',
+    sizeBytes: 6,
+    contentType: 'image/png',
+    previewUrl: 'blob:front',
+    file: new File(['photo'], 'front.png', { type: 'image/png' })
+  });
+  const asset = await repository.getAsset('tenant-home', 'inventory-household', 'asset-home');
+  asset.photo = { id: attachment.id, assetId: asset.id, url: 'blob:front', alt: 'Passport front' };
+  return { repository, attachment };
+}
+
+async function openPhotoDeletion(fileName: string): Promise<void> {
+  await waitFor(() => expect(document.body.querySelector(`[aria-label="Remove photo ${fileName}"]`)).toBeTruthy());
+  document.body.querySelector<HTMLElement>(`[aria-label="Remove photo ${fileName}"]`)!.click();
+  await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')?.textContent).toContain(`Delete ${fileName} permanently?`));
+}
+
+function deleteFromOpenConfirmation(): void {
+  const dialog = document.body.querySelector('[role="alertdialog"]');
+  const action = Array.from(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+    .find((candidate) => candidate.textContent?.trim() === 'Delete');
+  if (!action) throw new Error('Missing attachment Delete action');
+  action.click();
 }
 
 function installMatchMedia(): void {
@@ -224,7 +508,7 @@ function installMatchMedia(): void {
 
 async function waitFor(assertion: () => void): Promise<void> {
   let lastError: unknown;
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     await tick();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
     try {
@@ -243,6 +527,7 @@ afterEach(() => {
     component = null;
   }
   if (toaster) {
+    toast.dismiss();
     unmount(toaster);
     toaster = null;
   }
@@ -328,7 +613,76 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
+    });
+  });
+
+  it('loads a focused location by id when the bounded lifecycle collection omitted it', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage',
+      new BoundedLifecycleLocationRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+      expect(document.body.textContent).toContain('Garage');
+      expect(document.body.textContent).toContain('Move items here');
+      expect(document.body.textContent).toContain('Edit location');
+      expect(document.body.textContent).toContain('Move place');
+      expect(document.body.textContent).toContain('Archive');
+    });
+  });
+
+  it('does not expose internal move-here failure diagnostics', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage/move-here',
+      new UnsafeMoveHereRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    await waitFor(() => expect(document.body.querySelector('[aria-label="Select Passport"]')).toBeTruthy());
+    document.body.querySelector<HTMLButtonElement>('[aria-label="Select Passport"]')?.click();
+    await waitFor(() => expect(buttonContaining('Move Passport here')).toBeTruthy());
+    buttonContaining('Move Passport here').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Move not saved. Passport stayed where it was.');
+      expect(document.body.textContent).not.toContain('private database host diagnostic');
+    });
+  });
+
+  it('removes a returned Home row without depending on a follow-up asset refresh', async () => {
+    const repository = new RefreshFailingAfterReturnRepository(structuredClone(seed));
+    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household', repository);
+
+    await waitFor(() => expect(controlWithLabel('Return Passport')).toBeTruthy());
+    controlWithLabel('Return Passport').click();
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[aria-label="Return Passport"]')).toBeNull();
+      expect(document.body.textContent).toContain('Returned Passport.');
+      expect(controlContaining('Undo')).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Refresh failed after confirmed return.');
+    });
+  });
+
+  it('refreshes selected checkout state after undoing a return', async () => {
+    const repository = new UndoableReturnRepository(structuredClone(seed));
+    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => expect(controlContaining('Return')).toBeTruthy());
+    controlContaining('Return').click();
+    await waitFor(() => expect(document.body.querySelector('#return-asset-details')).toBeTruthy());
+    buttonContaining('Return').click();
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(controlContaining('Return')).toBeTruthy();
+      expect(document.body.textContent).toContain('Undid change to Passport.');
     });
   });
 
@@ -361,7 +715,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/not-a-workspace-route');
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
     });
   });
 
@@ -387,7 +741,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
       expect(document.body.textContent).not.toContain('Workspace unavailable');
     });
   });
@@ -462,14 +816,14 @@ describe('InventoryWorkspaceApp route application', () => {
 
   it('keeps search lifecycle route state independent from the home lifecycle', async () => {
     await mountWorkspace(
-      '/tenants/tenant-home/inventories/inventory-household/search?q=Passport&lifecycle=archived',
+      '/tenants/tenant-home/inventories/inventory-household/browse?q=Passport&lifecycle=archived',
       new LifecycleSelectionFailingRepository(structuredClone(seed))
     );
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
       expect(window.location.search).toBe('?q=Passport&lifecycle=archived');
-      expect(document.body.textContent).toContain('Search');
+      expect(document.body.textContent).toContain('Browse');
       expect(document.body.textContent).toContain('Archived Passport');
     });
   });
@@ -492,20 +846,54 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('updates the search filter URL when no query has been submitted', async () => {
+  it('updates the Browse sort URL when no query has been submitted', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/search');
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
-      expect(document.body.textContent).toContain('Search this inventory');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(document.body.textContent).toContain('Browse');
     });
 
-    controlContaining('Exact').click();
+    controlContaining('Default order').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/search');
-      expect(window.location.search).toBe('?mode=exact');
-      expect(document.body.textContent).toContain('Search this inventory');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(window.location.search).toBe('?sort=id_asc');
+      expect(document.body.textContent).toContain('Browse');
+    });
+  });
+
+  it('does not expose unsafe Browse list or Map failure details', async () => {
+    const repository = new UnsafeBrowseRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/browse', repository);
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Browse could not be loaded. Try again.');
+      expect(document.body.textContent).not.toContain('database host');
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/browse?surface=map');
+    afterNavigateCallbacks.forEach((callback) => callback());
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Map could not be loaded. Try again.');
+      expect(document.body.textContent).not.toContain('database host');
+    });
+  });
+
+  it('does not present an archived-only inventory as a new empty inventory', async () => {
+    const archivedOnlySeed = structuredClone(seed);
+    archivedOnlySeed.assets = archivedOnlySeed.assets.filter((asset) =>
+      asset.tenantId !== 'tenant-home' || asset.inventoryId !== 'inventory-household' || asset.lifecycleState === 'archived'
+    );
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/browse',
+      new SeededInventoryRepository(archivedOnlySeed)
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Nothing matches these filters');
+      expect(document.body.textContent).not.toContain('No stuff here yet');
     });
   });
 
@@ -658,12 +1046,88 @@ describe('InventoryWorkspaceApp route application', () => {
 
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
     afterNavigateCallbacks.forEach((callback) => callback());
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Activity');
+      expect(document.body.textContent).not.toContain('Loading asset details');
+    });
+
     repository.releaseAssetLoad?.();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Blue folder');
+    });
+  });
+
+  it('shows an explicit detail loading state instead of stale Home content', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+
+    await waitFor(() => expect(repository.releaseAssetLoad).toBeTruthy());
+
+    expect(document.body.textContent).toContain('Loading asset details');
+    expect(document.body.textContent).not.toContain('Recently changed');
+    repository.releaseAssetLoad?.();
+    await waitFor(() => expect(document.body.textContent).toContain('Passport'));
+  });
+
+  it('releases route control so Browse and Import initialize before an obsolete detail request resolves', async () => {
+    const repository = new DelayedAssetRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(repository.releaseAssetLoad).toBeTruthy());
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/browse');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    await waitFor(() => {
+      expect(document.body.querySelector('h1')?.textContent).toBe('Browse');
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.querySelector<HTMLButtonElement>('.header-add')?.disabled).toBe(false);
+    });
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/import');
+    afterNavigateCallbacks.forEach((callback) => callback());
+    await waitFor(() => expect(document.body.querySelector('h1')?.textContent).toBe('Imports'));
+
+    repository.releaseAssetLoad?.();
+    await waitFor(() => expect(document.body.querySelector('h1')?.textContent).toBe('Imports'));
+  });
+
+  it('does not render unsafe asset-detail diagnostics in the unavailable state or toast', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
+      new UnsafeAssetDetailRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => expect(document.body.textContent).toContain('Workspace unavailable'));
+    expect(document.body.textContent).toContain('Asset details could not be loaded. Try again.');
+    expect(document.body.textContent).not.toContain('private database diagnostic');
+  });
+
+  it('expires the session for a typed asset-detail authentication failure without rendering its message', async () => {
+    const onSessionExpired = vi.fn();
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
+      new ExpiredAssetDetailRepository(structuredClone(seed)),
+      { onSessionExpired }
+    );
+
+    await waitFor(() => expect(onSessionExpired).toHaveBeenCalledOnce());
+    expect(document.body.textContent).not.toContain('expired session diagnostic');
+  });
+
+  it('does not leave global actions busy after leaving an in-flight Browse request', async () => {
+    const repository = new DelayedBrowseRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/browse', repository);
+    await waitFor(() => expect(repository.releaseBrowseLoad).toBeTruthy());
+
+    document.body.querySelector<HTMLAnchorElement>('.nav-button[href="/tenants/tenant-home/inventories/inventory-household"]')?.click();
+    repository.releaseBrowseLoad?.();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
+      expect(document.body.querySelector<HTMLButtonElement>('.header-add')?.disabled).toBe(false);
     });
   });
 
@@ -716,10 +1180,16 @@ describe('InventoryWorkspaceApp route application', () => {
     afterNavigateCallbacks.forEach((callback) => callback());
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
     afterNavigateCallbacks.forEach((callback) => callback());
-    repository.releaseAssetLoad?.();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.textContent).not.toContain('Activity');
+    });
+
+    repository.releaseAssetLoad?.();
+
+    await waitFor(() => {
       expect(document.body.textContent).toContain('Passport');
       expect(document.body.textContent).not.toContain('Activity');
     });
@@ -802,7 +1272,10 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.search).toBe('?invitationStatus=pending');
       expect(document.body.textContent).toContain('Cancel invitation');
       expect(document.body.textContent).toContain('friend@example.test');
-      expect(controlContaining('Cancel').getAttribute('href')).toBe(
+      const cancel = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('[role="alertdialog"] a')).find(
+        (candidate) => candidate.textContent?.trim() === 'Cancel'
+      );
+      expect(cancel?.getAttribute('href')).toBe(
         '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending'
       );
     });
@@ -971,7 +1444,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household');
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain('Recently added');
+      expect(document.body.textContent).toContain('Recently changed');
     });
   });
 
@@ -983,7 +1456,8 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Garage');
     });
 
-    controlContaining('Add item here').click();
+    const invokingControl = controlContaining('Add item here');
+    invokingControl.click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
@@ -994,13 +1468,68 @@ describe('InventoryWorkspaceApp route application', () => {
     expect(controlContaining('Cancel').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/location-garage'
     );
+    const cancelFocus = recordFocusCalls();
     controlContaining('Cancel').click();
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
-      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain('Main storage area');
+    try {
+      await waitFor(() => {
+        expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.body.textContent).toContain('Main storage area');
+        expect((document.activeElement as HTMLElement | null)?.dataset.workspaceAddReturnFocus).toBe('location-item');
+        expect(document.activeElement?.textContent).toContain('Add item here');
+        expect(cancelFocus.calls.filter((element) => element.dataset.workspaceAddReturnFocus === 'location-item')).toHaveLength(1);
+      });
+    } finally {
+      cancelFocus.restore();
+    }
+  });
+
+  it('restores Add focus exactly once after Escape', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
+    await waitFor(() => expect(controlContaining('Add item here')).toBeTruthy());
+    const opener = controlContaining('Add item here');
+    opener.click();
+    await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="dialog"]')).toBeTruthy());
+    const focus = recordFocusCalls();
+    document.body.querySelector<HTMLElement>('[role="dialog"]')!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
+    try {
+      await waitFor(() => {
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect((document.activeElement as HTMLElement | null)?.dataset.workspaceAddReturnFocus).toBe('location-item');
+        expect(focus.calls.filter((element) => element.dataset.workspaceAddReturnFocus === 'location-item')).toHaveLength(1);
+      });
+    } finally {
+      focus.restore();
+    }
+  });
+
+  it('restores the mobile Add opener exactly once across the shell breakpoint', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(max-width: 900px)', media: query, onchange: null,
+        addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn()
+      }))
     });
+    const opener = document.body.querySelector<HTMLElement>('[data-workspace-add-trigger="mobile"]');
+    if (!opener) throw new Error('Missing mobile Add opener');
+    opener.click();
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const focus = recordFocusCalls();
+    controlContaining('Cancel').click();
+    try {
+      await waitFor(() => {
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.activeElement).toBe(opener);
+        expect(focus.calls.filter((element) => element.dataset.workspaceAddTrigger === 'mobile')).toHaveLength(1);
+      });
+    } finally {
+      focus.restore();
+    }
   });
 
   it('keeps global add and feedback overlays outside the product shell', async () => {
@@ -1024,19 +1553,152 @@ describe('InventoryWorkspaceApp route application', () => {
     await tick();
 
     const saveButton = await waitForSaveButton();
+    const savedFocus = recordFocusCalls();
     saveButton.click();
 
-    await waitFor(() => {
-      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-      expect(document.body.textContent).toContain('Saved Camera bag.');
-      expect(document.body.textContent).toContain('View asset');
-      expect(productShell ? isInert(productShell) : true).toBe(false);
-      expect(productShell?.getAttribute('aria-hidden')).toBeNull();
-    });
+    try {
+      await waitFor(() => {
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.body.textContent).toContain('Saved Camera bag.');
+        expect(document.body.textContent).toContain('View asset');
+        expect(productShell ? isInert(productShell) : true).toBe(false);
+        expect(productShell?.getAttribute('aria-hidden')).toBeNull();
+        expect((document.activeElement as HTMLElement | null)?.hasAttribute('data-workspace-add-result-focus')).toBe(true);
+        expect(savedFocus.calls.filter((element) => element.hasAttribute('data-workspace-add-result-focus'))).toHaveLength(1);
+      });
+    } finally {
+      savedFocus.restore();
+    }
 
     const toast = document.body.querySelector<HTMLElement>('.stuffstash-toast');
     expect(toast).toBeTruthy();
     expect(productShell?.contains(toast)).toBe(false);
+  });
+
+  it('focuses the created detail exactly once after a mobile Save without relying on tap focus', async () => {
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household');
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(max-width: 900px)', media: query, onchange: null,
+        addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn()
+      }))
+    });
+    const opener = document.body.querySelector<HTMLElement>('[data-workspace-add-trigger="mobile"]');
+    if (!opener) throw new Error('Missing mobile Add opener');
+    expect(document.activeElement).not.toBe(opener);
+    opener.click();
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Mobile camera bag');
+    await tick();
+    const focus = recordFocusCalls();
+    (await waitForSaveButton()).click();
+    try {
+      await waitFor(() => {
+        const resultTarget = document.body.querySelector<HTMLElement>('[data-workspace-add-result-focus]');
+        expect(resultTarget?.textContent).toContain('Mobile camera bag');
+        expect(document.activeElement).toBe(resultTarget);
+        expect(focus.calls.filter((element) => element.hasAttribute('data-workspace-add-result-focus'))).toHaveLength(1);
+        expect(document.body.querySelector('[data-workspace-add-trigger="mobile"]')).toBeNull();
+      });
+    } finally {
+      focus.restore();
+    }
+  });
+
+  it('offers target-scoped Undo after a supported mutation and Redo after compensation', async () => {
+    const repository = new UndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Camera bag');
+    await tick();
+    (await waitForSaveButton()).click();
+
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(document.body.textContent).toContain('Undid change to Camera bag.');
+      expect(controlContaining('Redo')).toBeTruthy();
+    });
+
+    controlContaining('Redo').click();
+    await waitFor(() => {
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`, `${repository.operationId}:redo`]);
+      expect(document.body.textContent).toContain('Redid change to Camera bag.');
+    });
+  });
+
+  it('keeps stale Undo failure visible without announcing false success', async () => {
+    const repository = new StaleUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+    if (!titleInput) throw new Error('Missing add title input');
+    setInputValue(titleInput, 'Camera bag');
+    await tick();
+    (await waitForSaveButton()).click();
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Couldn’t undo change.');
+      expect(document.body.textContent).toContain('This change is stale because the asset changed later.');
+      expect(document.body.textContent).not.toContain('Undid change to Camera bag.');
+    });
+  });
+
+  it('keeps successful Undo and Redo available when the follow-up refresh fails', async () => {
+    const repository = new RefreshFailingUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+    await saveNamedItem('Camera bag');
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Undid change to Camera bag.');
+      expect(document.body.textContent).toContain('Change applied, but this view could not be refreshed.');
+      expect(controlContaining('Redo')).toBeTruthy();
+    });
+  });
+
+  it('does not expose unsafe Undo failure details', async () => {
+    const repository = new UnsafeUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
+    await saveNamedItem('Camera bag');
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Couldn’t undo change.');
+      expect(document.body.textContent).toContain('can’t be applied safely');
+      expect(document.body.textContent).not.toContain('database host');
+    });
+  });
+
+  it('expires the session when Undo succeeds but the reconciliation refresh is unauthenticated', async () => {
+    const onSessionExpired = vi.fn();
+    const repository = new AuthExpiredRefreshUndoableCreateRepository(structuredClone(seed));
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository, { onSessionExpired });
+    await saveNamedItem('Camera bag');
+    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
+
+    controlContaining('Undo').click();
+
+    await waitFor(() => {
+      expect(onSessionExpired).toHaveBeenCalledOnce();
+      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(document.body.textContent).not.toContain('Couldn’t undo change.');
+    });
   });
 
   it('passes add kind routes into contextual add tray copy', async () => {
@@ -1152,16 +1814,16 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('opens top-level locations through a durable locations route', async () => {
+  it('normalizes top-level locations to the Places scope of Browse', async () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/locations');
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
-      expect(document.body.textContent).toContain('Locations');
-      expect(document.body.textContent).toContain('The places where your things live.');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(window.location.search).toBe('?scope=places');
+      expect(document.body.textContent).toContain('Browse');
       expect(document.body.textContent).toContain('Garage');
-      expect(document.body.textContent).not.toContain('Recently added');
-      expect(buttonMaybeContaining('Archived')).toBeUndefined();
+      expect(document.body.querySelectorAll('[data-recent-card]')).toHaveLength(0);
+      expect(document.body.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('List');
     });
   });
 
@@ -1257,12 +1919,13 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Main storage area');
     });
 
-    expect(controlContaining('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
+    expect(controlContaining('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/browse?scope=places');
     controlContaining('Back').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations');
-      expect(document.body.textContent).toContain('The places where your things live.');
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/browse');
+      expect(window.location.search).toBe('?scope=places');
+      expect(document.body.textContent).toContain('Browse');
     });
   });
 
@@ -1395,6 +2058,241 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps unsafe attachment archive failures sanitized inside the Files section', async () => {
+    const repository = new AttachmentArchiveFailingRepository(structuredClone(seed));
+    await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(document.body.textContent).toContain('manual.pdf'));
+
+    const archiveActions = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button'))
+      .filter((candidate) => candidate.textContent?.includes('Archive'));
+    archiveActions.at(-1)?.click();
+
+    await waitFor(() => {
+      const alert = document.body.querySelector('.attachment-section [role="alert"]');
+      expect(alert?.textContent).toContain('Unable to archive file.');
+      expect(alert?.textContent).not.toMatch(/garage-s3|503|7f8a/i);
+    });
+  });
+
+  it('handles attachment archive session expiry before local error propagation', async () => {
+    const repository = new AttachmentArchiveExpiredRepository(structuredClone(seed));
+    await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+    const onSessionExpired = vi.fn();
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository, { onSessionExpired });
+    await waitFor(() => expect(document.body.textContent).toContain('manual.pdf'));
+
+    const archiveActions = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button'))
+      .filter((candidate) => candidate.textContent?.includes('Archive'));
+    archiveActions.at(-1)?.click();
+
+    await waitFor(() => expect(onSessionExpired).toHaveBeenCalledOnce());
+    expect(document.body.textContent).not.toMatch(/private expired-session|Unable to archive file/i);
+  });
+
+  it('keeps default shared mutation failures in the workspace error channel', async () => {
+    const repository = new HomeReturnFailingRepository(structuredClone(seed));
+    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', { details: 'Using it' });
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household', repository);
+    await waitFor(() => expect(controlContaining('Return')).toBeTruthy());
+
+    controlContaining('Return').click();
+
+    await waitFor(() => expect(document.body.textContent).toContain('Return failed. Passport stayed checked out.'));
+  });
+
+  it('clears stale primary-photo metadata after successful attachment deletion', async () => {
+    const photoSeed = structuredClone(seed);
+    const repository = new SeededInventoryRepository(photoSeed);
+    const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-photo',
+      name: 'front.png',
+      sizeBytes: 6,
+      contentType: 'image/png',
+      previewUrl: 'blob:front',
+      file: new File(['photo'], 'front.png', { type: 'image/png' })
+    });
+    photoSeed.assets[0] = {
+      ...photoSeed.assets[0],
+      photo: { id: attachment.id, assetId: 'asset-home', url: 'blob:front', alt: 'Passport front' }
+    };
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(document.body.querySelector('[aria-label="Remove photo front.png"]')).toBeTruthy());
+    document.body.querySelector<HTMLElement>('[aria-label="Remove photo front.png"]')!.click();
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')?.textContent).toContain('Delete front.png permanently?'));
+    const dialog = document.body.querySelector('[role="alertdialog"]')!;
+    Array.from(dialog.querySelectorAll<HTMLButtonElement>('button')).find((candidate) => candidate.textContent?.trim() === 'Delete')!.click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Remove photo front.png"]')).toBeNull();
+    });
+  });
+
+  it('completes durable photo deletion while the attachment refresh remains pending', async () => {
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'delayed')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+    });
+    repository.finishRefresh([attachment]);
+    await waitFor(() => {
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.querySelector(`[aria-label="Remove photo ${attachment.fileName}"]`)).toBeNull();
+    });
+  });
+
+  it('immediately removes a deleted file when attachment refresh fails', async () => {
+    const repository = new AttachmentDeleteRefreshRepository(structuredClone(seed), 'failed');
+    const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(document.body.textContent).toContain(attachment.fileName));
+    const row = Array.from(document.body.querySelectorAll<HTMLElement>('.attachment-row'))
+      .find((candidate) => candidate.textContent?.includes(attachment.fileName));
+    row?.querySelector<HTMLElement>('a')?.click();
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')).toBeTruthy());
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(Array.from(document.body.querySelectorAll('.attachment-row'))
+        .some((candidate) => candidate.textContent?.includes(attachment.fileName))).toBe(false);
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+      expect(document.body.textContent).not.toMatch(/10\.0\.0\.9|refused refresh/i);
+    });
+  });
+
+  it('does not apply a delayed attachment refresh to a subsequently selected asset', async () => {
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'delayed')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')).toBeNull());
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/assets/asset-archived');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await waitFor(() => expect(document.body.querySelector('#asset-title')?.textContent ?? '').toContain('Archived Passport'));
+    repository.finishRefresh([attachment]);
+
+    await waitFor(() => {
+      expect(document.body.querySelector('#asset-title')?.textContent ?? '').toContain('Archived Passport');
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(Array.from(document.body.querySelectorAll('.attachment-row'))
+        .some((candidate) => candidate.textContent?.includes(attachment.fileName))).toBe(false);
+      expect(document.body.querySelector(`[aria-label="Remove photo ${attachment.fileName}"]`)).toBeNull();
+    });
+  });
+
+  it('keeps durable photo deletion complete when the attachment refresh fails', async () => {
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'failed')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+      expect(document.body.textContent).not.toMatch(/10\.0\.0\.9|refused refresh/i);
+    });
+  });
+
+  it('keeps durable photo deletion complete while an expired refresh ends the session', async () => {
+    const onSessionExpired = vi.fn();
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'expired')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository, { onSessionExpired });
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(onSessionExpired).toHaveBeenCalledOnce();
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+      expect(document.body.textContent).not.toContain('private refresh diagnostic');
+    });
+  });
+
+  it('keeps failed photo deletion visible, named, and retryable without false success', async () => {
+    const failure = new Error('blob host 10.0.0.8 refused deletion');
+    const { repository, attachment } = await photoDeletionRepository(new AttachmentDeleteFailingRepository(structuredClone(seed), failure));
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+
+    await waitFor(() => {
+      const dialog = document.body.querySelector('[role="alertdialog"]');
+      expect(dialog?.textContent).toContain('Delete attachment');
+      expect(dialog?.textContent).toContain(`Delete ${attachment.fileName} permanently?`);
+      expect(dialog?.textContent).toContain('Unable to delete attachment.');
+      expect(dialog?.textContent).not.toContain('10.0.0.8');
+      expect(dialog?.querySelector<HTMLButtonElement>('button:last-of-type')?.disabled).toBe(false);
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(`Deleted ${attachment.fileName}.`);
+    });
+  });
+
+  it('keeps expired-session photo deletion from looking successful', async () => {
+    const onSessionExpired = vi.fn();
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteFailingRepository(structuredClone(seed), new AuthenticationRequiredError())
+    );
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository, { onSessionExpired });
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+
+    await waitFor(() => {
+      expect(onSessionExpired).toHaveBeenCalledOnce();
+      const dialog = document.body.querySelector('[role="alertdialog"]');
+      expect(dialog?.textContent).toContain('Unable to delete attachment.');
+      expect(dialog?.querySelector<HTMLButtonElement>('button:last-of-type')?.disabled).toBe(false);
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(`Deleted ${attachment.fileName}.`);
+    });
+  });
+
   it('keeps location attachment delete cancel aligned with the exposed location href', async () => {
     const repository = new SeededInventoryRepository(structuredClone(seed));
     const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'location-garage', {
@@ -1503,6 +2401,15 @@ async function waitForSaveButton(): Promise<HTMLButtonElement> {
   return button;
 }
 
+async function saveNamedItem(title: string): Promise<void> {
+  await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+  const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
+  if (!titleInput) throw new Error('Missing add title input');
+  setInputValue(titleInput, title);
+  await tick();
+  (await waitForSaveButton()).click();
+}
+
 function buttonContaining(text: string): HTMLButtonElement {
   const button = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
     candidate.textContent?.includes(text)
@@ -1540,6 +2447,19 @@ function controlContaining(text: string): HTMLElement {
     throw new Error(`Missing control containing ${text}`);
   }
   return control;
+}
+
+function recordFocusCalls(): { calls: HTMLElement[]; restore: () => void } {
+  const calls: HTMLElement[] = [];
+  const nativeFocus = HTMLElement.prototype.focus;
+  const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
+    this: HTMLElement,
+    options?: FocusOptions
+  ) {
+    calls.push(this);
+    nativeFocus.call(this, options);
+  });
+  return { calls, restore: () => spy.mockRestore() };
 }
 
 function settingsLink(label: string): HTMLAnchorElement {

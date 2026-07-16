@@ -9,7 +9,8 @@ export default function AssetDetailRoute() {
     assetDetailQuery,
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
-    photoSelectionQuery
+    photoSelectionQuery,
+    undoAssetEditCommand
   } = useAppServices();
   const { assetId } = useLocalSearchParams<{ readonly assetId: string }>();
 
@@ -21,6 +22,7 @@ export default function AssetDetailRoute() {
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}
       photoSelectionQuery={photoSelectionQuery}
+      undoAssetEditCommand={undoAssetEditCommand}
       assetId={assetId}
     />
   );

@@ -1,0 +1,33 @@
+{{ template "header.html" . }}
+
+<div class="theme-panel">
+  <h1 class="theme-heading">Allow access</h1>
+
+  <div>
+    {{ if .Scopes }}
+      <p class="dex-subtle-text">{{ .Client }} is requesting:</p>
+      <ul class="dex-list">
+        {{ range $scope := .Scopes }}
+          <li>{{ $scope }}</li>
+        {{ end }}
+      </ul>
+    {{ else }}
+      <p class="dex-subtle-text">{{ .Client }} has not requested personal information.</p>
+    {{ end }}
+  </div>
+
+  <div class="theme-action-list">
+    <form method="post">
+      <input type="hidden" name="req" value="{{ .AuthReqID }}"/>
+      <input type="hidden" name="approval" value="approve">
+      <button type="submit" class="dex-btn theme-btn--primary">Allow</button>
+    </form>
+    <form method="post">
+      <input type="hidden" name="req" value="{{ .AuthReqID }}"/>
+      <input type="hidden" name="approval" value="rejected">
+      <button type="submit" class="dex-btn theme-btn-provider">Cancel</button>
+    </form>
+  </div>
+</div>
+
+{{ template "footer.html" . }}

@@ -3,13 +3,21 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import ImageViewing from 'react-native-image-viewing';
 import { ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../theme/tokens';
+import { radius, spacing } from '../theme/tokens';
 import {
   fullScreenPhotoViewerActionState,
   type FullScreenPhotoViewerPhoto
 } from './FullScreenPhotoViewerPresentation';
 
 export type { FullScreenPhotoViewerPhoto } from './FullScreenPhotoViewerPresentation';
+
+// Photo viewing intentionally uses a fixed neutral-black canvas so image
+// colors and exposure do not shift with the surrounding app appearance.
+const viewerColors = {
+  background: '#05080A',
+  foreground: '#FFFFFF',
+  warning: '#F5B95E'
+} as const;
 
 export function FullScreenPhotoViewer({
   canRemove,
@@ -33,7 +41,7 @@ export function FullScreenPhotoViewer({
   return (
     <ImageViewing
       animationType="fade"
-      backgroundColor="#05080A"
+      backgroundColor={viewerColors.background}
       doubleTapToZoomEnabled
       FooterComponent={({ imageIndex }) => (
         <PhotoViewerToolbar
@@ -90,7 +98,7 @@ function PhotoViewerToolbar({
       </View>
       <View style={styles.toolbar}>
         <ViewerIconButton accessibilityLabel="Close photo viewer" onPress={onClose}>
-          <X color={colors.onAction} size={25} strokeWidth={2.5} />
+          <X color={viewerColors.foreground} size={25} strokeWidth={2.5} />
         </ViewerIconButton>
         {photos.length > 1 ? (
           <>
@@ -99,14 +107,14 @@ function PhotoViewerToolbar({
               disabled={!state.canGoPrevious}
               onPress={() => onSelectIndex(Math.max(0, imageIndex - 1))}
             >
-              <ChevronLeft color={colors.onAction} size={27} strokeWidth={2.5} />
+              <ChevronLeft color={viewerColors.foreground} size={27} strokeWidth={2.5} />
             </ViewerIconButton>
             <ViewerIconButton
               accessibilityLabel="Next photo"
               disabled={!state.canGoNext}
               onPress={() => onSelectIndex(Math.min(photos.length - 1, imageIndex + 1))}
             >
-              <ChevronRight color={colors.onAction} size={27} strokeWidth={2.5} />
+              <ChevronRight color={viewerColors.foreground} size={27} strokeWidth={2.5} />
             </ViewerIconButton>
           </>
         ) : null}
@@ -121,7 +129,7 @@ function PhotoViewerToolbar({
               }
             }}
           >
-            <Trash2 color={colors.brandAmber} size={24} strokeWidth={2.4} />
+            <Trash2 color={viewerColors.warning} size={24} strokeWidth={2.4} />
           </ViewerIconButton>
         ) : null}
       </View>
@@ -173,13 +181,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg
   },
   positionText: {
-    color: colors.onAction,
+    color: viewerColors.foreground,
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 0
   },
   fileText: {
-    color: colors.onAction,
+    color: viewerColors.foreground,
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0,
@@ -187,7 +195,7 @@ const styles = StyleSheet.create({
     opacity: 0.84
   },
   metadataText: {
-    color: colors.onAction,
+    color: viewerColors.foreground,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
@@ -14,9 +14,10 @@ import {
 } from '../../application/locations/LocationAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
 import { IdentityLabel } from '../components/IdentityIcon';
-import { locationAssetDetailHref } from './AssetDetailNavigation';
+import { assetDetailHref, locationAssetDetailHref } from './AssetDetailNavigation';
 import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
-import { colors, spacing } from '../theme/tokens';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
+import { useAppearancePalette } from '../theme/AppearanceContext';
 
 type LocationAssetsRouteScreenProps = {
   readonly locationAssetsQuery: LocationAssetsQuery;
@@ -32,6 +33,8 @@ export function LocationAssetsRouteScreen({
   locationAssetsQuery,
   locationId
 }: LocationAssetsRouteScreenProps) {
+  const palette = useAppearancePalette();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -99,6 +102,8 @@ export function LocationAssetList({
   readonly locationAssets: LocationAssetsViewModel;
   readonly onRefresh: () => void;
 }) {
+  const palette = useAppearancePalette();
+  const styles = createStyles(palette);
   return (
     <>
       <Stack.Screen options={{ title: locationAssets.locationTitle }} />
@@ -126,6 +131,8 @@ export function LocationAssetList({
         renderItem={({ item }) => (
           <AssetCard
             asset={item}
+            palette={palette}
+            onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
             onPress={() => router.push(locationAssetDetailHref(locationAssets.locationId, item.id))}
             onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
           />
@@ -136,15 +143,19 @@ export function LocationAssetList({
 }
 
 function LoadingState() {
+  const palette = useAppearancePalette();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
-      <ActivityIndicator color={colors.accent} />
+      <ActivityIndicator color={palette.accent} />
       <Text style={styles.stateText}>Loading location</Text>
     </View>
   );
 }
 
 function ErrorState({ message }: { readonly message: string }) {
+  const palette = useAppearancePalette();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
@@ -157,7 +168,8 @@ function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: MobileColorPalette) {
+  return StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background
@@ -211,4 +223,5 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.sm
   }
-});
+  });
+}

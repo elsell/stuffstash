@@ -5,6 +5,7 @@ export const config: RuntimeConfig = {
   oidcIssuer: 'http://oidc.local',
   oidcClientId: 'web',
   oidcRedirectUri: 'http://web.local/auth/callback',
+  invitationAllowInsecureLocalHTTP: false,
   mediaUploadPolicy: {
     supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
     maxBytes: 5242880
@@ -24,6 +25,7 @@ export function fakeFetch(
     failedThumbnailStatusByAssetId?: Record<string, number>;
     includeUnphotographedContainerAndLocation?: boolean;
     failedImportOperations?: Array<'list' | 'preview' | 'start' | 'cancel' | 'remove'>;
+    createdInvitationOverride?: Record<string, unknown>;
   } = {}
 ): { fetch: typeof fetch; requests: Request[] } {
   const requests: Request[] = [];
@@ -138,7 +140,15 @@ export function fakeFetch(
         return envelope([
           {
             asset: {
-              ...asset('asset-archived', 'tenant-home', 'inventory-household', 'Archived Passport', null, 'archived'),
+              ...asset(
+                'asset-archived',
+                'tenant-home',
+                'inventory-household',
+                'Archived Passport',
+                null,
+                'archived',
+                options.primaryPhotoAssetIds?.includes('asset-archived') ?? false
+              ),
               currentCheckout: checkout
             },
             checkout
@@ -197,14 +207,21 @@ export function fakeFetch(
         const body = (await request.clone().json()) as { title: string; description?: string; parentAssetId?: string | null };
         return envelope({
           ...asset('asset-passport', 'tenant-home', 'inventory-household', body.title, body.parentAssetId ?? null),
-          description: body.description ?? ''
+          description: body.description ?? '',
+          undoableOperationId: 'operation-edit-one'
         });
       }
       if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/archive') {
-        return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'));
+        return envelope({ ...asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport', null, 'archived'), undoableOperationId: 'operation-archive-one' });
       }
       if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/restore') {
+        return envelope({ ...asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport'), undoableOperationId: 'operation-restore-one' });
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/undoable-operations/operation-edit-one/undo') {
         return envelope(asset('asset-passport', 'tenant-home', 'inventory-household', 'Passport'));
+      }
+      if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/undoable-operations/operation-edit-one/redo') {
+        return envelope({ ...asset('asset-passport', 'tenant-home', 'inventory-household', 'Updated Passport'), undoableOperationId: 'operation-edit-one' });
       }
       if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport') {
         return new Response(null, { status: 204 });
@@ -237,6 +254,15 @@ export function fakeFetch(
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments') {
         return envelope([attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg')]);
+      }
+      if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/archive') {
+        return envelope({
+          ...attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg'),
+          lifecycleState: 'archived'
+        });
+      }
+      if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one') {
+        return new Response(null, { status: 204 });
       }
       const thumbnailAssetID = matchingThumbnailAssetID(path, url.searchParams);
       if (request.method === 'GET' && thumbnailAssetID) {
@@ -351,7 +377,11 @@ export function fakeFetch(
       }
       if (request.method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/access-invitations') {
         const body = (await request.clone().json()) as { email: string; relationship: string };
-        return envelope({ ...invitation('invite-created', body.email, body.relationship), acceptanceToken: 'raw-token' }, 201);
+        return envelope({
+          ...invitation('invite-created', body.email, body.relationship),
+          inviteUrl: 'https://stash.example.test/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          ...options.createdInvitationOverride
+        }, 201);
       }
       if (
         request.method === 'PATCH' &&
@@ -507,6 +537,7 @@ function assetCheckout(id: string, state: string, checkoutDetails?: string): obj
     checkedOutAt: '2026-06-24T11:00:00Z',
     checkedOutByPrincipalId: 'principal-one',
     checkoutDetails,
+    undoableOperationId: state === 'returned' ? 'operation-return-one' : 'operation-checkout-one',
     createdAt: '2026-06-24T11:00:00Z',
     updatedAt: '2026-06-24T11:00:00Z'
   };

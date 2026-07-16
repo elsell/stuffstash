@@ -240,7 +240,7 @@ describe('StuffStashInventoryRepository imports, access, and audit', () => {
 
   it('manages access invitations through generated client-backed repository methods', async () => {
     const { fetch, requests } = fakeFetch();
-    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, 'https://stash.example.test');
 
     await expect(repository.listInventoryAccessInvitations('tenant-home', 'inventory-household', 'pending')).resolves.toMatchObject({
       items: [expect.objectContaining({ id: 'invite-one', email: 'friend@example.test', relationship: 'viewer' })],
@@ -250,7 +250,7 @@ describe('StuffStashInventoryRepository imports, access, and audit', () => {
       repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'editor@example.test', 'editor')
     ).resolves.toMatchObject({
       invitation: { email: 'editor@example.test', relationship: 'editor' },
-      acceptanceToken: 'raw-token'
+      inviteUrl: 'https://stash.example.test/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
     });
     await expect(
       repository.updateInventoryAccessInvitationExpiration(
@@ -272,6 +272,74 @@ describe('StuffStashInventoryRepository imports, access, and audit', () => {
     ]);
     expect(await requests[1]?.json()).toEqual({ email: 'editor@example.test', relationship: 'editor' });
     expect(await requests[2]?.json()).toEqual({ expiresAt: '2026-07-01T00:00:00Z' });
+  });
+
+  it.each([
+    ['missing URL', { inviteUrl: undefined }],
+    ['remote HTTP URL', { inviteUrl: 'http://stash.example.test/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' }],
+    ['untrusted HTTPS origin', { inviteUrl: 'https://phish.example.test/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' }],
+    ['wrong URL scope', { inviteUrl: 'https://stash.example.test/invitations/accept?tenant=tenant-other&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' }],
+    ['duplicate URL field', { inviteUrl: 'https://stash.example.test/invitations/accept?tenant=tenant-home&tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' }],
+    ['short token', { inviteUrl: 'https://stash.example.test/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=short' }],
+    ['response scope', { tenantId: 'tenant-other' }]
+  ])('rejects a created invitation with %s', async (_label, createdInvitationOverride) => {
+    const { fetch } = fakeFetch({ createdInvitationOverride });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, 'https://stash.example.test');
+    await expect(
+      repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'editor@example.test', 'editor')
+    ).rejects.toThrow('invalid invitation link');
+  });
+
+  it('rejects a matching private HTTP origin when the explicit switch is off', async () => {
+    const origin = 'http://192.168.1.117:5173';
+    const inviteUrl = `${origin}/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
+    const { fetch } = fakeFetch({ createdInvitationOverride: { inviteUrl } });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, origin);
+    await expect(
+      repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'editor@example.test', 'editor')
+    ).rejects.toThrow('invalid invitation link');
+  });
+
+  it.each([
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://[::1]:5173',
+    'http://10.0.0.7:5173',
+    'http://172.16.0.1:5173',
+    'http://172.31.255.254:5173',
+    'http://192.168.1.117:5173'
+  ])('accepts an explicitly trusted local invitation origin: %s', async (origin) => {
+    const inviteUrl = `${origin}/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
+    const { fetch } = fakeFetch({ createdInvitationOverride: { inviteUrl } });
+    const repository = new StuffStashInventoryRepository(
+      { ...config, invitationAllowInsecureLocalHTTP: true },
+      () => 'id-token',
+      new InMemoryWorkspaceObserver(),
+      fetch,
+      origin
+    );
+    await expect(
+      repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'editor@example.test', 'editor')
+    ).resolves.toMatchObject({ inviteUrl });
+  });
+
+  it.each([
+    'http://8.8.8.8:5173',
+    'http://172.32.0.1:5173',
+    'http://stash.example.test'
+  ])('rejects public HTTP even when the local switch is enabled: %s', async (origin) => {
+    const inviteUrl = `${origin}/invitations/accept?tenant=tenant-home&inventory=inventory-household&invitation=invite-created#token=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
+    const { fetch } = fakeFetch({ createdInvitationOverride: { inviteUrl } });
+    const repository = new StuffStashInventoryRepository(
+      { ...config, invitationAllowInsecureLocalHTTP: true },
+      () => 'id-token',
+      new InMemoryWorkspaceObserver(),
+      fetch,
+      origin
+    );
+    await expect(
+      repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'editor@example.test', 'editor')
+    ).rejects.toThrow('invalid invitation link');
   });
 
   it('lists tenant and inventory audit records through generated client paths', async () => {

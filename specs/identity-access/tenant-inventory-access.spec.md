@@ -242,6 +242,30 @@ Neither `viewer` nor `editor` allows sharing access onward.
 - The inventory access repository must preserve transactional behavior for grant, revoke, invitation acceptance, expiration update, and audit/outbox writes.
 - Persistence adapters may implement inventory and inventory access repositories on the same concrete store type, but the application layer must depend on the narrower port for each responsibility.
 
+## Clickable Invitation Links
+
+- Invitation creation must return one canonical clickable HTTPS URL, not a bare token that requires the recipient to reconstruct an API call.
+- The public invitation base URL must come from validated environment-backed configuration. The API must fail invitation creation safely when a usable absolute HTTPS base URL is unavailable outside explicit local development.
+- Insecure loopback or private RFC 1918 LAN HTTP invitation origins may be enabled only by an explicit local-development configuration switch at every API or client composition boundary that accepts them; OIDC mode alone must not silently enable that exception.
+- The local HTTP exception is limited to `localhost`, IP loopback addresses, and IPv4 addresses in `10.0.0.0/8`, `172.16.0.0/12`, or `192.168.0.0/16`. It must never permit a public IP address, public hostname, credentials, query, fragment, or non-HTTP scheme, and production builds must continue to require HTTPS invitation origins.
+- Private-LAN HTTP invitation links use the browser acceptance experience for local development and must not generate iOS associated-domain or Android verified app-link declarations. Production HTTPS origins provide verified native app linking.
+- The canonical URL is `/invitations/accept?tenant={tenantId}&inventory={inventoryId}&invitation={invitationId}#token={acceptanceToken}` beneath that configured base origin.
+- The raw acceptance token must live in the URL fragment so browsers do not send it in HTTP request targets, referrer headers, reverse-proxy access logs, or OIDC authorization URLs.
+- The creation response may expose the complete invitation URL only once. Invitation list, detail, audit, observability, and lifecycle responses must never reconstruct or return it.
+- Clients must label the material as an invitation link, provide copy and platform share actions where supported, and explain that it cannot be shown again.
+- Before offering copy or share, clients must verify that a created link uses the trusted web/mobile invitation origin configured at their composition boundary. An unconfigured client may accept only an explicit loopback HTTP link for local development. A configured private-LAN HTTP origin is trusted only when the client composition explicitly enables the local HTTP exception; clients must reject arbitrary returned HTTPS origins and all public HTTP origins.
+- The API and clients must never log, audit, persist in ordinary storage, or include the complete link or raw token in diagnostics and error messages.
+- The invitation-creation response contains one-time secret material and must include `Cache-Control: no-store` so browsers and intermediaries do not retain it.
+- `POST /tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview` accepts the raw token, requires authentication, and does not grant access.
+- Preview requires the authenticated principal's verified email to match the normalized invitation email. A mismatch must return a stable safe error that lets the client explain that the invitation belongs to another signed-in account without disclosing the invited email address.
+- A valid preview returns only safe presentation metadata: inventory ID and name, relationship, invitation status, whether it is expired, and expiration time. It must not return the invited email, inviter email, token hash, raw token, authorization internals, or unrelated tenant/inventory data.
+- Preview must distinguish pending, expired, revoked, cancelled, and accepted invitations for the matching authenticated invitee. Wrong token, wrong tenant, wrong inventory, missing invitation, and malformed link material must collapse to the same invalid-invitation result.
+- Revoking or cancelling an invitation must retain its one-way token verifier until hard deletion so possession can still be proven for safe terminal-state preview; neither transition may expose or restore the raw token, and acceptance must remain forbidden.
+- Acceptance remains an explicit user action after preview. Opening a link or completing sign-in must never accept automatically.
+- Retrying a transient preview failure must reuse the validated invitation material held in memory after the visible URL fragment has been scrubbed; it must not reparse the token-free address bar.
+- A successful acceptance response must let clients enter the newly accessible inventory directly. Reopening an already accepted invitation as the accepting principal must present a safe already-accepted state and the same inventory-entry action without creating another grant.
+- Web and mobile adapters must expose preview and acceptance through project-owned invitation ports; UI code must not call the generated client directly.
+
 ## Custom Fields
 
 - Tenant-scoped custom asset type definitions are controlled by tenant-level relationships.
@@ -263,6 +287,9 @@ Neither `viewer` nor `editor` allows sharing access onward.
 - Sharing API tests must prove owners can grant and revoke direct access, unrelated users cannot grant, revoke, or list grants, viewers cannot share or revoke, editors cannot share or revoke, granted viewers/editors receive only their intended permissions, and revoked users lose the revoked inventory permissions.
 - Invitation API tests must prove owners can create, accept, and revoke pending invitations; viewers, editors, unrelated users, wrong-email users, missing-email users, missing-token users, wrong-token users, expired-token users, wrong-tenant callers, and wrong-inventory callers cannot exceed their permissions; revoked invitations cannot be accepted; accepted invitations create only the intended direct access relationship.
 - Invitation listing and expiration tests must prove only users with `inventory.share` can list and update invitations, pagination preserves the standard contract, raw acceptance token material is not returned after creation, expired filtering works, manually expired invitations cannot be accepted, and non-pending invitations cannot have expiration changed.
+- Clickable-link tests must prove the exact configured HTTPS origin, canonical path, scoped query fields, and single fragment token on the creation wire response; the token must be absent from the query string and the bare `acceptanceToken` field must be absent from JSON.
+- Clickable-link tests must also prove one-time response behavior, absence of tokens from subsequent reads and logs, authenticated preview behavior, safe pending, expired, revoked, cancelled, and accepted status mapping, explicit acceptance, already-accepted idempotent presentation, and rejection of malformed, wrong-token, wrong-email, wrong-scope, and unauthenticated preview and acceptance attempts.
+- Invitation cancellation boundary tests must prove that only principals with `inventory.share` can cancel a pending invitation and that viewers, editors, unrelated principals, and unauthenticated callers cannot cancel it.
 
 ## Open Questions
 

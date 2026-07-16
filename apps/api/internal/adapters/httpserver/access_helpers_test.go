@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -159,6 +160,7 @@ type inventoryAccessInvitationResponse struct {
 	ExpiresAt           string `json:"expiresAt"`
 	IsExpired           bool   `json:"isExpired"`
 	AcceptanceToken     string `json:"acceptanceToken"`
+	InviteURL           string `json:"inviteUrl"`
 }
 
 type inventoryAccessInvitationBody struct {
@@ -179,6 +181,20 @@ type inventoryAccessInvitationAcceptanceResponse struct {
 type inventoryAccessInvitationAcceptanceBody struct {
 	Data inventoryAccessInvitationAcceptanceResponse `json:"data"`
 	Meta responseMeta                                `json:"meta"`
+}
+
+type inventoryAccessInvitationPreviewResponse struct {
+	InventoryID   string `json:"inventoryId"`
+	InventoryName string `json:"inventoryName"`
+	Relationship  string `json:"relationship"`
+	Status        string `json:"status"`
+	ExpiresAt     string `json:"expiresAt"`
+	IsExpired     bool   `json:"isExpired"`
+}
+
+type inventoryAccessInvitationPreviewBody struct {
+	Data inventoryAccessInvitationPreviewResponse `json:"data"`
+	Meta responseMeta                             `json:"meta"`
 }
 
 func decodeInventoryAccessGrant(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessGrantBody {
@@ -205,6 +221,14 @@ func decodeInventoryAccessInvitationAcceptance(t *testing.T, response *httptest.
 	return body
 }
 
+func decodeInventoryAccessInvitationPreview(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessInvitationPreviewBody {
+	t.Helper()
+
+	var body inventoryAccessInvitationPreviewBody
+	decodeBody(t, response, &body)
+	return body
+}
+
 func decodeInventoryAccessInvitationList(t *testing.T, response *httptest.ResponseRecorder) inventoryAccessInvitationListBody {
 	t.Helper()
 
@@ -219,6 +243,23 @@ func decodeInventoryAccessGrantList(t *testing.T, response *httptest.ResponseRec
 	var body inventoryAccessGrantListBody
 	decodeBody(t, response, &body)
 	return body
+}
+
+func acceptanceTokenFromInviteURL(t *testing.T, inviteURL string) string {
+	t.Helper()
+	parsed, err := url.Parse(inviteURL)
+	if err != nil {
+		t.Fatalf("parse invitation URL: %v", err)
+	}
+	fragment, err := url.ParseQuery(parsed.Fragment)
+	if err != nil {
+		t.Fatalf("parse invitation URL fragment: %v", err)
+	}
+	token := fragment.Get("token")
+	if token == "" {
+		t.Fatalf("expected invitation URL token fragment: %s", inviteURL)
+	}
+	return token
 }
 
 func assertInventoryAccessGrant(t *testing.T, grant inventoryAccessGrantResponse, tenantID string, inventoryID string, principalID string, relationship string) {

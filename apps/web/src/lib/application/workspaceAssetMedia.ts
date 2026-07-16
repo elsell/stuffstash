@@ -72,14 +72,16 @@ export function photoUploadUnavailableReason(input: {
   return '';
 }
 
-export function photoGalleryEmptyMessage(): string {
-  return 'No photos yet.';
-}
-
 export function unsupportedAttachmentTypeMessage(): string {
   return 'Unsupported file type.';
 }
 
 export function unsupportedImageTypeMessage(): string {
   return 'Unsupported image type.';
+}
+
+export function userSafeMediaErrorMessage(caught: unknown, fallback: string): string {
+  const explicitlySafe = typeof caught === 'object' && caught !== null &&
+    (caught as { safeForUser?: unknown }).safeForUser === true;
+  return explicitlySafe && caught instanceof Error && caught.message.trim() ? caught.message.trim() : fallback;
 }

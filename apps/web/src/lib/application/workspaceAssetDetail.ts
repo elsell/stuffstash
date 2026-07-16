@@ -1,5 +1,6 @@
-import type { Asset, AssetAttachment, AssetCheckout, WorkspaceData } from '$lib/domain/inventory';
+import type { Asset, AssetAttachment, AssetCheckout, CustomFieldDefinition, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
+import { isAuthenticationRequiredError } from './authenticationRequired';
 import { replaceWorkspaceAsset } from './workspaceAssetWorkflow';
 
 type AssetDetailRepository = Pick<InventoryRepository, 'getAsset' | 'listAssetAttachments' | 'listAssetCheckoutHistory'>;
@@ -32,6 +33,23 @@ export interface AssetDetailStatusPresentation {
   message: string;
 }
 
+export interface AssetDetailFieldGroups {
+  populated: CustomFieldDefinition[];
+  unset: CustomFieldDefinition[];
+}
+
+export function partitionAssetDetailFields(
+  definitions: CustomFieldDefinition[],
+  values: Record<string, unknown> = {}
+): AssetDetailFieldGroups {
+  return definitions.reduce<AssetDetailFieldGroups>((groups, definition) => {
+    const value = values[definition.key];
+    const target = value === undefined || value === null || value === '' ? groups.unset : groups.populated;
+    target.push(definition);
+    return groups;
+  }, { populated: [], unset: [] });
+}
+
 export async function loadWorkspaceAssetDetail(
   repository: AssetDetailRepository,
   tenantId: string,
@@ -50,14 +68,30 @@ export async function loadWorkspaceAssetDetail(
       error: ''
     };
   } catch (caught) {
+    if (isAuthenticationRequiredError(caught)) throw caught;
     return {
       loaded: false,
       asset: null,
       attachments: [],
       checkoutHistory: [],
-      error: caught instanceof Error ? caught.message : 'Asset could not be loaded.'
+      error: assetDetailFailureMessage(caught)
     };
   }
+}
+
+export function assetDetailFailureMessage(caught: unknown): string {
+  const safeForUser = typeof caught === 'object' && caught !== null &&
+    (caught as { safeForUser?: unknown }).safeForUser === true;
+  if (safeForUser && caught instanceof Error && caught.message.trim() && !isGenericAdapterMessage(caught)) {
+    return caught.message.trim();
+  }
+  return 'Asset details could not be loaded. Try again.';
+}
+
+function isGenericAdapterMessage(caught: Error): boolean {
+  const status = 'status' in caught && typeof caught.status === 'number' ? caught.status : 0;
+  if (status !== 400 && status !== 422) return false;
+  return /^(bad request|invalid request|unprocessable entity|validation failed|request failed)\.?$/i.test(caught.message.trim());
 }
 
 export function refreshWorkspaceAssetAttachments(

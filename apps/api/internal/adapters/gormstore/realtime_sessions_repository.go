@@ -12,6 +12,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (s Store) SaveRealtimeSession(ctx context.Context, record ports.RealtimeSessionRecord) error {
@@ -27,7 +28,13 @@ func (s Store) UpdateRealtimeSessionOutcome(ctx context.Context, tenantID tenant
 		return ports.ErrInvalidProviderInput
 	}
 	result := s.db.WithContext(ctx).Model(&realtimeSessionModel{}).
-		Where("tenant_id = ? AND inventory_id = ? AND id = ? AND state = ? AND started_at <= ?", tenantID.String(), inventoryID.String(), sessionID, string(ports.RealtimeSessionStateStarted), outcome.At).
+		Where(&realtimeSessionModel{
+			TenantID:    tenantID.String(),
+			InventoryID: inventoryID.String(),
+			ID:          sessionID,
+			State:       string(ports.RealtimeSessionStateStarted),
+		}).
+		Where(clause.Lte{Column: clause.Column{Name: "started_at"}, Value: outcome.At}).
 		Updates(map[string]any{
 			"state":             string(outcome.State),
 			"last_activity_at":  outcome.At,
@@ -48,7 +55,11 @@ func (s Store) RealtimeSessionByID(ctx context.Context, tenantID tenant.ID, inve
 		return ports.RealtimeSessionRecord{}, false, ports.ErrInvalidProviderInput
 	}
 	var model realtimeSessionModel
-	err := s.db.WithContext(ctx).Where("tenant_id = ? AND inventory_id = ? AND id = ?", tenantID.String(), inventoryID.String(), sessionID).First(&model).Error
+	err := s.db.WithContext(ctx).Where(&realtimeSessionModel{
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		ID:          sessionID,
+	}).First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ports.RealtimeSessionRecord{}, false, nil
 	}
