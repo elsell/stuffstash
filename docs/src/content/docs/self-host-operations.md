@@ -69,13 +69,20 @@ root.
    `POSTGRES_PASSWORD`, `SPICEDB_POSTGRES_PASSWORD`,
    `STUFF_STASH_SPICEDB_PRESHARED_KEY`, `STUFF_STASH_S3_ACCESS_KEY`,
    `STUFF_STASH_S3_SECRET_KEY`, and `STUFF_STASH_PROVIDER_CREDENTIAL_KEY`.
-3. Run the strict check, then restart:
+3. Delete the trial stack, run the strict check, then start fresh:
+
+:::danger[Trial data and certificates are deleted]
+Changing the example database and Garage credentials does not update existing
+volumes. This reset removes trial data and Caddy's local CA.
+:::
 
 ```sh
-docker compose -f compose.selfhost.yaml down
+docker compose -f compose.selfhost.yaml down -v
 ./scripts/selfhost-preflight.sh
 docker compose -f compose.selfhost.yaml up -d
 ```
+
+Export and trust the new Caddy root before opening the app again.
 
 Generate URL-safe passwords with `openssl rand -hex 24`. Generate the provider
 credential key with `openssl rand -base64 32`. Keep `.env` and the private Dex

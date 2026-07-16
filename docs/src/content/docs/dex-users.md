@@ -61,6 +61,12 @@ LAN](../self-host-operations/#use-stuff-stash-on-your-lan).
 
 ## 4. Apply And Test
 
+For the first household setup, return to [Before Household
+Use](../self-host-operations/#before-household-use). It replaces every example
+credential and resets trial data together.
+
+For a later Dex-only change on an already hardened deployment:
+
 ```sh
 docker compose -f compose.selfhost.yaml down
 ./scripts/selfhost-preflight.sh

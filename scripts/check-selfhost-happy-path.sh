@@ -200,6 +200,14 @@ fi
 test -f docs/src/content/docs/self-host-operations.md ||
   fail "self-host operator guidance must be linked from the quick start"
 
+awk '
+  /^## Before Household Use/ { in_household=1; next }
+  in_household && /^## / { exit }
+  in_household && /docker compose -f compose.selfhost.yaml down -v/ { found=1 }
+  END { exit found ? 0 : 1 }
+' docs/src/content/docs/self-host-operations.md ||
+  fail "household hardening must reset trial credentials and volumes together"
+
 if grep -q '^## Compose Evaluation' "$self_host_doc"; then
   fail "self-host docs must not present contributor evaluation as a public happy path"
 fi
