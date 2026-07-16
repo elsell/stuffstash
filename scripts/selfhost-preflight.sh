@@ -35,10 +35,20 @@ fi
 [ -f "$env_file" ] || fail "copy .env.example to .env first"
 [ -f "$repo_root/compose.selfhost.yaml" ] || fail "compose.selfhost.yaml is missing"
 
-set -a
-# shellcheck source=/dev/null
-source "$env_file"
-set +a
+while IFS= read -r line || [ -n "$line" ]; do
+  line="${line%$'\r'}"
+  case "$line" in
+    ''|'#'*) continue ;;
+  esac
+  name="${line%%=*}"
+  [ "$name" != "$line" ] || fail "invalid line in $env_file: $line"
+  [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || fail "invalid variable name in $env_file: $name"
+  value="${line#*=}"
+  if [[ "$value" =~ ^\"(.*)\"$ ]] || [[ "$value" =~ ^\'(.*)\'$ ]]; then
+    value="${BASH_REMATCH[1]}"
+  fi
+  printf -v "$name" '%s' "$value"
+done < "$env_file"
 
 required=(
   STUFF_STASH_BIND_ADDRESS STUFF_STASH_SELFHOST_HOSTNAME
@@ -89,6 +99,27 @@ case "$DEX_CONFIG_PATH" in
   *) dex_config="$repo_root/${DEX_CONFIG_PATH#./}" ;;
 esac
 [ -f "$dex_config" ] || fail "Dex config not found: $dex_config"
+
+if [ "$trial" -ne 1 ]; then
+  if cmp -s "$dex_config" "$repo_root/deploy/selfhost/dex/config.yaml"; then
+    fail "create a private Dex config and replace the bundled identities"
+  fi
+  if mode="$(stat -c '%a' "$dex_config" 2>/dev/null)"; then
+    :
+  else
+    mode="$(stat -f '%Lp' "$dex_config" 2>/dev/null || true)"
+  fi
+  [ "$mode" = "600" ] || fail "private Dex config must have mode 600"
+  if grep -Eq 'owner@example\.com|viewer@example\.com|stuff-stash-local-secret' "$dex_config"; then
+    fail "private Dex config still contains example identities or client secrets"
+  fi
+  grep -Fq "issuer: $STUFF_STASH_OIDC_ISSUER" "$dex_config" ||
+    fail "private Dex issuer must match STUFF_STASH_OIDC_ISSUER"
+  grep -Fq -- "- $STUFF_STASH_WEB_ORIGIN" "$dex_config" ||
+    fail "private Dex allowed origin must match STUFF_STASH_WEB_ORIGIN"
+  grep -Fq -- "- $STUFF_STASH_WEB_OIDC_REDIRECT_URI" "$dex_config" ||
+    fail "private Dex redirect URI must match STUFF_STASH_WEB_OIDC_REDIRECT_URI"
+fi
 
 example_secrets=0
 for value in \
