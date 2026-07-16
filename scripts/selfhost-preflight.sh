@@ -118,8 +118,21 @@ if [ "$trial" -ne 1 ]; then
     fail "private Dex issuer must match STUFF_STASH_OIDC_ISSUER"
   dex_has_line "- $STUFF_STASH_WEB_ORIGIN" ||
     fail "private Dex allowed origin must match STUFF_STASH_WEB_ORIGIN"
-  dex_has_line "- $STUFF_STASH_WEB_OIDC_REDIRECT_URI" ||
-    fail "private Dex redirect URI must match STUFF_STASH_WEB_OIDC_REDIRECT_URI"
+  awk -v target_id="$STUFF_STASH_WEB_OIDC_CLIENT_ID" -v target_redirect="$STUFF_STASH_WEB_OIDC_REDIRECT_URI" '
+    {
+      line=$0
+      sub(/^[[:space:]]+/, "", line)
+    }
+    line ~ /^- id: / {
+      in_target=(line == "- id: " target_id)
+      if (in_target) seen=1
+      next
+    }
+    in_target && line == "public: true" { public_client=1 }
+    in_target && line == "- " target_redirect { redirect=1 }
+    END { exit seen && public_client && redirect ? 0 : 1 }
+  ' "$dex_config" ||
+    fail "private Dex web client must be public and use STUFF_STASH_WEB_OIDC_REDIRECT_URI"
 fi
 
 example_secrets=0

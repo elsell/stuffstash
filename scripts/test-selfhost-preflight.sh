@@ -58,6 +58,23 @@ if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 S
 fi
 sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-private.yaml|" "$tmp_dir/.env"
 
+awk '
+  /- id: stuff-stash-web-local/ { in_web=1 }
+  in_web && /- https:\/\/stuffstash\.localhost:8081\/callback/ {
+    sub(/https:\/\/stuffstash\.localhost:8081\/callback/, "https://evil.example/callback")
+    in_web=0
+  }
+  { print }
+' "$tmp_dir/dex-private.yaml" > "$tmp_dir/dex-wrong-web-redirect.yaml"
+chmod 600 "$tmp_dir/dex-wrong-web-redirect.yaml"
+sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-wrong-web-redirect.yaml|" "$tmp_dir/.env"
+if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
+  "$repo_root/scripts/selfhost-preflight.sh" --env-file "$tmp_dir/.env" >/dev/null 2>&1; then
+  echo "strict preflight accepted a redirect on the wrong Dex client" >&2
+  exit 1
+fi
+sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-private.yaml|" "$tmp_dir/.env"
+
 sed -i.bak 's/stuffstash\.localhost/192.168.2.52/g' "$tmp_dir/.env"
 if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
   "$repo_root/scripts/selfhost-preflight.sh" --trial --env-file "$tmp_dir/.env" >"$tmp_dir/output" 2>&1; then
