@@ -195,6 +195,8 @@ The durable self-host Compose topology must:
   starting the stack.
 - Bind published ports to loopback by default. LAN operators must explicitly
   select a LAN-facing bind address and configure DNS before starting the stack.
+- Declare a stable Compose project name so persistent volume identity does not
+  depend on the checkout or release-bundle directory name.
 - Allow operators to provide a private Dex config for household users while
   keeping the committed Dex config suitable only as a first-run local example.
   Compose must stage mode-`0600` host config into a Dex-readable named volume

@@ -32,6 +32,8 @@ development loops.
   branch.
 - The default host port binding must be loopback-only. An operator must opt in
   to LAN exposure by setting one documented bind address before startup.
+- Compose must declare a stable project name so release-bundle directory names
+  do not change the names of persistent volumes during upgrades.
 - The shared HTTPS hostname must be a DNS name, not an IP literal. The
   preflight check must reject an IP literal because Go OIDC discovery omits TLS
   SNI for IP addresses and the Caddy internal-PKI route cannot serve that
