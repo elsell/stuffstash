@@ -199,5 +199,15 @@ test -x scripts/selfhost-preflight.sh ||
 test -x scripts/build-selfhost-release.sh ||
   fail "self-host release bundle builder must exist and be executable"
 
+test -x scripts/verify-selfhost-runtime.sh ||
+  fail "self-host runtime verification script must exist and be executable"
+
+grep -q 'scripts/verify-selfhost-runtime.sh' .github/workflows/ci.yml ||
+  fail "CI must run the self-host topology"
+
+grep -q 'scripts/build-selfhost-release.sh' .github/workflows/release.yml &&
+  grep -q 'stuffstash-selfhost.tar.gz.sha256' .github/workflows/release.yml ||
+  fail "releases must attach a checksummed self-host bundle"
+
 scripts/test-selfhost-preflight.sh
 scripts/test-selfhost-release-bundle.sh

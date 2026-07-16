@@ -58,3 +58,16 @@ jobs:
         run: make required-checks
         env:
           STUFF_STASH_STRUCTURAL_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || github.event_name == 'workflow_dispatch' && 'origin/main' || '' }}
+
+  selfhost-runtime:
+    name: Self-host runtime
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Start and verify self-host topology
+        run: scripts/verify-selfhost-runtime.sh

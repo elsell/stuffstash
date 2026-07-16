@@ -274,6 +274,12 @@ jobs:
           git tag "${{ needs.validate.outputs.next_tag }}" "${GITHUB_SHA}"
           git push origin "${{ needs.validate.outputs.next_tag }}"
 
+      - name: Build self-host release bundle
+        run: |
+          scripts/build-selfhost-release.sh \
+            --version "${{ needs.validate.outputs.next_tag }}" \
+            --output release-dist
+
       - name: Create GitHub release
         run: |
           release_ref="${GITHUB_SHA}"
@@ -296,6 +302,8 @@ jobs:
           gh release create "${{ needs.validate.outputs.next_tag }}" \
             --target "$release_ref" \
             --title "${{ needs.validate.outputs.next_tag }}" \
-            --notes-file release-notes.md
+            --notes-file release-notes.md \
+            release-dist/stuffstash-selfhost.tar.gz \
+            release-dist/stuffstash-selfhost.tar.gz.sha256
         env:
           GH_TOKEN: ${{ github.token }}
