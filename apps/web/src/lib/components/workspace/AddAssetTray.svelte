@@ -4,6 +4,7 @@
   import { onDestroy, tick } from 'svelte';
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
+  import * as Sheet from '$lib/components/ui/sheet/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
@@ -87,7 +88,6 @@
   let lastInitialKind = $state<AssetKind>('item');
   let lastInitialParentAssetId = $state<string | null>(null);
   let wasOpen = $state(false);
-  let dialogElement = $state<HTMLElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
   let returnFocusElement: HTMLElement | null = null;
   const assetKindOptions = assetKindControlOptions();
@@ -119,8 +119,6 @@
     } else if (!open && wasOpen) {
       wasOpen = false;
       revokePhotoPreviews(selectedPhotos);
-      selectedPhotos = [];
-      photoError = '';
       if (restoreFocusOnClose) addReturnFocusTarget(returnFocusElement)?.focus();
       returnFocusElement = null;
     } else if (open && initialKind !== lastInitialKind) {
@@ -200,36 +198,6 @@
     fileInputKey += 1;
     lastInitialKind = nextKind;
     lastInitialParentAssetId = initialParentAssetId;
-  }
-
-  function handleDialogKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      onClose();
-      return;
-    }
-    if (event.key !== 'Tab' || !dialogElement) {
-      return;
-    }
-    const focusable = Array.from(
-      dialogElement.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true');
-    if (focusable.length === 0) {
-      event.preventDefault();
-      dialogElement.focus();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
   }
 
   function closeFromLink(event: MouseEvent): void {
@@ -334,22 +302,20 @@
   }
 </script>
 
-{#if open}
-  <div class="tray-backdrop" role="presentation" onclick={onClose}></div>
-  <div
-    bind:this={dialogElement}
-    class="add-tray"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="add-title"
+<Sheet.Root {open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
+  <Sheet.Content
+    side="right"
+    class="add-tray workspace-task-sheet w-full max-w-none gap-0 p-0 sm:max-w-xl"
+    style="width: 100%;"
+    showCloseButton={false}
     data-parent-search-active={parentSearchPicking ? 'true' : undefined}
-    tabindex="-1"
-    onkeydown={handleDialogKeydown}
+    onOpenAutoFocus={(event) => { event.preventDefault(); titleInput?.focus(); }}
+    onCloseAutoFocus={(event) => { event.preventDefault(); }}
   >
-    <div class="section-heading compact">
-      <h2 id="add-title">{kindCopy.heading}</h2>
+    <Sheet.Header class="section-heading compact shrink-0 border-b px-5 py-4 pr-16 text-left sm:px-6">
+      <Sheet.Title id="add-title">{kindCopy.heading}</Sheet.Title>
       <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
-    </div>
+    </Sheet.Header>
 
     <div class="add-tray-body">
       <div class="add-summary">
@@ -472,9 +438,9 @@
       />
     </div>
 
-    <div class="tray-actions">
+    <Sheet.Footer class="tray-actions shrink-0 border-t px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
       <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
-    </div>
-  </div>
-{/if}
+    </Sheet.Footer>
+  </Sheet.Content>
+</Sheet.Root>
