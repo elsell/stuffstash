@@ -86,20 +86,22 @@ type UpdateDefinitionLifecycleOutput struct {
 type DeleteDefinitionOutput struct{}
 
 type ListTenantDefinitionsInput struct {
-	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
-	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
-	TenantID      string `path:"tenantId" doc:"Tenant ID"`
-	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
-	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	Authorization  string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID      string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID       string `path:"tenantId" doc:"Tenant ID"`
+	Limit          int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor         string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	LifecycleState string `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
 }
 
 type ListInventoryDefinitionsInput struct {
-	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
-	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
-	TenantID      string `path:"tenantId" doc:"Tenant ID"`
-	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
-	Limit         int    `query:"limit" minimum:"1" doc:"Requested page size"`
-	Cursor        string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	Authorization  string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID      string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID       string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID    string `path:"inventoryId" doc:"Inventory ID"`
+	Limit          int    `query:"limit" minimum:"1" doc:"Requested page size"`
+	Cursor         string `query:"cursor" doc:"Opaque cursor from the previous page"`
+	LifecycleState string `query:"lifecycleState" enum:"active,archived,all" doc:"Lifecycle filter; defaults to active"`
 }
 
 type ListDefinitionsOutput struct {

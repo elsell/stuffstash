@@ -85,4 +85,21 @@ describe('createMobileComposition', () => {
     expect(authRequiredCount).toBe(1);
     expect(fetchMock).toHaveBeenCalled();
   });
+
+  it('wires customization observability to the production composition and bounded event sink', () => {
+    const events: unknown[] = [];
+    const composition = createMobileComposition(
+      { apiBaseUrl: 'http://api.local', tenantId: 'tenant-home' },
+      { onCustomizationEvent: (event) => events.push(event) }
+    );
+
+    composition.customizationObservability.record({ name: 'settings.opened' });
+    composition.customizationObservability.record({ name: 'settings.level_selected', scope: 'inventory' });
+
+    expect(events).toEqual([
+      { name: 'settings.opened' },
+      { name: 'settings.level_selected', scope: 'inventory' }
+    ]);
+    expect(composition.customizationObservability.events()).toEqual(events);
+  });
 });

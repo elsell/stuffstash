@@ -36,8 +36,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/me',
       'GET http://api.local/me/tenants?limit=50',
       'GET http://api.local/tenants/tenant-cabin/inventories?limit=50',
-      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-asset-types?limit=100',
-      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-field-definitions?limit=100',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-asset-types?limit=100&lifecycleState=active',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-field-definitions?limit=100&lifecycleState=active',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/tags?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active&sort=updated_desc',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets?limit=100'
@@ -365,8 +365,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/me/tenants?limit=50',
       'POST http://api.local/tenants/tenant-empty/inventories',
       'GET http://api.local/tenants/tenant-empty/inventories?limit=50',
-      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-asset-types?limit=100',
-      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-field-definitions?limit=100',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-asset-types?limit=100&lifecycleState=active',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-field-definitions?limit=100&lifecycleState=active',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/tags?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active&sort=updated_desc',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/checked-out-assets?limit=100'
@@ -565,8 +565,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/me',
       'GET http://api.local/me/tenants?limit=50',
       'GET http://api.local/tenants/tenant-home/inventories?limit=50',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-asset-types?limit=100',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-field-definitions?limit=100',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-asset-types?limit=100&lifecycleState=active',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-field-definitions?limit=100&lifecycleState=active',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/tags?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived&sort=updated_desc',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/checked-out-assets?limit=100'

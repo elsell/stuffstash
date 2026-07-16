@@ -105,6 +105,13 @@ func TestStoreArchivesCustomAssetTypeWithoutDeletingReferences(t *testing.T) {
 	if len(listed) != 0 {
 		t.Fatalf("expected archived custom asset type to be hidden from list, got %+v", listed)
 	}
+	archivedListed, err := store.ListInventoryCustomAssetTypes(ctx, tenantID, inventoryID, ports.CustomAssetTypePageRequest{Limit: 10, Lifecycle: ports.CustomizationLifecycleArchived})
+	if err != nil {
+		t.Fatalf("list archived custom asset types: %v", err)
+	}
+	if len(archivedListed) != 1 || archivedListed[0].ID != assetType.ID {
+		t.Fatalf("expected lifecycle-filtered archived custom asset type, got %+v", archivedListed)
+	}
 
 	lookedUp, err := store.CustomAssetTypesByID(ctx, tenantID, inventoryID, []customfield.AssetTypeID{assetType.ID})
 	if err != nil {
@@ -141,5 +148,44 @@ func TestStoreArchivesCustomAssetTypeWithoutDeletingReferences(t *testing.T) {
 	newDefinition.CustomAssetTypeIDs = []customfield.AssetTypeID{assetType.ID}
 	if err := saveCustomFieldDefinition(t, ctx, store, newDefinition); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("expected archived custom asset type target rejection, got %v", err)
+	}
+}
+
+func TestStoreListsCustomAssetTypesByLifecycleAndScope(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Medicine")
+	tenantType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), "", customfield.ScopeTenant, "tenant-type")
+	inventoryType := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID.String(), inventoryID.String(), customfield.ScopeInventory, "inventory-type")
+	for _, assetType := range []customfield.AssetType{tenantType, inventoryType} {
+		if err := saveCustomAssetType(t, ctx, store, assetType); err != nil {
+			t.Fatalf("save custom asset type: %v", err)
+		}
+		archived, ok := assetType.Archive()
+		if !ok {
+			t.Fatalf("archive custom asset type %s", assetType.ID)
+		}
+		if err := store.ArchiveCustomAssetType(ctx, archived, auditRecord(t, auditIDWithSuffix(assetType.ID.String(), "A"), tenantID, inventoryID, audit.ActionCustomAssetTypeArchived)); err != nil {
+			t.Fatalf("persist archive: %v", err)
+		}
+	}
+	for _, filter := range []ports.CustomizationLifecycleFilter{"", ports.CustomizationLifecycleActive} {
+		items, err := store.ListInventoryCustomAssetTypes(ctx, tenantID, inventoryID, ports.CustomAssetTypePageRequest{Limit: 10, Lifecycle: filter})
+		if err != nil || len(items) != 0 {
+			t.Fatalf("expected %q to hide archived types, items=%+v err=%v", filter, items, err)
+		}
+	}
+	for _, filter := range []ports.CustomizationLifecycleFilter{ports.CustomizationLifecycleArchived, ports.CustomizationLifecycleAll} {
+		items, err := store.ListInventoryCustomAssetTypes(ctx, tenantID, inventoryID, ports.CustomAssetTypePageRequest{Limit: 10, Lifecycle: filter})
+		if err != nil || len(items) != 2 || items[0].ID != tenantType.ID || items[1].ID != inventoryType.ID {
+			t.Fatalf("expected %q types in scope order, items=%+v err=%v", filter, items, err)
+		}
+	}
+	tenantItems, err := store.ListTenantCustomAssetTypes(ctx, tenantID, ports.CustomAssetTypePageRequest{Limit: 10, Lifecycle: ports.CustomizationLifecycleArchived})
+	if err != nil || len(tenantItems) != 1 || tenantItems[0].ID != tenantType.ID {
+		t.Fatalf("expected tenant archived type only, items=%+v err=%v", tenantItems, err)
 	}
 }

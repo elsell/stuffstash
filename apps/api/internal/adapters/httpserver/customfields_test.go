@@ -711,6 +711,11 @@ func TestCustomFieldDefinitionSchemaEvolutionRejectsInvalidTargets(t *testing.T)
 	if archiveRestoreField.Code != http.StatusOK {
 		t.Fatalf("expected restore field archive status %d, got %d with body %s", http.StatusOK, archiveRestoreField.Code, archiveRestoreField.Body.String())
 	}
+	archivedFieldsResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-field-definitions?lifecycleState=archived&limit=50", "Bearer dev:inventory-owner", nil)
+	archivedFields := decodeCustomFieldDefinitionList(t, archivedFieldsResponse)
+	if archivedFieldsResponse.Code != http.StatusOK || len(archivedFields.Data) != 1 || archivedFields.Data[0].ID != restoreField.Data.ID || archivedFields.Data[0].LifecycleState != "archived" {
+		t.Fatalf("expected archived field definition, got %+v", archivedFields.Data)
+	}
 	archiveRestoreType := performRequest(server, http.MethodPatch, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types/"+restoreType.Data.ID+"/archive", "Bearer dev:inventory-owner", nil)
 	if archiveRestoreType.Code != http.StatusOK {
 		t.Fatalf("expected restore type archive status %d, got %d with body %s", http.StatusOK, archiveRestoreType.Code, archiveRestoreType.Body.String())

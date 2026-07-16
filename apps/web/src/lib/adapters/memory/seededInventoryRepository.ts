@@ -23,6 +23,7 @@ import {
   type InventoryAccessRelationship,
   type InvitationStatusFilter,
   type ImportSourceRequest,
+  type ManagedAssetTag,
   type SearchRequest,
   type SearchResult,
   type SelectedAttachment,
@@ -37,9 +38,13 @@ import type { InventoryAccessPage, InventoryAccessRepository } from '$lib/ports/
 import type { AuditRecordPage, InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
 import type {
   CustomAssetTypeDraft,
+  CustomAssetTypeUpdate,
   CustomFieldDefinitionDraft,
+  CustomFieldDefinitionUpdate,
+  CustomizationLifecycleFilter,
   InventoryCustomizationRepository
 } from '$lib/ports/inventoryCustomizationRepository';
+import type { InventoryTagRepository } from '$lib/ports/inventoryTagRepository';
 import { filterAssets } from '$lib/application/workspace';
 
 type ScopedImportJob = {
@@ -49,7 +54,7 @@ type ScopedImportJob = {
 };
 
 export class SeededInventoryRepository
-  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository, InventoryTagRepository
 {
   private seed: WorkspaceSeed;
   private attachments: AssetAttachment[] = [];
@@ -684,8 +689,19 @@ export class SeededInventoryRepository
     return page(records, cursor);
   }
 
-  async listInventoryCustomAssetTypes(tenantId: string, inventoryId: string, cursor?: string): Promise<InventoryAccessPage<CustomAssetType>> {
-    return page(this.effectiveCustomAssetTypes(tenantId, inventoryId), cursor);
+  async listTenantCustomAssetTypes(tenantId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active'): Promise<InventoryAccessPage<CustomAssetType>> {
+    return page(this.seed.customAssetTypes.filter((item) => item.tenantId === tenantId && item.scope === 'tenant' && item.lifecycleState === lifecycleState), cursor);
+  }
+
+  async listInventoryCustomAssetTypes(tenantId: string, inventoryId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active'): Promise<InventoryAccessPage<CustomAssetType>> {
+    return page(this.seed.customAssetTypes.filter((item) => item.tenantId === tenantId && item.lifecycleState === lifecycleState && (item.scope === 'tenant' || item.inventoryId === inventoryId)), cursor);
+  }
+
+  async updateCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory', update: CustomAssetTypeUpdate): Promise<CustomAssetType> {
+    const current = this.findCustomAssetType(tenantId, inventoryId, customAssetTypeId, scope);
+    const changed = { ...current, ...update };
+    this.seed = { ...this.seed, customAssetTypes: this.seed.customAssetTypes.map((item) => item.id === changed.id ? changed : item) };
+    return changed;
   }
 
   async createCustomAssetType(tenantId: string, inventoryId: string, draft: CustomAssetTypeDraft): Promise<CustomAssetType> {
@@ -734,12 +750,42 @@ export class SeededInventoryRepository
     return updated;
   }
 
+  async restoreCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory'): Promise<CustomAssetType> {
+    const current = this.findCustomAssetType(tenantId, inventoryId, customAssetTypeId, scope);
+    const changed: CustomAssetType = { ...current, lifecycleState: 'active' };
+    this.seed = { ...this.seed, customAssetTypes: this.seed.customAssetTypes.map((item) => item.id === changed.id ? changed : item) };
+    return changed;
+  }
+
+  async deleteCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory'): Promise<void> {
+    const current = this.findCustomAssetType(tenantId, inventoryId, customAssetTypeId, scope);
+    this.seed = { ...this.seed, customAssetTypes: this.seed.customAssetTypes.filter((item) => item.id !== current.id) };
+  }
+
+  async listTenantCustomFieldDefinitions(tenantId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active'): Promise<InventoryAccessPage<CustomFieldDefinition>> {
+    return page(this.seed.customFieldDefinitions.filter((item) => item.tenantId === tenantId && item.scope === 'tenant' && item.lifecycleState === lifecycleState), cursor);
+  }
+
   async listInventoryCustomFieldDefinitions(
     tenantId: string,
     inventoryId: string,
-    cursor?: string
+    cursor?: string,
+    lifecycleState: CustomizationLifecycleFilter = 'active'
   ): Promise<InventoryAccessPage<CustomFieldDefinition>> {
-    return page(this.effectiveCustomFieldDefinitions(tenantId, inventoryId), cursor);
+    return page(this.seed.customFieldDefinitions.filter((item) => item.tenantId === tenantId && item.lifecycleState === lifecycleState && (item.scope === 'tenant' || item.inventoryId === inventoryId)), cursor);
+  }
+
+  async updateCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory', update: CustomFieldDefinitionUpdate): Promise<CustomFieldDefinition> {
+    const current = this.findCustomFieldDefinition(tenantId, inventoryId, definitionId, scope);
+    const changed: CustomFieldDefinition = {
+      ...current,
+      displayName: update.displayName,
+      enumOptions: update.enumOptions ?? current.enumOptions,
+      applicability: update.applicability ?? current.applicability,
+      customAssetTypeIds: update.customAssetTypeIds ?? current.customAssetTypeIds
+    };
+    this.seed = { ...this.seed, customFieldDefinitions: this.seed.customFieldDefinitions.map((item) => item.id === changed.id ? changed : item) };
+    return changed;
   }
 
   async createCustomFieldDefinition(
@@ -794,6 +840,44 @@ export class SeededInventoryRepository
       metadata: { key: updated.key }
     });
     return updated;
+  }
+
+  async restoreCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory'): Promise<CustomFieldDefinition> {
+    const current = this.findCustomFieldDefinition(tenantId, inventoryId, definitionId, scope);
+    const changed: CustomFieldDefinition = { ...current, lifecycleState: 'active' };
+    this.seed = { ...this.seed, customFieldDefinitions: this.seed.customFieldDefinitions.map((item) => item.id === changed.id ? changed : item) };
+    return changed;
+  }
+
+  async deleteCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory'): Promise<void> {
+    const current = this.findCustomFieldDefinition(tenantId, inventoryId, definitionId, scope);
+    this.seed = { ...this.seed, customFieldDefinitions: this.seed.customFieldDefinitions.filter((item) => item.id !== current.id) };
+  }
+
+  async listManagedAssetTags(tenantId: string, inventoryId: string, cursor?: string): Promise<InventoryAccessPage<ManagedAssetTag>> {
+    this.validateInventoryScope(tenantId, inventoryId);
+    return page((this.seed.assetTags ?? []).map((tag) => this.managedTag(tenantId, inventoryId, tag)), cursor);
+  }
+
+  async createManagedAssetTag(tenantId: string, inventoryId: string, draft: AssetTagDraft): Promise<ManagedAssetTag> {
+    return this.managedTag(tenantId, inventoryId, await this.createAssetTag(tenantId, inventoryId, draft));
+  }
+
+  async updateManagedAssetTag(tenantId: string, inventoryId: string, tagId: string, update: { displayName: string; color?: string }): Promise<ManagedAssetTag> {
+    this.validateInventoryScope(tenantId, inventoryId);
+    const current = (this.seed.assetTags ?? []).find((tag) => tag.id === tagId);
+    if (!current) throw new Error('Tag not found.');
+    const changed: AssetTag = { ...current, displayName: update.displayName.trim(), color: normalizeTagColor(update.color) };
+    this.seed = { ...this.seed, assetTags: (this.seed.assetTags ?? []).map((tag) => tag.id === tagId ? changed : tag) };
+    return this.managedTag(tenantId, inventoryId, changed);
+  }
+
+  async archiveManagedAssetTag(tenantId: string, inventoryId: string, tagId: string): Promise<ManagedAssetTag> {
+    this.validateInventoryScope(tenantId, inventoryId);
+    const current = (this.seed.assetTags ?? []).find((tag) => tag.id === tagId);
+    if (!current) throw new Error('Tag not found.');
+    this.seed = { ...this.seed, assetTags: (this.seed.assetTags ?? []).filter((tag) => tag.id !== tagId) };
+    return { ...this.managedTag(tenantId, inventoryId, current), lifecycleState: 'archived' };
   }
 
   async listInventoryAccessGrants(
@@ -1143,6 +1227,17 @@ export class SeededInventoryRepository
       return [];
     }
     return (this.seed.assetTags ?? []).slice().sort((left, right) => left.displayName.localeCompare(right.displayName));
+  }
+
+  private managedTag(tenantId: string, inventoryId: string, tag: AssetTag): ManagedAssetTag {
+    return {
+      ...tag,
+      tenantId,
+      inventoryId,
+      lifecycleState: 'active',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    };
   }
 
   private assetTagsByIDs(tenantId: string, inventoryId: string, tagIds: string[]): AssetTag[] {

@@ -513,6 +513,23 @@ func TestCustomAssetTypeArchiveFlowAndAuthorization(t *testing.T) {
 	if listed := decodeCustomAssetTypeList(t, listTypes); len(listed.Data) != 0 {
 		t.Fatalf("expected archived custom asset types hidden from list, got %+v", listed.Data)
 	}
+	archivedFirstPageResponse := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types?lifecycleState=archived&limit=1", "Bearer dev:inventory-owner", nil)
+	if archivedFirstPageResponse.Code != http.StatusOK {
+		t.Fatalf("expected archived type list status %d, got %d with body %s", http.StatusOK, archivedFirstPageResponse.Code, archivedFirstPageResponse.Body.String())
+	}
+	archivedFirstPage := decodeCustomAssetTypeList(t, archivedFirstPageResponse)
+	if len(archivedFirstPage.Data) != 1 || archivedFirstPage.Data[0].Scope != "tenant" || archivedFirstPage.Meta.Pagination == nil || archivedFirstPage.Meta.Pagination.NextCursor == nil {
+		t.Fatalf("expected inherited archived type first with cursor, got %+v", archivedFirstPage)
+	}
+	wrongLifecycleCursor := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types?lifecycleState=active&cursor="+*archivedFirstPage.Meta.Pagination.NextCursor, "Bearer dev:inventory-owner", nil)
+	if wrongLifecycleCursor.Code != http.StatusBadRequest {
+		t.Fatalf("expected lifecycle-bound cursor rejection %d, got %d with body %s", http.StatusBadRequest, wrongLifecycleCursor.Code, wrongLifecycleCursor.Body.String())
+	}
+	assertSafeError(t, wrongLifecycleCursor, "invalid_request", "Invalid request.")
+	invalidLifecycle := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/custom-asset-types?lifecycleState=deleted", "Bearer dev:inventory-owner", nil)
+	if invalidLifecycle.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected invalid lifecycle status %d, got %d with body %s", http.StatusUnprocessableEntity, invalidLifecycle.Code, invalidLifecycle.Body.String())
+	}
 
 	listAssets := performRequest(server, http.MethodGet, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/assets?limit=10", "Bearer dev:inventory-owner", nil)
 	if listAssets.Code != http.StatusOK {

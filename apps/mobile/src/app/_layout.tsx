@@ -67,6 +67,23 @@ function ThemedApp() {
         <Stack.Screen name="settings/connection" options={{ title: 'Stuff Stash Server' }} />
         <Stack.Screen name="settings/about" options={{ title: 'About' }} />
         <Stack.Screen name="settings/diagnostics" options={{ title: 'Diagnostics' }} />
+        <Stack.Screen name="settings/inventory/index" options={{ title: 'Inventory Settings' }} />
+        <Stack.Screen name="settings/household/index" options={{ title: 'Household Settings' }} />
+        <Stack.Screen name="settings/inventory/tags/index" options={{ title: 'Tags' }} />
+        <Stack.Screen name="settings/inventory/tags/new" options={{ title: 'Add Tag' }} />
+        <Stack.Screen name="settings/inventory/tags/[resourceId]" options={{ title: 'Tag' }} />
+        <Stack.Screen name="settings/inventory/fields/index" options={{ title: 'Custom Fields' }} />
+        <Stack.Screen name="settings/inventory/fields/new" options={{ title: 'Add Field' }} />
+        <Stack.Screen name="settings/inventory/fields/[resourceId]" options={{ title: 'Custom Field' }} />
+        <Stack.Screen name="settings/inventory/asset-types/index" options={{ title: 'Asset Types' }} />
+        <Stack.Screen name="settings/inventory/asset-types/new" options={{ title: 'Add Asset Type' }} />
+        <Stack.Screen name="settings/inventory/asset-types/[resourceId]" options={{ title: 'Asset Type' }} />
+        <Stack.Screen name="settings/household/fields/index" options={{ title: 'Custom Fields' }} />
+        <Stack.Screen name="settings/household/fields/new" options={{ title: 'Add Field' }} />
+        <Stack.Screen name="settings/household/fields/[resourceId]" options={{ title: 'Custom Field' }} />
+        <Stack.Screen name="settings/household/asset-types/index" options={{ title: 'Asset Types' }} />
+        <Stack.Screen name="settings/household/asset-types/new" options={{ title: 'Add Asset Type' }} />
+        <Stack.Screen name="settings/household/asset-types/[resourceId]" options={{ title: 'Asset Type' }} />
         <Stack.Screen name="invitations/accept" options={{ title: 'Invitation' }} />
         <Stack.Screen name="settings/voice/index" options={{ title: 'Voice Setup' }} />
         <Stack.Screen name="settings/voice/[capability]" options={{ title: 'Voice Stage' }} />

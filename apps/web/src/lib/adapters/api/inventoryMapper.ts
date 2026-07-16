@@ -38,6 +38,7 @@ import {
   type InventoryAccessInvitation,
   type Capability,
   type Inventory,
+  type ManagedAssetTag,
   type Principal,
   type SearchResult,
   type Tenant
@@ -96,6 +97,17 @@ export function mapAsset(asset: ApiAsset): Asset {
 
 export function mapAssetTag(tag: ApiAssetTag): AssetTag {
   return mapAssetTagSummary(tag);
+}
+
+export function mapManagedAssetTag(tag: ApiAssetTag): ManagedAssetTag {
+  return {
+    ...mapAssetTagSummary(tag),
+    tenantId: tag.tenantId,
+    inventoryId: tag.inventoryId,
+    lifecycleState: tag.lifecycleState,
+    createdAt: tag.createdAt,
+    updatedAt: tag.updatedAt
+  };
 }
 
 function mapAssetTagSummary(tag: { id: string; key: string; displayName: string; color?: string }): AssetTag {

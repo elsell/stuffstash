@@ -320,8 +320,7 @@ The approved first mobile bottom navigation direction is:
 - Home.
 - Browse.
 - Add as the central primary action.
-- Settings or inventory/settings access when it exists.
-- The four approved Home, Browse, Add, and Settings actions must occupy four equal mobile-navigation columns without a reserved empty slot.
+- The three approved Home, Add, and Browse actions must occupy three equal mobile-navigation columns without a reserved empty slot. Settings remains available from the named account control in the compact header and must not compete as a second top-level navigation item.
 - The mobile Add control must expose the same durable add-action URL and unavailable-state semantics as the desktop Add control.
 
 Mobile must not show a desktop-style global search bar in the header because search is the first control within Browse.
@@ -646,6 +645,8 @@ The workspace must use consistent controls for repeated interaction patterns:
 
 ## Inventory Settings
 
+The canonical cross-platform settings hierarchy and production customization-management behavior are defined by `specs/platform/client-settings-management.spec.md`. Settings must be entered through the account affordance, and web must not retain a competing top-level Tools settings destination. The requirements below remain applicable to existing access, activity, import, and administration surfaces; where customization layout or lifecycle behavior differs, the client settings management spec takes precedence.
+
 Inventory settings is the preferred location for inventory-level secondary workflows, including:
 
 - Sharing and access management.
@@ -659,10 +660,7 @@ Inventory settings must be structured as focused sections rather than one long m
 
 - `overview` for inventory and tenant summary.
 - `access` for sharing and access management.
-- `fields` for custom asset types and custom fields.
-- Side-by-side schema creation columns in `fields` must remain independently top-aligned. A long list in one column must not vertically stretch or scatter the controls in the other column.
-- Customization creation forms and their existing-definition lists must use separate grouped surfaces. On mobile, each form must precede its related list so users do not have to cross an unrelated workflow to understand what they are creating.
-- Existing custom asset types and field definitions must use bounded, divided lists with a visible count, concise metadata, and an explicit empty state rather than one bordered card per record.
+- Separate `fields`, `asset-types`, and `tags` destinations under the tenant or inventory settings level where the domain supports them. They must use list-first management rather than permanently expanded creation forms or side-by-side schema creation columns.
 - `activity` for audit/history when exposed.
 - Activity must group records by calendar day, keep the initial page bounded, and place the `Load older activity` action after the grouped list. Source, actor, target, and technical details remain secondary to the human-readable action and time.
 - `administration` for tenant or inventory administrative actions and denied states.
@@ -673,7 +671,7 @@ Inventory settings must be structured as focused sections rather than one long m
 - The settings content area should restate the active section with a concise heading and context so the user can confirm where they are after deep linking.
 - The settings page shell must avoid duplicating inventory and role context that is already present in the workspace chrome or the active settings panel. The top heading should name the task surface, while detailed inventory, tenant, and relationship values belong in the overview or focused settings content.
 
-Settings section navigation must be URL-addressable through `/settings/{section}`. Unknown settings sections must resolve to `overview` and normalize to the canonical `/settings` overview URL rather than leaving an unsupported section slug in the browser.
+Settings section navigation must use the canonical route hierarchy from `specs/platform/client-settings-management.spec.md`. Existing `/settings/{section}` links may normalize or redirect to their corresponding canonical destinations; unknown settings routes must normalize to `/settings` rather than leave unsupported state in the browser.
 
 Settings section navigation must use route-backed links with `aria-current` for the active section rather than pressed-button filter semantics. On desktop, it may render as a compact vertical section rail with short descriptions when that improves scanability. On mobile, the same sections may collapse into a compact wrapping grid or horizontal strip above the active section, as long as all sections remain discoverable, section labels remain visible, and section descriptions remain available to assistive technology without forcing a tall card grid.
 
@@ -1028,8 +1026,6 @@ Before this direction is promoted into `apps/web`:
 - "Needs attention" dashboard panels.
 - Cross-tenant global search.
 - Cross-inventory combined switcher search.
-- Full custom field editing UI.
-- Full custom asset type management UI.
 - Full direct-upload production UX.
 - Offline create queues.
 - Voice or conversational command execution.

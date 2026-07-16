@@ -147,7 +147,7 @@ func (s *Store) ListTenantCustomFieldDefinitions(_ context.Context, tenantID ten
 
 	items := []customfield.Definition{}
 	for _, definition := range s.customFields {
-		if definition.TenantID.String() == tenantID.String() && definition.Scope == customfield.ScopeTenant && definition.IsActive() && definition.CursorKey() > page.AfterDefinitionKey {
+		if definition.TenantID.String() == tenantID.String() && definition.Scope == customfield.ScopeTenant && page.Lifecycle.Includes(definition.LifecycleState.String()) && definition.CursorKey() > page.AfterDefinitionKey {
 			items = append(items, definition)
 		}
 	}
@@ -160,7 +160,7 @@ func (s *Store) ListInventoryCustomFieldDefinitions(_ context.Context, tenantID 
 
 	items := []customfield.Definition{}
 	for _, definition := range s.customFields {
-		if definition.TenantID.String() != tenantID.String() || !definition.IsActive() || definition.CursorKey() <= page.AfterDefinitionKey {
+		if definition.TenantID.String() != tenantID.String() || !page.Lifecycle.Includes(definition.LifecycleState.String()) || definition.CursorKey() <= page.AfterDefinitionKey {
 			continue
 		}
 		if definition.Scope == customfield.ScopeTenant || definition.InventoryID.String() == inventoryID.String() {

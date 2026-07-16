@@ -136,19 +136,22 @@ The web audit and Browse parity work needs a production-shaped path through:
 
 ## Next Work
 
-1. Complete the mobile asset History and atomic edit refactor.
+1. Complete production-grade web and mobile settings customization parity.
+   - Use `specs/platform/client-settings-management.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, `specs/platform/mobile-app-tracer-bullet.spec.md`, and the custom field, custom asset type, tag, lifecycle, and identity/access specs as the source of truth.
+   - Prove one account-based Settings entry, tenant and inventory drill-ins, inherited-versus-local presentation, permission-correct create/edit/lifecycle behavior, inventory tag management without invented restore behavior, equivalent failure and denied states, and screenshot-backed responsive/native verification.
+2. Complete the mobile asset History and atomic edit refactor.
    - Use `specs/audit-history/audit-and-undo.spec.md`, `specs/assets/asset-model.spec.md`, `specs/platform/rest-api-initial-slice.spec.md`, and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
    - Prove change-first activity after noisy reads, raw audit preservation, safe cursor scoping, one coherent edit/audit/operation, saved Undo feedback, and native accessibility behavior.
-2. Complete clickable web and mobile inventory invitations.
+3. Complete clickable web and mobile inventory invitations.
    - Use `specs/identity-access/tenant-inventory-access.spec.md`, `specs/identity-access/authentication-flow.spec.md`, `specs/identity-access/mobile-oidc-authentication.spec.md`, and the web/mobile platform specs as the source of truth.
    - Prove canonical link creation, token redaction, sign-in return, authenticated preview, explicit acceptance, terminal states, and post-accept inventory entry with two identities.
-3. Deepen the production mobile voice session surface.
+4. Deepen the production mobile voice session surface.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
    - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
-4. Implement the external Stuff Stash MCP server.
+5. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-5. Complete unified Home/Browse web parity and the remaining screenshot-backed audit closure matrix.
+6. Complete unified Home/Browse web parity and the remaining screenshot-backed audit closure matrix.
    - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Prioritize the shared transient-surface migration, containable workspaces, media attachment management, browser-level coverage, tenant-first switching, inventory settings, and sharing/access management.
 

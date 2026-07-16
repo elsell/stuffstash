@@ -3,7 +3,7 @@ import { assetKindLabel, assetKinds, canViewImportJobs } from '$lib/domain/inven
 import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from './workspaceRoute';
 
 export type ShellWorkspaceMode = Extract<WorkspaceMode, 'home' | 'browse' | 'import' | 'settings'>;
-export type ShellNavigationIcon = 'home' | 'browse' | 'import' | 'settings';
+export type ShellNavigationIcon = 'home' | 'browse' | 'import';
 
 export interface ShellNavigationDestination {
   mode: ShellWorkspaceMode;
@@ -47,14 +47,12 @@ const desktopPrimaryDestinations: ShellNavigationDefinition[] = [
 ];
 
 const desktopUtilityDestinations: ShellNavigationDefinition[] = [
-  { mode: 'import', label: 'Import', description: 'Bring in outside data', icon: 'import' },
-  { mode: 'settings', label: 'Settings', description: 'Access, fields, and audit', icon: 'settings' }
+  { mode: 'import', label: 'Import', description: 'Bring in outside data', icon: 'import' }
 ];
 
 const mobileDestinations: ShellNavigationDefinition[] = [
   { mode: 'home', label: 'Home', description: 'Inventory home', icon: 'home' },
-  { mode: 'browse', label: 'Browse', description: 'Find and explore', icon: 'browse' },
-  { mode: 'settings', label: 'Settings', description: 'Inventory settings', icon: 'settings' }
+  { mode: 'browse', label: 'Browse', description: 'Find and explore', icon: 'browse' }
 ];
 
 export function shellModeHref(
@@ -65,7 +63,7 @@ export function shellModeHref(
 ): string {
   const route: Partial<WorkspaceRouteState> = { mode };
   if (mode === 'settings') {
-    route.settingsSection = settingsSection;
+    route.settingsLevel = 'overview';
   }
   return workspaceRouteHref(route, tenantId, inventoryId);
 }

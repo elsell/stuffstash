@@ -1132,15 +1132,6 @@ function AssetTagPicker({
           style={[styles.input, styles.newTagNameInput]}
           value={newTagName}
         />
-        <TextInput
-          accessibilityLabel="New tag color"
-          autoCapitalize="characters"
-          onChangeText={setNewTagColor}
-          placeholder="#2F80ED"
-          placeholderTextColor={colors.textMuted}
-          style={[styles.input, styles.newTagColorInput]}
-          value={newTagColor}
-        />
         <Pressable
           accessibilityRole="button"
           disabled={!canAddNewTag}

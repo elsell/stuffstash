@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { createSettingsScreenStyles } from './SettingsScreen.styles';
@@ -40,6 +40,14 @@ export function SettingsSeparator() {
   return <View accessibilityElementsHidden importantForAccessibility="no" style={styles.separator} />;
 }
 
+export function SettingsLoadingRow({ label }: { readonly label: string }) {
+  const { palette, styles } = useSettingsListStyles();
+  return <View accessibilityLiveRegion="polite" accessibilityRole="progressbar" style={styles.loadingRow}>
+    <ActivityIndicator color={palette.action} />
+    <Text style={styles.loadingText}>{label}</Text>
+  </View>;
+}
+
 export function SettingsNavigationRow({
   accessibilityLabel,
   context,
@@ -55,7 +63,7 @@ export function SettingsNavigationRow({
   readonly onPress: () => void;
   readonly value?: string;
 }) {
-  const { layout, palette, styles } = useSettingsListStyles();
+  const { palette, styles } = useSettingsListStyles();
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -72,7 +80,7 @@ export function SettingsNavigationRow({
         </View>
         <View style={styles.rowTrailing}>
           {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-          {!layout.stacksLabelValueRows ? <ChevronRight color={palette.textMuted} size={18} /> : null}
+          <ChevronRight color={palette.textMuted} size={18} />
         </View>
       </View>
     </Pressable>

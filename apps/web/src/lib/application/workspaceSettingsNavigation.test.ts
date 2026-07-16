@@ -14,16 +14,16 @@ import {
 describe('workspace settings navigation', () => {
   it('builds canonical settings section hrefs with section-specific durable filter state', () => {
     expect(settingsSectionHref('tenant-one', 'inventory-one', 'overview', 'revoked', 'tenant')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings'
+      '/settings/tenants/tenant-one/inventories/inventory-one'
     );
     expect(settingsSectionHref('tenant-one', 'inventory-one', 'access', 'revoked', 'tenant')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=revoked'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=revoked'
     );
     expect(settingsSectionHref('tenant-one', 'inventory-one', 'activity', 'revoked', 'tenant')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
+      '/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant'
     );
     expect(settingsSectionHref('tenant-one', 'inventory-one', 'fields', 'revoked', 'tenant')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/fields'
+      '/settings/tenants/tenant-one/inventories/inventory-one/fields'
     );
   });
 
@@ -42,7 +42,7 @@ describe('workspace settings navigation', () => {
         label: 'Overview',
         description: 'Inventory context and access summary',
         icon: 'boxes',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one',
         current: false
       },
       {
@@ -50,7 +50,7 @@ describe('workspace settings navigation', () => {
         label: 'Access',
         description: 'Sharing, grants, and invitations',
         icon: 'users',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=pending',
         current: true
       },
       {
@@ -58,7 +58,7 @@ describe('workspace settings navigation', () => {
         label: 'Fields',
         description: 'Custom asset types and fields',
         icon: 'sliders',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/fields',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/fields',
         current: false
       },
       {
@@ -66,7 +66,7 @@ describe('workspace settings navigation', () => {
         label: 'Activity',
         description: 'Audit history for this workspace',
         icon: 'activity',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant',
         current: false
       }
     ]);
@@ -74,16 +74,16 @@ describe('workspace settings navigation', () => {
 
   it('builds access invitation and audit scope filter hrefs', () => {
     expect(settingsInvitationStatusHref('tenant-one', 'inventory-one', 'all')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access'
     );
     expect(settingsInvitationStatusHref('tenant-one', 'inventory-one', 'pending')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=pending'
     );
     expect(settingsAuditScopeHref('tenant-one', 'inventory-one', 'inventory')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/activity'
+      '/settings/tenants/tenant-one/inventories/inventory-one/activity'
     );
     expect(settingsAuditScopeHref('tenant-one', 'inventory-one', 'tenant')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
+      '/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant'
     );
   });
 
@@ -92,32 +92,32 @@ describe('workspace settings navigation', () => {
       {
         value: 'all',
         label: 'All',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access'
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access'
       },
       {
         value: 'pending',
         label: 'Pending',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=pending'
       },
       {
         value: 'accepted',
         label: 'Accepted',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=accepted'
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=accepted'
       },
       {
         value: 'revoked',
         label: 'Revoked',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=revoked'
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=revoked'
       },
       {
         value: 'cancelled',
         label: 'Cancelled',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=cancelled'
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=cancelled'
       },
       {
         value: 'expired',
         label: 'Expired',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=expired'
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=expired'
       }
     ]);
   });
@@ -145,13 +145,13 @@ describe('workspace settings navigation', () => {
       {
         value: 'inventory',
         label: 'Inventory',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/activity',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/activity',
         disabled: true
       },
       {
         value: 'tenant',
         label: 'Tenant',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant',
         disabled: false
       }
     ]);

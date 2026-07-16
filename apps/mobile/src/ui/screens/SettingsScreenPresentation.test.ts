@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSettingsRootSections,
+  settingsLayoutMetrics,
   settingsLayoutMode,
   type SettingsRootPresentationInput
 } from './SettingsScreenPresentation';
@@ -12,16 +13,15 @@ describe('Settings root presentation', () => {
     expect(sections.map((section) => section.id)).toEqual([
       'account',
       'preferences',
-      'inventory-administration',
-      'tenant-administration',
+      'scope',
       'connection',
       'about'
     ]);
     expect(sections.flatMap((section) => section.rows.map((row) => row.id))).toEqual([
       'account',
       'appearance',
-      'sharing',
-      'voice-setup',
+      'tenant-settings',
+      'inventory-settings',
       'server',
       'about',
       'diagnostics'
@@ -44,7 +44,7 @@ describe('Settings root presentation', () => {
     ]));
   });
 
-  it('identifies tenant-wide voice configuration and exposes it only with configure permission', () => {
+  it('identifies the named household and inventory settings levels', () => {
     const configurable = buildSettingsRootSections(input({
       selectedTenant: {
         id: 'tenant-home',
@@ -52,41 +52,13 @@ describe('Settings root presentation', () => {
         permissions: ['view', 'configure']
       }
     }));
-    const voiceRow = configurable
-      .flatMap((section) => section.rows)
-      .find((row) => row.id === 'voice-setup');
-
-    expect(voiceRow).toMatchObject({
-      label: 'Voice Setup',
-      value: 'Needs attention',
-      context: 'Shared with Home',
-      destination: 'voice-setup',
-      accessibilityLabel: 'Open Voice Setup for the Home tenant. Needs attention',
-      showsDisclosure: true
-    });
-
-    const viewer = buildSettingsRootSections(input({
-      selectedTenant: {
-        id: 'tenant-home',
-        name: 'Home',
-        permissions: ['view']
-      }
-    }));
-    expect(viewer.flatMap((section) => section.rows).some((row) => row.id === 'voice-setup'))
-      .toBe(false);
-    expect(viewer.some((section) => section.id === 'tenant-administration')).toBe(false);
+    expect(configurable.flatMap((section) => section.rows)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'tenant-settings', label: 'Home', value: 'Household settings' }),
+      expect.objectContaining({ id: 'inventory-settings', label: 'Household', value: 'In Home' })
+    ]));
   });
 
-  it('exposes inventory Sharing only for the selected inventory share permission', () => {
-    const sharing = buildSettingsRootSections(input()).flatMap((section) => section.rows)
-      .find((row) => row.id === 'sharing');
-    expect(sharing).toMatchObject({
-      label: 'Sharing',
-      value: 'Household',
-      destination: 'sharing',
-      accessibilityLabel: 'Manage invitations for the Household inventory'
-    });
-
+  it('keeps the inventory settings destination readable for viewers', () => {
     const viewer = buildSettingsRootSections(input({
       selectedInventory: {
         id: 'inventory-home',
@@ -94,8 +66,7 @@ describe('Settings root presentation', () => {
         permissions: ['view']
       }
     }));
-    expect(viewer.flatMap((section) => section.rows).some((row) => row.id === 'sharing'))
-      .toBe(false);
+    expect(viewer.flatMap((section) => section.rows).some((row) => row.id === 'inventory-settings')).toBe(true);
   });
 
   it('keeps opaque and developer-only details behind Diagnostics', () => {
@@ -125,6 +96,15 @@ describe('Settings root presentation', () => {
 });
 
 describe('Settings Dynamic Type presentation', () => {
+  it('uses one shared content column and minimum native touch target', () => {
+    expect(settingsLayoutMetrics).toEqual({
+      bottomSpacing: 32,
+      horizontalInset: 16,
+      minimumTouchTarget: 44,
+      sectionSpacing: 24
+    });
+  });
+
   it('stacks values and controls at accessibility content sizes', () => {
     expect(settingsLayoutMode({ fontScale: 1 })).toEqual({
       stacksLabelValueRows: false,

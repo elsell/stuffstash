@@ -95,7 +95,15 @@ export type WorkspaceEventName =
   | 'workspace.access_invitation_delete_failed'
   | 'workspace.audit_load_started'
   | 'workspace.audit_loaded'
-  | 'workspace.audit_load_failed';
+  | 'workspace.audit_load_failed'
+  | 'workspace.settings_opened'
+  | 'workspace.settings_collection_load_started'
+  | 'workspace.settings_collection_loaded'
+  | 'workspace.settings_collection_load_failed'
+  | 'workspace.settings_mutation_started'
+  | 'workspace.settings_mutation_succeeded'
+  | 'workspace.settings_mutation_failed'
+  | 'workspace.settings_permission_denied';
 
 export interface WorkspaceObserver {
   record(eventName: WorkspaceEventName, attributes?: Record<string, string | number | boolean>): void;

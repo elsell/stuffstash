@@ -19,8 +19,6 @@
     assetDetailBackRoute,
     inventoryHomeNormalizationHref,
     inventoryHomeNormalizationRoute,
-    settingsOverviewHref,
-    settingsOverviewRoute,
     workspaceAddCloseHref,
     workspaceAddCloseRoute,
     workspaceHomeHref,
@@ -88,9 +86,11 @@
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import type { InventoryTagRepository } from '$lib/ports/inventoryTagRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
   import type { WorkspaceNotification, WorkspaceNotificationAction } from '$lib/components/ui/sonner/index.js';
+  import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
   import InventoryWorkspaceChrome from './InventoryWorkspaceChrome.svelte';
   import InventoryWorkspaceOverlays from './InventoryWorkspaceOverlays.svelte';
   import InventoryWorkspaceRouteContent from './InventoryWorkspaceRouteContent.svelte';
@@ -98,11 +98,13 @@
 
   let {
     repository,
+    observer = { record: () => {} },
     initialData,
     onSignOut,
     onSessionExpired = onSignOut
   }: {
-    repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & AssetThumbnailLoader;
+    repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
+    observer?: WorkspaceObserver;
     initialData: WorkspaceData;
     onSignOut: () => void;
     onSessionExpired?: () => void;
@@ -143,6 +145,11 @@
   let browseScope = $state<BrowseScope>(startingRoute.browseScope);
   let browseSort = $state<BrowseSort>(startingRoute.browseSort);
   let settingsSection = $state<SettingsSection>('overview');
+  let settingsLevel = $state<WorkspaceRouteState['settingsLevel']>(startingRoute.settingsLevel);
+  let settingsCollection = $state<WorkspaceRouteState['settingsCollection']>(startingRoute.settingsCollection);
+  let settingsLifecycle = $state<WorkspaceRouteState['settingsLifecycle']>(startingRoute.settingsLifecycle);
+  let settingsResourceId = $state<string | null>(startingRoute.settingsResourceId);
+  let settingsResourceAction = $state<WorkspaceRouteState['settingsResourceAction']>(startingRoute.settingsResourceAction);
   let invitationStatus = $state<WorkspaceRouteState['invitationStatus']>('all');
   let accessInvitationAction = $state<WorkspaceRouteState['accessInvitationAction']>(null);
   let accessInvitationId = $state<string | null>(null);
@@ -193,7 +200,7 @@
   let userLabel = $derived(accountDisplayLabel(data.context.principal));
   let modalSurfaceOpen = $derived(
     addOpen || assetAction !== null || attachmentAction === 'delete' ||
-    accessInvitationAction !== null || customizationAction !== null
+    accessInvitationAction !== null || customizationAction !== null || settingsResourceAction !== null
   );
 
   onMount(() => {
@@ -981,6 +988,11 @@
       searchMode = route.searchMode;
       searchCheckoutState = route.searchCheckoutState;
       settingsSection = route.settingsSection;
+      settingsLevel = route.settingsLevel;
+      settingsCollection = route.settingsCollection;
+      settingsLifecycle = route.settingsLifecycle;
+      settingsResourceId = route.settingsResourceId;
+      settingsResourceAction = route.settingsResourceAction;
       invitationStatus = route.invitationStatus;
       accessInvitationAction = route.accessInvitationAction;
       accessInvitationId = route.accessInvitationId;
@@ -1169,7 +1181,6 @@
         loadedAssetDetail = null;
         selectedAssetAttachments = [];
         selectedAssetCheckoutHistory = [];
-        normalizeSettingsOverviewRoute(route);
         canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         return;
       }
@@ -1248,6 +1259,23 @@
       importJobId: null,
       importTab: null
     });
+  }
+
+  function navigateSettingsHref(href: string): void {
+    window.history.pushState({}, '', href);
+    void applyRoute(currentWorkspaceRoute());
+  }
+
+  function updateManagedTags(tags: import('$lib/domain/inventory').ManagedAssetTag[]): void {
+    data = { ...data, context: { ...data.context, assetTags: tags } };
+  }
+
+  async function refreshSettingsPermissions(): Promise<void> {
+    try {
+      data = await repository.loadWorkspace();
+    } catch (caught) {
+      if (isAuthenticationRequiredError(caught)) onSessionExpired();
+    }
   }
 
   function updateBrowseState(next: {
@@ -1565,16 +1593,6 @@
     replaceCanonicalWorkspaceAlias(route, data.context.selectedTenantId || null, data.context.selectedInventoryId || null);
   }
 
-  function normalizeSettingsOverviewRoute(route: WorkspaceRouteState): void {
-    if (route.mode !== 'settings' || route.settingsSection !== 'overview' || typeof window === 'undefined') {
-      return;
-    }
-    const canonicalHref = settingsOverviewHref(data.context);
-    if (`${window.location.pathname}${window.location.search}` !== canonicalHref) {
-      replaceRoute(settingsOverviewRoute(data.context));
-    }
-  }
-
   function normalizeInventoryHomeRoute(route: WorkspaceRouteState): void {
     if (
       route.mode !== 'home' ||
@@ -1787,13 +1805,14 @@
     onSearch={() => { void search(); }}
     onOpenSearchAsset={openSearchAsset}
     onOpenAdd={openAdd}
-    onOpenAccountSettings={() => openSettingsSection('overview')}
+    onOpenAccountSettings={() => navigateSettingsHref('/settings')}
     {onSignOut}
   >
   <InventoryWorkspaceRouteContent
     workspace={{
       data,
       repository,
+      observer,
       selectedTenant,
       selectedInventory,
       selectedLocation,
@@ -1826,6 +1845,11 @@
       attachmentId,
       attachmentAction,
       settingsSection,
+      settingsLevel,
+      settingsCollection,
+      settingsLifecycle,
+      settingsResourceId,
+      settingsResourceAction,
       invitationStatus,
       accessInvitationAction,
       accessInvitationId,
@@ -1879,6 +1903,9 @@
       onOpenImportedAssetId: openImportedAssetId,
       onOpenInventoryAuditHistory: openInventoryAuditHistory,
       onSettingsSectionChange: openSettingsSection,
+      onSettingsNavigate: navigateSettingsHref,
+      onSettingsTagsChange: updateManagedTags,
+      onSettingsPermissionDenied: refreshSettingsPermissions,
       onInvitationStatusChange: openInvitationStatusFilter,
       onAccessInvitationActionOpen: openAccessInvitationAction,
       onAccessInvitationActionClose: closeAccessInvitationAction,

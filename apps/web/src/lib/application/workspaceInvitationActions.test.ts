@@ -23,13 +23,13 @@ describe('workspace invitation actions', () => {
 
   it('builds canonical access invitation cancel and action hrefs', () => {
     expect(accessInvitationsHref('tenant-one', 'inventory-one', 'pending')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=pending'
     );
     expect(accessInvitationsHref('tenant-one', 'inventory-one', 'all')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access'
     );
     expect(invitationActionHref('tenant-one', 'inventory-one', 'pending', invitation('pending', false), 'delete')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/delete?invitationStatus=pending'
     );
   });
 
@@ -47,7 +47,7 @@ describe('workspace invitation actions', () => {
         action: 'expire',
         label: 'Expire',
         ariaLabel: undefined,
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/expire?invitationStatus=pending',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/expire?invitationStatus=pending',
         disabled: false,
         destructive: false,
         iconOnly: false
@@ -56,7 +56,7 @@ describe('workspace invitation actions', () => {
         action: 'cancel',
         label: 'Cancel',
         ariaLabel: undefined,
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/cancel?invitationStatus=pending',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/cancel?invitationStatus=pending',
         disabled: false,
         destructive: false,
         iconOnly: false
@@ -65,7 +65,7 @@ describe('workspace invitation actions', () => {
         action: 'delete',
         label: 'Delete',
         ariaLabel: 'Delete invitation for friend@example.test',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending',
+        href: '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/delete?invitationStatus=pending',
         disabled: false,
         destructive: true,
         iconOnly: true

@@ -14,7 +14,15 @@ type WorkspaceApiState = {
   thumbnailRequestPaths: string[];
   apiRequestPaths: string[];
   lastAssetPatch: AssetPatch | null;
+  managedTags: SettingsTag[];
+  customAssetTypes: SettingsAssetType[];
+  customFields: SettingsField[];
+  homeInventoryPermissions: string[];
 };
+
+type SettingsTag = ReturnType<typeof assetTag>;
+type SettingsAssetType = ReturnType<typeof customAssetType>;
+type SettingsField = ReturnType<typeof customField>;
 
 type AssetOverride = {
   title?: string;
@@ -67,6 +75,22 @@ export function thumbnailRequestPaths(page: Page): string[] {
 
 export function apiRequestPaths(page: Page): string[] {
   return workspaceState(page).apiRequestPaths;
+}
+
+export function seedSettingsManagementState(page: Page): void {
+  const state = workspaceState(page);
+  state.customAssetTypes = [
+    customAssetType('type-appliance', 'appliance', 'Appliance', 'Inventory', 'inventory'),
+    customAssetType('type-shared-document', 'document', 'Document', 'Shared by Home', 'tenant')
+  ];
+  state.customFields = [
+    customField('field-serial', 'serial-number', 'Serial number', 'text', 'inventory'),
+    customField('field-shared-purchased', 'purchased-on', 'Purchased on', 'date', 'tenant')
+  ];
+}
+
+export function setHomeInventoryPermissions(page: Page, permissions: string[]): void {
+  workspaceState(page).homeInventoryPermissions = permissions;
 }
 
 export async function installAuthenticatedWorkspace(page: Page): Promise<void> {
@@ -132,7 +156,11 @@ function freshWorkspaceApiState(): WorkspaceApiState {
     uploadedPhotos: {},
     thumbnailRequestPaths: [],
     apiRequestPaths: [],
-    lastAssetPatch: null
+    lastAssetPatch: null,
+    managedTags: [assetTag('tag-workshop', 'workshop', 'Workshop', '#2F80ED'), assetTag('tag-uncolored', 'reference', 'Reference')],
+    customAssetTypes: [],
+    customFields: [],
+    homeInventoryPermissions: ['view', 'create_asset', 'edit_asset', 'share', 'configure', 'view_import_job', 'create_import_job']
   };
 }
 
@@ -165,15 +193,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories') {
     await fulfill(route, [
-      inventory('inventory-household', 'tenant-home', 'Household', [
-        'view',
-        'create_asset',
-        'edit_asset',
-        'share',
-        'configure',
-        'view_import_job',
-        'create_import_job'
-      ])
+      inventory('inventory-household', 'tenant-home', 'Household', state.homeInventoryPermissions)
     ]);
     return;
   }
@@ -190,16 +210,44 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
   if (method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/tags') {
-    if (url.searchParams.get('limit') !== '100') {
+    if (!['50', '100'].includes(url.searchParams.get('limit') ?? '')) {
       await route.fulfill({
         status: 400,
         contentType: 'application/json',
-        body: JSON.stringify({ error: { code: 'unexpected_query', message: 'Expected tag list limit=100.' } })
+        body: JSON.stringify({ error: { code: 'unexpected_query', message: 'Expected tag list limit=50 or limit=100.' } })
       });
       return;
     }
-    await fulfill(route, [assetTag('tag-workshop', 'workshop', 'Workshop', '#2F80ED')]);
+    await fulfill(route, state.managedTags.filter((tag) => tag.lifecycleState === 'active'));
     return;
+  }
+  if (method === 'POST' && path === '/tenants/tenant-home/inventories/inventory-household/tags') {
+    const body = (await request.postDataJSON()) as { displayName: string; color?: string };
+    const created = assetTag(`tag-${slug(body.displayName)}`, slug(body.displayName), body.displayName, body.color);
+    state.managedTags.push(created);
+    await fulfill(route, created, 201);
+    return;
+  }
+  const tagMatch = path.match(/^\/tenants\/tenant-home\/inventories\/inventory-household\/tags\/([^/]+)$/);
+  if (tagMatch && method === 'PATCH') {
+    const body = (await request.postDataJSON()) as { displayName: string; color?: string };
+    const tag = state.managedTags.find((item) => item.id === tagMatch[1]);
+    if (tag) {
+      tag.displayName = body.displayName;
+      tag.color = body.color || undefined;
+      tag.updatedAt = '2026-07-16T12:00:00Z';
+      await fulfill(route, tag);
+      return;
+    }
+  }
+  if (tagMatch && method === 'DELETE') {
+    const tag = state.managedTags.find((item) => item.id === tagMatch[1]);
+    if (tag) {
+      tag.lifecycleState = 'archived';
+      tag.updatedAt = '2026-07-16T12:00:00Z';
+      await fulfill(route, tag);
+      return;
+    }
   }
   if (method === 'GET' && path === '/tenants/tenant-cabin/inventories/inventory-cabin/assets') {
     await fulfill(route, [asset('asset-lantern', 'tenant-cabin', 'inventory-cabin', 'Lantern')]);
@@ -366,14 +414,7 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     await fulfill(route, []);
     return;
   }
-  if (method === 'GET' && path.endsWith('/custom-asset-types')) {
-    await fulfill(route, []);
-    return;
-  }
-  if (method === 'GET' && path.endsWith('/custom-field-definitions')) {
-    await fulfill(route, []);
-    return;
-  }
+  if (await routeSettingsSchemaRequest(route, state, method, path, url)) return;
   if (method === 'GET' && path.endsWith('/thumbnail')) {
     state.thumbnailRequestPaths.push(`${path}?${url.searchParams.toString()}`);
     await route.fulfill({
@@ -389,6 +430,94 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     contentType: 'application/json',
     body: JSON.stringify({ error: { code: 'not_found', message: `Unhandled ${method} ${path}` } })
   });
+}
+
+async function routeSettingsSchemaRequest(
+  route: Route,
+  state: WorkspaceApiState,
+  method: string,
+  path: string,
+  url: URL
+): Promise<boolean> {
+  const assetTypeCollection = path.match(/^\/tenants\/tenant-home(?:\/inventories\/inventory-household)?\/custom-asset-types$/);
+  const assetTypeMember = path.match(/^\/tenants\/tenant-home(?:\/inventories\/inventory-household)?\/custom-asset-types\/([^/]+)(?:\/(archive|restore))?$/);
+  const fieldCollection = path.match(/^\/tenants\/tenant-home(?:\/inventories\/inventory-household)?\/custom-field-definitions$/);
+  const fieldMember = path.match(/^\/tenants\/tenant-home(?:\/inventories\/inventory-household)?\/custom-field-definitions\/([^/]+)(?:\/(archive|restore))?$/);
+  const requestedScope = path.includes('/inventories/') ? 'inventory' : 'tenant';
+  const lifecycle = url.searchParams.get('lifecycleState') ?? 'active';
+
+  if (assetTypeCollection && method === 'GET') {
+    await fulfill(route, state.customAssetTypes.filter((item) => (requestedScope === 'inventory' || item.scope === 'tenant') && (lifecycle === 'all' || item.lifecycleState === lifecycle)));
+    return true;
+  }
+  if (assetTypeCollection && method === 'POST') {
+    const body = (await route.request().postDataJSON()) as { key: string; displayName: string; description?: string };
+    const created = customAssetType(`type-${slug(body.key)}`, body.key, body.displayName, body.description ?? '', requestedScope);
+    state.customAssetTypes.push(created);
+    await fulfill(route, created, 201);
+    return true;
+  }
+  if (assetTypeMember) {
+    const item = state.customAssetTypes.find((candidate) => candidate.id === assetTypeMember[1] && candidate.scope === requestedScope);
+    if (!item) return false;
+    if (method === 'PATCH' && !assetTypeMember[2]) {
+      const body = (await route.request().postDataJSON()) as { displayName?: string; description?: string };
+      item.displayName = body.displayName ?? item.displayName;
+      item.description = body.description ?? item.description;
+      await fulfill(route, item);
+      return true;
+    }
+    if (method === 'PATCH' && assetTypeMember[2]) {
+      item.lifecycleState = assetTypeMember[2] === 'archive' ? 'archived' : 'active';
+      await fulfill(route, item);
+      return true;
+    }
+    if (method === 'DELETE') {
+      state.customAssetTypes = state.customAssetTypes.filter((candidate) => candidate.id !== item.id);
+      await route.fulfill({ status: 204 });
+      return true;
+    }
+  }
+
+  if (fieldCollection && method === 'GET') {
+    await fulfill(route, state.customFields.filter((item) => (requestedScope === 'inventory' || item.scope === 'tenant') && (lifecycle === 'all' || item.lifecycleState === lifecycle)));
+    return true;
+  }
+  if (fieldCollection && method === 'POST') {
+    const body = (await route.request().postDataJSON()) as { key: string; displayName: string; type: SettingsField['type']; enumOptions?: string[]; applicability?: SettingsField['applicability']; customAssetTypeIds?: string[] };
+    const created = customField(`field-${slug(body.key)}`, body.key, body.displayName, body.type, requestedScope, {
+      enumOptions: body.enumOptions,
+      applicability: body.applicability,
+      customAssetTypeIds: body.customAssetTypeIds
+    });
+    state.customFields.push(created);
+    await fulfill(route, created, 201);
+    return true;
+  }
+  if (fieldMember) {
+    const item = state.customFields.find((candidate) => candidate.id === fieldMember[1] && candidate.scope === requestedScope);
+    if (!item) return false;
+    if (method === 'PATCH' && !fieldMember[2]) {
+      const body = (await route.request().postDataJSON()) as Partial<Pick<SettingsField, 'displayName' | 'enumOptions' | 'applicability' | 'customAssetTypeIds'>>;
+      item.displayName = body.displayName ?? item.displayName;
+      item.enumOptions = body.enumOptions ?? item.enumOptions;
+      item.applicability = body.applicability ?? item.applicability;
+      item.customAssetTypeIds = body.customAssetTypeIds ?? item.customAssetTypeIds;
+      await fulfill(route, item);
+      return true;
+    }
+    if (method === 'PATCH' && fieldMember[2]) {
+      item.lifecycleState = fieldMember[2] === 'archive' ? 'archived' : 'active';
+      await fulfill(route, item);
+      return true;
+    }
+    if (method === 'DELETE') {
+      state.customFields = state.customFields.filter((candidate) => candidate.id !== item.id);
+      await route.fulfill({ status: 204 });
+      return true;
+    }
+  }
+  return false;
 }
 
 function hasID(value: object, id: string | undefined): boolean {
@@ -499,7 +628,7 @@ function inventory(id: string, tenantId: string, name: string, permissions: stri
   };
 }
 
-function assetTag(id: string, key: string, displayName: string, color?: string): object {
+function assetTag(id: string, key: string, displayName: string, color?: string) {
   return {
     id,
     tenantId: 'tenant-home',
@@ -511,6 +640,46 @@ function assetTag(id: string, key: string, displayName: string, color?: string):
     createdAt: '2026-07-07T12:00:00Z',
     updatedAt: '2026-07-07T12:00:00Z'
   };
+}
+
+function customAssetType(id: string, key: string, displayName: string, description: string, scope: 'tenant' | 'inventory') {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: scope === 'inventory' ? 'inventory-household' : null,
+    scope,
+    key,
+    displayName,
+    description,
+    lifecycleState: 'active' as 'active' | 'archived'
+  };
+}
+
+function customField(
+  id: string,
+  key: string,
+  displayName: string,
+  type: 'text' | 'number' | 'boolean' | 'date' | 'url' | 'enum',
+  scope: 'tenant' | 'inventory',
+  options: { enumOptions?: string[]; applicability?: 'all_assets' | 'custom_asset_types'; customAssetTypeIds?: string[] } = {}
+) {
+  return {
+    id,
+    tenantId: 'tenant-home',
+    inventoryId: scope === 'inventory' ? 'inventory-household' : null,
+    scope,
+    key,
+    displayName,
+    type,
+    enumOptions: options.enumOptions ?? [],
+    applicability: options.applicability ?? 'all_assets' as 'all_assets' | 'custom_asset_types',
+    customAssetTypeIds: options.customAssetTypeIds ?? [],
+    lifecycleState: 'active' as 'active' | 'archived'
+  };
+}
+
+function slug(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 function accessGrant(principalId: string, relationship: string): object {

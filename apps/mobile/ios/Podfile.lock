@@ -247,6 +247,9 @@ PODS:
     - ExpoModulesCore
   - ExpoSymbols (55.0.9):
     - ExpoModulesCore
+  - ExpoUI (55.0.17):
+    - ExpoModulesCore
+    - React-RCTFabric
   - ExpoWebBrowser (55.0.17):
     - ExpoModulesCore
   - EXUpdatesInterface (55.1.6):
@@ -2371,7 +2374,7 @@ PODS:
 
 DEPENDENCIES:
   - "EXApplication (from `../../../node_modules/.pnpm/expo-application@55.0.16_expo@55.0.26/node_modules/expo-application/ios`)"
-  - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@55.0.16_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react_05499f0f5f9c164ad63639ee147e9188/node_modules/expo-constants/ios`)"
+  - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@55.0.16_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react_1ab6d4168e9d1067ad7641c3331e1f45/node_modules/expo-constants/ios`)"
   - "EXJSONUtils (from `../../../node_modules/.pnpm/expo-json-utils@55.0.2/node_modules/expo-json-utils/ios`)"
   - "EXManifests (from `../../../node_modules/.pnpm/expo-manifests@55.0.17_expo@55.0.26/node_modules/expo-manifests/ios`)"
   - "Expo (from `../../../node_modules/.pnpm/expo@55.0.26_@babel+core@7.29.7_@expo+dom-webview@55.0.6_@expo+metro-runtime@55.0.11_ex_3fdd5a046fcda0b37ab3281d70c91574/node_modules/expo`)"
@@ -2397,6 +2400,7 @@ DEPENDENCIES:
   - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@55.0.16_@expo+log-box@55.0.12_@expo+metro-runtime@55.0.11_@types+react@19.2_11b45b9efd1f0785b5d2dc63ba764332/node_modules/expo-router/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios`)"
   - "ExpoSymbols (from `../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._d57ffd5a6a16a992b90b2f2e41a11a02/node_modules/expo-symbols/ios`)"
+  - "ExpoUI (from `../../../node_modules/.pnpm/@expo+ui@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2._9d884da5704667673d1e452ffd429a5f/node_modules/@expo/ui/ios`)"
   - "ExpoWebBrowser (from `../../../node_modules/.pnpm/expo-web-browser@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+rea_2201748130530886c481e7fd3cc17c91/node_modules/expo-web-browser/ios`)"
   - "EXUpdatesInterface (from `../../../node_modules/.pnpm/expo-updates-interface@55.1.6_expo@55.0.26/node_modules/expo-updates-interface/ios`)"
   - "FBLazyVector (from `../../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0_supports-color@10.2.2/node_modules/react-native/Libraries/FBLazyVector`)"
@@ -2493,7 +2497,7 @@ EXTERNAL SOURCES:
   EXApplication:
     :path: "../../../node_modules/.pnpm/expo-application@55.0.16_expo@55.0.26/node_modules/expo-application/ios"
   EXConstants:
-    :path: "../../../node_modules/.pnpm/expo-constants@55.0.16_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react_05499f0f5f9c164ad63639ee147e9188/node_modules/expo-constants/ios"
+    :path: "../../../node_modules/.pnpm/expo-constants@55.0.16_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react_1ab6d4168e9d1067ad7641c3331e1f45/node_modules/expo-constants/ios"
   EXJSONUtils:
     :path: "../../../node_modules/.pnpm/expo-json-utils@55.0.2/node_modules/expo-json-utils/ios"
   EXManifests:
@@ -2544,6 +2548,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios"
   ExpoSymbols:
     :path: "../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._d57ffd5a6a16a992b90b2f2e41a11a02/node_modules/expo-symbols/ios"
+  ExpoUI:
+    :path: "../../../node_modules/.pnpm/@expo+ui@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2._9d884da5704667673d1e452ffd429a5f/node_modules/@expo/ui/ios"
   ExpoWebBrowser:
     :path: "../../../node_modules/.pnpm/expo-web-browser@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+rea_2201748130530886c481e7fd3cc17c91/node_modules/expo-web-browser/ios"
   EXUpdatesInterface:
@@ -2734,6 +2740,7 @@ SPEC CHECKSUMS:
   ExpoRouter: e0e2aa4b03843e7abfa3e63e0cdd6c642d74780f
   ExpoSecureStore: f495a3e0ab65683be8427a96f694726a88048f46
   ExpoSymbols: 896159288ad708e1a32dc12c92fe5f90bff01126
+  ExpoUI: 5c04357ca035630bd94dc2fdb6bc4de193f1c5c5
   ExpoWebBrowser: 3f57d6eec40cd76608ee9e660915bc474b7cfa6a
   EXUpdatesInterface: 4c11f4d1594526258f14d09817dc407acbf24e3b
   FBLazyVector: 427fa1856a481856091061293ce865a75aa4f20f

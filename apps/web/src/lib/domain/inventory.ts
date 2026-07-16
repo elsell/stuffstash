@@ -60,6 +60,14 @@ export interface AssetTag {
   color?: string;
 }
 
+export interface ManagedAssetTag extends AssetTag {
+  tenantId: string;
+  inventoryId: string;
+  lifecycleState: AssetLifecycleState;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AssetTagDraft {
   displayName: string;
   color?: string;

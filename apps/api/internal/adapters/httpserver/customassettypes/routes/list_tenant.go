@@ -20,12 +20,13 @@ func RegisterListTenant(api huma.API, application app.App) {
 		}
 
 		result, err := application.ListTenantCustomAssetTypes(ctx, app.ListCustomAssetTypesInput{
-			Principal: principal,
-			Source:    audit.SourceAPI,
-			RequestID: input.RequestID,
-			TenantID:  tenant.ID(input.TenantID),
-			Limit:     input.Limit,
-			Cursor:    input.Cursor,
+			Principal:      principal,
+			Source:         audit.SourceAPI,
+			RequestID:      input.RequestID,
+			TenantID:       tenant.ID(input.TenantID),
+			Limit:          input.Limit,
+			Cursor:         input.Cursor,
+			LifecycleState: input.LifecycleState,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

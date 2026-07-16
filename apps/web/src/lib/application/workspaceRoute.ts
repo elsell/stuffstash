@@ -5,12 +5,15 @@ import type {
   BrowseScope,
   BrowseSort,
   BrowseSurface,
+  CustomDefinitionLifecycleState,
   InvitationStatusFilter,
   SearchCheckoutFilter,
   SearchLifecycleFilter,
   SearchMode,
   WorkspaceMode
 } from '$lib/domain/inventory';
+import { formatSettingsRouteHref, type SettingsCollection, type SettingsLevel, type SettingsResourceAction } from './settingsRouteCodec';
+export type { SettingsCollection, SettingsLevel, SettingsResourceAction } from './settingsRouteCodec';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
 export type AssetRouteAction = 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
@@ -34,6 +37,11 @@ export interface WorkspaceRouteState {
   addKind: AssetKind | null;
   addParentAssetId: string | null;
   settingsSection: SettingsSection;
+  settingsLevel: SettingsLevel;
+  settingsCollection: SettingsCollection;
+  settingsLifecycle: CustomDefinitionLifecycleState;
+  settingsResourceId: string | null;
+  settingsResourceAction: SettingsResourceAction;
   invitationStatus: InvitationStatusFilter;
   accessInvitationAction: AccessInvitationRouteAction;
   accessInvitationId: string | null;
@@ -69,6 +77,11 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
   addKind: null,
   addParentAssetId: null,
   settingsSection: 'overview',
+  settingsLevel: 'overview',
+  settingsCollection: null,
+  settingsLifecycle: 'active',
+  settingsResourceId: null,
+  settingsResourceAction: null,
   invitationStatus: 'all',
   accessInvitationAction: null,
   accessInvitationId: null,
@@ -96,6 +109,8 @@ const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'move-here', 'ar
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 'cancel', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
+const settingsCollections = new Set<Exclude<SettingsCollection, null>>(['access', 'activity', 'fields', 'asset-types', 'tags']);
+const settingsResourceActions = new Set<Exclude<SettingsResourceAction, null>>(['edit', 'archive', 'restore', 'delete']);
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
 const importSources = new Set<Exclude<ImportSourceRoute, null>>(['homebox', 'homebox-csv']);
@@ -132,6 +147,14 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
   if (segments.length === 0) {
     return route;
+  }
+
+  if (segments[0] === 'settings') {
+    return parseCanonicalSettingsRoute(segments, {
+      ...route,
+      invitationStatus: parseInvitationStatus(url.searchParams.get('invitationStatus')),
+      auditScope: parseAuditScope(url.searchParams.get('auditScope'))
+    });
   }
 
   const inventoryOffset = parseInventoryOffset(segments);
@@ -215,10 +238,13 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
         return {
           ...route,
           mode: 'settings',
+          settingsLevel: 'inventory',
+          settingsCollection: 'access',
           settingsSection,
           invitationStatus: parseInvitationStatus(url.searchParams.get('invitationStatus')),
           accessInvitationAction: action,
-          accessInvitationId: resourceId
+          accessInvitationId: resourceId,
+          compatibilityAlias: true
         };
       }
       return route;
@@ -231,18 +257,28 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
         return {
           ...route,
           mode: 'settings',
+          settingsLevel: 'inventory',
+          settingsCollection: 'asset-types',
+          settingsResourceId: resourceId,
+          settingsResourceAction: 'archive',
           settingsSection,
           customizationAction: 'archive_asset_type',
-          customAssetTypeId: resourceId
+          customAssetTypeId: resourceId,
+          compatibilityAlias: true
         };
       }
       if (resource === 'field-definitions' && resourceId && action === 'archive') {
         return {
           ...route,
           mode: 'settings',
+          settingsLevel: 'inventory',
+          settingsCollection: 'fields',
+          settingsResourceId: resourceId,
+          settingsResourceAction: 'archive',
           settingsSection,
           customizationAction: 'archive_field_definition',
-          customFieldDefinitionId: resourceId
+          customFieldDefinitionId: resourceId,
+          compatibilityAlias: true
         };
       }
       return route;
@@ -253,9 +289,12 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
     return {
       ...route,
       mode: 'settings',
+      settingsLevel: 'inventory',
+      settingsCollection: settingsSection === 'access' ? 'access' : settingsSection === 'activity' ? 'activity' : settingsSection === 'fields' ? 'fields' : null,
       settingsSection,
       invitationStatus: settingsSection === 'access' ? parseInvitationStatus(url.searchParams.get('invitationStatus')) : 'all',
-      auditScope: settingsSection === 'activity' ? parseAuditScope(url.searchParams.get('auditScope')) : 'inventory'
+      auditScope: settingsSection === 'activity' ? parseAuditScope(url.searchParams.get('auditScope')) : 'inventory',
+      compatibilityAlias: true
     };
   }
   if (section === 'import') {
@@ -346,6 +385,11 @@ export function workspaceRouteHref(
   const search = new URLSearchParams();
   let path = '/';
 
+  const usesCanonicalSettingsState = 'settingsLevel' in state || 'settingsCollection' in state || 'settingsResourceId' in state || 'settingsResourceAction' in state;
+  if (next.mode === 'settings' && usesCanonicalSettingsState) {
+    return formatSettingsRouteHref(next);
+  }
+
   if (tenantId && inventoryId) {
     path = `/tenants/${encodeURIComponent(tenantId)}/inventories/${encodeURIComponent(inventoryId)}`;
   } else if (inventoryId) {
@@ -432,6 +476,63 @@ export function workspaceRouteHref(
 
   const query = search.toString();
   return query ? `${path}?${query}` : path;
+}
+
+function parseCanonicalSettingsRoute(segments: string[], route: WorkspaceRouteState): WorkspaceRouteState {
+  const settingsRoute: WorkspaceRouteState = {
+    ...route,
+    mode: 'settings',
+    settingsLevel: 'overview',
+    settingsCollection: null,
+    settingsLifecycle: route.searchLifecycleState === 'archived' ? 'archived' : 'active'
+  };
+  if (segments.length === 1) return settingsRoute;
+
+  if (segments[1] === 'account' && segments[2] && segments.length === 3) {
+    return { ...settingsRoute, settingsLevel: 'account' };
+  }
+  if (segments[1] !== 'tenants' || !segments[2]) return settingsRoute;
+
+  const tenantId = segments[2];
+  if (segments.length === 3) return { ...settingsRoute, tenantId, settingsLevel: 'tenant' };
+  if (segments[3] === 'inventories' && segments[4]) {
+    return parseSettingsCollectionSegments(
+      { ...settingsRoute, tenantId, inventoryId: segments[4], settingsLevel: 'inventory' },
+      segments.slice(5)
+    );
+  }
+  return parseSettingsCollectionSegments({ ...settingsRoute, tenantId, settingsLevel: 'tenant' }, segments.slice(3));
+}
+
+function parseSettingsCollectionSegments(route: WorkspaceRouteState, segments: string[]): WorkspaceRouteState {
+  if (segments.length === 0) return route;
+  const collection = settingsCollections.has(segments[0] as Exclude<SettingsCollection, null>)
+    ? (segments[0] as Exclude<SettingsCollection, null>)
+    : null;
+  if (!collection) return route;
+  if (segments.length === 1) return { ...route, settingsCollection: collection };
+  if (collection === 'access' && segments.length === 4 && segments[1] === 'invitations') {
+    const action = parseAccessInvitationAction(segments[3]);
+    if (segments[2] && action) {
+      return {
+        ...route,
+        settingsCollection: collection,
+        settingsSection: 'access',
+        accessInvitationId: segments[2],
+        accessInvitationAction: action
+      };
+    }
+    return route;
+  }
+  if (segments[1] === 'new' && segments.length === 2) {
+    return { ...route, settingsCollection: collection, settingsResourceAction: 'new' };
+  }
+  const resourceId = segments[1];
+  const action = settingsResourceActions.has(segments[2] as Exclude<SettingsResourceAction, null>)
+    ? (segments[2] as Exclude<SettingsResourceAction, null>)
+    : null;
+  if (!resourceId || segments.length > 3 || (segments.length === 3 && !action)) return route;
+  return { ...route, settingsCollection: collection, settingsResourceId: resourceId, settingsResourceAction: action };
 }
 
 function parseLifecycle(value: string | null): AssetLifecycleFilter {

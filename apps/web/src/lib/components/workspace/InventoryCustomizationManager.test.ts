@@ -150,6 +150,7 @@ describe('InventoryCustomizationManager', () => {
     };
     const schemaChanges: string[] = [];
     const repository: InventoryCustomizationRepository = {
+      ...fakeCustomizationRepository(),
       listInventoryCustomAssetTypes: async () => ({ items: [], pagination: page() }),
       createCustomAssetType: async (_tenantId, _inventoryId, draft) => {
         calls.push(`type:${draft.scope}:${draft.key}:${draft.displayName}`);
@@ -620,12 +621,20 @@ function buttonInGroup(groupLabel: string, text: string): HTMLButtonElement | nu
 
 function fakeCustomizationRepository(): InventoryCustomizationRepository {
   return {
+    listTenantCustomAssetTypes: async () => ({ items: [], pagination: page() }),
     listInventoryCustomAssetTypes: async () => ({ items: [], pagination: page() }),
     createCustomAssetType: async () => failRepositoryCall(),
+    updateCustomAssetType: async () => failRepositoryCall(),
     archiveCustomAssetType: async () => failRepositoryCall(),
+    restoreCustomAssetType: async () => failRepositoryCall(),
+    deleteCustomAssetType: async () => failRepositoryCall(),
+    listTenantCustomFieldDefinitions: async () => ({ items: [], pagination: page() }),
     listInventoryCustomFieldDefinitions: async () => ({ items: [], pagination: page() }),
     createCustomFieldDefinition: async () => failRepositoryCall(),
-    archiveCustomFieldDefinition: async () => failRepositoryCall()
+    updateCustomFieldDefinition: async () => failRepositoryCall(),
+    archiveCustomFieldDefinition: async () => failRepositoryCall(),
+    restoreCustomFieldDefinition: async () => failRepositoryCall(),
+    deleteCustomFieldDefinition: async () => failRepositoryCall()
   };
 }
 

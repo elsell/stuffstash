@@ -167,6 +167,9 @@ Inventory-scoped endpoints:
 Rules:
 
 - Detail requires the same permission as list for that scope.
+- Tenant and effective-inventory collection reads default to active definitions and accept `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all` so authorized clients can reach restore and guarded hard-delete workflows.
+- Lifecycle collection filters, including the query-only `all` value, belong to the application/port boundary rather than the custom-field domain lifecycle model.
+- Collection cursors must be isolated by lifecycle state, tenant, inventory when present, and effective-scope mode. Archived and all reads preserve existing authorization and tenant/inventory isolation.
 - Update/archive/restore/hard delete require configure permission for that scope.
 - Archived field definitions are hidden from normal lists and ignored for new asset validation.
 - Restore must revalidate custom asset type targets.
@@ -195,6 +198,9 @@ Inventory-scoped endpoints:
 Rules:
 
 - Detail requires the same permission as list for that scope.
+- Tenant and effective-inventory collection reads default to active types and accept `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all` so authorized clients can reach restore and guarded hard-delete workflows.
+- Lifecycle collection filters, including the query-only `all` value, belong to the application/port boundary rather than the custom-asset-type domain lifecycle model.
+- Collection cursors must be isolated by lifecycle state, tenant, inventory when present, and effective-scope mode. Archived and all reads preserve existing authorization and tenant/inventory isolation.
 - Update/archive/restore/hard delete require configure permission for that scope.
 - Archived custom asset types are hidden from normal lists and unavailable for new assets or new field targets.
 - Restore makes the type available again.
@@ -280,6 +286,7 @@ Required lifecycle write actions include:
 - Archive endpoints must verify hidden-from-normal-list behavior.
 - Restore endpoints must verify the resource returns to normal lists.
 - Hard delete endpoints must verify detail/list disappearance and preserved audit history.
+- Custom field definition and custom asset type collection tests must verify active-by-default plus explicit active, archived, and all lifecycle views, inherited effective-inventory ordering, invalid filters, cross-scope cursor rejection, and unchanged authorization/isolation for archived records.
 - Read endpoints must verify audit records are written.
-- OpenAPI tests must include all lifecycle endpoints.
+- OpenAPI tests must include all lifecycle endpoints and the customization collection `lifecycleState` query contract.
 - Generated TypeScript client artifacts must be regenerated after endpoint changes.

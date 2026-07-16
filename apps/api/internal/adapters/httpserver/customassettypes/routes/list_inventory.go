@@ -21,13 +21,14 @@ func RegisterListInventory(api huma.API, application app.App) {
 		}
 
 		result, err := application.ListInventoryCustomAssetTypes(ctx, app.ListCustomAssetTypesInput{
-			Principal:   principal,
-			Source:      audit.SourceAPI,
-			RequestID:   input.RequestID,
-			TenantID:    tenant.ID(input.TenantID),
-			InventoryID: inventory.InventoryID(input.InventoryID),
-			Limit:       input.Limit,
-			Cursor:      input.Cursor,
+			Principal:      principal,
+			Source:         audit.SourceAPI,
+			RequestID:      input.RequestID,
+			TenantID:       tenant.ID(input.TenantID),
+			InventoryID:    inventory.InventoryID(input.InventoryID),
+			Limit:          input.Limit,
+			Cursor:         input.Cursor,
+			LifecycleState: input.LifecycleState,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

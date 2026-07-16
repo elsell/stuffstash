@@ -2,7 +2,6 @@
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import Compass from '@lucide/svelte/icons/compass';
-  import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -63,7 +62,6 @@
     home: Home,
     browse: Compass,
     import: Upload,
-    settings: Settings
   };
 
   function openDestination(event: MouseEvent, destination: ShellNavigationDestination): void {

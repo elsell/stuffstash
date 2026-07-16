@@ -64,6 +64,10 @@ export function settingsSectionHref(
   return workspaceRouteHref(
     {
       mode: 'settings',
+      settingsLevel: 'inventory',
+      tenantId,
+      inventoryId,
+      settingsCollection: section === 'access' || section === 'activity' || section === 'fields' ? section : null,
       settingsSection: section,
       invitationStatus: section === 'access' ? invitationStatus : 'all',
       auditScope: section === 'activity' ? auditScope : 'inventory'
@@ -78,7 +82,7 @@ export function settingsInvitationStatusHref(
   inventoryId: string | null,
   status: InvitationStatusFilter
 ): string {
-  return workspaceRouteHref({ mode: 'settings', settingsSection: 'access', invitationStatus: status }, tenantId, inventoryId);
+  return workspaceRouteHref({ mode: 'settings', settingsLevel: 'inventory', tenantId, inventoryId, settingsCollection: 'access', settingsSection: 'access', invitationStatus: status }, tenantId, inventoryId);
 }
 
 export function settingsSectionOptions(input: {
@@ -108,7 +112,7 @@ export function settingsInvitationStatusOptions(input: {
 }
 
 export function settingsAuditScopeHref(tenantId: string | null, inventoryId: string | null, scope: AuditScope): string {
-  return workspaceRouteHref({ mode: 'settings', settingsSection: 'activity', auditScope: scope }, tenantId, inventoryId);
+  return workspaceRouteHref({ mode: 'settings', settingsLevel: 'inventory', tenantId, inventoryId, settingsCollection: 'activity', settingsSection: 'activity', auditScope: scope }, tenantId, inventoryId);
 }
 
 export function settingsAuditScopeOptions(input: {

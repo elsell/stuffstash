@@ -7,6 +7,7 @@ import { ApiAssetActivityRepository } from '../adapters/audit/ApiAssetActivityRe
 import { ApiAssetOperationReversalRepository } from '../adapters/assets/ApiAssetOperationReversalRepository';
 import { ApiAssetCheckoutHistoryRepository } from '../adapters/audit/ApiAssetCheckoutHistoryRepository';
 import { ApiCurrentPrincipalRepository } from '../adapters/identity/ApiCurrentPrincipalRepository';
+import { ApiCustomizationRepository } from '../adapters/customization/ApiCustomizationRepository';
 import { ApiInventorySummaryRepository } from '../adapters/inventories/ApiInventorySummaryRepository';
 import { ApiInventoryInvitationRepository } from '../adapters/invitations/ApiInventoryInvitationRepository';
 import { ApiOnboardingGateway } from '../adapters/onboarding/ApiOnboardingGateway';
@@ -55,6 +56,13 @@ import { SearchAssetsQuery } from '../application/search/SearchAssetsQuery';
 import { AcceptInventoryInvitationCommand } from '../application/invitations/AcceptInventoryInvitationCommand';
 import { PreviewInventoryInvitationQuery } from '../application/invitations/PreviewInventoryInvitationQuery';
 import { SettingsQuery } from '../application/settings/SettingsQuery';
+import { CustomizationContextQuery } from '../application/customization/CustomizationContextQuery';
+import { CustomizationCollectionQuery } from '../application/customization/CustomizationQueries';
+import { ManageTags } from '../application/customization/ManageTags';
+import { ManageCustomFields } from '../application/customization/ManageCustomFields';
+import { ManageCustomAssetTypes } from '../application/customization/ManageCustomAssetTypes';
+import { CustomizationAccessPolicy } from '../application/customization/CustomizationAccess';
+import { BufferedCustomizationObservability, type CustomizationEvent } from '../application/customization/CustomizationObservability';
 import { AppearancePreferenceController } from '../application/settings/AppearancePreference';
 import {
   CancelInventoryInvitationCommand,
@@ -99,6 +107,13 @@ export type MobileComposition = {
   readonly previewInventoryInvitationQuery: PreviewInventoryInvitationQuery;
   readonly acceptInventoryInvitationCommand: AcceptInventoryInvitationCommand;
   readonly settingsQuery: SettingsQuery;
+  readonly customizationContextQuery: CustomizationContextQuery;
+  readonly customizationCollectionQuery: CustomizationCollectionQuery;
+  readonly manageTags: ManageTags;
+  readonly manageCustomFields: ManageCustomFields;
+  readonly manageCustomAssetTypes: ManageCustomAssetTypes;
+  readonly customizationAccessPolicy: CustomizationAccessPolicy;
+  readonly customizationObservability: BufferedCustomizationObservability;
   readonly listInventoryInvitationsQuery: ListInventoryInvitationsQuery;
   readonly createInventoryInvitationCommand: CreateInventoryInvitationCommand;
   readonly cancelInventoryInvitationCommand: CancelInventoryInvitationCommand;
@@ -114,6 +129,7 @@ export type MobileComposition = {
 
 export type MobileCompositionOptions = {
   readonly onAuthenticationRequired?: () => void;
+  readonly onCustomizationEvent?: (event: CustomizationEvent) => void;
 };
 
 const connectionProfiles = new FileSystemConnectionProfileStore();
@@ -184,6 +200,14 @@ export function createMobileComposition(
   const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries);
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(serviceScopeId);
+  const settingsQuery = new SettingsQuery(
+    principals,
+    new ExpoSettingsDiagnosticsProvider(config),
+    new ApiSettingsScopeRepository(client, inventorySummaries)
+  );
+  const customization = new ApiCustomizationRepository(client);
+  const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
+  const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
@@ -212,11 +236,14 @@ export function createMobileComposition(
     locationAssetsQuery: new LocationAssetsQuery(inventorySummaries),
     previewInventoryInvitationQuery: new PreviewInventoryInvitationQuery(inventoryInvitations),
     acceptInventoryInvitationCommand: new AcceptInventoryInvitationCommand(inventoryInvitations),
-    settingsQuery: new SettingsQuery(
-      principals,
-      new ExpoSettingsDiagnosticsProvider(config),
-      new ApiSettingsScopeRepository(client, inventorySummaries)
-    ),
+    settingsQuery,
+    customizationContextQuery: new CustomizationContextQuery(settingsQuery),
+    customizationCollectionQuery: new CustomizationCollectionQuery(customization, customizationObservability),
+    manageTags: new ManageTags(customization, customizationObservability),
+    manageCustomFields: new ManageCustomFields(customization, customizationObservability),
+    manageCustomAssetTypes: new ManageCustomAssetTypes(customization, customizationObservability),
+    customizationAccessPolicy,
+    customizationObservability,
     listInventoryInvitationsQuery: new ListInventoryInvitationsQuery(managedInvitations),
     createInventoryInvitationCommand: new CreateInventoryInvitationCommand(managedInvitations),
     cancelInventoryInvitationCommand: new CancelInventoryInvitationCommand(managedInvitations),

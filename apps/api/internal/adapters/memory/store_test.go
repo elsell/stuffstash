@@ -89,6 +89,18 @@ func TestStoreRejectsArchiveCustomAssetTypeWithoutArchivedLifecycle(t *testing.T
 	if err := store.ArchiveCustomAssetType(ctx, archived, memoryAuditRecord(t, "audit-archive", tenantID)); err != nil {
 		t.Fatalf("archive custom asset type: %v", err)
 	}
+	active, err := store.ListInventoryCustomAssetTypes(ctx, tenantID, inventoryID, ports.CustomAssetTypePageRequest{Lifecycle: ports.CustomizationLifecycleActive})
+	if err != nil || len(active) != 0 {
+		t.Fatalf("expected active list to hide archived type, items=%+v err=%v", active, err)
+	}
+	archivedItems, err := store.ListInventoryCustomAssetTypes(ctx, tenantID, inventoryID, ports.CustomAssetTypePageRequest{Lifecycle: ports.CustomizationLifecycleArchived})
+	if err != nil || len(archivedItems) != 1 || archivedItems[0].ID != assetType.ID {
+		t.Fatalf("expected archived list to return archived type, items=%+v err=%v", archivedItems, err)
+	}
+	all, err := store.ListInventoryCustomAssetTypes(ctx, tenantID, inventoryID, ports.CustomAssetTypePageRequest{Lifecycle: ports.CustomizationLifecycleAll})
+	if err != nil || len(all) != 1 {
+		t.Fatalf("expected all list to return archived type, items=%+v err=%v", all, err)
+	}
 }
 
 func saveMemoryTenant(t *testing.T, ctx context.Context, store *Store, tenantID tenant.ID) {

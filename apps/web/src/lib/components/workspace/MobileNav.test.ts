@@ -73,7 +73,7 @@ describe('MobileNav', () => {
     expect(document.body.querySelector<HTMLAnchorElement>('a[aria-label="Add asset"]')?.getAttribute('href')).toBe(
       '/tenants/tenant-one/inventories/inventory-one/add/item'
     );
-    expect(linkContaining('Settings').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity');
+    expect(document.body.textContent).not.toContain('Settings');
   });
 
   it('does not open add when creation is unavailable', () => {

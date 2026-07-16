@@ -28,6 +28,9 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - TypeScript for mobile: `typescript 5.9.2`.
 - React types for mobile: `@types/react 19.2.17`.
 - Vitest for mobile application tests: `vitest 4.1.8`.
+- React Native Testing Library for behavioral mobile component tests: `@testing-library/react-native 14.0.1`. It is used with behavioral fakes and the real React reconciler so navigation, effects, and component state are exercised without module mocks or hand-indexed hook emulation.
+- React 19 test renderer used by React Native Testing Library: `test-renderer 1.2.0`. This is the modern custom renderer required by React Native Testing Library 14, not the deprecated `react-test-renderer`; its React `^19.0.0` peer range is compatible with the pinned React `19.2.0` and React Native `0.83.6` stack.
+- Reviewed `@jest/schemas 30.4.1` transitive schema dependency: `@sinclair/typebox 0.34.49`. The workspace override prevents the test renderer stack from floating to a release newer than the dependency-review cutoff while preserving the older React Native/Jest 29 dependency line independently.
 - Mobile generated API client workspace dependency: `@stuff-stash/api-client workspace:*`.
 - Expo Router for native mobile navigation: `expo-router 55.0.16`.
 - Expo development client for local physical-device SDK 55 testing: `expo-dev-client 55.0.35`.
@@ -38,13 +41,14 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo Audio for mobile voice recording and playback: `expo-audio 55.0.14`.
 - Expo FileSystem for mobile durable connection profile storage: `expo-file-system 55.0.22`.
 - Expo Image Picker for mobile create-form photo selection: `expo-image-picker 55.0.20`.
+- Expo UI for the native SwiftUI tag color picker on iOS: `@expo/ui 55.0.17`. This Expo SDK 55-aligned package is justified to preserve platform-native iOS color selection and accessibility semantics; it does not provide an equivalent native Android color picker, so Android uses a dependency-free project-owned full-spectrum picker with labeled hex fallback.
 - Expo Auth Session for mobile OIDC PKCE sign-in: `expo-auth-session 55.0.17`.
 - Expo Web Browser for system-browser OIDC session completion: `expo-web-browser 55.0.17`.
 - Expo Secure Store for native mobile token storage: `expo-secure-store 55.0.15`.
 - React Native Image Viewing for mobile draft photo preview carousel: `react-native-image-viewing 0.2.2`.
 - React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
 - React Native Worklets for Expo SDK 55 Reanimated: `react-native-worklets 0.7.4`.
-- React Navigation native runtime transitive dependency for Expo Router: `@react-navigation/native 7.2.6`.
+- React Navigation native runtime for Expo Router and dirty native-stack prevent-remove coordination: `@react-navigation/native 7.2.6`. It is a direct mobile dependency because the editor uses its public `usePreventRemove` hook; relying on Expo Router's transitive installation would make that safety boundary implicit and unstable.
 - React Navigation bottom tabs transitive dependency for Expo Router: `@react-navigation/bottom-tabs 7.17.0`.
 - React Navigation native stack transitive override for Expo Router peer alignment: `@react-navigation/native-stack 7.3.16`.
 - React Navigation core transitive override for dependency freshness: `@react-navigation/core 7.18.0`.

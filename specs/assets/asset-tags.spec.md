@@ -19,6 +19,8 @@ This spec covers the first native tag slice:
 
 This spec does not define tag hierarchies, global tenant-level tags, tag merge workflows, rule-based automatic tagging, tag permissions independent from inventory permissions, or tag analytics.
 
+Cross-platform tag-management navigation and interaction behavior are defined by `specs/platform/client-settings-management.spec.md`. That client spec does not add tenant tags, tag inheritance, restore, or hard delete.
+
 ## Domain Model
 
 `AssetTag` is an inventory-scoped aggregate.
@@ -168,7 +170,12 @@ Asset create and edit flows must let users:
 - Select existing active tags.
 - Remove assigned tags.
 - Create a new tag inline with display name and optional color where the UI already supports editing asset metadata.
-- Choose the optional tag color with a color-picker affordance on clients that support native color input; text entry may remain as a fallback for platforms without a native picker.
+- Choose the optional tag color through the browser-native color input on web, the native SwiftUI color picker supplied by the pinned Expo UI integration on iOS, and an accessible project-owned full-spectrum picker on Android. The Android picker must reach arbitrary valid `#RRGGBB` colors and include labeled hex entry as a fallback because the pinned Expo SDK has no equivalent native Android picker. Mobile must not reduce the full picker to a fixed set of swatches.
+- Use optional labeled quick swatches without losing access to the full picker, and clear an existing color through an explicit accessible action. Hex text entry may be offered as an advanced web fallback but must not replace the browser-native input.
+
+Tag-management collection rows on web and mobile must reserve a leading circular color slot for every tag. Colored tags use a filled circle; tags without a color use an empty outlined circle with sufficient contrast. The reserved slot keeps names aligned across mixed-color lists. The tag name must be the row's only visible text; the row must not repeat the visible indicator with a `No color`, color-name, or hex-value subtitle. The circle or row must expose a text accessibility value such as `Blue color` or `No color`, and tag identity, selection, and state must never rely on color alone.
+
+The iOS bridge must use pinned `@expo/ui 55.0.17`, justified in `specs/platform/tooling-versions.spec.md`. Review must cover Expo SDK compatibility, iOS behavior, accessibility, maintenance posture, and supply-chain risk. The client must not claim that this package supplies a native Android color picker.
 
 Web tag selection lists and web or mobile tag filter option lists must sort active tags alphabetically by display name using locale-aware, case-insensitive collation. Assigned tag chips may preserve the order supplied by the asset when that order is used for compact overflow or otherwise communicates content order.
 
@@ -203,3 +210,7 @@ Required coverage:
 - Homebox CSV `HB.labels` and `HB.tags` mapping.
 - Homebox live tag color preservation.
 - Import execution tag create/reuse counts and assignment.
+- Web and mobile tag-manager row rendering with mixed colored and uncolored tags, including the invariant leading-slot alignment, outlined no-color state, non-color accessible value, contrast, and large-text behavior.
+- Web tag create/edit using native color-input semantics for arbitrary selection and explicit clearing, including keyboard and screen-reader behavior.
+- iOS tag create/edit using the native SwiftUI picker and Android tag create/edit using the accessible full-spectrum project picker with labeled hex fallback, both covering arbitrary selection, explicit clearing, and VoiceOver/TalkBack behavior; fixed quick swatches may be tested only as an additional shortcut.
+- Visual verification of mixed colored and uncolored manager rows and the open picker in light, dark, increased-contrast, narrow/reflow, and large accessibility text presentations where the platform supports them.

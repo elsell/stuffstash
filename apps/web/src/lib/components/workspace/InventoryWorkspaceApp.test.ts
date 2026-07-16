@@ -15,6 +15,8 @@ import type {
   AssetAttachment,
   AssetLifecycleFilter,
   AuditScope,
+  CustomFieldDefinition,
+  ManagedAssetTag,
   InventoryAccessInvitation,
   InvitationStatusFilter,
   SelectedPhoto,
@@ -24,7 +26,10 @@ import type {
 } from '$lib/domain/inventory';
 import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
 import type { AuditRecordPage } from '$lib/ports/inventoryAuditRepository';
+import type { CustomFieldDefinitionUpdate } from '$lib/ports/inventoryCustomizationRepository';
+import type { AssetTagUpdate } from '$lib/ports/inventoryTagRepository';
 import type { WorkspaceSeed } from '$lib/ports/inventoryRepository';
+import { InMemoryWorkspaceObserver, type WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import InventoryWorkspaceApp from './InventoryWorkspaceApp.svelte';
 
 const afterNavigateCallbacks = vi.hoisted(() => [] as Array<() => void>);
@@ -286,6 +291,54 @@ class AuditScopeRecordingRepository extends SeededInventoryRepository {
   }
 }
 
+class PermissionRevokedFieldRepository extends SeededInventoryRepository {
+  loadCount = 0;
+
+  override async loadWorkspace(): Promise<WorkspaceData> {
+    const data = await super.loadWorkspace();
+    this.loadCount += 1;
+    if (this.loadCount === 1) return data;
+    return {
+      ...data,
+      context: {
+        ...data.context,
+        inventories: data.context.inventories.map((inventory) => ({
+          ...inventory,
+          access: inventory.access ? { ...inventory.access, permissions: inventory.access.permissions.filter((permission) => permission !== 'configure') } : inventory.access
+        }))
+      }
+    };
+  }
+
+  override async updateCustomFieldDefinition(_tenantId: string, _inventoryId: string, _definitionId: string, _scope: 'tenant' | 'inventory', _update: CustomFieldDefinitionUpdate): Promise<CustomFieldDefinition> {
+    throw Object.assign(new Error('Permission changed.'), { status: 403 });
+  }
+}
+
+class PermissionRevokedTagRepository extends SeededInventoryRepository {
+  loadCount = 0;
+
+  override async loadWorkspace(): Promise<WorkspaceData> {
+    const data = await super.loadWorkspace();
+    this.loadCount += 1;
+    if (this.loadCount === 1) return data;
+    return {
+      ...data,
+      context: {
+        ...data.context,
+        inventories: data.context.inventories.map((inventory) => ({
+          ...inventory,
+          access: inventory.access ? { ...inventory.access, permissions: inventory.access.permissions.filter((permission) => permission !== 'edit_asset') } : inventory.access
+        }))
+      }
+    };
+  }
+
+  override async updateManagedAssetTag(_tenantId: string, _inventoryId: string, _tagId: string, _update: AssetTagUpdate): Promise<ManagedAssetTag> {
+    throw Object.assign(new Error('Permission changed.'), { status: 403 });
+  }
+}
+
 class DelayedAssetRepository extends SeededInventoryRepository {
   releaseAssetLoad: (() => void) | null = null;
 
@@ -442,7 +495,7 @@ class AuthExpiredRefreshUndoableCreateRepository extends UndoableCreateRepositor
 async function mountWorkspace(
   path: string,
   repository = new SeededInventoryRepository(structuredClone(seed)),
-  options: { onSessionExpired?: () => void } = {}
+  options: { onSessionExpired?: () => void; observer?: WorkspaceObserver } = {}
 ): Promise<SeededInventoryRepository> {
   window.history.replaceState({}, '', path);
   installMatchMedia();
@@ -453,6 +506,7 @@ async function mountWorkspace(
     target: document.body,
     props: {
       repository,
+      observer: options.observer,
       initialData: await repository.loadWorkspace(),
       onSignOut: () => {},
       onSessionExpired: options.onSessionExpired
@@ -941,7 +995,7 @@ describe('InventoryWorkspaceApp route application', () => {
     controlContaining('Open inventory activity').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/activity');
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.querySelector('h1')?.textContent).not.toBe('Homebox import');
     });
@@ -984,7 +1038,7 @@ describe('InventoryWorkspaceApp route application', () => {
     afterNavigateCallbacks.forEach((callback) => callback());
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/activity');
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Imports');
     });
@@ -1055,7 +1109,7 @@ describe('InventoryWorkspaceApp route application', () => {
     repository.releaseAssetLoad?.();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/activity');
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Blue folder');
     });
@@ -1144,7 +1198,7 @@ describe('InventoryWorkspaceApp route application', () => {
     repository.releaseAssetLoad?.();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/activity');
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Blue folder');
     });
@@ -1224,11 +1278,11 @@ describe('InventoryWorkspaceApp route application', () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=revoked', repository);
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/access');
       expect(window.location.search).toBe('?invitationStatus=revoked');
       expect(document.body.textContent).toContain('Sharing');
       expect(controlContaining('Revoked').getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=revoked'
+        '/settings/tenants/tenant-home/inventories/inventory-household/access?invitationStatus=revoked'
       );
       expect(repository.invitationStatuses).toContain('revoked');
     });
@@ -1236,7 +1290,7 @@ describe('InventoryWorkspaceApp route application', () => {
     controlContaining('Pending').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/access');
       expect(window.location.search).toBe('?invitationStatus=pending');
       expect(repository.invitationStatuses).toContain('pending');
     });
@@ -1267,7 +1321,7 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe(
-        `/tenants/tenant-home/inventories/inventory-household/settings/access/invitations/${cancelTarget.invitation.id}/cancel`
+        `/settings/tenants/tenant-home/inventories/inventory-household/access/invitations/${cancelTarget.invitation.id}/cancel`
       );
       expect(window.location.search).toBe('?invitationStatus=pending');
       expect(document.body.textContent).toContain('Cancel invitation');
@@ -1276,14 +1330,14 @@ describe('InventoryWorkspaceApp route application', () => {
         (candidate) => candidate.textContent?.trim() === 'Cancel'
       );
       expect(cancel?.getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/settings/access?invitationStatus=pending'
+        '/settings/tenants/tenant-home/inventories/inventory-household/access?invitationStatus=pending'
       );
     });
 
     controlContaining('Cancel invitation').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/access');
       expect(window.location.search).toBe('?invitationStatus=pending');
       expect(document.body.textContent).not.toContain('Cancel invitation');
       expect(document.body.textContent).not.toContain('friend@example.test');
@@ -1305,7 +1359,7 @@ describe('InventoryWorkspaceApp route application', () => {
     buttonContaining('Delete').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/access');
       expect(window.location.search).toBe('?invitationStatus=pending');
       expect(document.body.textContent).not.toContain('Delete invitation');
       expect(document.body.textContent).not.toContain('delete-me@example.test');
@@ -1319,16 +1373,24 @@ describe('InventoryWorkspaceApp route application', () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/fields?invitationStatus=revoked', new SeededInventoryRepository(accessSeed));
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/fields');
-      expect(settingsLink('Access').getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/settings/access'
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/fields');
+      expect(window.location.search).toBe('');
+      expect(controlContaining('Household')).toBeTruthy();
+    });
+
+    window.history.pushState({}, '', '/settings/tenants/tenant-home/inventories/inventory-household');
+    afterNavigateCallbacks.forEach((callback) => callback());
+
+    await waitFor(() => {
+      expect(controlContaining('Sharing').getAttribute('href')).toBe(
+        '/settings/tenants/tenant-home/inventories/inventory-household/access'
       );
     });
 
-    settingsLink('Access').click();
+    controlContaining('Sharing').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/access');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/access');
       expect(window.location.search).toBe('');
       expect(document.body.textContent).toContain('Sharing');
     });
@@ -1338,11 +1400,10 @@ describe('InventoryWorkspaceApp route application', () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/nope?invitationStatus=revoked');
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household');
       expect(window.location.search).toBe('');
-      expect(document.body.querySelector('#settings-title')?.textContent).toBe('Settings');
-      expect(document.body.textContent).toContain('Overview');
-      expect(settingsLink('Overview').getAttribute('aria-current')).toBe('page');
+      expect(document.body.querySelector('#settings-level-title')?.textContent).toBe('Household');
+      expect(document.body.textContent).toContain('Inventory settings');
     });
   });
 
@@ -1354,11 +1415,11 @@ describe('InventoryWorkspaceApp route application', () => {
     await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant', repository);
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/activity');
       expect(window.location.search).toBe('?auditScope=tenant');
       expect(document.body.textContent).toContain('Activity');
       expect(auditScopeControl('Tenant').getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/settings/activity?auditScope=tenant'
+        '/settings/tenants/tenant-home/inventories/inventory-household/activity?auditScope=tenant'
       );
       expect(repository.auditScopes).toContain('tenant');
     });
@@ -1366,7 +1427,7 @@ describe('InventoryWorkspaceApp route application', () => {
     auditScopeControl('Inventory').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/activity');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/activity');
       expect(window.location.search).toBe('');
       expect(repository.auditScopes).toContain('inventory');
     });
@@ -1394,19 +1455,16 @@ describe('InventoryWorkspaceApp route application', () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/settings/fields/asset-types/type-medicine/archive'
+        '/settings/tenants/tenant-home/inventories/inventory-household/asset-types/type-medicine/archive'
       );
       expect(document.body.textContent).toContain('Archive asset type');
       expect(document.body.textContent).toContain('Medicine');
-      expect(controlContaining('Cancel').getAttribute('href')).toBe(
-        '/tenants/tenant-home/inventories/inventory-household/settings/fields'
-      );
     });
 
     controlContaining('Cancel').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/asset-types');
       expect(document.body.textContent).not.toContain('Archive asset type');
     });
 
@@ -1424,9 +1482,55 @@ describe('InventoryWorkspaceApp route application', () => {
     buttonContaining('Archive').click();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/settings/fields');
+      expect(window.location.pathname).toBe('/settings/tenants/tenant-home/inventories/inventory-household/asset-types');
       expect(document.body.textContent).not.toContain('Archive asset type');
       expect(document.body.textContent).not.toContain('Medicine');
+    });
+  });
+
+  it('refreshes lost settings permission while preserving the denied field draft', async () => {
+    const permissionSeed = structuredClone(seed);
+    permissionSeed.inventories[0].access?.permissions.push('configure');
+    permissionSeed.customFieldDefinitions.push({
+      id: 'field-warranty', tenantId: 'tenant-home', inventoryId: 'inventory-household', scope: 'inventory',
+      key: 'warranty', displayName: 'Warranty', type: 'text', enumOptions: [], applicability: 'all_assets',
+      customAssetTypeIds: [], lifecycleState: 'active'
+    });
+    const repository = new PermissionRevokedFieldRepository(permissionSeed);
+    const observer = new InMemoryWorkspaceObserver();
+
+    await mountWorkspace('/settings/tenants/tenant-home/inventories/inventory-household/fields/field-warranty/edit', repository, { observer });
+    await waitFor(() => expect(inputWithLabel('Display name').value).toBe('Warranty'));
+    setInputValue(inputWithLabel('Display name'), 'Warranty receipt');
+    await waitFor(() => expect(buttonContaining('Save').disabled).toBe(false));
+    buttonContaining('Save').click();
+
+    await waitFor(() => {
+      expect(repository.loadCount).toBe(2);
+      expect(document.body.textContent).toContain('Read only');
+      expect(inputWithLabel('Display name').value).toBe('Warranty receipt');
+      expect(observer.events.some((event) => event.eventName === 'workspace.settings_permission_denied')).toBe(true);
+    });
+  });
+
+  it('refreshes lost settings permission while preserving the denied tag draft', async () => {
+    const permissionSeed = structuredClone(seed);
+    permissionSeed.assetTags = [{ id: 'tag-reference', key: 'reference', displayName: 'Reference', color: '#2563EB' }];
+    const repository = new PermissionRevokedTagRepository(permissionSeed);
+    const observer = new InMemoryWorkspaceObserver();
+
+    await mountWorkspace('/settings/tenants/tenant-home/inventories/inventory-household/tags/tag-reference/edit', repository, { observer });
+    await waitFor(() => expect(inputWithLabel('Display name').value).toBe('Reference'));
+    setInputValue(inputWithLabel('Display name'), 'Reference material');
+    await waitFor(() => expect(buttonContaining('Save').disabled).toBe(false));
+    buttonContaining('Save').click();
+
+    await waitFor(() => {
+      expect(repository.loadCount).toBe(2);
+      expect(document.body.textContent).toContain('Read only');
+      expect(inputWithLabel('Display name').value).toBe('Reference material');
+      expect(inputWithLabel('Display name').disabled).toBe(true);
+      expect(observer.events.some((event) => event.eventName === 'workspace.settings_permission_denied')).toBe(true);
     });
   });
 

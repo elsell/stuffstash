@@ -396,13 +396,13 @@ describe('InventoryAccessManager', () => {
     await flush();
 
     expect(link('Expire').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/expire?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/expire?invitationStatus=pending'
     );
     expect(link('Cancel').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/cancel?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/cancel?invitationStatus=pending'
     );
     expect(iconLink('Delete invitation for friend@example.test').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access/invitations/invite-one/delete?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access/invitations/invite-one/delete?invitationStatus=pending'
     );
 
     link('Expire').click();
@@ -464,7 +464,7 @@ describe('InventoryAccessManager', () => {
 
     expect(document.body.textContent).toContain('Cancel invitation');
     expect(link('Cancel').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=pending'
     );
     clickButton('Cancel invitation');
     await flush();
@@ -678,7 +678,7 @@ describe('InventoryAccessManager', () => {
 
     const statusFilter = segmentedGroup('Invitation status');
     expect(statusFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(6);
-    expect(link('All').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/access');
+    expect(link('All').getAttribute('href')).toBe('/settings/tenants/tenant-one/inventories/inventory-one/access');
     expect(link('All').getAttribute('aria-current')).toBe('page');
   });
 
@@ -702,7 +702,7 @@ describe('InventoryAccessManager', () => {
 
     const statusFilter = segmentedGroup('Invitation status');
     expect(statusFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(6);
-    expect(link('Pending').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=pending');
+    expect(link('Pending').getAttribute('href')).toBe('/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=pending');
     expect(link('Pending').getAttribute('aria-current')).toBe('page');
 
     link('Revoked').click();

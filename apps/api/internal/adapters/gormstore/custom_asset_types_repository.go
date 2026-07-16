@@ -219,21 +219,20 @@ func scopedCustomAssetTypeQuery(db *gorm.DB, tenantID tenant.ID, inventoryID inv
 
 func (s Store) ListTenantCustomAssetTypes(ctx context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	query := s.db.WithContext(ctx).Where(&customAssetTypeModel{
-		TenantID:       tenantID.String(),
-		Scope:          customfield.ScopeTenant.String(),
-		LifecycleState: customfield.AssetTypeLifecycleActive.String(),
+		TenantID: tenantID.String(),
+		Scope:    customfield.ScopeTenant.String(),
 	})
-	return s.listCustomAssetTypes(query, page)
+	return s.listCustomAssetTypes(applyCustomizationLifecycleFilter(query, page.Lifecycle), page)
 }
 
 func (s Store) ListInventoryCustomAssetTypes(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	query := s.db.WithContext(ctx).
-		Where(&customAssetTypeModel{TenantID: tenantID.String(), LifecycleState: customfield.AssetTypeLifecycleActive.String()}).
+		Where(&customAssetTypeModel{TenantID: tenantID.String()}).
 		Where(clause.Or(
 			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
 			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
 		))
-	return s.listCustomAssetTypes(query, page)
+	return s.listCustomAssetTypes(applyCustomizationLifecycleFilter(query, page.Lifecycle), page)
 }
 
 func (s Store) CustomAssetTypesByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, ids []customfield.AssetTypeID) ([]customfield.AssetType, error) {
