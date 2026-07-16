@@ -37,13 +37,13 @@ func promoteAssetParentInTx(tx *gorm.DB, promotedParent asset.Asset, parentAudit
 		return ports.ErrForbidden
 	}
 	result := tx.Model(&assetModel{}).
-		Where("id = ? AND tenant_id = ? AND inventory_id = ? AND kind = ? AND lifecycle_state = ?",
-			promotedParent.ID.String(),
-			promotedParent.TenantID.String(),
-			promotedParent.InventoryID.String(),
-			asset.KindItem.String(),
-			asset.LifecycleStateActive.String(),
-		).
+		Where(&assetModel{
+			ID:             promotedParent.ID.String(),
+			TenantID:       promotedParent.TenantID.String(),
+			InventoryID:    promotedParent.InventoryID.String(),
+			Kind:           asset.KindItem.String(),
+			LifecycleState: asset.LifecycleStateActive.String(),
+		}).
 		Updates(map[string]any{
 			"kind":       promotedParent.Kind.String(),
 			"updated_at": promotedParent.UpdatedAt,

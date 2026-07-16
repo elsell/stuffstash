@@ -11,6 +11,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (s Store) ImportSourceLinkByKey(ctx context.Context, key ports.ImportSourceLinkKey) (ports.ImportSourceLink, bool, error) {
@@ -19,14 +20,14 @@ func (s Store) ImportSourceLinkByKey(ctx context.Context, key ports.ImportSource
 	}
 	var model importSourceLinkModel
 	err := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND source_type = ? AND source_instance_key = ? AND source_entity_type = ? AND source_entity_id = ?",
-			key.TenantID.String(),
-			key.InventoryID.String(),
-			string(key.SourceType),
-			strings.TrimSpace(key.SourceInstanceKey),
-			string(key.SourceEntityType),
-			strings.TrimSpace(key.SourceEntityID),
-		).
+		Where(&importSourceLinkModel{
+			TenantID:          key.TenantID.String(),
+			InventoryID:       key.InventoryID.String(),
+			SourceType:        string(key.SourceType),
+			SourceInstanceKey: strings.TrimSpace(key.SourceInstanceKey),
+			SourceEntityType:  string(key.SourceEntityType),
+			SourceEntityID:    strings.TrimSpace(key.SourceEntityID),
+		}).
 		First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ports.ImportSourceLink{}, false, nil
@@ -69,8 +70,10 @@ func (s Store) ListImportJobResources(ctx context.Context, tenantID tenant.ID, i
 	}
 	var models []importJobResourceModel
 	if err := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND job_id = ?", tenantID.String(), inventoryID.String(), jobID.String()).
-		Order("created_at ASC, resource_type ASC, resource_id ASC").
+		Where(&importJobResourceModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), JobID: jobID.String()}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "resource_type"}}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "resource_id"}}).
 		Limit(limit).
 		Find(&models).Error; err != nil {
 		return nil, err
@@ -84,8 +87,10 @@ func (s Store) ListAllImportJobResources(ctx context.Context, tenantID tenant.ID
 	}
 	var models []importJobResourceModel
 	if err := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND job_id = ?", tenantID.String(), inventoryID.String(), jobID.String()).
-		Order("created_at ASC, resource_type ASC, resource_id ASC").
+		Where(&importJobResourceModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), JobID: jobID.String()}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "resource_type"}}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "resource_id"}}).
 		Find(&models).Error; err != nil {
 		return nil, err
 	}
@@ -105,7 +110,7 @@ func (s Store) DeleteImportSourceLinksForJob(ctx context.Context, tenantID tenan
 		return 0, ports.ErrInvalidProviderInput
 	}
 	result := s.db.WithContext(ctx).
-		Where("tenant_id = ? AND inventory_id = ? AND job_id = ?", tenantID.String(), inventoryID.String(), jobID.String()).
+		Where(&importSourceLinkModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), JobID: jobID.String()}).
 		Delete(&importSourceLinkModel{})
 	if result.Error != nil {
 		return 0, result.Error
