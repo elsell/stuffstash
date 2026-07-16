@@ -1,3 +1,5 @@
+name: stuffstash
+
 services:
   caddy:
     image: ${CADDY_IMAGE:?set CADDY_IMAGE in .env}

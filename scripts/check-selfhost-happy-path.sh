@@ -10,6 +10,9 @@ fail() {
   exit 1
 }
 
+grep -q '^name: stuffstash$' "$compose_file" ||
+  fail "self-host Compose must keep a stable project and volume identity"
+
 grep -qE '^[[:space:]]+dex:' "$compose_file" ||
   fail "compose.selfhost.yaml must include bundled Dex"
 
