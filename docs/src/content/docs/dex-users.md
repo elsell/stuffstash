@@ -1,27 +1,16 @@
 ---
 title: Dex Users And Clients
-description: Replace the first-run Dex identity before using household data.
+description: Replace the bundled Dex users and clients.
 ---
 
 Dex has no user-management screen in the bundled setup. Users live in a
 private config file that you edit and back up.
 
-## 1. Make The Config Private
+## 1. Open The Private Config
 
-```sh
-mkdir -p .stuffstash/selfhost/dex
-cp deploy/selfhost/dex/config.yaml .stuffstash/selfhost/dex/config.yaml
-chmod 600 .stuffstash/selfhost/dex/config.yaml
-```
-
-Set its path in `.env`:
-
-```text
-DEX_CONFIG_PATH=.stuffstash/selfhost/dex/config.yaml
-```
-
-Compose securely stages this file for the non-root Dex container. Keep the host
-copy at mode `600` and out of Git.
+The setup command creates the file named by `DEX_CONFIG_PATH` in `.env`. Edit
+that file in place so its generated IP address or DNS name stays intact. Keep
+it at mode `600`, out of Git, and in your backups.
 
 ## 2. Replace Users
 
@@ -37,13 +26,14 @@ a unique `userID`, and a generated hash.
 
 ## 3. Check Clients
 
-The bundled web client is public and needs no secret. Keep these values aligned:
+The bundled web client is public and needs no secret. Keep its generated
+redirect URI aligned with `STUFF_STASH_WEB_OIDC_REDIRECT_URI` in `.env`:
 
 ```yaml
 - id: stuff-stash-web-local
   public: true
   redirectURIs:
-    - https://stuffstash.localhost:8081/callback
+    - https://<server-address>:8081/callback
 ```
 
 ```text
@@ -56,20 +46,16 @@ Remove the example confidential client, or replace its known secret. Add mobile
 or other client IDs only when matching clients exist in Dex. Keep
 `stuff-stash-mobile-local` when the bundled mobile client remains enabled.
 
-For LAN hostname changes, follow [Use Stuff Stash On Your
-LAN](../self-host-operations/#use-stuff-stash-on-your-lan).
-
 ## 4. Apply And Test
 
-For the first household setup, return to [Before Household
-Use](../self-host-operations/#before-household-use). It replaces every example
-credential and resets trial data together.
-
-For a later Dex-only change on an already hardened deployment:
+Return to [Replace The Example
+Credentials](../self-host-operations/#replace-the-example-credentials) to
+replace the remaining example secrets. To apply a Dex-only change on a private
+installation:
 
 ```sh
 docker compose -f compose.selfhost.yaml down
-./scripts/selfhost-preflight.sh
+./scripts/selfhost-preflight.sh --strict
 docker compose -f compose.selfhost.yaml up -d
 ```
 

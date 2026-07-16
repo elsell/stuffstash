@@ -1,10 +1,10 @@
 ---
 title: Self-Host Operations
-description: Secure, share, back up, and upgrade a Stuff Stash household deployment.
+description: Manage certificates, users, backups, and upgrades for Stuff Stash.
 ---
 
-Start with [Self-Host Stuff Stash](../self-hosting/). Return here before using
-real household data or opening the app to other devices.
+Start with [Self-Host Stuff Stash](../self-hosting/). Use this page when you
+need to change or maintain the installation.
 
 ## Trust The Local Certificate
 
@@ -16,8 +16,8 @@ mkdir -p .stuffstash/selfhost/caddy
 docker compose -f compose.selfhost.yaml cp caddy:/data/caddy/pki/authorities/local/root.crt .stuffstash/selfhost/caddy/root.crt
 ```
 
-Import `root.crt` on every device that opens Stuff Stash. When the browser is on
-another machine, copy the exported file from the server before importing it.
+Copy `root.crt` to each device that opens Stuff Stash, then import it using the
+matching instructions below.
 
 <details>
 <summary>macOS</summary>
@@ -51,7 +51,7 @@ sudo update-ca-trust
 <details>
 <summary>Windows</summary>
 
-In an administrator PowerShell window:
+Run in an administrator PowerShell window:
 
 ```powershell
 Import-Certificate -FilePath .\root.crt -CertStoreLocation Cert:\LocalMachine\Root
@@ -59,75 +59,42 @@ Import-Certificate -FilePath .\root.crt -CertStoreLocation Cert:\LocalMachine\Ro
 
 </details>
 
-Firefox may use its own store. If the warning remains, open **Settings → Privacy
-& Security → Certificates → View Certificates → Authorities**, then import the
-root.
+Firefox may use its own certificate store. If the warning remains, open
+**Settings → Privacy & Security → Certificates → View Certificates →
+Authorities**, then import the root.
 
-## Before Household Use
+## Replace The Example Credentials
 
-1. Create private [Dex users and clients](../dex-users/).
-2. Replace these example values in `.env`:
-   `POSTGRES_PASSWORD`, `SPICEDB_POSTGRES_PASSWORD`,
-   `STUFF_STASH_SPICEDB_PRESHARED_KEY`, `STUFF_STASH_S3_ACCESS_KEY`,
-   `STUFF_STASH_S3_SECRET_KEY`, and `STUFF_STASH_PROVIDER_CREDENTIAL_KEY`.
-3. Delete the trial stack, run the strict check, then start fresh:
+The defaults are reasonable for a trusted home network, but they are public.
+Replace them before exposing Stuff Stash to a wider network.
 
-:::danger[Trial data and certificates are deleted]
-Changing the example database and Garage credentials does not update existing
-volumes. This reset removes trial data and Caddy's local CA.
-:::
+Do this before adding data because the clean reset removes the example stack:
 
-```sh
-docker compose -f compose.selfhost.yaml down -v
-./scripts/selfhost-preflight.sh
-docker compose -f compose.selfhost.yaml up -d
-```
+1. Stop and reset with `docker compose -f compose.selfhost.yaml down -v`.
+2. Replace the [Dex users and clients](../dex-users/).
+3. Replace every `change-me-` value in `.env` and generate a provider key with
+   `openssl rand -base64 32`.
+4. Run `./scripts/selfhost-preflight.sh --strict`.
+5. Start with `docker compose -f compose.selfhost.yaml up -d`, then trust its
+   new Caddy root.
 
-Export and trust the new Caddy root before opening the app again.
+Keep `.env` and the private Dex config out of Git. Do not change database or
+Garage credentials on an installation with data unless you also rotate them in
+those services.
 
-Generate URL-safe passwords with `openssl rand -hex 24`. Generate the provider
-credential key with `openssl rand -base64 32`. Keep `.env` and the private Dex
-config out of Git.
+## Keep The Address Stable
 
-## Try From Another Machine
+Reserve the server's IPv4 address in your router so bookmarks, certificates,
+and OIDC callbacks do not change. If the address changes before you have data,
+stop the stack, remove `.env` and `.stuffstash`, and run the setup again with
+the new address.
 
-For a remote trial without exposing example credentials to your LAN, forward
-the four loopback ports from the browser machine:
+### Optional DNS Name
 
-```sh
-ssh -N -L 8081:127.0.0.1:8081 -L 8080:127.0.0.1:8080 \
-  -L 5556:127.0.0.1:5556 -L 3900:127.0.0.1:3900 user@server
-```
-
-Keep that terminal open and continue the quick start with its default URLs.
-
-## Use Stuff Stash On Your LAN
-
-:::caution[Use DNS, not an IP address]
-OIDC discovery requires a DNS hostname. A raw LAN IP is unsupported.
-:::
-
-This hardened path replaces the remaining trial steps.
-
-1. Complete steps 1 and 2 of [Before Household Use](#before-household-use).
-2. Create a local DNS record, such as `stuffstash.home.arpa`, pointing to the server.
-3. In `.env`, replace every `stuffstash.localhost` with that DNS name and set
-   `STUFF_STASH_BIND_ADDRESS` to the server's LAN address. Use `0.0.0.0` only
-   when the server address is not stable.
-4. Make the same hostname changes in your private Dex config.
-5. Allow TCP ports `8081`, `8080`, `5556`, and `3900` through the server firewall.
-6. Check and start the stack:
-
-```sh
-./scripts/selfhost-preflight.sh
-docker compose -f compose.selfhost.yaml up -d
-```
-
-Open `https://stuffstash.home.arpa:8081`, using your DNS name, then export and
-trust the Caddy root on each client device.
-
-The default bind address is `127.0.0.1`, so a new install is reachable only from
-the server itself.
+A local DNS name is optional. Stop the stack, replace the LAN IP everywhere in
+`.env` and the private Dex config, run preflight, then start it again. The name
+must resolve to the server on every client device; trust the new Caddy root if
+the certificate authority changed.
 
 ## What To Back Up
 
@@ -141,29 +108,21 @@ Back up `.env`, your private Dex config, and these Docker volumes together:
 | `stuffstash_selfhost-garage-data` | Uploaded files |
 | `stuffstash_selfhost-caddy-data` | Local CA and certificates |
 
-Stop the stack before copying these volumes so Postgres and Garage are
-consistent. Start it again afterward, and test restoration before relying on a
-backup.
+Stop the stack before copying the volumes. Start it afterward, and test a
+restore before relying on the backup.
 
 ## Upgrade
 
-1. Make a cold backup of the files and volumes listed above.
-2. In an empty directory, download and verify the latest release bundle using
-   the commands in [Download](../self-hosting/#1-download).
-3. Copy the new `.env.example` to `.env`, then carry forward your changed values
-   from the old `.env`. Move the private Dex config too. Do not overwrite the
-   new example wholesale; a release may add required settings.
-4. From the old directory, run `docker compose -f compose.selfhost.yaml down`.
-5. From the new directory, run `./scripts/selfhost-preflight.sh`.
-6. Run `docker compose -f compose.selfhost.yaml up -d`.
+1. Back up the files and volumes above.
+2. Download and verify the new bundle in an empty directory.
+3. Copy the new `.env.example` to `.env`, then carry over your changed values;
+   do not replace the new file wholesale. Move the private Dex config too.
+4. Stop the old bundle with `docker compose -f compose.selfhost.yaml down`.
+5. Run `./scripts/selfhost-preflight.sh`, then start the new bundle.
 
-The Compose project name is fixed, so the new bundle reuses the existing data
-volumes. Check the app and an uploaded image after every upgrade.
-
-:::caution[Rollback needs the backup]
-Database migrations may not run backward. Restore the pre-upgrade volumes before
-starting the previous bundle.
-:::
+The fixed Compose project name reuses the existing volumes. Check the app and
+an uploaded image after every upgrade. Database migrations may require the
+pre-upgrade backup to roll back.
 
 ## Remove Everything
 

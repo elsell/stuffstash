@@ -3,10 +3,10 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="$repo_root/.env"
-trial=0
+strict=0
 
 usage() {
-  echo "Usage: scripts/selfhost-preflight.sh [--trial] [--env-file PATH]"
+  echo "Usage: scripts/selfhost-preflight.sh [--strict] [--env-file PATH]"
 }
 
 fail() {
@@ -16,7 +16,7 @@ fail() {
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --trial) trial=1 ;;
+    --strict) strict=1 ;;
     --env-file)
       shift
       [ "$#" -gt 0 ] || fail "--env-file needs a path"
@@ -74,8 +74,21 @@ valid_dns_hostname() {
   done
 }
 
-valid_dns_hostname "$STUFF_STASH_SELFHOST_HOSTNAME" ||
-  fail "use a valid DNS hostname, not an IP address or URL"
+valid_ipv4() {
+  local address="$1" octet
+  local octets=()
+  [[ "$address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  [ "$address" != "0.0.0.0" ] || return 1
+  IFS='.' read -r -a octets <<< "$address"
+  for octet in "${octets[@]}"; do
+    [[ "$octet" == "0" || "$octet" =~ ^[1-9][0-9]*$ ]] || return 1
+    [ "$octet" -le 255 ] || return 1
+  done
+}
+
+valid_ipv4 "$STUFF_STASH_SELFHOST_HOSTNAME" ||
+  valid_dns_hostname "$STUFF_STASH_SELFHOST_HOSTNAME" ||
+  fail "use a valid DNS hostname or IPv4 address, not a URL or bind address"
 
 expect_value() {
   local name="$1" expected="$2"
@@ -93,8 +106,8 @@ expect_value STUFF_STASH_S3_PUBLIC_ENDPOINT "$STUFF_STASH_SELFHOST_HOSTNAME:$GAR
 
 case "$STUFF_STASH_BIND_ADDRESS" in
   127.0.0.1|::1) ;;
+  0.0.0.0) echo "Notice: ports will be reachable on every host interface." >&2 ;;
   *)
-    [ "$trial" -ne 1 ] || fail "trial mode requires a loopback bind address"
     echo "Notice: ports will be reachable beyond this machine at $STUFF_STASH_BIND_ADDRESS." >&2
     ;;
 esac
@@ -105,7 +118,7 @@ case "$DEX_CONFIG_PATH" in
 esac
 [ -f "$dex_config" ] || fail "Dex config not found: $dex_config"
 
-if [ "$trial" -ne 1 ]; then
+if [ "$strict" -eq 1 ]; then
   if cmp -s "$dex_config" "$repo_root/deploy/selfhost/dex/config.yaml"; then
     fail "create a private Dex config and replace the bundled identities"
   fi
@@ -125,33 +138,34 @@ if [ "$trial" -ne 1 ]; then
     "$dex_config"; then
     fail "private Dex config still contains example identities or client secrets"
   fi
-  dex_has_line() {
-    awk -v expected="$1" '
-      { line=$0; sub(/^[[:space:]]+/, "", line) }
-      line == expected { found=1 }
-      END { exit found ? 0 : 1 }
-    ' "$dex_config"
-  }
-  dex_has_line "issuer: $STUFF_STASH_OIDC_ISSUER" ||
-    fail "private Dex issuer must match STUFF_STASH_OIDC_ISSUER"
-  dex_has_line "- $STUFF_STASH_WEB_ORIGIN" ||
-    fail "private Dex allowed origin must match STUFF_STASH_WEB_ORIGIN"
-  awk -v target_id="$STUFF_STASH_WEB_OIDC_CLIENT_ID" -v target_redirect="$STUFF_STASH_WEB_OIDC_REDIRECT_URI" '
-    {
-      line=$0
-      sub(/^[[:space:]]+/, "", line)
-    }
-    line ~ /^- id: / {
-      in_target=(line == "- id: " target_id)
-      if (in_target) seen=1
-      next
-    }
-    in_target && line == "public: true" { public_client=1 }
-    in_target && line == "- " target_redirect { redirect=1 }
-    END { exit seen && public_client && redirect ? 0 : 1 }
-  ' "$dex_config" ||
-    fail "private Dex web client must be public and use STUFF_STASH_WEB_OIDC_REDIRECT_URI"
 fi
+
+dex_has_line() {
+  awk -v expected="$1" '
+    { line=$0; sub(/^[[:space:]]+/, "", line) }
+    line == expected { found=1 }
+    END { exit found ? 0 : 1 }
+  ' "$dex_config"
+}
+dex_has_line "issuer: $STUFF_STASH_OIDC_ISSUER" ||
+  fail "Dex issuer must match STUFF_STASH_OIDC_ISSUER"
+dex_has_line "- $STUFF_STASH_WEB_ORIGIN" ||
+  fail "Dex allowed origin must match STUFF_STASH_WEB_ORIGIN"
+awk -v target_id="$STUFF_STASH_WEB_OIDC_CLIENT_ID" -v target_redirect="$STUFF_STASH_WEB_OIDC_REDIRECT_URI" '
+  {
+    line=$0
+    sub(/^[[:space:]]+/, "", line)
+  }
+  line ~ /^- id: / {
+    in_target=(line == "- id: " target_id)
+    if (in_target) seen=1
+    next
+  }
+  in_target && line == "public: true" { public_client=1 }
+  in_target && line == "- " target_redirect { redirect=1 }
+  END { exit seen && public_client && redirect ? 0 : 1 }
+' "$dex_config" ||
+  fail "Dex web client must be public and use STUFF_STASH_WEB_OIDC_REDIRECT_URI"
 
 example_secrets=0
 for value in \
@@ -162,12 +176,22 @@ for value in \
     change-me-*|AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=) example_secrets=1 ;;
   esac
 done
-if [ "$example_secrets" -eq 1 ]; then
-  if [ "$trial" -eq 1 ]; then
-    echo "Trial mode: example secrets are still in use. Replace them before household use." >&2
-  else
-    fail "example secrets remain; use --trial only for evaluation"
+example_identities=0
+if grep -Fq \
+  -e 'owner@example.com' \
+  -e 'viewer@example.com' \
+  -e 'stuff-stash-local-secret' \
+  -e '$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W' \
+  -e '11111111-1111-1111-1111-111111111111' \
+  -e '22222222-2222-2222-2222-222222222222' \
+  "$dex_config"; then
+  example_identities=1
+fi
+if [ "$example_secrets" -eq 1 ] || [ "$example_identities" -eq 1 ]; then
+  if [ "$strict" -eq 1 ]; then
+    fail "example users or secrets remain"
   fi
+  echo "Warning: Anyone who can reach this server can use the example credentials until you replace them." >&2
 fi
 
 port_in_use() {

@@ -188,13 +188,13 @@ The durable self-host Compose topology must:
   concrete distributed cache, queue, or rate-limiter adapter need. The existing
   in-memory rate limiter remains acceptable for single-replica self-hosted
   Compose.
-- Use one browser-and-container-reachable DNS hostname for the web origin, API
-  origin, Dex issuer, and Garage public endpoint. IP literals are unsupported.
-  The default single-machine hostname is `stuffstash.localhost`; LAN and
-  reverse-proxy operators must update the DNS hostname consistently before
-  starting the stack.
-- Bind published ports to loopback by default. LAN operators must explicitly
-  select a LAN-facing bind address and configure DNS before starting the stack.
+- Use one browser-and-container-reachable host for the web origin, API origin,
+  Dex issuer, and Garage public endpoint. The release setup defaults to the
+  server's LAN IPv4 address; a consistently configured DNS name remains
+  optional.
+- Bind published release-bundle ports to all host interfaces by default so
+  household devices can connect directly. Warn that every reachable client can
+  use bundled example credentials until the operator replaces them.
 - Declare a stable Compose project name so persistent volume identity does not
   depend on the checkout or release-bundle directory name.
 - Allow operators to provide a private Dex config for household users while
