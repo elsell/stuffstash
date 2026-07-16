@@ -47,6 +47,17 @@ sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-private.yaml|" "$
 SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
   "$repo_root/scripts/selfhost-preflight.sh" --env-file "$tmp_dir/.env" >/dev/null
 
+cp "$tmp_dir/dex-private.yaml" "$tmp_dir/dex-comment-bypass.yaml"
+sed -i.bak 's|^issuer: .*|issuer: https://evil.example/dex|' "$tmp_dir/dex-comment-bypass.yaml"
+printf '%s\n' '# issuer: https://stuffstash.localhost:5556/dex' >> "$tmp_dir/dex-comment-bypass.yaml"
+sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-comment-bypass.yaml|" "$tmp_dir/.env"
+if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
+  "$repo_root/scripts/selfhost-preflight.sh" --env-file "$tmp_dir/.env" >/dev/null 2>&1; then
+  echo "strict preflight accepted Dex values found only in comments" >&2
+  exit 1
+fi
+sed -i.bak "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-private.yaml|" "$tmp_dir/.env"
+
 sed -i.bak 's/stuffstash\.localhost/192.168.2.52/g' "$tmp_dir/.env"
 if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
   "$repo_root/scripts/selfhost-preflight.sh" --trial --env-file "$tmp_dir/.env" >"$tmp_dir/output" 2>&1; then
@@ -54,5 +65,23 @@ if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 S
   exit 1
 fi
 grep -q 'DNS hostname' "$tmp_dir/output"
+
+cp "$repo_root/.env.example" "$tmp_dir/.env"
+sed -i.bak 's/^STUFF_STASH_BIND_ADDRESS=.*/STUFF_STASH_BIND_ADDRESS=0.0.0.0/' "$tmp_dir/.env"
+if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
+  "$repo_root/scripts/selfhost-preflight.sh" --trial --env-file "$tmp_dir/.env" >/dev/null 2>&1; then
+  echo "trial preflight allowed example credentials on a non-loopback bind" >&2
+  exit 1
+fi
+
+sed -i.bak \
+  -e 's/^STUFF_STASH_BIND_ADDRESS=.*/STUFF_STASH_BIND_ADDRESS=127.0.0.1/' \
+  -e 's|^STUFF_STASH_OIDC_ISSUER=.*|STUFF_STASH_OIDC_ISSUER=https://stuffstash.localhost:5556@evil.example/dex|' \
+  "$tmp_dir/.env"
+if SELFHOST_PREFLIGHT_SKIP_DOCKER_CHECK=1 SELFHOST_PREFLIGHT_SKIP_PORT_CHECK=1 SELFHOST_PREFLIGHT_SKIP_COMPOSE_CHECK=1 \
+  "$repo_root/scripts/selfhost-preflight.sh" --trial --env-file "$tmp_dir/.env" >/dev/null 2>&1; then
+  echo "preflight accepted a URL userinfo hostname bypass" >&2
+  exit 1
+fi
 
 echo "self-host preflight tests passed"

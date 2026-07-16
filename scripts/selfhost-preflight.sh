@@ -66,32 +66,26 @@ case "$STUFF_STASH_SELFHOST_HOSTNAME" in
   *) fail "use a DNS hostname, not an IP address" ;;
 esac
 
-hostname_from_https_url() {
-  local value="$1" remainder
-  case "$value" in
-    https://*) remainder="${value#https://}" ;;
-    *) fail "$2 must use https://" ;;
-  esac
-  remainder="${remainder%%/*}"
-  printf '%s\n' "${remainder%%:*}"
+expect_value() {
+  local name="$1" expected="$2"
+  [ "${!name:-}" = "$expected" ] || fail "$name must be $expected"
 }
 
-for name in STUFF_STASH_WEB_ORIGIN STUFF_STASH_API_ORIGIN STUFF_STASH_OIDC_ISSUER STUFF_STASH_WEB_OIDC_REDIRECT_URI STUFF_STASH_CORS_ALLOWED_ORIGINS; do
-  value="${!name:-}"
-  [ -n "$value" ] || fail "$name is empty"
-  [ "$(hostname_from_https_url "$value" "$name")" = "$STUFF_STASH_SELFHOST_HOSTNAME" ] ||
-    fail "$name must use $STUFF_STASH_SELFHOST_HOSTNAME"
-done
-
-for name in STUFF_STASH_S3_ENDPOINT STUFF_STASH_S3_PUBLIC_ENDPOINT; do
-  value="${!name}"
-  [ "${value%%:*}" = "$STUFF_STASH_SELFHOST_HOSTNAME" ] ||
-    fail "$name must use $STUFF_STASH_SELFHOST_HOSTNAME"
-done
+expected_web_origin="https://$STUFF_STASH_SELFHOST_HOSTNAME:$STUFF_STASH_WEB_PORT"
+expect_value STUFF_STASH_WEB_ORIGIN "$expected_web_origin"
+expect_value STUFF_STASH_API_ORIGIN "https://$STUFF_STASH_SELFHOST_HOSTNAME:$STUFF_STASH_HTTP_PORT"
+expect_value STUFF_STASH_OIDC_ISSUER "https://$STUFF_STASH_SELFHOST_HOSTNAME:$DEX_HTTP_PORT/dex"
+expect_value STUFF_STASH_WEB_OIDC_REDIRECT_URI "$expected_web_origin/callback"
+expect_value STUFF_STASH_CORS_ALLOWED_ORIGINS "$expected_web_origin"
+expect_value STUFF_STASH_S3_ENDPOINT "$STUFF_STASH_SELFHOST_HOSTNAME:$GARAGE_S3_PORT"
+expect_value STUFF_STASH_S3_PUBLIC_ENDPOINT "$STUFF_STASH_SELFHOST_HOSTNAME:$GARAGE_S3_PORT"
 
 case "$STUFF_STASH_BIND_ADDRESS" in
   127.0.0.1|::1) ;;
-  *) echo "Notice: ports will be reachable beyond this machine at $STUFF_STASH_BIND_ADDRESS." >&2 ;;
+  *)
+    [ "$trial" -ne 1 ] || fail "trial mode requires a loopback bind address"
+    echo "Notice: ports will be reachable beyond this machine at $STUFF_STASH_BIND_ADDRESS." >&2
+    ;;
 esac
 
 case "$DEX_CONFIG_PATH" in
@@ -113,11 +107,18 @@ if [ "$trial" -ne 1 ]; then
   if grep -Eq 'owner@example\.com|viewer@example\.com|stuff-stash-local-secret' "$dex_config"; then
     fail "private Dex config still contains example identities or client secrets"
   fi
-  grep -Fq "issuer: $STUFF_STASH_OIDC_ISSUER" "$dex_config" ||
+  dex_has_line() {
+    awk -v expected="$1" '
+      { line=$0; sub(/^[[:space:]]+/, "", line) }
+      line == expected { found=1 }
+      END { exit found ? 0 : 1 }
+    ' "$dex_config"
+  }
+  dex_has_line "issuer: $STUFF_STASH_OIDC_ISSUER" ||
     fail "private Dex issuer must match STUFF_STASH_OIDC_ISSUER"
-  grep -Fq -- "- $STUFF_STASH_WEB_ORIGIN" "$dex_config" ||
+  dex_has_line "- $STUFF_STASH_WEB_ORIGIN" ||
     fail "private Dex allowed origin must match STUFF_STASH_WEB_ORIGIN"
-  grep -Fq -- "- $STUFF_STASH_WEB_OIDC_REDIRECT_URI" "$dex_config" ||
+  dex_has_line "- $STUFF_STASH_WEB_OIDC_REDIRECT_URI" ||
     fail "private Dex redirect URI must match STUFF_STASH_WEB_OIDC_REDIRECT_URI"
 fi
 
