@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
+  import { tick } from 'svelte';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
-  import Image from '@lucide/svelte/icons/image';
   import LogOut from '@lucide/svelte/icons/log-out';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
@@ -19,7 +18,7 @@
     assetDetailHref,
     attachmentDeleteHref as assetAttachmentDeleteHref
   } from '$lib/application/workspaceAssetActions';
-  import { assetDescriptionText, assetEditUnavailableStatus } from '$lib/application/workspaceAssetDetail';
+  import { assetDescriptionText, assetEditUnavailableStatus, partitionAssetDetailFields } from '$lib/application/workspaceAssetDetail';
   import {
     buildDetailPhotos,
     photoUploadUnavailableReason,
@@ -31,6 +30,7 @@
   } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
 	  import type {
+	    Asset,
 	    AssetAttachment,
 	    AssetCheckout,
 	    AssetViewModel,
@@ -48,11 +48,14 @@
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetFilesSection, { type AssetFilesError } from './AssetFilesSection.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
+  import ContainedAssetWorkspace from './ContainedAssetWorkspace.svelte';
   import { formatBytes } from './formatBytes';
 
   let {
     asset,
     canEdit,
+    canCreate = false,
+    workspaceAssets = [],
     action = null,
     attachmentId = null,
     attachmentAction = null,
@@ -67,6 +70,9 @@
     onBack,
     onActionOpen,
     onActionClose,
+    onOpenAsset = () => {},
+    onOpenAdd = () => {},
+    onMoveHere = async () => {},
     onSave,
     onArchive,
     onRestore,
@@ -82,6 +88,8 @@
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
+    canCreate?: boolean;
+    workspaceAssets?: Asset[];
     action?: AssetRouteAction;
     attachmentId?: string | null;
     attachmentAction?: AttachmentRouteAction;
@@ -94,8 +102,11 @@
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
+    onActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onActionClose: () => void;
+    onOpenAsset?: (asset: Asset) => void;
+    onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
+    onMoveHere?: (asset: Asset) => Promise<void>;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -131,12 +142,14 @@
   let lastRouteActionKey = $state('');
   let actionReturnFocus = $state<HTMLElement | null>(null);
   let actionReturnHref = $state('');
+  let removePhotoButton = $state<HTMLElement | null>(null);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
   let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
   let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
+  let heroPhotoAttachment = $derived(heroPhoto ? photoAttachments.find((attachment) => attachment.id === heroPhoto.id) ?? null : null);
   let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && !photoUploading && imageContentTypes.length > 0);
   let editUnavailableStatus = $derived(assetEditUnavailableStatus(canEdit));
   let descriptionText = $derived(assetDescriptionText(asset.description));
@@ -163,6 +176,7 @@
         (!!asset.customAssetTypeId && definition.customAssetTypeIds.includes(asset.customAssetTypeId))
     )
   );
+  let detailFieldGroups = $derived(partitionAssetDetailFields(displayFields, asset.customFields));
 
   $effect(() => {
     const attachmentKey = attachmentAction === 'delete' ? attachments.map((attachment) => attachment.id).join(',') : 'none';
@@ -184,6 +198,8 @@
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
       actionReturnHref = actionHref('move');
       openMove(false);
+    } else if (action === 'move-here' && canEdit && asset.kind === 'container' && asset.lifecycleState === 'active') {
+      panel = 'none';
     } else if (action === 'archive' && canEdit && asset.lifecycleState === 'active') {
       actionReturnHref = actionHref('archive');
       panel = 'archive';
@@ -215,6 +231,7 @@
   });
 
   function openEdit(notify = true): void {
+    saveError = '';
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -230,6 +247,7 @@
   }
 
   function openMove(notify = true): void {
+    saveError = '';
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -244,11 +262,13 @@
   }
 
   function openArchive(): void {
+    saveError = '';
     panel = 'archive';
     onActionOpen('archive');
   }
 
   function openRestore(): void {
+    saveError = '';
     panel = 'restore';
     onActionOpen('restore');
   }
@@ -324,6 +344,7 @@
 
   function closePanel(): void {
     const previousPanel = panel;
+    const restorePhotoFocus = previousPanel === 'attachment-delete' && selectedAttachment?.contentType.startsWith('image/');
     panel = 'none';
     saveError = '';
     selectedAttachment = null;
@@ -339,6 +360,7 @@
       onActionClose();
     } else if (previousPanel === 'attachment-delete') {
       onAttachmentDeleteClose();
+      if (restorePhotoFocus) void tick().then(() => removePhotoButton?.focus());
     }
   }
 
@@ -347,6 +369,7 @@
       return;
     }
     event.preventDefault();
+    saveError = '';
     closePanel();
   }
 
@@ -617,9 +640,12 @@
       uploadError={photoUploadError}
       uploadBusy={photoUploading}
       retryPhotoName={failedPhotoUpload?.name ?? ''}
+      removePhotoHref={heroPhotoAttachment && canEdit && asset.lifecycleState === 'active' && !saving ? attachmentDeleteHref(heroPhotoAttachment) : ''}
+      bind:removePhotoButton
       onChoosePhoto={() => photoInput?.click()}
       onSelectPhoto={(photoId) => { selectedPhotoId = photoId; }}
       onRetryPhoto={() => { if (failedPhotoUpload) void uploadPhoto(failedPhotoUpload); }}
+      onRemovePhoto={(event) => { if (heroPhotoAttachment) openAttachmentDelete(event, heroPhotoAttachment); }}
     >
       <div class="asset-detail-copy">
         <div class="detail-title-row">
@@ -632,59 +658,56 @@
 	            {#if asset.currentCheckout}
 	              <CheckoutBadge checkout={asset.currentCheckout} />
 	            {/if}
-	            <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
+	            {#if !asset.currentCheckout || asset.lifecycleState === 'archived'}
+	              <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState === 'active' ? 'Active' : 'Archived'}</Badge>
+	            {/if}
 	          </span>
         </div>
-        <dl class="detail-list">
+	        <dl class="detail-list">
 	          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
-	          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
+	          {#if asset.customAssetTypeLabel}<div><dt>Type</dt><dd>{asset.customAssetTypeLabel}</dd></div>{/if}
 	          {#if asset.currentCheckout}
 	            <div><dt>Checkout</dt><dd>{new Date(asset.currentCheckout.checkedOutAt).toLocaleString()}</dd></div>
 	          {/if}
 	          <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
         </dl>
         <div class="detail-actions">
-          <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
-	          <Button.Root
-	            href={actionHref('move')}
-	            variant="outline"
-	            disabled={!actionIsAvailable('move')}
-	            onclick={(event) => openAction(event, 'move')}
-	          ><MoveRight /> Move</Button.Root>
 	          {#if asset.currentCheckout}
 	            <Button.Root
 	              href={actionHref('return')}
-	              variant="outline"
+	              class="availability-action"
 	              disabled={!actionIsAvailable('return')}
 	              onclick={(event) => openAction(event, 'return')}
 	            ><Undo2 /> Return</Button.Root>
 	          {:else}
 	            <Button.Root
 	              href={actionHref('checkout')}
-	              variant="outline"
+	              class="availability-action"
 	              disabled={!actionIsAvailable('checkout')}
 	              onclick={(event) => openAction(event, 'checkout')}
 	            ><LogOut /> Check out</Button.Root>
 	          {/if}
+          <Button.Root class="maintenance-action" href={actionHref('edit')} variant="outline" disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
 	          <Button.Root
+	            href={actionHref('move')}
+	            class="maintenance-action"
 	            variant="outline"
-            disabled={!canAddPhoto}
-            aria-describedby={photoUploadDescribedBy || undefined}
-            onclick={() => photoInput?.click()}
-          >
-            <Image /> Add photo
-          </Button.Root>
+	            disabled={!actionIsAvailable('move')}
+	            onclick={(event) => openAction(event, 'move')}
+	          ><MoveRight /> Move</Button.Root>
           {#if asset.lifecycleState === 'active'}
             <Button.Root
               href={actionHref('archive')}
-              variant="outline"
+              class="lifecycle-action"
+              variant="ghost"
               disabled={!actionIsAvailable('archive')}
               onclick={(event) => openAction(event, 'archive')}
             ><Archive /> Archive</Button.Root>
           {:else}
             <Button.Root
               href={actionHref('restore')}
-              variant="outline"
+              class="lifecycle-action"
+              variant="ghost"
               disabled={!actionIsAvailable('restore')}
               onclick={(event) => openAction(event, 'restore')}
             ><RotateCcw /> Restore</Button.Root>
@@ -695,6 +718,21 @@
         {/if}
       </div>
     </AssetDetailHero>
+    {#if asset.kind === 'container'}
+      <ContainedAssetWorkspace
+        target={asset}
+        assets={workspaceAssets}
+        {canCreate}
+        {canEdit}
+        {saving}
+        moveHereOpen={action === 'move-here'}
+        {onOpenAsset}
+        {onOpenAdd}
+        onOpenMoveHere={() => onActionOpen('move-here')}
+        onCloseMoveHere={onActionClose}
+        {onMoveHere}
+      />
+    {/if}
   <div class="asset-detail-sections">
       <AssetDetailActionPanel
         {panel}
@@ -732,15 +770,25 @@
     <section class="detail-section" aria-labelledby="asset-description-title">
       <h2 id="asset-description-title">Details</h2>
       <p>{descriptionText}</p>
-      {#if displayFields.length > 0}
+      {#if detailFieldGroups.populated.length > 0}
         <dl class="detail-list custom-detail-list" aria-label="Custom field values">
-          {#each displayFields as field}
+          {#each detailFieldGroups.populated as field}
             <div>
               <dt>{field.displayName}</dt>
-              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key]) || 'Not set'}</dd>
+              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key])}</dd>
             </div>
           {/each}
         </dl>
+      {/if}
+      {#if detailFieldGroups.unset.length > 0}
+        <details class="unset-field-disclosure">
+          <summary>Show {detailFieldGroups.unset.length} unset {detailFieldGroups.unset.length === 1 ? 'field' : 'fields'}</summary>
+          <dl class="detail-list custom-detail-list" aria-label="Unset custom fields">
+            {#each detailFieldGroups.unset as field}
+              <div><dt>{field.displayName}</dt><dd>Not set</dd></div>
+            {/each}
+          </dl>
+        </details>
       {/if}
     </section>
     <AssetFilesSection
@@ -759,21 +807,25 @@
       {#if checkoutHistory.length === 0}
         <p>No checkout history.</p>
       {:else}
-        <div class="asset-list compact-list" aria-label="Checkout history">
+        <div class="asset-list compact-list checkout-history-list" aria-label="Checkout history">
           {#each checkoutHistory as checkout}
             <div class="history-row">
               <div>
                 <strong>{checkout.state === 'returned' ? 'Returned' : checkout.state === 'undone' ? 'Undone' : 'Checked out'}</strong>
-                <small>{new Date(checkout.checkedOutAt).toLocaleString()} by {checkout.checkedOutByPrincipalId}</small>
+                <small>{new Date(checkout.checkedOutAt).toLocaleString()}</small>
                 {#if checkout.checkoutDetails}
                   <small>{checkout.checkoutDetails}</small>
                 {/if}
                 {#if checkout.returnedAt}
-                  <small>Returned {new Date(checkout.returnedAt).toLocaleString()} by {checkout.returnedByPrincipalId}</small>
+                  <small>Returned {new Date(checkout.returnedAt).toLocaleString()}</small>
                 {/if}
                 {#if checkout.returnDetails}
                   <small>{checkout.returnDetails}</small>
                 {/if}
+                <details class="history-technical">
+                  <summary>Technical details</summary>
+                  <code>Checked out by {checkout.checkedOutByPrincipalId}{#if checkout.returnedByPrincipalId}; returned by {checkout.returnedByPrincipalId}{/if}</code>
+                </details>
               </div>
             </div>
           {/each}
@@ -804,16 +856,59 @@
   }
 
   .history-row {
-    border-bottom: 1px solid var(--color-border, #e5e7eb);
-    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .history-row:last-child {
+    border-bottom: 0;
   }
 
   .history-row > div {
     display: grid;
-    gap: 0.2rem;
+    gap: var(--space-1);
   }
 
   .history-row small {
+    color: var(--muted-foreground);
+    font-size: var(--text-metadata-size);
+    line-height: var(--text-metadata-line-height);
+  }
+
+  .history-technical {
+    margin-top: var(--space-1);
+    color: var(--muted-foreground);
+    font-size: var(--text-metadata-size);
+    line-height: var(--text-metadata-line-height);
+  }
+
+  .history-technical summary {
+    width: fit-content;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .history-technical code {
+    display: block;
+    margin-top: var(--space-2);
+    overflow-wrap: anywhere;
+  }
+
+  .checkout-history-list {
+    border-radius: var(--radius-surface);
+  }
+
+  .unset-field-disclosure {
+    margin-top: 0.75rem;
+  }
+
+  .unset-field-disclosure summary {
+    width: fit-content;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
     color: var(--color-muted-foreground, #64748b);
+    cursor: pointer;
+    font-weight: 600;
   }
 </style>

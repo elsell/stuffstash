@@ -6,7 +6,7 @@ import { config, fakeFetch } from './stuffStashInventoryRepository.test-helpers'
 describe('StuffStashInventoryRepository imports, access, and audit', () => {
   it('normalizes live Homebox import requests before sending them through the generated client', async () => {
     const { fetch, requests } = fakeFetch();
-    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, 'https://stash.example.test');
 
     await repository.previewImportJob('tenant-home', 'inventory-household', {
       sourceType: 'legacy_homebox',
@@ -29,7 +29,7 @@ describe('StuffStashInventoryRepository imports, access, and audit', () => {
 
   it('preserves an explicitly entered http Homebox import URL', async () => {
     const { fetch, requests } = fakeFetch();
-    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, 'https://stash.example.test');
 
     const job = await repository.previewImportJob('tenant-home', 'inventory-household', {
       sourceType: 'legacy_homebox',
@@ -103,7 +103,7 @@ describe('StuffStashInventoryRepository imports, access, and audit', () => {
 
   it('sends safe request correlation IDs for import mutations', async () => {
     const { fetch, requests } = fakeFetch();
-    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, 'https://stash.example.test');
     const source = {
       sourceType: 'legacy_homebox' as const,
       baseUrl: 'stuff.jsksell.com',
@@ -210,7 +210,7 @@ describe('StuffStashInventoryRepository imports, access, and audit', () => {
 
   it('manages access grants through generated client-backed repository methods', async () => {
     const { fetch, requests } = fakeFetch();
-    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch, 'https://stash.example.test');
 
     await expect(repository.listInventoryAccessGrants('tenant-home', 'inventory-household')).resolves.toMatchObject({
       items: [

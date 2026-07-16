@@ -81,6 +81,15 @@ The first local web client must be a public OIDC client:
   opt-in through local environment variables or generated ignored local config;
   personal LAN IPs must not be committed to tracked runtime config or Dex
   fixture files.
+- When the Vite development server receives a runtime-config request through a
+  private LAN IP, it must derive the browser-facing web, API, and Dex origins
+  from that request if no explicit development origin or per-service override
+  is configured. This keeps the OIDC authorization request and callback on the
+  same browser origin without committing a personal LAN address. Loopback and
+  untrusted hostnames must keep the tracked runtime defaults, and explicit
+  environment overrides must always win. This request-derived behavior is a
+  development-server convenience only; mounted production runtime
+  configuration remains authoritative.
 
 For local browser development, the API must be configured to trust the same issuer and client ID as the browser flow. The local development topology may run infrastructure in Docker while running the API and web dev server as host processes when that is the simplest way to make issuer discovery work for both browser and API verifier.
 
@@ -103,6 +112,8 @@ The first runtime config shape is:
 ```
 
 `invitationAllowInsecureLocalHTTP` defaults to `false`. When explicitly enabled at the web runtime composition boundary, invitation-link validation may accept HTTP only for `localhost`, IP loopback, and IPv4 RFC 1918 addresses. It must continue to reject public HTTP hosts and public IP addresses. This switch must be configured consistently with the API invitation-link switch for local browser acceptance.
+
+The checked-in local development runtime configuration explicitly enables this switch so the bundled LAN development flow remains usable. A regression test must parse that shipped file through the production runtime-config parser and prove both the explicit invitation opt-in and the API-aligned attachment policy; test-only fixture parsing is not sufficient evidence.
 
 The runtime config may be served as a static file by the web app in local development. It must not be compiled into frontend source code as the only configuration mechanism.
 

@@ -78,6 +78,29 @@ export interface AuditRecord {
   metadata: Record<string, string>;
 }
 
+export type AssetActivityView = 'changes' | 'all';
+export type AssetActivityCategory = 'change' | 'read';
+
+export interface AssetActivityChange {
+  field: 'title' | 'description' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
+  previousValue?: string;
+  currentValue?: string;
+}
+
+export interface AssetActivityEntry {
+  id: string;
+  principalId: string;
+  principal?: Principal;
+  action: string;
+  category: AssetActivityCategory;
+  source: string;
+  occurredAt: string;
+  requestId?: string;
+  changes: AssetActivityChange[];
+  undo?: { operationId: string; status: 'available' | 'undone' | 'redone' };
+  technical: Record<string, string>;
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -620,6 +643,7 @@ type CreatedInvitationResponse = components['schemas']['CreatedInvitationRespons
 type InvitationAcceptanceResponse = components['schemas']['InvitationAcceptanceResponse'];
 type InvitationPreviewResponse = components['schemas']['InvitationPreviewResponse'];
 type RecordResponse = components['schemas']['RecordResponse'];
+type AssetActivityResponse = components['schemas']['AssetActivityResponse'];
 type AssetTypeResponse = components['schemas']['AssetTypeResponse'];
 type DefinitionResponse = components['schemas']['DefinitionResponse'];
 type ProviderProfileResponse = components['schemas']['ProviderProfileResponse'];
@@ -1429,6 +1453,26 @@ export class StuffStashClient {
     return mapPage(envelope, mapAuditRecord);
   }
 
+  async listAssetActivity(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    input: { view?: AssetActivityView; limit?: number; cursor?: string } = {},
+    signal?: AbortSignal
+  ): Promise<Page<AssetActivityEntry>> {
+    const envelope = await this.unwrap(
+      this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity', {
+        headers: await this.authHeaders(),
+        params: {
+          path: { tenantId, inventoryId, assetId },
+          query: { view: input.view, limit: input.limit, cursor: input.cursor }
+        },
+        signal
+      })
+    );
+    return mapPage(envelope, mapAssetActivity);
+  }
+
   async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/provider-profiles', {
@@ -1885,6 +1929,29 @@ function mapAuditRecord(response: RecordResponse): AuditRecord {
     occurredAt: response.occurredAt,
     requestId: response.requestId,
     metadata: response.metadata ?? {}
+  };
+}
+
+function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
+  return {
+    id: response.id,
+    principalId: response.principalId,
+    principal: response.principal ? mapPrincipal(response.principal) : undefined,
+    action: response.action,
+    category: response.category as AssetActivityCategory,
+    source: response.source,
+    occurredAt: response.occurredAt,
+    requestId: response.requestId,
+    changes: (response.changes ?? []).map((change) => ({
+      field: change.field as AssetActivityChange['field'],
+      previousValue: change.previousValue,
+      currentValue: change.currentValue
+    })),
+    undo: response.undo ? {
+      operationId: response.undo.operationId,
+      status: response.undo.status as 'available' | 'undone' | 'redone'
+    } : undefined,
+    technical: response.technical ?? {}
   };
 }
 

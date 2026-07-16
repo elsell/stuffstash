@@ -152,11 +152,16 @@ func CheckoutsToResponse(checkouts []asset.Checkout) []dto.AssetCheckoutResponse
 	return data
 }
 
-func CheckedOutAssetsToResponse(items []ports.CheckedOutAsset, checkoutPrincipals map[identity.PrincipalID]identity.User) []dto.CheckedOutAssetResponse {
+func CheckedOutAssetsToResponse(items []ports.CheckedOutAsset, primaryPhotos map[ports.AttachmentAssetReference]media.Attachment, checkoutPrincipals map[identity.PrincipalID]identity.User) []dto.CheckedOutAssetResponse {
 	data := make([]dto.CheckedOutAssetResponse, 0, len(items))
 	for _, item := range items {
+		var primaryPhoto *media.Attachment
+		ref := ports.AttachmentAssetReference{InventoryID: inventory.InventoryID(item.Asset.InventoryID.String()), AssetID: item.Asset.ID}
+		if photo, ok := primaryPhotos[ref]; ok {
+			primaryPhoto = &photo
+		}
 		data = append(data, dto.CheckedOutAssetResponse{
-			Asset:    AssetToResponse(item.Asset, nil, &item.Checkout, checkoutPrincipals),
+			Asset:    AssetToResponse(item.Asset, primaryPhoto, &item.Checkout, checkoutPrincipals),
 			Checkout: *CurrentCheckoutToResponse(item.Checkout, checkoutPrincipals),
 		})
 	}

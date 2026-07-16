@@ -481,6 +481,23 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID activity */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-activity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive": {
         parameters: {
             query?: never;
@@ -1277,6 +1294,31 @@ export interface components {
         AccessResponse: {
             permissions: string[] | null;
             relationship: string;
+        };
+        AssetActivityChangeResponse: {
+            currentValue?: string;
+            field: string;
+            previousValue?: string;
+        };
+        AssetActivityResponse: {
+            action: string;
+            category: string;
+            changes: components["schemas"]["AssetActivityChangeResponse"][] | null;
+            id: string;
+            /** Format: date-time */
+            occurredAt: string;
+            principal?: components["schemas"]["AuditPrincipalResponse"];
+            principalId: string;
+            requestId?: string;
+            source: string;
+            technical: {
+                [key: string]: string;
+            };
+            undo?: components["schemas"]["AssetActivityUndoResponse"];
+        };
+        AssetActivityUndoResponse: {
+            operationId: string;
+            status: string;
         };
         AssetCheckoutPrincipalResponse: {
             email?: string;
@@ -2159,6 +2201,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InvitationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListAssetActivityResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListAssetActivityResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["AssetActivityResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListAssetCheckoutResponse: {
@@ -4367,6 +4419,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-activity": {
+        parameters: {
+            query?: {
+                /** @description Meaningful changes or all technical events */
+                view?: "changes" | "all";
+                /** @description Requested page size */
+                limit?: number;
+                /** @description Opaque cursor from the previous page */
+                cursor?: string;
+            };
+            header?: {
+                /** @description Bearer dev:<principal-id> */
+                Authorization?: string;
+            };
+            path: {
+                /** @description Tenant ID */
+                tenantId: string;
+                /** @description Inventory ID */
+                inventoryId: string;
+                /** @description Asset ID */
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListAssetActivityResponse"];
                 };
             };
             /** @description Error */

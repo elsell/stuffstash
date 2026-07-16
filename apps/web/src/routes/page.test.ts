@@ -13,7 +13,9 @@ const runtime = vi.hoisted(() => ({
   loadRuntimeConfig: vi.fn(async () => runtimeConfig())
 }));
 const inventory = vi.hoisted(() => ({
-  loadWorkspace: vi.fn(async () => ({}))
+  loadWorkspace: vi.fn(async () => workspaceData()),
+  loadAssetThumbnail: vi.fn(async () => null),
+  dispose: vi.fn()
 }));
 
 vi.mock('$lib/auth', () => auth);
@@ -21,6 +23,8 @@ vi.mock('$lib/runtimeConfig', () => runtime);
 vi.mock('$lib/adapters/api/stuffStashInventoryRepository', () => ({
   StuffStashInventoryRepository: class {
     loadWorkspace = inventory.loadWorkspace;
+    loadAssetThumbnail = inventory.loadAssetThumbnail;
+    dispose = inventory.dispose;
   }
 }));
 
@@ -43,7 +47,9 @@ afterEach(() => {
   auth.signOut.mockReset();
   auth.startSignIn.mockReset().mockResolvedValue(undefined);
   runtime.loadRuntimeConfig.mockReset().mockResolvedValue(runtimeConfig());
-  inventory.loadWorkspace.mockReset().mockResolvedValue({});
+  inventory.loadWorkspace.mockReset().mockResolvedValue(workspaceData());
+  inventory.loadAssetThumbnail.mockReset().mockResolvedValue(null);
+  inventory.dispose.mockReset();
 });
 
 describe('root sign-in route', () => {
@@ -105,6 +111,38 @@ describe('root sign-in route', () => {
       eventName: 'auth.workspace_load_failed',
       attributes: { failureType: 'Error', reason: 'workspace_transport' }
     });
+    expect(inventory.dispose).toHaveBeenCalledOnce();
+  });
+
+  it('disposes route-owned media resources when the page unmounts', async () => {
+    auth.getStoredSession.mockReturnValue(session());
+    let finishLoading!: (value: ReturnType<typeof workspaceData>) => void;
+    inventory.loadWorkspace.mockReturnValueOnce(new Promise((resolve) => (finishLoading = resolve)));
+    component = mount(Page, { target: document.body });
+    await flush();
+
+    unmount(component);
+    component = null;
+
+    expect(inventory.dispose).toHaveBeenCalledOnce();
+    finishLoading(workspaceData());
+  });
+
+  it('disposes route-owned media resources when the user signs out', async () => {
+    auth.getStoredSession.mockReturnValue(session());
+    window.history.replaceState({}, '', '/tenants/tenant-one/inventories/inventory-one');
+    component = mount(Page, { target: document.body });
+    await flush();
+
+    const account = document.body.querySelector<HTMLButtonElement>('[aria-label="Open account menu"]');
+    expect(account).not.toBeNull();
+    account?.click();
+    await flush();
+    buttonContaining('Sign out').click();
+    await flush();
+
+    expect(inventory.dispose).toHaveBeenCalledOnce();
+    expect(auth.signOut).toHaveBeenCalledOnce();
   });
 
   it.each([
@@ -128,8 +166,29 @@ describe('root sign-in route', () => {
         reason: recent ? 'post_callback_rejected' : 'session_expired'
       }
     });
+    expect(inventory.dispose).toHaveBeenCalledOnce();
   });
 });
+
+function workspaceData() {
+  return {
+    context: {
+      principal: { id: 'principal-one', email: 'person@example.test' },
+      tenants: [{ id: 'tenant-one', name: 'Home', access: { relationship: 'owner', permissions: ['view'] } }],
+      inventories: [{ id: 'inventory-one', tenantId: 'tenant-one', name: 'Household', access: { relationship: 'owner', permissions: ['view'] } }],
+      selectedTenantId: 'tenant-one',
+      selectedInventoryId: 'inventory-one',
+      assetLifecycleState: 'active' as const,
+      mediaUploadPolicy: { supportedContentTypes: ['image/jpeg'] as const, maxBytes: 1_000_000 },
+      customAssetTypes: [],
+      customFieldDefinitions: [],
+      assetTags: [],
+      capability: 'owner' as const
+    },
+    assets: [],
+    checkedOutAssets: []
+  };
+}
 
 function runtimeConfig() {
   return {

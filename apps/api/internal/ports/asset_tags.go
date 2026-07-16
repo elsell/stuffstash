@@ -25,6 +25,12 @@ type AssetTagUnitOfWork interface {
 	SetAssetTags(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, tagIDs []assettag.ID, auditRecord audit.Record) error
 }
 
+// AssetEditUnitOfWork persists a direct asset edit, its optional complete tag
+// replacement, audit history, and undo snapshot as one transaction.
+type AssetEditUnitOfWork interface {
+	UpdateAssetAndTags(ctx context.Context, item asset.Asset, tagIDs []assettag.ID, auditRecords []audit.Record, undoableOperation *UndoableOperation) error
+}
+
 type AssetTagPageRequest struct {
 	AfterTagID assettag.ID
 	Limit      int

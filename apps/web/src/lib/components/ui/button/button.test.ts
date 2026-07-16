@@ -74,6 +74,15 @@ describe('Button', () => {
 		expect(busy?.disabled).toBe(true);
 	});
 
+	it('gives outline actions an explicit readable foreground color', () => {
+		component = mount(ButtonHarness, {
+			target: document.body
+		});
+
+		const outline = document.body.querySelector<HTMLButtonElement>('[data-testid="outline-button"]');
+		expect(outline?.className).toContain('text-foreground');
+	});
+
 	it('forwards primitive role and tab order to route-backed anchors', () => {
 		component = mount(ButtonHarness, { target: document.body });
 

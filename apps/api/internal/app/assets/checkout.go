@@ -340,12 +340,20 @@ func (s Service) ListCheckedOutAssets(ctx context.Context, input ListCheckedOutA
 		encoded := encodeCheckedOutAssetsCursor(items[len(items)-1])
 		nextCursor = &encoded
 	}
+	assets := make([]asset.Asset, 0, len(items))
+	for _, item := range items {
+		assets = append(assets, item.Asset)
+	}
+	primaryPhotos, err := s.primaryImageAttachments(ctx, input.TenantID, assets)
+	if err != nil {
+		return CheckedOutAssetsResult{}, err
+	}
 	s.observer.Record(ctx, ports.Event{Name: ports.EventCheckedOutAssetsListed, Message: "checked-out assets listed", Fields: map[string]string{
 		"tenant_id":    input.TenantID.String(),
 		"inventory_id": input.InventoryID.String(),
 		"principal_id": input.Principal.ID.String(),
 	}})
-	return CheckedOutAssetsResult{Items: items, Limit: limit, NextCursor: nextCursor, HasMore: hasMore}, nil
+	return CheckedOutAssetsResult{Items: items, PrimaryPhotos: primaryPhotos, Limit: limit, NextCursor: nextCursor, HasMore: hasMore}, nil
 }
 
 func boolMetadata(value bool) string {

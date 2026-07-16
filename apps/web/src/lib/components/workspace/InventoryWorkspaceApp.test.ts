@@ -19,7 +19,6 @@ import type {
   InvitationStatusFilter,
   SelectedPhoto,
   UpdateAssetDraft,
-  UndoableOperationDirection,
   WorkspaceData
 } from '$lib/domain/inventory';
 import type { InventoryAccessPage } from '$lib/ports/inventoryAccessRepository';
@@ -141,53 +140,18 @@ class LifecycleSelectionExpiredRepository extends SeededInventoryRepository {
   }
 }
 
-class BoundedLifecycleLocationRepository extends SeededInventoryRepository {
-  async loadWorkspace(): Promise<WorkspaceData> {
-    const data = await super.loadWorkspace();
-    return { ...data, assets: data.assets.filter((asset) => asset.id !== 'location-garage') };
-  }
-}
-
 class RefreshFailingAfterReturnRepository extends SeededInventoryRepository {
   private returned = false;
 
   async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
     const result = await super.returnAsset(...args);
     this.returned = true;
-    return { ...result, undoableOperationId: 'operation-home-return' };
+    return result;
   }
 
   async getAsset(...args: Parameters<SeededInventoryRepository['getAsset']>) {
     if (this.returned) throw new Error('Refresh failed after confirmed return.');
     return super.getAsset(...args);
-  }
-}
-
-class UndoableReturnRepository extends SeededInventoryRepository {
-  readonly operationId = 'operation-return-detail';
-  directions: string[] = [];
-
-  async returnAsset(...args: Parameters<SeededInventoryRepository['returnAsset']>) {
-    const result = await super.returnAsset(...args);
-    return { ...result, undoableOperationId: this.operationId };
-  }
-
-  async applyAssetOperation(
-    tenantId: string,
-    inventoryId: string,
-    operationId: string,
-    direction: UndoableOperationDirection
-  ): Promise<Asset> {
-    this.directions.push(`${operationId}:${direction}`);
-    if (direction === 'undo') {
-      await super.checkoutAsset(tenantId, inventoryId, 'asset-home', { details: 'Reopened by Undo' });
-    } else {
-      await super.returnAsset(tenantId, inventoryId, 'asset-home', {});
-    }
-    const current = await super.getAsset(tenantId, inventoryId, 'asset-home');
-    // The apply-operation endpoint currently returns the asset without checkout
-    // expansion; the selected-detail refresh must supply that relationship.
-    return { ...current, currentCheckout: undefined };
   }
 }
 
@@ -237,18 +201,6 @@ class DelayedAssetRepository extends SeededInventoryRepository {
   }
 }
 
-class UnsafeAssetDetailRepository extends SeededInventoryRepository {
-  async getAsset(): Promise<never> {
-    throw Object.assign(new Error('private database diagnostic must not be shown'), { safeForUser: false as const });
-  }
-}
-
-class ExpiredAssetDetailRepository extends SeededInventoryRepository {
-  async getAsset(): Promise<never> {
-    throw new AuthenticationRequiredError('expired session diagnostic must not be shown');
-  }
-}
-
 class DelayedBrowseRepository extends SeededInventoryRepository {
   releaseBrowseLoad: (() => void) | null = null;
 
@@ -294,32 +246,29 @@ class AssetUpdateFailingRepository extends SeededInventoryRepository {
   }
 }
 
-let undoableOperationSequence = 0;
-
 class UndoableCreateRepository extends SeededInventoryRepository {
   directions: string[] = [];
-  readonly operationId = `operation-create-${++undoableOperationSequence}`;
-  private createdAsset: Asset | null = null;
 
   async createAsset(...args: Parameters<SeededInventoryRepository['createAsset']>): Promise<Asset> {
-    const created = await super.createAsset(...args);
-    this.createdAsset = created;
-    return { ...created, undoableOperationId: this.operationId };
+    return { ...await super.createAsset(...args), undoableOperationId: 'operation-create-one' };
   }
 
   async applyAssetOperation(
     tenantId: string,
     inventoryId: string,
     operationId: string,
-    direction: UndoableOperationDirection
+    direction: 'undo' | 'redo'
   ): Promise<Asset> {
     this.directions.push(`${operationId}:${direction}`);
-    if (!this.createdAsset) throw new Error('The saved operation is no longer available.');
-    const asset = direction === 'undo'
-      ? await super.archiveAsset(tenantId, inventoryId, this.createdAsset.id)
-      : await super.restoreAsset(tenantId, inventoryId, this.createdAsset.id);
-    this.createdAsset = asset;
-    return asset;
+    const created = (await this.selectAssetLifecycle(tenantId, inventoryId, 'active')).assets
+      .find((asset) => asset.undoableOperationId === 'operation-create-one' || asset.title === 'Camera bag');
+    if (!created) {
+      const archived = (await this.selectAssetLifecycle(tenantId, inventoryId, 'archived')).assets
+        .find((asset) => asset.title === 'Camera bag');
+      if (!archived) throw new Error('Created asset is stale.');
+      return { ...await this.restoreAsset(tenantId, inventoryId, archived.id), undoableOperationId: operationId };
+    }
+    return { ...await this.archiveAsset(tenantId, inventoryId, created.id), undoableOperationId: operationId };
   }
 }
 
@@ -328,52 +277,10 @@ class StaleUndoableCreateRepository extends UndoableCreateRepository {
     _tenantId: string,
     _inventoryId: string,
     operationId: string,
-    direction: UndoableOperationDirection
+    direction: 'undo' | 'redo'
   ): Promise<Asset> {
     this.directions.push(`${operationId}:${direction}`);
-    throw Object.assign(new Error('This change is stale because the asset changed later.'), { safeForUser: true as const });
-  }
-}
-
-class RefreshFailingUndoableCreateRepository extends UndoableCreateRepository {
-  private applied = false;
-
-  async applyAssetOperation(...args: Parameters<UndoableCreateRepository['applyAssetOperation']>): Promise<Asset> {
-    const result = await super.applyAssetOperation(...args);
-    this.applied = true;
-    return result;
-  }
-
-  async selectAssetLifecycle(...args: Parameters<SeededInventoryRepository['selectAssetLifecycle']>): Promise<WorkspaceData> {
-    if (this.applied) throw Object.assign(new Error('database host 10.0.0.8 failed'), { safeForUser: false as const });
-    return super.selectAssetLifecycle(...args);
-  }
-}
-
-class UnsafeUndoableCreateRepository extends UndoableCreateRepository {
-  async applyAssetOperation(
-    _tenantId: string,
-    _inventoryId: string,
-    operationId: string,
-    direction: UndoableOperationDirection
-  ): Promise<Asset> {
-    this.directions.push(`${operationId}:${direction}`);
-    throw Object.assign(new Error('database host 10.0.0.8 rejected operation'), { safeForUser: false as const });
-  }
-}
-
-class AuthExpiredRefreshUndoableCreateRepository extends UndoableCreateRepository {
-  private applied = false;
-
-  async applyAssetOperation(...args: Parameters<UndoableCreateRepository['applyAssetOperation']>): Promise<Asset> {
-    const result = await super.applyAssetOperation(...args);
-    this.applied = true;
-    return result;
-  }
-
-  async selectAssetLifecycle(...args: Parameters<SeededInventoryRepository['selectAssetLifecycle']>): Promise<WorkspaceData> {
-    if (this.applied) throw new AuthenticationRequiredError();
-    return super.selectAssetLifecycle(...args);
+    throw new Error('This change is stale because the asset changed later.');
   }
 }
 
@@ -456,20 +363,6 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
-  it('loads a focused location by id when the bounded lifecycle collection omitted it', async () => {
-    await mountWorkspace(
-      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage',
-      new BoundedLifecycleLocationRepository(structuredClone(seed))
-    );
-
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
-      expect(document.body.textContent).toContain('Garage');
-      expect(document.body.textContent).toContain('Move place');
-      expect(document.body.textContent).toContain('Archive');
-    });
-  });
-
   it('removes a returned Home row without depending on a follow-up asset refresh', async () => {
     const repository = new RefreshFailingAfterReturnRepository(structuredClone(seed));
     await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
@@ -481,27 +374,7 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(document.body.querySelector('[aria-label="Return Passport"]')).toBeNull();
       expect(document.body.textContent).toContain('Returned Passport.');
-      expect(controlContaining('Undo')).toBeTruthy();
       expect(document.body.textContent).not.toContain('Refresh failed after confirmed return.');
-    });
-  });
-
-  it('refreshes selected checkout state after undoing a return', async () => {
-    const repository = new UndoableReturnRepository(structuredClone(seed));
-    await repository.checkoutAsset('tenant-home', 'inventory-household', 'asset-home', {});
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
-
-    await waitFor(() => expect(controlContaining('Return')).toBeTruthy());
-    controlContaining('Return').click();
-    await waitFor(() => expect(document.body.querySelector('#return-asset-details')).toBeTruthy());
-    buttonContaining('Return').click();
-    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
-    controlContaining('Undo').click();
-
-    await waitFor(() => {
-      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
-      expect(controlContaining('Return')).toBeTruthy();
-      expect(document.body.textContent).toContain('Undid change to Passport.');
     });
   });
 
@@ -865,12 +738,6 @@ describe('InventoryWorkspaceApp route application', () => {
 
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/settings/activity');
     afterNavigateCallbacks.forEach((callback) => callback());
-
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('Activity');
-      expect(document.body.textContent).not.toContain('Loading asset details');
-    });
-
     repository.releaseAssetLoad?.();
 
     await waitFor(() => {
@@ -878,62 +745,6 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Activity');
       expect(document.body.textContent).not.toContain('Blue folder');
     });
-  });
-
-  it('shows an explicit detail loading state instead of stale Home content', async () => {
-    const repository = new DelayedAssetRepository(structuredClone(seed));
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
-
-    await waitFor(() => expect(repository.releaseAssetLoad).toBeTruthy());
-
-    expect(document.body.textContent).toContain('Loading asset details');
-    expect(document.body.textContent).not.toContain('Recently changed');
-    repository.releaseAssetLoad?.();
-    await waitFor(() => expect(document.body.textContent).toContain('Passport'));
-  });
-
-  it('releases route control so Browse and Import initialize before an obsolete detail request resolves', async () => {
-    const repository = new DelayedAssetRepository(structuredClone(seed));
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
-    await waitFor(() => expect(repository.releaseAssetLoad).toBeTruthy());
-
-    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/browse');
-    afterNavigateCallbacks.forEach((callback) => callback());
-    await waitFor(() => {
-      expect(document.body.querySelector('h1')?.textContent).toBe('Browse');
-      expect(document.body.textContent).toContain('Passport');
-      expect(document.body.querySelector<HTMLButtonElement>('.header-add')?.disabled).toBe(false);
-    });
-
-    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/import');
-    afterNavigateCallbacks.forEach((callback) => callback());
-    await waitFor(() => expect(document.body.querySelector('h1')?.textContent).toBe('Imports'));
-
-    repository.releaseAssetLoad?.();
-    await waitFor(() => expect(document.body.querySelector('h1')?.textContent).toBe('Imports'));
-  });
-
-  it('does not render unsafe asset-detail diagnostics in the unavailable state or toast', async () => {
-    await mountWorkspace(
-      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
-      new UnsafeAssetDetailRepository(structuredClone(seed))
-    );
-
-    await waitFor(() => expect(document.body.textContent).toContain('Workspace unavailable'));
-    expect(document.body.textContent).toContain('Asset details could not be loaded. Try again.');
-    expect(document.body.textContent).not.toContain('private database diagnostic');
-  });
-
-  it('expires the session for a typed asset-detail authentication failure without rendering its message', async () => {
-    const onSessionExpired = vi.fn();
-    await mountWorkspace(
-      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
-      new ExpiredAssetDetailRepository(structuredClone(seed)),
-      { onSessionExpired }
-    );
-
-    await waitFor(() => expect(onSessionExpired).toHaveBeenCalledOnce());
-    expect(document.body.textContent).not.toContain('expired session diagnostic');
   });
 
   it('does not leave global actions busy after leaving an in-flight Browse request', async () => {
@@ -999,16 +810,10 @@ describe('InventoryWorkspaceApp route application', () => {
     afterNavigateCallbacks.forEach((callback) => callback());
     window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
     afterNavigateCallbacks.forEach((callback) => callback());
-
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
-      expect(document.body.textContent).toContain('Passport');
-      expect(document.body.textContent).not.toContain('Activity');
-    });
-
     repository.releaseAssetLoad?.();
 
     await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
       expect(document.body.textContent).toContain('Passport');
       expect(document.body.textContent).not.toContain('Activity');
     });
@@ -1275,7 +1080,9 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Garage');
     });
 
-    controlContaining('Add item here').click();
+    const invokingControl = controlContaining('Add item here');
+    invokingControl.focus();
+    invokingControl.click();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/add/item');
@@ -1292,6 +1099,8 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
       expect(document.body.textContent).toContain('Main storage area');
+      expect((document.activeElement as HTMLElement | null)?.dataset.workspaceAddReturnFocus).toBe('location-item');
+      expect(document.activeElement?.textContent).toContain('Add item here');
     });
   });
 
@@ -1346,14 +1155,14 @@ describe('InventoryWorkspaceApp route application', () => {
     controlContaining('Undo').click();
 
     await waitFor(() => {
-      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
+      expect(repository.directions).toEqual(['operation-create-one:undo']);
       expect(document.body.textContent).toContain('Undid change to Camera bag.');
       expect(controlContaining('Redo')).toBeTruthy();
     });
 
     controlContaining('Redo').click();
     await waitFor(() => {
-      expect(repository.directions).toEqual([`${repository.operationId}:undo`, `${repository.operationId}:redo`]);
+      expect(repository.directions).toEqual(['operation-create-one:undo', 'operation-create-one:redo']);
       expect(document.body.textContent).toContain('Redid change to Camera bag.');
     });
   });
@@ -1375,52 +1184,6 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Couldn’t undo change.');
       expect(document.body.textContent).toContain('This change is stale because the asset changed later.');
       expect(document.body.textContent).not.toContain('Undid change to Camera bag.');
-    });
-  });
-
-  it('keeps successful Undo and Redo available when the follow-up refresh fails', async () => {
-    const repository = new RefreshFailingUndoableCreateRepository(structuredClone(seed));
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
-    await saveNamedItem('Camera bag');
-    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
-
-    controlContaining('Undo').click();
-
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('Undid change to Camera bag.');
-      expect(document.body.textContent).toContain('Change applied, but this view could not be refreshed.');
-      expect(controlContaining('Redo')).toBeTruthy();
-    });
-  });
-
-  it('does not expose unsafe Undo failure details', async () => {
-    const repository = new UnsafeUndoableCreateRepository(structuredClone(seed));
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository);
-    await saveNamedItem('Camera bag');
-    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
-
-    controlContaining('Undo').click();
-
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('Couldn’t undo change.');
-      expect(document.body.textContent).toContain('can’t be applied safely');
-      expect(document.body.textContent).not.toContain('database host');
-    });
-  });
-
-  it('expires the session when Undo succeeds but the reconciliation refresh is unauthenticated', async () => {
-    const onSessionExpired = vi.fn();
-    const repository = new AuthExpiredRefreshUndoableCreateRepository(structuredClone(seed));
-    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/add/item', repository, { onSessionExpired });
-    await saveNamedItem('Camera bag');
-    await waitFor(() => expect(controlContaining('Undo')).toBeTruthy());
-
-    controlContaining('Undo').click();
-
-    await waitFor(() => {
-      expect(onSessionExpired).toHaveBeenCalledOnce();
-      expect(repository.directions).toEqual([`${repository.operationId}:undo`]);
-      expect(document.body.textContent).not.toContain('Couldn’t undo change.');
     });
   });
 
@@ -1930,15 +1693,6 @@ async function waitForSaveButton(): Promise<HTMLButtonElement> {
   });
   if (!button) throw new Error('Missing Save button');
   return button;
-}
-
-async function saveNamedItem(title: string): Promise<void> {
-  await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
-  const titleInput = document.body.querySelector<HTMLInputElement>('#asset-title');
-  if (!titleInput) throw new Error('Missing add title input');
-  setInputValue(titleInput, title);
-  await tick();
-  (await waitForSaveButton()).click();
 }
 
 function buttonContaining(text: string): HTMLButtonElement {

@@ -86,6 +86,7 @@ class FakeInventoryApiClient {
     readonly lifecycleState?: string;
     readonly sort?: string;
   }> = [];
+  getAssetRequests: Array<{ readonly inventoryId: string; readonly assetId: string }> = [];
   listCheckedOutAssetRequests: Array<{
     readonly inventoryId: string;
     readonly limit?: number;
@@ -241,6 +242,15 @@ class FakeInventoryApiClient {
       start + limit < sortedAssets.length ? (start + limit).toString() : null;
 
     return pageWithCursor(items, nextCursor);
+  }
+
+  async getAsset(_tenantId: string, inventoryId: string, selectedAssetId: string): Promise<Asset> {
+    this.getAssetRequests.push({ inventoryId, assetId: selectedAssetId });
+    const asset = this.assets.find((candidate) => candidate.id === selectedAssetId && candidate.inventoryId === inventoryId);
+    if (!asset) {
+      throw new Error('Asset not found.');
+    }
+    return asset;
   }
 
   async listAssetTags(
@@ -912,7 +922,9 @@ describe('ApiInventorySummaryRepository', () => {
       'tenant-home'
     );
 
+    await expect(repository.getCurrentTenantId()).resolves.toBe('tenant-home');
     await repository.selectInventory(inventoryId('inventory-cabin'));
+    await expect(repository.getCurrentTenantId()).resolves.toBe('tenant-cabin');
 
     await expect(repository.getDefaultInventorySummary()).resolves.toMatchObject({
       id: 'inventory-cabin',
@@ -2227,6 +2239,198 @@ describe('ApiInventorySummaryRepository', () => {
         sort: 'id_asc'
       }
     ]);
+  });
+
+  it('loads one active location workspace traversal and resolves thumbnails only for its subtree', async () => {
+    const client = new FakeInventoryApiClient();
+    const photo = (suffix: string) => ({
+      id: `attachment-${suffix}`,
+      fileName: `${suffix}.jpg`,
+      contentType: 'image/jpeg',
+      sizeBytes: 1024,
+      thumbnails: { small: 'small', medium: 'medium', large: 'large' }
+    });
+    client.assets = [
+      {
+        id: 'asset-garage', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'location',
+        title: 'Garage', description: '', parentAssetId: null, lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('garage')
+      },
+      {
+        id: 'asset-cabinet', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'container',
+        title: 'Cabinet', description: '', parentAssetId: 'asset-garage', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('cabinet')
+      },
+      {
+        id: 'asset-drawer', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'container',
+        title: 'Drawer', description: '', parentAssetId: 'asset-cabinet', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('drawer')
+      },
+      {
+        id: 'asset-hammer', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'item',
+        title: 'Hammer', description: '', parentAssetId: 'asset-drawer', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('hammer')
+      },
+      {
+        id: 'asset-shelf', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'location',
+        title: 'Shelf', description: '', parentAssetId: 'asset-cabinet', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('shelf')
+      },
+      {
+        id: 'asset-screws', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'item',
+        title: 'Screws', description: '', parentAssetId: 'asset-shelf', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('screws')
+      },
+      {
+        id: 'asset-kitchen', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'location',
+        title: 'Kitchen', description: '', parentAssetId: null, lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('kitchen')
+      },
+      {
+        id: 'asset-mug', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'item',
+        title: 'Mug', description: '', parentAssetId: 'asset-kitchen', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('mug')
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    const workspace = await repository.getAssetDetailWorkspace(assetId('asset-garage'));
+
+    expect(workspace).toMatchObject({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      asset: { id: 'asset-garage' }
+    });
+    expect(workspace?.allAssets.map((asset) => asset.id)).toEqual([
+      'asset-garage',
+      'asset-cabinet',
+      'asset-drawer',
+      'asset-hammer',
+      'asset-shelf',
+      'asset-screws'
+    ]);
+    expect(workspace?.allAssets.find((asset) => asset.id === 'asset-drawer')).toMatchObject({
+      hasPhoto: false,
+      photo: undefined
+    });
+    expect(workspace?.allAssets.find((asset) => asset.id === 'asset-shelf')).toMatchObject({
+      hasPhoto: false,
+      photo: undefined
+    });
+    expect(workspace?.allAssets.find((asset) => asset.id === 'asset-hammer')).toMatchObject({
+      locationTrail: ['Home Inventory', 'Garage', 'Cabinet', 'Drawer', 'Hammer'],
+      hasPhoto: true
+    });
+    expect(client.thumbnailRequests.map((request) => request.assetId).sort()).toEqual([
+      'asset-cabinet',
+      'asset-garage',
+      'asset-hammer',
+      'asset-screws'
+    ]);
+    expect(client.thumbnailRequests.every((request) => request.variant === 'small')).toBe(true);
+    expect(client.listAssetRequests).toEqual([{
+      inventoryId: 'inventory-home',
+      limit: 100,
+      cursor: undefined,
+      lifecycleState: 'active',
+      sort: 'id_asc'
+    }]);
+    expect(client.getAssetRequests).toEqual([{
+      inventoryId: 'inventory-home',
+      assetId: 'asset-garage'
+    }]);
+  });
+
+  it('loads ordinary item detail context without paginating the active inventory', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    const workspace = await repository.getAssetDetailWorkspace(assetId('asset-filters'));
+
+    expect(workspace).toMatchObject({
+      asset: {
+        id: 'asset-filters',
+        kind: 'item',
+        locationTrail: ['Home Inventory', 'Garage', 'Furnace filters'],
+        parentLocationTrail: [{ id: 'asset-garage', title: 'Garage' }]
+      },
+      allAssets: []
+    });
+    expect(client.getAssetRequests).toEqual([
+      { inventoryId: 'inventory-home', assetId: 'asset-filters' },
+      { inventoryId: 'inventory-home', assetId: 'asset-garage' }
+    ]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.thumbnailRequests.map((request) => request.assetId)).toEqual(['asset-filters']);
+  });
+
+  it('loads an active container subtree so immediate children remain available', async () => {
+    const client = new FakeInventoryApiClient();
+    const photo = (suffix: string) => ({
+      id: `attachment-${suffix}`,
+      fileName: `${suffix}.jpg`,
+      contentType: 'image/jpeg',
+      sizeBytes: 1024,
+      thumbnails: { small: 'small', medium: 'medium', large: 'large' }
+    });
+    client.assets = [
+      {
+        id: 'asset-cabinet', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'container',
+        title: 'Cabinet', description: '', parentAssetId: null, lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('cabinet')
+      },
+      {
+        id: 'asset-drawer', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'container',
+        title: 'Drawer', description: '', parentAssetId: 'asset-cabinet', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('drawer')
+      },
+      {
+        id: 'asset-hammer', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'item',
+        title: 'Hammer', description: '', parentAssetId: 'asset-drawer', lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z', primaryPhoto: photo('hammer')
+      },
+      {
+        id: 'asset-unrelated', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'item',
+        title: 'Unrelated', description: '', parentAssetId: null, lifecycleState: 'active', customFields: {},
+        createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z'
+      }
+    ];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    const workspace = await repository.getAssetDetailWorkspace(assetId('asset-cabinet'));
+
+    expect(workspace?.allAssets.map((asset) => asset.id)).toEqual(['asset-cabinet', 'asset-drawer']);
+    expect(client.thumbnailRequests.map((request) => request.assetId).sort()).toEqual([
+      'asset-cabinet',
+      'asset-drawer'
+    ]);
+    expect(client.listAssetRequests).toHaveLength(1);
+    expect(client.getAssetRequests).toEqual([{
+      inventoryId: 'inventory-home',
+      assetId: 'asset-cabinet'
+    }]);
+  });
+
+  it('loads an archived container target without traversing the active inventory', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets = [{
+      id: 'asset-archive-box', tenantId: 'tenant-home', inventoryId: 'inventory-home', kind: 'container',
+      title: 'Archive box', description: '', parentAssetId: null, lifecycleState: 'archived', customFields: {},
+      createdAt: '2026-06-20T10:00:00Z', updatedAt: '2026-06-20T10:00:00Z'
+    }];
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    const workspace = await repository.getAssetDetailWorkspace(assetId('asset-archive-box'));
+
+    expect(workspace).toMatchObject({
+      asset: { id: 'asset-archive-box', lifecycleState: 'archived' },
+      allAssets: []
+    });
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.getAssetRequests).toEqual([{
+      inventoryId: 'inventory-home',
+      assetId: 'asset-archive-box'
+    }]);
   });
 
   it('keeps inventory map structure available when one row thumbnail fails', async () => {

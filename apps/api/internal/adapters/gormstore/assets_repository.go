@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -140,6 +141,15 @@ func createAssetInTx(tx *gorm.DB, item asset.Asset, auditRecord audit.Record, un
 func (s Store) UpdateAsset(ctx context.Context, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return updateAssetInTx(tx, asset.Asset{}, item, auditRecords, undoableOperation)
+	})
+}
+
+func (s Store) UpdateAssetAndTags(ctx context.Context, item asset.Asset, tagIDs []assettag.ID, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := updateAssetInTx(tx, asset.Asset{}, item, auditRecords, undoableOperation); err != nil {
+			return err
+		}
+		return replaceAssetTagsInTx(tx, tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), item.ID, tagIDs)
 	})
 }
 

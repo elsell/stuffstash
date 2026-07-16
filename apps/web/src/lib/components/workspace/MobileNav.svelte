@@ -86,6 +86,7 @@
   <Button.Root
     href={addHref()}
     class="mobile-add"
+    data-workspace-add-trigger="mobile"
     disabled={!addAvailability.canOpen}
     aria-label="Add asset"
     aria-describedby={addAvailability.disabledReason ? addDeniedNoteId : undefined}

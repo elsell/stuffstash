@@ -33,7 +33,9 @@ export function notify(notification: WorkspaceNotification): string | number {
               void notification.action.onClick();
               return;
             }
-            if (notification.action?.href) void goto(notification.action.href);
+            if (notification.action?.href) {
+              void goto(notification.action.href);
+            }
           }
         }
       : undefined

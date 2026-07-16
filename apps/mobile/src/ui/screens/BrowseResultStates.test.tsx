@@ -37,6 +37,21 @@ describe('BrowseEmptyState', () => {
     expect(onAdd).toHaveBeenCalledTimes(1);
   });
 
+  it('explains a read-only empty inventory without exposing Add', () => {
+    const state = BrowseEmptyState({
+      kind: 'inventory',
+      inventoryName: 'Shared inventory',
+      palette: lightPalette
+    });
+
+    expect(collectText(state)).toEqual(expect.arrayContaining([
+      'No items in Shared inventory',
+      'An inventory editor can add the first item, container, or place.'
+    ]));
+    expect(collectText(state)).not.toContain('Add item');
+    expect(findPressableWithText(state, 'Add item')).toBeUndefined();
+  });
+
   it('quotes the submitted query and offers Clear search', () => {
     const onClearSearch = vi.fn();
     const state = BrowseEmptyState({

@@ -24,7 +24,6 @@
     assetTags?: AssetTag[];
     saving: boolean;
     notification: WorkspaceNotification | null;
-    refreshWarning?: WorkspaceNotification | null;
     error: string;
     onAddClose: () => void;
     onAddSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
@@ -48,32 +47,22 @@
     assetTags = [],
     saving,
     notification,
-    refreshWarning = null,
     error,
     onAddClose,
     onAddSave
   }: InventoryWorkspaceOverlaysProps = $props();
 
   let lastNotificationKey = '';
-  let lastRefreshWarningKey = '';
   let lastError = '';
 
   $effect(() => {
     const nextNotificationKey = notification
-      ? `${notification.kind}:${notification.title}:${notification.description ?? ''}:${notification.action?.label ?? ''}:${notification.action?.href ?? ''}`
+      ? `${notification.id ?? ''}:${notification.kind}:${notification.title}:${notification.description ?? ''}:${notification.action?.label ?? ''}:${notification.action?.href ?? ''}`
       : '';
     if (notification && nextNotificationKey !== lastNotificationKey) {
       notify(notification);
     }
     lastNotificationKey = nextNotificationKey;
-  });
-
-  $effect(() => {
-    const nextWarningKey = refreshWarning
-      ? `${refreshWarning.kind}:${refreshWarning.title}:${refreshWarning.description ?? ''}:${refreshWarning.duration ?? ''}`
-      : '';
-    if (refreshWarning && nextWarningKey !== lastRefreshWarningKey) notify(refreshWarning);
-    lastRefreshWarningKey = nextWarningKey;
   });
 
   $effect(() => {

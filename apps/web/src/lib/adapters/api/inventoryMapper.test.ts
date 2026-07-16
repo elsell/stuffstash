@@ -14,6 +14,7 @@ describe('inventory API mapper', () => {
         parentAssetId: null,
         lifecycleState: 'active',
         undoableOperationId: 'operation-move-one',
+        primaryPhoto: { id: 'photo-one' },
         customFields: {},
         tags: [{ id: 'tag-one', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
         currentCheckout: {
@@ -34,6 +35,7 @@ describe('inventory API mapper', () => {
       lifecycleState: 'active',
       customFields: {},
       tags: [{ id: 'tag-one', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }],
+      primaryPhotoId: 'photo-one',
       currentCheckout: {
         id: 'checkout-one',
         state: 'open',

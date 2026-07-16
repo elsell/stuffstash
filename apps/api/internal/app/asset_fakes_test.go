@@ -79,7 +79,7 @@ func (f *fakeAuditRepository) ListInventoryAuditRecords(_ context.Context, tenan
 func (f *fakeAuditRepository) ListAssetAuditRecords(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, targetID string, request ports.AssetAuditRecordListRequest) ([]audit.Record, error) {
 	items := []audit.Record{}
 	for _, record := range f.items {
-		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.TargetType == audit.TargetAsset && record.TargetID == targetID {
+		if record.TenantID.String() == tenantID.String() && record.InventoryID.String() == inventoryID.String() && record.TargetType == audit.TargetAsset && record.TargetID == targetID && fakeAssetAuditActionAllowed(record.Action, request.Actions) && fakeAssetAuditRecordBefore(record, request.BeforeOccurredAt, request.BeforeRecordID) {
 			items = append(items, record)
 		}
 	}
@@ -90,6 +90,28 @@ func (f *fakeAuditRepository) ListAssetAuditRecords(_ context.Context, tenantID 
 		items = items[:request.Limit]
 	}
 	return items, nil
+}
+
+func fakeAssetAuditActionAllowed(action audit.Action, allowed []audit.Action) bool {
+	if len(allowed) == 0 {
+		return true
+	}
+	for _, candidate := range allowed {
+		if action == candidate {
+			return true
+		}
+	}
+	return false
+}
+
+func fakeAssetAuditRecordBefore(record audit.Record, occurredAt time.Time, id audit.ID) bool {
+	if occurredAt.IsZero() || id.String() == "" {
+		return true
+	}
+	if record.OccurredAt.Before(occurredAt) {
+		return true
+	}
+	return record.OccurredAt.Equal(occurredAt) && record.ID.String() < id.String()
 }
 
 func pagedFakeAuditRecords(items []audit.Record, limit int) []audit.Record {

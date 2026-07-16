@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -46,6 +47,65 @@ func TestStoreCreatesAndAppliesUndoableAssetOperation(t *testing.T) {
 	}
 	if !ok || persisted.LifecycleState != asset.LifecycleStateArchived {
 		t.Fatalf("expected archived asset after undo, found=%t asset=%+v", ok, persisted)
+	}
+}
+
+func TestStoreUndoRestoresAssetAndTagAssignmentsTogether(t *testing.T) {
+	ctx := context.Background()
+	store := newUndoableOperationTestStore(t, ctx)
+	tenantID := tenant.ID("tenant-one")
+	inventoryID := inventory.InventoryID("inventory-one")
+	original := assetItem("asset-one", tenantID.String(), inventoryID.String(), asset.KindItem, "")
+	if err := createAsset(t, ctx, store, original); err != nil {
+		t.Fatalf("create asset: %v", err)
+	}
+	workshop := assetTag(t, "tag-workshop", tenantID, inventoryID, "workshop", "Workshop")
+	camping := assetTag(t, "tag-camping", tenantID, inventoryID, "camping", "Camping")
+	for index, tag := range []assettag.Tag{workshop, camping} {
+		if err := store.CreateAssetTag(ctx, tag, auditRecord(t, "audit-tag-"+string(rune('a'+index)), tenantID, inventoryID, audit.ActionAssetTagCreated)); err != nil {
+			t.Fatalf("create tag: %v", err)
+		}
+	}
+	if err := store.SetAssetTags(ctx, tenantID, inventoryID, original.ID, []assettag.ID{workshop.ID}, auditRecord(t, "audit-initial-tags", tenantID, inventoryID, audit.ActionAssetUpdated)); err != nil {
+		t.Fatalf("set initial tags: %v", err)
+	}
+	updated := original
+	updated.Title, _ = asset.NewTitle("Cordless drill")
+	operation := undoableAssetOperation("operation-edit", tenantID, inventoryID, audit.ActionAssetUpdated, &original, updated)
+	operation.ReplacesTags = true
+	operation.BeforeTagIDs = []assettag.ID{workshop.ID}
+	operation.AfterTagIDs = []assettag.ID{camping.ID}
+	if err := store.UpdateAssetAndTags(ctx, updated, operation.AfterTagIDs, []audit.Record{auditRecord(t, "audit-edit", tenantID, inventoryID, audit.ActionAssetUpdated)}, &operation); err != nil {
+		t.Fatalf("update fields and tags: %v", err)
+	}
+	loaded, found, err := store.UndoableOperationByID(ctx, tenantID, inventoryID, operation.ID)
+	if err != nil || !found || !loaded.ReplacesTags || len(loaded.BeforeTagIDs) != 1 || loaded.BeforeTagIDs[0] != workshop.ID {
+		t.Fatalf("expected persisted tag snapshots, found=%t operation=%+v err=%v", found, loaded, err)
+	}
+	if err := store.SetAssetTags(ctx, tenantID, inventoryID, original.ID, []assettag.ID{workshop.ID}, auditRecord(t, "audit-newer-tags", tenantID, inventoryID, audit.ActionAssetUpdated)); err != nil {
+		t.Fatalf("set newer tags: %v", err)
+	}
+	if _, _, err := store.ApplyAssetUndoableOperation(ctx, operation.ID, ports.UndoableOperationDirectionUndo, updated, original, auditRecord(t, "audit-stale-tag-undo", tenantID, inventoryID, audit.ActionUndoableOperationUndone)); !errors.Is(err, ports.ErrConflict) {
+		t.Fatalf("expected newer tags to make undo stale, got %v", err)
+	}
+	if err := store.SetAssetTags(ctx, tenantID, inventoryID, original.ID, []assettag.ID{camping.ID}, auditRecord(t, "audit-reset-tags", tenantID, inventoryID, audit.ActionAssetUpdated)); err != nil {
+		t.Fatalf("reset expected tags: %v", err)
+	}
+	if _, _, err := store.ApplyAssetUndoableOperation(ctx, operation.ID, ports.UndoableOperationDirectionUndo, updated, original, auditRecord(t, "audit-undo-edit", tenantID, inventoryID, audit.ActionUndoableOperationUndone)); err != nil {
+		t.Fatalf("undo edit: %v", err)
+	}
+	assigned, err := store.AssetTagsByAsset(ctx, tenantID, inventoryID, original.ID)
+	if err != nil {
+		t.Fatalf("read restored tags: %v", err)
+	}
+	if len(assigned) != 1 || assigned[0].ID != workshop.ID {
+		t.Fatalf("expected workshop tag restored, got %+v", assigned)
+	}
+	if err := store.SetAssetTags(ctx, tenantID, inventoryID, original.ID, []assettag.ID{camping.ID}, auditRecord(t, "audit-newer-tags-before-redo", tenantID, inventoryID, audit.ActionAssetUpdated)); err != nil {
+		t.Fatalf("set newer tags before redo: %v", err)
+	}
+	if _, _, err := store.ApplyAssetUndoableOperation(ctx, operation.ID, ports.UndoableOperationDirectionRedo, original, updated, auditRecord(t, "audit-stale-tag-redo", tenantID, inventoryID, audit.ActionUndoableOperationRedone)); !errors.Is(err, ports.ErrConflict) {
+		t.Fatalf("expected newer tags to make redo stale, got %v", err)
 	}
 }
 

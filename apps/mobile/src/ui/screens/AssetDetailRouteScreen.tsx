@@ -20,6 +20,7 @@ import {
 } from '../../application/assets/AddAssetPhotosCommand';
 import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
+import { UndoAssetEditCommand } from '../../application/assets/UndoAssetEditCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
@@ -33,6 +34,7 @@ import {
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
+import { AssetDetailRouteErrorState } from './AssetDetailRouteErrorState';
 import {
   assetPhotoViewerModel,
   isAssetPhotoId
@@ -72,6 +74,7 @@ type AssetDetailRouteScreenProps = {
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly undoAssetEditCommand: UndoAssetEditCommand;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly assetId: string;
@@ -91,6 +94,7 @@ export function AssetDetailRouteScreen({
   assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
+  undoAssetEditCommand,
   assetId,
   deleteAssetPhotoCommand,
   photoSelectionQuery
@@ -125,7 +129,26 @@ export function AssetDetailRouteScreen({
           setScreenState({ status: 'ready', asset });
           const completion = consumeAssetActionCompletion(assetId);
           if (completion) {
-            setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
+            if (completion.action === 'edit') {
+              feedback.showNotice({
+                tone: 'success',
+                title: `Saved "${asset.title}"`,
+                message: 'The change is now in History.',
+                ...(completion.undoableOperationId ? {
+                  action: {
+                    label: 'Undo',
+                    onPress: () => void undoSavedEdit({
+                      operationId: completion.undoableOperationId!,
+                      tenantId: asset.tenantId ?? '',
+                      inventoryId: asset.inventoryId ?? '',
+                      title: asset.title
+                    })
+                  }
+                } : {})
+              });
+            } else {
+              setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
+            }
           }
         }
       })
@@ -138,7 +161,28 @@ export function AssetDetailRouteScreen({
     return () => {
       isCurrent = false;
     };
-  }, [assetDetailQuery, assetId]));
+  }, [assetDetailQuery, assetId, feedback, undoAssetEditCommand]));
+
+  async function undoSavedEdit(input: { readonly tenantId: string; readonly inventoryId: string; readonly operationId: string; readonly title: string }): Promise<void> {
+    try {
+      await undoAssetEditCommand.execute(input);
+      await reloadAsset();
+      feedback.showNotice({ tone: 'success', title: 'Edit undone', message: 'The previous values were reapplied.' });
+    } catch (error) {
+      feedback.showNotice({ tone: 'error', title: 'Could not undo edit', message: readableError(error, 'Undo failed.') });
+    }
+  }
+
+  function openHistory(asset: AssetDetailViewModel): void {
+    if (!asset.tenantId || !asset.inventoryId) {
+      feedback.showNotice({ tone: 'error', title: 'Could not open History', message: 'The item scope is unavailable. Refresh and try again.' });
+      return;
+    }
+    router.push({
+      pathname: '/assets/[assetId]/history',
+      params: { assetId: asset.id, tenantId: asset.tenantId, inventoryId: asset.inventoryId, assetTitle: asset.title }
+    });
+  }
 
   async function refreshAsset(): Promise<void> {
     setIsRefreshing(true);
@@ -315,7 +359,7 @@ export function AssetDetailRouteScreen({
             return;
           }
           if (index === overflow.auditIndex) {
-            router.push(`/assets/${asset.id}/audit`);
+            openHistory(asset);
             return;
           }
           const lifecycleActionIndex = overflow.lifecycleActionIndexes.indexOf(index);
@@ -329,7 +373,7 @@ export function AssetDetailRouteScreen({
     }
     Alert.alert(overflow.title, overflow.message, [
       { text: 'Checkout history', onPress: () => router.push(`/assets/${asset.id}/checkouts`) },
-      { text: 'Audit history', onPress: () => router.push(`/assets/${asset.id}/audit`) },
+      { text: 'History', onPress: () => openHistory(asset) },
       ...overflow.actionRows.map((action) => ({
         text: action.label,
         style: action.isDestructive ? 'destructive' as const : 'default' as const,
@@ -429,7 +473,7 @@ export function AssetDetailRouteScreen({
       }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}
       {screenState.status === 'error' ? (
-        <ErrorState
+        <AssetDetailRouteErrorState
           canRetry={screenState.canRetry}
           message={screenState.message}
           onRetry={() => void retryLoad()}
@@ -499,31 +543,6 @@ function LoadingState() {
   );
 }
 
-function ErrorState({
-  canRetry,
-  message,
-  onRetry,
-  title
-}: {
-  readonly canRetry: boolean;
-  readonly message: string;
-  readonly onRetry: () => void;
-  readonly title: string;
-}) {
-  const styles = createStyles(useAppearanceAwarePalette());
-  return (
-    <View style={styles.centerState}>
-      <Text accessibilityRole="header" style={styles.errorTitle}>{title}</Text>
-      <Text style={styles.stateText}>{message}</Text>
-      {canRetry ? (
-        <Pressable accessibilityRole="button" onPress={onRetry} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 function readableError(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
@@ -549,28 +568,8 @@ function createStyles(palette: MobileColorPalette) {
   stateText: {
     color: palette.textMuted,
     fontSize: 16,
-    lineHeight: 23,
     marginTop: spacing.md,
     textAlign: 'center'
   },
-  errorTitle: {
-    color: palette.text,
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  retryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.lg,
-    minHeight: 44,
-    minWidth: 88,
-    paddingHorizontal: spacing.md
-  },
-  retryButtonText: {
-    color: palette.action,
-    fontSize: 17,
-    fontWeight: '600'
-  }
   });
 }

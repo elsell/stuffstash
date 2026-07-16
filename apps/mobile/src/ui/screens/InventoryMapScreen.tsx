@@ -102,11 +102,13 @@ type InventoryMapScreenProps = {
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly canAdd: boolean;
   readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
   readonly inventoryMapQuery: InventoryMapQuery;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly selectedSurface: InventoryMapSurface;
+  readonly onAdd: () => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
 };
 
@@ -151,11 +153,13 @@ export function InventoryMapScreen({
   assetCheckoutCommand,
   assetDetailQuery,
   assetLifecycleCommand,
+  canAdd,
   deleteAssetPhotoCommand,
   inventoryMapQuery,
   pathStore,
   photoSelectionQuery,
   selectedSurface,
+  onAdd,
   onChangeSurface
 }: InventoryMapScreenProps) {
   const colors = useAppearancePalette();
@@ -632,7 +636,13 @@ export function InventoryMapScreen({
               <Text numberOfLines={1} style={styles.overviewText}>{mapOverviewLabel(state.map)}</Text>
             ) : null}
           </View>
-          <BrowseSurfaceControl palette={colors} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
+          <InventoryMapHeaderActions
+            canAdd={canAdd}
+            palette={colors}
+            selectedSurface={selectedSurface}
+            onAdd={onAdd}
+            onChangeSurface={onChangeSurface}
+          />
         </View>
         <View style={styles.searchBar}>
           <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
@@ -752,6 +762,41 @@ export function InventoryMapScreen({
         photoSelectionQuery={photoSelectionQuery}
         onClose={() => setSelectedAsset(undefined)}
         onMapChanged={() => refreshMap({ preserveSelectedAsset: true })}
+      />
+    </View>
+  );
+}
+
+export function InventoryMapHeaderActions({
+  canAdd,
+  palette,
+  selectedSurface,
+  onAdd,
+  onChangeSurface
+}: {
+  readonly canAdd: boolean;
+  readonly palette: MobileColorPalette;
+  readonly selectedSurface: InventoryMapSurface;
+  readonly onAdd: () => void;
+  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
+}) {
+  const styles = createStyles(palette);
+  return (
+    <View style={styles.headerActions}>
+      {canAdd ? (
+        <Pressable
+          accessibilityLabel="Add an asset"
+          accessibilityRole="button"
+          onPress={onAdd}
+          style={styles.headerAddButton}
+        >
+          <Plus color={palette.action} size={24} strokeWidth={2.2} />
+        </Pressable>
+      ) : null}
+      <BrowseSurfaceControl
+        palette={palette}
+        selectedSurface={selectedSurface}
+        onChangeSurface={onChangeSurface}
       />
     </View>
   );
@@ -1517,7 +1562,10 @@ function InventoryMapInfoSheet({
           }
           if (index === overflow.auditIndex) {
             onClose();
-            router.push(`/assets/${detail.id}/audit`);
+            router.push({
+              pathname: '/assets/[assetId]/history',
+              params: { assetId: detail.id, tenantId: detail.tenantId ?? '', inventoryId: detail.inventoryId ?? '', assetTitle: detail.title }
+            });
           }
         }
       );
@@ -1538,10 +1586,13 @@ function InventoryMapInfoSheet({
         }
       },
       {
-        text: 'Audit history',
+        text: 'History',
         onPress: () => {
           onClose();
-          router.push(`/assets/${detail.id}/audit`);
+          router.push({
+            pathname: '/assets/[assetId]/history',
+            params: { assetId: detail.id, tenantId: detail.tenantId ?? '', inventoryId: detail.inventoryId ?? '', assetTitle: detail.title }
+          });
         }
       },
       { text: 'Cancel', style: 'cancel' }
@@ -1748,6 +1799,18 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.md,
     marginBottom: spacing.xs
+  },
+  headerActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs
+  },
+  headerAddButton: {
+    alignItems: 'center',
+    borderRadius: 22,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44
   },
   titleBlock: {
     flex: 1,

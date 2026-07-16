@@ -5,8 +5,7 @@ api_base_url="${STUFF_STASH_WEB_API_BASE_URL:-${STUFF_STASH_API_ORIGIN:-http://l
 oidc_issuer="${STUFF_STASH_WEB_OIDC_ISSUER:-${STUFF_STASH_OIDC_ISSUER:-http://localhost:5556/dex}}"
 oidc_client_id="${STUFF_STASH_WEB_OIDC_CLIENT_ID:-${STUFF_STASH_OIDC_CLIENT_ID:-stuff-stash-web-local}}"
 oidc_redirect_uri="${STUFF_STASH_WEB_OIDC_REDIRECT_URI:-${STUFF_STASH_WEB_ORIGIN:-http://localhost:8081}/callback}"
-media_max_bytes="${STUFF_STASH_WEB_MEDIA_MAX_BYTES:-${STUFF_STASH_MAX_ATTACHMENT_BYTES:-26214400}}"
-invitation_allow_insecure_local_http="${STUFF_STASH_WEB_INVITATION_ALLOW_INSECURE_LOCAL_HTTP:-false}"
+media_max_bytes="${STUFF_STASH_WEB_MEDIA_MAX_BYTES:-${STUFF_STASH_MAX_ATTACHMENT_BYTES:-5242880}}"
 s3_endpoint="${STUFF_STASH_S3_PUBLIC_ENDPOINT:-localhost:3900}"
 s3_secure="${STUFF_STASH_S3_SECURE:-false}"
 
@@ -73,28 +72,20 @@ case "$media_max_bytes" in
     ;;
 esac
 
-case "$invitation_allow_insecure_local_http" in
-  true|1|yes) invitation_allow_insecure_local_http=true ;;
-  false|0|no) invitation_allow_insecure_local_http=false ;;
-  *)
-    echo "STUFF_STASH_WEB_INVITATION_ALLOW_INSECURE_LOCAL_HTTP must be a boolean" >&2
-    exit 1
-    ;;
-esac
-
 cat > /tmp/stuffstash-config.json <<EOF
 {
   "apiBaseUrl": "$(json_escape "$api_base_url")",
   "oidcIssuer": "$(json_escape "$oidc_issuer")",
   "oidcClientId": "$(json_escape "$oidc_client_id")",
   "oidcRedirectUri": "$(json_escape "$oidc_redirect_uri")",
-  "invitationAllowInsecureLocalHTTP": $invitation_allow_insecure_local_http,
   "mediaUploadPolicy": {
     "supportedContentTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"],
     "maxBytes": $media_max_bytes
   }
 }
 EOF
+
+/usr/local/bin/write-mobile-association-files /tmp
 
 nginx_template="/opt/app-root/etc/nginx.default.d/stuffstash.conf"
 nginx_server_conf="/tmp/stuffstash-server.conf"

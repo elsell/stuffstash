@@ -117,7 +117,7 @@ export function AssetDetailPhotoGallery({
               disabled={!canOpenPhoto}
               key={photo.id ?? photo.uri}
               onPress={() => photo.id && onPhotoPress ? onPhotoPress(photo.id) : undefined}
-              style={[styles.mediaFrame, { backgroundColor: palette.surfaceMuted, width: photoWidth }]}
+              style={[styles.mediaFrame, styles.photoMediaFrame, { backgroundColor: palette.surfaceMuted, width: photoWidth }]}
             >
               <Image
                 accessibilityIgnoresInvertColors
@@ -185,11 +185,13 @@ const styles = StyleSheet.create({
   },
   mediaFrame: {
     alignItems: 'center',
-    aspectRatio: 4 / 3,
     borderRadius: radius.lg,
     justifyContent: 'center',
-    overflow: 'hidden',
     position: 'relative'
+  },
+  photoMediaFrame: {
+    aspectRatio: 4 / 3,
+    overflow: 'hidden'
   },
   photo: {
     height: '100%',
@@ -206,24 +208,22 @@ const styles = StyleSheet.create({
   },
   positionText: {
     fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 17
+    fontWeight: '600'
   },
   emptyMedia: {
     borderWidth: 1,
     gap: spacing.xs,
+    minHeight: 240,
     padding: spacing.lg
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    lineHeight: 25,
     textAlign: 'center'
   },
   emptySupporting: {
     fontSize: 15,
     fontWeight: '400',
-    lineHeight: 20,
     textAlign: 'center'
   },
   addPhotoButton: {
@@ -234,13 +234,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     justifyContent: 'center',
     minHeight: 44,
+    maxWidth: '100%',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm
   },
   addPhotoText: {
+    flexShrink: 1,
     fontSize: 15,
     fontWeight: '600',
-    lineHeight: 20,
     textAlign: 'center'
   }
 });

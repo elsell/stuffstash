@@ -30,6 +30,43 @@ type auditRecordListBody struct {
 	Meta responseMeta          `json:"meta"`
 }
 
+type assetActivityChangeResponse struct {
+	Field         string `json:"field"`
+	PreviousValue string `json:"previousValue,omitempty"`
+	CurrentValue  string `json:"currentValue,omitempty"`
+}
+
+type assetActivityUndoResponse struct {
+	OperationID string `json:"operationId"`
+	Status      string `json:"status"`
+}
+
+type assetActivityResponse struct {
+	ID          string                        `json:"id"`
+	PrincipalID string                        `json:"principalId"`
+	Principal   *principalResponse            `json:"principal,omitempty"`
+	Action      string                        `json:"action"`
+	Category    string                        `json:"category"`
+	Source      string                        `json:"source"`
+	OccurredAt  string                        `json:"occurredAt"`
+	RequestID   string                        `json:"requestId,omitempty"`
+	Changes     []assetActivityChangeResponse `json:"changes"`
+	Undo        *assetActivityUndoResponse    `json:"undo,omitempty"`
+	Technical   map[string]string             `json:"technical"`
+}
+
+type assetActivityListBody struct {
+	Data []assetActivityResponse `json:"data"`
+	Meta responseMeta            `json:"meta"`
+}
+
+func decodeAssetActivityList(t *testing.T, response *httptest.ResponseRecorder) assetActivityListBody {
+	t.Helper()
+	var body assetActivityListBody
+	decodeBody(t, response, &body)
+	return body
+}
+
 func decodeAuditRecordList(t *testing.T, response *httptest.ResponseRecorder) auditRecordListBody {
 	t.Helper()
 

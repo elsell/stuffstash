@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -72,6 +73,9 @@ type UndoableOperation struct {
 	LastAppliedAt     time.Time
 	BeforeAsset       *asset.Asset
 	AfterAsset        asset.Asset
+	BeforeTagIDs      []assettag.ID
+	AfterTagIDs       []assettag.ID
+	ReplacesTags      bool
 	BeforeCheckout    *asset.Checkout
 	AfterCheckout     *asset.Checkout
 	UndoAuditRecordID audit.ID

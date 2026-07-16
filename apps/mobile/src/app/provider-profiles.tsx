@@ -1,18 +1,5 @@
-import { useAppServices } from '../ui/navigation/AppServicesContext';
-import { ProviderProfilesScreen } from '../ui/screens/ProviderProfilesScreen';
+import { Redirect } from 'expo-router';
 
 export default function ProviderProfilesRoute() {
-  const {
-    manageProviderProfileCommand,
-    providerProfileSettingsQuery,
-    testProviderProfileCommand
-  } = useAppServices();
-
-  return (
-    <ProviderProfilesScreen
-      manageCommand={manageProviderProfileCommand}
-      query={providerProfileSettingsQuery}
-      testCommand={testProviderProfileCommand}
-    />
-  );
+  return <Redirect href="/settings/voice" />;
 }

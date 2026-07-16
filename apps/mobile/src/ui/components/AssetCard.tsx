@@ -27,8 +27,9 @@ function useAssetCardStyles(paletteOverride?: MobileColorPalette) {
 
 type AssetCardProps = {
   readonly asset: AssetCardViewModel;
-  readonly density?: 'standard' | 'compact';
+  readonly density?: 'standard' | 'compact' | 'row';
   readonly footerAction?: {
+    readonly accessibilityLabel?: string;
     readonly disabled?: boolean;
     readonly label: string;
     readonly onPress: () => void;
@@ -37,6 +38,7 @@ type AssetCardProps = {
   readonly onParentLocationPress: (location: AssetParentLocationCrumbViewModel) => void;
   readonly palette?: MobileColorPalette;
   readonly showTags?: boolean;
+  readonly showUpdatedAt?: boolean;
   readonly style?: StyleProp<ViewStyle>;
   readonly onTagPress?: (tag: AssetTagViewModel) => void;
 };
@@ -50,19 +52,29 @@ export function AssetCard({
   onPress,
   onTagPress,
   showTags = true,
+  showUpdatedAt = false,
   style
 }: AssetCardProps) {
   const isCompact = density === 'compact';
+  const isRow = density === 'row';
   const styles = useAssetCardStyles(paletteOverride);
 
   return (
-    <View style={[styles.card, isCompact ? styles.compactCard : styles.standardCard, style]}>
+    <View style={[
+      styles.card,
+      isRow ? styles.rowCard : isCompact ? styles.compactCard : styles.standardCard,
+      style
+    ]}>
       <Pressable
         accessible={false}
         onPress={onPress}
-        style={({ pressed }) => [styles.openRegion, pressed ? styles.openRegionPressed : undefined]}
+        style={({ pressed }) => [
+          styles.openRegion,
+          isRow ? styles.rowOpenRegion : undefined,
+          pressed ? styles.openRegionPressed : undefined
+        ]}
       >
-        <View style={styles.imageFrame}>
+        <View style={[styles.imageFrame, isRow ? styles.rowImageFrame : undefined]}>
           {asset.photo ? (
             <Image
               accessibilityIgnoresInvertColors
@@ -72,19 +84,27 @@ export function AssetCard({
           ) : (
             <Text style={styles.imagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
           )}
-          {asset.checkedOutLabel ? <Text style={styles.checkoutImageBadge}>{asset.checkedOutLabel}</Text> : null}
+          {asset.checkedOutLabel && !isRow ? <Text style={styles.checkoutImageBadge}>{asset.checkedOutLabel}</Text> : null}
         </View>
       </Pressable>
-      <View style={styles.body}>
+      <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
         <Pressable
           accessibilityLabel={`Open asset ${asset.title}`}
           accessibilityRole="button"
           onPress={onPress}
           style={({ pressed }) => [styles.openTextRegion, pressed ? styles.openTextRegionPressed : undefined]}
         >
-          <Text numberOfLines={2} style={[styles.title, isCompact ? styles.compactTitle : styles.standardTitle]}>
+          <Text
+            numberOfLines={isRow ? undefined : 2}
+            style={[
+              styles.title,
+              isRow ? styles.rowTitle : isCompact ? styles.compactTitle : styles.standardTitle
+            ]}
+          >
             {asset.title}
           </Text>
+          {showUpdatedAt && isRow ? <Text style={styles.updatedAt}>{asset.updatedAtLabel}</Text> : null}
+          {asset.checkedOutLabel && isRow ? <Text style={styles.rowCheckoutStatus}>{asset.checkedOutLabel}</Text> : null}
         </Pressable>
         {asset.parentLocationTrail.length > 0 ? (
           <View style={styles.topRow}>
@@ -95,6 +115,7 @@ export function AssetCard({
             />
           </View>
         ) : null}
+        {showUpdatedAt && !isRow ? <Text style={styles.updatedAt}>{asset.updatedAtLabel}</Text> : null}
         {shouldShowAssetCardSupportingDetails(asset, density) ? (
           <Pressable
             accessible={false}
@@ -113,15 +134,17 @@ export function AssetCard({
             ) : null}
           </Pressable>
         ) : null}
-        {showTags ? <AssetTagChips palette={paletteOverride} tags={asset.tags} compact overflowLimit={2} onTagPress={onTagPress} /> : null}
+        {showTags && !isRow ? <AssetTagChips palette={paletteOverride} tags={asset.tags} compact overflowLimit={2} onTagPress={onTagPress} /> : null}
       </View>
       {footerAction ? (
         <Pressable
+          accessibilityLabel={footerAction.accessibilityLabel}
           accessibilityRole="button"
           disabled={footerAction.disabled}
           onPress={footerAction.onPress}
           style={({ pressed }) => [
             styles.footerAction,
+            isRow ? styles.rowFooterAction : undefined,
             pressed && !footerAction.disabled ? styles.footerActionPressed : undefined,
             footerAction.disabled ? styles.disabledFooterAction : undefined
           ]}
@@ -135,7 +158,7 @@ export function AssetCard({
 
 export function shouldShowAssetCardSupportingDetails(
   asset: AssetCardViewModel,
-  density: 'standard' | 'compact'
+  density: 'standard' | 'compact' | 'row'
 ): boolean {
   return density === 'standard'
     && (asset.description.trim().length > 0 || (asset.searchMatchLabels?.length ?? 0) > 0);
@@ -228,6 +251,20 @@ function createStyles(colors: MobileColorPalette) {
     minHeight: 210,
     width: 164
   },
+  rowCard: {
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: 0,
+    borderRadius: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+    flexDirection: 'row',
+    minHeight: 88,
+    overflow: 'visible',
+    width: '100%'
+  },
   imageFrame: {
     alignItems: 'center',
     aspectRatio: 1,
@@ -238,6 +275,10 @@ function createStyles(colors: MobileColorPalette) {
   },
   openRegion: {
     width: '100%'
+  },
+  rowOpenRegion: {
+    flexShrink: 0,
+    width: 64
   },
   openRegionPressed: {
     borderColor: colors.controlBorder,
@@ -261,9 +302,22 @@ function createStyles(colors: MobileColorPalette) {
     height: '100%',
     width: '100%'
   },
+  rowImageFrame: {
+    borderRadius: radius.md,
+    height: 64,
+    overflow: 'hidden',
+    width: 64
+  },
   body: {
     gap: spacing.xs,
     padding: spacing.sm
+  },
+  rowBody: {
+    flex: 1,
+    gap: 0,
+    minWidth: 0,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
   },
   topRow: {
     alignItems: 'center',
@@ -341,15 +395,29 @@ function createStyles(colors: MobileColorPalette) {
     color: colors.text,
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0,
-    lineHeight: 21
+    letterSpacing: 0
   },
   standardTitle: {
+    lineHeight: 21,
     minHeight: 40
   },
   compactTitle: {
     fontSize: 17,
     lineHeight: 23
+  },
+  rowTitle: {
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  updatedAt: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '400'
+  },
+  rowCheckoutStatus: {
+    color: colors.warning,
+    fontSize: 13,
+    fontWeight: '600'
   },
   description: {
     color: colors.textMuted,
@@ -370,7 +438,15 @@ function createStyles(colors: MobileColorPalette) {
     borderRadius: radius.sm,
     justifyContent: 'center',
     margin: spacing.sm,
-    minHeight: 44
+    minHeight: 44,
+    minWidth: 44
+  },
+  rowFooterAction: {
+    marginHorizontal: 0,
+    marginLeft: spacing.xs,
+    marginVertical: spacing.sm,
+    minWidth: 64,
+    paddingHorizontal: spacing.sm
   },
   footerActionPressed: {
     backgroundColor: colors.actionPressed

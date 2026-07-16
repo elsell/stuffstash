@@ -55,7 +55,6 @@
 
   export type RouteContentRouteState = {
     routeUnavailable: string;
-    assetDetailLoading: boolean;
     mode: WorkspaceMode;
     searchResults: SearchResult[];
     searchSuggestions: Asset[];
@@ -115,6 +114,7 @@
     onAssetActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onAssetActionClose: () => void;
     onAssetSave: (draft: UpdateAssetDraft) => Promise<void>;
+    onMoveAssetHere: (asset: Asset) => Promise<void>;
     onAssetArchive: () => Promise<void>;
     onAssetRestore: () => Promise<void>;
     onAssetDelete: () => Promise<void>;
@@ -160,13 +160,12 @@
 </script>
 
 <script lang="ts">
-  import { containedAssets, moveParentTargets, recentlyChangedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { moveParentTargets, recentlyChangedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import {
     workspaceNoInventoryPresentation,
     workspaceUnavailableRoutePresentation
   } from '$lib/application/workspaceRouteRecoveryPresentation';
   import * as Button from '$lib/components/ui/button/index.js';
-  import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import AssetDetail from './AssetDetail.svelte';
   import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
@@ -212,31 +211,44 @@
       {/if}
     </div>
   </section>
-{:else if route.assetDetailLoading}
-  <section class="workspace-main" aria-busy="true">
-    <div class="empty-state spacious" role="status" aria-live="polite">
-      <LoaderCircle class="size-6 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
-      <h1>Loading asset details</h1>
-      <p>Getting the latest details and files.</p>
+{:else if route.mode === 'location' && !workspace.selectedLocation}
+  <section class="workspace-main" aria-live="polite" aria-busy="true">
+    <div class="empty-state spacious" role="status">
+      <h1>Opening location…</h1>
+      <p>Loading this place and what it contains.</p>
+    </div>
+  </section>
+{:else if route.mode === 'asset' && !workspace.selectedAsset}
+  <section class="workspace-main" aria-live="polite" aria-busy="true">
+    <div class="empty-state spacious" role="status">
+      <h1>Opening asset…</h1>
+      <p>Loading details and photos.</p>
     </div>
   </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}
   <LocationView
     location={workspace.selectedLocation}
-    assets={containedAssets(workspace.assets, workspace.selectedLocation.id)}
+    workspaceAssets={workspace.assets}
     canEdit={status.editAssetAllowed}
     canCreateAsset={status.createAssetAllowed}
+    saving={status.busy}
+    moveHereOpen={route.assetAction === 'move-here'}
     onBack={handlers.onCloseLocation}
     onOpenLocation={handlers.onOpenLocation}
     onEditLocation={handlers.onEditLocation}
     onOpenAsset={handlers.onOpenAsset}
     onOpenAdd={handlers.onOpenAdd}
+    onOpenMoveHere={() => handlers.onAssetActionOpen('move-here')}
+    onCloseMoveHere={handlers.onAssetActionClose}
+    onMoveHere={handlers.onMoveAssetHere}
     onTagSearch={handlers.onAssetTagSearch}
   />
 {:else if route.mode === 'asset' && workspace.selectedAsset}
   <AssetDetail
     asset={withTrail(workspace.selectedAsset, workspace.detailAssets)}
     canEdit={status.editAssetAllowed}
+    canCreate={status.createAssetAllowed}
+    workspaceAssets={workspace.detailAssets}
     parentTargets={moveParentTargets(workspace.detailAssets, workspace.selectedAsset.id)}
     customFieldDefinitions={workspace.data.context.customFieldDefinitions}
     assetTags={workspace.data.context.assetTags ?? []}
@@ -251,6 +263,9 @@
     onBack={handlers.onCloseAssetDetail}
     onActionOpen={handlers.onAssetActionOpen}
     onActionClose={handlers.onAssetActionClose}
+    onOpenAsset={(asset) => { void handlers.onOpenAsset(asset); }}
+    onOpenAdd={handlers.onOpenAdd}
+    onMoveHere={handlers.onMoveAssetHere}
     onSave={handlers.onAssetSave}
     onArchive={handlers.onAssetArchive}
     onRestore={handlers.onAssetRestore}

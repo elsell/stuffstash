@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   AppearancePreferenceController,
+  appearancePreferences,
   type AppearancePreference,
   type AppearancePreferenceStore
 } from './AppearancePreference';
@@ -18,6 +19,10 @@ class FakeAppearancePreferenceStore implements AppearancePreferenceStore {
 }
 
 describe('AppearancePreferenceController', () => {
+  it('presents the system-following option first', () => {
+    expect(appearancePreferences).toEqual(['system', 'light', 'dark']);
+  });
+
   it('defaults to the system appearance when no preference has been saved', async () => {
     const controller = new AppearancePreferenceController(new FakeAppearancePreferenceStore());
 

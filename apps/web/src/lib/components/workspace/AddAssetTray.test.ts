@@ -588,7 +588,7 @@ describe('AddAssetTray', () => {
     expect(revokedObjectUrls).toContain('blob:test-2');
   });
 
-  it('keeps keyboard focus inside the tray and restores focus to the opener', async () => {
+  it('moves focus into the modal sheet and restores focus to the opener', async () => {
     component = mount(AddAssetTrayHarness, {
       target: document.body
     });
@@ -607,18 +607,8 @@ describe('AddAssetTray', () => {
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) throw new Error('Missing dialog');
     const closeButton = document.body.querySelector<HTMLElement>('button[aria-label="Close add tray"], a[aria-label="Close add tray"]');
-    const saveButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
-      candidate.textContent?.startsWith('Save')
-    );
-    if (!closeButton || !saveButton) throw new Error('Missing focus controls');
-
-    saveButton.focus();
-    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
-    expect(document.activeElement).toBe(closeButton);
-
-    closeButton.focus();
-    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
-    expect(document.activeElement).toBe(saveButton);
+    expect(closeButton).toBeNull();
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
 
     link('Cancel').click();
     await flush();

@@ -22,41 +22,72 @@
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
+  import type { AssetThumbnailLoaderLifecycle } from '$lib/ports/assetThumbnailLoader';
+
+  type WorkspaceRepository = InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & AssetThumbnailLoaderLifecycle;
 
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
-  let repository = $state<(InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository) | null>(null);
+  let repository = $state<WorkspaceRepository | null>(null);
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
   let authFailure = $state<SignInFailure | null>(null);
   let workspaceError = $state('');
   let authNotice = $state<Exclude<SignInState, 'default'> | null>(null);
   let authObserver: AuthObserver | null = null;
+  let ownedRepository: WorkspaceRepository | null = null;
 
-  onMount(async () => {
+  onMount(() => {
+    let mounted = true;
     authObserver = new BrowserAuthObserver();
-    try {
-      config = await loadRuntimeConfig();
-      session = getStoredSession();
-      if (session) {
-        const observer = new InMemoryWorkspaceObserver();
-        repository = new StuffStashInventoryRepository(config, () => getStoredSession()?.idToken ?? null, observer);
-        workspaceData = await repository.loadWorkspace();
+    void initialize();
+
+    return () => {
+      mounted = false;
+      releaseOwnedRepository();
+    };
+
+    async function initialize(): Promise<void> {
+      try {
+        const loadedConfig = await loadRuntimeConfig();
+        if (!mounted) return;
+        config = loadedConfig;
+        session = getStoredSession();
+        if (session) {
+          const observer = new InMemoryWorkspaceObserver();
+          const nextRepository = new StuffStashInventoryRepository(
+            loadedConfig,
+            () => getStoredSession()?.idToken ?? null,
+            observer
+          );
+          ownedRepository = nextRepository;
+          const nextWorkspace = await nextRepository.loadWorkspace();
+          if (!mounted) return;
+          repository = nextRepository;
+          workspaceData = nextWorkspace;
+        }
+      } catch (caught) {
+        releaseOwnedRepository();
+        if (!mounted) return;
+        if (isAuthenticationRequiredError(caught)) {
+          expireSession(caught);
+        } else if (session) {
+          authObserver?.record('auth.workspace_load_failed', authFailureAttributes(caught, 'workspace_transport'));
+          workspaceError = signInFailureMessage('workspace');
+        } else {
+          authObserver?.record('auth.runtime_configuration_failed', authFailureAttributes(caught, 'runtime_configuration'));
+          authFailure = 'configuration';
+        }
+      } finally {
+        if (mounted) loading = false;
       }
-    } catch (caught) {
-      if (isAuthenticationRequiredError(caught)) {
-        expireSession(caught);
-      } else if (session) {
-        authObserver.record('auth.workspace_load_failed', authFailureAttributes(caught, 'workspace_transport'));
-        workspaceError = signInFailureMessage('workspace');
-      } else {
-        authObserver.record('auth.runtime_configuration_failed', authFailureAttributes(caught, 'runtime_configuration'));
-        authFailure = 'configuration';
-      }
-    } finally {
-      loading = false;
     }
   });
+
+  function releaseOwnedRepository(): void {
+    ownedRepository?.dispose();
+    ownedRepository = null;
+  }
 
   async function signIn(): Promise<void> {
     if (config) {
@@ -72,6 +103,7 @@
   }
 
   function signOutAndReset(): void {
+    releaseOwnedRepository();
     signOut();
     session = null;
     repository = null;
@@ -87,6 +119,7 @@
       'auth.session_invalidated',
       authFailureAttributes(failure, notice === 'rejected' ? 'post_callback_rejected' : 'session_expired')
     );
+    releaseOwnedRepository();
     signOut();
     session = null;
     repository = null;

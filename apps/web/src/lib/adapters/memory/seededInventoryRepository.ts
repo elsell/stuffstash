@@ -75,6 +75,10 @@ export class SeededInventoryRepository
     return this.workspace();
   }
 
+  async loadAssetThumbnail(asset: Asset): Promise<Asset['photo'] | null> {
+    return asset.photo?.assetId === asset.id ? asset.photo : null;
+  }
+
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = {
       id: `tenant-${Date.now()}`,
@@ -259,6 +263,17 @@ export class SeededInventoryRepository
     };
     this.recordAssetAudit(updated, updated.parentAssetId !== asset.parentAssetId ? 'asset.moved' : 'asset.updated');
     return updated;
+  }
+
+  async moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    return this.updateAsset(tenantId, inventoryId, assetId, {
+      title: asset.title,
+      description: asset.description,
+      parentAssetId,
+      customFields: asset.customFields,
+      tagIds: asset.tags?.map((tag) => tag.id)
+    });
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {

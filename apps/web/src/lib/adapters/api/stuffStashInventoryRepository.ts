@@ -57,8 +57,11 @@ import {
 } from './inventoryMapper';
 import { mapInventoryAccessGrant, mapInventoryAccessInvitation } from './inventoryMapper';
 import { collectCursorPages } from './cursorPagination';
+import { BoundedTaskScheduler } from './boundedTaskScheduler';
 
 const workspacePageSize = 100;
+const thumbnailConcurrency = 6;
+type ThumbnailResource = { url: string; headers: Record<string, string> };
 
 export class StuffStashInventoryRepository
   implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
@@ -68,6 +71,10 @@ export class StuffStashInventoryRepository
   private readonly config: RuntimeConfig;
   private readonly invitationOrigin: string;
   private readonly invitationAllowInsecureLocalHTTP: boolean;
+  private readonly thumbnailCache = new Map<string, Promise<ThumbnailResource | null>>();
+  private readonly thumbnailScheduler = new BoundedTaskScheduler(thumbnailConcurrency);
+  private readonly ownedObjectUrls = new Set<string>();
+  private disposed = false;
   private selectedTenantId = readSessionValue('stuffstash.selectedTenantId');
   private selectedInventoryId = readSessionValue('stuffstash.selectedInventoryId');
 
@@ -93,7 +100,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.load_started');
     try {
       const principal = mapPrincipal(await this.client.me());
-      const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+      const tenants = await this.loadTenants();
       const selectedTenant = tenants.find((tenant) => tenant.id === this.selectedTenantId) ?? tenants[0] ?? null;
       if (!selectedTenant) {
         this.observer.record('workspace.loaded', { empty: true });
@@ -120,6 +127,37 @@ export class StuffStashInventoryRepository
       this.observer.record('workspace.load_failed');
       throw safeError(error);
     }
+  }
+
+  async loadAssetThumbnail(asset: Asset): Promise<Asset['photo'] | null> {
+    if (this.disposed) return null;
+    if (asset.photo?.assetId === asset.id) {
+      return { ...asset.photo, alt: asset.title };
+    }
+    if (!asset.primaryPhotoId) {
+      return null;
+    }
+    const resource = await this.loadPrimaryThumbnailResource(
+      asset.tenantId,
+      asset.inventoryId,
+      asset.id,
+      asset.primaryPhotoId,
+      'small'
+    );
+    if (!resource) {
+      this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
+      return null;
+    }
+    return { id: asset.primaryPhotoId, assetId: asset.id, url: resource.url, alt: asset.title };
+  }
+
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.thumbnailScheduler.close();
+    for (const url of this.ownedObjectUrls) URL.revokeObjectURL(url);
+    this.ownedObjectUrls.clear();
+    this.thumbnailCache.clear();
   }
 
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
@@ -149,20 +187,20 @@ export class StuffStashInventoryRepository
 
   async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
-    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    const tenants = await this.loadTenants();
     const inventory = mapInventory(await this.client.createInventory(tenantId, inventoryName));
     return this.loadTenantWorkspace(principal, tenants, tenantId, inventory.id);
   }
 
   async selectInventory(tenantId: string, inventoryId: string): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
-    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    const tenants = await this.loadTenants();
     return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId, 'active');
   }
 
   async selectTenant(tenantId: string): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
-    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    const tenants = await this.loadTenants();
     return this.loadTenantWorkspace(principal, tenants, tenantId, '', 'active');
   }
 
@@ -172,7 +210,7 @@ export class StuffStashInventoryRepository
     lifecycleState: AssetLifecycleFilter
   ): Promise<WorkspaceData> {
     const principal = mapPrincipal(await this.client.me());
-    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    const tenants = await this.loadTenants();
     return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId, lifecycleState);
   }
 
@@ -240,6 +278,17 @@ export class StuffStashInventoryRepository
       this.observer.record('workspace.asset_update_failed');
       throw safeError(error);
     }
+  }
+
+  async moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    return this.updateAsset(tenantId, inventoryId, assetId, {
+      title: asset.title,
+      description: asset.description,
+      parentAssetId,
+      customFields: asset.customFields,
+      tagIds: asset.tags?.map((tag) => tag.id)
+    });
   }
 
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
@@ -336,16 +385,8 @@ export class StuffStashInventoryRepository
   async listCheckedOutAssets(tenantId: string, inventoryId: string): Promise<CheckedOutAsset[]> {
     this.observer.record('workspace.checked_out_assets_load_started');
     try {
-      const page = await this.client.listCheckedOutAssets(tenantId, inventoryId, 50);
-      const checkedOutAssets = await Promise.all(
-        page.items.map(async (item) => {
-          const mapped = mapCheckedOutAsset(item);
-          return {
-            ...mapped,
-            asset: await this.mapAssetWithPrimaryPhoto(item.asset)
-          };
-        })
-      );
+      const items = await collectCursorPages((cursor) => this.client.listCheckedOutAssets(tenantId, inventoryId, workspacePageSize, cursor));
+      const checkedOutAssets = items.map(mapCheckedOutAsset);
       this.observer.record('workspace.checked_out_assets_loaded', { assetCount: checkedOutAssets.length });
       return checkedOutAssets;
     } catch (error) {
@@ -360,10 +401,9 @@ export class StuffStashInventoryRepository
       const page = await this.client.listAssetAttachments(tenantId, inventoryId, assetId, 50);
       const attachments = await Promise.all(
         page.items.map(async (attachment) => {
-          const thumbnail = attachment.contentType.startsWith('image/')
-            ? await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, attachment.id)
-            : undefined;
-          return mapAttachment(attachment, await this.thumbnailObjectUrl(thumbnail), thumbnail?.headers);
+          if (!attachment.contentType.startsWith('image/')) return mapAttachment(attachment);
+          const loaded = await this.loadThumbnailResource(tenantId, inventoryId, assetId, attachment.id, 'small');
+          return mapAttachment(attachment, loaded?.url, loaded?.headers);
         })
       );
       this.observer.record('workspace.asset_attachments_loaded', { attachmentCount: attachments.length });
@@ -390,10 +430,10 @@ export class StuffStashInventoryRepository
       await this.uploadToDirectTarget(upload, attachment.file);
       const uploaded = await this.client.completeAssetAttachmentDirectUpload(tenantId, inventoryId, assetId, upload.uploadId);
       const thumbnail = uploaded.contentType.startsWith('image/')
-        ? await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, uploaded.id)
+        ? await this.loadThumbnailResource(tenantId, inventoryId, assetId, uploaded.id, 'small')
         : undefined;
       this.observer.record('workspace.asset_attachment_uploaded');
-      return mapAttachment(uploaded, await this.thumbnailObjectUrl(thumbnail), thumbnail?.headers);
+      return mapAttachment(uploaded, thumbnail?.url, thumbnail?.headers);
     } catch (error) {
       if (!isDirectUploadTargetUnavailable(error)) {
         this.observer.record('workspace.asset_attachment_upload_failed');
@@ -406,10 +446,10 @@ export class StuffStashInventoryRepository
           contentBase64: await fileToBase64(attachment.file)
         });
         const thumbnail = uploaded.contentType.startsWith('image/')
-          ? await this.client.assetAttachmentThumbnailReference(tenantId, inventoryId, assetId, uploaded.id)
+          ? await this.loadThumbnailResource(tenantId, inventoryId, assetId, uploaded.id, 'small')
           : undefined;
         this.observer.record('workspace.asset_attachment_uploaded');
-        return mapAttachment(uploaded, await this.thumbnailObjectUrl(thumbnail), thumbnail?.headers);
+        return mapAttachment(uploaded, thumbnail?.url, thumbnail?.headers);
       } catch (fallbackError) {
         this.observer.record('workspace.asset_attachment_upload_failed');
         throw safeError(fallbackError);
@@ -437,6 +477,7 @@ export class StuffStashInventoryRepository
     attachmentId: string
   ): Promise<AssetAttachment> {
     const attachment = await this.client.archiveAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+    this.invalidateAttachmentThumbnails(tenantId, inventoryId, assetId, attachmentId);
     return mapAttachment(attachment);
   }
 
@@ -457,6 +498,7 @@ export class StuffStashInventoryRepository
     attachmentId: string
   ): Promise<void> {
     await this.client.deleteAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+    this.invalidateAttachmentThumbnails(tenantId, inventoryId, assetId, attachmentId);
   }
 
   async searchAssets(request: SearchRequest): Promise<SearchResult[]> {
@@ -470,12 +512,7 @@ export class StuffStashInventoryRepository
         checkoutState: request.checkoutState ?? 'any'
       });
       this.observer.record('workspace.search_completed', { resultCount: page.items.length });
-      return Promise.all(
-        page.items.map(async (result) => ({
-          ...mapSearchResult(result),
-          asset: await this.mapAssetWithPrimaryPhoto(result.asset)
-        }))
-      );
+      return page.items.map(mapSearchResult);
     } catch (error) {
       this.observer.record('workspace.search_failed');
       throw safeError(error);
@@ -874,26 +911,31 @@ export class StuffStashInventoryRepository
     lifecycleState: AssetLifecycleFilter = 'active'
   ): Promise<WorkspaceData> {
     this.selectedTenantId = tenantId;
-    const inventories = (await this.client.listInventories(tenantId)).items.map(mapInventory);
+    const inventories = await this.loadInventories(tenantId);
     const selectedInventory = inventories.find((inventory) => inventory.id === inventoryId) ?? inventories[0] ?? null;
     this.selectedInventoryId = selectedInventory?.id ?? '';
     this.rememberSelection();
     const customAssetTypes = selectedInventory
-      ? (await this.client.listInventoryCustomAssetTypes(tenantId, selectedInventory.id, 100)).items.map(mapCustomAssetType)
+      ? (await collectCursorPages((cursor) =>
+          this.client.listInventoryCustomAssetTypes(tenantId, selectedInventory.id, workspacePageSize, cursor)
+        )).map(mapCustomAssetType)
       : [];
     const customFieldDefinitions = selectedInventory
-      ? (await this.client.listInventoryCustomFieldDefinitions(tenantId, selectedInventory.id, 100)).items.map(mapCustomFieldDefinition)
+      ? (await collectCursorPages((cursor) =>
+          this.client.listInventoryCustomFieldDefinitions(tenantId, selectedInventory.id, workspacePageSize, cursor)
+        )).map(mapCustomFieldDefinition)
       : [];
     const assetTags = selectedInventory
-      ? (await this.client.listAssetTags(tenantId, selectedInventory.id, 100)).items.map(mapAssetTag)
+      ? (await collectCursorPages((cursor) =>
+          this.client.listAssetTags(tenantId, selectedInventory.id, workspacePageSize, cursor)
+        )).map(mapAssetTag)
       : [];
-    const assets = selectedInventory
-      ? await Promise.all(
-          (await this.client.listAssets(tenantId, selectedInventory.id, 100, undefined, lifecycleState)).items.map((asset) =>
-            this.mapAssetWithPrimaryPhoto(asset)
-          )
+    const apiAssets = selectedInventory
+      ? await collectCursorPages((cursor) =>
+          this.client.listAssets(tenantId, selectedInventory.id, workspacePageSize, cursor, lifecycleState, 'updated_desc')
         )
       : [];
+    const assets = apiAssets.map(mapAsset);
     const checkedOutAssets = selectedInventory ? await this.listCheckedOutAssets(tenantId, selectedInventory.id) : [];
     this.observer.record('workspace.loaded', {
       tenantCount: tenants.length,
@@ -925,37 +967,105 @@ export class StuffStashInventoryRepository
     writeSessionValue('stuffstash.selectedInventoryId', this.selectedInventoryId);
   }
 
+  private async loadTenants() {
+    return (await collectCursorPages((cursor) => this.client.listMyTenants(50, cursor))).map(mapTenant);
+  }
+
+  private async loadInventories(tenantId: string) {
+    return (await collectCursorPages((cursor) => this.client.listInventories(tenantId, 50, cursor))).map(mapInventory);
+  }
+
   private async mapAssetWithPrimaryPhoto(asset: ApiAsset, variant: AssetPhotoVariant = 'small'): Promise<Asset> {
     const mapped = mapAsset(asset);
     if (!asset.primaryPhoto) {
       return mapped;
     }
-    try {
-      const thumbnail = await this.client.assetAttachmentThumbnailReference(
-        asset.tenantId,
-        asset.inventoryId,
-        asset.id,
-        asset.primaryPhoto.id,
-        variant
-      );
-      const thumbnailUrl = await this.thumbnailObjectUrl(thumbnail);
-      if (!thumbnailUrl) {
-        this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
-        return { ...mapped, photoUnavailable: true };
-      }
-      return {
-        ...mapped,
-        photo: {
-          id: asset.primaryPhoto.id,
-          assetId: asset.id,
-          url: thumbnailUrl,
-          alt: asset.title
-        }
-      };
-    } catch {
-      this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
-      return { ...mapped, photoUnavailable: true };
+    const resource = await this.loadPrimaryThumbnailResource(
+      asset.tenantId,
+      asset.inventoryId,
+      asset.id,
+      asset.primaryPhoto.id,
+      variant
+    );
+    return resource
+      ? { ...mapped, photo: { id: asset.primaryPhoto.id, assetId: asset.id, url: resource.url, alt: asset.title } }
+      : { ...mapped, photoUnavailable: true };
+  }
+
+  private async loadPrimaryThumbnailResource(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string,
+    variant: AssetPhotoVariant
+  ): Promise<ThumbnailResource | null> {
+    return this.loadThumbnailResource(tenantId, inventoryId, assetId, attachmentId, variant);
+  }
+
+  private loadThumbnailResource(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string,
+    variant: AssetPhotoVariant
+  ): Promise<ThumbnailResource | null> {
+    if (this.disposed) return Promise.resolve(null);
+    const cacheKey = this.thumbnailResourceKey(tenantId, inventoryId, assetId, attachmentId, variant);
+    const cached = this.thumbnailCache.get(cacheKey);
+    if (cached) return cached;
+    const pending = this.thumbnailScheduler
+      .schedule(async () => {
+        const reference = await this.client.assetAttachmentThumbnailReference(
+          tenantId,
+          inventoryId,
+          assetId,
+          attachmentId,
+          variant
+        );
+        const url = await this.thumbnailObjectUrl(reference);
+        return url ? { url, headers: reference.headers } : null;
+      })
+      .catch(() => null);
+    this.thumbnailCache.set(cacheKey, pending);
+    void pending.then((resource) => {
+      if (!resource && this.thumbnailCache.get(cacheKey) === pending) this.thumbnailCache.delete(cacheKey);
+    });
+    return pending;
+  }
+
+  private thumbnailResourceKey(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string,
+    variant: AssetPhotoVariant
+  ): string {
+    return `${tenantId}/${inventoryId}/${assetId}/${attachmentId}/${variant}`;
+  }
+
+  private invalidateThumbnailResource(cacheKey: string): void {
+    const pending = this.thumbnailCache.get(cacheKey);
+    this.thumbnailCache.delete(cacheKey);
+    void pending?.then((resource) => {
+      if (resource) this.releaseObjectUrl(resource.url);
+    });
+  }
+
+  private invalidateAttachmentThumbnails(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): void {
+    const prefix = `${tenantId}/${inventoryId}/${assetId}/${attachmentId}/`;
+    for (const cacheKey of this.thumbnailCache.keys()) {
+      if (cacheKey.startsWith(prefix)) this.invalidateThumbnailResource(cacheKey);
     }
+  }
+
+  private releaseObjectUrl(url: string): void {
+    if (!this.ownedObjectUrls.delete(url)) return;
+    URL.revokeObjectURL(url);
   }
 
   private async uploadToDirectTarget(
@@ -993,7 +1103,7 @@ export class StuffStashInventoryRepository
   private async thumbnailObjectUrl(
     thumbnail: { uri: string; headers: Record<string, string> } | undefined
   ): Promise<string | undefined> {
-    if (!thumbnail) {
+    if (!thumbnail || this.disposed) {
       return undefined;
     }
     if (Object.keys(thumbnail.headers).length === 0) {
@@ -1003,7 +1113,13 @@ export class StuffStashInventoryRepository
     if (!response.ok) {
       return undefined;
     }
-    return URL.createObjectURL(await response.blob());
+    const objectUrl = URL.createObjectURL(await response.blob());
+    if (this.disposed) {
+      URL.revokeObjectURL(objectUrl);
+      return undefined;
+    }
+    this.ownedObjectUrls.add(objectUrl);
+    return objectUrl;
   }
 }
 

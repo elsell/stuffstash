@@ -10,7 +10,7 @@ type BrowseEmptyStateProps =
       readonly kind: 'inventory';
       readonly inventoryName: string;
       readonly palette: MobileColorPalette;
-      readonly onAdd: () => void;
+      readonly onAdd?: () => void;
     }
   | {
       readonly kind: 'search';
@@ -32,11 +32,13 @@ export function BrowseEmptyState(props: BrowseEmptyStateProps) {
     <View accessibilityLiveRegion="polite" style={styles.statePanel}>
       <Text style={styles.title}>{presentation.title}</Text>
       <Text style={styles.message}>{presentation.message}</Text>
-      {browseStateAction({
-        label: presentation.actionLabel,
-        onPress: presentation.onAction,
-        styles
-      })}
+      {presentation.actionLabel && presentation.onAction
+        ? browseStateAction({
+            label: presentation.actionLabel,
+            onPress: presentation.onAction,
+            styles
+          })
+        : null}
     </View>
   );
 }
@@ -111,15 +113,17 @@ function browseStateAction({
 function emptyStatePresentation(props: BrowseEmptyStateProps): {
   readonly title: string;
   readonly message: string;
-  readonly actionLabel: string;
-  readonly onAction: () => void;
+  readonly actionLabel?: string;
+  readonly onAction?: () => void;
 } {
   switch (props.kind) {
     case 'inventory':
       return {
         title: `No items in ${props.inventoryName}`,
-        message: 'Add your first item, container, or place.',
-        actionLabel: 'Add item',
+        message: props.onAdd
+          ? 'Add your first item, container, or place.'
+          : 'An inventory editor can add the first item, container, or place.',
+        actionLabel: props.onAdd ? 'Add item' : undefined,
         onAction: props.onAdd
       };
     case 'search':

@@ -57,6 +57,8 @@ export type AssetPhotoViewModel = {
 };
 
 export type AssetDetailViewModel = {
+  readonly tenantId?: string;
+  readonly inventoryId?: string;
   readonly id: string;
   readonly title: string;
   readonly kind: AssetSummary['kind'];
@@ -125,6 +127,8 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
 export function toAssetDetailViewModel(
   asset: AssetSummary,
   options: {
+    readonly tenantId?: string;
+    readonly inventoryId?: string;
     readonly canManageLifecycle?: boolean;
     readonly canEditAsset?: boolean;
     readonly canCreateAsset?: boolean;
@@ -145,6 +149,8 @@ export function toAssetDetailViewModel(
 
   return {
     ...toAssetCardViewModel(asset),
+    tenantId: options.tenantId ?? '',
+    inventoryId: options.inventoryId ?? '',
     kind: asset.kind,
     parentAssetId: asset.parentAssetId,
     parentLocationTrailLabel: labelParentLocationTrail(asset),
@@ -196,59 +202,73 @@ function locationWorkspaceContents(
   readonly spaces: readonly AssetCardViewModel[];
   readonly items: readonly AssetContainedItemViewModel[];
 } {
-  const assetsById = new Map(allAssets.map((asset) => [asset.id, asset]));
-  const spaces = allAssets
-    .filter((candidate) => candidate.parentAssetId === location.id && candidate.kind !== 'item')
-    .slice()
-    .sort(compareContainedAssetSummaries)
-    .map(toAssetCardViewModel);
-  const items = allAssets
-    .filter((candidate) => candidate.kind === 'item')
-    .map((candidate) => {
-      const relativePath = relativePathFromLocation(location.id, candidate, assetsById);
-      if (!relativePath) {
-        return undefined;
-      }
-      return {
-        ...toAssetCardViewModel(candidate),
-        relativePath,
-        relativePathLabel: relativePath.length > 0
-          ? relativePath.map((crumb) => crumb.title).join(' / ')
-          : undefined
-      } satisfies AssetContainedItemViewModel;
-    })
-    .filter((candidate): candidate is AssetContainedItemViewModel => candidate !== undefined)
-    .sort(compareContainedItems);
-
-  return { spaces, items };
-}
-
-function relativePathFromLocation(
-  locationId: AssetSummary['id'],
-  item: AssetSummary,
-  assetsById: ReadonlyMap<AssetSummary['id'], AssetSummary>
-): readonly AssetRelativePathCrumbViewModel[] | undefined {
-  const reversedPath: AssetRelativePathCrumbViewModel[] = [];
-  const visited = new Set<AssetSummary['id']>([item.id]);
-  let parentId = item.parentAssetId;
-
-  while (parentId !== undefined) {
-    if (parentId === locationId) {
-      return reversedPath.reverse();
+  const childrenByParent = new Map<AssetSummary['id'], AssetSummary[]>();
+  const indexedAssetIds = new Set<AssetSummary['id']>();
+  for (const candidate of allAssets) {
+    if (indexedAssetIds.has(candidate.id)) {
+      continue;
     }
-    if (visited.has(parentId)) {
-      return undefined;
+    indexedAssetIds.add(candidate.id);
+    const parentAssetId = candidate.parentAssetId;
+    if (!parentAssetId) {
+      continue;
     }
-    visited.add(parentId);
-    const parent = assetsById.get(parentId);
-    if (!parent) {
-      return undefined;
-    }
-    reversedPath.push({ id: parent.id, title: parent.title });
-    parentId = parent.parentAssetId;
+    const siblings = childrenByParent.get(parentAssetId) ?? [];
+    siblings.push(candidate);
+    childrenByParent.set(parentAssetId, siblings);
+  }
+  for (const children of childrenByParent.values()) {
+    children.sort(compareContainedAssetSummaries);
   }
 
-  return undefined;
+  const spaces: AssetCardViewModel[] = [];
+  const items: AssetContainedItemViewModel[] = [];
+  const visited = new Set<AssetSummary['id']>([location.id]);
+  const pending: Array<{
+    readonly asset: AssetSummary;
+    readonly parentId: AssetSummary['id'];
+    readonly relativePath: readonly AssetRelativePathCrumbViewModel[];
+  }> = [];
+  const rootChildren = childrenByParent.get(location.id) ?? [];
+  for (let index = rootChildren.length - 1; index >= 0; index -= 1) {
+    const child = rootChildren[index];
+    if (child) {
+      pending.push({ asset: child, parentId: location.id, relativePath: [] });
+    }
+  }
+  while (pending.length > 0) {
+    const entry = pending.pop();
+    if (!entry || visited.has(entry.asset.id)) {
+      continue;
+    }
+    visited.add(entry.asset.id);
+    if (entry.asset.kind === 'item') {
+      items.push({
+        ...toAssetCardViewModel(entry.asset),
+        relativePath: entry.relativePath,
+        relativePathLabel: entry.relativePath.length > 0
+          ? entry.relativePath.map((crumb) => crumb.title).join(' / ')
+          : undefined
+      });
+      continue;
+    }
+    if (entry.parentId === location.id) {
+      spaces.push(toAssetCardViewModel(entry.asset));
+    }
+    const childPath = [
+      ...entry.relativePath,
+      { id: entry.asset.id, title: entry.asset.title }
+    ];
+    const children = childrenByParent.get(entry.asset.id) ?? [];
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      const child = children[index];
+      if (child) {
+        pending.push({ asset: child, parentId: entry.asset.id, relativePath: childPath });
+      }
+    }
+  }
+  items.sort(compareContainedItems);
+  return { spaces, items };
 }
 
 function compareContainedItems(

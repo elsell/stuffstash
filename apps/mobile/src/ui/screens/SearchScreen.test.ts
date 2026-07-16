@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import type { TextInput } from 'react-native';
+import { router } from 'expo-router';
 import { describe, expect, it, vi } from 'vitest';
 import {
   browseScopeToKind,
@@ -21,10 +22,11 @@ import {
 } from './SearchScreenPresentation';
 import { SearchHeader } from './SearchScreen';
 import { createBrowseHeaderStyles } from './BrowseHeader';
+import { InventoryMapHeaderActions } from './InventoryMapScreen';
 import { darkPalette, lightPalette } from '../theme/tokens';
 
 vi.mock('expo-router', () => ({
-  router: { push: vi.fn() },
+  router: { navigate: vi.fn(), push: vi.fn() },
   useFocusEffect: vi.fn()
 }));
 
@@ -364,6 +366,58 @@ describe('SearchScreen presentation helpers', () => {
     expect(text).not.toContain('Any');
   });
 
+  it('offers permitted users a full-size Add action from a populated Browse header', () => {
+    const permittedHeader = renderHeader({
+      canAdd: true,
+      resultCount: 3,
+      onAdd: () => router.navigate('/add')
+    });
+    const add = findFirstByProp(permittedHeader, 'accessibilityLabel', 'Add an asset');
+
+    expect(add?.props?.accessibilityRole).toBe('button');
+    expect(controlSize(add, 'minHeight')).toBeGreaterThanOrEqual(44);
+    expect(controlSize(add, 'minWidth')).toBeGreaterThanOrEqual(44);
+
+    const onPress = add?.props?.onPress;
+    if (typeof onPress !== 'function') throw new Error('Missing Browse Add handler');
+    onPress();
+
+    expect(router.navigate).toHaveBeenCalledWith('/add');
+    expect(findFirstByProp(
+      renderHeader({ canAdd: false, resultCount: 3 }),
+      'accessibilityLabel',
+      'Add an asset'
+    )).toBeUndefined();
+  });
+
+  it('keeps the permission-aware Add action when Browse switches to Map', () => {
+    const permittedActions = InventoryMapHeaderActions({
+      canAdd: true,
+      palette: lightPalette,
+      selectedSurface: 'map',
+      onAdd: () => router.navigate('/add'),
+      onChangeSurface: vi.fn()
+    });
+    const add = findFirstByProp(permittedActions, 'accessibilityLabel', 'Add an asset');
+
+    expect(add?.props?.accessibilityRole).toBe('button');
+    expect(controlSize(add, 'minHeight')).toBeGreaterThanOrEqual(44);
+    (add?.props?.onPress as (() => void) | undefined)?.();
+    expect(router.navigate).toHaveBeenCalledWith('/add');
+
+    expect(findFirstByProp(
+      InventoryMapHeaderActions({
+        canAdd: false,
+        palette: lightPalette,
+        selectedSurface: 'map',
+        onAdd: () => router.navigate('/add'),
+        onChangeSurface: vi.fn()
+      }),
+      'accessibilityLabel',
+      'Add an asset'
+    )).toBeUndefined();
+  });
+
   it('uses Status, Availability, and Tags groups without hiding scope or mixing in Sort', () => {
     const text = collectText(renderHeader({ filtersExpanded: true, scope: 'places' }));
 
@@ -590,6 +644,18 @@ function findFirstByProp(node: unknown, prop: string, value: unknown): ElementNo
     (found, child) => found ?? findFirstByProp(child, prop, value),
     undefined
   );
+}
+
+function controlSize(node: ElementNode | undefined, key: 'minHeight' | 'minWidth'): number {
+  const style = node?.props?.style;
+  const resolved = typeof style === 'function' ? style({ pressed: false }) : style;
+  const entries = Array.isArray(resolved) ? resolved : [resolved];
+
+  return entries.reduce<number>((size, entry) => {
+    if (!entry || typeof entry !== 'object') return size;
+    const value = (entry as Record<string, unknown>)[key];
+    return typeof value === 'number' ? Math.max(size, value) : size;
+  }, 0);
 }
 
 function collectText(node: unknown): readonly string[] {

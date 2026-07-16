@@ -34,6 +34,7 @@ type App struct {
 	checkouts                    ports.AssetCheckoutRepository
 	assetUnitOfWork              ports.AssetUnitOfWork
 	assetTagUnitOfWork           ports.AssetTagUnitOfWork
+	assetEditUnitOfWork          ports.AssetEditUnitOfWork
 	undoables                    ports.UndoableOperationRepository
 	search                       ports.AssetSearchRepository
 	attachments                  ports.AttachmentRepository
@@ -106,6 +107,7 @@ type Dependencies struct {
 	Checkouts                        ports.AssetCheckoutRepository
 	AssetUnitOfWork                  ports.AssetUnitOfWork
 	AssetTagUnitOfWork               ports.AssetTagUnitOfWork
+	AssetEditUnitOfWork              ports.AssetEditUnitOfWork
 	Undoables                        ports.UndoableOperationRepository
 	Search                           ports.AssetSearchRepository
 	Attachments                      ports.AttachmentRepository
@@ -198,6 +200,7 @@ func New(deps Dependencies) App {
 		checkouts:                    deps.Checkouts,
 		assetUnitOfWork:              deps.AssetUnitOfWork,
 		assetTagUnitOfWork:           deps.AssetTagUnitOfWork,
+		assetEditUnitOfWork:          deps.AssetEditUnitOfWork,
 		undoables:                    deps.Undoables,
 		search:                       deps.Search,
 		attachments:                  deps.Attachments,
@@ -247,24 +250,25 @@ func New(deps Dependencies) App {
 		thumbnailGenerationState:     newThumbnailGenerationState(),
 	}
 	app.assetService = assetapp.New(assetapp.Dependencies{
-		Observer:           app.observer,
-		Authorizer:         app.authorizer,
-		Tenants:            app.tenants,
-		Inventories:        app.inventories,
-		CustomAssetTypes:   app.customAssetTypes,
-		CustomFields:       app.customFields,
-		Assets:             app.assets,
-		Checkouts:          app.checkouts,
-		Attachments:        app.attachments,
-		AssetTags:          app.assetTags,
-		AssetUnitOfWork:    app.assetUnitOfWork,
-		AssetTagUnitOfWork: app.assetTagUnitOfWork,
-		Undoables:          app.undoables,
-		Audit:              app.audit,
-		IDs:                app.ids,
-		Clock:              app.clock,
-		DefaultPageLimit:   app.defaultPageLimit,
-		MaxPageLimit:       app.maxPageLimit,
+		Observer:            app.observer,
+		Authorizer:          app.authorizer,
+		Tenants:             app.tenants,
+		Inventories:         app.inventories,
+		CustomAssetTypes:    app.customAssetTypes,
+		CustomFields:        app.customFields,
+		Assets:              app.assets,
+		Checkouts:           app.checkouts,
+		Attachments:         app.attachments,
+		AssetTags:           app.assetTags,
+		AssetUnitOfWork:     app.assetUnitOfWork,
+		AssetTagUnitOfWork:  app.assetTagUnitOfWork,
+		AssetEditUnitOfWork: app.assetEditUnitOfWork,
+		Undoables:           app.undoables,
+		Audit:               app.audit,
+		IDs:                 app.ids,
+		Clock:               app.clock,
+		DefaultPageLimit:    app.defaultPageLimit,
+		MaxPageLimit:        app.maxPageLimit,
 	})
 	app.customFieldService = customfieldapp.New(customfieldapp.Dependencies{
 		Observer:                  app.observer,

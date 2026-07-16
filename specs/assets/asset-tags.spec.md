@@ -172,6 +172,8 @@ Asset create and edit flows must let users:
 
 Web tag selection lists and web or mobile tag filter option lists must sort active tags alphabetically by display name using locale-aware, case-insensitive collation. Assigned tag chips may preserve the order supplied by the asset when that order is used for compact overflow or otherwise communicates content order.
 
+Tag selectors with more than twelve available tags must use progressive disclosure: show the first twelve naturally sorted options initially, preserve the selected-tag summary, and provide an explicit control to show or hide the complete list.
+
 Web and mobile clients must load active inventory tags through client adapter boundaries, map API tag DTOs into client domain models, and submit complete `tagIds` lists on asset create and update. Clients must not treat generated API DTOs as UI domain models.
 
 Clients must reconcile pending inline tag drafts against known inventory tags by normalized key before calling the tag creation API. If a matching active tag is already known locally, the save must reuse that tag ID instead of issuing a duplicate create request.

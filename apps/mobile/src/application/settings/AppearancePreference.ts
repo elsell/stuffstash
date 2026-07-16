@@ -1,4 +1,4 @@
-export const appearancePreferences = ['light', 'dark', 'system'] as const;
+export const appearancePreferences = ['system', 'light', 'dark'] as const;
 
 export type AppearancePreference = typeof appearancePreferences[number];
 

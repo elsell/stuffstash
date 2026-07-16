@@ -105,6 +105,9 @@ export function assetRouteActionIsAvailable(
   if (action === 'return') {
     return !!asset?.currentCheckout;
   }
+  if (action === 'move-here') {
+    return (asset?.kind === 'container' || asset?.kind === 'location') && asset.lifecycleState === 'active';
+  }
   if (action === 'restore') {
     return asset?.lifecycleState === 'archived';
   }

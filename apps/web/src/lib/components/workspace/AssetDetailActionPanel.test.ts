@@ -128,17 +128,6 @@ describe('AssetDetailActionPanel', () => {
     expect(selectedParent).toBe('parent-two');
   });
 
-  it('labels the shared move sheet as a place workflow for locations', async () => {
-    component = mount(AssetDetailActionPanel, {
-      target: document.body,
-      props: panelProps({ panel: 'move', asset: { ...asset(), kind: 'location' } })
-    });
-    await tick();
-
-    expect(document.body.textContent).toContain('Move place');
-    expect(document.body.textContent).not.toContain('Move asset');
-  });
-
   it('renders destructive confirmation panels with durable cancel links', async () => {
     const deleted: string[] = [];
     component = mount(AssetDetailActionPanel, {

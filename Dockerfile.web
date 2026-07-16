@@ -17,6 +17,7 @@ COPY packages/api-client packages/api-client
 COPY apps/web apps/web
 COPY deploy/web/nginx.conf deploy/web/nginx.conf
 COPY deploy/web/start-web-runtime.sh deploy/web/start-web-runtime.sh
+COPY deploy/web/write-mobile-association-files.sh deploy/web/write-mobile-association-files.sh
 COPY scripts/render-web-nginx-config.mjs scripts/render-web-nginx-config.mjs
 RUN pnpm --dir apps/web build
 RUN node scripts/render-web-nginx-config.mjs apps/web/build/index.html deploy/web/nginx.conf /tmp/stuffstash-nginx.conf
@@ -26,8 +27,9 @@ FROM ${WEB_RUNTIME_IMAGE}
 COPY --from=builder /tmp/stuffstash-nginx.conf /opt/app-root/etc/nginx.default.d/stuffstash.conf
 COPY --from=builder /src/apps/web/build /opt/app-root/src
 COPY --from=builder /src/deploy/web/start-web-runtime.sh /usr/local/bin/start-web-runtime
+COPY --from=builder /src/deploy/web/write-mobile-association-files.sh /usr/local/bin/write-mobile-association-files
 USER 0
-RUN chmod 0755 /usr/local/bin/start-web-runtime
+RUN chmod 0755 /usr/local/bin/start-web-runtime /usr/local/bin/write-mobile-association-files
 USER 1001
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/start-web-runtime"]

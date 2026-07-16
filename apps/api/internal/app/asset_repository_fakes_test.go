@@ -322,6 +322,31 @@ func (f *fakeAssetRepository) UpdateAsset(_ context.Context, item asset.Asset, a
 	return nil
 }
 
+func (f *fakeAssetRepository) UpdateAssetAndTags(ctx context.Context, item asset.Asset, tagIDs []assettag.ID, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
+	for _, tagID := range tagIDs {
+		tag, ok := f.assetTags[tagID]
+		if !ok || tag.TenantID.String() != item.TenantID.String() || tag.InventoryID.String() != item.InventoryID.String() || tag.LifecycleState != assettag.LifecycleStateActive {
+			return ports.ErrForbidden
+		}
+	}
+	if err := f.UpdateAsset(ctx, item, auditRecords, undoableOperation); err != nil {
+		return err
+	}
+	links := map[assettag.ID]struct{}{}
+	for _, tagID := range tagIDs {
+		links[tagID] = struct{}{}
+	}
+	if len(links) == 0 {
+		delete(f.assetTagLinks, item.ID)
+	} else {
+		if f.assetTagLinks == nil {
+			f.assetTagLinks = map[asset.ID]map[assettag.ID]struct{}{}
+		}
+		f.assetTagLinks[item.ID] = links
+	}
+	return nil
+}
+
 func (f *fakeAssetRepository) UpdateAssetLifecycle(_ context.Context, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	if f.items == nil {
 		f.items = map[asset.ID]asset.Asset{}
@@ -383,6 +408,15 @@ func (f *fakeAssetRepository) ApplyAssetUndoableOperation(_ context.Context, ope
 	if !ok || !fakeAssetsEqual(current, expectedCurrent) {
 		return ports.UndoableOperation{}, asset.Asset{}, ports.ErrConflict
 	}
+	if operation.ReplacesTags {
+		expectedTagIDs := operation.AfterTagIDs
+		if direction == ports.UndoableOperationDirectionRedo {
+			expectedTagIDs = operation.BeforeTagIDs
+		}
+		if !fakeAssetTagAssignmentsMatch(f.assetTagLinks[current.ID], expectedTagIDs) {
+			return ports.UndoableOperation{}, asset.Asset{}, ports.ErrConflict
+		}
+	}
 	if !fakeAssetsSameIdentity(current, resulting) {
 		return ports.UndoableOperation{}, asset.Asset{}, ports.ErrForbidden
 	}
@@ -424,9 +458,40 @@ func (f *fakeAssetRepository) ApplyAssetUndoableOperation(_ context.Context, ope
 	}
 	operation.LastAppliedAt = time.Now().UTC()
 	f.items[resulting.ID] = resulting
+	if operation.ReplacesTags {
+		tagIDs := operation.AfterTagIDs
+		if direction == ports.UndoableOperationDirectionUndo {
+			tagIDs = operation.BeforeTagIDs
+		}
+		links := map[assettag.ID]struct{}{}
+		for _, tagID := range tagIDs {
+			links[tagID] = struct{}{}
+		}
+		if len(links) == 0 {
+			delete(f.assetTagLinks, resulting.ID)
+		} else {
+			f.assetTagLinks[resulting.ID] = links
+		}
+	}
 	f.undoables[operationID] = operation
 	f.auditRecords = append(f.auditRecords, auditRecord)
 	return operation, resulting, nil
+}
+
+func fakeAssetTagAssignmentsMatch(actual map[assettag.ID]struct{}, expected []assettag.ID) bool {
+	wanted := make(map[assettag.ID]struct{}, len(expected))
+	for _, tagID := range expected {
+		wanted[tagID] = struct{}{}
+	}
+	if len(actual) != len(wanted) {
+		return false
+	}
+	for tagID := range wanted {
+		if _, ok := actual[tagID]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (f *fakeAssetRepository) ApplyAssetCheckoutUndoableOperation(_ context.Context, operationID string, direction ports.UndoableOperationDirection, expectedCurrent asset.Checkout, resulting asset.Checkout, auditRecord audit.Record) (ports.UndoableOperation, asset.Checkout, error) {

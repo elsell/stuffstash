@@ -10,7 +10,6 @@ import {
   recordAssetActionCompletion
 } from './AssetActionCompletion';
 import {
-  assetAuditNativeSheetOptions,
   assetEditNativeSheetOptions,
   assetMoveHereNativeSheetOptions,
   assetMoveNativeSheetOptions
@@ -33,7 +32,6 @@ import {
   movePlacementPreview,
   parentFromCurrentAssetPath
 } from './AssetDetailMovePresentation';
-import { isCurrentAuditHistoryRequest } from './AssetAuditHistoryPresentation';
 import {
   assetPhotoViewerModel,
   assetPhotoViewerModelAtIndex,
@@ -200,8 +198,7 @@ describe('asset native sheet route options', () => {
     for (const options of [
       assetEditNativeSheetOptions,
       assetMoveNativeSheetOptions,
-      assetMoveHereNativeSheetOptions,
-      assetAuditNativeSheetOptions
+      assetMoveHereNativeSheetOptions
     ]) {
       expect(options.presentation).toBe('formSheet');
       expect(options.headerShown).toBe(false);
@@ -216,7 +213,6 @@ describe('asset native sheet route options', () => {
     expect(assetEditNativeSheetOptions.gestureEnabled).toBe(false);
     expect(assetMoveNativeSheetOptions.gestureEnabled).toBeUndefined();
     expect(assetMoveHereNativeSheetOptions.gestureEnabled).toBeUndefined();
-    expect(assetAuditNativeSheetOptions.gestureEnabled).toBeUndefined();
   });
 });
 
@@ -640,13 +636,6 @@ describe('asset workspace status presentation', () => {
   });
 });
 
-describe('asset audit history presentation helpers', () => {
-  it('rejects stale audit history requests after close or navigation', () => {
-    expect(isCurrentAuditHistoryRequest(3, 3)).toBe(true);
-    expect(isCurrentAuditHistoryRequest(4, 3)).toBe(false);
-  });
-});
-
 describe('asset photo workspace presentation helpers', () => {
   it('builds upload progress rows from selected photo order', () => {
     expect(photoUploadRows([
@@ -891,7 +880,7 @@ describe('asset lifecycle presentation helpers', () => {
         { kind: 'restore', label: 'Restore', isDestructive: false },
         { kind: 'delete', label: 'Delete permanently', isDestructive: true }
       ],
-      options: ['Checkout history', 'Audit history', 'Restore', 'Delete permanently', 'Cancel'],
+      options: ['Checkout history', 'History', 'Restore', 'Delete permanently', 'Cancel'],
       checkoutHistoryIndex: 0,
       auditIndex: 1,
       lifecycleActionIndexes: [2, 3],

@@ -23,5 +23,8 @@ type AuditRecordPageRequest struct {
 }
 
 type AssetAuditRecordListRequest struct {
-	Limit int
+	Actions          []audit.Action
+	BeforeOccurredAt time.Time
+	BeforeRecordID   audit.ID
+	Limit            int
 }

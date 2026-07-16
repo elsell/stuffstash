@@ -57,6 +57,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types`
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}`
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records`
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity`
 
 ## Authentication
 
@@ -101,6 +102,7 @@ The first protected REST slice includes:
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types` requires `inventory.view`.
 - `PATCH /tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}` requires `inventory.configure`.
 - `GET /tenants/{tenantId}/inventories/{inventoryId}/audit-records` requires `inventory.view`.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity` requires `inventory.view` and verifies the asset in the same tenant and inventory.
 - Cross-tenant and hidden-resource access must return safe authorization failures.
 
 ## First Asset REST Slice
@@ -154,6 +156,8 @@ The first protected REST slice includes:
 - Audit listing must be read-only.
 - Tenant audit listing returns all records in the tenant, including inventory-scoped records.
 - Inventory audit listing returns records scoped to the inventory.
+- Asset activity listing is cursor-paginated newest-first, defaults to `view=changes`, accepts `view=all`, and returns typed safe change summaries plus same-scope undo availability without replacing the raw audit endpoints.
+- Asset activity cursors are opaque and scoped to tenant, inventory, asset, and view.
 - Audit listing must support cursor pagination with `limit` and `cursor` query parameters.
 - Audit listing cursors must preserve `(occurredAt, id)` ordering.
 - Audit listing must include pagination metadata in the response envelope.
@@ -201,6 +205,7 @@ The first protected REST slice includes:
 - Tests must verify audit records are written for state-changing operations.
 - Tests must verify tenant and inventory audit record listing is authenticated, authorized, cursor-paginated, and tenant/inventory isolated.
 - Tests must verify audit records capture `X-Request-ID` when supplied.
+- Tests must verify asset activity authentication, authorization, tenant and inventory isolation, safe missing-asset behavior, view filtering, cursor scoping, safe structured changes, undo status, and preservation of raw read audit records.
 - Tests must verify unauthorized errors use the safe error envelope.
 - Tests must verify the API index route is available.
 - Tests must verify the OpenAPI route is available.

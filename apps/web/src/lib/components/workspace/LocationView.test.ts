@@ -49,6 +49,29 @@ afterEach(() => {
 });
 
 describe('LocationView', () => {
+  it('uses a bounded location-detail hierarchy with identity and maintenance regions', () => {
+    component = mount(LocationView, {
+      target: document.body,
+      props: {
+        location: { ...location, description: 'Tools and household overflow.' },
+        assets: [nestedLocation, item],
+        canEdit: true,
+        onBack: () => {},
+        onOpenLocation: () => {},
+        onEditLocation: () => {},
+        onOpenAsset: () => {}
+      }
+    });
+
+    const view = document.body.querySelector('.location-view');
+    const hero = view?.querySelector('.location-detail-hero');
+    expect(view).not.toBeNull();
+    expect(hero?.querySelector('.location-identity')).not.toBeNull();
+    expect(hero?.querySelector('#location-title')?.textContent).toBe('Garage');
+    expect(hero?.textContent).toContain('Tools and household overflow.');
+    expect(hero?.querySelector('[aria-label="Place maintenance"]')).not.toBeNull();
+  });
+
   it('opens nested locations as location navigation and items as asset detail', () => {
     let openedLocationId = '';
     let openedAssetId = '';
@@ -93,12 +116,6 @@ describe('LocationView', () => {
     expect(link('Back').getAttribute('href')).toBe('/tenants/tenant-home/inventories/inventory-household/browse?scope=places');
     expect(link('Edit location').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/garage/edit'
-    );
-    expect(link('Move place').getAttribute('href')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/assets/garage/move'
-    );
-    expect(link('Archive').getAttribute('href')).toBe(
-      '/tenants/tenant-home/inventories/inventory-household/assets/garage/archive'
     );
     expect(link('Shelf').getAttribute('href')).toBe(
       '/tenants/tenant-home/inventories/inventory-household/locations/garage-shelf'
@@ -227,8 +244,6 @@ describe('LocationView', () => {
     });
 
     expect(document.body.textContent).not.toContain('Edit location');
-    expect(document.body.textContent).not.toContain('Move place');
-    expect(document.body.textContent).not.toContain('Archive');
   });
 
   it('uses a denied empty-state note when location creation access is missing', () => {
@@ -249,7 +264,7 @@ describe('LocationView', () => {
       }
     });
 
-    expect(document.body.textContent).toContain('This location is empty.');
+    expect(document.body.textContent).toContain('No items here yet');
     expect(document.body.textContent).toContain('Adding items is unavailable for this inventory.');
     expect(document.body.textContent).not.toContain('Add item here');
   });

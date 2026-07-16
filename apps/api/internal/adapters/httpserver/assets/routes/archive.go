@@ -32,9 +32,9 @@ func RegisterArchive(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-
 		response := mapper.AssetToResponse(result.Asset, nil, nil, nil)
 		response.UndoableOperationID = result.UndoableOperationID
+
 		return &dto.UpdateAssetLifecycleOutput{
 			Body: shared.SuccessEnvelope[dto.AssetResponse]{
 				Data: response,

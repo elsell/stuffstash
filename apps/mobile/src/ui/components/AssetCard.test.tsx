@@ -217,6 +217,90 @@ describe('AssetCard', () => {
     expect(collectText(card)).not.toContain('Garage drill');
   });
 
+  it('offers a full-width compact row without turning the thumbnail into the dominant surface', () => {
+    const card = renderHomeRow({
+      asset: makeHomeRowAsset(),
+      density: 'row',
+      onParentLocationPress: vi.fn(),
+      onPress: vi.fn()
+    });
+    const thumbnail = findFirstByStyleNumberRange(card, 'width', 56, 80);
+
+    expect(styleValue(card.props?.style, 'width')).toBe('100%');
+    expect(styleValue(card.props?.style, 'flexDirection')).toBe('row');
+    expect(styleValue(card.props?.style, 'backgroundColor')).toBe('transparent');
+    expect(styleValue(card.props?.style, 'minHeight')).toBeLessThanOrEqual(112);
+    expect(styleValue(thumbnail?.props?.style, 'width')).toBeGreaterThanOrEqual(56);
+    expect(styleValue(thumbnail?.props?.style, 'width')).toBeLessThanOrEqual(80);
+    expect(styleValue(thumbnail?.props?.style, 'height')).toBe(
+      styleValue(thumbnail?.props?.style, 'width')
+    );
+  });
+
+  it('keeps Home row typography restrained and reveals recency only when explicitly requested', () => {
+    const hiddenRecencyCard = renderHomeRow({
+      asset: makeHomeRowAsset(),
+      density: 'row',
+      onParentLocationPress: vi.fn(),
+      onPress: vi.fn()
+    });
+    const visibleRecencyCard = renderHomeRow({
+      asset: makeHomeRowAsset(),
+      density: 'row',
+      onParentLocationPress: vi.fn(),
+      onPress: vi.fn(),
+      showUpdatedAt: true
+    });
+    const title = findFirstByText(visibleRecencyCard, 'Cordless drill');
+    const recency = findFirstByText(visibleRecencyCard, 'Updated 2 hours ago');
+
+    expect(collectText(hiddenRecencyCard)).not.toContain('Updated 2 hours ago');
+    expect(collectText(visibleRecencyCard)).toContain('Updated 2 hours ago');
+    expect(styleValue(title?.props?.style, 'fontWeight')).toBe('600');
+    expect(styleValue(title?.props?.style, 'lineHeight')).toBeUndefined();
+    expect(title?.props?.numberOfLines).toBeUndefined();
+    expect(styleValue(recency?.props?.style, 'fontWeight')).not.toBe('700');
+    expect(styleValue(recency?.props?.style, 'lineHeight')).toBeUndefined();
+    expect(styleValue(recency?.props?.style, 'fontSize')).toBeGreaterThanOrEqual(12);
+    expect(styleValue(recency?.props?.style, 'fontSize')).toBeLessThanOrEqual(15);
+  });
+
+  it('preserves actionable placement and checkout affordances in a restrained Home row', () => {
+    const onLocationPress = vi.fn();
+    const onReturn = vi.fn();
+    const card = renderHomeRow({
+      asset: {
+        ...makeHomeRowAsset(),
+        checkedOutLabel: 'Checked out to Taylor'
+      },
+      density: 'row',
+      footerAction: {
+        label: 'Return',
+        onPress: onReturn
+      },
+      onParentLocationPress: onLocationPress,
+      onPress: vi.fn()
+    });
+    const garage = findFirstByAccessibilityLabel(card, 'Open location Garage');
+    const returnButton = findPressableWithText(card, 'Return');
+
+    expect(collectText(card)).toEqual(expect.arrayContaining([
+      'Cordless drill',
+      'Garage',
+      'Checked out to Taylor',
+      'Return'
+    ]));
+    expect(garage?.props?.accessibilityRole).toBe('button');
+    (garage?.props?.onPress as (() => void) | undefined)?.();
+    expect(onLocationPress).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'asset-garage', title: 'Garage' })
+    );
+    expect(styleValue(resolvePressableStyle(returnButton?.props?.style, false), 'minHeight')).toBeGreaterThanOrEqual(44);
+    expect(styleValue(resolvePressableStyle(returnButton?.props?.style, false), 'minWidth')).toBeGreaterThanOrEqual(44);
+    expect(styleValue(card.props?.style, 'borderWidth')).toBe(0);
+    expect(Number(styleValue(card.props?.style, 'borderBottomWidth') ?? 0)).toBeLessThanOrEqual(1);
+  });
+
   it('keeps the standard card flexible for an ordinary-phone two-column grid', () => {
     const card = AssetCard({
       asset: {
@@ -281,6 +365,31 @@ describe('AssetCard', () => {
     expect(onReturn).toHaveBeenCalledTimes(1);
   });
 });
+
+type ExperimentalHomeRowProps = Omit<Parameters<typeof AssetCard>[0], 'density'> & {
+  readonly density: 'row';
+  readonly showUpdatedAt?: boolean;
+};
+
+function renderHomeRow(props: ExperimentalHomeRowProps): ReturnType<typeof AssetCard> {
+  return AssetCard(props as unknown as Parameters<typeof AssetCard>[0]);
+}
+
+function makeHomeRowAsset() {
+  return {
+    id: 'asset-drill',
+    title: 'Cordless drill',
+    kindLabel: 'Item',
+    description: 'Garage drill',
+    locationTrailLabel: 'Garage',
+    parentLocationTrail: [
+      { id: 'asset-garage', title: 'Garage', isImmediateParent: true }
+    ],
+    updatedAtLabel: 'Updated 2 hours ago',
+    photoLabel: 'Photo ready',
+    imagePlaceholderLabel: 'Item'
+  };
+}
 
 describe('AssetBreadcrumbTrail', () => {
   it('supports a more prominent detail-page treatment without changing card density', () => {
@@ -462,7 +571,7 @@ function findFirstByText(node: unknown, text: string): ElementNode | undefined {
 
 function styleValue(style: unknown, key: string): unknown {
   if (Array.isArray(style)) {
-    return style.reduce<unknown>((found, entry) => found ?? styleValue(entry, key), undefined);
+    return style.reduce<unknown>((found, entry) => styleValue(entry, key) ?? found, undefined);
   }
   return style && typeof style === 'object' ? (style as Record<string, unknown>)[key] : undefined;
 }
@@ -493,6 +602,38 @@ function findFirstByStyleValue(node: unknown, styleKey: string, value: unknown):
 
   return childrenOf(node).reduce<ElementNode | undefined>(
     (found, child) => found ?? findFirstByStyleValue(child, styleKey, value),
+    undefined
+  );
+}
+
+function findFirstByStyleNumberRange(
+  node: unknown,
+  styleKey: string,
+  minimum: number,
+  maximum: number
+): ElementNode | undefined {
+  if (Array.isArray(node)) {
+    return node.reduce<ElementNode | undefined>(
+      (found, child) => found ?? findFirstByStyleNumberRange(child, styleKey, minimum, maximum),
+      undefined
+    );
+  }
+
+  if (!isElementNode(node)) {
+    return undefined;
+  }
+
+  const value = styleValue(node.props?.style, styleKey);
+  if (typeof value === 'number' && value >= minimum && value <= maximum) {
+    return node;
+  }
+
+  if (typeof node.type === 'function') {
+    return findFirstByStyleNumberRange(node.type(node.props), styleKey, minimum, maximum);
+  }
+
+  return childrenOf(node).reduce<ElementNode | undefined>(
+    (found, child) => found ?? findFirstByStyleNumberRange(child, styleKey, minimum, maximum),
     undefined
   );
 }

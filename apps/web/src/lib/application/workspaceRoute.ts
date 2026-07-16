@@ -13,7 +13,7 @@ import type {
 } from '$lib/domain/inventory';
 
 export type WorkspaceAction = 'add' | 'edit' | null;
-export type AssetRouteAction = 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
+export type AssetRouteAction = 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
 export type AttachmentRouteAction = 'delete' | null;
 export type AccessInvitationRouteAction = 'expire' | 'cancel' | 'delete' | null;
 export type CustomizationRouteAction = 'archive_asset_type' | 'archive_field_definition' | null;
@@ -92,7 +92,7 @@ export const defaultWorkspaceRoute: WorkspaceRouteState = {
 };
 
 const assetKinds = new Set<AssetKind>(['item', 'container', 'location']);
-const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'archive', 'restore', 'delete', 'checkout', 'return']);
+const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'move-here', 'archive', 'restore', 'delete', 'checkout', 'return']);
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 'cancel', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
@@ -159,7 +159,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
       mode: action === 'edit' ? 'asset' : 'location',
       locationId: segments[inventoryOffset.nextIndex + 1],
       assetId: action === 'edit' ? segments[inventoryOffset.nextIndex + 1] : null,
-      action,
+      action: action === 'edit' ? 'edit' : null,
       assetAction: action
     };
   }
@@ -303,8 +303,8 @@ function parseAccessInvitationAction(value: string | undefined): AccessInvitatio
   return accessInvitationActions.has(value as AccessInvitationRouteAction) ? (value as AccessInvitationRouteAction) : null;
 }
 
-function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit'> | null {
-  return value === 'edit' ? 'edit' : null;
+function parseLocationAction(value: string | undefined): Extract<AssetRouteAction, 'edit' | 'move-here'> | null {
+  return value === 'edit' || value === 'move-here' ? value : null;
 }
 
 function parseSettingsSection(value: string | undefined): SettingsSection {
@@ -364,6 +364,8 @@ export function workspaceRouteHref(
     path += `/locations/${encodeURIComponent(next.locationId)}`;
     if ((next.assetAction ?? next.action) === 'edit') {
       path += '/edit';
+    } else if (next.assetAction === 'move-here') {
+      path += '/move-here';
     }
   } else if (inventoryId && next.mode === 'asset' && next.assetId) {
     const action = next.assetAction ?? (next.action === 'edit' ? 'edit' : null);

@@ -197,7 +197,7 @@ export function VoiceSessionSheetScreen() {
         setPhotoDrafts({});
         setCommandDraftState({ drafts: {} });
       }}
-      onOpenProviderProfiles={() => router.push('/provider-profiles')}
+      onOpenProviderProfiles={() => router.push('/settings/voice')}
       onSessionMic={() => {
         void handleSessionMic();
       }}

@@ -87,6 +87,7 @@ export function mapAsset(asset: ApiAsset): Asset {
     customAssetTypeId: asset.customAssetTypeId,
     customFields: asset.customFields,
     tags: (asset.tags ?? []).map(mapAssetTagSummary),
+    primaryPhotoId: asset.primaryPhoto?.id,
     currentCheckout: mapCurrentCheckout(asset.currentCheckout),
     undoableOperationId: asset.undoableOperationId,
     updatedAt: undefined

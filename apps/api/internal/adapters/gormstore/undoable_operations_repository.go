@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -84,6 +85,19 @@ func (s Store) ApplyAssetUndoableOperation(ctx context.Context, operationID stri
 		if !gormAssetsEqual(current, expectedCurrent) {
 			return ports.ErrConflict
 		}
+		if operation.ReplacesTags {
+			expectedTagIDs := operation.AfterTagIDs
+			if direction == ports.UndoableOperationDirectionRedo {
+				expectedTagIDs = operation.BeforeTagIDs
+			}
+			matches, err := assetTagAssignmentsMatch(tx, operation.TenantID, operation.InventoryID, current.ID, expectedTagIDs)
+			if err != nil {
+				return err
+			}
+			if !matches {
+				return ports.ErrConflict
+			}
+		}
 		if !gormAssetsSameIdentity(current, resulting) {
 			return ports.ErrForbidden
 		}
@@ -92,6 +106,15 @@ func (s Store) ApplyAssetUndoableOperation(ctx context.Context, operationID stri
 		}
 		if err := updateAssetModelForUndoableOperation(tx, currentModel, resulting); err != nil {
 			return err
+		}
+		if operation.ReplacesTags {
+			tagIDs := operation.AfterTagIDs
+			if direction == ports.UndoableOperationDirectionUndo {
+				tagIDs = operation.BeforeTagIDs
+			}
+			if err := replaceAssetTagsInTx(tx, operation.TenantID, operation.InventoryID, resulting.ID, tagIDs); err != nil {
+				return err
+			}
 		}
 		if err := createAuditRecord(tx, auditRecord); err != nil {
 			return err
@@ -127,6 +150,32 @@ func (s Store) ApplyAssetUndoableOperation(ctx context.Context, operationID stri
 		return ports.UndoableOperation{}, asset.Asset{}, err
 	}
 	return saved, resulting, nil
+}
+
+func assetTagAssignmentsMatch(tx *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, expected []assettag.ID) (bool, error) {
+	var assignments []assetTagAssignmentModel
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetTagAssignmentModel{
+		TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: assetID.String(),
+	}).Find(&assignments).Error; err != nil {
+		return false, err
+	}
+	actual := make(map[string]struct{}, len(assignments))
+	for _, assignment := range assignments {
+		actual[assignment.TagID] = struct{}{}
+	}
+	wanted := make(map[string]struct{}, len(expected))
+	for _, tagID := range expected {
+		wanted[tagID.String()] = struct{}{}
+	}
+	if len(actual) != len(wanted) {
+		return false, nil
+	}
+	for tagID := range wanted {
+		if _, ok := actual[tagID]; !ok {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func (s Store) ApplyAssetCheckoutUndoableOperation(ctx context.Context, operationID string, direction ports.UndoableOperationDirection, expectedCurrent asset.Checkout, resulting asset.Checkout, auditRecord audit.Record) (ports.UndoableOperation, asset.Checkout, error) {

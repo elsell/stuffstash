@@ -90,8 +90,7 @@ The first canonical URL model is:
 
 - `/` for the selected inventory home.
 - `/tenants/{tenantId}/inventories/{inventoryId}` for an inventory home.
-- `/tenants/{tenantId}/inventories/{inventoryId}/browse` for unified inventory browsing.
-- `/tenants/{tenantId}/inventories/{inventoryId}/locations` for top-level location browsing.
+- `/tenants/{tenantId}/inventories/{inventoryId}/browse` for the unified inventory browse surface.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}` for a focused location view.
 - `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/edit` for the location edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
@@ -101,7 +100,6 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore` for archived asset restore confirmation when restore is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/delete` for the asset delete confirmation state when delete is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/delete` for the attachment delete confirmation state when delete is available.
-- `/tenants/{tenantId}/inventories/{inventoryId}/search` for search.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings` for inventory settings.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/{section}` for a focused inventory settings section.
 - `/tenants/{tenantId}/inventories/{inventoryId}/settings/access/invitations/{invitationId}/expire` for an invitation expire confirmation when expire is available.
@@ -112,14 +110,22 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/import` for import.
 - `/tenants/{tenantId}/inventories/{inventoryId}/import/{source}` for a focused import source, initially `homebox` or `homebox-csv`.
 - `/tenants/{tenantId}/inventories/{inventoryId}/add/{kind}` for add item, container, or location.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{containerAssetId}/move-here` for the focused one-at-a-time move-into-container workflow.
+- `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/move-here` for the same workflow on a focused place.
 
 The web app may accept `/inventories/{inventoryId}` and descendant paths as compatibility aliases for an inventory that is visible in the current tenant context. When a compatibility alias can be resolved, the app should replace the browser URL with the canonical tenant-scoped path.
 
+The former inventory-level `/locations` and `/search` paths are compatibility aliases, not primary destinations. `/locations` must normalize to `/browse?scope=places`; `/search` must normalize to `/browse` while preserving supported search and filter query state. Focused location paths under `/locations/{locationAssetId}` remain canonical because they identify a location resource rather than the Browse collection.
+
 The route path owns durable navigation state. Query parameters may own transient filters such as:
 
-- `lifecycle=active|archived`.
+- `surface=list|map` on Browse, defaulting to `list`.
+- `scope=all|places|containers|items` on Browse, defaulting to `all`.
+- `lifecycle=active|archived|all` on Browse, defaulting to `active`.
 - `q={search query}`.
-- `mode=fuzzy|exact`.
+- repeated `tag={tagId}` values on Browse.
+- `availability=any|available|checked_out` on Browse, defaulting to `any`.
+- `sort=updated_desc|id_asc` on Browse, defaulting to `updated_desc`.
 - `parent={assetId}` for add item, container, or location routes that should open with an existing location or container selected as the parent destination.
 - `invitationStatus=all|pending|accepted|revoked|cancelled|expired` for the access settings invitation filter.
 - `auditScope=inventory|tenant` for the activity settings audit scope filter.
@@ -208,6 +214,7 @@ Desktop:
 - A top header must remain available for global search and add actions.
 - On desktop destinations that already own the primary search field, the header must become a compact contextual toolbar rather than reserving an empty search-height band: it names the current inventory and keeps Add available without duplicating search.
 - The side navigation must use the same primary information architecture as mobile: Home and Browse.
+- The side navigation must not include separate Search or Locations items because both are scopes within Browse and search remains globally available in the top header.
 - The side navigation must contain durable destinations, not duplicate global actions.
 - The account entry belongs at the bottom of the side navigation and must identify the signed-in account before exposing account actions.
 - The desktop account entry uses the shared `DropdownMenu` primitive. Its closed state is one clearly interactive row rather than loose identity text beside a separate action, and its menu exposes the current account, a canonical inventory `Settings` destination, and `Sign out`.
@@ -275,9 +282,9 @@ Search:
 - Search must be front and center on desktop.
 - Search must be available across primary web pages.
 - Search should feel closer to Google Drive than a command palette: a visible field that accepts ordinary asset/location/container terms.
-- The dedicated search route must preserve the same autocomplete affordance as the global header search, including keyboard access to suggestions and direct opening of suggested assets.
-- On Browse, the page search field is the primary search affordance and the desktop header must not also render the global search field.
-- Submitting search from the shell or Browse must keep the canonical Browse mode and URL while preserving the normalized query in `q`.
+- Submitting global search must navigate into Browse with the query represented in the canonical Browse URL.
+- Browse must preserve the same autocomplete affordance as the global header search, including keyboard access to suggestions and direct opening of suggested assets.
+- On Browse, the page search field is the primary search affordance and the desktop header must not also render a duplicate global search field.
 - Search must be scoped to the selected tenant and inventory unless a future search spec defines cross-inventory behavior.
 - Search must preserve tenant and inventory authorization boundaries.
 
@@ -292,6 +299,7 @@ Add:
 - Header and mobile Add controls must expose a perceivable disabled reason when add creation is unavailable or no inventory is selected.
 - Add deep links must not silently render the ordinary workspace when creation is unavailable. They must show a calm denied state or normalize to a non-action route.
 - Modal add and edit surfaces must make the background workspace inert and hidden from assistive technology while the modal is open.
+- Closing the Add surface with Escape, Cancel, close, or successful completion must restore focus after route application settles to the connected invoking control, or to the durable visible Add trigger for the active responsive shell when the opener was transient. It must not target the document body or a kind-menu item that is removed when the tray opens.
 - On mobile, the add tray must behave like a focused sheet with usable viewport height and fixed completion controls so save/cancel actions remain reachable while long custom-field or parent-picker content scrolls.
 - The Add heading and its trailing close action must remain one stable row at narrow widths. Every Add button, segmented choice, text/search input, and completion action must provide at least a 44px hit region at desktop and mobile widths.
 - Parent-picker destinations in mobile add and edit trays must scroll with enough bottom clearance that focused or selected destination controls are not hidden under sticky action bars.
@@ -368,8 +376,6 @@ The first location view must include:
 - Location description.
 - Asset count for the assets visible in that location scope.
 - A scannable list of assets inside the location.
-- Visible `Edit location`, `Move place`, and `Archive` actions for editors. Move and archive must use the same route-backed task sheet and confirmation dialog as other asset kinds, return to the canonical focused location route on cancellation, preserve the shared dirty-dismiss, busy, focus, authorization, and Undo behavior, and expose no live mutation control to viewers.
-- A canonical focused location deep link must load its authorized location by ID when that location is not present in the initial bounded lifecycle collection; it must not silently redirect to Home because of list pagination.
 
 The asset list must:
 
@@ -392,7 +398,7 @@ The first asset detail view must include:
 
 - Back navigation to the previous location list when opened from a location.
 - Back navigation must expose a canonical `href` matching the ordinary in-app back destination.
-- Asset action panel cancellation must expose a canonical `href` back to the asset detail or focused location route that the ordinary in-app close action restores.
+- Asset Sheet or AlertDialog cancellation must expose a canonical `href` back to the asset detail or focused location route that the ordinary in-app close action restores.
 - A prominent asset photo area with a kind icon fallback.
 - Asset title.
 - Asset kind.
@@ -409,10 +415,12 @@ Desktop asset detail layout:
 - The primary photo/gallery must sit on the left or top-left at roughly 320-420px wide when viewport space allows.
 - The asset title, location trail, lifecycle state, kind, custom type, and primary actions must sit beside the photo/gallery.
 - Description and custom fields belong below the hero identity area.
+- Asset detail must show populated custom-field values by default. Applicable fields with no value must remain discoverable behind a collapsed `Show unset fields` disclosure with an accurate count; the page must not render a repetitive wall of `Not set` rows. Zero, `false`, and other valid non-null values count as populated.
 - Photos must be presented near the hero as asset identity media, with a thumbnail rail when more than one image is available.
+- Asset detail must expose exactly one visible `Add photo` affordance near the hero on each viewport; the action must not be duplicated between the gallery and the primary action row.
 - Disabled asset-detail photo upload actions must expose a perceivable reason, including missing edit access, inactive lifecycle state, save-in-progress state, or no supported image upload types.
-- Asset-detail photo upload must expose local uploading and failed states in the photo surface. A failed photo must retain its safe filename and a Retry action so the user does not need to reopen the system picker; retry reuses the selected file, prevents duplicate concurrent attempts, and clears the failed state after success.
-- Media surfaces may render server detail only when the adapter explicitly marks the message safe for users. Unmarked transport, infrastructure, and internal server errors must use calm operation-specific fallback copy.
+- Asset-detail photo upload must expose local uploading and failed states in the photo surface. A failed file must retain its safe name and retry action so the user does not need to reopen the system picker; retrying must reuse the selected file, prevent duplicate concurrent attempts, and clear the failed row after success.
+- The selected active photo attachment must expose a named `Remove photo` action in the photo surface. Removal must use the existing durable attachment-delete confirmation route and restore focus to the photo surface when cancelled.
 - The first implementation may choose the first active image attachment as the primary photo until explicit primary-photo selection is specified.
 - Non-image attachments such as receipts, manuals, PDFs, and supporting documents must be visually separated from photos and appear lower than the primary photo/gallery.
 
@@ -420,7 +428,7 @@ Mobile asset detail layout:
 
 - The primary photo/gallery must appear first.
 - Asset title and location trail must appear immediately after the photo/gallery so the user can confirm identity without a long scroll.
-- Photo upload must expose one visible mobile affordance near the primary asset actions; a gallery-local upload action may remain on desktop but must not create duplicate adjacent mobile `Add photo` controls.
+- Photo upload must expose one visible mobile affordance in the gallery immediately beside the identity area.
 - `Edit`, `Move`, and photo upload actions must remain close to the title and identity area.
 - The photo thumbnail rail must appear before non-image documents.
 - The photo area must not consume so much vertical space that the title and location are hidden for common mobile viewport heights.
@@ -435,6 +443,35 @@ Asset detail must support:
 - Viewer or denied states for edit-only actions.
 - Archived state when lifecycle views expose archived assets.
 
+Containable asset workspaces:
+
+- Active container and location detail must behave as one shared containable workspace rather than diverging into an item-only detail and a legacy place-only list. Compact photo-first child rows must open each child's kind-appropriate focused workspace.
+- Containers show immediate active children under `Inside {container title}` with an accurate immediate-child count. Empty copy must say that nothing is inside yet without implying the container is unusable.
+- Locations separate direct child containers/locations under `Spaces in {location title}` from active descendant items at any depth under `Items in {location title}`. Descendant item rows must retain structured relative placement context; titles containing slash characters must not be parsed to derive hierarchy. Location headings and counts must state their scope honestly.
+- A focused location must use the same calm detail-page hierarchy as other
+  focused assets: a bounded content track, a clearly separated identity hero,
+  a grouped spatial-action region, and distinct `Spaces` and `Items` sections.
+  The hero must give the location photo or kind fallback a stable identity
+  region, keep the location title and optional description together, and keep
+  quiet maintenance actions visually subordinate to the spatial actions.
+- Location spaces and items must render as photo-first rows inside separate
+  grouped-list surfaces with dividers. Each row must keep its title, kind,
+  relative placement, checkout state, and tags within one coherent record;
+  metadata must wrap rather than collide with adjacent rows. Desktop may use
+  a wider row but must not scatter records across an unstructured canvas.
+  Mobile must retain the same section order in one column with at least
+  44-CSS-pixel targets and without compressing the desktop composition.
+- Location contents search appears only when at least 20 combined space/item rows exist, filters both title and structured relative path, preserves both section headings/counts, and offers a clear no-match reset. Smaller places must not spend permanent space on this control.
+- Children must be deterministic: locations and containers precede items, then each group uses the shared locale-aware natural title order with asset ID as a stable tiebreaker.
+- An editable active container or location must expose `Add item here` as the primary spatial action and `Move items here` as a quieter route-backed action whether it is empty or populated. Add requires create and edit access; Move here requires edit access. `Add item here` must open the canonical Add item route with the containable asset preselected through `parent={assetId}`.
+- `Move items here` must open the canonical focused move-here route. The first web slice moves one asset at a time; recursive editing and bulk selection remain out of scope.
+- Move-here candidates must be active assets in the same inventory for which the current container is a valid parent. The target container itself, assets already directly inside it, and candidates whose move would create a cycle must not be offered. Server validation remains authoritative.
+- The frontend repository must expose movement as a focused operation that sends only the candidate asset ID and new parent ID through the generated update contract. Move here must not reconstruct and repost unrelated title, description, custom-field, tag, media, or checkout state.
+- The move-here surface must be search-first and bounded. It must show candidate kind and current placement, distinguish the selected candidate, require an explicit `Move here` confirmation, provide Cancel, and preserve the container route when dismissed.
+- Empty candidate state must invite search or explain that every currently eligible asset is already inside. Loading, denied, validation failure, and save success must remain local and screen-reader perceivable.
+- Successful movement must refresh the moved asset in the workspace model, keep the user on the target containable workspace, expose saved feedback, and return focus to the `Move items here` trigger after the route closes.
+- Container spatial controls and move-here controls must provide at least 44 CSS pixel hit regions at desktop and mobile widths. Focused container routes continue to suppress mobile bottom navigation.
+
 Asset detail loading and actions must use real API-backed boundaries:
 
 - Opening an asset detail must load the selected asset by ID through the frontend repository port and API adapter rather than relying only on the current list row.
@@ -445,7 +482,6 @@ Asset detail loading and actions must use real API-backed boundaries:
 - Moving an asset must update `parentAssetId` through the same API-backed update path and must use valid parent targets from the current inventory, not free-form IDs.
 - Edit and move affordances must require the exact `edit_asset` permission from the selected inventory access metadata.
 - Save success, save failure, loading, and denied states must be explicit in the detail workflow.
-- While an initial asset-detail read is pending, the routed detail surface must replace stale Home or previously selected content with an explicit `role="status"`, polite-live, busy loading state. A newer route immediately cancels the pending-detail presentation and renders its own surface without waiting for the obsolete request. Detail authentication failures must retain their typed session-expiry meaning through the application helper so the shell can end the session. Detail failures may render adapter text only when it is explicitly marked safe and specific for users; generic HTTP or adapter messages, transport, infrastructure, and internal server diagnostics must never appear in the unavailable surface, toast, or other rendered copy.
 - Svelte components must not import generated SDK DTOs or call generated client methods directly for detail, edit, or move behavior.
 
 ## Add Flow
@@ -459,7 +495,7 @@ Entry points:
 
 The add surface:
 
-- Must open as a modal, tray, or sheet appropriate to viewport.
+- Must use the shared `WorkspaceTaskSheet`: a right-side Sheet on desktop and near-full-screen task Sheet on mobile.
 - Must let the user choose or change `Item`, `Container`, or `Location`.
 - Must reflect the selected kind in the tray heading, title/name prompt, placeholder, and primary save action so add-location and add-container routes do not read like item-only forms.
 - The kind selector must be compact. It must not use large stacked cards.
@@ -561,11 +597,12 @@ Search behavior within Browse:
 - Search suggestions and search results must show an asset image thumbnail when the asset has its own primary photo, and must show the same explicit kind fallback used elsewhere when it does not.
 - If the API says an asset has its own primary photo but the web adapter cannot fetch or materialize the authenticated thumbnail, the frontend asset model must preserve that state as an unavailable photo rather than treating the asset as unphotographed. Thumbnail surfaces, including search suggestions and results, must show the explicit kind fallback with a visible unavailable-photo badge and expose that state to assistive technology.
 - Assets created with a successfully uploaded photo must appear in subsequent search results with that asset's own primary photo thumbnail.
-- Search result rows should open asset or location detail/list surfaces. Location-kind results and suggestions must route to the focused location URL rather than generic asset detail.
+- Search result rows open asset or location detail surfaces. Location-kind results and suggestions route to the focused location URL rather than generic asset detail.
 - Search suggestions and result rows must expose canonical destination `href` values while preserving ordinary in-app navigation behavior.
-- Global header search and the dedicated search page must use a shared suggestion-list composition so thumbnail behavior, kind labels, route links, focus state, and ordinary list/button semantics do not drift.
+- Global header search and Browse must use a shared suggestion-list composition so thumbnail behavior, kind labels, route links, focus state, and ordinary list/button semantics do not drift.
+- Global header and Browse autocomplete must use the combobox `aria-activedescendant` focus model consistently: keyboard focus remains on the text input while Up/Down changes the active option, Enter opens the active route-backed suggestion, and Escape closes the popup. Suggestion links remain pointer-operable and expose canonical destinations, but are removed from the ordinary Tab sequence while owned by the open combobox.
 - No-results and denied states must be explicit and calm. Submitted searches with no results must name the query so the user can tell the search ran. Focused autocomplete fields with a non-empty query and no suggestions must expose calm no-suggestion feedback instead of appearing inert.
-- Search must not bypass tenant, inventory, lifecycle, or authorization boundaries.
+- Search, filtering, and paging must not bypass tenant, inventory, lifecycle, or authorization boundaries.
 
 ## Consistent Controls
 
@@ -724,6 +761,27 @@ Surfaces and controls:
   pixels, where step-progress labels require their narrow-phone optical size.
   These exceptions are shared by the named workflow rather than copied into
   nearby one-off layout modes.
+
+Content hierarchy:
+
+- User photos are the primary source of visual warmth. Recent and Browse cards
+  must give media a stable, useful area and keep identity copy below it without
+  overlap.
+- Home is a concise overview: recent changes, actionable checkout state, and a
+  bounded place preview. It must not turn into an unbounded location directory.
+- Focused detail pages must group identity, primary actions, populated details,
+  files, history, and destructive actions into clearly separated regions. Empty
+  custom fields remain collapsed as specified above.
+- Settings uses desktop master-detail navigation and a compact, readable mobile
+  destination control. It must not squeeze labels into a tiny tab strip or
+  create a large empty gap above the active settings content.
+- Settings field customization presents asset-type creation and field-definition
+  creation as independently sized grouped surfaces. A shorter workflow must not
+  stretch to the height of its taller neighbor or leave a large shared white
+  dead area beneath its content.
+- Checkout history uses the same grouped-list padding, radius, divider, caption,
+  and spacing roles as other detail records. Its final row must not render a
+  trailing divider, and optional technical metadata remains visually secondary.
 - Auth and callback states use one shared branded surface on a 24rem to 26rem
   readable track with calm spacing and full-width mobile behavior. They must not
   shrink-wrap into a narrow text column or use a separate decorative visual
@@ -753,7 +811,7 @@ Mobile:
 - Use one-column layouts for location and asset views.
 - Keep bottom navigation visible and reachable.
 - Keep add/search reachable without making the header tall.
-- Fixed bottom chrome such as mobile navigation, saved/status toasts, and local-auth/demo banners must not occlude the final reachable content in the main workspace.
+- Mobile bottom navigation must occupy a reserved viewport row below the independently scrolling workspace at mobile and browser-reflow widths. It must not overlay route content, including at short viewport heights or 200% zoom. Other fixed chrome such as saved/status toasts and local-auth/demo banners must not occlude the final reachable content in the main workspace.
 - Mobile workspace pages and sheets must share a named bottom-clearance rhythm so long settings, import, add, edit, and picker content can be scrolled fully above fixed bottom navigation, sticky action rows, and safe-area insets.
 - Mobile workspace navigation and primary interaction controls should provide at least a 44px touch target wherever the control is not intentionally inline text.
 - Desktop and mobile add trays must reserve visible space for the tray heading and save/cancel row while the form body scrolls internally.
@@ -826,8 +884,14 @@ Required implementation split:
 - Frontend domain models live outside Svelte components and represent product concepts such as tenant, inventory, asset, asset kind, lifecycle state, selected photos, workspace mode, and search result.
 - UI-facing data access must go through a frontend repository port with domain-oriented methods.
 - The REST adapter must use the checked generated TypeScript API client package and map API DTOs into frontend domain objects at the adapter boundary.
+- Workspace context loading must follow cursor pagination until completion for tenant, inventory, active asset, checked-out asset, active tag, custom asset type, and custom field definition collections that feed context switching, counts, containment trails, move targets, filters, and settings. The web app must not silently present a first-page subset as a complete inventory. Invalid pagination metadata such as a repeated or missing continuation cursor must fail safely instead of looping or returning incomplete state.
+- API-backed primary-thumbnail loading must be incremental and surface-driven. Initial workspace context loading must not wait for or request a thumbnail for every asset in the inventory; it must return the complete asset metadata needed for containment, counts, and filters before bounded media hydration begins for assets visible on the active surface. Detail and search operations may hydrate the bounded result set they return. Thumbnail work must use one repository-wide concurrency limit, deduplicate the same asset attachment and variant for the repository session, permit retry after transient failures, and release replaced blob object URLs. Route changes and repeated workspace loads must reuse in-flight or completed thumbnail work instead of refetching every visible asset and overwhelming browser or API resources.
+- Thumbnail loading must be composed through an explicit frontend port rather than an optional method hidden on the broad inventory repository. The owning route must dispose the loader on unmount, sign-out, session expiry, and failed initialization. Disposal must reject queued work, prevent new network work, and revoke any object URL produced by an already-active request after disposal.
+- Every thumbnail materialization path, including primary photos, attachment galleries, and newly uploaded images, must use the same keyed resource cache. Concurrent requests for the same tenant, inventory, asset, attachment, and variant must share one task. Changing or clearing the primary-photo alias must not revoke an attachment resource that an attachment gallery may still render. Archiving or deleting the attachment must invalidate all of its cached variants and revoke their blob URLs; disposal must revoke every remaining session resource. Cache entries must store attachment identity and resource URL only; accessible alternative text must be derived from the current asset title at presentation time so a rename cannot preserve stale text.
+- The thumbnail loader port must resolve `null` for an unavailable thumbnail and must not reject for ordinary load failure. Thumbnail components must still guard against a rejecting port implementation, show the explicit unavailable-photo indicator and assistive text, and avoid unhandled promise rejections.
 - Svelte components must not import generated schema types or API DTOs directly.
 - Route files may compose authentication, runtime configuration, repository construction, and top-level page state, but must not become the place where transport mapping, containment derivation, visual components, and API calls all accumulate.
+- A direct deep link must render its destination mode immediately. While a focused asset or location is being resolved, the route must show a destination-specific loading state and must not briefly mount Home or trigger Home-only thumbnail work.
 - Workspace-specific derivation such as top-level locations, contained asset lists, valid parent targets, and containment trails must live in focused application helpers.
 - Parent target picker suggestion, search ranking, result limiting, and location/container grouping must live in focused application helpers rather than component-local derivation.
 - Parent target picker result-count, destination-count, suggestion-count, no-match, overflow, and no-target presentation must live in focused application helpers rather than component-local conditional copy.
@@ -995,6 +1059,5 @@ Before this direction is promoted into `apps/web`:
 - Should desktop eventually support a split-pane location list and asset detail for faster scanning?
 - Should location lists default to photo rows, compact rows, or a user-selectable density?
 - How should archived assets appear in location views?
-- What is the final mobile order and labeling for bottom navigation once Search, Locations, Settings, and future voice interaction all exist?
 - Which asset detail actions belong in the first promoted implementation versus later asset management iterations?
 - How should expiration-oriented custom fields surface later without turning the home page into a noisy dashboard?

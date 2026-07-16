@@ -146,6 +146,26 @@ describe('SeededInventoryRepository tenant selection', () => {
     });
   });
 
+  it('moves an asset while preserving its editable fields', async () => {
+    const repository = new SeededInventoryRepository(seed);
+    const shelf = await repository.createAsset('tenant-home', 'inventory-household', {
+      kind: 'container',
+      title: 'Office shelf',
+      description: '',
+      parentAssetId: null,
+      photos: []
+    });
+
+    const moved = await repository.moveAsset('tenant-home', 'inventory-household', 'asset-home', shelf.id);
+
+    expect(moved).toMatchObject({
+      id: 'asset-home',
+      title: 'Passport',
+      description: 'Blue folder',
+      parentAssetId: shelf.id
+    });
+  });
+
   it('creates assets inside active locations and containers only', async () => {
     const repository = new SeededInventoryRepository(seed);
 

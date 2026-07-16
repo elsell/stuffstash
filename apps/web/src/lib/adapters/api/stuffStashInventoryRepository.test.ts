@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StuffStashInventoryRepository } from './stuffStashInventoryRepository';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
 import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
 import { config, fakeFetch } from './stuffStashInventoryRepository.test-helpers';
+import type { Asset } from '$lib/domain/inventory';
 
 describe('StuffStashInventoryRepository workspace and assets', () => {
   beforeEach(() => {
@@ -38,9 +39,30 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/custom-field-definitions?limit=100',
       'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/tags?limit=100',
-      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active',
-      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets?limit=50'
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/assets?limit=100&lifecycleState=active&sort=updated_desc',
+      'GET http://api.local/tenants/tenant-cabin/inventories/inventory-cabin/checked-out-assets?limit=100'
     ]);
+  });
+
+  it('follows tenant pagination before selecting workspace context', async () => {
+    const base = fakeFetch();
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const request = new Request(input, init);
+      const url = new URL(request.url);
+      if (request.method === 'GET' && url.pathname === '/me/tenants') {
+        const cursor = url.searchParams.get('cursor');
+        return pagedEnvelope(
+          [apiTenant(cursor ? 'tenant-cabin' : 'tenant-home', cursor ? 'Cabin' : 'Home')],
+          cursor ? null : 'tenant-page-two'
+        );
+      }
+      return base.fetch(input, init);
+    };
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetchImpl);
+
+    const data = await repository.loadWorkspace();
+
+    expect(data.context.tenants.map((tenant) => tenant.id)).toEqual(['tenant-home', 'tenant-cabin']);
   });
 
   it('keeps an empty tenant selected and clears the selected inventory without listing assets', async () => {
@@ -61,7 +83,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     );
   });
 
-  it('hydrates API primary photos into workspace asset photos', async () => {
+  it('returns workspace photo metadata without blocking on thumbnail bytes', async () => {
     sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
     sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
     const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
@@ -69,18 +91,147 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
 
     const data = await repository.loadWorkspace();
 
-    expect(data.assets[0]?.photo).toMatchObject({
-      id: 'attachment-one',
-      assetId: 'asset-archived',
-      url: expect.stringContaining('blob:'),
-      alt: 'Archived Passport'
-    });
+    expect(data.assets[0]).toMatchObject({ id: 'asset-archived', primaryPhotoId: 'attachment-one' });
+    expect(data.assets[0]?.photo).toBeUndefined();
     expect(data.context.assetTags).toEqual([{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }]);
     expect(data.assets[0]?.tags).toEqual([{ id: 'tag-workshop', key: 'workshop', displayName: 'Workshop', color: '#2F80ED' }]);
-    const thumbnailRequest = requests.find((request) =>
-      request.url.includes('/assets/asset-archived/attachments/attachment-one/thumbnail?variant=small')
+    expect(requests.some((request) => request.url.includes('/thumbnail'))).toBe(false);
+  });
+
+  it('reuses explicit primary thumbnail work for visible assets', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const data = await repository.loadWorkspace();
+    const asset = data.assets[0]!;
+    await repository.loadAssetThumbnail(asset);
+    await repository.loadAssetThumbnail(asset);
+
+    expect(requests.filter((request) => request.url.includes('/thumbnail?variant=small'))).toHaveLength(1);
+  });
+
+  it('derives cached thumbnail alt text from the current asset title', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const original = (await repository.loadWorkspace()).assets[0]!;
+
+    await repository.loadAssetThumbnail(original);
+    const renamed = await repository.loadAssetThumbnail({ ...original, title: 'Travel passport' });
+
+    expect(renamed?.alt).toBe('Travel passport');
+    expect(requests.filter((request) => request.url.includes('/thumbnail?variant=small'))).toHaveLength(1);
+  });
+
+  it('shares one in-flight thumbnail between concurrent primary and gallery callers', async () => {
+    const base = fakeFetch();
+    let thumbnailAttempts = 0;
+    let finishThumbnail!: (response: Response) => void;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => (markStarted = resolve));
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.includes('/attachments/attachment-one/thumbnail')) {
+        thumbnailAttempts += 1;
+        markStarted();
+        return new Promise((resolve) => (finishThumbnail = resolve));
+      }
+      return base.fetch(input, init);
+    };
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetchImpl);
+    const asset = photographedAsset('attachment-one');
+
+    const primaryLoading = repository.loadAssetThumbnail(asset);
+    const galleryLoading = repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-passport');
+    await started;
+    finishThumbnail(new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 }));
+    const [primary, attachments] = await Promise.all([primaryLoading, galleryLoading]);
+
+    expect(attachments[0]?.thumbnailUrl).toBe(primary?.url);
+    expect(thumbnailAttempts).toBe(1);
+  });
+
+  it('does not start thumbnail requests after the route disposes the repository', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const asset = (await repository.loadWorkspace()).assets[0]!;
+
+    repository.dispose();
+
+    await expect(repository.loadAssetThumbnail(asset)).resolves.toBeNull();
+    expect(requests.filter((request) => request.url.includes('/thumbnail'))).toHaveLength(0);
+  });
+
+  it('keeps gallery resources across primary A to B to null, then revokes on archive and delete', async () => {
+    const base = fakeFetch();
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.includes('/attachments/attachment-two/thumbnail')) {
+        return new Response(new Blob(['replacement'], { type: 'image/jpeg' }), { status: 200 });
+      }
+      if (url.endsWith('/attachments/attachment-two')) return new Response(null, { status: 204 });
+      return base.fetch(input, init);
+    };
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL');
+    const repository = new StuffStashInventoryRepository(
+      config,
+      () => 'id-token',
+      new InMemoryWorkspaceObserver(),
+      fetchImpl
     );
-    expect(thumbnailRequest?.headers.get('Authorization')).toBe('Bearer id-token');
+    const original = await repository.loadAssetThumbnail(photographedAsset('attachment-one'));
+    await repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-passport');
+    const replacement = await repository.loadAssetThumbnail(photographedAsset('attachment-two'));
+    await repository.loadAssetThumbnail(photographedAsset(undefined));
+
+    expect(revokeObjectUrl).not.toHaveBeenCalled();
+
+    await repository.archiveAssetAttachment('tenant-home', 'inventory-household', 'asset-passport', 'attachment-one');
+    expect(revokeObjectUrl).toHaveBeenCalledWith(original?.url);
+
+    await repository.deleteAssetAttachment('tenant-home', 'inventory-household', 'asset-passport', 'attachment-two');
+    expect(revokeObjectUrl).toHaveBeenCalledWith(replacement?.url);
+
+    revokeObjectUrl.mockRestore();
+  });
+
+  it('revokes a blob URL completed by active work after disposal', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const base = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
+    let finishThumbnail!: (response: Response) => void;
+    let markThumbnailStarted!: () => void;
+    const thumbnailStarted = new Promise<void>((resolve) => (markThumbnailStarted = resolve));
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.includes('/attachments/attachment-one/thumbnail')) {
+        markThumbnailStarted();
+        return new Promise((resolve) => (finishThumbnail = resolve));
+      }
+      return base.fetch(input, init);
+    };
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL');
+    const repository = new StuffStashInventoryRepository(
+      config,
+      () => 'id-token',
+      new InMemoryWorkspaceObserver(),
+      fetchImpl
+    );
+    const asset = (await repository.loadWorkspace()).assets[0]!;
+
+    const loading = repository.loadAssetThumbnail(asset);
+    await thumbnailStarted;
+    repository.dispose();
+    finishThumbnail(new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 }));
+
+    await expect(loading).resolves.toBeNull();
+    expect(revokeObjectUrl).toHaveBeenCalledOnce();
+    revokeObjectUrl.mockRestore();
   });
 
   it('does not reuse a photographed item image for unphotographed containers or locations', async () => {
@@ -97,13 +248,13 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     expect(data.assets.find((asset) => asset.id === 'asset-archived')).toMatchObject({
       id: 'asset-archived',
       kind: 'item',
-      photo: expect.objectContaining({ assetId: 'asset-archived' })
+      primaryPhotoId: 'attachment-one'
     });
     expect(data.assets.find((asset) => asset.id === 'asset-container')).toMatchObject({ id: 'asset-container', kind: 'container' });
     expect(data.assets.find((asset) => asset.id === 'asset-container')).not.toHaveProperty('photo');
     expect(data.assets.find((asset) => asset.id === 'asset-location')).toMatchObject({ id: 'asset-location', kind: 'location' });
     expect(data.assets.find((asset) => asset.id === 'asset-location')).not.toHaveProperty('photo');
-    expect(requests.filter((request) => request.url.includes('/thumbnail'))).toHaveLength(1);
+    expect(requests.filter((request) => request.url.includes('/thumbnail'))).toHaveLength(0);
   });
 
   it('keeps workspace assets when a primary photo thumbnail cannot be fetched', async () => {
@@ -114,14 +265,71 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
 
     const data = await repository.loadWorkspace();
+    await repository.loadAssetThumbnail(data.assets[0]!);
 
     expect(data.assets[0]?.id).toBe('asset-archived');
     expect(data.assets[0]?.photo).toBeUndefined();
-    expect(data.assets[0]?.photoUnavailable).toBe(true);
     expect(observer.events).toContainEqual({
       eventName: 'workspace.asset_primary_photo_load_failed',
       attributes: { assetId: 'asset-archived' }
     });
+  });
+
+  it('retries thumbnail materialization after a transient failure', async () => {
+    sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
+    sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
+    const base = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
+    let thumbnailAttempts = 0;
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.includes('/attachments/attachment-one/thumbnail') && ++thumbnailAttempts === 1) {
+        return new Response('try again', { status: 503 });
+      }
+      return base.fetch(input, init);
+    };
+    const repository = new StuffStashInventoryRepository(
+      config,
+      () => 'id-token',
+      new InMemoryWorkspaceObserver(),
+      fetchImpl
+    );
+    const asset = (await repository.loadWorkspace()).assets[0]!;
+
+    await expect(repository.loadAssetThumbnail(asset)).resolves.toBeNull();
+    await expect(repository.loadAssetThumbnail(asset)).resolves.toMatchObject({ assetId: asset.id });
+    expect(thumbnailAttempts).toBe(2);
+  });
+
+  it('does not let a delayed invalidated failure delete a newer successful cache entry', async () => {
+    const base = fakeFetch();
+    let attempts = 0;
+    let finishOld!: (response: Response) => void;
+    let markOldStarted!: () => void;
+    const oldStarted = new Promise<void>((resolve) => (markOldStarted = resolve));
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.includes('/attachments/attachment-one/thumbnail')) {
+        attempts += 1;
+        if (attempts === 1) {
+          markOldStarted();
+          return new Promise((resolve) => (finishOld = resolve));
+        }
+      }
+      return base.fetch(input, init);
+    };
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetchImpl);
+    const asset = photographedAsset('attachment-one');
+
+    const oldLoading = repository.loadAssetThumbnail(asset);
+    await oldStarted;
+    await repository.archiveAssetAttachment('tenant-home', 'inventory-household', 'asset-passport', 'attachment-one');
+    const fresh = await repository.loadAssetThumbnail(asset);
+    finishOld(new Response('try again', { status: 503 }));
+    await expect(oldLoading).resolves.toBeNull();
+    const reused = await repository.loadAssetThumbnail(asset);
+
+    expect(reused?.url).toBe(fresh?.url);
+    expect(attempts).toBe(2);
   });
 
   it('marks workspace photos unavailable when a primary photo thumbnail returns an HTTP error', async () => {
@@ -132,10 +340,10 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', observer, fetch);
 
     const data = await repository.loadWorkspace();
+    await repository.loadAssetThumbnail(data.assets[0]!);
 
     expect(data.assets[0]?.id).toBe('asset-archived');
     expect(data.assets[0]?.photo).toBeUndefined();
-    expect(data.assets[0]?.photoUnavailable).toBe(true);
     expect(observer.events).toContainEqual({
       eventName: 'workspace.asset_primary_photo_load_failed',
       attributes: { assetId: 'asset-archived' }
@@ -160,8 +368,8 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/custom-field-definitions?limit=100',
       'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/tags?limit=100',
-      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active',
-      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/checked-out-assets?limit=50'
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/assets?limit=100&lifecycleState=active&sort=updated_desc',
+      'GET http://api.local/tenants/tenant-empty/inventories/inventory-created/checked-out-assets?limit=100'
     ]);
   });
 
@@ -201,7 +409,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
-  it('does not reuse search result photos across items, containers, or locations', async () => {
+  it('keeps search result photo identities scoped to their assets without eager thumbnail requests', async () => {
     const { fetch } = fakeFetch({
       primaryPhotoAssetIds: ['asset-passport'],
       includeUnphotographedContainerAndLocation: true
@@ -219,7 +427,7 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     expect(results[0]?.asset).toMatchObject({
       id: 'asset-passport',
       kind: 'item',
-      photo: expect.objectContaining({ assetId: 'asset-passport' })
+      primaryPhotoId: 'attachment-one'
     });
     expect(results[1]?.asset).toMatchObject({ id: 'asset-container', kind: 'container' });
     expect(results[1]?.asset).not.toHaveProperty('photo');
@@ -253,6 +461,24 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       description: 'Fire safe',
       parentAssetId: 'asset-safe',
       tagIds: ['tag-workshop']
+    });
+  });
+
+  it('moves an asset while preserving its editable fields', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    const asset = await repository.moveAsset('tenant-home', 'inventory-household', 'asset-passport', 'asset-safe');
+
+    expect(asset).toMatchObject({ id: 'asset-passport', parentAssetId: 'asset-safe' });
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport',
+      'PATCH http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
+    ]);
+    expect(await requests[1]?.json()).toMatchObject({
+      title: 'Passport',
+      description: '',
+      parentAssetId: 'asset-safe'
     });
   });
 
@@ -304,25 +530,26 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-asset-types?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/custom-field-definitions?limit=100',
       'GET http://api.local/tenants/tenant-home/inventories/inventory-household/tags?limit=100',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/checked-out-assets?limit=50'
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets?limit=100&lifecycleState=archived&sort=updated_desc',
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/checked-out-assets?limit=100'
     ]);
   });
 
   it('loads checked-out assets regardless of lifecycle during workspace load', async () => {
     sessionStorage.setItem('stuffstash.selectedTenantId', 'tenant-home');
     sessionStorage.setItem('stuffstash.selectedInventoryId', 'inventory-household');
-    const { fetch } = fakeFetch();
+    const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-archived'] });
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
 
     const data = await repository.loadWorkspace();
 
     expect(data.checkedOutAssets).toMatchObject([
       {
-        asset: { id: 'asset-archived', lifecycleState: 'archived' },
+        asset: { id: 'asset-archived', lifecycleState: 'archived', primaryPhotoId: 'attachment-one' },
         checkout: { id: 'checkout-open', state: 'open' }
       }
     ]);
+    expect(requests.some((request) => request.url.includes('/thumbnail'))).toBe(false);
   });
 
   it('checks out, returns, and lists checkout history through generated client paths', async () => {
@@ -601,3 +828,28 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
   });
 
 });
+
+function photographedAsset(primaryPhotoId: string | undefined): Asset {
+  return {
+    id: 'asset-passport',
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    kind: 'item',
+    title: 'Passport',
+    description: '',
+    parentAssetId: null,
+    lifecycleState: 'active',
+    primaryPhotoId
+  };
+}
+
+function apiTenant(id: string, name: string) {
+  return { id, name, access: { relationship: 'owner', permissions: ['view', 'create_inventory', 'configure'] } };
+}
+
+function pagedEnvelope(data: unknown[], nextCursor: string | null): Response {
+  return Response.json({
+    data,
+    meta: { pagination: { limit: 50, nextCursor, hasMore: nextCursor !== null } }
+  });
+}

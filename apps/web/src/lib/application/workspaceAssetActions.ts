@@ -1,8 +1,8 @@
 import type { AssetRouteAction } from './workspaceRoute';
 import { workspaceRouteHref } from './workspaceRoute';
-import type { Asset, AssetAttachment, AssetViewModel } from '$lib/domain/inventory';
+import type { AssetAttachment, AssetViewModel } from '$lib/domain/inventory';
 
-export function assetActionHref(asset: Asset, action: Exclude<AssetRouteAction, null>): string {
+export function assetActionHref(asset: AssetViewModel, action: Exclude<AssetRouteAction, null>): string {
   return workspaceRouteHref(assetActionRoute(asset, action), asset.tenantId, asset.inventoryId);
 }
 
@@ -58,13 +58,16 @@ export function assetActionIsAvailable(
   if (action === 'return') {
     return !!asset.currentCheckout;
   }
+  if (action === 'move-here') {
+    return (asset.kind === 'container' || asset.kind === 'location') && asset.lifecycleState === 'active';
+  }
   if (action === 'restore') {
     return asset.lifecycleState === 'archived';
   }
   return asset.lifecycleState === 'active';
 }
 
-function assetActionRoute(asset: Asset, action: Exclude<AssetRouteAction, null>) {
+function assetActionRoute(asset: AssetViewModel, action: Exclude<AssetRouteAction, null>) {
   return {
     mode: 'asset' as const,
     tenantId: asset.tenantId,

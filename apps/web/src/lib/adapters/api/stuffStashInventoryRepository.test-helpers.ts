@@ -117,7 +117,15 @@ export function fakeFetch(
         return envelope([
           {
             asset: {
-              ...asset('asset-archived', 'tenant-home', 'inventory-household', 'Archived Passport', null, 'archived'),
+              ...asset(
+                'asset-archived',
+                'tenant-home',
+                'inventory-household',
+                'Archived Passport',
+                null,
+                'archived',
+                options.primaryPhotoAssetIds?.includes('asset-archived') ?? false
+              ),
               currentCheckout: checkout
             },
             checkout
@@ -214,6 +222,15 @@ export function fakeFetch(
       }
       if (request.method === 'GET' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments') {
         return envelope([attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg')]);
+      }
+      if (request.method === 'PATCH' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/archive') {
+        return envelope({
+          ...attachment('attachment-one', 'tenant-home', 'inventory-household', 'asset-passport', 'photo.jpg'),
+          lifecycleState: 'archived'
+        });
+      }
+      if (request.method === 'DELETE' && path === '/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one') {
+        return new Response(null, { status: 204 });
       }
       const thumbnailAssetID = matchingThumbnailAssetID(path, url.searchParams);
       if (request.method === 'GET' && thumbnailAssetID) {

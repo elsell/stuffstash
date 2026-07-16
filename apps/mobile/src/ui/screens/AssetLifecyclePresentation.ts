@@ -140,7 +140,7 @@ export function assetLifecycleOverflowMenu(
   return {
     ...overflow,
     actionRows,
-    options: ['Checkout history', 'Audit history', ...actionRows.map((action) => action.label), 'Cancel'],
+    options: ['Checkout history', 'History', ...actionRows.map((action) => action.label), 'Cancel'],
     checkoutHistoryIndex,
     auditIndex,
     lifecycleActionIndexes,

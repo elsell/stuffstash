@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import { photoGalleryEmptyMessage, type DetailPhoto } from '$lib/application/workspaceAssetMedia';
+  import type { DetailPhoto } from '$lib/application/workspaceAssetMedia';
 
   export const PHOTO_UPLOAD_DISABLED_REASON_ID = 'asset-photo-upload-disabled';
   export const PHOTO_UPLOAD_ERROR_ID = 'asset-photo-upload-error';
@@ -7,6 +7,7 @@
 
 <script lang="ts">
   import Image from '@lucide/svelte/icons/image';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
   import type { Snippet } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { AssetKind } from '$lib/domain/inventory';
@@ -21,10 +22,13 @@
     uploadError,
     uploadBusy = false,
     retryPhotoName = '',
+    removePhotoHref = '',
+    removePhotoButton = $bindable(null),
     children,
     onChoosePhoto,
     onSelectPhoto,
-    onRetryPhoto = () => {}
+    onRetryPhoto = () => {},
+    onRemovePhoto = () => {}
   }: {
     kind: AssetKind;
     heroPhoto: DetailPhoto | undefined;
@@ -34,15 +38,17 @@
     uploadError: string;
     uploadBusy?: boolean;
     retryPhotoName?: string;
+    removePhotoHref?: string;
+    removePhotoButton?: HTMLElement | null;
     children?: Snippet;
     onChoosePhoto: () => void;
     onSelectPhoto: (photoId: string) => void;
     onRetryPhoto?: () => void;
+    onRemovePhoto?: (event: MouseEvent) => void;
   } = $props();
   let uploadDescribedBy = $derived(
     [uploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '', uploadError ? PHOTO_UPLOAD_ERROR_ID : ''].filter(Boolean).join(' ')
   );
-  const emptyGalleryMessage = photoGalleryEmptyMessage();
 </script>
 
 <div class="asset-detail-hero">
@@ -56,9 +62,6 @@
         </div>
       {/if}
     </div>
-  </div>
-  {@render children?.()}
-  <div class="photo-gallery-section" aria-label="Asset photo gallery">
     <div class="photo-panel-actions">
       <Button.Root
         variant="outline"
@@ -68,7 +71,21 @@
       >
         <Image /> Add photo
       </Button.Root>
+      {#if heroPhoto && removePhotoHref}
+        <Button.Root
+          bind:ref={removePhotoButton}
+          href={removePhotoHref}
+          variant="outline"
+          aria-label={`Remove photo ${heroPhoto.fileName}`}
+          title={`Remove ${heroPhoto.fileName}`}
+          onclick={onRemovePhoto}
+        ><Trash2 /> Remove photo</Button.Root>
+      {/if}
     </div>
+  </div>
+  {@render children?.()}
+  {#if photos.length > 0 || uploadDisabledReason || uploadError || uploadBusy || retryPhotoName}
+  <div class="photo-gallery-section" aria-label="Asset photo gallery">
     {#if uploadDisabledReason}
       <p id={PHOTO_UPLOAD_DISABLED_REASON_ID} class="denied-note" role="note">{uploadDisabledReason}</p>
     {/if}
@@ -89,10 +106,6 @@
           </Button.Root>
         {/each}
       </div>
-    {:else}
-      <div class="empty-state compact-empty">
-        <p>{emptyGalleryMessage}</p>
-      </div>
     {/if}
     {#if uploadError}
       <p id={PHOTO_UPLOAD_ERROR_ID} class="denied-note" role="alert">{uploadError}</p>
@@ -103,4 +116,5 @@
       <Button.Root variant="outline" aria-label={`Retry ${retryPhotoName}`} onclick={onRetryPhoto}>Retry {retryPhotoName}</Button.Root>
     {/if}
   </div>
+  {/if}
 </div>

@@ -469,11 +469,13 @@ export function SearchScreen({
           assetCheckoutCommand={assetCheckoutCommand}
           assetDetailQuery={assetDetailQuery}
           assetLifecycleCommand={assetLifecycleCommand}
+          canAdd={inventoryContext?.canAdd ?? false}
           deleteAssetPhotoCommand={deleteAssetPhotoCommand}
           inventoryMapQuery={inventoryMapQuery}
           pathStore={mapPathStore}
           photoSelectionQuery={photoSelectionQuery}
           selectedSurface={surface}
+          onAdd={() => router.navigate('/add')}
           onChangeSurface={setSurface}
         />
       </SafeAreaView>
@@ -496,6 +498,7 @@ export function SearchScreen({
         onRefresh={() => void refreshResults()}
         ListHeaderComponent={
           <SearchHeader
+            canAdd={inventoryContext?.canAdd ?? false}
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}
             checkoutState={checkoutState}
@@ -517,6 +520,7 @@ export function SearchScreen({
             tagFilters={tagFilters}
             tagFilterStatus={tagFilterStatus}
             onApplyFilters={applyFilters}
+            onAdd={() => router.navigate('/add')}
             onChangeDraftCheckoutState={(value) => setFilterDraft((draft) => ({ ...draft, checkoutState: value }))}
             onChangeDraftLifecycleState={(value) => setFilterDraft((draft) => ({ ...draft, lifecycleState: value }))}
             onChangeDraftTagIds={(value) => setFilterDraft((draft) => ({ ...draft, tagIds: value }))}
@@ -548,7 +552,7 @@ export function SearchScreen({
               kind="inventory"
               inventoryName={inventoryContext?.inventoryName ?? 'this inventory'}
               palette={palette}
-              onAdd={() => router.navigate('/add')}
+              onAdd={inventoryContext?.canAdd ? () => router.navigate('/add') : undefined}
             />
           )
         }

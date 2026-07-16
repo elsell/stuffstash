@@ -1,51 +1,51 @@
 <script lang="ts">
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-  import Plus from '@lucide/svelte/icons/plus';
   import Pencil from '@lucide/svelte/icons/pencil';
-  import MoveRight from '@lucide/svelte/icons/move-right';
-  import Archive from '@lucide/svelte/icons/archive';
   import * as Button from '$lib/components/ui/button/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
   import {
-    locationAddItemHref,
     locationBackHref,
-    locationEditHref,
-    locationEmptyState,
-    locationRowHref
+    locationEditHref
   } from '$lib/application/workspaceBrowseNavigation';
-  import { assetActionHref } from '$lib/application/workspaceAssetActions';
   import type { Asset, AssetTag, AssetViewModel, LocationAsset } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
-  import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
-  import CheckoutBadge from './CheckoutBadge.svelte';
+  import ContainedAssetWorkspace from './ContainedAssetWorkspace.svelte';
 
   let {
     location,
-    assets,
+    assets = [],
+    workspaceAssets = assets,
     canEdit,
     canCreateAsset = false,
+    saving = false,
+    moveHereOpen = false,
     onBack,
     onOpenLocation,
     onEditLocation,
     onOpenAsset,
     onOpenAdd = () => {},
+    onOpenMoveHere = () => {},
+    onCloseMoveHere = () => {},
+    onMoveHere = async () => {},
     onTagSearch
   }: {
     location: LocationAsset;
-    assets: AssetViewModel[];
+    assets?: AssetViewModel[];
+    workspaceAssets?: Asset[];
     canEdit: boolean;
     canCreateAsset?: boolean;
+    saving?: boolean;
+    moveHereOpen?: boolean;
     onBack: () => void;
     onOpenLocation: (asset: Asset) => void;
     onEditLocation: (asset: Asset) => void;
     onOpenAsset: (asset: Asset) => void;
     onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
+    onOpenMoveHere?: () => void;
+    onCloseMoveHere?: () => void;
+    onMoveHere?: (asset: Asset) => Promise<void>;
     onTagSearch?: (tag: AssetTag) => void;
   } = $props();
-
-  let emptyState = $derived(locationEmptyState(canCreateAsset));
 
   function openBack(event: MouseEvent): void {
     if (!shouldHandleWorkspaceLinkClick(event)) {
@@ -63,83 +63,35 @@
     onEditLocation(location);
   }
 
-  function openAddItemHere(event: MouseEvent): void {
-    if (!shouldHandleWorkspaceLinkClick(event)) {
-      return;
-    }
-    event.preventDefault();
-    onOpenAdd('item', location.id);
-  }
-
-  function openRow(event: MouseEvent, asset: Asset): void {
-    if (!shouldHandleWorkspaceLinkClick(event)) {
-      return;
-    }
-    event.preventDefault();
-    if (asset.kind === 'location') {
-      onOpenLocation(asset);
-    } else {
-      onOpenAsset(asset);
-    }
-  }
 </script>
 
-<section class="workspace-main" aria-labelledby="location-title">
+<section class="workspace-main location-view" aria-labelledby="location-title">
   <Button.Root href={locationBackHref(location)} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> Back</Button.Root>
-  <div class="location-hero">
+  <header class="location-detail-hero">
     <AssetThumb asset={location} size="lg" />
-    <div>
+    <div class="location-identity">
+      <span class="location-kind-label">Location</span>
       <h1 id="location-title">{location.title}</h1>
-      <p>{location.description}</p>
-      <Badge variant="secondary">{assets.length} visible assets</Badge>
+      {#if location.description}<p>{location.description}</p>{/if}
     </div>
-    {#if canEdit || (canCreateAsset && assets.length > 0)}
-      <div class="location-actions" role="group" aria-label="Location actions">
-        {#if canCreateAsset && assets.length > 0}
-          <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}><Plus /> {emptyState.actionLabel}</Button.Root>
-        {/if}
-        {#if canEdit}
-          <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
-          <Button.Root href={assetActionHref(location, 'move')} variant="outline"><MoveRight /> Move place</Button.Root>
-          <Button.Root href={assetActionHref(location, 'archive')} variant="ghost"><Archive /> Archive</Button.Root>
-        {/if}
+    {#if canEdit}
+      <div class="location-maintenance-actions" aria-label="Place maintenance">
+        <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
       </div>
     {/if}
-  </div>
-
-  {#if assets.length === 0}
-    <div class="empty-state spacious">
-      <h2>{emptyState.title}</h2>
-      <p>{emptyState.message}</p>
-      {#if canCreateAsset}
-        <Button.Root href={locationAddItemHref(location)} onclick={openAddItemHere}>{emptyState.actionLabel}</Button.Root>
-      {:else}
-        <p class="denied-note" role="note">{emptyState.deniedMessage}</p>
-      {/if}
-    </div>
-  {:else}
-    <div class="asset-list">
-      {#each assets as asset}
-        <div class="asset-row">
-          <Button.Root href={locationRowHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openRow(event, asset)}>
-            <AssetThumb {asset} />
-            <span class="asset-row-main">
-              <strong>{asset.title}</strong>
-              {#if asset.description}
-                <small>{asset.description}</small>
-              {/if}
-              {#if asset.currentCheckout}
-                <CheckoutBadge checkout={asset.currentCheckout} compact />
-              {/if}
-            </span>
-          </Button.Root>
-          <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
-          <span class="asset-row-meta">
-            <Badge variant="outline">{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</Badge>
-            <small>{asset.containmentTrail}</small>
-          </span>
-        </div>
-      {/each}
-    </div>
-  {/if}
+  </header>
+  <ContainedAssetWorkspace
+    target={{ ...location, containmentTrail: '' }}
+    assets={workspaceAssets}
+    canCreate={canCreateAsset}
+    {canEdit}
+    {saving}
+    {moveHereOpen}
+    onOpenAsset={(asset) => asset.kind === 'location' ? onOpenLocation(asset) : onOpenAsset(asset)}
+    {onOpenAdd}
+    {onOpenMoveHere}
+    {onCloseMoveHere}
+    {onMoveHere}
+    {onTagSearch}
+  />
 </section>

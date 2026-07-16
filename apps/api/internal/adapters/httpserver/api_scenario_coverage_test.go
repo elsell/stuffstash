@@ -198,6 +198,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	undoAssetID := decodeAsset(t, undoAssetCreate).Data.ID
 	auditInventory := coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", inventoryPath+"/audit-records?limit=200", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records", inventoryPath+"/assets/"+undoAssetID+"/audit-records?limit=20", "Bearer dev:owner", nil, http.StatusOK)
+	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity", inventoryPath+"/assets/"+undoAssetID+"/activity?limit=20", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/audit-records", tenantPath+"/audit-records?limit=50", "Bearer dev:owner", nil, http.StatusOK)
 	operationID := operationIDForTarget(t, decodeAuditRecordList(t, auditInventory).Data, undoAssetID)
 	coverage.request(t, server, http.MethodPost, "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo", inventoryPath+"/undoable-operations/"+operationID+"/undo", "Bearer dev:owner", nil, http.StatusOK)
@@ -432,6 +433,7 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodGet, template: "/tenants/{tenantId}/audit-records", path: tenantPath + "/audit-records?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/audit-records", path: inventoryPath + "/audit-records?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records", path: assetPath + "/audit-records?limit=10"},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity", path: assetPath + "/activity?limit=10"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/search/assets", path: tenantPath + "/search/assets?q=Drill&limit=10"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo", path: inventoryPath + "/undoable-operations/" + operationID + "/undo"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo", path: inventoryPath + "/undoable-operations/" + operationID + "/redo"},

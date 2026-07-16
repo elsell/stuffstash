@@ -50,6 +50,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		AssetTags:                        repositories.assetTags,
 		AssetUnitOfWork:                  repositories.assetUnitOfWork,
 		AssetTagUnitOfWork:               repositories.assetTagUnitOfWork,
+		AssetEditUnitOfWork:              repositories.assetEditUnitOfWork,
 		Undoables:                        repositories.undoables,
 		Search:                           repositories.search,
 		Attachments:                      repositories.attachments,

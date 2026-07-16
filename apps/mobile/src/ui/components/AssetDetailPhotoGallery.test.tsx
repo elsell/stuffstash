@@ -109,6 +109,10 @@ describe('AssetDetailPhotoGallery', () => {
       })
     ]));
     expect(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.type).toBe('View');
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style, 'aspectRatio')).toBeUndefined();
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style, 'overflow')).toBeUndefined();
+    expect(styleValue(findFirstTextNode(tree, 'No photos')?.props?.style, 'lineHeight')).toBeUndefined();
+    expect(styleValue(findFirstTextNode(tree, 'Add photos')?.props?.style, 'lineHeight')).toBeUndefined();
     press(addActions[0]);
     expect(addCount).toBe(1);
   });
@@ -122,6 +126,9 @@ describe('AssetDetailPhotoGallery', () => {
     });
 
     expect(findAllByProp(tree, 'accessibilityLabel', 'Add photos')).toHaveLength(1);
+    const photo = findFirstByProp(tree, 'accessibilityLabel', 'Open photo 1 of 2');
+    expect(styleValue(photo?.props?.style, 'aspectRatio')).toBe(4 / 3);
+    expect(styleValue(photo?.props?.style, 'overflow')).toBe('hidden');
   });
 
   it('accepts the asset-detail appearance palette', () => {
@@ -168,6 +175,35 @@ function press(node: ElementNode | undefined): void {
 function resolvePressableStyle(node: ElementNode | undefined): unknown {
   const style = node?.props?.style;
   return typeof style === 'function' ? style({ pressed: false }) : style;
+}
+
+function styleValue(style: unknown, key: string): unknown {
+  if (Array.isArray(style)) {
+    return style.reduce<unknown>((found, entry) => found ?? styleValue(entry, key), undefined);
+  }
+  return style && typeof style === 'object' ? (style as Record<string, unknown>)[key] : undefined;
+}
+
+function findFirstTextNode(node: unknown, value: string): ElementNode | undefined {
+  if (Array.isArray(node)) {
+    return node.reduce<ElementNode | undefined>(
+      (found, child) => found ?? findFirstTextNode(child, value),
+      undefined
+    );
+  }
+  if (!isElementNode(node)) {
+    return undefined;
+  }
+  if (node.type === 'Text' && childrenOf(node).includes(value)) {
+    return node;
+  }
+  if (typeof node.type === 'function') {
+    return findFirstTextNode(node.type(node.props), value);
+  }
+  return childrenOf(node).reduce<ElementNode | undefined>(
+    (found, child) => found ?? findFirstTextNode(child, value),
+    undefined
+  );
 }
 
 function findFirstByProp(node: unknown, prop: string, value: unknown): ElementNode | undefined {
