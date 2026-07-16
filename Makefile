@@ -197,6 +197,8 @@ selfhost-happy-path-check:
 
 scripts-test: release-plan-test selfhost-happy-path-check
 	scripts/test-go-structural-rules.sh
+	scripts/test-mobile-association-files.sh
+	scripts/test-ios-associated-domains.sh
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs
@@ -227,9 +229,9 @@ web-build:
 
 web-check:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check:shadcn
+	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check:visual
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check
 
-	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web check:visual
 web-test:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir apps/web test
 
