@@ -196,6 +196,7 @@ export interface Asset {
   customAssetTypeLabel?: string;
   tags?: AssetTag[];
   photo?: AssetPhoto;
+  primaryPhotoId?: string;
   photoUnavailable?: boolean;
   currentCheckout?: CurrentCheckout;
   undoableOperationId?: string;

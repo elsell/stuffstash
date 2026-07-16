@@ -3,7 +3,8 @@
   import { operationRefreshWarning, safeOperationFailureDescription } from '$lib/application/workspaceOperationNotifications';
   import { isAuthenticationRequiredError } from '$lib/application/authenticationRequired';
   import { afterNavigate } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, setContext } from 'svelte';
+  import { assetThumbnailLoaderContext, type AssetThumbnailLoader } from '$lib/ports/assetThumbnailLoader';
   import {
     detailAssetList,
     labelAssets,
@@ -95,11 +96,17 @@
     onSignOut,
     onSessionExpired = onSignOut
   }: {
-    repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
+    repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & AssetThumbnailLoader;
     initialData: WorkspaceData;
     onSignOut: () => void;
     onSessionExpired?: () => void;
   } = $props();
+
+  // svelte-ignore state_referenced_locally -- the repository is immutable for the mounted workspace session.
+  const workspaceRepository = repository;
+  setContext(assetThumbnailLoaderContext, {
+    loadAssetThumbnail: workspaceRepository.loadAssetThumbnail.bind(workspaceRepository)
+  });
 
   // svelte-ignore state_referenced_locally -- initial route data seeds local workspace state.
   const startingData = initialData;
