@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { useLocalSearchParams } from 'expo-router';
-import { useAppServices } from '../../ui/navigation/AppServicesContext';
-import { initialParentFromParams } from '../../ui/screens/AddAssetInitialParent';
-import { AddAssetScreen } from '../../ui/screens/AddAssetScreen';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useAppServices } from '../ui/navigation/AppServicesContext';
+import { initialParentFromParams } from '../ui/screens/AddAssetInitialParent';
+import { AddAssetScreen } from '../ui/screens/AddAssetScreen';
 
 export default function AddRoute() {
   const params = useLocalSearchParams();
@@ -31,6 +31,7 @@ export default function AddRoute() {
       createAssetCommand={createAssetCommand}
       dashboardQuery={homeDashboardQuery}
       initialParent={initialParent}
+      onDismiss={() => router.back()}
       parentLookupQuery={parentLookupQuery}
       photoSelectionQuery={photoSelectionQuery}
     />

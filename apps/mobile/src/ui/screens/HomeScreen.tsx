@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { Settings } from 'lucide-react-native';
+import { ChevronDown, Plus, UserCircle } from 'lucide-react-native';
 import {
   ActivityIndicator,
-  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -15,13 +14,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import {
-  HomeDashboardLocationViewModel,
   HomeDashboardQuery,
   HomeDashboardViewModel
 } from '../../application/home/HomeDashboardQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
-import { BrandMark } from '../components/BrandMark';
-import { IdentityLabel } from '../components/IdentityIcon';
 import { AssetCard } from '../components/AssetCard';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -121,7 +117,24 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenP
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
+      {screenState.status === 'error' ? (
+        <ErrorState
+          message={screenState.message}
+          onRetry={async () => {
+            setScreenState({ status: 'loading' });
+            try {
+              const dashboard = await dashboardQuery.execute();
+              didInitialLoadRef.current = true;
+              setScreenState({ status: 'ready', dashboard });
+            } catch (error) {
+              setScreenState({
+                status: 'error',
+                message: readableError(error, 'Stuff Stash could not load the mobile home screen.')
+              });
+            }
+          }}
+        />
+      ) : null}
       {screenState.status === 'ready' ? (
         <Dashboard
           assetCheckoutCommand={assetCheckoutCommand}
@@ -145,12 +158,20 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ message }: { readonly message: string }) {
+function ErrorState({ message, onRetry }: { readonly message: string; readonly onRetry: () => void }) {
   const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
       <Text style={styles.stateText}>{message}</Text>
+      <Pressable
+        accessibilityLabel="Retry loading Home"
+        accessibilityRole="button"
+        onPress={onRetry}
+        style={styles.retryButton}
+      >
+        <Text style={styles.retryButtonText}>Retry</Text>
+      </Pressable>
     </View>
   );
 }
@@ -174,6 +195,7 @@ function Dashboard({
   const styles = createHomeScreenStyles(colors);
   return (
     <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
@@ -290,51 +312,58 @@ function DashboardHeader({
     <View>
       <View style={styles.homeTopBar}>
         <Pressable
+          accessibilityLabel={`Current inventory ${dashboard.inventoryName}, tenant ${dashboard.tenantName}. Switch inventory`}
           accessibilityRole="button"
           onPress={() => router.push('/tenant-switcher')}
           style={styles.contextControl}
         >
-          <BrandMark size="sm" />
           <View style={styles.contextText}>
-            <View style={styles.contextLine}>
-              <Text numberOfLines={1} style={styles.contextTenantPrefix}>
-                {dashboard.tenantName} /
-              </Text>
-              <IdentityLabel
-                kind="inventory"
-                label={dashboard.inventoryName}
-                textStyle={styles.contextInventory}
-              />
-            </View>
+            <Text style={styles.contextInventory}>{dashboard.inventoryName}</Text>
+            <Text style={styles.contextTenantPrefix}>{dashboard.tenantName}</Text>
           </View>
+          <ChevronDown color={colors.textMuted} size={18} strokeWidth={2} />
         </Pressable>
-        <Pressable
-          accessibilityLabel="Open Settings"
-          accessibilityRole="button"
-          onPress={() => router.push('/settings')}
-          style={styles.settingsButton}
-        >
-          <Settings color={colors.text} size={22} strokeWidth={2.2} />
-        </Pressable>
+        <View style={styles.topBarActions}>
+          {dashboard.canAdd ? (
+            <Pressable
+              accessibilityLabel="Add an asset"
+              accessibilityRole="button"
+              onPress={() => router.push('/add')}
+              style={styles.settingsButton}
+            >
+              <Plus color={colors.action} size={24} strokeWidth={2.2} />
+            </Pressable>
+          ) : null}
+          <Pressable
+            accessibilityLabel="Open account and settings"
+            accessibilityRole="button"
+            onPress={() => router.push('/settings')}
+            style={styles.settingsButton}
+          >
+            <UserCircle color={colors.text} size={24} strokeWidth={2} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recently changed</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/assets')}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>Recently changed</Text>
+        <Pressable
+          accessibilityLabel="View all recently changed assets"
+          accessibilityRole="button"
+          onPress={() => router.push('/assets')}
+          style={styles.sectionActionButton}
+        >
           <Text style={styles.sectionAction}>See all</Text>
         </Pressable>
       </View>
-      <ScrollView
-        contentContainerStyle={styles.recentTicker}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        {dashboard.recentAssets.map((asset) => (
+      <View style={styles.recentTicker}>
+        {dashboard.recentAssets.slice(0, 3).map((asset) => (
           <AssetCard
             asset={asset}
-            density="compact"
+            density="row"
             key={asset.id}
             palette={colors}
+            showUpdatedAt
             onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
             onPress={() => router.push(assetDetailHref(asset.id))}
           />
@@ -342,42 +371,42 @@ function DashboardHeader({
         {dashboard.recentAssets.length === 0 ? (
           <Text style={styles.emptyText}>No assets yet.</Text>
         ) : null}
-      </ScrollView>
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Checked out</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.navigate({ pathname: '/search', params: { checkoutState: 'checked_out' } })}>
-          <Text style={styles.sectionAction}>View all</Text>
-        </Pressable>
       </View>
+
       {dashboard.checkedOutAssets.length > 0 ? (
-        <ScrollView
-          contentContainerStyle={styles.recentTicker}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          {dashboard.checkedOutAssets.map((asset) => (
-            <AssetCard
-              asset={asset}
-              density="compact"
-              footerAction={{
-                disabled: returningAssetId === asset.id,
-                label: returningAssetId === asset.id ? 'Returning...' : 'Return',
-                onPress: () => void returnAsset(asset)
-              }}
-              key={asset.id}
-              palette={colors}
-              onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
-              onPress={() => router.push(assetDetailHref(asset.id))}
-              showTags={false}
-            />
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.checkedOutEmpty}>
-          <Text style={styles.emptyText}>Nothing checked out.</Text>
+        <View style={styles.attentionSection}>
+          <View style={styles.sectionHeader}>
+            <Text accessibilityRole="header" style={styles.sectionTitle}>Checked out</Text>
+            <Pressable
+              accessibilityLabel="View all checked-out assets"
+              accessibilityRole="button"
+              onPress={() => router.navigate({ pathname: '/search', params: { checkoutState: 'checked_out' } })}
+              style={styles.sectionActionButton}
+            >
+              <Text style={styles.sectionAction}>View all</Text>
+            </Pressable>
+          </View>
+          <View style={styles.recentTicker}>
+            {dashboard.checkedOutAssets.slice(0, 3).map((asset) => (
+              <AssetCard
+                asset={asset}
+                density="row"
+                footerAction={{
+                  accessibilityLabel: `Return ${asset.title}`,
+                  disabled: returningAssetId === asset.id,
+                  label: returningAssetId === asset.id ? 'Returning...' : 'Return',
+                  onPress: () => void returnAsset(asset)
+                }}
+                key={asset.id}
+                palette={colors}
+                onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}
+                onPress={() => router.push(assetDetailHref(asset.id))}
+                showTags={false}
+              />
+            ))}
+          </View>
         </View>
-      )}
+      ) : null}
 
       <ReturnDetailsSheet
         pendingReturn={pendingReturn}
@@ -390,53 +419,7 @@ function DashboardHeader({
         onSave={() => void saveReturnDetails()}
       />
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Locations</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.navigate({ pathname: '/search', params: { scope: 'places' } })}>
-          <Text style={styles.sectionAction}>View all</Text>
-        </Pressable>
-      </View>
-      <View style={styles.locationGrid}>
-        {dashboard.topLocations.map((location) => (
-          <LocationCard key={location.id} location={location} />
-        ))}
-        {dashboard.topLocations.length === 0 ? (
-          <Text style={styles.emptyText}>No locations yet.</Text>
-        ) : null}
-      </View>
     </View>
-  );
-}
-
-function LocationCard({ location }: { readonly location: HomeDashboardLocationViewModel }) {
-  const styles = createHomeScreenStyles(useAppearanceAwarePalette());
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => router.push(`/locations/${location.id}`)}
-      style={styles.locationCard}
-    >
-      <View style={styles.locationImageFrame}>
-        {location.photo ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            source={{ uri: location.photo.uri, headers: location.photo.headers }}
-            style={styles.locationImage}
-          />
-        ) : (
-          <Text style={styles.locationImagePlaceholder}>Place</Text>
-        )}
-      </View>
-      <Text style={styles.locationTitle}>{location.title}</Text>
-      <Text style={styles.locationDescription}>{location.description}</Text>
-      <View style={styles.locationFooter}>
-        <Text style={styles.locationCount}>{location.containedAssetCountLabel} assets</Text>
-        <Text style={location.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
-          {location.photoLabel}
-        </Text>
-      </View>
-      <Text style={styles.recentAssetLabel}>{location.recentAssetLabel || 'No recent assets'}</Text>
-    </Pressable>
   );
 }
 

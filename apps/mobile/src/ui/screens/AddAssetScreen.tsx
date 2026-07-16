@@ -67,6 +67,7 @@ type AddAssetScreenProps = {
   readonly createAssetCommand: CreateAssetCommand;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly initialParent?: ParentSelection;
+  readonly onDismiss?: () => void;
   readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
 };
@@ -101,6 +102,7 @@ export function AddAssetScreen({
   createAssetCommand,
   dashboardQuery,
   initialParent,
+  onDismiss = () => router.back(),
   parentLookupQuery,
   photoSelectionQuery
 }: AddAssetScreenProps) {
@@ -472,6 +474,16 @@ export function AddAssetScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
+      <View style={styles.dismissRow}>
+        <Pressable
+          accessibilityLabel="Close Add"
+          accessibilityRole="button"
+          onPress={onDismiss}
+          style={styles.dismissButton}
+        >
+          <X color={colors.text} size={22} strokeWidth={2.4} />
+        </Pressable>
+      </View>
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -1240,6 +1252,20 @@ function createStyles(colors: MobileColorPalette) {
   shell: {
     flex: 1,
     backgroundColor: colors.background
+  },
+  dismissRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    minHeight: 44,
+    paddingHorizontal: spacing.sm
+  },
+  dismissButton: {
+    alignItems: 'center',
+    borderRadius: 22,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44
   },
   content: {
     padding: spacing.lg,

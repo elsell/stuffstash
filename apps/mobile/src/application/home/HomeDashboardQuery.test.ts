@@ -171,26 +171,8 @@ describe('HomeDashboardQuery', () => {
         updatedAtLabel: 'Updated yesterday'
       }
     ]);
-    expect(dashboard.topLocations).toEqual([
-      {
-        id: 'asset-kitchen',
-        title: 'Kitchen',
-        description: 'Pantry, utility drawer, and cleaning supplies.',
-        containedAssetCountLabel: '12',
-        recentAssetLabel: 'AA batteries, LED bulbs',
-        photoLabel: 'Photo ready'
-      }
-    ]);
-    expect(dashboard.locations).toEqual([
-      {
-        id: 'asset-kitchen',
-        title: 'Kitchen',
-        description: 'Pantry, utility drawer, and cleaning supplies.',
-        containedAssetCountLabel: '12',
-        recentAssetLabel: 'AA batteries, LED bulbs',
-        photoLabel: 'Photo ready'
-      }
-    ]);
+    expect(dashboard).not.toHaveProperty('topLocations');
+    expect(dashboard).not.toHaveProperty('locations');
     expect(dashboard.assetTags).toEqual([
       {
         id: 'tag-workshop',

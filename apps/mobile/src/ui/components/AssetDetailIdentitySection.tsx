@@ -221,14 +221,12 @@ function createStyles(palette: MobileColorPalette) {
     color: palette.text,
     fontSize: 30,
     fontWeight: '700',
-    letterSpacing: 0,
-    lineHeight: 36
+    letterSpacing: 0
   },
   classification: {
     color: palette.textMuted,
     fontSize: 15,
-    fontWeight: '500',
-    lineHeight: 21
+    fontWeight: '500'
   },
   placement: {
     gap: spacing.sm
@@ -241,8 +239,7 @@ function createStyles(palette: MobileColorPalette) {
   placementFallback: {
     color: palette.text,
     fontSize: 17,
-    fontWeight: '500',
-    lineHeight: 23
+    fontWeight: '500'
   },
   availabilityAction: {
     alignItems: 'center',
@@ -253,12 +250,15 @@ function createStyles(palette: MobileColorPalette) {
     gap: spacing.sm,
     justifyContent: 'center',
     minHeight: 50,
-    paddingHorizontal: spacing.md
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
   },
   availabilityActionText: {
     color: palette.onAction,
+    flexShrink: 1,
     fontSize: 17,
-    fontWeight: '600'
+    fontWeight: '600',
+    textAlign: 'center'
   },
   quietAvailabilityAction: {
     backgroundColor: palette.surfaceMuted
@@ -286,17 +286,16 @@ function createStyles(palette: MobileColorPalette) {
   exceptionValue: {
     color: palette.text,
     fontSize: 16,
-    fontWeight: '500',
-    lineHeight: 22
+    fontWeight: '500'
   },
   description: {
     color: palette.text,
     fontSize: 17,
-    fontWeight: '400',
-    lineHeight: 24
+    fontWeight: '400'
   },
   maintenanceBar: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm
   },
   maintenanceAction: {
@@ -305,20 +304,24 @@ function createStyles(palette: MobileColorPalette) {
     borderColor: palette.controlBorder,
     borderRadius: radius.md,
     borderWidth: 1,
-    flex: 1,
+    flexBasis: 140,
+    flexGrow: 1,
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'center',
     minHeight: 46,
-    paddingHorizontal: spacing.sm
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm
   },
   maintenanceActionPressed: {
     backgroundColor: palette.selected
   },
   maintenanceActionText: {
     color: palette.action,
+    flexShrink: 1,
     fontSize: 15,
-    fontWeight: '600'
+    fontWeight: '600',
+    textAlign: 'center'
   },
   disabledAction: {
     opacity: 0.55

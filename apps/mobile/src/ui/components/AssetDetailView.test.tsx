@@ -3,6 +3,7 @@ import type { AssetCardViewModel, AssetDetailViewModel } from '../../application
 import {
   AssetDetailView,
   assetDetailNavigationTitle,
+  containedAssetRowAccessibilityLabel,
   containedWorkspaceItems
 } from './AssetDetailView';
 
@@ -268,6 +269,21 @@ describe('AssetDetailView', () => {
     expect(text.indexOf('Cordless drill')).toBeLessThan(text.lastIndexOf('Item'));
     expect(text.lastIndexOf('Item')).toBeLessThan(text.lastIndexOf('Utility shelf'));
     expect(text.indexOf('Move place')).toBeGreaterThan(text.indexOf('Cordless drill'));
+    expect(findFirstByProp(
+      tree,
+      'accessibilityLabel',
+      'Open asset Cordless drill. Item. Utility shelf'
+    )?.props?.accessibilityRole).toBe('button');
+  });
+
+  it('builds distinguishing contained-row labels from visible kind, path, and checkout context', () => {
+    expect(containedAssetRowAccessibilityLabel({
+      id: 'asset-bin',
+      title: 'Storage bin',
+      eyebrowLabel: 'Container · Holiday storage',
+      supportingLabel: 'Checked out · Attic',
+      imagePlaceholderLabel: 'Container'
+    })).toBe('Open asset Storage bin. Container · Holiday storage. Checked out · Attic');
   });
 
   it('filters large place contents by title and relative path while preserving sections and recovery', () => {
@@ -300,6 +316,57 @@ describe('AssetDetailView', () => {
 
     expect(findFirstByProp(large, 'accessibilityLabel', 'Search contents')?.type).toBe('TextInput');
     expect(findFirstByProp(small, 'accessibilityLabel', 'Search contents')).toBeUndefined();
+  });
+
+  it('omits empty maintenance chrome for viewer and archived places with no applicable actions', () => {
+    const viewer = AssetDetailView({
+      asset: {
+        ...placeDetail(),
+        canEdit: false,
+        canMove: false,
+        canCheckout: false,
+        canReturn: false
+      }
+    });
+    const archived = AssetDetailView({
+      asset: {
+        ...placeDetail(),
+        isActive: false,
+        canEdit: false,
+        canMove: false,
+        canCheckout: false,
+        canReturn: false
+      }
+    });
+
+    expect(findFirstByProp(viewer, 'accessibilityLabel', 'Manage this asset')).toBeUndefined();
+    expect(findFirstByProp(archived, 'accessibilityLabel', 'Manage this asset')).toBeUndefined();
+  });
+
+  it('lets shared detail text and action rows grow with accessibility Dynamic Type', () => {
+    const tree = AssetDetailView({
+      asset: placeDetail({
+        spaces: [containedCard('space-shelf', 'Utility shelf', 'container')],
+        items: [{
+          ...containedCard('item-drill', 'Cordless drill', 'item'),
+          relativePath: [{ id: 'space-shelf', title: 'Utility shelf' }],
+          relativePathLabel: 'Utility shelf'
+        }]
+      }),
+      onAddHere: vi.fn(),
+      onEdit: vi.fn(),
+      onMove: vi.fn(),
+      onMoveThingsHere: vi.fn()
+    });
+
+    for (const label of ['Garage', 'Add item here', 'Spaces in Garage', 'Cordless drill', 'Move place']) {
+      expect(styleValue(findFirstTextNode(tree, label)?.props?.style, 'lineHeight')).toBeUndefined();
+    }
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Asset maintenance')?.props?.style, 'flexWrap'))
+      .toBe('wrap');
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'paddingVertical'))
+      .toBeGreaterThanOrEqual(10);
+    expect(findFirstTextNode(tree, 'Container')?.props?.allowFontScaling).toBe(false);
   });
 
   it('puts the primary spatial action before quieter container utility actions', () => {
@@ -464,6 +531,9 @@ function collectText(node: unknown): string[] {
 }
 
 function styleValue(style: unknown, key: string): unknown {
+  if (typeof style === 'function') {
+    return styleValue(style({ pressed: false }), key);
+  }
   if (Array.isArray(style)) {
     return style.reduce<unknown>((found, entry) => found ?? styleValue(entry, key), undefined);
   }
@@ -500,6 +570,28 @@ function findFirstByProp(node: unknown, prop: string, value: unknown): ElementNo
 
   return childrenOf(node).reduce<ElementNode | undefined>(
     (found, child) => found ?? findFirstByProp(child, prop, value),
+    undefined
+  );
+}
+
+function findFirstTextNode(node: unknown, value: string): ElementNode | undefined {
+  if (Array.isArray(node)) {
+    return node.reduce<ElementNode | undefined>(
+      (found, child) => found ?? findFirstTextNode(child, value),
+      undefined
+    );
+  }
+  if (!isElementNode(node)) {
+    return undefined;
+  }
+  if (node.type === 'Text' && childrenOf(node).includes(value)) {
+    return node;
+  }
+  if (typeof node.type === 'function') {
+    return findFirstTextNode(node.type(node.props), value);
+  }
+  return childrenOf(node).reduce<ElementNode | undefined>(
+    (found, child) => found ?? findFirstTextNode(child, value),
     undefined
   );
 }

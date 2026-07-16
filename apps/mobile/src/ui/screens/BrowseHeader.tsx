@@ -12,7 +12,7 @@ import {
   TextInput,
   View
 } from 'react-native';
-import { Check, ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type {
@@ -42,6 +42,7 @@ export type BrowseDraftFilters = {
 };
 
 export type SearchHeaderProps = {
+  readonly canAdd?: boolean;
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
@@ -63,6 +64,7 @@ export type SearchHeaderProps = {
   readonly tagFilters?: readonly AssetTagOptionViewModel[];
   readonly tagFilterStatus?: TagFilterStatus;
   readonly onApplyFilters: (filters: BrowseDraftFilters) => void;
+  readonly onAdd?: () => void;
   readonly onChangeDraftCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
   readonly onChangeDraftLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
   readonly onChangeDraftTagIds: (tagIds: readonly string[]) => void;
@@ -83,6 +85,7 @@ export type SearchHeaderProps = {
 };
 
 export function SearchHeader({
+  canAdd = false,
   isLoading,
   lifecycleState,
   checkoutState,
@@ -104,6 +107,7 @@ export function SearchHeader({
   tagFilters = [],
   tagFilterStatus = 'ready',
   onApplyFilters,
+  onAdd,
   onChangeDraftCheckoutState,
   onChangeDraftLifecycleState,
   onChangeDraftTagIds,
@@ -160,7 +164,19 @@ export function SearchHeader({
             </View>
           )}
         </View>
-        <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
+        <View style={styles.headerActions}>
+          {canAdd && onAdd ? (
+            <Pressable
+              accessibilityLabel="Add an asset"
+              accessibilityRole="button"
+              onPress={onAdd}
+              style={({ pressed }) => [styles.headerIconButton, pressed ? styles.controlPressed : null]}
+            >
+              <Plus color={palette.action} size={24} strokeWidth={2.2} />
+            </Pressable>
+          ) : null}
+          <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
+        </View>
       </View>
 
       <View style={[styles.searchBar, searchInputFocused ? styles.searchBarFocused : null]}>
@@ -505,6 +521,8 @@ const baseStyles = StyleSheet.create({
 export function createBrowseHeaderStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
     headerTopRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
+    headerActions: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs },
+    headerIconButton: { alignItems: 'center', borderRadius: 22, justifyContent: 'center', minHeight: 44, minWidth: 44 },
     titleBlock: { flex: 1, minWidth: 0 },
     title: { color: palette.text, fontSize: 30, fontWeight: '700', lineHeight: 36 },
     inventoryContext: { color: palette.textMuted, fontSize: 13, fontWeight: '600', marginTop: 1 },

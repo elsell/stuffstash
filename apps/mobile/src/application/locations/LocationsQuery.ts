@@ -15,13 +15,16 @@ export type LocationBrowserItemViewModel = {
 };
 
 export type LocationsViewModel = {
+  readonly canAdd: boolean;
   readonly tenantName: string;
   readonly inventoryName: string;
   readonly locations: readonly LocationBrowserItemViewModel[];
 };
 
 export class LocationsQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(
+    private readonly inventories: Pick<InventorySummaryRepository, 'getInventoryWorkspace'>
+  ) {}
 
   async execute(): Promise<LocationsViewModel> {
     const workspace = await this.inventories.getInventoryWorkspace();
@@ -40,6 +43,7 @@ export class LocationsQuery {
     }
 
     return {
+      canAdd: inventory.permissions.includes('create_asset'),
       tenantName: tenant.name,
       inventoryName: inventory.name,
       locations: inventory.locations.map(toLocationViewModel)
