@@ -25,6 +25,20 @@ development loops.
 - The release workflow must merge the validated digest-update pull request
   before creating the GitHub release, while keeping the release tag on the
   source commit that produced the published image attestations.
+- Each GitHub release must attach a checksum-protected self-host bundle that
+  contains the Compose file, digest-pinned environment example, mounted
+  configuration, and operator scripts needed to start that release. Public
+  quick-start documentation must use this bundle instead of cloning a moving
+  branch.
+- The default host port binding must be loopback-only. An operator must opt in
+  to LAN exposure by setting one documented bind address before startup.
+- The shared HTTPS hostname must be a DNS name, not an IP literal. The
+  preflight check must reject an IP literal because Go OIDC discovery omits TLS
+  SNI for IP addresses and the Caddy internal-PKI route cannot serve that
+  request reliably.
+- A private Dex config must remain private on the host. Compose must stage it
+  into a named volume with ownership and mode readable by the non-root Dex
+  process rather than requiring a world-readable host file.
 - Postgres services in self-host Compose must set `PGDATA` inside the mounted
   data volume so database rows survive `docker compose down` and a later
   `docker compose up`.
@@ -45,14 +59,26 @@ development loops.
 - Public docs must name the persistent volumes and explain which hold Stuff
   Stash metadata, SpiceDB authorization data, Garage metadata, Garage object
   data, and Caddy certificates.
+- The public happy path must run an operator preflight before Compose. It must
+  check Docker Compose availability, hostname and origin consistency, port
+  availability, bind-address intent, required files, and unchanged example
+  secrets. A clearly labeled trial mode may warn instead of failing on example
+  secrets so a newcomer can evaluate the product before hardening it.
+- Public documentation must keep the first-run path concise and sequential.
+  Certificate trust, LAN exposure, secrets, backup, and upgrade detail must be
+  visually separated or linked from the quick start.
 
 ## Verification
 
 - `scripts/check-selfhost-happy-path.sh` must reject self-host Compose drift that
   can be checked mechanically, including source-build defaults, missing
   published image digest references, missing Postgres `PGDATA` under mounted
-  volumes, missing Garage CORS setup, and docs that still tell operators to run
-  source builds by default.
+  volumes, missing Garage CORS setup, unsafe default port binding, bypassed Dex
+  config staging, missing release-bundle assets, and docs that still tell
+  operators to clone a moving branch or run source builds by default.
+- CI must start the released-topology Compose stack with a mode-`0600` private
+  Dex config, verify the public health and OIDC discovery endpoints, and tear
+  down the isolated project and volumes afterward.
 - Browser-level self-host audits must verify Dex sign-in, first inventory
   creation, item creation, Garage-backed image upload, reload, and restart
   durability.
