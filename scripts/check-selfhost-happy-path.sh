@@ -19,6 +19,12 @@ grep -q 'dexidp/dex:.*@sha256:' "$compose_file" ||
 grep -qE '^[[:space:]]+caddy:' "$compose_file" ||
   fail "compose.selfhost.yaml must include Caddy HTTPS edge"
 
+grep -Fq '${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:' "$compose_file" ||
+  fail "self-host published ports must require an explicit bind address"
+
+grep -q '^STUFF_STASH_BIND_ADDRESS=127\.0\.0\.1$' .env.example ||
+  fail "self-host ports must bind to loopback by default"
+
 grep -q 'CADDY_IMAGE=caddy:.*@sha256:' .env.example ||
   fail "self-host Caddy image must be digest-pinned"
 
@@ -33,6 +39,16 @@ grep -q 'aliases:' "$compose_file" && grep -q 'STUFF_STASH_SELFHOST_HOSTNAME' "$
 
 grep -q '127.0.0.1:5556/dex/.well-known/openid-configuration' "$compose_file" ||
   fail "self-host Dex healthcheck must verify OIDC discovery readiness"
+
+grep -qE '^[[:space:]]+dex-config-bootstrap:' "$compose_file" ||
+  fail "Compose must stage private Dex configuration"
+
+grep -q 'selfhost-dex-config:/etc/dex:ro' "$compose_file" ||
+  fail "Dex must read staged configuration from a named volume"
+
+if grep -q 'DEX_CONFIG_PATH.*:/etc/dex/config.yaml:ro' "$compose_file"; then
+  fail "Dex must not directly mount a mode-0600 host configuration"
+fi
 
 awk '
   /^[[:space:]]+app:$/ { in_app=1; next }
@@ -176,3 +192,12 @@ grep -qi 'bundled Dex' "$topology_spec" ||
 
 grep -qi 'Garage direct browser upload must work' specs/platform/self-hosting.spec.md ||
   fail "self-hosting spec must require Garage direct browser upload"
+
+test -x scripts/selfhost-preflight.sh ||
+  fail "operator preflight script must exist and be executable"
+
+test -x scripts/build-selfhost-release.sh ||
+  fail "self-host release bundle builder must exist and be executable"
+
+scripts/test-selfhost-preflight.sh
+scripts/test-selfhost-release-bundle.sh

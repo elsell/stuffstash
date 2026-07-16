@@ -4,10 +4,10 @@ services:
     env_file:
       - .env
     ports:
-      - "${STUFF_STASH_WEB_PORT:?set STUFF_STASH_WEB_PORT in .env}:${STUFF_STASH_WEB_PORT:?set STUFF_STASH_WEB_PORT in .env}"
-      - "${STUFF_STASH_HTTP_PORT:?set STUFF_STASH_HTTP_PORT in .env}:${STUFF_STASH_HTTP_PORT:?set STUFF_STASH_HTTP_PORT in .env}"
-      - "${DEX_HTTP_PORT:?set DEX_HTTP_PORT in .env}:${DEX_HTTP_PORT:?set DEX_HTTP_PORT in .env}"
-      - "${GARAGE_S3_PORT:?set GARAGE_S3_PORT in .env}:${GARAGE_S3_PORT:?set GARAGE_S3_PORT in .env}"
+      - "${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:${STUFF_STASH_WEB_PORT:?set STUFF_STASH_WEB_PORT in .env}:${STUFF_STASH_WEB_PORT:?set STUFF_STASH_WEB_PORT in .env}"
+      - "${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:${STUFF_STASH_HTTP_PORT:?set STUFF_STASH_HTTP_PORT in .env}:${STUFF_STASH_HTTP_PORT:?set STUFF_STASH_HTTP_PORT in .env}"
+      - "${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:${DEX_HTTP_PORT:?set DEX_HTTP_PORT in .env}:${DEX_HTTP_PORT:?set DEX_HTTP_PORT in .env}"
+      - "${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:${GARAGE_S3_PORT:?set GARAGE_S3_PORT in .env}:${GARAGE_S3_PORT:?set GARAGE_S3_PORT in .env}"
     volumes:
       - ./deploy/selfhost/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - selfhost-caddy-data:/data
@@ -123,6 +123,22 @@ services:
       garage-cors:
         condition: service_completed_successfully
 
+  dex-config-bootstrap:
+    image: ${CADDY_IMAGE:?set CADDY_IMAGE in .env}
+    user: "0:0"
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -eu
+        cp /source/config.yaml /staged/config.yaml.tmp
+        chown 1001:1001 /staged/config.yaml.tmp
+        chmod 600 /staged/config.yaml.tmp
+        mv /staged/config.yaml.tmp /staged/config.yaml
+    volumes:
+      - ${DEX_CONFIG_PATH:-./deploy/selfhost/dex/config.yaml}:/source/config.yaml:ro
+      - selfhost-dex-config:/staged
+
   dex:
     image: ${DEX_IMAGE:-dexidp/dex:v2.44.0@sha256:5d0656fce7d453c0e3b2706abf40c0d0ce5b371fb0b73b3cf714d05f35fa5f86}
     command:
@@ -130,13 +146,16 @@ services:
       - serve
       - /etc/dex/config.yaml
     volumes:
-      - ${DEX_CONFIG_PATH:-./deploy/selfhost/dex/config.yaml}:/etc/dex/config.yaml:ro
+      - selfhost-dex-config:/etc/dex:ro
       - ./deploy/dex/theme/styles.css:/srv/dex/web/themes/light/styles.css:ro
       - ./docs/public/brand/stuff-stash-glyph.png:/srv/dex/web/themes/light/logo.png:ro
       - ./docs/public/brand/stuff-stash-glyph.png:/srv/dex/web/themes/light/favicon.png:ro
       - ./deploy/dex/templates/header.html:/srv/dex/web/templates/header.html:ro
       - ./deploy/dex/templates/login.html:/srv/dex/web/templates/login.html:ro
       - ./deploy/dex/templates/password.html:/srv/dex/web/templates/password.html:ro
+    depends_on:
+      dex-config-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test:
         - CMD-SHELL
@@ -253,6 +272,7 @@ services:
 volumes:
   selfhost-caddy-data:
   selfhost-caddy-config:
+  selfhost-dex-config:
   selfhost-postgres-data:
   selfhost-spicedb-postgres-data:
   selfhost-garage-meta:
