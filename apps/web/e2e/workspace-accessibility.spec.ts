@@ -115,7 +115,7 @@ test('asset detail photo upload action is not duplicated on mobile', async ({ pa
     }).length
   );
 
-  expect(visibleAddPhotoActions).toBe(testInfo.project.name === 'mobile-chromium' ? 1 : 2);
+  expect(visibleAddPhotoActions).toBe(1);
 });
 
 test('mobile workspace controls provide comfortable touch targets', async ({ page }, testInfo) => {

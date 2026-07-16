@@ -605,9 +605,15 @@
     }
     await run(async () => {
       await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
-      await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
+      removeSelectedAttachment(attachment);
       setSuccessNotification(`Deleted ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
-    });
+      void refreshSelectedAttachments(
+        attachment.tenantId,
+        attachment.inventoryId,
+        attachment.assetId,
+        [attachment.id]
+      ).catch(() => {});
+    }, { rethrow: true, propagateSessionExpiry: true });
   }
 
   async function uploadSelectedAttachment(attachment: SelectedAttachment): Promise<void> {
@@ -626,7 +632,10 @@
     });
   }
 
-  async function run(task: () => Promise<void>, options: { rethrow?: boolean } = {}): Promise<void> {
+  async function run(
+    task: () => Promise<void>,
+    options: { rethrow?: boolean; propagateSessionExpiry?: boolean } = {}
+  ): Promise<void> {
     busy = true;
     error = '';
     notification = null;
@@ -634,6 +643,9 @@
       await task();
     } catch (caught) {
       if (handleSessionExpired(caught)) {
+        if (options.propagateSessionExpiry) {
+          throw caught;
+        }
         return;
       }
       const taskError = caught instanceof Error ? caught.message : 'Action failed.';
@@ -1568,9 +1580,31 @@
     );
   }
 
-  async function refreshSelectedAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<void> {
+  function selectedAssetMatches(tenantId: string, inventoryId: string, assetId: string): boolean {
+    return data.context.selectedTenantId === tenantId && selectedInventory?.id === inventoryId && selectedAssetId === assetId;
+  }
+
+  function removeSelectedAttachment(attachment: AssetAttachment): void {
+    if (!selectedAssetMatches(attachment.tenantId, attachment.inventoryId, attachment.assetId)) {
+      return;
+    }
+    selectedAssetAttachments = selectedAssetAttachments.filter((candidate) => candidate.id !== attachment.id);
+  }
+
+  async function refreshSelectedAttachments(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    excludedAttachmentIds: string[] = []
+  ): Promise<void> {
     try {
-      selectedAssetAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+      const refreshedAttachments = await refreshWorkspaceAssetAttachments(repository, { tenantId, inventoryId, assetId });
+      if (!selectedAssetMatches(tenantId, inventoryId, assetId)) {
+        return;
+      }
+      selectedAssetAttachments = refreshedAttachments.filter(
+        (attachment) => !excludedAttachmentIds.includes(attachment.id)
+      );
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;

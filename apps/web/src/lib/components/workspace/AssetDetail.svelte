@@ -3,7 +3,6 @@
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Archive from '@lucide/svelte/icons/archive';
-  import Image from '@lucide/svelte/icons/image';
   import LogOut from '@lucide/svelte/icons/log-out';
   import MoveRight from '@lucide/svelte/icons/move-right';
   import Pencil from '@lucide/svelte/icons/pencil';
@@ -44,7 +43,7 @@
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
-  import AssetDetailHero, { PHOTO_UPLOAD_DISABLED_REASON_ID, PHOTO_UPLOAD_ERROR_ID } from './AssetDetailHero.svelte';
+  import AssetDetailHero from './AssetDetailHero.svelte';
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetFilesSection, { type AssetFilesError } from './AssetFilesSection.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
@@ -128,15 +127,23 @@
   let fileInput = $state<HTMLInputElement | null>(null);
   let selectedAttachment = $state<AssetAttachment | null>(null);
   let selectedPhotoId = $state<string | null>(null);
+  let removedPhotoIds = $state<string[]>([]);
+  let removalScopeAssetId = $state('');
   let lastRouteActionKey = $state('');
   let actionReturnFocus = $state<HTMLElement | null>(null);
   let actionReturnHref = $state('');
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
-  let photoAttachments = $derived(attachments.filter((attachment) => attachment.contentType.startsWith('image/')));
+  let photoAttachments = $derived(
+    attachments.filter((attachment) => attachment.contentType.startsWith('image/') && !removedPhotoIds.includes(attachment.id))
+  );
   let fileAttachments = $derived(attachments.filter((attachment) => !attachment.contentType.startsWith('image/')));
-  let detailPhotos = $derived(buildDetailPhotos(asset, photoAttachments));
+  let photoSourceAsset = $derived(
+    asset.photo && removedPhotoIds.includes(asset.photo.id) ? { ...asset, photo: undefined } : asset
+  );
+  let detailPhotos = $derived(buildDetailPhotos(photoSourceAsset, photoAttachments));
   let heroPhoto = $derived(detailPhotos.find((photo) => photo.id === selectedPhotoId) ?? detailPhotos.find((photo) => photo.isPrimary) ?? detailPhotos[0]);
+  let heroPhotoAttachment = $derived(heroPhoto ? photoAttachments.find((attachment) => attachment.id === heroPhoto.id) ?? null : null);
   let canAddPhoto = $derived(canEdit && asset.lifecycleState === 'active' && !saving && !photoUploading && imageContentTypes.length > 0);
   let editUnavailableStatus = $derived(assetEditUnavailableStatus(canEdit));
   let descriptionText = $derived(assetDescriptionText(asset.description));
@@ -150,12 +157,6 @@
           supportedImageTypeCount: imageContentTypes.length
         })
   );
-  let photoUploadDescribedBy = $derived(
-    [
-      photoUploadDisabledReason ? PHOTO_UPLOAD_DISABLED_REASON_ID : '',
-      photoUploadError ? PHOTO_UPLOAD_ERROR_ID : ''
-    ].filter(Boolean).join(' ')
-  );
   let displayFields = $derived(
     customFieldDefinitions.filter(
       (definition) =>
@@ -163,6 +164,16 @@
         (!!asset.customAssetTypeId && definition.customAssetTypeIds.includes(asset.customAssetTypeId))
     )
   );
+
+  $effect(() => {
+    if (!removalScopeAssetId) {
+      removalScopeAssetId = asset.id;
+    } else if (removalScopeAssetId !== asset.id) {
+      removalScopeAssetId = asset.id;
+      removedPhotoIds = [];
+      selectedPhotoId = null;
+    }
+  });
 
   $effect(() => {
     const attachmentKey = attachmentAction === 'delete' ? attachments.map((attachment) => attachment.id).join(',') : 'none';
@@ -515,12 +526,17 @@
     }
     saveError = '';
     try {
-      await onDeleteAttachment(selectedAttachment);
+      const deletedAttachment = selectedAttachment;
+      await onDeleteAttachment(deletedAttachment);
+      if (deletedAttachment.contentType.startsWith('image/')) {
+        removedPhotoIds = [...removedPhotoIds, deletedAttachment.id];
+        selectedPhotoId = null;
+      }
       selectedAttachment = null;
       panel = 'none';
       onAttachmentDeleteClose();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to delete attachment.';
+      saveError = userSafeMediaErrorMessage(caught, 'Unable to delete attachment.');
     }
   }
 
@@ -617,9 +633,11 @@
       uploadError={photoUploadError}
       uploadBusy={photoUploading}
       retryPhotoName={failedPhotoUpload?.name ?? ''}
+      removePhotoHref={heroPhotoAttachment && canEdit && asset.lifecycleState === 'active' && !saving ? attachmentDeleteHref(heroPhotoAttachment) : ''}
       onChoosePhoto={() => photoInput?.click()}
       onSelectPhoto={(photoId) => { selectedPhotoId = photoId; }}
       onRetryPhoto={() => { if (failedPhotoUpload) void uploadPhoto(failedPhotoUpload); }}
+      onRemovePhoto={(event) => { if (heroPhotoAttachment) openAttachmentDelete(event, heroPhotoAttachment); }}
     >
       <div class="asset-detail-copy">
         <div class="detail-title-row">
@@ -666,14 +684,6 @@
 	              onclick={(event) => openAction(event, 'checkout')}
 	            ><LogOut /> Check out</Button.Root>
 	          {/if}
-	          <Button.Root
-	            variant="outline"
-            disabled={!canAddPhoto}
-            aria-describedby={photoUploadDescribedBy || undefined}
-            onclick={() => photoInput?.click()}
-          >
-            <Image /> Add photo
-          </Button.Root>
           {#if asset.lifecycleState === 'active'}
             <Button.Root
               href={actionHref('archive')}

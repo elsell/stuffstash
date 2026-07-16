@@ -410,9 +410,16 @@ Desktop asset detail layout:
 - The asset title, location trail, lifecycle state, kind, custom type, and primary actions must sit beside the photo/gallery.
 - Description and custom fields belong below the hero identity area.
 - Photos must be presented near the hero as asset identity media, with a thumbnail rail when more than one image is available.
+- Asset detail must expose exactly one visible `Add photo` affordance near the hero on each viewport; the action must not be duplicated between the gallery and the primary action row.
 - Disabled asset-detail photo upload actions must expose a perceivable reason, including missing edit access, inactive lifecycle state, save-in-progress state, or no supported image upload types.
 - Asset-detail photo upload must expose local uploading and failed states in the photo surface. A failed photo must retain its safe filename and a Retry action so the user does not need to reopen the system picker; retry reuses the selected file, prevents duplicate concurrent attempts, and clears the failed state after success.
 - Media surfaces may render server detail only when the adapter explicitly marks the message safe for users. Unmarked transport, infrastructure, and internal server errors must use calm operation-specific fallback copy.
+- The selected active photo attachment must expose a named `Remove photo` action in the photo surface. Removal must use the existing durable attachment-delete confirmation route and restore focus to the photo surface when cancelled.
+- Successful photo removal must immediately remove the deleted photo from the rendered gallery and clear its selection, even while the parent refresh is still resolving stale primary-photo metadata.
+- Durable attachment deletion success must immediately remove the deleted attachment from the selected asset and resolve the owning confirmation before the follow-up attachment refresh completes. A delayed, stale, failed, or authentication-expired refresh must not reopen the confirmation, restore the deleted attachment, suppress the already-established deletion result, leak refresh diagnostics, emit a second success result, or replace attachments belonging to a subsequently selected asset; authentication expiry still invokes the session-expiry boundary.
+- Photo-removal failures must keep the named confirmation open, re-enable retry, preserve only errors explicitly marked safe for users, and otherwise show the calm fallback `Unable to delete attachment.` without leaking transport or infrastructure detail.
+- The workspace mutation boundary must propagate attachment-deletion failures back to the owning confirmation after handling session-expiry notification. It must not convert an API or expired-session failure into apparent success, clear the photo, close the confirmation, or emit a success notification; the confirmation component is the sole owner of safe inline recovery copy.
+- When no photo exists, the kind fallback is the complete empty-photo presentation; the gallery must not add redundant empty-state copy or a second upload action.
 - The first implementation may choose the first active image attachment as the primary photo until explicit primary-photo selection is specified.
 - Non-image attachments such as receipts, manuals, PDFs, and supporting documents must be visually separated from photos and appear lower than the primary photo/gallery.
 
@@ -420,7 +427,7 @@ Mobile asset detail layout:
 
 - The primary photo/gallery must appear first.
 - Asset title and location trail must appear immediately after the photo/gallery so the user can confirm identity without a long scroll.
-- Photo upload must expose one visible mobile affordance near the primary asset actions; a gallery-local upload action may remain on desktop but must not create duplicate adjacent mobile `Add photo` controls.
+- Photo upload must expose one visible mobile affordance in the gallery immediately beside the identity area.
 - `Edit`, `Move`, and photo upload actions must remain close to the title and identity area.
 - The photo thumbnail rail must appear before non-image documents.
 - The photo area must not consume so much vertical space that the title and location are hidden for common mobile viewport heights.

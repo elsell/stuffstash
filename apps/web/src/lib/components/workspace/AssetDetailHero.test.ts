@@ -55,7 +55,7 @@ describe('AssetDetailHero', () => {
     });
 
     expect(document.body.querySelector('.asset-hero-fallback svg')).toBeTruthy();
-    expect(document.body.textContent).toContain('No photos yet.');
+    expect(document.body.textContent).not.toContain('No photos yet.');
     expect(document.body.textContent).toContain('Photo upload requires asset edit access.');
     expect(document.body.textContent).toContain('Attachment must be 4 B or smaller.');
     expect(button('Add photo').disabled).toBe(true);

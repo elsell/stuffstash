@@ -121,6 +121,62 @@ class HomeReturnFailingRepository extends SeededInventoryRepository {
   }
 }
 
+class AttachmentDeleteFailingRepository extends SeededInventoryRepository {
+  constructor(seed: WorkspaceSeed, private readonly failure: Error) {
+    super(seed);
+  }
+
+  override async deleteAssetAttachment(): Promise<void> {
+    throw this.failure;
+  }
+}
+
+type AttachmentRefreshOutcome = 'delayed' | 'failed' | 'expired';
+
+class AttachmentDeleteRefreshRepository extends SeededInventoryRepository {
+  private deletedAssetId = '';
+  private resolveRefresh: ((attachments: AssetAttachment[]) => void) | null = null;
+  readonly refreshStarted: Promise<void>;
+  private markRefreshStarted!: () => void;
+
+  constructor(seed: WorkspaceSeed, private readonly outcome: AttachmentRefreshOutcome) {
+    super(seed);
+    this.refreshStarted = new Promise((resolve) => { this.markRefreshStarted = resolve; });
+  }
+
+  override async deleteAssetAttachment(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    attachmentId: string
+  ): Promise<void> {
+    await super.deleteAssetAttachment(tenantId, inventoryId, assetId, attachmentId);
+    this.deletedAssetId = assetId;
+  }
+
+  override async listAssetAttachments(
+    tenantId: string,
+    inventoryId: string,
+    assetId: string
+  ): Promise<AssetAttachment[]> {
+    if (this.deletedAssetId !== assetId) {
+      return super.listAssetAttachments(tenantId, inventoryId, assetId);
+    }
+    this.markRefreshStarted();
+    if (this.outcome === 'failed') {
+      throw new Error('garage node 10.0.0.9 refused refresh');
+    }
+    if (this.outcome === 'expired') {
+      throw new AuthenticationRequiredError('private refresh diagnostic');
+    }
+    return new Promise((resolve) => { this.resolveRefresh = resolve; });
+  }
+
+  finishRefresh(attachments: AssetAttachment[] = []): void {
+    this.resolveRefresh?.(attachments);
+  }
+}
+
 class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
   async selectAssetLifecycle(
     _tenantId: string,
@@ -397,6 +453,34 @@ async function mountWorkspace(
     }
   });
   return repository;
+}
+
+async function photoDeletionRepository<T extends SeededInventoryRepository>(repository: T): Promise<{ repository: T; attachment: AssetAttachment }> {
+  const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+    id: 'selected-photo',
+    name: 'front.png',
+    sizeBytes: 6,
+    contentType: 'image/png',
+    previewUrl: 'blob:front',
+    file: new File(['photo'], 'front.png', { type: 'image/png' })
+  });
+  const asset = await repository.getAsset('tenant-home', 'inventory-household', 'asset-home');
+  asset.photo = { id: attachment.id, assetId: asset.id, url: 'blob:front', alt: 'Passport front' };
+  return { repository, attachment };
+}
+
+async function openPhotoDeletion(fileName: string): Promise<void> {
+  await waitFor(() => expect(document.body.querySelector(`[aria-label="Remove photo ${fileName}"]`)).toBeTruthy());
+  document.body.querySelector<HTMLElement>(`[aria-label="Remove photo ${fileName}"]`)!.click();
+  await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')?.textContent).toContain(`Delete ${fileName} permanently?`));
+}
+
+function deleteFromOpenConfirmation(): void {
+  const dialog = document.body.querySelector('[role="alertdialog"]');
+  const action = Array.from(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+    .find((candidate) => candidate.textContent?.trim() === 'Delete');
+  if (!action) throw new Error('Missing attachment Delete action');
+  action.click();
 }
 
 function installMatchMedia(): void {
@@ -1835,6 +1919,185 @@ describe('InventoryWorkspaceApp route application', () => {
     controlContaining('Return').click();
 
     await waitFor(() => expect(document.body.textContent).toContain('Return failed. Passport stayed checked out.'));
+  });
+
+  it('clears stale primary-photo metadata after successful attachment deletion', async () => {
+    const photoSeed = structuredClone(seed);
+    const repository = new SeededInventoryRepository(photoSeed);
+    const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-photo',
+      name: 'front.png',
+      sizeBytes: 6,
+      contentType: 'image/png',
+      previewUrl: 'blob:front',
+      file: new File(['photo'], 'front.png', { type: 'image/png' })
+    });
+    photoSeed.assets[0] = {
+      ...photoSeed.assets[0],
+      photo: { id: attachment.id, assetId: 'asset-home', url: 'blob:front', alt: 'Passport front' }
+    };
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(document.body.querySelector('[aria-label="Remove photo front.png"]')).toBeTruthy());
+    document.body.querySelector<HTMLElement>('[aria-label="Remove photo front.png"]')!.click();
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')?.textContent).toContain('Delete front.png permanently?'));
+    const dialog = document.body.querySelector('[role="alertdialog"]')!;
+    Array.from(dialog.querySelectorAll<HTMLButtonElement>('button')).find((candidate) => candidate.textContent?.trim() === 'Delete')!.click();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/assets/asset-home');
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Remove photo front.png"]')).toBeNull();
+    });
+  });
+
+  it('completes durable photo deletion while the attachment refresh remains pending', async () => {
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'delayed')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+    });
+    repository.finishRefresh([attachment]);
+    await waitFor(() => {
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.querySelector(`[aria-label="Remove photo ${attachment.fileName}"]`)).toBeNull();
+    });
+  });
+
+  it('immediately removes a deleted file when attachment refresh fails', async () => {
+    const repository = new AttachmentDeleteRefreshRepository(structuredClone(seed), 'failed');
+    const attachment = await repository.uploadAssetAttachment('tenant-home', 'inventory-household', 'asset-home', {
+      id: 'selected-manual',
+      name: 'manual.pdf',
+      sizeBytes: 6,
+      contentType: 'application/pdf',
+      file: new File(['manual'], 'manual.pdf', { type: 'application/pdf' })
+    });
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await waitFor(() => expect(document.body.textContent).toContain(attachment.fileName));
+    const row = Array.from(document.body.querySelectorAll<HTMLElement>('.attachment-row'))
+      .find((candidate) => candidate.textContent?.includes(attachment.fileName));
+    row?.querySelector<HTMLElement>('a')?.click();
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')).toBeTruthy());
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(Array.from(document.body.querySelectorAll('.attachment-row'))
+        .some((candidate) => candidate.textContent?.includes(attachment.fileName))).toBe(false);
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+      expect(document.body.textContent).not.toMatch(/10\.0\.0\.9|refused refresh/i);
+    });
+  });
+
+  it('does not apply a delayed attachment refresh to a subsequently selected asset', async () => {
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'delayed')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+    await waitFor(() => expect(document.body.querySelector('[role="alertdialog"]')).toBeNull());
+
+    window.history.pushState({}, '', '/tenants/tenant-home/inventories/inventory-household/assets/asset-archived');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await waitFor(() => expect(document.body.querySelector('#asset-title')?.textContent ?? '').toContain('Archived Passport'));
+    repository.finishRefresh([attachment]);
+
+    await waitFor(() => {
+      expect(document.body.querySelector('#asset-title')?.textContent ?? '').toContain('Archived Passport');
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(Array.from(document.body.querySelectorAll('.attachment-row'))
+        .some((candidate) => candidate.textContent?.includes(attachment.fileName))).toBe(false);
+      expect(document.body.querySelector(`[aria-label="Remove photo ${attachment.fileName}"]`)).toBeNull();
+    });
+  });
+
+  it('keeps durable photo deletion complete when the attachment refresh fails', async () => {
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'failed')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+      expect(document.body.textContent).not.toMatch(/10\.0\.0\.9|refused refresh/i);
+    });
+  });
+
+  it('keeps durable photo deletion complete while an expired refresh ends the session', async () => {
+    const onSessionExpired = vi.fn();
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteRefreshRepository(structuredClone(seed), 'expired')
+    );
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository, { onSessionExpired });
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+    await repository.refreshStarted;
+
+    await waitFor(() => {
+      expect(onSessionExpired).toHaveBeenCalledOnce();
+      expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+      expect(document.body.textContent).toContain(`Deleted ${attachment.fileName}.`);
+      expect(document.body.textContent).not.toContain('private refresh diagnostic');
+    });
+  });
+
+  it('keeps failed photo deletion visible, named, and retryable without false success', async () => {
+    const failure = new Error('blob host 10.0.0.8 refused deletion');
+    const { repository, attachment } = await photoDeletionRepository(new AttachmentDeleteFailingRepository(structuredClone(seed), failure));
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository);
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+
+    await waitFor(() => {
+      const dialog = document.body.querySelector('[role="alertdialog"]');
+      expect(dialog?.textContent).toContain('Delete attachment');
+      expect(dialog?.textContent).toContain(`Delete ${attachment.fileName} permanently?`);
+      expect(dialog?.textContent).toContain('Unable to delete attachment.');
+      expect(dialog?.textContent).not.toContain('10.0.0.8');
+      expect(dialog?.querySelector<HTMLButtonElement>('button:last-of-type')?.disabled).toBe(false);
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(`Deleted ${attachment.fileName}.`);
+    });
+  });
+
+  it('keeps expired-session photo deletion from looking successful', async () => {
+    const onSessionExpired = vi.fn();
+    const { repository, attachment } = await photoDeletionRepository(
+      new AttachmentDeleteFailingRepository(structuredClone(seed), new AuthenticationRequiredError())
+    );
+
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home', repository, { onSessionExpired });
+    await openPhotoDeletion(attachment.fileName);
+    deleteFromOpenConfirmation();
+
+    await waitFor(() => {
+      expect(onSessionExpired).toHaveBeenCalledOnce();
+      const dialog = document.body.querySelector('[role="alertdialog"]');
+      expect(dialog?.textContent).toContain('Unable to delete attachment.');
+      expect(dialog?.querySelector<HTMLButtonElement>('button:last-of-type')?.disabled).toBe(false);
+      expect(document.body.querySelector('.asset-hero-photo img')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(`Deleted ${attachment.fileName}.`);
+    });
   });
 
   it('keeps location attachment delete cancel aligned with the exposed location href', async () => {

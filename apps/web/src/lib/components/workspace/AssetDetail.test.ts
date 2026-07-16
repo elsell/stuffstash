@@ -146,7 +146,7 @@ describe('AssetDetail', () => {
     });
 
     expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
-    expect(document.body.textContent).toContain('No photos yet.');
+    expect(document.body.textContent).not.toContain('No photos yet.');
   });
 
   it('ignores image attachments owned by a different asset', () => {
@@ -160,7 +160,7 @@ describe('AssetDetail', () => {
     });
 
     expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
-    expect(document.body.textContent).toContain('No photos yet.');
+    expect(document.body.textContent).not.toContain('No photos yet.');
     expect(document.body.textContent).not.toContain('wrong.jpg');
   });
 
@@ -545,6 +545,83 @@ describe('AssetDetail', () => {
     expect(document.body.textContent).toContain('Move asset');
   });
 
+  it('opens durable removal for the selected existing photo and restores focus after cancel', async () => {
+    let openedAttachmentId = '';
+    mountAssetDetail({
+      attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')],
+      onAttachmentDeleteOpen: (attachmentId) => { openedAttachmentId = attachmentId; }
+    });
+
+    const remove = document.body.querySelector<HTMLAnchorElement>('a[aria-label="Remove photo front.jpg"]');
+    if (!remove) throw new Error('Missing photo removal link');
+    expect(remove.getAttribute('href')).toBe(
+      '/tenants/tenant-one/inventories/inventory-one/assets/asset-one/attachments/photo-one/delete'
+    );
+    remove.click();
+    expect(openedAttachmentId).toBe('photo-one');
+    await flush();
+    link('Cancel').click();
+    await flush();
+    expect(document.activeElement).toBe(remove);
+  });
+
+  it('does not expose photo removal without edit availability', () => {
+    for (const props of [{ canEdit: false }, { saving: true }]) {
+      mountAssetDetail({ ...props, attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')] });
+      expect(document.body.querySelector('[aria-label="Remove photo front.jpg"]')).toBeNull();
+      if (component) { unmount(component); component = null; }
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('removes a successfully deleted selected primary photo without waiting for refreshed asset metadata', async () => {
+    mountAssetDetail({
+      asset: {
+        ...asset(),
+        photo: { id: 'photo-one', assetId: 'asset-one', url: 'blob:front', alt: 'Front photo' }
+      },
+      attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')]
+    });
+
+    (requiredElement('[aria-label="Remove photo front.jpg"]') as HTMLElement).click();
+    await flush();
+    clickLast('Delete');
+    await flush();
+
+    expect(document.body.querySelector('.asset-hero-photo img')).toBeNull();
+    expect(document.body.querySelector('[aria-label="Remove photo front.jpg"]')).toBeNull();
+  });
+
+  it('keeps photo removal retryable while sanitizing unsafe failures and preserving explicitly safe failures', async () => {
+    for (const failure of [
+      { error: new Error('blob host 10.0.0.8 refused deletion'), expected: 'Unable to delete attachment.', rejected: '10.0.0.8' },
+      {
+        error: Object.assign(new Error('The retention policy prevents deletion.'), { safeForUser: true }),
+        expected: 'The retention policy prevents deletion.',
+        rejected: ''
+      }
+    ]) {
+      mountAssetDetail({
+        attachments: [attachment('photo-one', 'front.jpg', 'image/jpeg', 'blob:front')],
+        onDeleteAttachment: async () => { throw failure.error; }
+      });
+      (requiredElement('[aria-label="Remove photo front.jpg"]') as HTMLElement).click();
+      await flush();
+      clickLast('Delete');
+      await flush();
+
+      const dialog = requiredElement('[role="alertdialog"]');
+      expect(dialog.textContent).toContain('Delete attachment');
+      expect(dialog.textContent).toContain('Delete front.jpg permanently?');
+      expect(dialog.textContent).toContain(failure.expected);
+      if (failure.rejected) expect(dialog.textContent).not.toContain(failure.rejected);
+      expect(buttons('Delete').at(-1)?.disabled).toBe(false);
+
+      if (component) { unmount(component); component = null; }
+      document.body.innerHTML = '';
+    }
+  });
+
   it('uses the focused location route for location action cancel links', async () => {
     mountAssetDetail({
       action: 'edit',
@@ -712,7 +789,7 @@ describe('AssetDetail', () => {
       document.body.innerHTML = '';
       mountAssetDetail(testCase.props);
 
-      expect(buttons('Add photo'), testCase.name).toHaveLength(2);
+      expect(buttons('Add photo'), testCase.name).toHaveLength(1);
       for (const button of buttons('Add photo')) {
         expect(button.disabled, testCase.name).toBe(true);
         expect(button.getAttribute('aria-describedby'), testCase.name).toBe('asset-photo-upload-disabled');

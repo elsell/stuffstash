@@ -1915,6 +1915,10 @@ h2 {
   gap: 14px;
 }
 
+.asset-photo-panel {
+  position: relative;
+}
+
 .photo-gallery-section {
   grid-column: 1;
 }
@@ -1957,6 +1961,16 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+}
+
+.photo-panel-actions [data-slot="button"] {
+  min-height: 44px;
+  background: color-mix(in oklab, var(--card) 94%, transparent);
+  box-shadow: 0 4px 18px rgb(15 23 42 / 0.14);
+  backdrop-filter: blur(10px);
 }
 
 .photo-rail {
@@ -2844,10 +2858,6 @@ dd {
 
   .asset-hero-photo {
     max-height: 44vh;
-  }
-
-  .photo-gallery-section .photo-panel-actions {
-    display: none;
   }
 
   .asset-row {
