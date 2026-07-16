@@ -60,7 +60,7 @@
 
   $effect(() => {
     const nextNotificationKey = notification
-      ? `${notification.kind}:${notification.title}:${notification.description ?? ''}:${notification.action?.label ?? ''}:${notification.action?.href ?? ''}`
+      ? `${notification.id ?? ''}:${notification.kind}:${notification.title}:${notification.description ?? ''}:${notification.action?.label ?? ''}:${notification.action?.href ?? ''}`
       : '';
     if (notification && nextNotificationKey !== lastNotificationKey) {
       notify(notification);

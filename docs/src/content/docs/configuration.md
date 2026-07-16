@@ -126,8 +126,8 @@ endpoint must be reachable from the browser and the bucket must allow CORS for
 the web origin. For local Garage this usually means:
 
 - `STUFF_STASH_S3_ENDPOINT=garage:3900` for API-to-Garage traffic.
-- `STUFF_STASH_S3_PUBLIC_ENDPOINT=localhost:3900` or
-  `<server-lan-ip>:3900` for browser-to-Garage traffic.
+- `STUFF_STASH_S3_PUBLIC_ENDPOINT=<shared-dns-hostname>:3900` for
+  browser-to-Garage traffic.
 - a bucket CORS rule that allows the web origin to use `GET` and `POST` and
   exposes `ETag`.
 

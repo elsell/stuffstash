@@ -50,6 +50,11 @@ describe('AddAssetTray', () => {
     await flush();
 
     expect(document.body.textContent).toContain('Add location');
+    const sheet = document.body.querySelector<HTMLElement>('[data-slot="sheet-content"]');
+    expect(sheet?.getAttribute('role')).toBe('dialog');
+    expect(sheet?.getAttribute('data-side')).toBe('right');
+    expect(sheet?.classList.contains('fixed')).toBe(true);
+    expect(document.body.querySelector('[data-slot="sheet-overlay"]')?.classList.contains('fixed')).toBe(true);
     expect(labelFor('asset-title')?.textContent).toBe('Location name');
     expect(inputElement('#asset-title').getAttribute('placeholder')).toBe('Garage shelf');
     expect(button('Save location')).toBeTruthy();
@@ -588,7 +593,7 @@ describe('AddAssetTray', () => {
     expect(revokedObjectUrls).toContain('blob:test-2');
   });
 
-  it('keeps keyboard focus inside the tray and restores focus to the opener', async () => {
+  it('uses the native modal focus boundary and restores focus to the opener', async () => {
     component = mount(AddAssetTrayHarness, {
       target: document.body
     });
@@ -606,19 +611,8 @@ describe('AddAssetTray', () => {
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) throw new Error('Missing dialog');
-    const closeButton = document.body.querySelector<HTMLElement>('button[aria-label="Close add tray"], a[aria-label="Close add tray"]');
-    const saveButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
-      candidate.textContent?.startsWith('Save')
-    );
-    if (!closeButton || !saveButton) throw new Error('Missing focus controls');
-
-    saveButton.focus();
-    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
-    expect(document.activeElement).toBe(closeButton);
-
-    closeButton.focus();
-    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
-    expect(document.activeElement).toBe(saveButton);
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('data-slot')).toBe('sheet-content');
 
     link('Cancel').click();
     await flush();

@@ -25,6 +25,26 @@ development loops.
 - The release workflow must merge the validated digest-update pull request
   before creating the GitHub release, while keeping the release tag on the
   source commit that produced the published image attestations.
+- Each GitHub release must attach a checksum-protected self-host bundle that
+  contains the Compose file, digest-pinned environment example, mounted
+  configuration, and operator scripts needed to start that release. Public
+  quick-start documentation must use this bundle instead of cloning a moving
+  branch.
+- A release bundle must embed the API and web digest references produced by
+  that release, even when the tracked env example is updated later by PR.
+- Production documentation deployment must wait for the main-branch Release
+  workflow to finish successfully so newly documented release assets exist
+  before the public quick start points to them.
+- The default host port binding must be loopback-only. An operator must opt in
+  to LAN exposure by setting one documented bind address before startup.
+- Compose must declare a stable project name so release-bundle directory names
+  do not change the names of persistent volumes during upgrades.
+- The shared HTTPS hostname must be a valid DNS name, not an IP literal, URL,
+  port, or userinfo value. The preflight check must reject malformed DNS labels
+  and IP literals because OIDC and TLS require one unambiguous host.
+- A private Dex config must remain private on the host. Compose must stage it
+  into a named volume with ownership and mode readable by the non-root Dex
+  process rather than requiring a world-readable host file.
 - Postgres services in self-host Compose must set `PGDATA` inside the mounted
   data volume so database rows survive `docker compose down` and a later
   `docker compose up`.
@@ -38,6 +58,9 @@ development loops.
 - The bundled Dex config is a first-run example only. Public docs must link to
   an operator-safe recipe for replacing static users and clients before
   household use.
+- Strict preflight must reject the bundled Dex emails, client secret, user IDs,
+  and known password hash. Renaming a public example account must not make its
+  public password acceptable for household use.
 - Dex operator guidance must be honest that Dex has no built-in user-management
   UI in this topology. If persistent Dex storage is introduced later, the spec
   must define its storage mode, backup requirements, and user-management
@@ -45,22 +68,32 @@ development loops.
 - Public docs must name the persistent volumes and explain which hold Stuff
   Stash metadata, SpiceDB authorization data, Garage metadata, Garage object
   data, and Caddy certificates.
-- Public docs must include a short startup verification path with concrete
-  commands for the browser-facing web app, API health endpoint, Dex discovery,
-  and the expected anonymous Garage response.
-- Public docs must include a concrete LAN or reverse-proxy configuration example
-  that names every `.env` and Dex setting that must share the same public host.
-- Public docs must include straightforward backup, restore, upgrade, and
-  rollback guidance for the Compose topology, including `.env`, private Dex
-  config, database volumes, Garage volumes, and Caddy certificate data.
+- The public happy path must run an operator preflight before Compose. It must
+  check Docker Compose availability, hostname and origin consistency, port
+  availability, bind-address intent, required files, and unchanged example
+  secrets. A clearly labeled trial mode may warn instead of failing on example
+  secrets so a newcomer can evaluate the product before hardening it.
+- Public documentation must keep the first-run path concise and sequential.
+  Certificate trust, LAN exposure, secrets, backup, and upgrade detail must be
+  visually separated or linked from the quick start.
+- After creating `.env` and before preflight, the quick start must tell
+  remote-server users to use loopback-preserving SSH forwarding for a trial or
+  complete the hardened LAN DNS, binding, and private Dex flow instead of
+  following same-machine `.localhost` instructions. The LAN branch must replace
+  the trial path, require secret replacement, end at the configured DNS URL, and
+  explain how the browser device receives the Caddy root.
 
 ## Verification
 
 - `scripts/check-selfhost-happy-path.sh` must reject self-host Compose drift that
   can be checked mechanically, including source-build defaults, missing
   published image digest references, missing Postgres `PGDATA` under mounted
-  volumes, missing Garage CORS setup, and docs that still tell operators to run
-  source builds by default.
+  volumes, missing Garage CORS setup, unsafe default port binding, bypassed Dex
+  config staging, missing release-bundle assets, and docs that still tell
+  operators to clone a moving branch or run source builds by default.
+- CI must start the released-topology Compose stack with a mode-`0600` private
+  Dex config, verify the public health and OIDC discovery endpoints, and tear
+  down the isolated project and volumes afterward.
 - Browser-level self-host audits must verify Dex sign-in, first inventory
   creation, item creation, Garage-backed image upload, reload, and restart
   durability.

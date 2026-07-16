@@ -2234,7 +2234,7 @@ dd {
   gap: 14px;
   min-width: 0;
   min-height: 0;
-  overflow: visible;
+  overflow-y: auto;
   padding-right: 2px;
   scroll-padding-bottom: 18px;
 }

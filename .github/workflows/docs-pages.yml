@@ -1,7 +1,9 @@
 name: Docs Pages
 
 on:
-  push:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
     branches:
       - main
   pull_request:
@@ -15,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: docs-pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  group: docs-pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event.workflow_run.head_sha }}
   cancel-in-progress: false
 
 env:
@@ -26,13 +28,15 @@ env:
 jobs:
   build:
     name: Build docs
-    if: github.event_name == 'push' || github.event.action != 'closed'
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event.action != 'closed'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -48,7 +52,7 @@ jobs:
         run: pnpm --dir docs install --frozen-lockfile
 
       - name: Configure production base path
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_run'
         run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/" >> "$GITHUB_ENV"
 
       - name: Configure pull request preview base path
@@ -69,7 +73,7 @@ jobs:
   deploy:
     name: Deploy docs
     needs: build
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'workflow_run' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -101,7 +105,7 @@ jobs:
           path: built-docs
 
       - name: Publish production docs
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_run'
         run: |
           mkdir -p pages
           find pages -mindepth 1 -maxdepth 1 ! -name .git ! -name 'pr-*' -exec rm -rf {} +

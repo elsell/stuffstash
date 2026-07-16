@@ -10,6 +10,9 @@ fail() {
   exit 1
 }
 
+grep -q '^name: stuffstash$' "$compose_file" ||
+  fail "self-host Compose must keep a stable project and volume identity"
+
 grep -qE '^[[:space:]]+dex:' "$compose_file" ||
   fail "compose.selfhost.yaml must include bundled Dex"
 
@@ -18,6 +21,12 @@ grep -q 'dexidp/dex:.*@sha256:' "$compose_file" ||
 
 grep -qE '^[[:space:]]+caddy:' "$compose_file" ||
   fail "compose.selfhost.yaml must include Caddy HTTPS edge"
+
+grep -Fq '${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:' "$compose_file" ||
+  fail "self-host published ports must require an explicit bind address"
+
+grep -q '^STUFF_STASH_BIND_ADDRESS=127\.0\.0\.1$' .env.example ||
+  fail "self-host ports must bind to loopback by default"
 
 grep -q 'CADDY_IMAGE=caddy:.*@sha256:' .env.example ||
   fail "self-host Caddy image must be digest-pinned"
@@ -33,6 +42,16 @@ grep -q 'aliases:' "$compose_file" && grep -q 'STUFF_STASH_SELFHOST_HOSTNAME' "$
 
 grep -q '127.0.0.1:5556/dex/.well-known/openid-configuration' "$compose_file" ||
   fail "self-host Dex healthcheck must verify OIDC discovery readiness"
+
+grep -qE '^[[:space:]]+dex-config-bootstrap:' "$compose_file" ||
+  fail "Compose must stage private Dex configuration"
+
+grep -q 'selfhost-dex-config:/etc/dex:ro' "$compose_file" ||
+  fail "Dex must read staged configuration from a named volume"
+
+if grep -q 'DEX_CONFIG_PATH.*:/etc/dex/config.yaml:ro' "$compose_file"; then
+  fail "Dex must not directly mount a mode-0600 host configuration"
+fi
 
 awk '
   /^[[:space:]]+app:$/ { in_app=1; next }
@@ -159,12 +178,38 @@ if docker compose version >/dev/null 2>&1; then
   trap - EXIT
 fi
 
-grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres, SpiceDB, and Garage' "$self_host_doc" ||
+grep -q 'Docker Compose, Caddy HTTPS, Dex OIDC, Postgres' "$self_host_doc" &&
+  grep -q 'SpiceDB, Garage, and the web app' "$self_host_doc" ||
   fail "self-host docs must lead with durable Docker Compose, HTTPS, and bundled Dex"
 
 if grep -q 'docker compose -f compose.selfhost.yaml up --build' "$self_host_doc"; then
   fail "self-host docs must not tell operators to build source images by default"
 fi
+
+if grep -q 'git clone .*stuffstash' "$self_host_doc"; then
+  fail "self-host docs must use an immutable release bundle, not a moving branch"
+fi
+
+grep -q 'releases/latest/download/stuffstash-selfhost.tar.gz' "$self_host_doc" ||
+  fail "self-host docs must download the release bundle"
+
+grep -q './scripts/selfhost-preflight.sh --trial' "$self_host_doc" ||
+  fail "self-host quick start must run trial preflight"
+
+if grep -qi 'LAN IP or DNS\|IP or DNS' "$self_host_doc"; then
+  fail "self-host docs must not claim that IP-literal OIDC works"
+fi
+
+test -f docs/src/content/docs/self-host-operations.md ||
+  fail "self-host operator guidance must be linked from the quick start"
+
+awk '
+  /^## Before Household Use/ { in_household=1; next }
+  in_household && /^## / { exit }
+  in_household && /docker compose -f compose.selfhost.yaml down -v/ { found=1 }
+  END { exit found ? 0 : 1 }
+' docs/src/content/docs/self-host-operations.md ||
+  fail "household hardening must reset trial credentials and volumes together"
 
 if grep -q '^## Compose Evaluation' "$self_host_doc"; then
   fail "self-host docs must not present contributor evaluation as a public happy path"
@@ -179,3 +224,33 @@ grep -qi 'bundled Dex' "$topology_spec" ||
 
 grep -qi 'Garage direct browser upload must work' specs/platform/self-hosting.spec.md ||
   fail "self-hosting spec must require Garage direct browser upload"
+
+test -x scripts/selfhost-preflight.sh ||
+  fail "operator preflight script must exist and be executable"
+
+test -x scripts/build-selfhost-release.sh ||
+  fail "self-host release bundle builder must exist and be executable"
+
+test -x scripts/verify-selfhost-runtime.sh ||
+  fail "self-host runtime verification script must exist and be executable"
+
+grep -q 'scripts/verify-selfhost-runtime.sh' .github/workflows/ci.yml ||
+  fail "CI must run the self-host topology"
+
+grep -q 'SELFHOST_RUNTIME_ROOT=.*selfhost-runtime-dist/extracted/stuffstash-selfhost' .github/workflows/ci.yml ||
+  fail "CI must run the extracted self-host release bundle"
+
+grep -q -- '--api-image' .github/workflows/ci.yml &&
+  grep -q -- '--web-image' .github/workflows/ci.yml ||
+  fail "CI must build the self-host bundle with immutable image references"
+
+grep -q 'scripts/build-selfhost-release.sh' .github/workflows/release.yml &&
+  grep -q 'stuffstash-selfhost.tar.gz.sha256' .github/workflows/release.yml ||
+  fail "releases must attach a checksummed self-host bundle"
+
+grep -q 'workflow_run:' .github/workflows/docs-pages.yml &&
+  grep -q 'workflows: \[Release\]' .github/workflows/docs-pages.yml ||
+  fail "production docs must wait for release assets"
+
+scripts/test-selfhost-preflight.sh
+scripts/test-selfhost-release-bundle.sh
