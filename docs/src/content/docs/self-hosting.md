@@ -1,6 +1,6 @@
 ---
 title: Self-Host Stuff Stash
-description: Get Stuff Stash running with the supported release bundle.
+description: Run Stuff Stash on your home network with the supported release bundle.
 ---
 
 The release bundle runs Docker Compose, Caddy HTTPS, Dex OIDC, Postgres,
@@ -20,25 +20,26 @@ cd stuffstash-selfhost
 Use `shasum -a 256 -c stuffstash-selfhost.tar.gz.sha256` for the checksum.
 :::
 
-## 2. Check The Setup
+## 2. Configure
 
 ```sh
-cp .env.example .env
+./scripts/configure-selfhost.sh
+./scripts/selfhost-preflight.sh
 ```
 
-:::note[Remote server?]
-If the browser is on another device, use an [SSH
-trial](../self-host-operations/#try-from-another-machine). For permanent LAN
-access, follow the [hardened LAN
-setup](../self-host-operations/#use-stuff-stash-on-your-lan) instead of the
-remaining trial steps. Same-machine trials can keep the defaults.
+The setup command detects the server's LAN IPv4 address and prints the URL to
+open. If it chooses the wrong address, remove `.env` and `.stuffstash`, then run
+it again with `--host 192.168.1.40`.
+
+:::caution[Your LAN can reach the example accounts]
+Ports `8081`, `8080`, `5556`, and `3900` listen on the local network. Anyone
+who can reach the server can use the example credentials below. Do not forward
+these ports to the internet.
 :::
 
-```sh
-./scripts/selfhost-preflight.sh --trial
-```
-
-Trial mode allows the example users and secrets. It is only for evaluation.
+:::note[Host firewall enabled?]
+Allow inbound TCP ports `8081`, `8080`, `5556`, and `3900` on the server.
+:::
 
 ## 3. Start
 
@@ -46,19 +47,18 @@ Trial mode allows the example users and secrets. It is only for evaluation.
 docker compose -f compose.selfhost.yaml up -d
 ```
 
-Before opening the app, [trust Caddy's local certificate
-authority](../self-host-operations/#trust-the-local-certificate). Then open
-[https://stuffstash.localhost:8081](https://stuffstash.localhost:8081) and sign
-in:
+[Trust Caddy's local certificate](../self-host-operations/#trust-the-local-certificate)
+on each device that will open Stuff Stash. Then open the URL printed by the
+setup command and sign in:
 
 ```text
 Email: owner@example.com
 Password: password
 ```
 
-:::caution[Before adding household data]
-Replace the example [Dex users and clients](../dex-users/) and complete the
-[household-use checklist](../self-host-operations/#before-household-use).
+:::note[Want private accounts?]
+[Replace the example credentials](../self-host-operations/#replace-the-example-credentials)
+before adding data. The simple reset deletes existing volumes.
 :::
 
 Next, create your [First Inventory](../first-inventory/).
@@ -69,5 +69,6 @@ Next, create your [First Inventory](../first-inventory/).
 docker compose -f compose.selfhost.yaml down
 ```
 
-Your data stays in Docker volumes. For LAN access, backups, upgrades, or full
-removal, see [Self-Host Operations](../self-host-operations/).
+Your data stays in Docker volumes. See [Self-Host
+Operations](../self-host-operations/) to replace the example users, keep the
+address stable, back up, upgrade, or remove the installation.

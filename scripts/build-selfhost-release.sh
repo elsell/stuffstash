@@ -63,6 +63,7 @@ cp "$repo_root/deploy/dex/templates/login.html" "$bundle/deploy/dex/templates/lo
 cp "$repo_root/deploy/dex/templates/password.html" "$bundle/deploy/dex/templates/password.html"
 cp "$repo_root/docs/public/brand/stuff-stash-glyph.png" "$bundle/docs/public/brand/stuff-stash-glyph.png"
 cp "$repo_root/scripts/configure-garage-cors.mjs" "$bundle/scripts/configure-garage-cors.mjs"
+cp "$repo_root/scripts/configure-selfhost.sh" "$bundle/scripts/configure-selfhost.sh"
 cp "$repo_root/scripts/selfhost-preflight.sh" "$bundle/scripts/selfhost-preflight.sh"
 printf '%s\n' "$version" > "$bundle/VERSION"
 

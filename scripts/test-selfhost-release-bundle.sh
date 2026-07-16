@@ -22,6 +22,7 @@ for required in \
   stuffstash-selfhost/.env.example \
   stuffstash-selfhost/compose.selfhost.yaml \
   stuffstash-selfhost/scripts/selfhost-preflight.sh \
+  stuffstash-selfhost/scripts/configure-selfhost.sh \
   stuffstash-selfhost/scripts/configure-garage-cors.mjs \
   stuffstash-selfhost/deploy/selfhost/caddy/Caddyfile \
   stuffstash-selfhost/deploy/selfhost/dex/config.yaml \

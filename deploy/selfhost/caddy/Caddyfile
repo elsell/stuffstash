@@ -1,5 +1,6 @@
 {
 	auto_https disable_redirects
+	default_sni {$STUFF_STASH_SELFHOST_HOSTNAME}
 }
 
 https://{$STUFF_STASH_SELFHOST_HOSTNAME}:{$STUFF_STASH_WEB_PORT} {

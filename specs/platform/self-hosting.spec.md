@@ -35,13 +35,23 @@ development loops.
 - Production documentation deployment must wait for the main-branch Release
   workflow to finish successfully so newly documented release assets exist
   before the public quick start points to them.
-- The default host port binding must be loopback-only. An operator must opt in
-  to LAN exposure by setting one documented bind address before startup.
+- The public quick start must configure direct LAN access by default. Published
+  ports may bind to all host interfaces so a browser on another household
+  device can open the app without SSH forwarding.
 - Compose must declare a stable project name so release-bundle directory names
   do not change the names of persistent volumes during upgrades.
-- The shared HTTPS hostname must be a valid DNS name, not an IP literal, URL,
-  port, or userinfo value. The preflight check must reject malformed DNS labels
-  and IP literals because OIDC and TLS require one unambiguous host.
+- The shared HTTPS host may be a valid DNS name or strict IPv4 literal. It must
+  not be a URL, include a port or userinfo, or contain malformed DNS labels or
+  IPv4 octets. IPv6 literal support is deferred until URL rendering, Caddy, and
+  client behavior are specified and tested together.
+- Caddy must issue a local certificate for the configured host and provide that
+  host as its default SNI value. IP-literal TLS clients omit hostname SNI, so
+  the default is required for the web app, API, Dex, and Garage to remain
+  reachable at an IPv4 address.
+- The release bundle must include one setup command that creates `.env`, detects
+  or accepts the server LAN IPv4 address, keeps every public origin and OIDC
+  callback consistent, creates the private Dex config, and prints the final web
+  URL. DNS configuration must remain optional.
 - A private Dex config must remain private on the host. Compose must stage it
   into a named volume with ownership and mode readable by the non-root Dex
   process rather than requiring a world-readable host file.
@@ -69,19 +79,19 @@ development loops.
   Stash metadata, SpiceDB authorization data, Garage metadata, Garage object
   data, and Caddy certificates.
 - The public happy path must run an operator preflight before Compose. It must
-  check Docker Compose availability, hostname and origin consistency, port
-  availability, bind-address intent, required files, and unchanged example
-  secrets. A clearly labeled trial mode may warn instead of failing on example
-  secrets so a newcomer can evaluate the product before hardening it.
+  check Docker Compose availability, host and origin consistency, port
+  availability, bind-address intent, and required files. The default check may
+  warn about bundled example users and secrets so a newcomer can start without
+  a separate evaluation mode. An explicit `--strict` check must reject them for
+  operators who want a hardened configuration.
 - Public documentation must keep the first-run path concise and sequential.
   Certificate trust, LAN exposure, secrets, backup, and upgrade detail must be
   visually separated or linked from the quick start.
-- After creating `.env` and before preflight, the quick start must tell
-  remote-server users to use loopback-preserving SSH forwarding for a trial or
-  complete the hardened LAN DNS, binding, and private Dex flow instead of
-  following same-machine `.localhost` instructions. The LAN branch must replace
-  the trial path, require secret replacement, end at the configured DNS URL, and
-  explain how the browser device receives the Caddy root.
+- The quick start must follow one top-to-bottom LAN path, end at the configured
+  IPv4 URL, explain how the browser device receives the Caddy root, and state
+  plainly that anyone who can reach the server can use the bundled example
+  credentials. SSH forwarding, optional DNS, private users, backups, and wider
+  network exposure belong in visually separate operator guidance.
 
 ## Verification
 
@@ -91,9 +101,10 @@ development loops.
   volumes, missing Garage CORS setup, unsafe default port binding, bypassed Dex
   config staging, missing release-bundle assets, and docs that still tell
   operators to clone a moving branch or run source builds by default.
-- CI must start the released-topology Compose stack with a mode-`0600` private
-  Dex config, verify the public health and OIDC discovery endpoints, and tear
-  down the isolated project and volumes afterward.
+- CI must configure the release bundle with the runner's LAN IPv4 address,
+  start that topology with a mode-`0600` private Dex config, verify the public
+  health and OIDC discovery endpoints through the IP-literal HTTPS edge, and
+  tear down the isolated project and volumes afterward.
 - Browser-level self-host audits must verify Dex sign-in, first inventory
   creation, item creation, Garage-backed image upload, reload, and restart
   durability.

@@ -25,8 +25,8 @@ grep -qE '^[[:space:]]+caddy:' "$compose_file" ||
 grep -Fq '${STUFF_STASH_BIND_ADDRESS:?set STUFF_STASH_BIND_ADDRESS in .env}:' "$compose_file" ||
   fail "self-host published ports must require an explicit bind address"
 
-grep -q '^STUFF_STASH_BIND_ADDRESS=127\.0\.0\.1$' .env.example ||
-  fail "self-host ports must bind to loopback by default"
+grep -q '^STUFF_STASH_BIND_ADDRESS=0\.0\.0\.0$' .env.example ||
+  fail "self-host ports must bind to the LAN by default"
 
 grep -q 'CADDY_IMAGE=caddy:.*@sha256:' .env.example ||
   fail "self-host Caddy image must be digest-pinned"
@@ -36,6 +36,9 @@ test -f deploy/selfhost/caddy/Caddyfile ||
 
 grep -q 'tls internal' deploy/selfhost/caddy/Caddyfile ||
   fail "self-host Caddyfile must use Caddy local HTTPS"
+
+grep -Fq 'default_sni {$STUFF_STASH_SELFHOST_HOSTNAME}' deploy/selfhost/caddy/Caddyfile ||
+  fail "Caddy must select the LAN IP certificate for clients that omit SNI"
 
 grep -q 'aliases:' "$compose_file" && grep -q 'STUFF_STASH_SELFHOST_HOSTNAME' "$compose_file" ||
   fail "Caddy must expose the self-host hostname as a Docker network alias"
@@ -193,23 +196,25 @@ fi
 grep -q 'releases/latest/download/stuffstash-selfhost.tar.gz' "$self_host_doc" ||
   fail "self-host docs must download the release bundle"
 
-grep -q './scripts/selfhost-preflight.sh --trial' "$self_host_doc" ||
-  fail "self-host quick start must run trial preflight"
+grep -q './scripts/configure-selfhost.sh' "$self_host_doc" ||
+  fail "self-host quick start must configure the detected LAN IPv4 address"
 
-if grep -qi 'LAN IP or DNS\|IP or DNS' "$self_host_doc"; then
-  fail "self-host docs must not claim that IP-literal OIDC works"
+grep -q './scripts/selfhost-preflight.sh' "$self_host_doc" ||
+  fail "self-host quick start must run preflight"
+
+grep -qi 'Your LAN can reach the example accounts' "$self_host_doc" ||
+  fail "self-host quick start must explain LAN access to example credentials"
+
+if grep -qi 'trial mode\|--trial\|hardened LAN\|raw IP.*not supported\|requires.*DNS' "$self_host_doc"; then
+  fail "self-host quick start must present one direct LAN path without obsolete trial or DNS requirements"
 fi
 
 test -f docs/src/content/docs/self-host-operations.md ||
   fail "self-host operator guidance must be linked from the quick start"
 
-awk '
-  /^## Before Household Use/ { in_household=1; next }
-  in_household && /^## / { exit }
-  in_household && /docker compose -f compose.selfhost.yaml down -v/ { found=1 }
-  END { exit found ? 0 : 1 }
-' docs/src/content/docs/self-host-operations.md ||
-  fail "household hardening must reset trial credentials and volumes together"
+if grep -qi 'raw IP.*not supported\|OIDC requires.*DNS' docs/src/content/docs/self-host-operations.md; then
+  fail "operations guidance must not claim that LAN IP OIDC is unsupported"
+fi
 
 if grep -q '^## Compose Evaluation' "$self_host_doc"; then
   fail "self-host docs must not present contributor evaluation as a public happy path"
@@ -228,11 +233,24 @@ grep -qi 'Garage direct browser upload must work' specs/platform/self-hosting.sp
 test -x scripts/selfhost-preflight.sh ||
   fail "operator preflight script must exist and be executable"
 
+test -x scripts/configure-selfhost.sh ||
+  fail "LAN self-host setup script must exist and be executable"
+
 test -x scripts/build-selfhost-release.sh ||
   fail "self-host release bundle builder must exist and be executable"
 
+grep -q 'configure-selfhost.sh' scripts/build-selfhost-release.sh ||
+  fail "self-host release bundle must include the LAN setup script"
+
 test -x scripts/verify-selfhost-runtime.sh ||
   fail "self-host runtime verification script must exist and be executable"
+
+grep -q 'scripts/configure-selfhost.sh' scripts/verify-selfhost-runtime.sh ||
+  fail "self-host runtime verification must exercise LAN setup"
+
+if grep -q 'https://stuffstash\.localhost' scripts/verify-selfhost-runtime.sh; then
+  fail "self-host runtime verification must exercise IP-literal HTTPS"
+fi
 
 grep -q 'scripts/verify-selfhost-runtime.sh' .github/workflows/ci.yml ||
   fail "CI must run the self-host topology"
@@ -253,4 +271,5 @@ grep -q 'workflow_run:' .github/workflows/docs-pages.yml &&
   fail "production docs must wait for release assets"
 
 scripts/test-selfhost-preflight.sh
+scripts/test-configure-selfhost.sh
 scripts/test-selfhost-release-bundle.sh

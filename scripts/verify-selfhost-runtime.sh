@@ -9,30 +9,38 @@ cd "$repo_root"
   echo "runtime verification requires a workspace without .env" >&2
   exit 1
 }
+[ ! -e .stuffstash/selfhost/dex/config.yaml ] || {
+  echo "runtime verification requires a workspace without a generated Dex config" >&2
+  exit 1
+}
 
-tmp_dir="$(mktemp -d)"
 project="stuffstash-runtime-${GITHUB_RUN_ID:-$$}"
 compose=(docker compose --project-name "$project" -f compose.selfhost.yaml)
 
 cleanup() {
   "${compose[@]}" down --volumes --remove-orphans >/dev/null 2>&1 || true
   rm -f .env
-  rm -rf "$tmp_dir"
+  rm -f .stuffstash/selfhost/dex/config.yaml
+  rmdir .stuffstash/selfhost/dex .stuffstash/selfhost .stuffstash 2>/dev/null || true
 }
 trap cleanup EXIT
 
-cp deploy/selfhost/dex/config.yaml "$tmp_dir/dex-config.yaml"
-chmod 600 "$tmp_dir/dex-config.yaml"
-sed "s|^DEX_CONFIG_PATH=.*|DEX_CONFIG_PATH=$tmp_dir/dex-config.yaml|" .env.example > .env
+scripts/configure-selfhost.sh
+scripts/selfhost-preflight.sh
+host="$(awk -F= '$1 == "STUFF_STASH_SELFHOST_HOSTNAME" { print $2 }' .env)"
+[ -n "$host" ] || {
+  echo "LAN setup did not write STUFF_STASH_SELFHOST_HOSTNAME" >&2
+  exit 1
+}
 
 "${compose[@]}" up --detach
 
 ready=0
 for _ in $(seq 1 90); do
   if curl --insecure --fail --silent --show-error \
-      https://stuffstash.localhost:8080/healthz >/dev/null &&
+      "https://$host:8080/healthz" >/dev/null &&
     curl --insecure --fail --silent --show-error \
-      https://stuffstash.localhost:5556/dex/.well-known/openid-configuration >/dev/null; then
+      "https://$host:5556/dex/.well-known/openid-configuration" >/dev/null; then
     ready=1
     break
   fi
