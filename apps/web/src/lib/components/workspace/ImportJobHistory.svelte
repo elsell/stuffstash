@@ -1171,8 +1171,10 @@
       margin-inline: -0.15rem;
       overflow-x: auto;
       overscroll-behavior-x: contain;
-      padding: 0 0.15rem 0.2rem;
+      padding: 0 1.5rem 0.2rem 0.15rem;
+      scroll-padding-inline: 0.15rem 1.5rem;
       scrollbar-width: none;
+      mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 1.25rem), transparent 100%);
     }
 
     .history-status-strip::-webkit-scrollbar {
