@@ -3,6 +3,8 @@ export type MobileRuntimeConfig = {
   readonly tenantId: string;
   readonly voiceDeveloperDiagnosticsEnabled: boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled: boolean;
+  readonly invitationOrigin?: string;
+  readonly invitationAllowInsecureLocalHTTP: boolean;
 };
 
 export type MobileRuntimeConfigSeed = {
@@ -10,6 +12,8 @@ export type MobileRuntimeConfigSeed = {
   readonly tenantId?: string;
   readonly voiceDeveloperDiagnosticsEnabled: boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled: boolean;
+  readonly invitationOrigin?: string;
+  readonly invitationAllowInsecureLocalHTTP: boolean;
 };
 
 export type RawMobileRuntimeConfig = {
@@ -17,6 +21,8 @@ export type RawMobileRuntimeConfig = {
   readonly tenantId?: string;
   readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled?: string | boolean;
+  readonly invitationOrigin?: string;
+  readonly invitationAllowInsecureLocalHTTP?: string | boolean;
 };
 
 export function mergeMobileRuntimeConfigSources(
@@ -33,6 +39,11 @@ export function mergeMobileRuntimeConfigSources(
     directUploadLocalDevelopmentTargetsEnabled: preferConfigured(
       expoPublicEnv.directUploadLocalDevelopmentTargetsEnabled,
       expoExtra.directUploadLocalDevelopmentTargetsEnabled
+    ),
+    invitationOrigin: preferConfigured(expoPublicEnv.invitationOrigin, expoExtra.invitationOrigin),
+    invitationAllowInsecureLocalHTTP: preferConfigured(
+      expoPublicEnv.invitationAllowInsecureLocalHTTP,
+      expoExtra.invitationAllowInsecureLocalHTTP
     )
   };
 }
@@ -42,6 +53,8 @@ export function parseMobileRuntimeConfig(input: {
   readonly tenantId?: string;
   readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled?: string | boolean;
+  readonly invitationOrigin?: string;
+  readonly invitationAllowInsecureLocalHTTP?: string | boolean;
 }): MobileRuntimeConfig {
   const apiBaseUrl = requireValue('EXPO_PUBLIC_STUFF_STASH_API_BASE_URL', input.apiBaseUrl);
   const tenantId = requireValue('EXPO_PUBLIC_STUFF_STASH_TENANT_ID', input.tenantId);
@@ -53,13 +66,58 @@ export function parseMobileRuntimeConfig(input: {
     'EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED',
     input.directUploadLocalDevelopmentTargetsEnabled
   );
+  const invitationAllowInsecureLocalHTTP = optionalBooleanValue(
+    'EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP',
+    input.invitationAllowInsecureLocalHTTP
+  );
+  const invitationOrigin = optionalInvitationOrigin(
+    'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN',
+    input.invitationOrigin,
+    invitationAllowInsecureLocalHTTP
+  );
 
   return {
     apiBaseUrl: apiBaseUrl.replace(/\/+$/, ''),
     tenantId,
     voiceDeveloperDiagnosticsEnabled,
-    directUploadLocalDevelopmentTargetsEnabled
+    directUploadLocalDevelopmentTargetsEnabled,
+    invitationOrigin,
+    invitationAllowInsecureLocalHTTP
   };
+}
+
+function optionalInvitationOrigin(name: string, value: string | undefined, allowInsecureLocalHTTP: boolean): string | undefined {
+  const trimmed = optionalValue(value);
+  if (!trimmed) return undefined;
+  try {
+    const parsed = new URL(trimmed);
+    if (
+      (parsed.protocol !== 'https:' && !(allowInsecureLocalHTTP && isPrivateLocalHTTPOrigin(parsed))) ||
+      parsed.pathname !== '/' ||
+      (parsed.protocol === 'https:' && parsed.port !== '') ||
+      parsed.search ||
+      parsed.hash ||
+      parsed.username ||
+      parsed.password
+    ) {
+      throw new Error('invalid');
+    }
+    return parsed.origin;
+  } catch {
+    throw new Error(`Invalid mobile runtime configuration value: ${name}.`);
+  }
+}
+
+function isPrivateLocalHTTPOrigin(origin: URL): boolean {
+  if (origin.protocol !== 'http:') return false;
+  if (origin.hostname === 'localhost' || origin.hostname === '127.0.0.1' || origin.hostname === '[::1]') return true;
+  const parts = origin.hostname.split('.');
+  if (parts.length !== 4 || parts.some((part) => !/^\d{1,3}$/.test(part))) return false;
+  const octets = parts.map(Number);
+  if (octets.some((octet) => octet > 255)) return false;
+  return octets[0] === 10 ||
+    (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+    (octets[0] === 192 && octets[1] === 168);
 }
 
 function requireValue(name: string, value: string | undefined): string {

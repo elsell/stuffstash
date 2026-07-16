@@ -262,7 +262,9 @@ function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | unde
     apiBaseUrl: profile.apiBaseUrl,
     tenantId: profile.tenantId,
     voiceDeveloperDiagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
-    directUploadLocalDevelopmentTargetsEnabled: runtimeSeed.directUploadLocalDevelopmentTargetsEnabled
+    directUploadLocalDevelopmentTargetsEnabled: runtimeSeed.directUploadLocalDevelopmentTargetsEnabled,
+    invitationOrigin: runtimeSeed.invitationOrigin,
+    invitationAllowInsecureLocalHTTP: runtimeSeed.invitationAllowInsecureLocalHTTP
   };
 }
 
