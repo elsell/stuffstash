@@ -61,8 +61,8 @@ func (a App) applyUndoableOperation(ctx context.Context, input ApplyUndoableOper
 		Source:      input.Source,
 		RequestID:   input.RequestID,
 		Action:      auditAction,
-		TargetType:  audit.TargetUndoableOperation,
-		TargetID:    operation.ID,
+		TargetType:  operation.TargetType,
+		TargetID:    operation.TargetID,
 		Metadata: map[string]string{
 			"operation_id":    operation.ID,
 			"original_action": operation.OriginalAction.String(),

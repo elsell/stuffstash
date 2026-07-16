@@ -124,15 +124,14 @@ func TestStateChangingOperationsWriteAuditHistory(t *testing.T) {
 		audit.ActionCustomFieldDefinitionCreated,
 		audit.ActionAssetCreated,
 		audit.ActionAssetUpdated,
-		audit.ActionAssetMoved,
 	} {
 		if !collectedAudits.hasAction(expected) {
 			t.Fatalf("expected audit action %s in %+v", expected, collectedAudits.items)
 		}
 	}
-	moved, ok := collectedAudits.recordForAction(audit.ActionAssetMoved)
+	moved, ok := collectedAudits.recordForAction(audit.ActionAssetUpdated)
 	if !ok {
-		t.Fatalf("expected asset moved audit record")
+		t.Fatalf("expected coherent asset update audit record")
 	}
 	if moved.Source != audit.SourceAPI || moved.TargetType != audit.TargetAsset || moved.TargetID != item.ID.String() || moved.Metadata["new_parent"] != location.ID.String() {
 		t.Fatalf("unexpected asset moved record: %+v", moved)

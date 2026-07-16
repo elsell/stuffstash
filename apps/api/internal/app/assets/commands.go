@@ -3,10 +3,13 @@ package assets
 import (
 	"context"
 	"errors"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -233,18 +236,49 @@ func (s Service) UpdateAssetWithOperation(ctx context.Context, input UpdateAsset
 	if err != nil {
 		return AssetMutationResult{}, err
 	}
+	tagsChanged := false
 	if input.TagIDs != nil {
-		if _, err := s.validateAssignableAssetTagIDs(ctx, input.TenantID, input.InventoryID, *input.TagIDs); err != nil {
+		tagIDs, err := s.validateAssignableAssetTagIDs(ctx, input.TenantID, input.InventoryID, *input.TagIDs)
+		if err != nil {
 			return AssetMutationResult{}, err
 		}
+		if s.assetTags == nil {
+			return AssetMutationResult{}, apperrors.ErrInvalidInput
+		}
+		currentTags, err := s.assetTags.AssetTagsByAsset(ctx, input.TenantID, input.InventoryID, input.AssetID)
+		if err != nil {
+			return AssetMutationResult{}, err
+		}
+		beforeTagIDs := assetTagIDs(currentTags)
+		tagsChanged = !assetTagIDSetsEqual(beforeTagIDs, tagIDs)
+		if tagsChanged {
+			prepared.ReplaceTags = true
+			prepared.TagIDs = tagIDs
+			prepared.Asset.UpdatedAt = s.now().UTC()
+			if prepared.UndoableOperation == nil {
+				operation, err := s.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetUpdated, &prepared.PreviousAsset, prepared.Asset)
+				if err != nil {
+					return AssetMutationResult{}, err
+				}
+				prepared.UndoableOperation = &operation
+			}
+			prepared.UndoableOperation.OriginalAction = audit.ActionAssetUpdated
+			prepared.UndoableOperation.AfterAsset = prepared.Asset
+			prepared.UndoableOperation.BeforeTagIDs = beforeTagIDs
+			prepared.UndoableOperation.AfterTagIDs = append([]assettag.ID(nil), tagIDs...)
+			prepared.UndoableOperation.ReplacesTags = true
+		}
+	}
+	changed := len(prepared.AuditRecords) > 0 || tagsChanged
+	if !changed {
+		return AssetMutationResult{Asset: prepared.Asset}, nil
+	}
+	prepared, err = s.coalesceDirectAssetEdit(input, prepared, tagsChanged)
+	if err != nil {
+		return AssetMutationResult{}, err
 	}
 	if err := s.persistPreparedUpdateAsset(ctx, prepared); err != nil {
 		return AssetMutationResult{}, err
-	}
-	if input.TagIDs != nil {
-		if err := s.setAssetTagAssignments(ctx, input.Principal, input.Source, input.RequestID, input.TenantID, input.InventoryID, prepared.Asset.ID, *input.TagIDs); err != nil {
-			return AssetMutationResult{}, err
-		}
 	}
 	s.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
 	result := AssetMutationResult{Asset: prepared.Asset}
@@ -259,6 +293,8 @@ type PreparedUpdateAsset struct {
 	Asset             asset.Asset
 	AuditRecords      []audit.Record
 	UndoableOperation *ports.UndoableOperation
+	ReplaceTags       bool
+	TagIDs            []assettag.ID
 }
 
 func (s Service) PrepareUpdateAsset(ctx context.Context, input UpdateAssetInput) (PreparedUpdateAsset, error) {
@@ -316,7 +352,9 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 			return PreparedUpdateAsset{}, err
 		}
 		updated.CustomFields = customFields
-		fieldsChanged = true
+		if !updated.CustomFields.Equal(current.CustomFields) {
+			fieldsChanged = true
+		}
 	}
 	if input.ParentAssetID.Present {
 		parentAssetID := asset.ID("")
@@ -352,6 +390,13 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 	auditRecords := []audit.Record{}
 	if fieldsChanged {
 		metadata := map[string]string{"asset_kind": updated.Kind.String()}
+		if updated.Title != current.Title {
+			metadata["previous_title"] = current.Title.String()
+			metadata["updated_title"] = updated.Title.String()
+		}
+		if updated.Description != current.Description {
+			metadata["description_changed"] = "true"
+		}
 		if undoableOperation != nil {
 			metadata["operation_id"] = undoableOperation.ID
 		}
@@ -404,13 +449,87 @@ func (s Service) persistPreparedUpdateAsset(ctx context.Context, prepared Prepar
 	if s.assetUnitOfWork == nil {
 		return apperrors.ErrInvalidInput
 	}
-	if err := s.assetUnitOfWork.UpdateAsset(ctx, prepared.Asset, prepared.AuditRecords, prepared.UndoableOperation); err != nil {
+	var err error
+	if prepared.ReplaceTags {
+		if s.assetEditUnitOfWork == nil {
+			return apperrors.ErrInvalidInput
+		}
+		err = s.assetEditUnitOfWork.UpdateAssetAndTags(ctx, prepared.Asset, prepared.TagIDs, prepared.AuditRecords, prepared.UndoableOperation)
+	} else {
+		err = s.assetUnitOfWork.UpdateAsset(ctx, prepared.Asset, prepared.AuditRecords, prepared.UndoableOperation)
+	}
+	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
 			return apperrors.ErrInvalidInput
 		}
 		return err
 	}
 	return nil
+}
+
+func (s Service) coalesceDirectAssetEdit(input UpdateAssetInput, prepared PreparedUpdateAsset, tagsChanged bool) (PreparedUpdateAsset, error) {
+	metadata := map[string]string{"asset_kind": prepared.Asset.Kind.String()}
+	if prepared.Asset.Title != prepared.PreviousAsset.Title {
+		metadata["previous_title"] = prepared.PreviousAsset.Title.String()
+		metadata["updated_title"] = prepared.Asset.Title.String()
+	}
+	if prepared.Asset.Description != prepared.PreviousAsset.Description {
+		metadata["description_changed"] = "true"
+	}
+	if prepared.Asset.ParentAssetID != prepared.PreviousAsset.ParentAssetID {
+		metadata["previous_parent"] = prepared.PreviousAsset.ParentAssetID.String()
+		metadata["new_parent"] = prepared.Asset.ParentAssetID.String()
+	}
+	if tagsChanged && prepared.UndoableOperation != nil {
+		metadata["previous_tag_count"] = strconv.Itoa(len(prepared.UndoableOperation.BeforeTagIDs))
+		metadata["updated_tag_count"] = strconv.Itoa(len(prepared.UndoableOperation.AfterTagIDs))
+	}
+	if prepared.UndoableOperation != nil {
+		prepared.UndoableOperation.OriginalAction = audit.ActionAssetUpdated
+		prepared.UndoableOperation.AfterAsset = prepared.Asset
+		metadata["operation_id"] = prepared.UndoableOperation.ID
+	}
+	if len(prepared.AuditRecords) > 0 {
+		record := prepared.AuditRecords[0]
+		record.Action = audit.ActionAssetUpdated
+		record.Metadata = metadata
+		prepared.AuditRecords = []audit.Record{record}
+		return prepared, nil
+	}
+	record, err := s.newAuditRecord(auditRecordInput{
+		Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID, Source: input.Source, RequestID: input.RequestID,
+		Action: audit.ActionAssetUpdated, TargetType: audit.TargetAsset, TargetID: prepared.Asset.ID.String(), Metadata: metadata,
+	})
+	if err != nil {
+		return PreparedUpdateAsset{}, err
+	}
+	prepared.AuditRecords = []audit.Record{record}
+	return prepared, nil
+}
+
+func assetTagIDs(tags []assettag.Tag) []assettag.ID {
+	ids := make([]assettag.ID, 0, len(tags))
+	for _, tag := range tags {
+		ids = append(ids, tag.ID)
+	}
+	sort.Slice(ids, func(left, right int) bool { return ids[left].String() < ids[right].String() })
+	return ids
+}
+
+func assetTagIDSetsEqual(left, right []assettag.ID) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	seen := make(map[assettag.ID]struct{}, len(left))
+	for _, id := range left {
+		seen[id] = struct{}{}
+	}
+	for _, id := range right {
+		if _, ok := seen[id]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (s Service) RecordAssetUpdated(ctx context.Context, item asset.Asset, principalID identity.PrincipalID) {

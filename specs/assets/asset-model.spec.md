@@ -39,8 +39,11 @@ This spec does not define the full lifecycle model, consumable model, search beh
 - Asset custom field values must be validated against tenant-scoped and inventory-scoped custom field definitions.
 - Asset create may accept non-empty custom field values when every value is validated against the effective custom field definitions for the target inventory and the asset's custom asset type.
 - Asset update may replace title, description, parent asset reference, and custom field values.
+- Asset update may replace the asset's complete tag assignment set when the asset-tag specification permits it.
 - Asset update must validate custom field values against the same effective custom field definitions used by asset create.
 - Asset update must not change asset ID, tenant ID, inventory ID, kind, custom asset type, or lifecycle state.
+- A direct asset edit must compare normalized field values and normalized tag assignments with current state before persistence. A no-op edit must not advance `updatedAt`, rewrite tag assignments, create audit history, or create an undoable operation.
+- Changed editable fields and tag assignments from one direct request must commit atomically with one coherent `asset.updated` audit record and one undoable operation. Movement may remain a separate audit record when the same request also changes `parentAssetId`.
 - Asset movement is represented by updating an asset's parent asset reference.
 - Cross-inventory movement is not supported in the first update slice.
 - Clearing `parentAssetId` moves an asset to the inventory root.
@@ -166,6 +169,7 @@ The system must eventually support things that can be used up, such as medicine,
 ## Testing
 
 - Tests must verify asset creation, asset updates, custom field validation, tenant isolation, inventory isolation, and authorization.
+- Tests must verify direct edits atomically update fields and tag assignments, create one coherent audit record and undoable operation, and treat normalized no-op edits as no-ops.
 - Tests must verify containment behavior for item, container, and location asset kinds.
 - Tests must verify asset nesting, moving an asset between parents, moving a container or location with descendants, moving to root, self-parent rejection, cycle rejection, and item-as-parent rejection.
 - Tests must verify location-like assets are persisted through the same asset repository path as other assets.

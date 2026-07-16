@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
@@ -10,7 +12,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
-	"testing"
 )
 
 func TestCreateAndListAssets(t *testing.T) {
@@ -657,7 +658,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 		IDs:                   &fakeIDGenerator{},
 	})
 
-	archivedResult, err := application.ArchiveAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
+	archiveResult, err := application.ArchiveAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -666,7 +667,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("archive asset: %v", err)
 	}
-	archived := archivedResult.Asset
+	archived := archiveResult.Asset
 	if archived.LifecycleState != asset.LifecycleStateArchived {
 		t.Fatalf("expected archived asset, got %+v", archived)
 	}
@@ -698,7 +699,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 		t.Fatalf("expected redo archive to archive asset, got %+v", redoArchive)
 	}
 
-	restoredResult, err := application.RestoreAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
+	restoreResult, err := application.RestoreAssetWithOperation(context.Background(), UpdateAssetLifecycleInput{
 		Principal:   identity.Principal{ID: identity.PrincipalID("editor")},
 		TenantID:    tenant.ID("tenant-one"),
 		InventoryID: inventory.InventoryID("inventory-one"),
@@ -707,7 +708,7 @@ func TestUndoAndRedoAssetLifecycleOperations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("restore asset: %v", err)
 	}
-	restored := restoredResult.Asset
+	restored := restoreResult.Asset
 	if restored.LifecycleState != asset.LifecycleStateActive {
 		t.Fatalf("expected restored asset, got %+v", restored)
 	}

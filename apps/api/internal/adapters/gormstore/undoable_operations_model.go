@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -49,6 +50,8 @@ type undoableAssetSnapshot struct {
 	Description       string         `json:"description"`
 	CustomFields      map[string]any `json:"customFields"`
 	LifecycleState    string         `json:"lifecycleState"`
+	TagIDs            []string       `json:"tagIds,omitempty"`
+	ReplacesTags      bool           `json:"replacesTags,omitempty"`
 }
 
 type undoableCheckoutSnapshot struct {
@@ -71,13 +74,13 @@ func newUndoableOperationModel(operation ports.UndoableOperation) (undoableOpera
 	var afterAsset *string
 	var beforeAsset *string
 	if operation.AfterCheckout == nil {
-		encoded, err := marshalUndoableAssetSnapshot(operation.AfterAsset)
+		encoded, err := marshalUndoableAssetSnapshot(operation.AfterAsset, operation.AfterTagIDs, operation.ReplacesTags)
 		if err != nil {
 			return undoableOperationModel{}, err
 		}
 		afterAsset = &encoded
 		if operation.BeforeAsset != nil {
-			encoded, err := marshalUndoableAssetSnapshot(*operation.BeforeAsset)
+			encoded, err := marshalUndoableAssetSnapshot(*operation.BeforeAsset, operation.BeforeTagIDs, operation.ReplacesTags)
 			if err != nil {
 				return undoableOperationModel{}, err
 			}
@@ -127,20 +130,25 @@ func newUndoableOperationModel(operation ports.UndoableOperation) (undoableOpera
 
 func (m undoableOperationModel) toPort() (ports.UndoableOperation, bool) {
 	afterAsset := asset.Asset{}
+	var afterTagIDs []assettag.ID
+	replacesTags := false
 	if m.AfterAsset != nil {
 		var ok bool
-		afterAsset, ok = unmarshalUndoableAssetSnapshot(*m.AfterAsset)
+		afterAsset, afterTagIDs, replacesTags, ok = unmarshalUndoableAssetSnapshot(*m.AfterAsset)
 		if !ok {
 			return ports.UndoableOperation{}, false
 		}
 	}
 	var beforeAsset *asset.Asset
+	var beforeTagIDs []assettag.ID
 	if m.BeforeAsset != nil {
-		item, ok := unmarshalUndoableAssetSnapshot(*m.BeforeAsset)
+		item, tagIDs, beforeReplacesTags, ok := unmarshalUndoableAssetSnapshot(*m.BeforeAsset)
 		if !ok {
 			return ports.UndoableOperation{}, false
 		}
 		beforeAsset = &item
+		beforeTagIDs = tagIDs
+		replacesTags = replacesTags || beforeReplacesTags
 	}
 	var afterCheckout *asset.Checkout
 	if m.AfterCheckout != nil {
@@ -202,6 +210,9 @@ func (m undoableOperationModel) toPort() (ports.UndoableOperation, bool) {
 		LastAppliedAt:     lastAppliedAt,
 		BeforeAsset:       beforeAsset,
 		AfterAsset:        afterAsset,
+		BeforeTagIDs:      beforeTagIDs,
+		AfterTagIDs:       afterTagIDs,
+		ReplacesTags:      replacesTags,
 		BeforeCheckout:    beforeCheckout,
 		AfterCheckout:     afterCheckout,
 		UndoAuditRecordID: undoAuditRecordID,
@@ -302,7 +313,11 @@ func parseSnapshotTime(value string) (time.Time, bool) {
 	return parsed, err == nil
 }
 
-func marshalUndoableAssetSnapshot(item asset.Asset) (string, error) {
+func marshalUndoableAssetSnapshot(item asset.Asset, tagIDs []assettag.ID, replacesTags bool) (string, error) {
+	encodedTagIDs := make([]string, 0, len(tagIDs))
+	for _, tagID := range tagIDs {
+		encodedTagIDs = append(encodedTagIDs, tagID.String())
+	}
 	encoded, err := json.Marshal(undoableAssetSnapshot{
 		ID:                item.ID.String(),
 		TenantID:          item.TenantID.String(),
@@ -314,30 +329,40 @@ func marshalUndoableAssetSnapshot(item asset.Asset) (string, error) {
 		Description:       item.Description.String(),
 		CustomFields:      item.CustomFields.Values(),
 		LifecycleState:    item.LifecycleState.String(),
+		TagIDs:            encodedTagIDs,
+		ReplacesTags:      replacesTags,
 	})
 	return string(encoded), err
 }
 
-func unmarshalUndoableAssetSnapshot(encoded string) (asset.Asset, bool) {
+func unmarshalUndoableAssetSnapshot(encoded string) (asset.Asset, []assettag.ID, bool, bool) {
 	var snapshot undoableAssetSnapshot
 	if err := json.Unmarshal([]byte(encoded), &snapshot); err != nil {
-		return asset.Asset{}, false
+		return asset.Asset{}, nil, false, false
 	}
 	id, ok := asset.NewID(snapshot.ID)
 	if !ok {
-		return asset.Asset{}, false
+		return asset.Asset{}, nil, false, false
 	}
 	kind, ok := asset.NewKind(snapshot.Kind)
 	if !ok {
-		return asset.Asset{}, false
+		return asset.Asset{}, nil, false, false
 	}
 	title, ok := asset.NewTitle(snapshot.Title)
 	if !ok {
-		return asset.Asset{}, false
+		return asset.Asset{}, nil, false, false
 	}
 	fields, ok := asset.NewCustomFields(snapshot.CustomFields)
 	if !ok {
-		return asset.Asset{}, false
+		return asset.Asset{}, nil, false, false
+	}
+	tagIDs := make([]assettag.ID, 0, len(snapshot.TagIDs))
+	for _, rawTagID := range snapshot.TagIDs {
+		tagID, ok := assettag.NewID(rawTagID)
+		if !ok {
+			return asset.Asset{}, nil, false, false
+		}
+		tagIDs = append(tagIDs, tagID)
 	}
 	return asset.Asset{
 		ID:                id,
@@ -350,5 +375,5 @@ func unmarshalUndoableAssetSnapshot(encoded string) (asset.Asset, bool) {
 		Description:       asset.NewDescription(snapshot.Description),
 		CustomFields:      fields,
 		LifecycleState:    asset.LifecycleState(snapshot.LifecycleState),
-	}, true
+	}, tagIDs, snapshot.ReplacesTags, true
 }

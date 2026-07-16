@@ -490,8 +490,8 @@ describe('StuffStashClient', () => {
         tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
-      customAssetTypeId: 'type-medicine',
       undoableOperationId: 'operation-edit-one',
+      customAssetTypeId: 'type-medicine',
       customFields: { 'expiration-date': '2027-01-01', count: 2 },
       tags: [{ id: 'tag-one', key: 'medicine', displayName: 'Medicine', color: '#2F80ED' }]
     });
@@ -502,6 +502,7 @@ describe('StuffStashClient', () => {
         tagIds: ['tag-one']
       })
     ).resolves.toMatchObject({
+      undoableOperationId: 'operation-edit-one',
       customAssetTypeId: 'type-medicine',
       customFields: { 'expiration-date': '2027-01-01', count: 2 }
     });
@@ -808,7 +809,8 @@ describe('StuffStashClient', () => {
       undoableOperationId: 'operation-lifecycle-one'
     });
     await expect(client.restoreAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toMatchObject({
-      id: 'asset-one'
+      id: 'asset-one',
+      undoableOperationId: 'operation-lifecycle-one'
     });
     await expect(client.deleteAsset('tenant-one', 'inventory-one', 'asset-one')).resolves.toBeUndefined();
 
@@ -1329,6 +1331,33 @@ describe('StuffStashClient', () => {
       'GET http://api.local/tenants/tenant-one/inventories/inventory-one/audit-records?limit=1&cursor=next-page',
       'GET http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/audit-records?limit=2'
     ]);
+  });
+
+  it('lists typed asset activity with scoped cursor parameters', async () => {
+    const requests: Request[] = [];
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        requests.push(new Request(input, init));
+        return Response.json({
+          data: [{
+            id: 'activity-one', principalId: 'principal-one', action: 'asset.updated', category: 'change', source: 'api',
+            occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title', previousValue: 'Drill', currentValue: 'Driver' }],
+            undo: { operationId: 'operation-one', status: 'available' }, technicalMetadata: { target_type: 'asset' }
+          }],
+          meta: { pagination: { limit: 20, nextCursor: 'next-page', hasMore: true } }
+        });
+      }
+    });
+
+    await expect(client.listAssetActivity('tenant-one', 'inventory-one', 'asset-one', {
+      view: 'changes', limit: 20, cursor: 'cursor-one'
+    })).resolves.toMatchObject({
+      items: [{ id: 'activity-one', category: 'change', changes: [{ field: 'title' }], undo: { operationId: 'operation-one', status: 'available' }, technicalMetadata: { target_type: 'asset' } }],
+      pagination: { nextCursor: 'next-page', hasMore: true }
+    });
+    expect(requests[0]?.url).toBe('http://api.local/tenants/tenant-one/inventories/inventory-one/assets/asset-one/activity?view=changes&limit=20&cursor=cursor-one');
   });
 
   it('manages custom asset types and field definitions through generated paths', async () => {

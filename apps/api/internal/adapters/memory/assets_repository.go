@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -105,6 +106,28 @@ func (s *Store) UpdateAsset(_ context.Context, item asset.Asset, auditRecords []
 	defer s.mu.Unlock()
 
 	return s.updateAssetLocked(asset.Asset{}, item, auditRecords, undoableOperation)
+}
+
+func (s *Store) UpdateAssetAndTags(_ context.Context, item asset.Asset, tagIDs []assettag.ID, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	next := map[assettag.ID]struct{}{}
+	for _, tagID := range tagIDs {
+		tag, found := s.assetTags[tagID]
+		if !found || tag.TenantID.String() != item.TenantID.String() || tag.InventoryID.String() != item.InventoryID.String() || tag.LifecycleState != assettag.LifecycleStateActive {
+			return ports.ErrForbidden
+		}
+		next[tagID] = struct{}{}
+	}
+	if err := s.updateAssetLocked(asset.Asset{}, item, auditRecords, undoableOperation); err != nil {
+		return err
+	}
+	if len(next) == 0 {
+		delete(s.assetTagLinks, item.ID)
+	} else {
+		s.assetTagLinks[item.ID] = next
+	}
+	return nil
 }
 
 func (s *Store) updateAssetLocked(expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {

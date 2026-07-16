@@ -60,6 +60,22 @@ func (s Store) ListAssetAuditRecords(ctx context.Context, tenantID tenant.ID, in
 		TargetID:   targetID,
 	})
 	query = query.Where(&auditRecordModel{InventoryID: stringPtrFromInventoryID(inventoryID)})
+	if len(request.Actions) > 0 {
+		actions := make([]string, 0, len(request.Actions))
+		for _, action := range request.Actions {
+			actions = append(actions, action.String())
+		}
+		query = query.Where(clause.IN{Column: clause.Column{Name: "action"}, Values: stringValues(actions)})
+	}
+	if !request.BeforeOccurredAt.IsZero() && request.BeforeRecordID.String() != "" {
+		query = query.Where(clause.Or(
+			clause.Lt{Column: clause.Column{Name: "occurred_at"}, Value: request.BeforeOccurredAt},
+			clause.And(
+				clause.Eq{Column: clause.Column{Name: "occurred_at"}, Value: request.BeforeOccurredAt},
+				clause.Lt{Column: clause.Column{Name: "id"}, Value: request.BeforeRecordID.String()},
+			),
+		))
+	}
 	var models []auditRecordModel
 	if request.Limit > 0 {
 		query = query.Limit(request.Limit)
