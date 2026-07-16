@@ -951,6 +951,10 @@ Before this direction is promoted into `apps/web`:
 - Implement behind the existing SvelteKit web architecture.
 - Run Svelte type checking.
 - Run web tests.
+- Web unit-test execution must use bounded worker concurrency so the complete
+  component suite remains deterministic on supported contributor machines;
+  individual integration tests must not require broader timeout waivers merely
+  because the runner oversubscribes the host.
 - Web component tests that mount a scroll-locking transient surface must complete the primitive's asynchronous teardown before the shared DOM environment is discarded. The centralized test lifecycle owns that flush so delayed portal or body-style cleanup cannot escape a test, leak into the next test, or run after `document` is unavailable. Cleanup is gated by active body-scroll-lock evidence, advances fake time only through the primitive's bounded cleanup window, restores real timers after the final Svelte tick, and preserves the pre-test body style; unrelated tests must not pay a timer delay or have their pending work flushed.
 - Run the shadcn foundation check after generic primitive changes.
 - Browser-level smoke tests must exercise the authenticated workspace shell through runtime config, stored session state, and API-boundary responses rather than relying on removed unauthenticated demo data.
