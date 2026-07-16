@@ -280,6 +280,20 @@ export class StuffStashInventoryRepository
     }
   }
 
+  async moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset> {
+    this.observer.record('workspace.asset_move_started');
+    try {
+      const asset = await this.mapAssetWithPrimaryPhoto(
+        await this.client.updateAsset(tenantId, inventoryId, assetId, { parentAssetId })
+      );
+      this.observer.record('workspace.asset_moved', { kind: asset.kind });
+      return asset;
+    } catch (error) {
+      this.observer.record('workspace.asset_move_failed');
+      throw safeError(error);
+    }
+  }
+
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     this.observer.record('workspace.asset_archive_started');
     try {

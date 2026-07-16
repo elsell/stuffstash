@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import AssetDetail from './AssetDetail.svelte';
 import type {
+  Asset,
   AssetAttachment,
   AssetViewModel,
   CustomFieldDefinition,
@@ -116,6 +117,33 @@ describe('AssetDetail', () => {
 
     expect(document.body.querySelector('.detail-section')?.textContent).toContain('No description.');
     expect(document.body.textContent).toContain('Edit actions require asset edit access.');
+  });
+
+  it('shows populated custom fields and collapses unset fields by default', () => {
+    mountAssetDetail({
+      asset: { ...asset(), customFields: { serial: 'ABC-123' } },
+      customFieldDefinitions: [customFieldDefinition('serial', 'Serial number'), customFieldDefinition('purchase-store', 'Purchase store')]
+    });
+
+    expect(document.body.querySelector('[aria-label="Custom field values"]')?.textContent).toContain('Serial number ABC-123');
+    expect(document.body.textContent).toContain('Show 1 unset field');
+    expect(document.body.querySelector<HTMLDetailsElement>('.unset-field-disclosure')?.open).toBe(false);
+  });
+
+  it('renders container contents and opens a deep-linked move-here sheet', async () => {
+    const container = { ...asset(), id: 'container-one', title: 'Tool cabinet', kind: 'container' as const, parentAssetId: null };
+    const child: Asset = { ...asset(), id: 'child-one', title: 'Drill', kind: 'item', parentAssetId: container.id };
+    mountAssetDetail({
+      asset: container,
+      action: 'move-here',
+      canCreate: true,
+      workspaceAssets: [container, child]
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('Inside Tool cabinet');
+    expect(document.body.textContent).toContain('Drill');
+    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Move items here');
   });
 
   it('searches by detail tag without opening another action', async () => {
@@ -855,10 +883,12 @@ describe('AssetDetail', () => {
 function mountAssetDetail(
   props: Partial<{
     asset: AssetViewModel;
-    action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
+    action: 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | null;
     attachmentId: string | null;
     attachmentAction: 'delete' | null;
     canEdit: boolean;
+    canCreate: boolean;
+    workspaceAssets: Asset[];
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
     saving: boolean;
@@ -866,8 +896,11 @@ function mountAssetDetail(
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
+    onActionOpen: (action: 'edit' | 'move' | 'move-here' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
     onActionClose: () => void;
+    onOpenAsset: (asset: Asset) => void;
+    onOpenAdd: (kind: 'item', parentAssetId: string) => void;
+    onMoveHere: (asset: Asset) => Promise<void>;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;

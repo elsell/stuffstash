@@ -91,11 +91,27 @@ describe('workspace route state', () => {
     });
   });
 
+  it('parses and builds the canonical location move-here route', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/locations/location_1/move-here'))).toMatchObject({
+      mode: 'location',
+      locationId: 'location_1',
+      assetAction: 'move-here'
+    });
+    expect(workspaceRouteHref({ mode: 'location', locationId: 'location_1', assetAction: 'move-here' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/locations/location_1/move-here'
+    );
+  });
+
   it('parses durable asset actions and settings sections', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'))).toMatchObject({
       mode: 'asset',
       assetId: 'asset_1',
       assetAction: 'move'
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/move-here'))).toMatchObject({
+      mode: 'asset',
+      assetId: 'asset_1',
+      assetAction: 'move-here'
     });
     expect(parseWorkspaceRoute(new URL('https://app.test/tenants/tenant_1/inventories/inv_1/assets/asset_1/delete'))).toMatchObject({
       mode: 'asset',
@@ -245,6 +261,9 @@ describe('workspace route state', () => {
     expect(workspaceRouteHref({ mode: 'locations' }, 'tenant_1', 'inv_1')).toBe('/tenants/tenant_1/inventories/inv_1/locations');
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move'
+    );
+    expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'move-here' }, 'tenant_1', 'inv_1')).toBe(
+      '/tenants/tenant_1/inventories/inv_1/assets/asset_1/move-here'
     );
     expect(workspaceRouteHref({ mode: 'asset', assetId: 'asset_1', assetAction: 'archive' }, 'tenant_1', 'inv_1')).toBe(
       '/tenants/tenant_1/inventories/inv_1/assets/asset_1/archive'

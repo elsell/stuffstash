@@ -97,6 +97,8 @@ The first canonical URL model is:
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}` for asset detail.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/edit` for the asset edit state when edit is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/move` for the asset move state when move is available.
+- `/tenants/{tenantId}/inventories/{inventoryId}/assets/{containerAssetId}/move-here` for the focused one-at-a-time move-into-container workflow.
+- `/tenants/{tenantId}/inventories/{inventoryId}/locations/{locationAssetId}/move-here` for the equivalent focused location workflow.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive` for active asset archive confirmation when archive is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore` for archived asset restore confirmation when restore is available.
 - `/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/delete` for the asset delete confirmation state when delete is available.
@@ -409,6 +411,7 @@ Desktop asset detail layout:
 - The primary photo/gallery must sit on the left or top-left at roughly 320-420px wide when viewport space allows.
 - The asset title, location trail, lifecycle state, kind, custom type, and primary actions must sit beside the photo/gallery.
 - Description and custom fields belong below the hero identity area.
+- Asset detail must show populated custom-field values by default. Applicable fields with no value must remain discoverable behind a collapsed `Show unset fields` disclosure with an accurate count; zero, `false`, and other valid non-null values count as populated.
 - Photos must be presented near the hero as asset identity media, with a thumbnail rail when more than one image is available.
 - Asset detail must expose exactly one visible `Add photo` affordance near the hero on each viewport; the action must not be duplicated between the gallery and the primary action row.
 - Disabled asset-detail photo upload actions must expose a perceivable reason, including missing edit access, inactive lifecycle state, save-in-progress state, or no supported image upload types.
@@ -441,6 +444,16 @@ Asset detail must support:
 - Long location trails.
 - Viewer or denied states for edit-only actions.
 - Archived state when lifecycle views expose archived assets.
+
+Containable asset workspaces:
+
+- Active container and location detail use one shared containable workspace. Compact photo-first child rows open each child's kind-appropriate focused workspace.
+- Containers show immediate active children under `Inside {container title}`. Locations separate direct child containers and locations under `Spaces in {location title}` from active descendant items at any depth under `Items in {location title}`. Descendant items retain structured relative placement; titles containing slash characters are never parsed to derive hierarchy.
+- Children are deterministic: locations and containers precede items, then each group uses the shared locale-aware natural title order with asset ID as a stable tiebreaker.
+- Editable active containers and locations expose `Add item here` as the primary spatial action and `Move items here` as a quieter route-backed action whether empty or populated. Add requires create and edit access; Move here requires edit access.
+- Move-here candidates are active assets in the same inventory for which the target is a valid parent. The target, assets already directly inside it, and candidates whose move would create a cycle are excluded. The search-first sheet is bounded, shows kind and current placement, moves one asset at a time, requires explicit confirmation, and preserves the owning route when dismissed.
+- Successful movement refreshes the moved asset in the workspace model, keeps the target workspace open, exposes saved feedback, and returns focus to the `Move items here` trigger after the route closes.
+- Focused locations use a bounded detail hierarchy with a stable photo or kind-fallback identity region, subordinate maintenance actions, grouped spatial actions, and distinct Spaces and Items grouped lists. Mobile preserves this order with 44-CSS-pixel controls and wrapping metadata.
 
 Asset detail loading and actions must use real API-backed boundaries:
 

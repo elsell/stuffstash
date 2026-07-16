@@ -177,6 +177,12 @@ class AttachmentDeleteRefreshRepository extends SeededInventoryRepository {
   }
 }
 
+class UnsafeMoveHereRepository extends SeededInventoryRepository {
+  async moveAsset(): Promise<never> {
+    throw new Error('private database host diagnostic');
+  }
+}
+
 class LifecycleSelectionFailingRepository extends SeededInventoryRepository {
   async selectAssetLifecycle(
     _tenantId: string,
@@ -549,8 +555,28 @@ describe('InventoryWorkspaceApp route application', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/tenants/tenant-home/inventories/inventory-household/locations/location-garage');
       expect(document.body.textContent).toContain('Garage');
+      expect(document.body.textContent).toContain('Move items here');
+      expect(document.body.textContent).toContain('Edit location');
       expect(document.body.textContent).toContain('Move place');
       expect(document.body.textContent).toContain('Archive');
+    });
+  });
+
+  it('does not expose internal move-here failure diagnostics', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/locations/location-garage/move-here',
+      new UnsafeMoveHereRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeTruthy());
+    await waitFor(() => expect(document.body.querySelector('[aria-label="Select Passport"]')).toBeTruthy());
+    document.body.querySelector<HTMLButtonElement>('[aria-label="Select Passport"]')?.click();
+    await waitFor(() => expect(buttonContaining('Move Passport here')).toBeTruthy());
+    buttonContaining('Move Passport here').click();
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Move not saved. Passport stayed where it was.');
+      expect(document.body.textContent).not.toContain('private database host diagnostic');
     });
   });
 

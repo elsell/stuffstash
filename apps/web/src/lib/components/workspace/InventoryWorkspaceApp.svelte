@@ -184,6 +184,10 @@
   let editAssetAllowed = $derived(canEditAsset(selectedInventory));
   let canCreateStarter = $derived(!data.context.selectedTenantId || canCreateInventory(selectedTenant));
   let userLabel = $derived(accountDisplayLabel(data.context.principal));
+  let modalSurfaceOpen = $derived(
+    addOpen || assetAction !== null || attachmentAction === 'delete' ||
+    accessInvitationAction !== null || customizationAction !== null
+  );
 
   onMount(() => {
     void applyRoute(currentWorkspaceRoute());
@@ -373,6 +377,28 @@
       }
       error = caught instanceof Error ? caught.message : 'Action failed.';
       throw new Error(error);
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function moveAssetHere(candidate: Asset): Promise<void> {
+    const target = selectedAsset ?? selectedLocation;
+    if (!target || (target.kind !== 'container' && target.kind !== 'location')) return;
+    if (!editAssetAllowed) {
+      throw new Error('Move not saved. You do not have permission to move assets in this inventory.');
+    }
+    busy = true;
+    notification = null;
+    try {
+      const moved = await repository.moveAsset(candidate.tenantId, candidate.inventoryId, candidate.id, target.id);
+      data = replaceWorkspaceAsset(data, moved);
+      setMutationSuccessNotification(`Moved ${moved.title} into ${target.title}.`, moved, viewAssetAction(moved));
+      closeAssetActionRoute();
+    } catch (caught) {
+      if (handleSessionExpired(caught)) return;
+      const reason = safeOperationFailureDescription(caught);
+      throw new Error(`Move not saved. ${candidate.title} stayed where it was. ${reason}`);
     } finally {
       busy = false;
     }
@@ -1018,6 +1044,15 @@
           attachmentId = null;
           attachmentAction = null;
           mode = 'location';
+          if (route.assetAction === 'move-here' && !assetRouteActionIsAvailable(route.assetAction, selectedInventory, location)) {
+            assetAction = null;
+            replaceRoute({
+              mode: 'location',
+              tenantId: location.tenantId,
+              inventoryId: location.inventoryId,
+              locationId: location.id
+            });
+          }
           canonicalizeRouteAlias(route, shouldCanonicalizeAlias);
         } else {
           closeDetailToHome();
@@ -1420,14 +1455,16 @@
   }
 
   function openAssetActionRoute(action: Exclude<AssetRouteAction, null>): void {
-    if (selectedAsset) {
-      const isLocationEdit = selectedAsset.kind === 'location' && action === 'edit';
+    const target = selectedAsset ?? selectedLocation;
+    if (target) {
+      const isLocationEdit = target.kind === 'location' && action === 'edit';
+      const isLocationMoveHere = target.kind === 'location' && action === 'move-here';
       navigateTo({
-        mode: 'asset',
-        tenantId: selectedAsset.tenantId,
-        inventoryId: selectedAsset.inventoryId,
-        locationId: isLocationEdit ? selectedAsset.id : null,
-        assetId: selectedAsset.id,
+        mode: isLocationMoveHere ? 'location' : 'asset',
+        tenantId: target.tenantId,
+        inventoryId: target.inventoryId,
+        locationId: isLocationEdit || isLocationMoveHere ? target.id : null,
+        assetId: isLocationMoveHere ? null : target.id,
         assetAction: action,
         action: action === 'edit' ? 'edit' : null
       });
@@ -1449,8 +1486,8 @@
 
   function closeAssetActionRoute(): void {
     assetAction = null;
-    if (selectedAsset) {
-      const closingAsset = selectedAsset;
+    const closingAsset = selectedAsset ?? selectedLocation;
+    if (closingAsset) {
       if (closingAsset.kind === 'location') {
         mode = 'location';
         selectedLocationId = closingAsset.id;
@@ -1696,7 +1733,7 @@
     searchSuggestions={searchSuggestions}
     bind:searchQuery
     canCreateAsset={createAssetAllowed && data.context.assetLifecycleState === 'active'}
-    modalOpen={addOpen}
+    modalOpen={modalSurfaceOpen}
     onSelectTenant={(tenantId) => { void selectTenant(tenantId); }}
     onSelectInventory={(tenantId, inventoryId) => { void selectInventory(tenantId, inventoryId); }}
     onModeChange={navigateMode}
@@ -1774,6 +1811,7 @@
       onAssetActionOpen: openAssetActionRoute,
       onAssetActionClose: closeAssetActionRoute,
       onAssetSave: updateAsset,
+      onMoveAssetHere: moveAssetHere,
       onAssetArchive: archiveSelectedAsset,
       onAssetRestore: restoreSelectedAsset,
       onAssetDelete: deleteSelectedAsset,

@@ -464,6 +464,18 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     });
   });
 
+  it('moves an asset with a parent-only generated update payload', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+
+    await expect(
+      repository.moveAsset('tenant-home', 'inventory-household', 'asset-passport', 'asset-safe')
+    ).resolves.toMatchObject({ id: 'asset-passport', parentAssetId: 'asset-safe' });
+
+    expect(requests).toHaveLength(1);
+    expect(await requests[0]?.json()).toEqual({ parentAssetId: 'asset-safe' });
+  });
+
   it('applies target-scoped Undo and Redo through generated client paths', async () => {
     const { fetch, requests } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);

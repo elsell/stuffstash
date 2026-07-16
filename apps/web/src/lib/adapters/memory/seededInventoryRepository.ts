@@ -265,6 +265,22 @@ export class SeededInventoryRepository
     return updated;
   }
 
+  async moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset> {
+    const asset = await this.getAsset(tenantId, inventoryId, assetId);
+    this.validateAssetParent(tenantId, inventoryId, assetId, parentAssetId);
+    const moved: Asset = { ...asset, parentAssetId, updatedAt: new Date().toISOString() };
+    this.seed = {
+      ...this.seed,
+      assets: this.seed.assets.map((candidate) =>
+        candidate.tenantId === tenantId && candidate.inventoryId === inventoryId && candidate.id === assetId
+          ? moved
+          : candidate
+      )
+    };
+    this.recordAssetAudit(moved, 'asset.moved');
+    return moved;
+  }
+
   async archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
     const asset = await this.setAssetLifecycle(tenantId, inventoryId, assetId, 'archived');
     this.recordAssetAudit(asset, 'asset.archived');

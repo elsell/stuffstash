@@ -18,7 +18,7 @@
     assetDetailHref,
     attachmentDeleteHref as assetAttachmentDeleteHref
   } from '$lib/application/workspaceAssetActions';
-  import { assetDescriptionText, assetEditUnavailableStatus } from '$lib/application/workspaceAssetDetail';
+  import { assetDescriptionText, assetEditUnavailableStatus, partitionAssetDetailFields } from '$lib/application/workspaceAssetDetail';
   import {
     buildDetailPhotos,
     photoUploadUnavailableReason,
@@ -30,6 +30,7 @@
   } from '$lib/application/workspaceAssetMedia';
   import type { AssetRouteAction, AttachmentRouteAction } from '$lib/application/workspaceRoute';
 	  import type {
+	    Asset,
 	    AssetAttachment,
 	    AssetCheckout,
 	    AssetViewModel,
@@ -47,11 +48,14 @@
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetFilesSection, { type AssetFilesError } from './AssetFilesSection.svelte';
   import CheckoutBadge from './CheckoutBadge.svelte';
+  import ContainedAssetWorkspace from './ContainedAssetWorkspace.svelte';
   import { formatBytes } from './formatBytes';
 
   let {
     asset,
     canEdit,
+    canCreate = false,
+    workspaceAssets = [],
     action = null,
     attachmentId = null,
     attachmentAction = null,
@@ -66,6 +70,9 @@
     onBack,
     onActionOpen,
     onActionClose,
+    onOpenAsset = () => {},
+    onOpenAdd = () => {},
+    onMoveHere = async () => {},
     onSave,
     onArchive,
     onRestore,
@@ -81,6 +88,8 @@
   }: {
     asset: AssetViewModel;
     canEdit: boolean;
+    canCreate?: boolean;
+    workspaceAssets?: Asset[];
     action?: AssetRouteAction;
     attachmentId?: string | null;
     attachmentAction?: AttachmentRouteAction;
@@ -93,8 +102,11 @@
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
-    onActionOpen: (action: 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return') => void;
+    onActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onActionClose: () => void;
+    onOpenAsset?: (asset: Asset) => void;
+    onOpenAdd?: (kind: 'item', parentAssetId: string) => void;
+    onMoveHere?: (asset: Asset) => Promise<void>;
     onSave: (draft: UpdateAssetDraft) => Promise<void>;
     onArchive: () => Promise<void>;
     onRestore: () => Promise<void>;
@@ -164,6 +176,7 @@
         (!!asset.customAssetTypeId && definition.customAssetTypeIds.includes(asset.customAssetTypeId))
     )
   );
+  let detailFieldGroups = $derived(partitionAssetDetailFields(displayFields, asset.customFields));
 
   $effect(() => {
     if (!removalScopeAssetId) {
@@ -195,6 +208,8 @@
     } else if (action === 'move' && canEdit && asset.lifecycleState === 'active') {
       actionReturnHref = actionHref('move');
       openMove(false);
+    } else if (action === 'move-here' && canEdit && asset.kind === 'container' && asset.lifecycleState === 'active') {
+      panel = 'none';
     } else if (action === 'archive' && canEdit && asset.lifecycleState === 'active') {
       actionReturnHref = actionHref('archive');
       panel = 'archive';
@@ -705,6 +720,21 @@
         {/if}
       </div>
     </AssetDetailHero>
+    {#if asset.kind === 'container'}
+      <ContainedAssetWorkspace
+        target={asset}
+        assets={workspaceAssets}
+        {canCreate}
+        {canEdit}
+        {saving}
+        moveHereOpen={action === 'move-here'}
+        {onOpenAsset}
+        {onOpenAdd}
+        onOpenMoveHere={() => onActionOpen('move-here')}
+        onCloseMoveHere={onActionClose}
+        {onMoveHere}
+      />
+    {/if}
   <div class="asset-detail-sections">
       <AssetDetailActionPanel
         {panel}
@@ -742,15 +772,25 @@
     <section class="detail-section" aria-labelledby="asset-description-title">
       <h2 id="asset-description-title">Details</h2>
       <p>{descriptionText}</p>
-      {#if displayFields.length > 0}
+      {#if detailFieldGroups.populated.length > 0}
         <dl class="detail-list custom-detail-list" aria-label="Custom field values">
-          {#each displayFields as field}
+          {#each detailFieldGroups.populated as field}
             <div>
               <dt>{field.displayName}</dt>
-              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key]) || 'Not set'}</dd>
+              <dd>{stringifyCustomFieldValue(asset.customFields?.[field.key])}</dd>
             </div>
           {/each}
         </dl>
+      {/if}
+      {#if detailFieldGroups.unset.length > 0}
+        <details class="unset-field-disclosure">
+          <summary>Show {detailFieldGroups.unset.length} unset {detailFieldGroups.unset.length === 1 ? 'field' : 'fields'}</summary>
+          <dl class="detail-list custom-detail-list" aria-label="Unset custom fields">
+            {#each detailFieldGroups.unset as field}
+              <div><dt>{field.displayName}</dt><dd>Not set</dd></div>
+            {/each}
+          </dl>
+        </details>
       {/if}
     </section>
     <AssetFilesSection

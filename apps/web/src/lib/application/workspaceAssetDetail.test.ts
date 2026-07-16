@@ -6,6 +6,7 @@ import {
   assetDescriptionText,
   assetEditUnavailableStatus,
   assetFilesStatus,
+  partitionAssetDetailFields,
   loadWorkspaceAssetDetail,
   refreshWorkspaceAssetAttachments
 } from './workspaceAssetDetail';
@@ -161,7 +162,35 @@ describe('workspace asset detail helpers', () => {
     });
     expect(assetFilesStatus(1)).toBeNull();
   });
+
+  it('separates populated custom fields from unset fields without losing falsey values', () => {
+    const definitions = [
+      field('serial', 'Serial number'),
+      field('insured', 'Insured'),
+      field('quantity', 'Quantity'),
+      field('notes', 'Notes')
+    ];
+
+    expect(partitionAssetDetailFields(definitions, { serial: 'ABC-123', insured: false, quantity: 0, notes: '' }))
+      .toEqual({ populated: definitions.slice(0, 3), unset: [definitions[3]] });
+  });
 });
+
+function field(key: string, displayName: string): import('$lib/domain/inventory').CustomFieldDefinition {
+  return {
+    id: `field-${key}`,
+    tenantId: 'tenant-home',
+    inventoryId: 'inventory-household',
+    scope: 'inventory',
+    key,
+    displayName,
+    type: 'text',
+    enumOptions: [],
+    applicability: 'all_assets',
+    customAssetTypeIds: [],
+    lifecycleState: 'active'
+  };
+}
 
 function workspaceData(assets: Asset[]): import('$lib/domain/inventory').WorkspaceData {
   return {

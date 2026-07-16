@@ -34,6 +34,7 @@ export interface InventoryRepository {
   selectAssetLifecycle(tenantId: string, inventoryId: string, lifecycleState: AssetLifecycleFilter): Promise<WorkspaceData>;
   getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
   updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset>;
+  moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset>;
   createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset>;
   createAssetTag(tenantId: string, inventoryId: string, draft: AssetTagDraft): Promise<AssetTag>;
   archiveAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;

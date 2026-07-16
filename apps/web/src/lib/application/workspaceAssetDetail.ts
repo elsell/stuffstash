@@ -1,4 +1,4 @@
-import type { Asset, AssetAttachment, AssetCheckout, WorkspaceData } from '$lib/domain/inventory';
+import type { Asset, AssetAttachment, AssetCheckout, CustomFieldDefinition, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import { isAuthenticationRequiredError } from './authenticationRequired';
 import { replaceWorkspaceAsset } from './workspaceAssetWorkflow';
@@ -31,6 +31,23 @@ export interface WorkspaceAssetDetailState {
 export interface AssetDetailStatusPresentation {
   kind: 'edit-unavailable' | 'files-empty';
   message: string;
+}
+
+export interface AssetDetailFieldGroups {
+  populated: CustomFieldDefinition[];
+  unset: CustomFieldDefinition[];
+}
+
+export function partitionAssetDetailFields(
+  definitions: CustomFieldDefinition[],
+  values: Record<string, unknown> = {}
+): AssetDetailFieldGroups {
+  return definitions.reduce<AssetDetailFieldGroups>((groups, definition) => {
+    const value = values[definition.key];
+    const target = value === undefined || value === null || value === '' ? groups.unset : groups.populated;
+    target.push(definition);
+    return groups;
+  }, { populated: [], unset: [] });
 }
 
 export async function loadWorkspaceAssetDetail(

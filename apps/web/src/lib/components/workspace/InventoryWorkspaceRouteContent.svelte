@@ -115,6 +115,7 @@
     onAssetActionOpen: (action: Exclude<AssetRouteAction, null>) => void;
     onAssetActionClose: () => void;
     onAssetSave: (draft: UpdateAssetDraft) => Promise<void>;
+    onMoveAssetHere: (asset: Asset) => Promise<void>;
     onAssetArchive: () => Promise<void>;
     onAssetRestore: () => Promise<void>;
     onAssetDelete: () => Promise<void>;
@@ -160,7 +161,7 @@
 </script>
 
 <script lang="ts">
-  import { containedAssets, moveParentTargets, recentlyChangedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
+  import { moveParentTargets, recentlyChangedAssets, topLevelLocations, withTrail } from '$lib/application/workspace';
   import {
     workspaceNoInventoryPresentation,
     workspaceUnavailableRoutePresentation
@@ -223,20 +224,27 @@
 {:else if route.mode === 'location' && workspace.selectedLocation}
   <LocationView
     location={workspace.selectedLocation}
-    assets={containedAssets(workspace.assets, workspace.selectedLocation.id)}
+    workspaceAssets={workspace.assets}
     canEdit={status.editAssetAllowed}
     canCreateAsset={status.createAssetAllowed}
+    saving={status.busy}
+    moveHereOpen={route.assetAction === 'move-here'}
     onBack={handlers.onCloseLocation}
     onOpenLocation={handlers.onOpenLocation}
     onEditLocation={handlers.onEditLocation}
     onOpenAsset={handlers.onOpenAsset}
     onOpenAdd={handlers.onOpenAdd}
+    onOpenMoveHere={() => handlers.onAssetActionOpen('move-here')}
+    onCloseMoveHere={handlers.onAssetActionClose}
+    onMoveHere={handlers.onMoveAssetHere}
     onTagSearch={handlers.onAssetTagSearch}
   />
 {:else if route.mode === 'asset' && workspace.selectedAsset}
   <AssetDetail
     asset={withTrail(workspace.selectedAsset, workspace.detailAssets)}
     canEdit={status.editAssetAllowed}
+    canCreate={status.createAssetAllowed}
+    workspaceAssets={workspace.detailAssets}
     parentTargets={moveParentTargets(workspace.detailAssets, workspace.selectedAsset.id)}
     customFieldDefinitions={workspace.data.context.customFieldDefinitions}
     assetTags={workspace.data.context.assetTags ?? []}
@@ -251,6 +259,9 @@
     onBack={handlers.onCloseAssetDetail}
     onActionOpen={handlers.onAssetActionOpen}
     onActionClose={handlers.onAssetActionClose}
+    onOpenAsset={(asset) => asset.kind === 'location' ? handlers.onOpenLocation(asset) : void handlers.onOpenAsset(asset)}
+    onOpenAdd={handlers.onOpenAdd}
+    onMoveHere={handlers.onMoveAssetHere}
     onSave={handlers.onAssetSave}
     onArchive={handlers.onAssetArchive}
     onRestore={handlers.onAssetRestore}

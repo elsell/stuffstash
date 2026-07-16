@@ -271,6 +271,37 @@ describe('InventoryWorkspaceRouteContent', () => {
     expect(document.body.textContent).toContain('Edit asset');
   });
 
+  it('opens a location child from a container through location navigation', async () => {
+    const base = await routeContentProps();
+    const container = asset('container-one', 'Tool cabinet', 'container');
+    const nestedLocation = asset('location-nested', 'Nested place', 'location', container.id);
+    const assets = [...base.workspace.data.assets, container, nestedLocation];
+    const openedLocations: string[] = [];
+    const openedAssets: string[] = [];
+    component = mount(InventoryWorkspaceRouteContent, {
+      target: document.body,
+      props: await routeContentProps({
+        route: { mode: 'asset' },
+        workspace: {
+          data: { ...base.workspace.data, assets },
+          assets,
+          detailAssets: assets,
+          selectedAsset: container
+        },
+        handlers: {
+          onOpenLocation: (candidate) => openedLocations.push(candidate.id),
+          onOpenAsset: async (candidate) => { openedAssets.push(candidate.id); }
+        }
+      })
+    });
+
+    link('Nested place').click();
+    await tick();
+
+    expect(openedLocations).toEqual(['location-nested']);
+    expect(openedAssets).toEqual([]);
+  });
+
   it('renders an accessible busy status while asset details load', async () => {
     component = mount(InventoryWorkspaceRouteContent, {
       target: document.body,
@@ -418,6 +449,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       onAssetActionOpen: () => {},
       onAssetActionClose: () => {},
       onAssetSave: async () => {},
+	    onMoveAssetHere: async () => {},
 	      onAssetArchive: async () => {},
 	      onAssetRestore: async () => {},
 	      onAssetDelete: async () => {},
