@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -298,12 +299,22 @@ func missingRealtimeVoiceDestinationResolution(reference agentmodel.SemanticRefe
 	return agentmodel.Resolution{ReferenceKey: reference, Status: agentmodel.ResolutionMissing, Evidence: "No authorized candidate forms the requested destination chain."}
 }
 
+type realtimeVoiceResponseGrounding struct {
+	Brief    agentmodel.GroundedVoiceResponseBrief
+	Bindings []ports.StructuredAgentResponseArtifact
+}
+
 func realtimeVoiceInvestigationResponseBrief(intent agentmodel.Intent, resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) (agentmodel.GroundedVoiceResponseBrief, error) {
+	grounding, err := realtimeVoiceInvestigationResponseGrounding(intent, resolutions, candidates)
+	return grounding.Brief, err
+}
+
+func realtimeVoiceInvestigationResponseGrounding(intent agentmodel.Intent, resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) (realtimeVoiceResponseGrounding, error) {
 	if intent.Kind == agentmodel.IntentKindUnsupported || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionUnsupported) {
-		return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+		return validatedRealtimeVoiceResponseGrounding(agentmodel.GroundedVoiceResponseBrief{
 			Kind: agentmodel.ResponseBriefKindUnsupported, Mode: agentmodel.ResponseAnswerModeUnsupported,
 			Operation: agentmodel.OperationUnsupported, Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceAbsent,
-		})
+		}, nil)
 	}
 	for _, resolution := range resolutions {
 		if resolution.ReferenceKey == agentmodel.SemanticReferenceSubject || resolution.Status != agentmodel.ResolutionPlausible || len(resolution.CandidateIDs) != 1 {
@@ -311,62 +322,66 @@ func realtimeVoiceInvestigationResponseBrief(intent agentmodel.Intent, resolutio
 		}
 		candidate, exists := candidates[resolution.CandidateIDs[0]]
 		if !exists {
-			return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
+			return realtimeVoiceResponseGrounding{}, ports.ErrInvalidProviderInput
+		}
+		bindings, err := realtimeVoiceResponseCandidateBindings(candidate)
+		if err != nil {
+			return realtimeVoiceResponseGrounding{}, err
 		}
 		requested := realtimeVoiceInvestigationReferenceMention(intent, resolution.ReferenceKey)
-		return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+		return validatedRealtimeVoiceResponseGrounding(agentmodel.GroundedVoiceResponseBrief{
 			Kind: agentmodel.ResponseBriefKindClarification, Mode: agentmodel.ResponseAnswerModeClarify, Operation: intent.Operation,
 			Subject: requested, Confidence: agentmodel.ResponseConfidencePlausible,
 			Findings: []agentmodel.ResponseFinding{realtimeVoiceResponseFinding("finding.0", candidate)},
-		})
+		}, bindings)
 	}
 	for _, resolution := range resolutions {
 		if resolution.Status == agentmodel.ResolutionAmbiguous {
-			findings, truncated, err := realtimeVoiceResponseFindings(agentmodel.ResponseAnswerModeClarify, resolution.CandidateIDs, candidates)
+			selection, err := selectRealtimeVoiceResponseFindings(agentmodel.ResponseAnswerModeClarify, resolution.CandidateIDs, candidates)
 			if err != nil {
-				return agentmodel.GroundedVoiceResponseBrief{}, err
+				return realtimeVoiceResponseGrounding{}, err
 			}
-			return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+			return validatedRealtimeVoiceResponseGrounding(agentmodel.GroundedVoiceResponseBrief{
 				Kind: agentmodel.ResponseBriefKindClarification, Mode: agentmodel.ResponseAnswerModeClarify, Operation: intent.Operation,
-				Subject: realtimeVoiceInvestigationReferenceMention(intent, resolution.ReferenceKey), Confidence: agentmodel.ResponseConfidenceAmbiguous, Findings: findings, Truncated: truncated,
-			})
+				Subject: realtimeVoiceInvestigationReferenceMention(intent, resolution.ReferenceKey), Confidence: agentmodel.ResponseConfidenceAmbiguous, Findings: selection.Findings, Truncated: selection.Truncated,
+			}, selection.Bindings)
 		}
 	}
 	subject, exists := realtimeVoiceInvestigationResolution(resolutions, agentmodel.SemanticReferenceSubject)
 	if !exists {
-		return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
+		return realtimeVoiceResponseGrounding{}, ports.ErrInvalidProviderInput
 	}
 	if intent.Kind == agentmodel.IntentKindChange {
 		if subject.Status == agentmodel.ResolutionAbsent {
-			return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+			return validatedRealtimeVoiceResponseGrounding(agentmodel.GroundedVoiceResponseBrief{
 				Kind: agentmodel.ResponseBriefKindClarification, Mode: agentmodel.ResponseAnswerModeClarify, Operation: intent.Operation,
 				Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceAbsent,
-			})
+			}, nil)
 		}
-		return agentmodel.GroundedVoiceResponseBrief{}, errors.New("change intent requires action-plan compilation")
+		return realtimeVoiceResponseGrounding{}, errors.New("change intent requires action-plan compilation")
 	}
 	if subject.Status == agentmodel.ResolutionAbsent {
-		return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+		return validatedRealtimeVoiceResponseGrounding(agentmodel.GroundedVoiceResponseBrief{
 			Kind: agentmodel.ResponseBriefKindAnswer, Mode: agentmodel.ResponseAnswerModeNotFound, Operation: intent.Operation,
 			Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceAbsent,
-		})
+		}, nil)
 	}
 	mode := realtimeVoiceResponseAnswerMode(intent.Operation)
-	findings, truncated, err := realtimeVoiceResponseFindings(mode, subject.CandidateIDs, candidates)
+	selection, err := selectRealtimeVoiceResponseFindings(mode, subject.CandidateIDs, candidates)
 	if err != nil {
-		return agentmodel.GroundedVoiceResponseBrief{}, err
+		return realtimeVoiceResponseGrounding{}, err
 	}
 	confidence := agentmodel.ResponseConfidenceStrong
 	if subject.Status == agentmodel.ResolutionPlausible {
 		confidence = agentmodel.ResponseConfidencePlausible
 	}
-	if subject.Status == agentmodel.ResolutionCollection && intent.Operation == agentmodel.OperationLocate && len(findings) == 1 && (findings[0].Kind == "container" || findings[0].Kind == "location") {
+	if subject.Status == agentmodel.ResolutionCollection && intent.Operation == agentmodel.OperationLocate && len(selection.Findings) == 1 && (selection.Findings[0].Kind == "container" || selection.Findings[0].Kind == "location") {
 		confidence = agentmodel.ResponseConfidencePlausible
 	}
-	return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+	return validatedRealtimeVoiceResponseGrounding(agentmodel.GroundedVoiceResponseBrief{
 		Kind: agentmodel.ResponseBriefKindAnswer, Mode: mode, Operation: intent.Operation,
-		Subject: intent.SubjectMention, Confidence: confidence, Findings: findings, Truncated: truncated,
-	})
+		Subject: intent.SubjectMention, Confidence: confidence, Findings: selection.Findings, Truncated: selection.Truncated,
+	}, selection.Bindings)
 }
 
 func realtimeVoiceResponseAnswerMode(operation agentmodel.Operation) agentmodel.ResponseAnswerMode {
@@ -390,12 +405,23 @@ func realtimeVoiceResponseAnswerMode(operation agentmodel.Operation) agentmodel.
 	}
 }
 
+type realtimeVoiceResponseFindingSelection struct {
+	Findings  []agentmodel.ResponseFinding
+	Bindings  []ports.StructuredAgentResponseArtifact
+	Truncated bool
+}
+
 func realtimeVoiceResponseFindings(mode agentmodel.ResponseAnswerMode, ids []string, candidates map[string]agentmodel.CandidateObservation) ([]agentmodel.ResponseFinding, bool, error) {
+	selection, err := selectRealtimeVoiceResponseFindings(mode, ids, candidates)
+	return selection.Findings, selection.Truncated, err
+}
+
+func selectRealtimeVoiceResponseFindings(mode agentmodel.ResponseAnswerMode, ids []string, candidates map[string]agentmodel.CandidateObservation) (realtimeVoiceResponseFindingSelection, error) {
 	items := make([]agentmodel.CandidateObservation, 0, len(ids))
 	for _, id := range ids {
 		candidate, exists := candidates[id]
 		if !exists {
-			return nil, false, ports.ErrInvalidProviderInput
+			return realtimeVoiceResponseFindingSelection{}, ports.ErrInvalidProviderInput
 		}
 		items = append(items, candidate)
 	}
@@ -409,6 +435,7 @@ func realtimeVoiceResponseFindings(mode agentmodel.ResponseAnswerMode, ids []str
 		return items[i].Title < items[j].Title
 	})
 	findings := make([]agentmodel.ResponseFinding, 0, min(len(items), 8))
+	bindings := make([]ports.StructuredAgentResponseArtifact, 0, min(len(items)*2, 16))
 	presentationCost := 0
 	for index, candidate := range items {
 		finding := realtimeVoiceResponseFinding(fmt.Sprintf("finding.%d", index), candidate)
@@ -423,9 +450,51 @@ func realtimeVoiceResponseFindings(mode agentmodel.ResponseAnswerMode, ids []str
 			break
 		}
 		findings = append(findings, finding)
+		candidateBindings, err := realtimeVoiceResponseCandidateBindings(candidate)
+		if err != nil {
+			return realtimeVoiceResponseFindingSelection{}, err
+		}
+		bindings = append(bindings, candidateBindings...)
 		presentationCost += cost
 	}
-	return findings, len(findings) < len(items), nil
+	return realtimeVoiceResponseFindingSelection{Findings: findings, Bindings: bindings, Truncated: len(findings) < len(items)}, nil
+}
+
+func realtimeVoiceResponseCandidateBindings(candidate agentmodel.CandidateObservation) ([]ports.StructuredAgentResponseArtifact, error) {
+	assetID, validID := asset.NewID(candidate.CandidateID)
+	title, validTitle := asset.NewTitle(candidate.Title)
+	kind, validKind := asset.NewKind(candidate.Kind)
+	if !validID || !validTitle || !validKind {
+		return nil, ports.ErrInvalidProviderInput
+	}
+	bindings := []ports.StructuredAgentResponseArtifact{{
+		Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: assetID, Title: title.String(), AssetKind: kind,
+	}}
+	parentIDValue := strings.TrimSpace(candidate.ParentAssetID)
+	parentTitleValue := strings.TrimSpace(candidate.ParentTitle)
+	parentKindValue := strings.TrimSpace(candidate.ParentKind)
+	if parentIDValue == "" && parentTitleValue == "" && parentKindValue == "" {
+		return bindings, nil
+	}
+	parentID, validParentID := asset.NewID(parentIDValue)
+	parentTitle, validParentTitle := asset.NewTitle(parentTitleValue)
+	parentKind, validParentKind := asset.NewKind(parentKindValue)
+	if !validParentID || !validParentTitle || !validParentKind {
+		return nil, ports.ErrInvalidProviderInput
+	}
+	bindings[0].Context = parentTitle.String()
+	parentContext := ""
+	if path := candidate.ContainmentPath; len(path) >= 3 && path[len(path)-1] == title.String() && path[len(path)-2] == parentTitle.String() {
+		outerTitle, validOuterTitle := asset.NewTitle(path[len(path)-3])
+		if !validOuterTitle {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		parentContext = outerTitle.String()
+	}
+	bindings = append(bindings, ports.StructuredAgentResponseArtifact{
+		Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: parentID, Title: parentTitle.String(), AssetKind: parentKind, Context: parentContext,
+	})
+	return bindings, nil
 }
 
 func realtimeVoiceResponseFinding(key string, candidate agentmodel.CandidateObservation) agentmodel.ResponseFinding {
@@ -493,6 +562,15 @@ func validatedRealtimeVoiceResponseBrief(brief agentmodel.GroundedVoiceResponseB
 		return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
 	}
 	return brief, nil
+}
+
+func validatedRealtimeVoiceResponseGrounding(brief agentmodel.GroundedVoiceResponseBrief, bindings []ports.StructuredAgentResponseArtifact) (realtimeVoiceResponseGrounding, error) {
+	if brief.Validate() != nil || len(bindings) > 16 {
+		return realtimeVoiceResponseGrounding{}, ports.ErrInvalidProviderInput
+	}
+	return realtimeVoiceResponseGrounding{
+		Brief: brief, Bindings: append([]ports.StructuredAgentResponseArtifact{}, bindings...),
+	}, nil
 }
 
 func hasRealtimeVoicePlausibleDestination(resolutions []agentmodel.Resolution) bool {

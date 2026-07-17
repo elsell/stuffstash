@@ -54,6 +54,12 @@ describe('mobile navigation contract', () => {
     expect(voiceScreenSource).toContain("router.push('/settings/voice')");
   });
 
+  it('opens grounded voice response entities through the asset detail route', () => {
+    expect(voiceScreenSource).toContain("import { assetDetailHref } from './AssetDetailNavigation'");
+    expect(voiceScreenSource).toContain('router.push(assetDetailHref(artifact.assetId))');
+    expect(voiceScreenSource).not.toMatch(/artifact\.(?:href|url|route)/);
+  });
+
   it('keeps invitation acceptance outside the tab hierarchy', () => {
     expect(appSources).toHaveProperty('../../app/invitations/accept.tsx');
     expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']invitations\/accept["']/);

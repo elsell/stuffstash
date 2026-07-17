@@ -39,6 +39,9 @@ func TestGoogleGeminiGeneratesResponseFromGroundedBrief(t *testing.T) {
 	if !strings.Contains(prompt, "untrusted grounded response brief") || !strings.Contains(prompt, `"confidence":"plausible"`) {
 		t.Fatalf("expected bounded grounded prompt, got %q", prompt)
 	}
+	if strings.Contains(prompt, `"assetId"`) || strings.Contains(prompt, `"artifacts"`) {
+		t.Fatalf("response generator received navigation metadata: %q", prompt)
+	}
 	if !strings.Contains(prompt, "place findings may be omitted") || !strings.Contains(prompt, "intentionally supplied a bounded presentation subset") {
 		t.Fatalf("expected item-complete and truncation-aware realization policy, got %q", prompt)
 	}

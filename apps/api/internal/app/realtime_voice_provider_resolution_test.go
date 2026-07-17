@@ -238,6 +238,7 @@ func resolvedVoiceResponse(brief agentmodel.GroundedVoiceResponseBrief) ports.Vo
 		titles = append(titles, finding.Title)
 	}
 	text := "I couldn't find " + brief.Subject + " in this inventory."
+	displayText := text
 	switch brief.Mode {
 	case agentmodel.ResponseAnswerModeLocate:
 		location := brief.Findings[0].Title
@@ -256,6 +257,10 @@ func resolvedVoiceResponse(brief agentmodel.GroundedVoiceResponseBrief) ports.Vo
 			prefix = "I think " + brief.Subject + " are probably"
 		}
 		text = prefix + " in " + location + "."
+		displayText = text
+		if brief.Confidence == agentmodel.ResponseConfidencePlausible {
+			displayText = "I think " + brief.Findings[0].Title + " is probably in " + location + "."
+		}
 	case agentmodel.ResponseAnswerModeInventory:
 		text = "You have " + strings.Join(titles, " and ") + "."
 	case agentmodel.ResponseAnswerModeContents:
@@ -271,7 +276,10 @@ func resolvedVoiceResponse(brief agentmodel.GroundedVoiceResponseBrief) ports.Vo
 			text = brief.Findings[0].Title + ": " + brief.Findings[0].Facts[len(brief.Findings[0].Facts)-1]
 		}
 	}
-	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}
+	if displayText == "I couldn't find "+brief.Subject+" in this inventory." {
+		displayText = text
+	}
+	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: displayText}
 }
 
 type failingResolvedLanguageInference struct {

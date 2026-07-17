@@ -592,7 +592,8 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         response: {
           kind: assistantResponseKindField(response),
           spokenResponse: stringField(response, 'spokenResponse'),
-          displayResponse: stringField(response, 'displayResponse')
+          displayResponse: stringField(response, 'displayResponse'),
+          artifacts: voiceResponseArtifactsField(response)
         }
       };
     }
@@ -738,6 +739,46 @@ function assistantResponseKindField(message: Record<string, unknown>): VoiceAssi
     default:
       throw new Error('Voice structured response kind is not supported.');
   }
+}
+
+function voiceResponseArtifactsField(message: Record<string, unknown>) {
+  const raw = message.artifacts;
+  if (raw === undefined) {
+    return [];
+  }
+  if (!Array.isArray(raw) || raw.length > 16) {
+    throw new Error('Voice response artifacts must be a bounded array.');
+  }
+  const seen = new Set<string>();
+  return raw.map((item) => {
+    const artifact = objectValue(item, 'response.artifacts');
+    const allowed = new Set(['type', 'assetId', 'title', 'assetKind', 'context']);
+    if (Object.keys(artifact).some((key) => !allowed.has(key))) {
+      throw new Error('Voice response artifact contains unsupported fields.');
+    }
+    const type = stringField(artifact, 'type');
+    const assetIdValue = stringField(artifact, 'assetId').trim();
+    const title = stringField(artifact, 'title').trim();
+    const assetKind = voiceResponseAssetKind(stringField(artifact, 'assetKind'));
+    const rawContext = artifact.context;
+    const context = typeof rawContext === 'string' ? rawContext.trim() : undefined;
+    if (
+      type !== 'asset_reference' || assetIdValue.length > 200 || title.length > 500 ||
+      (rawContext !== undefined && (typeof rawContext !== 'string' || !context || context.length > 500 || context !== rawContext)) ||
+      seen.has(assetIdValue)
+    ) {
+      throw new Error('Voice response artifact is invalid.');
+    }
+    seen.add(assetIdValue);
+    return { type: 'asset_reference' as const, assetId: assetIdValue, title, assetKind, ...(context ? { context } : {}) };
+  });
+}
+
+function voiceResponseAssetKind(value: string): 'item' | 'container' | 'location' {
+  if (value === 'item' || value === 'container' || value === 'location') {
+    return value;
+  }
+  throw new Error('Voice response artifact asset kind is invalid.');
 }
 
 function optionalObjectField<T extends string>(field: T, value: string | undefined): { readonly [key in T]?: string } {

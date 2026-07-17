@@ -1,6 +1,7 @@
 import type {
   VoiceActionPlanCommand,
   VoiceRealtimeState,
+  VoiceResponseArtifact,
   VoiceSafeDiagnosticEvent
 } from '../../application/voice/RealtimeVoiceSession';
 import { redactUnsafeVoiceText } from '../../application/voice/VoiceTextSafety';
@@ -232,6 +233,7 @@ export type VoiceSessionPresentation = {
   readonly progressTrace: readonly string[];
   readonly recoveryAction?: VoiceSessionRecoveryAction;
   readonly response?: string;
+  readonly responseArtifacts: readonly VoiceResponseArtifact[];
   readonly title: string;
   readonly transcript?: string;
 };
@@ -322,6 +324,7 @@ export function buildVoiceSessionPresentation({
       ? { label: 'Voice providers', target: 'provider_profiles' }
       : undefined,
     response: realtime?.spokenResponse,
+    responseArtifacts: realtime?.responseArtifacts ?? [],
     title,
     transcript: realtime?.transcript ?? activePartialTranscript
   };

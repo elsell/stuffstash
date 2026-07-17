@@ -272,7 +272,7 @@ func realtimeVoiceInvestigationObservationFromItem(round int, reference agentmod
 	}
 	return agentmodel.CandidateObservation{
 		EvidenceRound: round, ReferenceKey: reference, CandidateID: item.AssetID, Title: item.Title, Kind: item.Kind,
-		Description: item.Description, ParentAssetID: item.ParentAssetID, LifecycleState: item.LifecycleState,
+		Description: item.Description, ParentAssetID: item.ParentAssetID, ParentTitle: item.ParentTitle, ParentKind: item.ParentKind, LifecycleState: item.LifecycleState,
 		CheckoutState: checkoutState, ContainmentPath: append([]string{}, item.ContainmentPath...), MatchedProbes: matched, Facts: facts,
 	}
 }

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -94,7 +95,7 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 		"session.completed",
 	)
 	assertNoRealtimeEventType(t, events, "assistant.response.delta")
-	assertSafeRealtimeEvents(t, events, []string{"fake-audio", "garage-id", "tools-id"})
+	assertSafeRealtimeEvents(t, events, []string{"fake-audio"})
 
 	final := findRealtimeEvent(t, events, "assistant.response.completed")
 	response, ok := final["response"].(map[string]any)
@@ -108,6 +109,31 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 	if response["kind"] != "answer" {
 		t.Fatalf("unexpected response kind: %+v", response)
 	}
+	artifacts, ok := response["artifacts"].([]any)
+	if !ok || len(artifacts) != 2 {
+		t.Fatalf("expected item and location navigation artifacts, got %+v", response["artifacts"])
+	}
+	titles := map[string]bool{}
+	artifactIDs := map[string]string{}
+	artifactContexts := map[string]string{}
+	for _, raw := range artifacts {
+		artifact, ok := raw.(map[string]any)
+		artifactID, hasArtifactID := artifact["assetId"].(string)
+		artifactTitle, hasArtifactTitle := artifact["title"].(string)
+		if !ok || artifact["type"] != "asset_reference" || !hasArtifactID || !hasArtifactTitle || strings.TrimSpace(artifactID) == "" {
+			t.Fatalf("invalid navigation artifact: %+v", raw)
+		}
+		titles[artifactTitle] = true
+		artifactIDs[artifactTitle] = artifactID
+		artifactContexts[artifactTitle], _ = artifact["context"].(string)
+	}
+	if !titles["Tools"] || !titles["Garage"] {
+		t.Fatalf("expected grounded Tools and Garage references, got %+v", artifacts)
+	}
+	if artifactContexts["Tools"] != "Garage" {
+		t.Fatalf("expected authorized parent context for Tools, got %+v", artifacts)
+	}
+	assertRealtimeAssetIDsOnlyInResponseArtifacts(t, events, []string{artifactIDs["Tools"], artifactIDs["Garage"]})
 
 	var speechChunks int
 	for _, event := range events {
@@ -128,6 +154,42 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 	if record.State != ports.RealtimeSessionStateCompleted || record.EndedAt.IsZero() || record.SafeFailureCode != "" {
 		t.Fatalf("expected direct answer websocket session to be marked completed, got %+v", record)
 	}
+}
+
+func assertRealtimeAssetIDsOnlyInResponseArtifacts(t *testing.T, events []map[string]any, expectedIDs []string) {
+	t.Helper()
+	payload, err := json.Marshal(events)
+	if err != nil {
+		t.Fatalf("marshal realtime events: %v", err)
+	}
+	var scrubbed []map[string]any
+	if err := json.Unmarshal(payload, &scrubbed); err != nil {
+		t.Fatalf("copy realtime events: %v", err)
+	}
+	found := map[string]int{}
+	for _, event := range scrubbed {
+		if event["type"] != "assistant.response.completed" {
+			continue
+		}
+		response, _ := event["response"].(map[string]any)
+		artifacts, _ := response["artifacts"].([]any)
+		for _, rawArtifact := range artifacts {
+			artifact, _ := rawArtifact.(map[string]any)
+			id, _ := artifact["assetId"].(string)
+			for _, expectedID := range expectedIDs {
+				if id == expectedID {
+					found[id]++
+					artifact["assetId"] = "[authorized-reference]"
+				}
+			}
+		}
+	}
+	for _, expectedID := range expectedIDs {
+		if found[expectedID] != 1 {
+			t.Fatalf("expected exactly one authorized artifact for %q, got %d", expectedID, found[expectedID])
+		}
+	}
+	assertSafeRealtimeEvents(t, scrubbed, expectedIDs)
 }
 
 func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing.T) {
@@ -486,13 +548,26 @@ func TestRealtimeVoiceQuerySearchesOnlySelectedInventory(t *testing.T) {
 		"isFinalChunk": true,
 	})
 	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
-	_ = readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+	events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 
 	if !strings.Contains(language.lastToolResult, "Home Tools") {
 		t.Fatalf("expected selected inventory result, got %q", language.lastToolResult)
 	}
 	if strings.Contains(language.lastToolResult, "Shop Tools") {
 		t.Fatalf("expected voice search to exclude other inventory result, got %q", language.lastToolResult)
+	}
+	final := findRealtimeEvent(t, events, "assistant.response.completed")
+	response, ok := final["response"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected structured response, got %+v", final)
+	}
+	artifacts, ok := response["artifacts"].([]any)
+	if !ok || len(artifacts) != 1 {
+		t.Fatalf("expected one selected-inventory reference, got %+v", response["artifacts"])
+	}
+	artifact, ok := artifacts[0].(map[string]any)
+	if !ok || artifact["title"] != "Home Tools" {
+		t.Fatalf("wrong-inventory entity entered response references: %+v", artifacts)
 	}
 }
 

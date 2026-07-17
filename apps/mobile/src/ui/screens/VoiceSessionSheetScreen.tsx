@@ -29,7 +29,10 @@ import {
   type VoicePlanPhotoDrafts
 } from './VoicePlanPhotoDraftState';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
+import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import type { VoiceSessionActionPlanCommand } from '../navigation/VoiceSessionPresentation';
+import { assetDetailHref } from './AssetDetailNavigation';
+import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
   voicePlanCommandEdits,
   type VoicePlanCommandDrafts,
@@ -198,6 +201,7 @@ export function VoiceSessionSheetScreen() {
         setCommandDraftState({ drafts: {} });
       }}
       onOpenProviderProfiles={() => router.push('/settings/voice')}
+      onOpenResponseArtifact={(artifact) => router.push(assetDetailHref(artifact.assetId))}
       onSessionMic={() => {
         void handleSessionMic();
       }}
@@ -220,6 +224,7 @@ function VoiceSessionSheet({
   onRemovePhoto,
   onRetryPhotos,
   onOpenProviderProfiles,
+  onOpenResponseArtifact,
   onReset,
   onSessionMic,
   onToggleDiagnostics,
@@ -246,6 +251,7 @@ function VoiceSessionSheet({
   readonly onClose: () => void;
   readonly onCancelSession: () => void;
   readonly onOpenProviderProfiles: () => void;
+  readonly onOpenResponseArtifact: (artifact: VoiceResponseArtifact) => void;
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
   readonly onToggleDiagnostics: () => void;
@@ -433,7 +439,12 @@ function VoiceSessionSheet({
                 <View style={styles.responseIcon}>
                   <MessageCircle color={palette.accentStrong} size={18} strokeWidth={2.4} />
                 </View>
-                <Text accessibilityLiveRegion="polite" style={styles.responseText}>{session.response}</Text>
+                <VoiceResponseEntityText
+                  enabled={state.stage === 'completed' || state.stage === 'failed'}
+                  onOpen={onOpenResponseArtifact}
+                  references={session.responseArtifacts}
+                  text={session.response}
+                />
               </View>
             ) : null}
 
@@ -1152,13 +1163,6 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.md
-  },
-  responseText: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
-    lineHeight: 24
   },
   reviewActionGroup: {
     flexDirection: 'row',

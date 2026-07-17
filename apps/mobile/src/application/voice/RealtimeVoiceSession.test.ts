@@ -1443,7 +1443,8 @@ describe('RealtimeVoiceSessionController', () => {
           response: {
             kind: 'answer',
             spokenResponse: 'Your tools are in the garage.',
-            displayResponse: 'Your tools are in the garage.'
+            displayResponse: 'Your tools are in the Garage.',
+            artifacts: [{ type: 'asset_reference', assetId: 'garage', title: 'Garage', assetKind: 'location' }]
           }
         },
         { type: 'session.completed', seq: 2, sessionId: 'session-1' },
@@ -1471,8 +1472,11 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       progressLabel: 'Done',
-      spokenResponse: 'Your tools are in the garage.'
+      spokenResponse: 'Your tools are in the Garage.'
     });
+    expect(states.at(-1)?.responseArtifacts).toEqual([
+      { type: 'asset_reference', assetId: 'garage', title: 'Garage', assetKind: 'location' }
+    ]);
     expect(states.at(-1)?.actionPlan).toBeUndefined();
     expect(player.played).toEqual([]);
   });

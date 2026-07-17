@@ -259,7 +259,7 @@ Server message fields:
 - `tool.call.failed`: `seq`, `sessionId`, `toolCallId`, `toolLabel`, `code`, safe `message`.
 - `assistant.response.started`: `seq`, `sessionId`, `responseId`.
 - `assistant.response.delta`: reserved and must not be emitted by the first implementation. Mobile clients must reject it as a safe protocol error if it appears and must not render partial model response text.
-- `assistant.response.completed`: `seq`, `sessionId`, structured final response.
+- `assistant.response.completed`: `seq`, `sessionId`, structured final response with bounded authorized asset-reference artifacts.
 - `tts.audio.started`: `seq`, `sessionId`, `format`.
 - `tts.audio.chunk`: `seq`, `sessionId`, `chunkId`, `audioBase64`, `isFinalChunk`.
 - `tts.audio.completed`: `seq`, `sessionId`.
@@ -703,7 +703,7 @@ The first structured final response shape must include:
 - `kind`: final response kind, initially `answer`, `clarification`, `unsupported_action`, or `safe_failure`.
 - `spokenResponse`: concise text intended to be spoken to the user.
 - `displayResponse`: text intended to be displayed in the mobile UI.
-- `artifacts`: optional safe structured artifacts, initially empty or limited to safe asset/location references.
+- `artifacts`: a bounded list of safe structured artifacts. The first non-empty artifact type is `asset_reference` with only `assetId`, exact `title`, `assetKind` (`item`, `container`, or `location`), and an optional application-authored `context` containing a bounded authorized parent or containment label for disambiguation.
 - `toolCallIds`: tool calls used to produce the response.
 - `auditMetadata`: safe metadata for observability and audit.
 
@@ -711,7 +711,11 @@ The first structured final response shape must include:
 
 The application must render `spokenResponse` from the grounded terminal outcome. It must be concise, natural, calibrated to resolution confidence, and free of JSON, Markdown tables, hidden reasoning, provider details, implementation details, and unsafe secrets.
 
-`displayResponse` may be the same as `spokenResponse` in the first slice.
+`displayResponse` may be the same as `spokenResponse` in the first slice. Every grounded item, container, or location named in `displayResponse` must use its exact authorized title so the application can attach a deterministic entity reference. The spoken channel may retain a safe natural abbreviation when required by its tighter length bound.
+
+Asset-reference artifacts are navigation metadata, not model-authored provenance. The response-generation provider must not receive or return asset IDs or artifacts. After validating the generated text, the application must derive references only from the exact bounded candidate observations selected into the response brief and their authorized immediate parent context. It must include a reference only when that case-sensitive exact title occurs in `displayResponse`, deduplicate by asset ID, and reject invalid IDs, titles, kinds, contexts, hidden candidates, and collections over 16 references. Optional disambiguation context must come from the same authorized containment evidence and must never be inferred by the model or client. A generated title alone must never create a navigation target.
+
+Mobile must validate the artifact collection at the WebSocket boundary, preserve it only in ephemeral active-session state, and render case-sensitive exact non-overlapping title occurrences in the visible response as inline accessible links. Tapping a linked item, container, or location must navigate through the existing asset-detail route for that asset ID. Longer exact titles take precedence over overlapping shorter titles. Duplicate-title references must not be assigned to an arbitrary inline occurrence; each must remain available as an explicitly labeled `Open` control in the response card. Duplicate controls must use their authorized context when available and a stable visible ordinal when title and context are still identical, so their labels and accessibility names remain distinct without exposing asset IDs. Any reference that cannot be placed safely inline must remain available through that bounded response-card control. Malformed, duplicate-ID, unsupported, or unbounded artifacts must fail the realtime protocol safely rather than navigating. Artifacts must not be written to diagnostics, analytics, logs, crash reports, or durable local storage.
 
 The final response must not include raw chain-of-thought, raw model reasoning, raw prompts, raw provider responses, raw transcripts, raw audio, credentials, bearer tokens, hidden resource data, stack traces, tool-call syntax, raw JSON envelopes, or internal resource-key names such as `assetId`. The application final-response validator must reject unsafe `spokenResponse` and `displayResponse` content before any text is sent to text-to-speech or mobile response-completed events.
 

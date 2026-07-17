@@ -377,6 +377,8 @@ type CandidateObservation struct {
 	Kind            string               `json:"kind"`
 	Description     string               `json:"description,omitempty"`
 	ParentAssetID   string               `json:"parentAssetId,omitempty"`
+	ParentTitle     string               `json:"parentTitle,omitempty"`
+	ParentKind      string               `json:"parentKind,omitempty"`
 	LifecycleState  string               `json:"lifecycleState,omitempty"`
 	CheckoutState   string               `json:"checkoutState,omitempty"`
 	ContainmentPath []string             `json:"containmentPath,omitempty"`
@@ -387,7 +389,8 @@ type CandidateObservation struct {
 func (observation CandidateObservation) Validate() error {
 	if observation.EvidenceRound < 1 || observation.EvidenceRound > MaxEvidenceRounds || !observation.ReferenceKey.Valid() ||
 		!bounded(observation.CandidateID, 200, false) || !bounded(observation.Title, 500, false) ||
-		!bounded(observation.Description, maxInvestigationTextRunes, true) || len(observation.ContainmentPath) > 32 ||
+		!bounded(observation.Description, maxInvestigationTextRunes, true) || !bounded(observation.ParentAssetID, 200, true) ||
+		!bounded(observation.ParentTitle, 500, true) || !validCandidateObservationKind(observation.ParentKind, true) || len(observation.ContainmentPath) > 32 ||
 		len(observation.MatchedProbes) > MaxSearchProbesPerRequest || len(observation.Facts) > MaxObservationFacts {
 		return ErrInvalidVoiceInvestigation
 	}
@@ -399,6 +402,10 @@ func (observation CandidateObservation) Validate() error {
 		}
 	}
 	return nil
+}
+
+func validCandidateObservationKind(value string, allowEmpty bool) bool {
+	return (allowEmpty && value == "") || value == "item" || value == "container" || value == "location"
 }
 
 // ReadEvidence records one completed, authorization-scoped inventory read,

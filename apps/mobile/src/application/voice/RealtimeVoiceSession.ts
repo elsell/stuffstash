@@ -115,6 +115,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
         readonly kind: VoiceAssistantResponseKind;
         readonly spokenResponse: string;
         readonly displayResponse: string;
+        readonly artifacts?: readonly VoiceResponseArtifact[];
       };
     }
   | { readonly type: 'tts.audio.started'; readonly mimeType: string }
@@ -129,6 +130,14 @@ export type VoiceAssistantResponseKind =
   | 'clarification'
   | 'unsupported_action'
   | 'safe_failure';
+
+export type VoiceResponseArtifact = {
+  readonly type: 'asset_reference';
+  readonly assetId: string;
+  readonly title: string;
+  readonly assetKind: 'item' | 'container' | 'location';
+  readonly context?: string;
+};
 
 export type VoiceActionPlanProposal = {
   readonly planId: string;
@@ -207,6 +216,7 @@ export type VoiceRealtimeState = {
   readonly partialTranscript?: string;
   readonly transcript?: string;
   readonly spokenResponse?: string;
+  readonly responseArtifacts?: readonly VoiceResponseArtifact[];
   readonly responseKind?: VoiceAssistantResponseKind;
   readonly clarificationFollowUpAvailable?: boolean;
   readonly conversationPhase?: VoiceConversationPhase;
@@ -579,9 +589,11 @@ export class RealtimeVoiceSessionController {
       case 'assistant.response.started':
         return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing', conversationPhase: 'answering' });
       case 'assistant.response.completed':
+        const responseArtifacts = safeVoiceResponseArtifacts(event.response.artifacts ?? []);
         return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
           status: state.actionPlan ? 'review' : 'processing',
           spokenResponse: safeVisibleAssistantResponseText(event.response.displayResponse, event.response.spokenResponse, 500),
+          responseArtifacts,
           responseKind: event.response.kind,
           conversationPhase: 'answering'
         });
@@ -782,6 +794,29 @@ export class RealtimeVoiceSessionController {
       canRetry: hasRetryablePhotos(remaining)
     };
   }
+}
+
+function safeVoiceResponseArtifacts(artifacts: readonly VoiceResponseArtifact[]): readonly VoiceResponseArtifact[] {
+  const safe: VoiceResponseArtifact[] = [];
+  const seen = new Set<string>();
+  for (const artifact of artifacts.slice(0, 16)) {
+    const assetIdValue = artifact.assetId.trim();
+    const title = safeVisibleResponseText(artifact.title, 500);
+    const context = artifact.context === undefined ? undefined : safeVisibleResponseText(artifact.context, 500);
+    if (
+      artifact.type !== 'asset_reference' ||
+      !assetIdValue || assetIdValue.length > 200 ||
+      !isMeaningfulVisibleResponseText(title) ||
+      (artifact.context !== undefined && !isMeaningfulVisibleResponseText(context ?? '')) ||
+      (artifact.assetKind !== 'item' && artifact.assetKind !== 'container' && artifact.assetKind !== 'location') ||
+      seen.has(assetIdValue)
+    ) {
+      continue;
+    }
+    seen.add(assetIdValue);
+    safe.push({ type: 'asset_reference', assetId: assetIdValue, title, assetKind: artifact.assetKind, ...(context ? { context } : {}) });
+  }
+  return safe;
 }
 
 function boundedCommandEdits(edits: readonly VoiceActionPlanCommandEdit[]): readonly VoiceActionPlanCommandEdit[] {

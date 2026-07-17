@@ -30,6 +30,9 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 	if strings.TrimSpace(response.DisplayResponse) != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
 		return ports.ErrInvalidProviderInput
 	}
+	if err := validateRealtimeVoiceResponseArtifacts(response.DisplayResponse, response.Artifacts); err != nil {
+		return err
+	}
 	return nil
 }
 

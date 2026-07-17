@@ -27,11 +27,11 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		return err
 	}
 	if step.Intent.Operation == agentmodel.OperationUnsupported {
-		brief, responseErr := realtimeVoiceInvestigationResponseBrief(step.Intent, nil, nil)
+		grounding, responseErr := realtimeVoiceInvestigationResponseGrounding(step.Intent, nil, nil)
 		if responseErr != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 		}
-		response, responseErr := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		response, responseErr := a.generateRealtimeVoiceResponse(ctx, session, grounding.Brief, grounding.Bindings)
 		if responseErr != nil {
 			return responseErr
 		}
@@ -50,11 +50,11 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 		}
-		brief, err := realtimeVoiceInvestigationResponseBrief(canonical.Intent, canonical.Resolutions, nil)
+		grounding, err := realtimeVoiceInvestigationResponseGrounding(canonical.Intent, canonical.Resolutions, nil)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 		}
-		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		response, err := a.generateRealtimeVoiceResponse(ctx, session, grounding.Brief, grounding.Bindings)
 		if err != nil {
 			return err
 		}
@@ -288,11 +288,11 @@ func (a App) completeRealtimeVoiceInvestigationOutcome(ctx context.Context, sess
 	if intent.Kind != agentmodel.IntentKindChange || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAmbiguous) ||
 		hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionUnsupported) || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAbsent) ||
 		hasRealtimeVoicePlausibleDestination(resolutions) {
-		brief, err := realtimeVoiceInvestigationResponseBrief(intent, resolutions, candidates)
+		grounding, err := realtimeVoiceInvestigationResponseGrounding(intent, resolutions, candidates)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
 		}
-		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		response, err := a.generateRealtimeVoiceResponse(ctx, session, grounding.Brief, grounding.Bindings)
 		if err != nil {
 			return err
 		}
@@ -310,7 +310,19 @@ func (a App) completeRealtimeVoiceInvestigationOutcome(ctx context.Context, sess
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
 		}
-		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		subject, found := realtimeVoiceInvestigationResolution(resolutions, agentmodel.SemanticReferenceSubject)
+		if !found || len(subject.CandidateIDs) != 1 {
+			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+		}
+		candidate, found := candidates[subject.CandidateIDs[0]]
+		if !found {
+			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+		}
+		bindings, err := realtimeVoiceResponseCandidateBindings(candidate)
+		if err != nil {
+			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+		}
+		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief, bindings)
 		if err != nil {
 			return err
 		}

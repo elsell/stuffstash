@@ -9,7 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) generateRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, brief agentmodel.GroundedVoiceResponseBrief) (ports.StructuredAgentResponse, error) {
+func (a App) generateRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, brief agentmodel.GroundedVoiceResponseBrief, bindings []ports.StructuredAgentResponseArtifact) (ports.StructuredAgentResponse, error) {
 	if brief.Validate() != nil || session.responseGenerator == nil {
 		return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
 	}
@@ -22,11 +22,16 @@ func (a App) generateRealtimeVoiceResponse(ctx context.Context, session Realtime
 	if err := validateRealtimeVoiceGeneratedResponse(brief, result); err != nil {
 		return ports.StructuredAgentResponse{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 	}
-	return ports.StructuredAgentResponse{
+	response := ports.StructuredAgentResponse{
 		Kind:            realtimeVoiceStructuredResponseKind(brief.Kind),
 		SpokenResponse:  strings.TrimSpace(result.SpokenResponse),
 		DisplayResponse: strings.TrimSpace(result.DisplayResponse),
-	}, nil
+		Artifacts:       realtimeVoiceDisplayedResponseArtifacts(result.DisplayResponse, bindings),
+	}
+	if err := validateRealtimeVoiceFinalResponse(response); err != nil {
+		return ports.StructuredAgentResponse{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
+	}
+	return response, nil
 }
 
 func validateRealtimeVoiceGeneratedResponse(brief agentmodel.GroundedVoiceResponseBrief, result ports.VoiceResponseGenerationResult) error {
@@ -42,7 +47,32 @@ func validateRealtimeVoiceGeneratedResponse(brief agentmodel.GroundedVoiceRespon
 	if validateRealtimeVoiceGeneratedChannel(brief, result.SpokenResponse) != nil || validateRealtimeVoiceGeneratedChannel(brief, result.DisplayResponse) != nil {
 		return ports.ErrInvalidProviderInput
 	}
+	for _, title := range realtimeVoiceRequiredDisplayEntityTitles(brief) {
+		if !containsExactRealtimeVoiceEntityTitle(result.DisplayResponse, title) {
+			return ports.ErrInvalidProviderInput
+		}
+	}
 	return nil
+}
+
+func realtimeVoiceRequiredDisplayEntityTitles(brief agentmodel.GroundedVoiceResponseBrief) []string {
+	findings := brief.Findings
+	if brief.Mode == agentmodel.ResponseAnswerModeInventory {
+		findings = realtimeVoiceInventoryResponseFindings(brief.Findings)
+	}
+	switch brief.Mode {
+	case agentmodel.ResponseAnswerModeNotFound, agentmodel.ResponseAnswerModeUnsupported:
+		return nil
+	}
+	titles := make([]string, 0, len(findings)*2)
+	for _, finding := range findings {
+		titles = append(titles, finding.Title)
+		if brief.Mode == agentmodel.ResponseAnswerModeLocate && len(finding.ContainmentPath) > 1 &&
+			(finding.Kind == "item" || brief.Confidence == agentmodel.ResponseConfidenceStrong) {
+			titles = append(titles, finding.ContainmentPath[len(finding.ContainmentPath)-2])
+		}
+	}
+	return titles
 }
 
 func validateRealtimeVoiceGeneratedChannel(brief agentmodel.GroundedVoiceResponseBrief, value string) error {

@@ -20,6 +20,7 @@ func TestValidateRealtimeVoiceGeneratedResponseRequiresGroundedLocation(t *testi
 	}
 
 	invalid := []ports.VoiceResponseGenerationResult{
+		{SpokenResponse: valid.SpokenResponse, DisplayResponse: "Your tools are probably in the toolbox in the Garage."},
 		{SpokenResponse: "I found one visible match: Toolbox.", DisplayResponse: "I found one visible match: Toolbox."},
 		{SpokenResponse: "I found your tools.", DisplayResponse: "I found your tools."},
 		{SpokenResponse: "Your tools are in the basement.", DisplayResponse: "Your tools are in the basement."},
@@ -213,7 +214,7 @@ func TestValidateRealtimeVoiceGeneratedResponseAllowsGroundedLongTitleAbbreviati
 	brief := responseComparisonBoundedSummaryBrief()
 	valid := ports.VoiceResponseGenerationResult{
 		SpokenResponse:  "I found the blue storage case for letters and the green equipment bag for camping, plus other items.",
-		DisplayResponse: "Blue storage case for letters; Green equipment bag for camping; and other items.",
+		DisplayResponse: "Blue archival storage case for family photographs and handwritten letters from summer trips; Green equipment bag for camping lanterns cooking utensils and water purification supplies; and other items.",
 	}
 	if err := validateRealtimeVoiceGeneratedResponse(brief, valid); err != nil {
 		t.Fatalf("expected distinctive long-title abbreviations to remain grounded, got %v", err)

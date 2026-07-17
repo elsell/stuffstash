@@ -2,6 +2,75 @@ import { describe, expect, it } from 'vitest';
 import { WebSocketRealtimeVoiceTransport } from './WebSocketRealtimeVoiceTransport';
 
 describe('WebSocketRealtimeVoiceTransport', () => {
+  it('accepts bounded asset-reference artifacts from completed responses', async () => {
+    const socket = new FakeWebSocket();
+    const events: unknown[] = [];
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async (event) => { events.push(event); });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.completed', seq: 2, sessionId: 'session-1',
+      response: {
+        kind: 'answer', spokenResponse: 'The drill is in the office.', displayResponse: 'The Drill is in the Office.',
+        artifacts: [
+          { type: 'asset_reference', assetId: 'drill', title: 'Drill', assetKind: 'item', context: 'Office' },
+          { type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }
+        ]
+      }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+
+    await run;
+    expect(events[1]).toMatchObject({
+      response: { artifacts: [
+        { type: 'asset_reference', assetId: 'drill', title: 'Drill', assetKind: 'item', context: 'Office' },
+        { type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }
+      ] }
+    });
+  });
+
+  it('rejects duplicate or provider-shaped response artifacts', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const run = transport.run({
+      tenantId: 'tenant-home', inventoryId: 'inventory-home', source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: []
+    }, async () => {});
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.completed', seq: 2, sessionId: 'session-1',
+      response: {
+        kind: 'answer', spokenResponse: 'The Drill is here.', displayResponse: 'The Drill is here.',
+        artifacts: [
+          { type: 'asset_reference', assetId: 'drill', title: 'Drill', assetKind: 'item' },
+          { type: 'asset_reference', assetId: 'drill', title: 'Other drill', assetKind: 'item', href: '/unsafe' }
+        ]
+      }
+    });
+
+    await expect(run).rejects.toThrow(/artifact/i);
+  });
+
   it('awaits an async OIDC token before opening the realtime socket', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
@@ -1162,7 +1231,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
         type: 'assistant.response.completed',
         seq: 2,
         sessionId: 'session-1',
-        response: { kind: 'answer', spokenResponse: 'Done.', displayResponse: 'Done.' }
+        response: { kind: 'answer', spokenResponse: 'Done.', displayResponse: 'Done.', artifacts: [] }
       },
       { type: 'session.completed', seq: 3, sessionId: 'session-1' }
     ]);

@@ -102,6 +102,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         progressLabel: 'Done',
         spokenResponse: 'Your water bottle is in the Office.',
+        responseArtifacts: [{ type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }],
         debugEvents: []
       },
       stage: 'completed',
@@ -475,6 +476,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         transcript: 'Where is my water bottle?',
         spokenResponse: 'Your water bottle is in the Office.',
+        responseArtifacts: [{ type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }],
         progressLabel: 'Done',
         debugEvents: [{ label: 'Inventory search', status: 'Completed' }]
       },
@@ -485,6 +487,9 @@ describe('VoiceSessionPresentation', () => {
     expect(session.title).toBe('Answer ready');
     expect(session.transcript).toBe('Where is my water bottle?');
     expect(session.response).toBe('Your water bottle is in the Office.');
+    expect(session.responseArtifacts).toEqual([
+      { type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }
+    ]);
     expect(session.diagnostics).toBeNull();
   });
 

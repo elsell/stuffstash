@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -121,7 +122,20 @@ type StructuredAgentResponse struct {
 	Kind            StructuredAgentResponseKind
 	SpokenResponse  string
 	DisplayResponse string
+	Artifacts       []StructuredAgentResponseArtifact
 	ToolCallIDs     []string
+}
+
+type StructuredAgentResponseArtifactType string
+
+const StructuredAgentResponseArtifactAssetReference StructuredAgentResponseArtifactType = "asset_reference"
+
+type StructuredAgentResponseArtifact struct {
+	Type      StructuredAgentResponseArtifactType
+	AssetID   asset.ID
+	Title     string
+	AssetKind asset.Kind
+	Context   string
 }
 
 type TextToSpeechProvider interface {
