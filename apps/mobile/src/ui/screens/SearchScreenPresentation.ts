@@ -26,12 +26,14 @@ export type BrowseScopeOption = {
 };
 
 export type BrowseSecondaryFilters = {
+  readonly scope: BrowseScope;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly tagIds: readonly string[];
 };
 
 export type BrowseFilterToken =
+  | { readonly key: 'scope'; readonly label: string; readonly type: 'scope' }
   | { readonly key: 'lifecycle'; readonly label: string; readonly type: 'lifecycle' }
   | { readonly key: 'checkout'; readonly label: string; readonly type: 'checkout' }
   | { readonly key: string; readonly label: string; readonly type: 'tag'; readonly tagId: string };
@@ -45,7 +47,8 @@ export function shouldAutoFocusSearchInput(_initialTagIds: readonly string[]): b
 }
 
 export function browseFilterCount(filters: BrowseSecondaryFilters): number {
-  return (filters.lifecycleState === 'active' ? 0 : 1)
+  return (filters.scope === 'all' ? 0 : 1)
+    + (filters.lifecycleState === 'active' ? 0 : 1)
     + (filters.checkoutState === 'any' ? 0 : 1)
     + filters.tagIds.length;
 }
@@ -57,6 +60,13 @@ export function buildBrowseFilterTokens(
   const tagsById = new Map(tagOptions.map((tag) => [tag.id, tag]));
   const tokens: BrowseFilterToken[] = [];
 
+  if (filters.scope !== 'all') {
+    tokens.push({
+      key: 'scope',
+      label: buildBrowseScopeOptions().find((option) => option.value === filters.scope)?.label ?? 'Type',
+      type: 'scope'
+    });
+  }
   if (filters.lifecycleState !== 'active') {
     tokens.push({
       key: 'lifecycle',
@@ -82,6 +92,28 @@ export function buildBrowseFilterTokens(
   });
 
   return tokens;
+}
+
+export function removeBrowseFilter(
+  filters: BrowseSecondaryFilters,
+  token: BrowseFilterToken
+): BrowseSecondaryFilters {
+  return {
+    scope: token.type === 'scope' ? 'all' : filters.scope,
+    lifecycleState: token.type === 'lifecycle' ? 'active' : filters.lifecycleState,
+    checkoutState: token.type === 'checkout' ? 'any' : filters.checkoutState,
+    tagIds: token.type === 'tag'
+      ? filters.tagIds.filter((tagId) => tagId !== token.tagId)
+      : filters.tagIds
+  };
+}
+
+export function openBrowseFilterDraft(filters: BrowseSecondaryFilters): BrowseSecondaryFilters {
+  return { ...filters, tagIds: [...filters.tagIds] };
+}
+
+export function commitBrowseFilterDraft(draft: BrowseSecondaryFilters): BrowseSecondaryFilters {
+  return { ...draft, tagIds: [...draft.tagIds] };
 }
 
 export function sortLabel(sort: AssetBrowseSort): string {

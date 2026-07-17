@@ -7,7 +7,6 @@ import {
   Text,
   View
 } from 'react-native';
-import { MoreHorizontal } from 'lucide-react-native';
 import type {
   AssetDetailViewModel,
   AssetParentLocationCrumbViewModel,
@@ -58,7 +57,7 @@ type AssetDetailViewProps = {
   readonly onAddPhotos?: () => void;
   readonly onPhotoPress?: (photoId: string) => void;
   readonly onRetryPhotos?: () => void;
-  readonly onMoreActions?: () => void;
+  readonly overflowMenu?: ReactElement;
   readonly onChildPress?: (assetId: string) => void;
   readonly onParentLocationPress?: (parent: AssetParentLocationCrumbViewModel) => void;
   readonly onAddHere?: () => void;
@@ -81,7 +80,7 @@ export function AssetDetailView({
   onChildPress,
   onEdit,
   onMove,
-  onMoreActions,
+  overflowMenu,
   onMoveThingsHere,
   onParentLocationPress,
   onPhotoPress,
@@ -120,25 +119,14 @@ export function AssetDetailView({
       )}
       ListHeaderComponent={(
         <View style={styles.headerStack}>
-          {onBack || onMoreActions ? (
+          {onBack || overflowMenu ? (
             <View style={styles.topActions}>
               {onBack ? (
                 <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
                   <Text style={styles.backButtonText}>Back</Text>
                 </Pressable>
               ) : <View />}
-              {onMoreActions ? (
-                <Pressable
-                  accessibilityLabel="More actions"
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: isActionPending }}
-                  disabled={isActionPending}
-                  onPress={isActionPending ? undefined : onMoreActions}
-                  style={[styles.moreButton, isActionPending ? styles.disabledAction : null]}
-                >
-                  <MoreHorizontal color={palette.text} size={22} />
-                </Pressable>
-              ) : null}
+              {overflowMenu ?? null}
             </View>
           ) : null}
 
@@ -303,12 +291,6 @@ function createStyles(palette: MobileColorPalette) {
     flexDirection: 'row',
     justifyContent: 'space-between'
   },
-  moreButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    minWidth: 44
-  },
   content: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
@@ -412,9 +394,6 @@ function createStyles(palette: MobileColorPalette) {
   updatedText: {
     color: palette.textMuted,
     fontSize: 13
-  },
-  disabledAction: {
-    opacity: 0.55
   }
   });
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AssetActivityRecordViewModel } from '../../application/assets/AssetActivityQuery';
 import {
   groupHistoryRecords,
+  historyFilterMenuGroups,
   historyLoadError,
   historyRevertConfirmation,
   historyRevertFailure,
@@ -9,6 +10,18 @@ import {
 } from './AssetHistoryPresentation';
 
 describe('AssetHistoryRouteScreen presentation', () => {
+  it('models History filtering as an anchored native single-selection menu', () => {
+    const selected: string[] = [];
+    const groups = historyFilterMenuGroups('changes', (view) => selected.push(view));
+
+    expect(groups[0]?.items.map((item) => ({ id: item.id, selected: item.isSelected }))).toEqual([
+      { id: 'changes', selected: true },
+      { id: 'all', selected: false }
+    ]);
+    groups[0]?.items[1]?.onPress();
+    expect(selected).toEqual(['all']);
+  });
+
   it('groups newest-first records with localized date context without changing row order', () => {
     const records = [record('newer', '2026-07-14T15:00:00Z'), record('older', '2026-07-13T15:00:00Z')];
     const sections = groupHistoryRecords(records);

@@ -1,10 +1,7 @@
 import type { ReactNode, RefObject } from 'react';
 import {
-  ActionSheetIOS,
   ActivityIndicator,
-  Alert,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +9,7 @@ import {
   View
 } from 'react-native';
 import type { TextInput } from 'react-native';
-import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { Check, Plus, Search, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type {
@@ -28,15 +25,19 @@ import {
   sortLabel
 } from './SearchScreenPresentation';
 import type { BrowseFilterToken, BrowseScope } from './SearchScreenPresentation';
-import { BrowseSurfaceControl } from './InventoryMapScreen';
+import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
 import { radius, spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
 import { AppTextInput } from '../components/AppTextInput';
+import { NativeActionMenu, type NativeActionMenuGroup } from '../components/NativeActionMenu';
+import { NativeRefinementButton } from '../components/NativeRefinementButton';
+import { NativeSegmentedControl } from '../components/NativeSegmentedControl';
 
 type TagFilterStatus = 'loading' | 'ready' | 'error';
 
 export type BrowseDraftFilters = {
+  readonly scope: BrowseScope;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
   readonly tagIds: readonly string[];
@@ -68,9 +69,9 @@ export type SearchHeaderProps = {
   readonly onAdd?: () => void;
   readonly onChangeDraftCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
   readonly onChangeDraftLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
+  readonly onChangeDraftScope: (scope: BrowseScope) => void;
   readonly onChangeDraftTagIds: (tagIds: readonly string[]) => void;
   readonly onChangeQuery: (query: string) => void;
-  readonly onChangeScope: (scope: BrowseScope) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onClearFilters: () => void;
@@ -111,9 +112,9 @@ export function SearchHeader({
   onAdd,
   onChangeDraftCheckoutState,
   onChangeDraftLifecycleState,
+  onChangeDraftScope,
   onChangeDraftTagIds,
   onChangeQuery,
-  onChangeScope,
   onChangeSort,
   onChangeSurface,
   onClearFilters,
@@ -128,9 +129,9 @@ export function SearchHeader({
   onToggleFilters
 }: SearchHeaderProps) {
   const styles = stylesForPalette(palette);
-  const activeFilterCount = browseFilterCount({ lifecycleState, checkoutState, tagIds: selectedTagIds });
+  const activeFilterCount = browseFilterCount({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds });
   const activeTokens = buildBrowseFilterTokens(
-    { lifecycleState, checkoutState, tagIds: selectedTagIds },
+    { scope, lifecycleState, checkoutState, tagIds: selectedTagIds },
     tagFilters
   );
   const summaryLabel = searchResultSummaryLabel({
@@ -209,37 +210,25 @@ export function SearchHeader({
         {isLoading ? <ActivityIndicator color={palette.accent} size="small" /> : null}
       </View>
 
-      <ScopeControl palette={palette} selectedScope={scope} onChangeScope={onChangeScope} />
-
       <View style={styles.resultToolsRow}>
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}
         </Text>
-        <Pressable
+        <NativeRefinementButton
           accessibilityLabel={activeFilterCount > 0 ? `Filters, ${activeFilterCount.toString()} applied` : 'Filters'}
-          accessibilityRole="button"
           accessibilityState={{ expanded: filtersExpanded }}
+          badgeCount={activeFilterCount}
+          iconOnly
+          label="Filters"
           onPress={() => onToggleFilters(true)}
-          style={({ pressed }) => [styles.toolButton, pressed ? styles.controlPressed : null]}
-        >
-          <SlidersHorizontal color={palette.action} size={17} strokeWidth={2.4} />
-          <Text style={styles.toolButtonText}>Filters{activeFilterCount > 0 ? ` ${activeFilterCount.toString()}` : ''}</Text>
-        </Pressable>
-        <Pressable
+          systemImage="line.3.horizontal.decrease"
+        />
+        <NativeActionMenu
           accessibilityLabel={isSearchMode ? 'Sort unavailable during search' : `Sort, ${sortLabel(sort)}`}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: isSearchMode }}
           disabled={isSearchMode}
-          onPress={() => showSortOptions(sort, onChangeSort)}
-          style={({ pressed }) => [
-            styles.toolButton,
-            isSearchMode ? styles.toolButtonDisabled : null,
-            pressed ? styles.controlPressed : null
-          ]}
-        >
-          <Text style={[styles.toolButtonText, isSearchMode ? styles.toolButtonTextDisabled : null]}>Sort</Text>
-          <ChevronDown color={isSearchMode ? palette.textMuted : palette.action} size={16} strokeWidth={2.4} />
-        </Pressable>
+          groups={browseSortMenuGroups(sort, onChangeSort)}
+          trigger={{ androidIcon: 'sort', kind: 'icon', systemImage: 'arrow.up.arrow.down' }}
+        />
       </View>
 
       {activeTokens.length > 0 ? (
@@ -255,10 +244,12 @@ export function SearchHeader({
               accessibilityRole="button"
               key={token.key}
               onPress={() => onRemoveFilter(token)}
-              style={({ pressed }) => [styles.activeFilterToken, pressed ? styles.controlPressed : null]}
+              style={({ pressed }) => [styles.activeFilterToken, pressed ? styles.activeFilterTokenPressed : null]}
             >
-              <Text style={styles.activeFilterTokenText}>{token.label}</Text>
-              <X color={palette.accentStrong} size={14} strokeWidth={2.5} />
+              <View style={styles.activeFilterTokenPill}>
+                <Text style={styles.activeFilterTokenText}>{token.label}</Text>
+                <X color={palette.accentStrong} size={14} strokeWidth={2.5} />
+              </View>
             </Pressable>
           ))}
           {activeTokens.length > 1 ? (
@@ -297,9 +288,11 @@ export function SearchHeader({
           onApply={() => onApplyFilters(filterDraft)}
           onChangeCheckoutState={onChangeDraftCheckoutState}
           onChangeLifecycleState={onChangeDraftLifecycleState}
+          onChangeScope={onChangeDraftScope}
           onChangeTagIds={onChangeDraftTagIds}
           onClose={() => onToggleFilters(false)}
           onReset={() => {
+            onChangeDraftScope('all');
             onChangeDraftLifecycleState('active');
             onChangeDraftCheckoutState('any');
             onChangeDraftTagIds([]);
@@ -307,40 +300,6 @@ export function SearchHeader({
           onRetryTags={onRetryTags}
         />
       ) : null}
-    </View>
-  );
-}
-
-function ScopeControl({
-  palette,
-  selectedScope,
-  onChangeScope
-}: {
-  readonly palette: MobileColorPalette;
-  readonly selectedScope: BrowseScope;
-  readonly onChangeScope: (scope: BrowseScope) => void;
-}) {
-  const styles = stylesForPalette(palette);
-  return (
-    <View accessibilityLabel="Browse by kind" accessibilityRole="tablist" style={styles.scopeControl}>
-      {buildBrowseScopeOptions().map((option) => {
-        const selected = option.value === selectedScope;
-        return (
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityState={{ selected }}
-            key={option.value}
-            onPress={() => onChangeScope(option.value)}
-            style={({ pressed }) => [
-              styles.scopeButton,
-              selected ? styles.scopeButtonSelected : null,
-              pressed ? styles.controlPressed : null
-            ]}
-          >
-            <Text style={[styles.scopeText, selected ? styles.scopeTextSelected : null]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
     </View>
   );
 }
@@ -353,6 +312,7 @@ function BrowseFilterSheet({
   onApply,
   onChangeCheckoutState,
   onChangeLifecycleState,
+  onChangeScope,
   onChangeTagIds,
   onClose,
   onReset,
@@ -365,6 +325,7 @@ function BrowseFilterSheet({
   readonly onApply: () => void;
   readonly onChangeCheckoutState: (state: AssetBrowseCheckoutFilter) => void;
   readonly onChangeLifecycleState: (state: AssetBrowseLifecycleFilter) => void;
+  readonly onChangeScope: (scope: BrowseScope) => void;
   readonly onChangeTagIds: (ids: readonly string[]) => void;
   readonly onClose: () => void;
   readonly onReset: () => void;
@@ -386,18 +347,37 @@ function BrowseFilterSheet({
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.sheetContent}>
+          <FilterSection palette={palette} title="Type">
+            <View accessibilityLabel="Filter by type">
+              <NativeSegmentedControl
+                colors={palette}
+                onChange={onChangeScope}
+                segments={buildBrowseScopeOptions()}
+                style={styles.sheetSegmentedControl}
+                value={draft.scope}
+              />
+            </View>
+          </FilterSection>
           <FilterSection palette={palette} title="Status">
-            <View style={styles.sheetOptionGroup}>
-              <FilterChip label="Active" selected={draft.lifecycleState === 'active'} palette={palette} onPress={() => onChangeLifecycleState('active')} />
-              <FilterChip label="Archived" selected={draft.lifecycleState === 'archived'} palette={palette} onPress={() => onChangeLifecycleState('archived')} />
-              <FilterChip label="All" selected={draft.lifecycleState === 'all'} palette={palette} onPress={() => onChangeLifecycleState('all')} />
+            <View accessibilityLabel="Filter by status">
+              <NativeSegmentedControl
+                colors={palette}
+                onChange={onChangeLifecycleState}
+                segments={lifecycleFilterSegments}
+                style={styles.sheetSegmentedControl}
+                value={draft.lifecycleState}
+              />
             </View>
           </FilterSection>
           <FilterSection palette={palette} title="Availability">
-            <View style={styles.sheetOptionGroup}>
-              <FilterChip label="Any" selected={draft.checkoutState === 'any'} palette={palette} onPress={() => onChangeCheckoutState('any')} />
-              <FilterChip label="Available" selected={draft.checkoutState === 'available'} palette={palette} onPress={() => onChangeCheckoutState('available')} />
-              <FilterChip label="Checked out" selected={draft.checkoutState === 'checked_out'} palette={palette} onPress={() => onChangeCheckoutState('checked_out')} />
+            <View accessibilityLabel="Filter by availability">
+              <NativeSegmentedControl
+                colors={palette}
+                onChange={onChangeCheckoutState}
+                segments={availabilityFilterSegments}
+                style={styles.sheetSegmentedControl}
+                value={draft.checkoutState}
+              />
             </View>
           </FilterSection>
           <FilterSection palette={palette} title="Tags">
@@ -414,18 +394,32 @@ function BrowseFilterSheet({
             ) : null}
             {tagFilterStatus === 'ready' && sortedTags.length === 0 ? <Text style={styles.sheetSupportingText}>No tags in this inventory.</Text> : null}
             {tagFilterStatus === 'ready' && sortedTags.length > 0 ? (
-              <View accessibilityLabel="Tag filters" style={styles.sheetOptionGroup}>
-                {sortedTags.map((tag) => (
-                  <FilterChip
-                    accessibilityLabel={`Filter by tag ${tag.label}`}
-                    color={tag.color}
-                    key={tag.id}
-                    label={tag.label}
-                    palette={palette}
-                    selected={selectedTags.has(tag.id)}
-                    onPress={() => onChangeTagIds(toggleValue(draft.tagIds, tag.id))}
-                  />
-                ))}
+              <View accessibilityLabel="Tag filters" style={styles.tagList}>
+                {sortedTags.map((tag, index) => {
+                  const selected = selectedTags.has(tag.id);
+                  return (
+                    <View key={tag.id}>
+                      {index > 0 ? <View accessibilityElementsHidden style={styles.tagSeparator} /> : null}
+                      <Pressable
+                        accessibilityLabel={`Filter by tag ${tag.label}`}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: selected }}
+                        onPress={() => onChangeTagIds(toggleValue(draft.tagIds, tag.id))}
+                        style={({ pressed }) => [styles.tagRow, pressed ? styles.controlPressed : null]}
+                      >
+                        <View
+                          accessibilityElementsHidden
+                          style={[styles.tagColor, tag.color ? { backgroundColor: tag.color } : styles.emptyTagColor]}
+                          testID={`tag-color-${tag.id}`}
+                        />
+                        <Text style={styles.tagLabel}>{tag.label}</Text>
+                        <View accessibilityElementsHidden style={styles.tagCheckSpace}>
+                          {selected ? <Check color={palette.action} size={20} strokeWidth={2.5} /> : null}
+                        </View>
+                      </Pressable>
+                    </View>
+                  );
+                })}
               </View>
             ) : null}
           </FilterSection>
@@ -457,56 +451,43 @@ function FilterSection({
   );
 }
 
-function FilterChip({
-  accessibilityLabel,
-  color,
-  label,
-  palette,
-  selected,
-  onPress
-}: {
-  readonly accessibilityLabel?: string;
-  readonly color?: string;
-  readonly label: string;
-  readonly palette: MobileColorPalette;
-  readonly selected: boolean;
-  readonly onPress: () => void;
-}) {
-  const styles = stylesForPalette(palette);
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.filterChip,
-        selected ? styles.filterChipSelected : null,
-        color ? { borderColor: color } : null,
-        pressed ? styles.controlPressed : null
-      ]}
-    >
-      {selected ? <Check color={palette.accentStrong} size={16} strokeWidth={2.8} /> : null}
-      <Text style={[styles.filterChipText, selected ? styles.filterChipTextSelected : null]}>{label}</Text>
-    </Pressable>
-  );
-}
+const lifecycleFilterSegments = [
+  { label: 'Active', value: 'active' },
+  { label: 'Archived', value: 'archived' },
+  { label: 'All', value: 'all' }
+] as const;
 
-export function showSortOptions(sort: AssetBrowseSort, onChangeSort: (sort: AssetBrowseSort) => void): void {
-  const options = ['Recently changed', 'Default order', 'Cancel'];
-  const choose = (index: number) => {
-    if (index === 0 && sort !== 'updated_desc') onChangeSort('updated_desc');
-    if (index === 1 && sort !== 'id_asc') onChangeSort('id_asc');
-  };
-  if (Platform.OS === 'ios') {
-    ActionSheetIOS.showActionSheetWithOptions({ title: 'Sort', options, cancelButtonIndex: 2 }, choose);
-    return;
-  }
-  Alert.alert('Sort', undefined, [
-    { text: 'Recently changed', onPress: () => choose(0) },
-    { text: 'Default order', onPress: () => choose(1) },
-    { text: 'Cancel', style: 'cancel' }
-  ]);
+const availabilityFilterSegments = [
+  { label: 'Any', value: 'any' },
+  { label: 'Available', value: 'available' },
+  { label: 'Checked out', value: 'checked_out' }
+] as const;
+
+export function browseSortMenuGroups(
+  sort: AssetBrowseSort,
+  onChangeSort: (sort: AssetBrowseSort) => void
+): readonly NativeActionMenuGroup[] {
+  return [{
+    id: 'sort',
+    items: [
+      {
+        id: 'updated_desc',
+        label: 'Recently changed',
+        isSelected: sort === 'updated_desc',
+        onPress: () => {
+          if (sort !== 'updated_desc') onChangeSort('updated_desc');
+        }
+      },
+      {
+        id: 'id_asc',
+        label: 'Default order',
+        isSelected: sort === 'id_asc',
+        onPress: () => {
+          if (sort !== 'id_asc') onChangeSort('id_asc');
+        }
+      }
+    ]
+  }];
 }
 
 function toggleValue(values: readonly string[], value: string): readonly string[] {
@@ -534,19 +515,12 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     searchBarFocused: { borderColor: palette.action, borderWidth: 2 },
     searchInput: { color: palette.text, flex: 1, fontSize: 16, minHeight: 48, paddingVertical: 0 },
     iconButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
-    scopeControl: { backgroundColor: palette.surfaceMuted, borderRadius: radius.md, flexDirection: 'row', gap: 2, marginTop: spacing.sm, padding: 2 },
-    scopeButton: { alignItems: 'center', borderRadius: radius.sm, flex: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 4 },
-    scopeButtonSelected: { backgroundColor: palette.elevatedSurface },
-    scopeText: { color: palette.textMuted, fontSize: 13, fontWeight: '600' },
-    scopeTextSelected: { color: palette.text, fontWeight: '700' },
-    resultToolsRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm },
+    resultToolsRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm, minHeight: 44 },
     resultSummary: { color: palette.textMuted, flex: 1, fontSize: 13, fontWeight: '600' },
-    toolButton: { alignItems: 'center', backgroundColor: palette.surfaceMuted, borderRadius: radius.md, flexDirection: 'row', gap: 4, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.sm },
-    toolButtonDisabled: { opacity: 0.55 },
-    toolButtonText: { color: palette.action, fontSize: 13, fontWeight: '700' },
-    toolButtonTextDisabled: { color: palette.textMuted },
     activeFilterRow: { alignItems: 'center', gap: spacing.xs, paddingBottom: spacing.xs, paddingTop: spacing.sm },
-    activeFilterToken: { alignItems: 'center', backgroundColor: palette.selected, borderRadius: 999, flexDirection: 'row', gap: spacing.xs, minHeight: 44, paddingHorizontal: spacing.sm },
+    activeFilterToken: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+    activeFilterTokenPressed: { opacity: 0.72 },
+    activeFilterTokenPill: { alignItems: 'center', backgroundColor: palette.selected, borderRadius: 999, flexDirection: 'row', gap: spacing.xs, minHeight: 32, paddingHorizontal: spacing.sm },
     activeFilterTokenText: { color: palette.accentStrong, fontSize: 13, fontWeight: '700' },
     clearAllButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.sm },
     clearAllText: { color: palette.action, fontSize: 13, fontWeight: '700' },
@@ -560,11 +534,14 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     sheetHeaderSecondary: { color: palette.action, fontSize: 16, fontWeight: '600' },
     sheetTitle: { color: palette.text, fontSize: 17, fontWeight: '700' },
     sheetContent: { gap: spacing.lg, padding: spacing.md },
-    sheetOptionGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    filterChip: { alignItems: 'center', backgroundColor: palette.surface, borderColor: palette.controlBorder, borderRadius: 999, borderWidth: 1, flexDirection: 'row', gap: spacing.xs, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.md },
-    filterChipSelected: { backgroundColor: palette.selected, borderColor: palette.accentStrong },
-    filterChipText: { color: palette.textMuted, fontSize: 15, fontWeight: '600' },
-    filterChipTextSelected: { color: palette.accentStrong, fontWeight: '700' },
+    sheetSegmentedControl: { width: '100%' },
+    tagList: { backgroundColor: palette.surface, borderRadius: radius.md, overflow: 'hidden' },
+    tagRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, minHeight: 52, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+    tagColor: { borderRadius: 8, height: 16, width: 16 },
+    emptyTagColor: { backgroundColor: 'transparent', borderColor: palette.controlBorder, borderWidth: 1.5 },
+    tagLabel: { color: palette.text, flex: 1, fontSize: 16 },
+    tagCheckSpace: { alignItems: 'center', height: 24, justifyContent: 'center', width: 24 },
+    tagSeparator: { backgroundColor: palette.border, height: StyleSheet.hairlineWidth, marginLeft: 48 },
     sheetSupportingText: { color: palette.textMuted, fontSize: 15, lineHeight: 21 },
     tagError: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
     sheetFooter: { borderTopColor: palette.border, borderTopWidth: 1, padding: spacing.md },

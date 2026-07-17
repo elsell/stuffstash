@@ -1,10 +1,7 @@
 import { useCallback, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
-  ActionSheetIOS,
   ActivityIndicator,
-  Alert,
-  Platform,
   Pressable,
   RefreshControl,
   SectionList,
@@ -17,10 +14,11 @@ import {
   AssetActivityRecordViewModel,
   AssetActivityView
 } from '../../application/assets/AssetActivityQuery';
-import { groupHistoryRecords, historyLoadError } from './AssetHistoryPresentation';
+import { groupHistoryRecords, historyFilterMenuGroups, historyLoadError } from './AssetHistoryPresentation';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { NativeActionMenu } from '../components/NativeActionMenu';
 
 type HistoryState =
   | { readonly status: 'loading' }
@@ -154,27 +152,15 @@ export function AssetHistoryRouteScreen({
 }
 
 function HistoryFilter({ value, onChange, styles }: { readonly value: AssetActivityView; readonly onChange: (view: AssetActivityView) => void; readonly styles: ReturnType<typeof createStyles> }) {
-  function choose(): void {
-    const options = ['Changes', 'All events', 'Cancel'];
-    const select = (index?: number) => {
-      if (index === 0) onChange('changes');
-      if (index === 1) onChange('all');
-    };
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: 2, title: 'Show History' }, select);
-      return;
-    }
-    Alert.alert('Show History', undefined, [
-      { text: 'Changes', onPress: () => onChange('changes') },
-      { text: 'All events', onPress: () => onChange('all') },
-      { text: 'Cancel', style: 'cancel' }
-    ]);
-  }
   return (
-    <Pressable accessibilityHint="Choose Changes or All events" accessibilityRole="button" onPress={choose} style={styles.filterButton}>
+    <View style={styles.filterButton}>
       <Text style={styles.filterLabel}>Show</Text>
-      <Text style={styles.filterValue}>{value === 'changes' ? 'Changes' : 'All events'} ›</Text>
-    </Pressable>
+      <NativeActionMenu
+        accessibilityLabel={`Show History, ${value === 'changes' ? 'Changes' : 'All events'}`}
+        groups={historyFilterMenuGroups(value, onChange)}
+        trigger={{ kind: 'label', label: value === 'changes' ? 'Changes' : 'All events' }}
+      />
+    </View>
   );
 }
 
@@ -206,7 +192,6 @@ function createStyles(colors: MobileColorPalette) {
     assetTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
     filterButton: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 44 },
     filterLabel: { color: colors.text, fontSize: 16, fontWeight: '600' },
-    filterValue: { color: colors.action, fontSize: 16 },
     dateHeader: { backgroundColor: colors.background, color: colors.textMuted, fontSize: 13, fontWeight: '700', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     list: { paddingBottom: spacing.xl },
     emptyList: { flexGrow: 1 },

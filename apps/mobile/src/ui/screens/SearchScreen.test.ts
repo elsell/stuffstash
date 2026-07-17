@@ -15,13 +15,16 @@ import {
   canLoadNextBrowsePage,
   focusSearchInput,
   locationRowsFromAssetCards,
+  commitBrowseFilterDraft,
+  openBrowseFilterDraft,
   parseBrowseScope,
+  removeBrowseFilter,
   searchResultSummaryLabel,
   sortLabel,
   shouldAutoFocusSearchInput
 } from './SearchScreenPresentation';
 import { SearchHeader } from './SearchScreen';
-import { createBrowseHeaderStyles } from './BrowseHeader';
+import { browseSortMenuGroups, createBrowseHeaderStyles } from './BrowseHeader';
 import { InventoryMapHeaderActions } from './InventoryMapScreen';
 import { darkPalette, lightPalette } from '../theme/tokens';
 import { AppTextInput } from '../components/AppTextInput';
@@ -56,6 +59,23 @@ vi.mock('react-native-image-viewing', () => ({
 vi.mock('react-native-safe-area-context', () => ({
   SafeAreaView: 'SafeAreaView',
   useSafeAreaInsets: () => ({ bottom: 34, left: 0, right: 0, top: 47 })
+}));
+
+vi.mock('../components/NativeActionMenu', () => ({
+  NativeActionMenu: (props: { readonly trigger?: { readonly kind: string; readonly label?: string } }) => ({
+    type: 'NativeActionMenu',
+    props: {
+      ...props,
+      children: props.trigger?.kind === 'label' ? props.trigger.label : 'SortIcon'
+    }
+  })
+}));
+
+vi.mock('../components/NativeRefinementButton', () => ({
+  NativeRefinementButton: (props: { readonly label: string }) => ({
+    type: 'NativeRefinementButton',
+    props: { ...props, children: props.label }
+  })
 }));
 
 vi.mock('react-native', () => ({
@@ -93,15 +113,16 @@ type ElementNode = {
 };
 
 describe('SearchScreen presentation helpers', () => {
-  it('uses calm filled Browse controls and reserves outlines for search focus', () => {
+  it('uses calm Browse fields while native controls own refinement styling', () => {
     const styles = createBrowseHeaderStyles(darkPalette);
 
     expect(styles.searchBar.backgroundColor).toBe(darkPalette.surfaceMuted);
     expect(styles.searchBar).not.toHaveProperty('borderWidth');
     expect(styles.searchBarFocused.borderWidth).toBe(2);
-    expect(styles.scopeButtonSelected).not.toHaveProperty('borderWidth');
-    expect(styles.toolButton).not.toHaveProperty('borderWidth');
-    expect(styles.toolButton.backgroundColor).toBe(darkPalette.surfaceMuted);
+    expect(styles.resultToolsRow).toMatchObject({ alignItems: 'center', minHeight: 44 });
+    expect(styles.activeFilterToken).toMatchObject({ minHeight: 44 });
+    expect(styles.activeFilterTokenPill).toMatchObject({ minHeight: 32 });
+    expect(styles).not.toHaveProperty('toolButton');
   });
 
   it('focuses the search input only after an explicit search action', () => {
@@ -126,23 +147,27 @@ describe('SearchScreen presentation helpers', () => {
     expect(shouldAutoFocusSearchInput([' ', 'tag-camping'])).toBe(false);
   });
 
-  it('counts only non-default secondary filters and describes them by user-facing labels', () => {
+  it('counts only non-default filters and describes them by user-facing labels', () => {
     const tags = [
       { id: 'tag-camping', key: 'camping', label: 'Camping' },
       { id: 'tag-tools', key: 'tools', label: 'Tools' }
     ];
 
-    expect(browseFilterCount({ lifecycleState: 'active', checkoutState: 'any', tagIds: [] })).toBe(0);
+    expect(browseFilterCount({ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [] })).toBe(0);
+    expect(browseFilterCount({ scope: 'containers', lifecycleState: 'active', checkoutState: 'any', tagIds: [] })).toBe(1);
     expect(browseFilterCount({
+      scope: 'items',
       lifecycleState: 'archived',
       checkoutState: 'checked_out',
       tagIds: ['tag-camping', 'tag-tools']
-    })).toBe(4);
+    })).toBe(5);
     expect(buildBrowseFilterTokens({
+      scope: 'places',
       lifecycleState: 'archived',
       checkoutState: 'checked_out',
       tagIds: ['tag-tools', 'tag-camping']
     }, tags)).toEqual([
+      { key: 'scope', label: 'Places', type: 'scope' },
       { key: 'lifecycle', label: 'Archived', type: 'lifecycle' },
       { key: 'checkout', label: 'Checked out', type: 'checkout' },
       { key: 'tag:tag-tools', label: 'Tools', type: 'tag', tagId: 'tag-tools' },
@@ -150,6 +175,20 @@ describe('SearchScreen presentation helpers', () => {
     ]);
     expect(sortLabel('updated_desc')).toBe('Recently changed');
     expect(sortLabel('id_asc')).toBe('Default order');
+  });
+
+  it('removes an applied Type without disturbing the other applied filters', () => {
+    expect(removeBrowseFilter({
+      scope: 'containers',
+      lifecycleState: 'archived',
+      checkoutState: 'available',
+      tagIds: ['tag-tools']
+    }, { key: 'scope', label: 'Containers', type: 'scope' })).toEqual({
+      scope: 'all',
+      lifecycleState: 'archived',
+      checkoutState: 'available',
+      tagIds: ['tag-tools']
+    });
   });
 
   it('offers browse scopes that collapse search and locations into one surface', () => {
@@ -334,7 +373,7 @@ describe('SearchScreen presentation helpers', () => {
     })).toBe('3 shown · relevance');
   });
 
-  it('renders Browse as a content-first inventory surface with visible scope and separate tools', () => {
+  it('renders Browse as a content-first inventory surface with Type disclosed through Filters', () => {
     const inputRef = { current: null } as RefObject<TextInput | null>;
     const header = renderHeader({
       query: 'bike pump',
@@ -347,21 +386,15 @@ describe('SearchScreen presentation helpers', () => {
     expect(input?.type).toBe(AppTextInput);
     expect(input?.props?.ref).toBe(inputRef);
     expect(input?.props?.value).toBe('bike pump');
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.accessibilityState)
-      .toMatchObject({ disabled: true });
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
     expect(header.props?.style).toMatchObject({ marginBottom: 16 });
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse view')?.props?.accessibilityRole).toBe('tablist');
+    expect(findFirstByProp(header, 'selectedIndex', 0)?.props?.values).toEqual(['List', 'Map']);
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Filter by type')).toBeUndefined();
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by kind')).toBeUndefined();
     expect(text).toEqual(expect.arrayContaining([
       'Browse',
-      'Home inventory',
-      'List',
-      'Map',
-      'All',
-      'Places',
-      'Containers',
-      'Items',
-      'Filters',
-      'Sort'
+      'Home inventory'
     ]));
     expect(input?.props?.placeholder).toBe('Search names, places, or tags');
     expect(text).not.toContain('No tags');
@@ -420,16 +453,39 @@ describe('SearchScreen presentation helpers', () => {
     )).toBeUndefined();
   });
 
-  it('uses Status, Availability, and Tags groups without hiding scope or mixing in Sort', () => {
-    const text = collectText(renderHeader({ filtersExpanded: true, scope: 'places' }));
+  it('uses native Type, Status, and Availability controls plus a selectable Tags list', () => {
+    const header = renderHeader({
+      filtersExpanded: true,
+      scope: 'places',
+      filterDraft: { scope: 'items', lifecycleState: 'active', checkoutState: 'any', tagIds: [] }
+    });
+    const text = collectText(header);
 
-    expect(text).toContain('Places');
+    const type = findFirstByProp(header, 'accessibilityLabel', 'Filter by type');
+    expect(findFirstByProp(type, 'selectedIndex', 3)?.props?.values).toEqual(['All', 'Places', 'Containers', 'Items']);
+    const status = findFirstByProp(header, 'accessibilityLabel', 'Filter by status');
+    expect(findFirstByProp(status, 'selectedIndex', 0)?.props?.values).toEqual(['Active', 'Archived', 'All']);
+    const availability = findFirstByProp(header, 'accessibilityLabel', 'Filter by availability');
+    expect(findFirstByProp(availability, 'selectedIndex', 0)?.props?.values).toEqual(['Any', 'Available', 'Checked out']);
+    expect(text).toContain('Type');
     expect(text).toContain('Status');
     expect(text).toContain('Availability');
-    expect(text).toContain('Active');
     expect(text).toContain('Tags');
     expect(text).not.toContain('Checkout');
     expect(text).not.toContain('Stable');
+  });
+
+  it('commits an applied Type and restores the applied Type after cancelling a later draft', () => {
+    const initialApplied = { scope: 'places' as const, lifecycleState: 'active' as const, checkoutState: 'any' as const, tagIds: ['tag-tools'] };
+    const firstDraft = { ...openBrowseFilterDraft(initialApplied), scope: 'items' as const };
+    const applied = commitBrowseFilterDraft(firstDraft);
+
+    expect(applied).toEqual({ ...initialApplied, scope: 'items' });
+
+    const cancelledDraft = { ...openBrowseFilterDraft(applied), scope: 'containers' as const };
+    expect(cancelledDraft.scope).toBe('containers');
+    expect(openBrowseFilterDraft(applied)).toEqual(applied);
+    expect(openBrowseFilterDraft(applied)).not.toBe(applied);
   });
 
   it('describes submitted search results without presenting a false total', () => {
@@ -441,8 +497,7 @@ describe('SearchScreen presentation helpers', () => {
     const text = collectText(header);
 
     expect(text).toContain('20 shown for “mug” · relevance');
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.accessibilityState)
-      .toMatchObject({ disabled: true });
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
   });
 
   it('renders colored multi-select tag filters alphabetically in the filter sheet', () => {
@@ -450,7 +505,7 @@ describe('SearchScreen presentation helpers', () => {
     const header = renderHeader({
       filtersExpanded: true,
       selectedTagIds: ['tag-tools'],
-      filterDraft: { lifecycleState: 'active', checkoutState: 'any', tagIds: ['tag-tools'] },
+      filterDraft: { scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: ['tag-tools'] },
       tagFilters: [
         { id: 'tag-tools', key: 'tools', label: 'Tools', color: '#2F80ED' },
         { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' },
@@ -473,12 +528,17 @@ describe('SearchScreen presentation helpers', () => {
     expect(tagText.indexOf('Kids')).toBeLessThan(tagText.indexOf('Office'));
     expect(tagText.indexOf('Office')).toBeLessThan(tagText.indexOf('Tools'));
     expect(findFirstByProp(header, 'accessibilityLabel', 'Tag filters')).toBeTruthy();
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.accessibilityState)
-      .toMatchObject({ disabled: true });
+    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
 
     const tools = findFirstByProp(header, 'accessibilityLabel', 'Filter by tag Tools');
     expect(tools).toBeTruthy();
-    expect(tools?.props?.selected).toBe(true);
+    expect(tools?.props?.accessibilityRole).toBe('checkbox');
+    expect(tools?.props?.accessibilityState).toMatchObject({ checked: true });
+    expect(controlSize(tools, 'minHeight')).toBeGreaterThanOrEqual(44);
+    expect(findFirstByProp(tools, 'testID', 'tag-color-tag-tools')).toBeTruthy();
+    const kids = findFirstByProp(header, 'accessibilityLabel', 'Filter by tag Kids');
+    expect(kids?.props?.accessibilityState).toMatchObject({ checked: false });
+    expect(findFirstByProp(kids, 'testID', 'tag-color-tag-kids')).toBeTruthy();
     const onPress = tools?.props?.onPress;
     if (typeof onPress !== 'function') {
       throw new Error('Missing tag filter press handler');
@@ -488,7 +548,20 @@ describe('SearchScreen presentation helpers', () => {
     expect(selectedTags).toEqual([[]]);
   });
 
-  it('uses a compact filter control without hiding primary scope', () => {
+  it('models Browse sort as an anchored native single-selection menu', () => {
+    const selected: string[] = [];
+    const groups = browseSortMenuGroups('updated_desc', (sort) => selected.push(sort));
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.items.map((item) => ({ id: item.id, selected: item.isSelected }))).toEqual([
+      { id: 'updated_desc', selected: true },
+      { id: 'id_asc', selected: false }
+    ]);
+    groups[0]?.items[1]?.onPress();
+    expect(selected).toEqual(['id_asc']);
+  });
+
+  it('uses a compact native filter disclosure', () => {
     const toggles: boolean[] = [];
     const header = renderHeader({
       filtersExpanded: false,
@@ -499,7 +572,8 @@ describe('SearchScreen presentation helpers', () => {
 
     const filters = findFirstByProp(header, 'accessibilityLabel', 'Filters');
     expect(filters?.props?.accessibilityState).toMatchObject({ expanded: false });
-    expect(collectText(header)).toContain('Places');
+    expect(filters?.props?.label).toBe('Filters');
+    expect(filters?.props?.systemImage).toBe('line.3.horizontal.decrease');
 
     const onPress = filters?.props?.onPress;
     if (typeof onPress !== 'function') {
@@ -508,6 +582,27 @@ describe('SearchScreen presentation helpers', () => {
     onPress();
 
     expect(toggles).toEqual([true]);
+  });
+
+  it('presents filters and sort as one aligned native refinement toolbar', () => {
+    const header = renderHeader({
+      scope: 'containers',
+      lifecycleState: 'archived',
+      selectedTagIds: []
+    });
+    const filters = findFirstByProp(header, 'accessibilityLabel', 'Filters, 2 applied');
+    const sort = findFirstByProp(header, 'accessibilityLabel', 'Sort, Recently changed');
+    const styles = createBrowseHeaderStyles(lightPalette) as unknown as Record<string, Record<string, unknown>>;
+
+    expect(filters?.props?.badgeCount).toBe(2);
+    expect(filters?.props?.iconOnly).toBe(true);
+    expect(filters?.props?.label).toBe('Filters');
+    expect(filters?.props?.systemImage).toBe('line.3.horizontal.decrease');
+    expect(sort).toBeTruthy();
+    expect(sort?.props?.trigger).toEqual({ androidIcon: 'sort', kind: 'icon', systemImage: 'arrow.up.arrow.down' });
+    expect(styles.resultToolsRow).toMatchObject({ alignItems: 'center', minHeight: 44 });
+    expect(styles).not.toHaveProperty('toolButton');
+    expect(styles).not.toHaveProperty('toolButtonDisabled');
   });
 
   it('keeps selected-inventory context recoverable when its metadata request fails', () => {
@@ -558,7 +653,7 @@ function renderHeader(
     isLoading: false,
     lifecycleState: 'active',
     checkoutState: 'any',
-    filterDraft: { lifecycleState: 'active', checkoutState: 'any', tagIds: [] },
+    filterDraft: { scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [] },
     inventoryContext: 'Home inventory',
     palette: lightPalette,
     query: '',
@@ -575,9 +670,9 @@ function renderHeader(
     onApplyFilters: vi.fn(),
     onChangeDraftLifecycleState: vi.fn(),
     onChangeDraftCheckoutState: vi.fn(),
+    onChangeDraftScope: vi.fn(),
     onChangeDraftTagIds: vi.fn(),
     onChangeQuery: vi.fn(),
-    onChangeScope: vi.fn(),
     onChangeSort: vi.fn(),
     onClearQuery: vi.fn(),
     onClearFilters: vi.fn(),

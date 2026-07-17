@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Alert,
-  Platform,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View
 } from 'react-native';
-import { Ellipsis } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AddAssetPhotosCommand,
@@ -34,6 +30,7 @@ import {
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
+import { AssetOverflowMenu } from './AssetOverflowMenu';
 import { AssetDetailRouteErrorState } from './AssetDetailRouteErrorState';
 import {
   assetPhotoViewerModel,
@@ -46,12 +43,9 @@ import {
 } from './AssetDetailNavigation';
 import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import {
-  assetLifecycleActionRows,
   assetLifecycleConfirmation,
   assetDetailLoadErrorPresentation,
-  assetDetailOverflowControlState,
   assetLifecycleFailurePresentation,
-  assetLifecycleOverflowMenu,
   AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
 import {
@@ -339,54 +333,6 @@ export function AssetDetailRouteScreen({
     router.push(assetDetailHref(parent.id));
   }
 
-  function showMoreActions(asset: AssetDetailViewModel): void {
-    if (assetDetailOverflowControlState(pendingAction !== undefined).disabled) {
-      return;
-    }
-    const overflow = assetLifecycleOverflowMenu(asset);
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: overflow.title,
-          message: overflow.message,
-          options: [...overflow.options],
-          cancelButtonIndex: overflow.cancelIndex,
-          destructiveButtonIndex: overflow.destructiveIndex
-        },
-        (index) => {
-          if (index === overflow.checkoutHistoryIndex) {
-            router.push(`/assets/${asset.id}/checkouts`);
-            return;
-          }
-          if (index === overflow.auditIndex) {
-            openHistory(asset);
-            return;
-          }
-          const lifecycleActionIndex = overflow.lifecycleActionIndexes.indexOf(index);
-          const action = lifecycleActionIndex >= 0 ? overflow.actionRows[lifecycleActionIndex] : undefined;
-          if (action) {
-            confirmLifecycleAction(action.kind, asset);
-          }
-        }
-      );
-      return;
-    }
-    Alert.alert(overflow.title, overflow.message, [
-      { text: 'Checkout history', onPress: () => router.push(`/assets/${asset.id}/checkouts`) },
-      { text: 'History', onPress: () => openHistory(asset) },
-      ...overflow.actionRows.map((action) => ({
-        text: action.label,
-        style: action.isDestructive ? 'destructive' as const : 'default' as const,
-        onPress: () => confirmLifecycleAction(action.kind, asset)
-      })),
-      { text: 'Cancel', style: 'cancel' }
-    ]);
-  }
-
-  function lifecycleActions(asset: AssetDetailViewModel) {
-    return assetLifecycleActionRows(asset);
-  }
-
   function confirmLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
     const confirmation = assetLifecycleConfirmation(action, asset);
     Alert.alert(confirmation.title, confirmation.message, [
@@ -449,25 +395,19 @@ export function AssetDetailRouteScreen({
   }
 
   const presentedWorkspaceStatus = visibleAssetWorkspaceStatus(pendingAction, workspaceStatus);
-  const overflowControlState = assetDetailOverflowControlState(pendingAction !== undefined);
-
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
         ...(screenState.status === 'ready' ? {
           headerRight: () => (
-            <Pressable
-              accessibilityLabel={`More actions for ${screenState.asset.title}`}
-              accessibilityRole="button"
-              accessibilityState={overflowControlState.accessibilityState}
-              disabled={overflowControlState.disabled}
-              hitSlop={6}
-              onPress={overflowControlState.disabled ? undefined : () => showMoreActions(screenState.asset)}
-              style={styles.headerAction}
-            >
-              <Ellipsis accessible={false} color={palette.action} size={24} strokeWidth={2} />
-            </Pressable>
+            <AssetOverflowMenu
+              asset={screenState.asset}
+              disabled={pendingAction !== undefined}
+              onCheckoutHistory={() => router.push(`/assets/${screenState.asset.id}/checkouts`)}
+              onHistory={() => openHistory(screenState.asset)}
+              onLifecycleAction={(action) => confirmLifecycleAction(action, screenState.asset)}
+            />
           )
         } : {})
       }} />
@@ -552,12 +492,6 @@ function createStyles(palette: MobileColorPalette) {
   shell: {
     flex: 1,
     backgroundColor: palette.background
-  },
-  headerAction: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    minWidth: 44
   },
   centerState: {
     alignItems: 'center',

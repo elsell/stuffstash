@@ -214,31 +214,21 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).toContain('Archive');
   });
 
-  it('uses a native segmented control when available and a semantic fallback without redundant selected checks', async () => {
+  it('uses the linked platform-native segmented control without redundant selected checks', async () => {
     const changes: string[] = [];
-    Reflect.set(globalThis, 'expo', { getViewConfig: () => ({ validAttributes: {}, directEventTypes: {} }) });
     harness = new MobileRenderHarness();
     await harness.render(<SettingsSegmentedControl onChange={(value) => changes.push(value)} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value="active" />);
     expect(harness.byType('NativeSegmentedControl')?.props).toMatchObject({ selectedIndex: 0, values: ['Active', 'Archived'] });
     expect(harness.allText()).not.toContain('Selected');
     await harness.change(harness.byType('NativeSegmentedControl'), 'Archived');
     expect(changes).toEqual(['archived']);
-
-    await harness.unmount(); harness = new MobileRenderHarness();
-    Reflect.deleteProperty(globalThis, 'expo');
-    await harness.render(<SettingsSegmentedControl onChange={(value) => changes.push(value)} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value="active" />);
-    const tabs = harness.all().filter((node) => node.props.accessibilityRole === 'tab');
-    expect(tabs).toHaveLength(2);
-    expect(tabs[0].props.accessibilityState).toMatchObject({ selected: true });
-    expect(harness.allText()).not.toContain('Selected');
   });
 
   it('keeps prior rows with an inline loading row until an atomic lifecycle switch commits', async () => {
     const archived = deferred<{ items: readonly ReturnType<typeof field>[]; complete: true }>();
     const fields = sequence({ items: [field('active', 'Active field', 'inventory')], complete: true }, archived.promise);
     const screen = await renderCollection({ kind: 'field', query: { fields: fields.next }, scope: 'inventory' });
-    const archivedTab = screen.byText('Archived')?.parent ?? undefined;
-    await screen.press(archivedTab);
+    await screen.change(screen.byType('NativeSegmentedControl'), 'Archived');
     expect(screen.allText()).toEqual(expect.arrayContaining(['Active field', 'Loading archived settings…']));
     expect(screen.all().find((node) => node.props.accessibilityRole === 'progressbar')).toBeDefined();
     expect(screen.allText()).not.toContain('No archived custom fields');
@@ -252,13 +242,11 @@ describe('rendered mobile customization production states', () => {
   it('rolls a failed lifecycle switch back to the prior selection and rows', async () => {
     const fields = sequence<{ items: readonly ReturnType<typeof field>[]; complete: true }>({ items: [field('active', 'Active field', 'inventory')], complete: true }, new CustomizationFailure('conflict'));
     const screen = await renderCollection({ kind: 'field', query: { fields: fields.next }, scope: 'inventory' });
-    const archivedTab = screen.byText('Archived')?.parent ?? undefined;
-    await screen.press(archivedTab);
+    await screen.change(screen.byType('NativeSegmentedControl'), 'Archived');
     await screen.settle();
     expect(screen.allText()).toContain('Active field');
     expect(screen.allText()).not.toContain('Archived field');
-    const activeTab = screen.byText('Active')?.parent ?? undefined;
-    expect(activeTab?.props.accessibilityState).toMatchObject({ selected: true });
+    expect(screen.byType('NativeSegmentedControl')?.props.selectedIndex).toBe(0);
   });
 
   it('keeps a denied-save draft visible, read-only, and recoverable after access returns', async () => {

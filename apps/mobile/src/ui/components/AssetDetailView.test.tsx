@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createElement } from 'react';
 import type { AssetCardViewModel, AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import {
   AssetDetailView,
@@ -398,36 +399,23 @@ describe('AssetDetailView', () => {
   });
 
   it('keeps overflow actions reachable when detail is embedded without a native header', () => {
-    const onMoreActions = vi.fn();
-    const tree = AssetDetailView({ asset: assetDetail(), onMoreActions });
+    const overflowMenu = createElement('NativeActionMenu', { accessibilityLabel: 'More actions' });
+    const tree = AssetDetailView({ asset: assetDetail(), overflowMenu });
 
     const moreButton = findFirstByProp(tree, 'accessibilityLabel', 'More actions');
-    expect(moreButton?.props?.accessibilityRole).toBe('button');
-    press(moreButton);
-
-    expect(onMoreActions).toHaveBeenCalledOnce();
+    expect(moreButton?.type).toBe('NativeActionMenu');
   });
 
-  it('disables embedded overflow and callback-less maintenance actions while they cannot run', () => {
-    const onMoreActions = vi.fn();
-    const pendingTree = AssetDetailView({
-      asset: assetDetail(),
-      isActionPending: true,
-      onMoreActions
-    });
+  it('keeps callback-less maintenance actions disabled when they cannot run', () => {
     const callbackLessTree = AssetDetailView({ asset: assetDetail() });
 
-    const moreButton = findFirstByProp(pendingTree, 'accessibilityLabel', 'More actions');
     const editButton = findFirstByProp(callbackLessTree, 'accessibilityLabel', 'Edit');
     const moveButton = findFirstByProp(callbackLessTree, 'accessibilityLabel', 'Move');
 
-    expect(moreButton?.props?.disabled).toBe(true);
-    expect(moreButton?.props?.accessibilityState).toEqual({ disabled: true });
     expect(editButton?.props?.disabled).toBe(true);
     expect(editButton?.props?.accessibilityState).toEqual({ disabled: true });
     expect(moveButton?.props?.disabled).toBe(true);
     expect(moveButton?.props?.accessibilityState).toEqual({ disabled: true });
-    expect(onMoreActions).not.toHaveBeenCalled();
   });
 });
 
