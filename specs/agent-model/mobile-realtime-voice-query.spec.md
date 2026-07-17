@@ -455,6 +455,22 @@ The language model owns the fuzzy judgments that benefit from language understan
 
 The language model must be free to generate several search probes without requiring an exact title or exact transcript match. Search probes are retrieval hypotheses, not inventory facts. They must remain bounded, reference-scoped, and free of opaque IDs unless the ID was returned for that reference by an earlier authorized observation. Tenant prompt guidance may influence interpretation and vocabulary but must not weaken the typed schema, budgets, provenance, approval, authorization, or terminal-outcome rules.
 
+The initial interpretation input must include a compact project-owned vocabulary manifest assembled only after the principal's tenant and inventory scope has been authorized. The manifest is part of the typed investigation contract, not free-form prompt interpolation. It may contain only active definitions effective for that inventory and must represent:
+
+- custom asset types by stable key, display name, and a bounded description;
+- custom field summaries by stable key, display name, field type, and applicability, without field values or internal target IDs; and
+- a bounded set of active inventory tags by stable key and display name.
+
+The manifest exists to help the model distinguish base asset kind from household-specific classification, recognize that a phrase may name a custom field or tag, and generate better search hypotheses on the first turn. It is vocabulary guidance, not proof that an asset has a type, field value, or tag assignment. The provider must still ground asset facts in authorized observations.
+
+Full custom-field metadata should be disclosed only after the initial turn selects a relevant manifest key. The initial step may request a bounded set of vocabulary definitions by project-owned vocabulary kind and stable key. The application must validate every requested key against the scoped manifest, resolve it through the scoped definition data already loaded by the application, and include only the selected definition metadata in the evidence-assessment input. A resolved custom-field definition may include its field type, applicability, enum option keys, and applicable custom-asset-type keys. It must not include custom field values, internal definition IDs, internal custom-asset-type IDs, tag IDs, or hidden/archived definitions.
+
+The model may copy stable user-facing keys from the manifest but must never author or infer internal IDs for custom asset types, custom field definitions, or tags. The application remains responsible for mapping validated keys to internal IDs when a future specified command supports type assignment, field updates, or tag assignment. The current command compiler must not silently add unsupported custom metadata arguments.
+
+Vocabulary payloads must be deterministically bounded. The first limits are 32 custom asset types, 64 custom field summaries, 32 tags, and 12 targeted definition requests. A manifest must state when any collection was truncated. When tags or other vocabulary are truncated, omission is unknown rather than evidence of absence; the model should use normal asset search evidence for a user's named term. High-cardinality tag inventories must never be dumped wholesale into a provider prompt.
+
+Vocabulary manifests may be cached only behind the application boundary. Any cache key must include tenant ID, inventory ID, lifecycle view, and the authorization/disclosure policy version; entries must never be shared across tenants or inventories. Definition and tag create, update, archive, restore, or effective-scope changes must invalidate the affected entries. Provider requests and diagnostics must not expose cache keys, tenant IDs, inventory IDs, internal definition IDs, or tag IDs as vocabulary data.
+
 The application owns all deterministic policy and product outcomes:
 
 - execution of authorized reads through application services;
