@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -20,7 +21,7 @@ func TestRealtimeVoiceActionPlanApprovalCreatesMissingLocationThenMovesAsset(t *
 	ctx, connection, sessionID, planID, proposedPlan := openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t, moveToMissingLocationActionPlanProposalLanguageModel{}, []string{
 		"office-id", "office-undo-id", "office-audit-id",
 		"asset-id", "asset-undo-id", "asset-audit-id",
-		"voice-session-id", "plan-id",
+		"voice-session-id", "read-subject-id", "read-destination-id", "plan-id",
 		"kitchen-id", "kitchen-undo-id", "kitchen-audit-id", "move-undo-id", "move-audit-id",
 	}, func(seedApplication app.App) {
 		application = seedApplication
@@ -85,7 +86,7 @@ func TestRealtimeVoiceActionPlanApprovalReturnsAttachmentUploadIntentForDependen
 	t.Parallel()
 
 	ctx, connection, sessionID, planID, proposedPlan := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, createNestedItemActionPlanProposalLanguageModel{}, []string{
-		"voice-session-id", "plan-id",
+		"voice-session-id", "read-subject-id", "read-room-id", "read-closet-id", "plan-id",
 		"room-id", "room-undo-id", "room-audit-id",
 		"closet-id", "closet-undo-id", "closet-audit-id",
 		"item-id", "item-undo-id", "item-audit-id",
@@ -99,7 +100,7 @@ func TestRealtimeVoiceActionPlanApprovalReturnsAttachmentUploadIntentForDependen
 		"sessionId": sessionID,
 		"planId":    planID,
 		"photoAttachments": []map[string]any{{
-			"commandId":   "cmd-diaper-genie-refills",
+			"commandId":   "create-subject",
 			"photoIndex":  float64(0),
 			"fileName":    "diaper-genie-refills.jpg",
 			"contentType": "image/jpeg",
@@ -128,7 +129,7 @@ func TestRealtimeVoiceActionPlanApprovalRejectsInvalidPhotoMetadataBeforeApprova
 		{
 			name: "unsupported mime",
 			photo: map[string]any{
-				"commandId":   "cmd-diaper-genie-refills",
+				"commandId":   "create-subject",
 				"photoIndex":  float64(0),
 				"fileName":    "manual.pdf",
 				"contentType": "application/pdf",
@@ -148,7 +149,7 @@ func TestRealtimeVoiceActionPlanApprovalRejectsInvalidPhotoMetadataBeforeApprova
 		{
 			name: "oversized photo",
 			photo: map[string]any{
-				"commandId":   "cmd-diaper-genie-refills",
+				"commandId":   "create-subject",
 				"photoIndex":  float64(0),
 				"fileName":    "refills.jpg",
 				"contentType": "image/jpeg",
@@ -158,7 +159,7 @@ func TestRealtimeVoiceActionPlanApprovalRejectsInvalidPhotoMetadataBeforeApprova
 		{
 			name: "local uri and bytes are not metadata",
 			photo: map[string]any{
-				"commandId":     "cmd-diaper-genie-refills",
+				"commandId":     "create-subject",
 				"photoIndex":    float64(0),
 				"fileName":      "refills.jpg",
 				"contentType":   "image/jpeg",
@@ -208,11 +209,11 @@ func assertMixedMoveProposalForKitchen(t *testing.T, actionPlan map[string]any) 
 		t.Fatalf("expected create and move commands, got %+v", actionPlan["commands"])
 	}
 	createCommand, ok := commands[0].(map[string]any)
-	if !ok || createCommand["id"] != "cmd-kitchen" || createCommand["kind"] != "create_location" || createCommand["operation"] != "create" || createCommand["title"] != "Kitchen" || createCommand["assetKind"] != "location" {
+	if !ok || createCommand["id"] != "create-destination-0" || createCommand["kind"] != "create_location" || createCommand["operation"] != "create" || createCommand["title"] != "Kitchen" || createCommand["assetKind"] != "location" {
 		t.Fatalf("unexpected create command proposal: %+v", commands[0])
 	}
 	moveCommand, ok := commands[1].(map[string]any)
-	if !ok || moveCommand["id"] != "cmd-move-water-bottle" || moveCommand["kind"] != "move_asset" || moveCommand["operation"] != "move" || moveCommand["assetKind"] != "item" || moveCommand["parentCommandId"] != "cmd-kitchen" {
+	if !ok || moveCommand["id"] != "move-subject" || moveCommand["kind"] != "move_asset" || moveCommand["operation"] != "move" || moveCommand["assetKind"] != "item" || moveCommand["parentCommandId"] != "create-destination-0" {
 		t.Fatalf("unexpected move command proposal: %+v", commands[1])
 	}
 	if _, leaked := moveCommand["parentAssetId"]; leaked {
@@ -229,7 +230,7 @@ func assertNestedCreateProposal(t *testing.T, actionPlan map[string]any) {
 		t.Fatalf("expected nested create commands, got %+v", actionPlan["commands"])
 	}
 	itemCommand, ok := commands[2].(map[string]any)
-	if !ok || itemCommand["id"] != "cmd-diaper-genie-refills" || itemCommand["operation"] != "create" || itemCommand["assetKind"] != "item" || itemCommand["parentCommandId"] != "cmd-closet" {
+	if !ok || itemCommand["id"] != "create-subject" || itemCommand["operation"] != "create" || itemCommand["assetKind"] != "item" || itemCommand["parentCommandId"] != "create-destination-1" {
 		t.Fatalf("unexpected item command: %+v", commands[2])
 	}
 }
@@ -249,14 +250,14 @@ func assertNestedCreateUploadIntent(t *testing.T, executed map[string]any) {
 	itemResult := map[string]any{}
 	for _, raw := range commandResults {
 		result, ok := raw.(map[string]any)
-		if ok && result["commandId"] == "cmd-diaper-genie-refills" {
+		if ok && result["commandId"] == "create-subject" {
 			itemResult = result
 		}
 	}
 	if itemResult["assetId"] == "" {
 		t.Fatalf("expected item command result, got %+v", commandResults)
 	}
-	if !ok || intent["commandId"] != "cmd-diaper-genie-refills" || intent["photoIndex"] != float64(0) || intent["assetId"] != itemResult["assetId"] || intent["fileName"] != "diaper-genie-refills.jpg" || intent["contentType"] != "image/jpeg" {
+	if !ok || intent["commandId"] != "create-subject" || intent["photoIndex"] != float64(0) || intent["assetId"] != itemResult["assetId"] || intent["fileName"] != "diaper-genie-refills.jpg" || intent["contentType"] != "image/jpeg" {
 		t.Fatalf("unexpected upload intent: %+v", intent)
 	}
 	directUpload, ok := intent["directUpload"].(map[string]any)
@@ -290,10 +291,10 @@ func assertMixedMoveCommandResults(t *testing.T, executed map[string]any) {
 		}
 		resultsByCommandID[commandID] = result
 	}
-	if result := resultsByCommandID["cmd-kitchen"]; result["assetId"] == "" || result["operation"] != "create" || result["assetKind"] != "location" {
+	if result := resultsByCommandID["create-destination-0"]; result["assetId"] == "" || result["operation"] != "create" || result["assetKind"] != "location" {
 		t.Fatalf("unexpected kitchen command result: %+v", result)
 	}
-	if result := resultsByCommandID["cmd-move-water-bottle"]; result["assetId"] == "" || result["operation"] != "move" || result["assetKind"] != "item" {
+	if result := resultsByCommandID["move-subject"]; result["assetId"] == "" || result["operation"] != "move" || result["assetKind"] != "item" {
 		t.Fatalf("unexpected move command result: %+v", result)
 	}
 	assertSafeRealtimeEvents(t, []map[string]any{executed}, []string{"Water bottle", "Kitchen", "apiKey", "Bearer", "provider_session_id"})
@@ -302,121 +303,20 @@ func assertMixedMoveCommandResults(t *testing.T, executed map[string]any) {
 type createNestedItemActionPlanProposalLanguageModel struct{}
 
 func (m createNestedItemActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "list-active-assets",
-				Name: "list_authorized_assets",
-				Arguments: map[string]any{
-					"lifecycleState": "active",
-					"limit":          float64(10),
-				},
-			}},
-		}, nil
+	intent := agentmodel.Intent{
+		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "diaper genie refills", NewAssetKind: "item",
+		DestinationPath:  []string{"Henry's room", "closet"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer},
 	}
-	return ports.LanguageInferenceTurn{
-		ToolCalls: []ports.AgentToolCall{{
-			ID:   "plan-tool-call",
-			Name: "propose_action_plan",
-			Arguments: map[string]any{
-				"intentSummary":              "Create diaper genie refills inside a new closet in Henry's room.",
-				"modelInterpretationSummary": "The user wants a nested item created with missing parent containers.",
-				"confirmationSummary":        "Create Henry's room, closet, and diaper genie refills?",
-				"commands": []any{
-					map[string]any{
-						"id":      "cmd-henrys-room",
-						"kind":    "create_location",
-						"summary": "Create Henry's room",
-						"arguments": map[string]any{
-							"title": "Henry's room",
-							"kind":  "location",
-						},
-					},
-					map[string]any{
-						"id":      "cmd-closet",
-						"kind":    "create_asset",
-						"summary": "Create closet",
-						"arguments": map[string]any{
-							"title":           "closet",
-							"kind":            "container",
-							"parentCommandId": "cmd-henrys-room",
-						},
-					},
-					map[string]any{
-						"id":      "cmd-diaper-genie-refills",
-						"kind":    "create_asset",
-						"summary": "Create diaper genie refills",
-						"arguments": map[string]any{
-							"title":           "diaper genie refills",
-							"kind":            "item",
-							"parentCommandId": "cmd-closet",
-						},
-					},
-				},
-				"riskSummary": "Creates new inventory records.",
-			},
-		}},
-	}, nil
+	return typedVoiceInvestigationTurn(input, intent, nil)
 }
 
 type moveToMissingLocationActionPlanProposalLanguageModel struct{}
 
 func (m moveToMissingLocationActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "list-active-assets",
-				Name: "list_authorized_assets",
-				Arguments: map[string]any{
-					"lifecycleState": "active",
-					"limit":          float64(10),
-				},
-			}},
-		}, nil
+	intent := agentmodel.Intent{
+		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
+		DestinationPath: []string{"Kitchen"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 	}
-	if len(input.ToolResults) == 1 {
-		assetID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Water bottle", "active")
-		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
-		}
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-tool-call",
-				Name: "propose_action_plan",
-				Arguments: map[string]any{
-					"intentSummary":              "Move the water bottle to the kitchen.",
-					"modelInterpretationSummary": "The user wants the existing visible water bottle moved into a new Kitchen location.",
-					"confirmationSummary":        "Move Water bottle to Kitchen?",
-					"commands": []any{
-						map[string]any{
-							"id":      "cmd-kitchen",
-							"kind":    "create_location",
-							"summary": "Create Kitchen",
-							"arguments": map[string]any{
-								"title": "Kitchen",
-								"kind":  "location",
-							},
-						},
-						map[string]any{
-							"id":      "cmd-move-water-bottle",
-							"kind":    "move_asset",
-							"summary": "Move Water bottle to Kitchen",
-							"arguments": map[string]any{
-								"assetId":         assetID,
-								"parentCommandId": "cmd-kitchen",
-							},
-						},
-					},
-					"risks": []any{"Creates one new location and moves an item in this inventory."},
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "I prepared that move for review.",
-			DisplayResponse: "I prepared that move for review.",
-		},
-	}, nil
+	return typedVoiceInvestigationTurn(input, intent, nil)
 }

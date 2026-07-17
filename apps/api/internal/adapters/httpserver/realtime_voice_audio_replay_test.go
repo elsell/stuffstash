@@ -9,23 +9,23 @@ import (
 	"time"
 
 	"nhooyr.io/websocket"
-
-	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestRealtimeVoiceWebSocketRejectsReplayedAudioChunkAcrossClarificationTurns(t *testing.T) {
 	t.Parallel()
 
-	language := &scriptedFinalLanguageModel{finals: []ports.StructuredAgentResponse{{
-		Kind:            ports.StructuredAgentResponseKindClarification,
-		SpokenResponse:  "Which item should I update?",
-		DisplayResponse: "Which item should I update?",
-	}}}
+	language := &scriptedFinalLanguageModel{}
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "clarification-response-id"},
+		ids: []string{
+			"first-item-id", "first-item-undo", "first-item-audit",
+			"second-item-id", "second-item-undo", "second-item-audit",
+			"voice-session-id", "clarification-response-id",
+		},
 	}, &scriptedSpeechToText{transcripts: []string{"Where should I put it?", "Put it in the office."}}, language, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "First item", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Second item", "")
 
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)

@@ -16,12 +16,12 @@ func TestRealtimeVoiceActionPlanApprovalEmitsSafeExecutionFailure(t *testing.T) 
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, archiveActionPlanProposalLanguageModel{}, []string{
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, archiveActionPlanProposalLanguageModel{}, []string{
 		"location-id", "location-undo-id", "location-audit-id",
 		"asset-id", "asset-undo-id", "asset-audit-id",
 		"child-id", "child-undo-id", "child-audit-id",
 		"voice-session-id", "plan-id", "command-id", "response-id", "archive-undo-id", "archive-audit-id",
-	}, func(seedApplication app.App) {
+	}, "Archive Toolbox.", func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "container", "Toolbox", "")
