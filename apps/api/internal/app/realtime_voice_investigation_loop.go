@@ -23,7 +23,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		if step.Intent.Kind != agentmodel.IntentKindUnsupported {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 		}
-		canonical, err := canonicalRealtimeVoiceInvestigationStep(step.Intent, step, nil)
+		canonical, err := canonicalRealtimeVoiceInvestigationStep(step.Intent, step, nil, nil)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 		}
@@ -40,12 +40,13 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 	if canonicalIntent.Validate() != nil || canonicalIntent.Kind == agentmodel.IntentKindUnsupported {
 		return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 	}
-	readState, err := newRealtimeVoiceInvestigationReadState(nil, nil)
+	readState, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
 	if err != nil {
 		return err
 	}
 	requests := []agentmodel.SearchRequest{}
 	observations := []agentmodel.CandidateObservation{}
+	readEvidence := []agentmodel.ReadEvidence{}
 	for evidenceRound := 1; evidenceRound <= agentmodel.MaxEvidenceRounds; evidenceRound++ {
 		readResult, err := a.executeRealtimeVoiceInvestigationReads(ctx, session, evidenceRound, step.SearchRequests, readState, emit)
 		if err != nil {
@@ -53,12 +54,14 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		}
 		requests = append(requests, step.SearchRequests...)
 		observations = mergeRealtimeVoiceInvestigationObservations(observations, readResult.Observations)
+		readEvidence = append(readEvidence, readResult.ReadEvidence...)
 		intentCopy := canonicalIntent
 		assessmentInput := agentmodel.InvestigationInput{
 			Phase: agentmodel.InvestigationPhaseEvidenceAssessment, PromptVersion: realtimeVoiceInvestigationVersion,
 			SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: transcript, EvidenceRound: evidenceRound,
 			MaxEvidenceRounds: agentmodel.MaxEvidenceRounds, CanonicalIntent: &intentCopy,
 			PreviousRequests: append([]agentmodel.SearchRequest{}, requests...), Observations: append([]agentmodel.CandidateObservation{}, observations...),
+			ReadEvidence: append([]agentmodel.ReadEvidence{}, readEvidence...),
 		}
 		step, err = a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, assessmentInput, emit)
 		if err != nil {
@@ -76,7 +79,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		if step.Decision != agentmodel.InvestigationDecisionFinish {
 			return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 		}
-		canonical, err := canonicalRealtimeVoiceInvestigationStep(canonicalIntent, step, observations)
+		canonical, err := canonicalRealtimeVoiceInvestigationStep(canonicalIntent, step, observations, readEvidence)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 		}

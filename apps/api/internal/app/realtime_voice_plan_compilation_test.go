@@ -17,6 +17,9 @@ func TestCompileRealtimeVoiceActionPlanCreatesMissingDestinationSuffix(t *testin
 		SubjectMention:  "Thermal gloves",
 		NewAssetKind:    "item",
 		DestinationPath: []string{"Garage", "Blue cabinet", "Upper shelf"},
+		DestinationKinds: []agentmodel.DestinationKind{
+			agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer,
+		},
 	}
 	resolutions := []agentmodel.Resolution{
 		voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionMissing),
@@ -58,7 +61,8 @@ func TestCompileRealtimeVoiceActionPlanCreatesMissingOuterLocationBeforeContaine
 	intent := agentmodel.Intent{
 		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate,
 		SubjectMention: "Passport", NewAssetKind: "item",
-		DestinationPath: []string{"New house", "Office", "Document box"},
+		DestinationPath:  []string{"New house", "Office", "Document box"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer},
 	}
 	resolutions := []agentmodel.Resolution{
 		voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionMissing),
@@ -75,12 +79,50 @@ func TestCompileRealtimeVoiceActionPlanCreatesMissingOuterLocationBeforeContaine
 		t.Fatalf("expected four commands, got %+v", compiled.Commands)
 	}
 	assertVoicePlanCommand(t, compiled.Commands[0], "create-destination-0", actionplan.CommandKindCreateLocation, map[string]any{"title": "New house"})
-	assertVoicePlanCommand(t, compiled.Commands[1], "create-destination-1", actionplan.CommandKindCreateAsset, map[string]any{
-		"title": "Office", "kind": "container", "parentCommandId": "create-destination-0",
+	assertVoicePlanCommand(t, compiled.Commands[1], "create-destination-1", actionplan.CommandKindCreateLocation, map[string]any{
+		"title": "Office", "parentCommandId": "create-destination-0",
 	})
 	assertVoicePlanCommand(t, compiled.Commands[2], "create-destination-2", actionplan.CommandKindCreateAsset, map[string]any{
 		"title": "Document box", "kind": "container", "parentCommandId": "create-destination-1",
 	})
+}
+
+func TestCompileRealtimeVoiceActionPlanUsesDeclaredKindForSingleMissingDestination(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		title       string
+		kind        agentmodel.DestinationKind
+		commandKind actionplan.CommandKind
+		arguments   map[string]any
+	}{
+		{name: "bin", title: "Red bin", kind: agentmodel.DestinationKindContainer, commandKind: actionplan.CommandKindCreateAsset, arguments: map[string]any{"title": "Red bin", "kind": "container"}},
+		{name: "toolbox", title: "Toolbox", kind: agentmodel.DestinationKindContainer, commandKind: actionplan.CommandKindCreateAsset, arguments: map[string]any{"title": "Toolbox", "kind": "container"}},
+		{name: "room", title: "Craft room", kind: agentmodel.DestinationKindLocation, commandKind: actionplan.CommandKindCreateLocation, arguments: map[string]any{"title": "Craft room"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			intent := agentmodel.Intent{
+				Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill",
+				DestinationPath: []string{test.title}, DestinationKinds: []agentmodel.DestinationKind{test.kind},
+			}
+			resolutions := []agentmodel.Resolution{
+				voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "drill-id"),
+				voicePlanResolution("destination.0", agentmodel.ResolutionMissing),
+			}
+			candidates := map[string]agentmodel.CandidateObservation{
+				"drill-id": voicePlanCandidate(agentmodel.SemanticReferenceSubject, "drill-id", "Drill", "item", ""),
+			}
+
+			compiled, err := compileRealtimeVoiceActionPlan(intent, resolutions, candidates)
+			if err != nil {
+				t.Fatalf("compile missing destination: %v", err)
+			}
+			assertVoicePlanCommand(t, compiled.Commands[0], "create-destination-0", test.commandKind, test.arguments)
+		})
+	}
 }
 
 func TestCompileRealtimeVoiceActionPlanMovesGroundedSubjectToCreatedDestination(t *testing.T) {
@@ -89,6 +131,7 @@ func TestCompileRealtimeVoiceActionPlanMovesGroundedSubjectToCreatedDestination(
 	intent := agentmodel.Intent{
 		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove,
 		SubjectMention: "Drill", DestinationPath: []string{"Garage", "Tool cabinet"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer},
 	}
 	resolutions := []agentmodel.Resolution{
 		voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "drill-id"),
@@ -195,7 +238,7 @@ func TestCompileRealtimeVoiceActionPlanReportsAlreadySatisfiedChangesAsNoOp(t *t
 func TestCompileRealtimeVoiceActionPlanRejectsCrossReferenceCandidateID(t *testing.T) {
 	t.Parallel()
 
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill", DestinationPath: []string{"Garage"}}
+	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill", DestinationPath: []string{"Garage"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
 	resolutions := []agentmodel.Resolution{
 		voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "shared-id"),
 		voicePlanResolution("destination.0", agentmodel.ResolutionStrong, "garage-id"),
@@ -213,7 +256,7 @@ func TestCompileRealtimeVoiceActionPlanRejectsCrossReferenceCandidateID(t *testi
 func TestCompileRealtimeVoiceActionPlanRejectsBrokenExistingDestinationChain(t *testing.T) {
 	t.Parallel()
 
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill", DestinationPath: []string{"Garage", "Shelf"}}
+	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill", DestinationPath: []string{"Garage", "Shelf"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer}}
 	resolutions := []agentmodel.Resolution{
 		voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "drill-id"),
 		voicePlanResolution("destination.0", agentmodel.ResolutionStrong, "garage-id"),

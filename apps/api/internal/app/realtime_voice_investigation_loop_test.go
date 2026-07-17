@@ -54,7 +54,11 @@ func TestRealtimeVoiceInvestigationLoopAnswersFromPlausibleApproximateMatch(t *t
 
 func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsAtReview(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill", DestinationPath: []string{"Garage", "Blue cabinet", "Upper shelf"}}
+	intent := agentmodel.Intent{
+		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill",
+		DestinationPath:  []string{"Garage", "Blue cabinet", "Upper shelf"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
 	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{
 		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Drill", SearchProbes: []string{"drill"}},
 		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Garage", SearchProbes: []string{"garage"}},
@@ -91,6 +95,25 @@ func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsA
 	}
 	if proposal.Commands[0].Kind != "create_location" || proposal.Commands[3].Kind != "move_asset" {
 		t.Fatalf("unexpected compiled command graph: %+v", proposal.Commands)
+	}
+	if len(language.seenInvestigations) != 2 || language.seenInvestigations[1] == nil {
+		t.Fatalf("expected evidence assessment input, got %+v", language.seenInvestigations)
+	}
+	readEvidence := language.seenInvestigations[1].ReadEvidence
+	if len(readEvidence) != 4 {
+		t.Fatalf("expected one accumulated safe-read record for every semantic reference, got %+v", readEvidence)
+	}
+	for _, reference := range []agentmodel.SemanticReferenceKey{agentmodel.SemanticReferenceSubject, "destination.0", "destination.1", "destination.2"} {
+		found := false
+		for _, evidence := range readEvidence {
+			if evidence.ReferenceKey == reference {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected executed read evidence for %s, got %+v", reference, readEvidence)
+		}
 	}
 	for _, event := range events {
 		if event.Type == RealtimeVoiceEventAssistantResponseCompleted || event.Type == RealtimeVoiceEventTextToSpeechAudioStarted || event.Type == RealtimeVoiceEventSessionCompleted {

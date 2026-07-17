@@ -13,6 +13,7 @@ const (
 	MaxSearchProbesPerRequest     = 5
 	MaxSearchRequestsPerStep      = 24
 	MaxCandidateObservations      = 120
+	MaxReadEvidenceRecords        = MaxSearchRequestsPerStep * MaxSearchProbesPerRequest * MaxEvidenceRounds
 	MaxObservationFacts           = 12
 	MaxInvestigationDetailRunes   = 500
 	maxInvestigationTextRunes     = 1000
@@ -191,22 +192,38 @@ func (key SemanticReferenceKey) Valid() bool {
 	return ok
 }
 
+// DestinationKind is the user-facing containment role of one destination path
+// segment. It is intentionally narrower than the asset kind enumeration: an
+// item cannot contain another asset.
+type DestinationKind string
+
+const (
+	DestinationKindLocation  DestinationKind = "location"
+	DestinationKindContainer DestinationKind = "container"
+)
+
+func (kind DestinationKind) Valid() bool {
+	return kind == DestinationKindLocation || kind == DestinationKindContainer
+}
+
 type Intent struct {
-	Kind            IntentKind `json:"kind"`
-	Operation       Operation  `json:"operation"`
-	SubjectMention  string     `json:"subjectMention"`
-	NewAssetKind    string     `json:"newAssetKind"`
-	DestinationPath []string   `json:"destinationPath"`
-	Details         string     `json:"details"`
+	Kind             IntentKind        `json:"kind"`
+	Operation        Operation         `json:"operation"`
+	SubjectMention   string            `json:"subjectMention"`
+	NewAssetKind     string            `json:"newAssetKind"`
+	DestinationPath  []string          `json:"destinationPath"`
+	DestinationKinds []DestinationKind `json:"destinationKinds"`
+	Details          string            `json:"details"`
 }
 
 func (intent Intent) Validate() error {
 	if !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
-		!bounded(intent.Details, MaxInvestigationDetailRunes, true) || len(intent.DestinationPath) > MaxDestinationSegments {
+		!bounded(intent.Details, MaxInvestigationDetailRunes, true) || len(intent.DestinationPath) > MaxDestinationSegments ||
+		len(intent.DestinationKinds) != len(intent.DestinationPath) {
 		return ErrInvalidVoiceInvestigation
 	}
-	for _, segment := range intent.DestinationPath {
-		if !bounded(segment, 200, false) {
+	for index, segment := range intent.DestinationPath {
+		if !bounded(segment, 200, false) || !intent.DestinationKinds[index].Valid() {
 			return ErrInvalidVoiceInvestigation
 		}
 	}
@@ -316,6 +333,40 @@ func (observation CandidateObservation) Validate() error {
 	return nil
 }
 
+// ReadEvidence records one completed, authorization-scoped inventory read,
+// including reads that returned no candidates.
+type ReadEvidence struct {
+	EvidenceRound  int                   `json:"evidenceRound"`
+	ReferenceKey   SemanticReferenceKey  `json:"referenceKey"`
+	ReadKind       InvestigationReadKind `json:"readKind"`
+	Probe          string                `json:"probe,omitempty"`
+	VisibleAssetID string                `json:"visibleAssetId,omitempty"`
+	CandidateCount int                   `json:"candidateCount"`
+}
+
+func (evidence ReadEvidence) Validate() error {
+	if evidence.EvidenceRound < 1 || evidence.EvidenceRound > MaxEvidenceRounds || !evidence.ReferenceKey.Valid() ||
+		!evidence.ReadKind.Valid() || !bounded(evidence.Probe, 200, true) || !bounded(evidence.VisibleAssetID, 200, true) ||
+		evidence.CandidateCount < 0 || evidence.CandidateCount > MaxCandidateObservations {
+		return ErrInvalidVoiceInvestigation
+	}
+	switch evidence.ReadKind {
+	case InvestigationReadSearchAssets:
+		if strings.TrimSpace(evidence.Probe) == "" || strings.TrimSpace(evidence.VisibleAssetID) != "" {
+			return ErrInvalidVoiceInvestigation
+		}
+	case InvestigationReadListInventory:
+		if strings.TrimSpace(evidence.Probe) != "" || strings.TrimSpace(evidence.VisibleAssetID) != "" {
+			return ErrInvalidVoiceInvestigation
+		}
+	default:
+		if strings.TrimSpace(evidence.Probe) != "" || strings.TrimSpace(evidence.VisibleAssetID) == "" {
+			return ErrInvalidVoiceInvestigation
+		}
+	}
+	return nil
+}
+
 type Resolution struct {
 	ReferenceKey SemanticReferenceKey `json:"referenceKey"`
 	Status       ResolutionStatus     `json:"status"`
@@ -364,17 +415,18 @@ type InvestigationInput struct {
 	CanonicalIntent   *Intent                `json:"canonicalIntent,omitempty"`
 	PreviousRequests  []SearchRequest        `json:"previousRequests"`
 	Observations      []CandidateObservation `json:"observations"`
+	ReadEvidence      []ReadEvidence         `json:"readEvidence"`
 }
 
 func (input InvestigationInput) Validate() error {
 	if !input.Phase.Valid() || !bounded(input.PromptVersion, 100, false) || !bounded(input.SchemaVersion, 100, false) ||
 		!bounded(input.Transcript, maxInvestigationTextRunes, false) || input.MaxEvidenceRounds < 1 || input.MaxEvidenceRounds > MaxEvidenceRounds ||
 		input.EvidenceRound < 0 || input.EvidenceRound > input.MaxEvidenceRounds || len(input.PreviousRequests) > MaxSearchRequestsPerStep*MaxEvidenceRounds ||
-		len(input.Observations) > MaxCandidateObservations {
+		len(input.Observations) > MaxCandidateObservations || len(input.ReadEvidence) > MaxReadEvidenceRecords {
 		return ErrInvalidVoiceInvestigation
 	}
 	if input.Phase == InvestigationPhaseInitial {
-		if input.EvidenceRound != 0 || input.CanonicalIntent != nil || len(input.PreviousRequests) != 0 || len(input.Observations) != 0 {
+		if input.EvidenceRound != 0 || input.CanonicalIntent != nil || len(input.PreviousRequests) != 0 || len(input.Observations) != 0 || len(input.ReadEvidence) != 0 {
 			return ErrInvalidVoiceInvestigation
 		}
 	} else {
@@ -392,7 +444,62 @@ func (input InvestigationInput) Validate() error {
 			return ErrInvalidVoiceInvestigation
 		}
 	}
+	for _, evidence := range input.ReadEvidence {
+		if evidence.Validate() != nil || evidence.EvidenceRound > input.EvidenceRound || !readEvidenceMatchesRequest(evidence, input.PreviousRequests) {
+			return ErrInvalidVoiceInvestigation
+		}
+	}
+	for _, request := range input.PreviousRequests {
+		if !requestCoveredByReadEvidence(request, input.ReadEvidence) {
+			return ErrInvalidVoiceInvestigation
+		}
+	}
 	return nil
+}
+
+func readEvidenceMatchesRequest(evidence ReadEvidence, requests []SearchRequest) bool {
+	for _, request := range requests {
+		if request.ReferenceKey != evidence.ReferenceKey || request.ReadKind != evidence.ReadKind {
+			continue
+		}
+		if request.ReadKind == InvestigationReadSearchAssets {
+			for _, probe := range request.SearchProbes {
+				if strings.EqualFold(strings.TrimSpace(probe), strings.TrimSpace(evidence.Probe)) {
+					return true
+				}
+			}
+			continue
+		}
+		if request.ReadKind == InvestigationReadListInventory || strings.TrimSpace(request.VisibleAssetID) == strings.TrimSpace(evidence.VisibleAssetID) {
+			return true
+		}
+	}
+	return false
+}
+
+func requestCoveredByReadEvidence(request SearchRequest, records []ReadEvidence) bool {
+	if request.ReadKind == InvestigationReadSearchAssets {
+		for _, probe := range request.SearchProbes {
+			covered := false
+			for _, record := range records {
+				if record.ReferenceKey == request.ReferenceKey && record.ReadKind == request.ReadKind && strings.EqualFold(strings.TrimSpace(record.Probe), strings.TrimSpace(probe)) {
+					covered = true
+					break
+				}
+			}
+			if !covered {
+				return false
+			}
+		}
+		return true
+	}
+	for _, record := range records {
+		if record.ReferenceKey == request.ReferenceKey && record.ReadKind == request.ReadKind &&
+			(request.ReadKind == InvestigationReadListInventory || strings.TrimSpace(record.VisibleAssetID) == strings.TrimSpace(request.VisibleAssetID)) {
+			return true
+		}
+	}
+	return false
 }
 
 type InvestigationStep struct {

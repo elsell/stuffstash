@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -19,7 +20,7 @@ func TestRealtimeVoiceInvestigationReadsMergeSearchProbeEvidenceByReference(t *t
 	seedRealtimeVoiceLoopAsset(t, store, closet, "audit-closet")
 	seedRealtimeVoiceLoopAsset(t, store, winterClothes, "audit-winter-clothes")
 
-	state, err := newRealtimeVoiceInvestigationReadState(nil, nil)
+	state, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
 	if err != nil {
 		t.Fatalf("new read state: %v", err)
 	}
@@ -56,10 +57,38 @@ func TestRealtimeVoiceInvestigationReadsMergeSearchProbeEvidenceByReference(t *t
 	if len(result.ToolResults) != 2 || len(result.ToolCallIDs) != 2 {
 		t.Fatalf("expected one project-owned tool trace per probe, got results=%d ids=%d", len(result.ToolResults), len(result.ToolCallIDs))
 	}
+	if len(result.ReadEvidence) != 2 || result.ReadEvidence[0].ReferenceKey != agentmodel.SemanticReferenceSubject || result.ReadEvidence[0].CandidateCount != 1 || result.ReadEvidence[1].CandidateCount != 1 {
+		t.Fatalf("expected safe-read evidence for both completed probes, got %+v", result.ReadEvidence)
+	}
 	if !realtimeVoiceInvestigationHasEvent(events, RealtimeVoiceEventAgentProgress) ||
 		!realtimeVoiceInvestigationHasEvent(events, RealtimeVoiceEventToolCallStarted) ||
 		!realtimeVoiceInvestigationHasEvent(events, RealtimeVoiceEventToolCallCompleted) {
 		t.Fatalf("expected safe progress and tool events, got %+v", events)
+	}
+}
+
+func TestRealtimeVoiceInvestigationReadsRetainZeroMatchEvidence(t *testing.T) {
+	t.Parallel()
+
+	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
+	state, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
+	if err != nil {
+		t.Fatalf("new read state: %v", err)
+	}
+	result, err := application.executeRealtimeVoiceInvestigationReads(context.Background(), realtimeVoiceInvestigationSession(), 1, []agentmodel.SearchRequest{{
+		ReferenceKey: agentmodel.SemanticReferenceSubject,
+		ReadKind:     agentmodel.InvestigationReadSearchAssets,
+		Mention:      "moon boots",
+		SearchProbes: []string{"moon boots"},
+	}}, state, func(RealtimeVoiceEvent) error { return nil })
+	if err != nil {
+		t.Fatalf("execute zero-match search: %v", err)
+	}
+	if len(result.Observations) != 0 {
+		t.Fatalf("expected no candidate observations, got %+v", result.Observations)
+	}
+	if len(result.ReadEvidence) != 1 || result.ReadEvidence[0].CandidateCount != 0 || result.ReadEvidence[0].Probe != "moon boots" {
+		t.Fatalf("expected explicit zero-match read evidence, got %+v", result.ReadEvidence)
 	}
 }
 
@@ -69,7 +98,7 @@ func TestRealtimeVoiceInvestigationReadsRejectRepeatedProbeOnlyWithinReference(t
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
 	item := realtimeVoiceInvestigationAsset("coat-1", "Sarah coat", asset.KindItem, "")
 	seedRealtimeVoiceLoopAsset(t, store, item, "audit-coat")
-	state, err := newRealtimeVoiceInvestigationReadState(nil, nil)
+	state, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
 	if err != nil {
 		t.Fatalf("new read state: %v", err)
 	}
@@ -122,7 +151,7 @@ func TestRealtimeVoiceInvestigationTypedReadsRequireSameReferenceVisibility(t *t
 		Title:         item.Title.String(),
 		Kind:          item.Kind.String(),
 	}}
-	state, err := newRealtimeVoiceInvestigationReadState(nil, prior)
+	state, err := newRealtimeVoiceInvestigationReadState(nil, prior, nil)
 	if err != nil {
 		t.Fatalf("new read state: %v", err)
 	}
@@ -162,7 +191,7 @@ func TestRealtimeVoiceInvestigationReadsMapInventoryContentsAndTypedHistory(t *t
 		{EvidenceRound: 1, ReferenceKey: contentsReference, CandidateID: toolbox.ID.String(), Title: toolbox.Title.String(), Kind: toolbox.Kind.String()},
 		{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: drill.ID.String(), Title: drill.Title.String(), Kind: drill.Kind.String(), ParentAssetID: toolbox.ID.String()},
 	}
-	state, err := newRealtimeVoiceInvestigationReadState(nil, prior)
+	state, err := newRealtimeVoiceInvestigationReadState(nil, prior, nil)
 	if err != nil {
 		t.Fatalf("new read state: %v", err)
 	}
@@ -193,13 +222,64 @@ func TestRealtimeVoiceInvestigationReadsMapInventoryContentsAndTypedHistory(t *t
 	}
 }
 
+func TestRealtimeVoiceInvestigationListContentsScopesDuplicateTitlesByVisibleParentID(t *testing.T) {
+	t.Parallel()
+
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
+	selectedToolbox := realtimeVoiceInvestigationAsset("toolbox-selected", "Toolbox", asset.KindContainer, "")
+	otherToolbox := realtimeVoiceInvestigationAsset("toolbox-other", "Toolbox", asset.KindContainer, "")
+	selectedDrill := realtimeVoiceInvestigationAsset("drill-selected", "Cordless drill", asset.KindItem, selectedToolbox.ID.String())
+	otherDrill := realtimeVoiceInvestigationAsset("drill-other", "Impact drill", asset.KindItem, otherToolbox.ID.String())
+	seedRealtimeVoiceLoopAsset(t, store, selectedToolbox, "audit-toolbox-selected")
+	seedRealtimeVoiceLoopAsset(t, store, otherToolbox, "audit-toolbox-other")
+	seedRealtimeVoiceLoopAsset(t, store, selectedDrill, "audit-drill-selected")
+	seedRealtimeVoiceLoopAsset(t, store, otherDrill, "audit-drill-other")
+
+	contentsReference, ok := agentmodel.NewSemanticReferenceKey("destination.0")
+	if !ok {
+		t.Fatal("expected valid contents reference")
+	}
+	state, err := newRealtimeVoiceInvestigationReadState(nil, []agentmodel.CandidateObservation{{
+		EvidenceRound: 1,
+		ReferenceKey:  contentsReference,
+		CandidateID:   selectedToolbox.ID.String(),
+		Title:         selectedToolbox.Title.String(),
+		Kind:          selectedToolbox.Kind.String(),
+	}}, nil)
+	if err != nil {
+		t.Fatalf("new read state: %v", err)
+	}
+
+	result, err := application.executeRealtimeVoiceInvestigationReads(
+		context.Background(),
+		realtimeVoiceInvestigationSession(),
+		2,
+		[]agentmodel.SearchRequest{{
+			ReferenceKey:   contentsReference,
+			ReadKind:       agentmodel.InvestigationReadListContents,
+			VisibleAssetID: selectedToolbox.ID.String(),
+		}},
+		state,
+		func(RealtimeVoiceEvent) error { return nil },
+	)
+	if err != nil {
+		t.Fatalf("execute list contents: %v", err)
+	}
+	if len(result.Observations) != 1 || result.Observations[0].CandidateID != selectedDrill.ID.String() {
+		t.Fatalf("expected only the selected toolbox child, got %+v", result.Observations)
+	}
+	if strings.Contains(result.ToolResults[0].Content, otherDrill.ID.String()) {
+		t.Fatalf("duplicate-titled parent leaked another container's child: %s", result.ToolResults[0].Content)
+	}
+}
+
 func TestRealtimeVoiceInvestigationReadsMapBroadInventoryList(t *testing.T) {
 	t.Parallel()
 
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
 	item := realtimeVoiceInvestigationAsset("labels-1", "Freezer labels", asset.KindItem, "")
 	seedRealtimeVoiceLoopAsset(t, store, item, "audit-labels")
-	state, err := newRealtimeVoiceInvestigationReadState(nil, nil)
+	state, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
 	if err != nil {
 		t.Fatalf("new read state: %v", err)
 	}

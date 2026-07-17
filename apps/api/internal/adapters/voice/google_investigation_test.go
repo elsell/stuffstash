@@ -22,7 +22,7 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 		}
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
           "decision":"search",
-          "intent":{"kind":"read","operation":"locate","subjectMention":"Sarah winter coat","newAssetKind":"","destinationPath":[],"details":""},
+          "intent":{"kind":"read","operation":"locate","subjectMention":"Sarah winter coat","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
           "searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"Sarah winter coat","kindHint":"","visibleAssetId":"","searchProbes":["Sarah winter coat","Sarah winter clothes","winter clothing"]}],
           "resolutions":[],
           "rationale":"Gather authorized candidates for the remembered title."
@@ -65,6 +65,44 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 	if !ok || len(contents) != 1 || !strings.Contains(string(mustJSON(t, contents[0])), "search hypotheses") {
 		t.Fatalf("expected bounded investigation prompt, got %+v", request["contents"])
 	}
+	requestText := string(mustJSON(t, request))
+	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") {
+		t.Fatalf("expected ordered destination-kind contract in prompt and schema, got %s", requestText)
+	}
+}
+
+func TestParseGeminiInvestigationTurnPreservesOrderedDestinationKinds(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		path  string
+		kinds string
+		want  []agentmodel.DestinationKind
+	}{
+		{name: "single toolbox is a container", path: `["Toolbox"]`, kinds: `["container"]`, want: []agentmodel.DestinationKind{agentmodel.DestinationKindContainer}},
+		{name: "single room is a location", path: `["Craft room"]`, kinds: `["location"]`, want: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}},
+		{name: "nested path keeps semantic roles", path: `["Garage","Blue cabinet","Upper shelf"]`, kinds: `["location","container","container"]`, want: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			raw := `{"decision":"search","intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":` + test.path + `,"destinationKinds":` + test.kinds + `,"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"]}],"resolutions":[],"rationale":"Gather evidence."}`
+			turn, err := parseGeminiInvestigationTurn(raw)
+			if err != nil {
+				t.Fatalf("parse investigation turn: %v", err)
+			}
+			got := turn.Investigation.Intent.DestinationKinds
+			if len(got) != len(test.want) {
+				t.Fatalf("unexpected destination kinds: got %+v want %+v", got, test.want)
+			}
+			for index := range got {
+				if got[index] != test.want[index] {
+					t.Fatalf("unexpected destination kind at %d: got %q want %q", index, got[index], test.want[index])
+				}
+			}
+		})
+	}
 }
 
 func TestGoogleGeminiLanguageInferenceRejectsInvalidInvestigationPayload(t *testing.T) {
@@ -73,7 +111,7 @@ func TestGoogleGeminiLanguageInferenceRejectsInvalidInvestigationPayload(t *test
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
           "decision":"finish",
-          "intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":["garage"],"details":""},
+          "intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":["garage"],"destinationKinds":["location"],"details":""},
           "searchRequests":[],
           "resolutions":[{"referenceKey":"subject","status":"strong","candidateIds":["invented-id"],"evidence":"guess"}],
           "commands":[{"kind":"move_asset"}],

@@ -10,19 +10,21 @@ import (
 )
 
 type realtimeVoiceInvestigationReadState struct {
-	seenQueries map[agentmodel.SemanticReferenceKey]map[string]struct{}
-	visible     map[agentmodel.SemanticReferenceKey]map[string]agentmodel.CandidateObservation
-	toolResults []ports.AgentToolResult
-	toolCallIDs []string
+	seenQueries  map[agentmodel.SemanticReferenceKey]map[string]struct{}
+	visible      map[agentmodel.SemanticReferenceKey]map[string]agentmodel.CandidateObservation
+	toolResults  []ports.AgentToolResult
+	toolCallIDs  []string
+	readEvidence []agentmodel.ReadEvidence
 }
 
 type realtimeVoiceInvestigationReadResult struct {
 	Observations []agentmodel.CandidateObservation
 	ToolResults  []ports.AgentToolResult
 	ToolCallIDs  []string
+	ReadEvidence []agentmodel.ReadEvidence
 }
 
-func newRealtimeVoiceInvestigationReadState(previous []agentmodel.SearchRequest, observations []agentmodel.CandidateObservation) (*realtimeVoiceInvestigationReadState, error) {
+func newRealtimeVoiceInvestigationReadState(previous []agentmodel.SearchRequest, observations []agentmodel.CandidateObservation, readEvidence []agentmodel.ReadEvidence) (*realtimeVoiceInvestigationReadState, error) {
 	state := &realtimeVoiceInvestigationReadState{
 		seenQueries: map[agentmodel.SemanticReferenceKey]map[string]struct{}{},
 		visible:     map[agentmodel.SemanticReferenceKey]map[string]agentmodel.CandidateObservation{},
@@ -41,6 +43,12 @@ func newRealtimeVoiceInvestigationReadState(previous []agentmodel.SearchRequest,
 		}
 		state.mergeObservation(observation)
 	}
+	for _, evidence := range readEvidence {
+		if evidence.Validate() != nil {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		state.readEvidence = append(state.readEvidence, evidence)
+	}
 	return state, nil
 }
 
@@ -51,6 +59,7 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 	newObservations := map[string]agentmodel.CandidateObservation{}
 	startResults := len(state.toolResults)
 	startIDs := len(state.toolCallIDs)
+	startEvidence := len(state.readEvidence)
 	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
 		return realtimeVoiceInvestigationReadResult{}, err
 	}
@@ -84,6 +93,10 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 			if err != nil {
 				return realtimeVoiceInvestigationReadResult{}, err
 			}
+			state.readEvidence = append(state.readEvidence, agentmodel.ReadEvidence{
+				EvidenceRound: evidenceRound, ReferenceKey: request.ReferenceKey, ReadKind: request.ReadKind,
+				Probe: strings.TrimSpace(callSpec.probe), VisibleAssetID: strings.TrimSpace(request.VisibleAssetID), CandidateCount: len(observations),
+			})
 			for _, observation := range observations {
 				key := observation.ReferenceKey.String() + "\x00" + observation.CandidateID
 				if existing, exists := newObservations[key]; exists {
@@ -105,6 +118,7 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 		Observations: observations,
 		ToolResults:  append([]ports.AgentToolResult{}, state.toolResults[startResults:]...),
 		ToolCallIDs:  append([]string{}, state.toolCallIDs[startIDs:]...),
+		ReadEvidence: append([]agentmodel.ReadEvidence{}, state.readEvidence[startEvidence:]...),
 	}, nil
 }
 
@@ -136,12 +150,7 @@ func (a App) realtimeVoiceInvestigationCalls(request agentmodel.SearchRequest, s
 		if !ok || (candidate.Kind != "location" && candidate.Kind != "container") {
 			return nil, ports.ErrInvalidProviderInput
 		}
-		arguments := map[string]any{"limit": realtimeVoiceToolMaxResults, "lifecycleState": "active"}
-		if candidate.Kind == "location" {
-			arguments["locationTitle"] = candidate.Title
-		} else {
-			arguments["parentTitle"] = candidate.Title
-		}
+		arguments := map[string]any{"limit": realtimeVoiceToolMaxResults, "lifecycleState": "active", "parentAssetId": request.VisibleAssetID}
 		return []realtimeVoiceInvestigationCall{{call: ports.AgentToolCall{Name: RealtimeVoiceToolListAuthorizedAssets, Arguments: arguments}}}, nil
 	case agentmodel.InvestigationReadAssetDetail:
 		if !state.assetVisibleForReference(request.ReferenceKey, request.VisibleAssetID) {

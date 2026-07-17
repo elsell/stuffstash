@@ -61,9 +61,26 @@ func TestRealtimeVoiceListAuthorizedAssetsRejectsRootScopeWithParentFilters(t *t
 	for _, arguments := range []map[string]any{
 		{"parentScope": "root", "parentTitle": "Office"},
 		{"parentScope": "root", "locationTitle": "Office"},
+		{"parentScope": "root", "parentAssetId": "office-1"},
+		{"parentAssetId": "office-1", "parentTitle": "Office"},
+		{"parentAssetId": "office-1", "locationTitle": "Office"},
 	} {
 		if _, err := parseRealtimeVoiceListArgs(arguments); err == nil {
 			t.Fatalf("expected root parent scope with parent/location filter to be rejected for arguments %+v", arguments)
 		}
+	}
+}
+
+func TestRealtimeVoiceListAuthorizedAssetsRequiresParentIDVisibility(t *testing.T) {
+	t.Parallel()
+
+	application := newActionPlanExecutionTestApp(&fakeActionPlanRepository{}, &fakeAssetRepository{}, &fakeIDGenerator{})
+	_, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+		ID:        "tool-call-hidden-parent",
+		Name:      RealtimeVoiceToolListAuthorizedAssets,
+		Arguments: map[string]any{"parentAssetId": "hidden-parent", "limit": 10},
+	}, map[string]struct{}{})
+	if err == nil {
+		t.Fatal("expected an unobserved parent asset ID to be rejected")
 	}
 }

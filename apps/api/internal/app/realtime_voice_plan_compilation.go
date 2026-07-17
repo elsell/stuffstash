@@ -141,7 +141,7 @@ func compileRealtimeVoiceDestinationPath(intent agentmodel.Intent, resolutions [
 		commandID := fmt.Sprintf("create-destination-%d", index)
 		arguments := map[string]any{"title": strings.TrimSpace(title)}
 		kind := actionplan.CommandKindCreateLocation
-		if index > 0 {
+		if intent.DestinationKinds[index] == agentmodel.DestinationKindContainer {
 			kind = actionplan.CommandKindCreateAsset
 			arguments["kind"] = "container"
 		}

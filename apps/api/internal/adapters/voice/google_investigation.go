@@ -17,7 +17,7 @@ Interpret imperfect speech and propose narrow evidence reads. Speech may contain
 
 Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. Acquisition language means create when a newly obtained subject is being placed, even if the placement clause uses put, place, store, or stash.
 
-Preserve every named destination segment in outer-to-inner containment order. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
+Preserve every named destination segment in outer-to-inner containment order. Return one destinationKinds entry for every destinationPath entry in the same order: location for a place or room, container for a bin, box, cabinet, shelf, toolbox, surface, or other thing that can contain an asset. Classify the meaning expressed by the request; do not rely on a segment's array position. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
 
 For search_assets, generate 2 to 5 diverse probes when the words permit it: the concise mention, proper-name anchors, distinctive content words, semantic categories, morphology, and likely transcription corrections. Do not use generic words such as item, thing, place, storage, furniture, or room as standalone probes. A search probe is only a retrieval hypothesis.
 
@@ -83,8 +83,11 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		"subjectMention":  {Type: "string"},
 		"newAssetKind":    {Type: "string", Enum: []string{"", "item", "container", "location"}},
 		"destinationPath": stringArray(0, agentmodel.MaxDestinationSegments),
-		"details":         {Type: "string"},
-	}, Required: []string{"kind", "operation", "subjectMention", "newAssetKind", "destinationPath", "details"}}
+		"destinationKinds": {Type: "array", Items: &geminiSchema{
+			Type: "string", Enum: []string{"location", "container"},
+		}, MinItems: 0, MaxItems: agentmodel.MaxDestinationSegments},
+		"details": {Type: "string"},
+	}, Required: []string{"kind", "operation", "subjectMention", "newAssetKind", "destinationPath", "destinationKinds", "details"}}
 
 	readKinds := []string{"search_assets", "list_inventory"}
 	if input.Phase == agentmodel.InvestigationPhaseEvidenceAssessment {

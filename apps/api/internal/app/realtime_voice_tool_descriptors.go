@@ -43,7 +43,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:             RealtimeVoiceToolListAuthorizedAssets,
 			Label:            realtimeVoiceListAuthorizedAssetsPublicName,
-			Description:      "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, checkout state, root-level assets, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentTitle string, optional locationTitle string, optional parentScope any|root, optional limit number. Use parentScope root only for assets at the inventory root and do not combine it with parentTitle or locationTitle. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, checkout state when currently checked out, and containment paths.",
+			Description:      "List visible assets in the selected inventory. Use this for broad inventory questions like what items do I have, what is in a place, checkout state, root-level assets, or what archived item should be restored. Arguments: optional kind item|container|location, optional lifecycleState active|archived|all, optional parentAssetId copied from an earlier authorized read result, optional parentTitle string, optional locationTitle string, optional parentScope any|root, optional limit number. Prefer parentAssetId for the direct contents of a known parent. Use parentScope root only for assets at the inventory root and do not combine it with parentTitle or locationTitle. Do not combine parentAssetId with parentTitle, locationTitle, or parentScope root. Results are JSON with asset metadata, internal asset IDs for action-plan arguments, checkout state when currently checked out, and containment paths. Do not speak or display asset IDs to the user.",
 			ReadOnly:         true,
 			ProviderCallable: true,
 			Parameters: ports.AgentToolParameters{
@@ -57,6 +57,10 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 						Type:        ports.AgentToolParameterTypeString,
 						Description: "Optional lifecycle filter. Defaults to active. Use archived when the user asks to restore an archived asset.",
 						Enum:        []string{"active", "archived", "all"},
+					},
+					"parentAssetId": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Optional opaque asset ID copied exactly from an earlier authorized read result; filters to direct children of that parent.",
 					},
 					"parentTitle": {
 						Type:        ports.AgentToolParameterTypeString,

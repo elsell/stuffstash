@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -16,6 +17,7 @@ type scriptedRealtimeLanguageInference struct {
 	seenRequireToolCall   []bool
 	seenTranscripts       []string
 	seenConversationTurns [][]ports.AgentConversationTurn
+	seenInvestigations    []*agentmodel.InvestigationInput
 }
 
 func (s *scriptedRealtimeLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
@@ -26,6 +28,7 @@ func (s *scriptedRealtimeLanguageInference) NextTurn(_ context.Context, input po
 	s.seenRequireToolCall = append(s.seenRequireToolCall, input.RequireToolCall)
 	s.seenTranscripts = append(s.seenTranscripts, input.Transcript)
 	s.seenConversationTurns = append(s.seenConversationTurns, append([]ports.AgentConversationTurn{}, input.ConversationTurns...))
+	s.seenInvestigations = append(s.seenInvestigations, input.Investigation)
 	if len(s.errs) > 0 {
 		err := s.errs[0]
 		s.errs = s.errs[1:]

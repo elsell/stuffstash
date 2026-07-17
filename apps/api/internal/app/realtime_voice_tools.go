@@ -28,7 +28,7 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 		result, err := a.executeRealtimeVoiceAssetDetailTool(toolCtx, session, call, visibleAssetIDs)
 		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAuthorizedAssets:
-		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call)
+		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call, visibleAssetIDs)
 		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAssetAuditHistory:
 		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(toolCtx, session, call, visibleAssetIDs)
@@ -164,10 +164,15 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 	})
 }
 
-func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
+func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, error) {
 	args, err := parseRealtimeVoiceListArgs(call.Arguments)
 	if err != nil {
 		return ports.AgentToolResult{}, err
+	}
+	if args.ParentAssetID != "" {
+		if _, visible := visibleAssetIDs[args.ParentAssetID]; !visible {
+			return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
+		}
 	}
 	inventoryItem, err := a.GetInventory(ctx, GetInventoryInput{
 		Principal:   session.Principal,
@@ -204,6 +209,9 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 			if args.Kind != "" && toolItem.Kind != args.Kind.String() {
 				continue
 			}
+			if args.ParentAssetID != "" && toolItem.ParentAssetID != args.ParentAssetID {
+				continue
+			}
 			if args.ParentTitle != "" && !strings.EqualFold(toolItem.ParentTitle, args.ParentTitle) {
 				continue
 			}
@@ -231,6 +239,7 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 		Filters: map[string]string{
 			"kind":           args.Kind.String(),
 			"lifecycleState": args.LifecycleState,
+			"parentAssetId":  args.ParentAssetID,
 			"parentTitle":    args.ParentTitle,
 			"locationTitle":  args.LocationTitle,
 			"parentScope":    args.ParentScope,

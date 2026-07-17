@@ -11,12 +11,24 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, step agentmodel.InvestigationStep, observations []agentmodel.CandidateObservation) (agentmodel.InvestigationStep, error) {
+func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, step agentmodel.InvestigationStep, observations []agentmodel.CandidateObservation, readEvidence []agentmodel.ReadEvidence) (agentmodel.InvestigationStep, error) {
 	if step.Decision != agentmodel.InvestigationDecisionFinish || step.Validate() != nil || !sameRealtimeVoiceInvestigationIntent(canonicalIntent, step.Intent) {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	byReference := map[agentmodel.SemanticReferenceKey]map[string]agentmodel.CandidateObservation{}
 	allCandidates := map[string]agentmodel.CandidateObservation{}
+	coverage := map[agentmodel.SemanticReferenceKey]bool{}
+	discoveryCoverage := map[agentmodel.SemanticReferenceKey]bool{}
+	for _, evidence := range readEvidence {
+		if evidence.Validate() != nil {
+			return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+		}
+		coverage[evidence.ReferenceKey] = true
+		switch evidence.ReadKind {
+		case agentmodel.InvestigationReadSearchAssets, agentmodel.InvestigationReadListInventory, agentmodel.InvestigationReadListContents:
+			discoveryCoverage[evidence.ReferenceKey] = true
+		}
+	}
 	for _, observation := range observations {
 		if observation.Validate() != nil {
 			return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
@@ -49,6 +61,12 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		if !exists {
 			return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 		}
+		if resolution.Status != agentmodel.ResolutionUnsupported && !coverage[reference] {
+			return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+		}
+		if (resolution.Status == agentmodel.ResolutionAbsent || resolution.Status == agentmodel.ResolutionMissing) && !discoveryCoverage[reference] {
+			return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+		}
 		mention := realtimeVoiceInvestigationReferenceMention(canonicalIntent, reference)
 		resolution = realtimeVoiceExactTitleResolution(mention, resolution, byReference[reference])
 		ordered = append(ordered, resolution)
@@ -67,11 +85,12 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 func sameRealtimeVoiceInvestigationIntent(left, right agentmodel.Intent) bool {
 	if left.Kind != right.Kind || left.Operation != right.Operation || strings.TrimSpace(left.SubjectMention) != strings.TrimSpace(right.SubjectMention) ||
 		strings.TrimSpace(left.NewAssetKind) != strings.TrimSpace(right.NewAssetKind) || strings.TrimSpace(left.Details) != strings.TrimSpace(right.Details) ||
-		len(left.DestinationPath) != len(right.DestinationPath) {
+		len(left.DestinationPath) != len(right.DestinationPath) || len(left.DestinationKinds) != len(right.DestinationKinds) {
 		return false
 	}
 	for index := range left.DestinationPath {
-		if strings.TrimSpace(left.DestinationPath[index]) != strings.TrimSpace(right.DestinationPath[index]) {
+		if strings.TrimSpace(left.DestinationPath[index]) != strings.TrimSpace(right.DestinationPath[index]) ||
+			left.DestinationKinds[index] != right.DestinationKinds[index] {
 			return false
 		}
 	}

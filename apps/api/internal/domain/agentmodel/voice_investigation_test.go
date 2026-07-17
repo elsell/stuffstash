@@ -18,6 +18,7 @@ func TestVoiceInvestigationEnumsRejectUnknownValues(t *testing.T) {
 		{name: "read kind", valid: func(value string) bool { return InvestigationReadKind(value).Valid() }},
 		{name: "resolution status", valid: func(value string) bool { return ResolutionStatus(value).Valid() }},
 		{name: "phase", valid: func(value string) bool { return InvestigationPhase(value).Valid() }},
+		{name: "destination kind", valid: func(value string) bool { return DestinationKind(value).Valid() }},
 	}
 
 	for _, test := range tests {
@@ -49,7 +50,10 @@ func TestSemanticReferenceKeyAcceptsOnlyCanonicalSubjectAndDestinationKeys(t *te
 func TestIntentValidatesOperationCoherenceAndBounds(t *testing.T) {
 	t.Parallel()
 
-	valid := Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"garage", "cabinet"}}
+	valid := Intent{
+		Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill",
+		DestinationPath: []string{"garage", "cabinet"}, DestinationKinds: []DestinationKind{DestinationKindLocation, DestinationKindContainer},
+	}
 	if err := valid.Validate(); err != nil {
 		t.Fatalf("expected valid move intent, got %v", err)
 	}
@@ -63,6 +67,9 @@ func TestIntentValidatesOperationCoherenceAndBounds(t *testing.T) {
 		{name: "create without subject", intent: Intent{Kind: IntentKindChange, Operation: OperationCreate, NewAssetKind: "item"}},
 		{name: "unsupported asset kind", intent: Intent{Kind: IntentKindChange, Operation: OperationCreate, SubjectMention: "charger", NewAssetKind: "vehicle"}},
 		{name: "too many destination segments", intent: Intent{Kind: IntentKindChange, Operation: OperationCreate, SubjectMention: "charger", DestinationPath: []string{"a", "b", "c", "d", "e", "f", "g"}}},
+		{name: "missing destination kind", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"toolbox"}}},
+		{name: "extra destination kind", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"garage"}, DestinationKinds: []DestinationKind{DestinationKindLocation, DestinationKindContainer}}},
+		{name: "item destination kind", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"toolbox"}, DestinationKinds: []DestinationKind{"item"}}},
 		{name: "unbounded details", intent: Intent{Kind: IntentKindChange, Operation: OperationCheckout, SubjectMention: "drill", Details: strings.Repeat("x", MaxInvestigationDetailRunes+1)}},
 	}
 	for _, test := range tests {
@@ -190,6 +197,10 @@ func TestInvestigationInputValidatesPhaseRoundAndEvidenceBounds(t *testing.T) {
 			SearchProbes: []string{"Sarah winter coat", "Sarah winter clothes"},
 		}},
 		Observations: []CandidateObservation{{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, CandidateID: "asset-1", Title: "Sarah Winter Clothes and Shoes", Kind: "container"}},
+		ReadEvidence: []ReadEvidence{
+			{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Probe: "Sarah winter coat", CandidateCount: 1},
+			{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Probe: "Sarah winter clothes", CandidateCount: 1},
+		},
 	}
 	if err := input.Validate(); err != nil {
 		t.Fatalf("expected valid evidence input, got %v", err)
@@ -203,6 +214,33 @@ func TestInvestigationInputValidatesPhaseRoundAndEvidenceBounds(t *testing.T) {
 	input.Phase = InvestigationPhaseInitial
 	if err := input.Validate(); err == nil {
 		t.Fatal("expected initial phase with prior evidence to fail")
+	}
+}
+
+func TestReadEvidenceValidatesCompletedSafeReadBounds(t *testing.T) {
+	t.Parallel()
+
+	valid := ReadEvidence{
+		EvidenceRound:  1,
+		ReferenceKey:   SemanticReferenceSubject,
+		ReadKind:       InvestigationReadSearchAssets,
+		Probe:          "winter clothes",
+		CandidateCount: 0,
+	}
+	if err := valid.Validate(); err != nil {
+		t.Fatalf("expected valid zero-match read evidence, got %v", err)
+	}
+
+	invalid := []ReadEvidence{
+		{EvidenceRound: 0, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Probe: "winter clothes"},
+		{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets},
+		{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadAssetDetail, Probe: "not allowed", CandidateCount: 1},
+		{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadListInventory, CandidateCount: -1},
+	}
+	for _, evidence := range invalid {
+		if err := evidence.Validate(); err == nil {
+			t.Fatalf("expected invalid read evidence %+v", evidence)
+		}
 	}
 }
 
