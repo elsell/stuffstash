@@ -282,9 +282,9 @@ func TestRealtimeVoiceInvestigationLoopRepairsIncompleteDestinationPathWithinEvi
 		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", SearchProbes: []string{"lower basket"}},
 	}}
 	repair := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: repairedIntent, SearchRequests: []agentmodel.SearchRequest{
-		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Live Room", SearchProbes: []string{"live room"}},
-		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", SearchProbes: []string{"accessory rack"}},
-		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", SearchProbes: []string{"lower basket"}},
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Live Room", KindHint: "location", SearchProbes: []string{"live room"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", KindHint: "container", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", KindHint: "container", SearchProbes: []string{"lower basket"}},
 	}}
 	final := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: repairedIntent, Resolutions: []agentmodel.Resolution{
 		{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"cable-1"}},
@@ -351,6 +351,17 @@ func TestRealtimeVoiceDestinationRepairRejectsSemanticDrift(t *testing.T) {
 			candidate.DestinationPath = []string{"Secret Vault", "Accessory Rack", "Lower Basket"}
 			return candidate
 		}(),
+		"subject added as destination": func() agentmodel.Intent {
+			candidate := valid
+			candidate.DestinationPath = []string{"Patch Cable", "Live Room", "Accessory Rack", "Lower Basket"}
+			candidate.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+			return candidate
+		}(),
+		"original destination kind changed": func() agentmodel.Intent {
+			candidate := original
+			candidate.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer}
+			return candidate
+		}(),
 	}
 	for name, candidate := range tests {
 		candidate := candidate
@@ -360,6 +371,12 @@ func TestRealtimeVoiceDestinationRepairRejectsSemanticDrift(t *testing.T) {
 				t.Fatalf("expected semantic drift to be rejected: %+v", candidate)
 			}
 		})
+	}
+	partial := valid
+	partial.DestinationPath = []string{"Art", "Live Room", "Accessory Rack", "Lower Basket"}
+	partial.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+	if realtimeVoiceDestinationRepairAllowed("Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room beside a Cart", original, partial) {
+		t.Fatal("expected partial-token transcript match to be rejected")
 	}
 }
 

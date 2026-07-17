@@ -151,10 +151,15 @@ func realtimeVoiceDestinationRepairAllowed(transcript string, original, repaired
 	}
 	repairedSegments := map[string]int{}
 	normalizedTranscript := normalizeRealtimeVoiceInvestigationTitle(transcript)
-	for _, mention := range repaired.DestinationPath {
+	normalizedSubject := normalizeRealtimeVoiceSemanticMention(repaired.SubjectMention)
+	for index, mention := range repaired.DestinationPath {
 		normalizedMention := normalizeRealtimeVoiceInvestigationTitle(mention)
 		semanticMention := normalizeRealtimeVoiceSemanticMention(mention)
-		if semanticMention == "" || (!strings.Contains(normalizedTranscript, normalizedMention) && !strings.Contains(normalizedTranscript, semanticMention)) {
+		if semanticMention == "" || semanticMention == normalizedSubject ||
+			(!containsRealtimeVoiceTokenPhrase(normalizedTranscript, normalizedMention) && !containsRealtimeVoiceTokenPhrase(normalizedTranscript, semanticMention)) {
+			return false
+		}
+		if index < len(original.DestinationPath) && semanticMention == normalizeRealtimeVoiceSemanticMention(original.DestinationPath[index]) && repaired.DestinationKinds[index] != original.DestinationKinds[index] {
 			return false
 		}
 		key := semanticMention
@@ -166,6 +171,13 @@ func realtimeVoiceDestinationRepairAllowed(transcript string, original, repaired
 		}
 	}
 	return true
+}
+
+func containsRealtimeVoiceTokenPhrase(normalizedText, normalizedPhrase string) bool {
+	if normalizedText == "" || normalizedPhrase == "" {
+		return false
+	}
+	return strings.Contains(" "+normalizedText+" ", " "+normalizedPhrase+" ")
 }
 
 func realtimeVoiceDestinationRepairRequestsValid(intent agentmodel.Intent, requests []agentmodel.SearchRequest) bool {
@@ -184,7 +196,7 @@ func realtimeVoiceDestinationRepairRequestsValid(intent agentmodel.Intent, reque
 		}
 		var index int
 		if _, err := fmt.Sscanf(request.ReferenceKey.String(), "destination.%d", &index); err != nil || index < 0 || index >= len(intent.DestinationPath) || seen[request.ReferenceKey] ||
-			normalizeRealtimeVoiceSemanticMention(request.Mention) != normalizeRealtimeVoiceSemanticMention(intent.DestinationPath[index]) {
+			normalizeRealtimeVoiceSemanticMention(request.Mention) != normalizeRealtimeVoiceSemanticMention(intent.DestinationPath[index]) || request.KindHint != string(intent.DestinationKinds[index]) {
 			return false
 		}
 		seen[request.ReferenceKey] = true

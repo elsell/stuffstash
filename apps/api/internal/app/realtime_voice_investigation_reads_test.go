@@ -193,6 +193,33 @@ func TestRealtimeVoiceInvestigationTypedReadsRequireSameReferenceVisibility(t *t
 	}
 }
 
+func TestRealtimeVoiceInvestigationReadsDropsRepeatedProbeWhenStepStillMakesProgress(t *testing.T) {
+	t.Parallel()
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, successfulRealtimeVoiceResolver())
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("coat-1", "Sarah winter coat", asset.KindItem, ""), "audit-progressive-probe")
+	state, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
+	if err != nil {
+		t.Fatalf("new read state: %v", err)
+	}
+	session := realtimeVoiceInvestigationSession()
+	if _, err := application.executeRealtimeVoiceInvestigationReads(context.Background(), session, 1, []agentmodel.SearchRequest{{
+		ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
+		Mention: "Sarah winter coat", SearchProbes: []string{"Sarah"},
+	}}, state, func(RealtimeVoiceEvent) error { return nil }); err != nil {
+		t.Fatalf("execute first probe: %v", err)
+	}
+	result, err := application.executeRealtimeVoiceInvestigationReads(context.Background(), session, 2, []agentmodel.SearchRequest{{
+		ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
+		Mention: "Sarah winter coat", SearchProbes: []string{" SARAH ", "winter coat"},
+	}}, state, func(RealtimeVoiceEvent) error { return nil })
+	if err != nil {
+		t.Fatalf("expected novel probe to remain valid after deduplication: %v", err)
+	}
+	if len(result.ReadEvidence) != 1 || result.ReadEvidence[0].Probe != "winter coat" {
+		t.Fatalf("expected only the novel probe to execute, got %+v", result.ReadEvidence)
+	}
+}
+
 func TestRealtimeVoiceInvestigationReadsMapInventoryContentsAndTypedHistory(t *testing.T) {
 	t.Parallel()
 

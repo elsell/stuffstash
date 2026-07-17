@@ -63,15 +63,29 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
 		return realtimeVoiceInvestigationReadResult{}, err
 	}
+	executedCalls := 0
 	for _, request := range requests {
 		if request.Validate() != nil {
 			return realtimeVoiceInvestigationReadResult{}, ports.ErrInvalidProviderInput
+		}
+		if request.ReadKind == agentmodel.InvestigationReadSearchAssets {
+			probes := make([]string, 0, len(request.SearchProbes))
+			for _, probe := range request.SearchProbes {
+				if !state.querySeen(request.ReferenceKey, probe, request.LifecycleScope) {
+					probes = append(probes, probe)
+				}
+			}
+			if len(probes) == 0 {
+				continue
+			}
+			request.SearchProbes = probes
 		}
 		calls, err := a.realtimeVoiceInvestigationCalls(request, state)
 		if err != nil {
 			return realtimeVoiceInvestigationReadResult{}, err
 		}
 		for _, callSpec := range calls {
+			executedCalls++
 			call := callSpec.call
 			call.ID = a.newRealtimeVoiceID()
 			if strings.TrimSpace(call.ID) == "" {
@@ -109,6 +123,9 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 				return realtimeVoiceInvestigationReadResult{}, err
 			}
 		}
+	}
+	if executedCalls == 0 {
+		return realtimeVoiceInvestigationReadResult{}, ports.ErrInvalidProviderInput
 	}
 	observations := make([]agentmodel.CandidateObservation, 0, len(newObservations))
 	for _, observation := range newObservations {

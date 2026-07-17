@@ -40,6 +40,10 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 	})
 	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
 		Transcript: "Where are Sarah's winter coat?",
+		ConversationTurns: []ports.AgentConversationTurn{
+			{Role: ports.AgentConversationRoleUser, Text: "Where are Sarah's winter clothes?"},
+			{Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Did you mean Sarah Winter Clothes and Shoes?"},
+		},
 		Investigation: &agentmodel.InvestigationInput{
 			Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1",
 			SchemaVersion: "voice-investigation-v1", Transcript: "Where are Sarah's winter coat?",
@@ -76,7 +80,8 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 	requestText := string(mustJSON(t, request))
 	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") ||
 		!strings.Contains(requestText, "subject in A inside B at C") || !strings.Contains(requestText, "[C, B, A]") ||
-		!strings.Contains(requestText, "winter-clothing") || !strings.Contains(requestText, "lifecycleScope") {
+		!strings.Contains(requestText, "winter-clothing") || !strings.Contains(requestText, "lifecycleScope") ||
+		!strings.Contains(requestText, "Did you mean Sarah Winter Clothes and Shoes?") || !strings.Contains(requestText, "UNTRUSTED_CONVERSATION_JSON") {
 		t.Fatalf("expected ordered destination-kind contract in prompt and schema, got %s", requestText)
 	}
 }
