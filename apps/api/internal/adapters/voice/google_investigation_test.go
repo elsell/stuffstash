@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -97,6 +98,54 @@ func TestGoogleGeminiLanguageInferenceRejectsMissingInvestigationWithoutCallingP
 	}
 	if calls != 0 {
 		t.Fatalf("missing investigation must fail before provider I/O, got %d calls", calls)
+	}
+}
+
+func TestGeminiInvestigationPromptPreservesValidatedVocabularyAsCompleteUntrustedJSON(t *testing.T) {
+	t.Parallel()
+
+	manifest := agentmodel.VoiceVocabularyManifest{}
+	for index := 0; index < agentmodel.MaxVoiceVocabularyAssetTypes; index++ {
+		manifest.CustomAssetTypes = append(manifest.CustomAssetTypes, agentmodel.VoiceVocabularyAssetType{
+			Key: fmt.Sprintf("secret-documents-%d", index), DisplayName: fmt.Sprintf("Password records %d", index), Description: strings.Repeat("x", 500),
+		})
+	}
+	for index := 0; index < agentmodel.MaxVoiceVocabularyCustomFields; index++ {
+		manifest.CustomFields = append(manifest.CustomFields, agentmodel.VoiceVocabularyFieldSummary{
+			Key: fmt.Sprintf("api-token-location-%d", index), DisplayName: fmt.Sprintf("Credential location %d", index), FieldType: "text", Applicability: "all_assets",
+		})
+	}
+	for index := 0; index < agentmodel.MaxVoiceVocabularyTags; index++ {
+		manifest.Tags = append(manifest.Tags, agentmodel.VoiceVocabularyTag{Key: fmt.Sprintf("token-%d", index), DisplayName: fmt.Sprintf("Token %d", index)})
+	}
+	input := agentmodel.InvestigationInput{
+		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
+		Transcript: "Where are the secret documents?", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds, Vocabulary: manifest,
+	}
+	if err := input.Validate(); err != nil {
+		t.Fatalf("max-sized investigation fixture must be valid: %v", err)
+	}
+	prompt := geminiInvestigationPrompt(ports.LanguageInferenceInput{Investigation: &input})
+	const begin = "<BEGIN_UNTRUSTED_INVESTIGATION_JSON>\n"
+	const end = "\n<END_UNTRUSTED_INVESTIGATION_JSON>"
+	start := strings.Index(prompt, begin)
+	finish := strings.Index(prompt, end)
+	if start < 0 || finish <= start {
+		t.Fatalf("expected explicit untrusted JSON boundary, got %s", prompt)
+	}
+	payload := prompt[start+len(begin) : finish]
+	if len(payload) <= 24000 {
+		t.Fatalf("fixture must prove payloads larger than the former truncation limit, got %d bytes", len(payload))
+	}
+	var decoded agentmodel.InvestigationInput
+	if err := json.Unmarshal([]byte(payload), &decoded); err != nil {
+		t.Fatalf("typed prompt payload was not complete JSON: %v", err)
+	}
+	if decoded.Vocabulary.CustomAssetTypes[0].Key != "secret-documents-0" || decoded.Vocabulary.CustomFields[0].Key != "api-token-location-0" || decoded.Vocabulary.Tags[0].Key != "token-0" {
+		t.Fatalf("typed vocabulary keys were rewritten: %+v", decoded.Vocabulary)
+	}
+	if strings.Contains(payload, "[redacted]") || decoded.Vocabulary.CustomAssetTypes[0].Description != strings.Repeat("x", 500) {
+		t.Fatalf("validated structured input was sanitized or truncated")
 	}
 }
 
