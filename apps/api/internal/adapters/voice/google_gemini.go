@@ -107,6 +107,11 @@ func NewGoogleGeminiLanguageInference(cfg GoogleGeminiConfig) GoogleGeminiLangua
 }
 
 func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	if input.Investigation != nil {
+		if err := input.Investigation.Validate(); err != nil {
+			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+		}
+	}
 	contents, err := languageContents(input)
 	if err != nil {
 		return ports.LanguageInferenceTurn{}, err
@@ -149,7 +154,12 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 			return turn, nil
 		}
 		rawText := firstGeminiText(response)
-		turn, err := parseLanguageTurn(rawText, input.Tools, input.PlanOnly)
+		var turn ports.LanguageInferenceTurn
+		if input.Investigation != nil {
+			turn, err = parseGeminiInvestigationTurn(rawText)
+		} else {
+			turn, err = parseLanguageTurn(rawText, input.Tools, input.PlanOnly)
+		}
 		if err != nil {
 			lastErr = err
 			if !retryableGoogleStructuredOutputError(input, err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
@@ -186,14 +196,14 @@ func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Contex
 }
 
 func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {
-	if input.FinalOnly || input.PlanOnly {
+	if input.FinalOnly || input.PlanOnly || input.Investigation != nil {
 		return nil
 	}
 	return geminiTools(input.Tools)
 }
 
 func geminiToolConfigForTurn(input ports.LanguageInferenceInput) *geminiToolConfig {
-	if input.FinalOnly || input.PlanOnly || !input.RequireToolCall || len(input.Tools) == 0 {
+	if input.FinalOnly || input.PlanOnly || input.Investigation != nil || !input.RequireToolCall || len(input.Tools) == 0 {
 		return nil
 	}
 	names := make([]string, 0, len(input.Tools))
@@ -213,6 +223,11 @@ func geminiToolConfigForTurn(input ports.LanguageInferenceInput) *geminiToolConf
 
 func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGenerationConfig {
 	config := &geminiGenerationConfig{Temperature: 0}
+	if input.Investigation != nil {
+		config.ResponseMimeType = "application/json"
+		config.ResponseJSONSchema = geminiInvestigationResponseSchema(*input.Investigation)
+		return config
+	}
 	if input.PlanOnly {
 		config.ResponseMimeType = "application/json"
 		config.ResponseJSONSchema = geminiActionPlanResponseSchema()
@@ -227,6 +242,9 @@ func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGe
 }
 
 func languagePrompt(input ports.LanguageInferenceInput) string {
+	if input.Investigation != nil {
+		return geminiInvestigationPrompt(input)
+	}
 	lines := []string{}
 	transcript := safeGoogleConversationPromptText(input.Transcript, 1000)
 	if template := strings.TrimSpace(input.PromptTemplate); template != "" {
@@ -728,6 +746,8 @@ type geminiSchema struct {
 	Enum        []string                `json:"enum,omitempty"`
 	Items       *geminiSchema           `json:"items,omitempty"`
 	AnyOf       []geminiSchema          `json:"anyOf,omitempty"`
+	MinItems    int                     `json:"minItems,omitempty"`
+	MaxItems    int                     `json:"maxItems,omitempty"`
 }
 
 type geminiGenerationConfig struct {

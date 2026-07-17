@@ -10,7 +10,7 @@ import (
 )
 
 func googleLanguageInferenceAttempts(input ports.LanguageInferenceInput) int {
-	if input.PlanOnly || input.FinalOnly {
+	if input.PlanOnly || input.FinalOnly || input.Investigation != nil {
 		return 2
 	}
 	return 1
@@ -28,7 +28,7 @@ func retryableGoogleStructuredOutputError(input ports.LanguageInferenceInput, er
 	if err == nil {
 		return false
 	}
-	return input.PlanOnly || input.FinalOnly
+	return input.PlanOnly || input.FinalOnly || input.Investigation != nil
 }
 
 func sleepGoogleLanguageRetry(ctx context.Context, attempt int, err error) error {

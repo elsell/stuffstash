@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -54,6 +55,7 @@ type LanguageInferenceInput struct {
 	PlanOnly           bool
 	RequireToolCall    bool
 	IncludeDiagnostics bool
+	Investigation      *agentmodel.InvestigationInput
 }
 
 type AgentConversationRole string
@@ -104,9 +106,10 @@ const (
 )
 
 type LanguageInferenceTurn struct {
-	ToolCalls   []AgentToolCall
-	Final       *StructuredAgentResponse
-	Diagnostics []LanguageInferenceDiagnostic
+	ToolCalls     []AgentToolCall
+	Final         *StructuredAgentResponse
+	Investigation *agentmodel.InvestigationStep
+	Diagnostics   []LanguageInferenceDiagnostic
 }
 
 type LanguageInferenceDiagnostic struct {
