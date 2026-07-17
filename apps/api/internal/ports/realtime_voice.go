@@ -42,15 +42,14 @@ type LanguageInferenceProviderProbe interface {
 }
 
 type LanguageInferenceInput struct {
-	TenantID           tenant.ID
-	InventoryID        inventory.InventoryID
-	Principal          identity.Principal
-	Transcript         string
-	ConversationTurns  []AgentConversationTurn
-	PromptTemplate     string
-	PreviousTurns      int
-	IncludeDiagnostics bool
-	Investigation      *agentmodel.InvestigationInput
+	TenantID          tenant.ID
+	InventoryID       inventory.InventoryID
+	Principal         identity.Principal
+	Transcript        string
+	ConversationTurns []AgentConversationTurn
+	PromptTemplate    string
+	PreviousTurns     int
+	Investigation     *agentmodel.InvestigationInput
 }
 
 type AgentConversationRole string
@@ -68,12 +67,6 @@ type AgentConversationTurn struct {
 
 type LanguageInferenceTurn struct {
 	Investigation *agentmodel.InvestigationStep
-	Diagnostics   []LanguageInferenceDiagnostic
-}
-
-type LanguageInferenceDiagnostic struct {
-	Title  string
-	Detail string
 }
 
 type AgentToolCall struct {

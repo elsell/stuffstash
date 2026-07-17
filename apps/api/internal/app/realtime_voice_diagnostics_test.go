@@ -32,8 +32,8 @@ func TestRealtimeVoiceTypedInvestigationDiagnosticsRespectSessionSetting(t *test
 			t.Parallel()
 			initial, final := realtimeVoiceTypedLocateTurns("diagnostic-subject", "Diagnostic subject")
 			language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-				{Investigation: &initial, Diagnostics: []ports.LanguageInferenceDiagnostic{{Title: "Investigation prompt", Detail: "apiKey: should-not-leak\nphase: initial"}}},
-				{Investigation: &final, Diagnostics: []ports.LanguageInferenceDiagnostic{{Title: "Evidence assessment", Detail: "authorization=bearer should-not-leak\nphase: evidence"}}},
+				{Investigation: &initial},
+				{Investigation: &final},
 			}}
 			resolver := successfulRealtimeVoiceResolver()
 			resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "generated diagnostic request"}
@@ -63,12 +63,17 @@ func TestRealtimeVoiceTypedInvestigationDiagnosticsRespectSessionSetting(t *test
 				t.Fatalf("diagnostics-disabled session leaked diagnostics: %+v", diagnostics)
 			}
 			if enabled {
-				if len(diagnostics) < 2 {
+				if len(diagnostics) != 2 {
 					t.Fatalf("expected typed-turn diagnostics, got %+v", events)
 				}
 				for _, diagnostic := range diagnostics {
-					if strings.Contains(diagnostic.Detail, "should-not-leak") || strings.Contains(strings.ToLower(diagnostic.Detail), "bearer ") {
-						t.Fatalf("unsafe diagnostic material leaked: %+v", diagnostic)
+					for _, forbidden := range []string{"generated diagnostic request", "Diagnostic subject", "diagnostic-subject", "search_assets", "subjectMention"} {
+						if strings.Contains(diagnostic.Detail, forbidden) {
+							t.Fatalf("diagnostic leaked %q: %+v", forbidden, diagnostic)
+						}
+					}
+					if !strings.Contains(diagnostic.Detail, `"operation":"locate"`) || !strings.Contains(diagnostic.Message, "Language investigation") {
+						t.Fatalf("expected safe typed diagnostic metadata: %+v", diagnostic)
 					}
 				}
 			}

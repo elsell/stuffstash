@@ -156,18 +156,6 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	return a.runRealtimeVoiceInvestigationLoop(ctx, input.Session, effectiveTranscript, input.ConversationTurns, input.ContinueAfterClarification, emit)
 }
 
-func emitRealtimeVoiceDiagnostics(session RealtimeVoiceSession, diagnostics []ports.LanguageInferenceDiagnostic, emit RealtimeVoiceEventSink) error {
-	if !session.DeveloperDiagnostics {
-		return nil
-	}
-	for _, diagnostic := range diagnostics {
-		if err := emitRealtimeVoiceDiagnostic(session.ID, diagnostic.Title, diagnostic.Detail, emit); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, emit RealtimeVoiceEventSink) error {
 	message := safeRealtimeVoiceDiagnosticText(title, 120)
 	if message == "" {

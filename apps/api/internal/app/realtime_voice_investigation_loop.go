@@ -108,8 +108,8 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 	turn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 		TenantID: session.TenantID, InventoryID: session.InventoryID, Principal: session.Principal,
 		Transcript: transcript, ConversationTurns: safeRealtimeVoiceConversationTurns(conversationTurns),
-		PromptTemplate: session.LanguagePromptTemplate, IncludeDiagnostics: session.DeveloperDiagnostics,
-		PreviousTurns: investigation.EvidenceRound, Investigation: &investigation,
+		PromptTemplate: session.LanguagePromptTemplate,
+		PreviousTurns:  investigation.EvidenceRound, Investigation: &investigation,
 	})
 	if err != nil {
 		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, investigation.EvidenceRound+1, false, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
@@ -117,11 +117,11 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 		}
 		return agentmodel.InvestigationStep{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 	}
-	if err := emitRealtimeVoiceDiagnostics(session, turn.Diagnostics, emit); err != nil {
-		return agentmodel.InvestigationStep{}, err
-	}
 	if turn.Investigation == nil || turn.Investigation.Validate() != nil {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+	}
+	if err := emitRealtimeVoiceInvestigationDiagnostic(session, investigation, *turn.Investigation, emit); err != nil {
+		return agentmodel.InvestigationStep{}, err
 	}
 	return *turn.Investigation, nil
 }

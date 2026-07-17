@@ -3,8 +3,6 @@ package voice
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -142,9 +140,6 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 			}
 			continue
 		}
-		if input.IncludeDiagnostics {
-			turn.Diagnostics = languageInferenceDiagnostics(input)
-		}
 		return turn, nil
 	}
 	if lastErr != nil {
@@ -172,54 +167,6 @@ func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Contex
 		return ports.ErrInvalidProviderInput
 	}
 	return nil
-}
-
-func languageInferenceDiagnostics(input ports.LanguageInferenceInput) []ports.LanguageInferenceDiagnostic {
-	turnLabel := fmt.Sprintf("turn %d", input.PreviousTurns+1)
-	if input.Investigation == nil {
-		return nil
-	}
-	investigation := input.Investigation
-	payload := struct {
-		Phase                     string `json:"phase"`
-		EvidenceRound             int    `json:"evidenceRound"`
-		MaxEvidenceRounds         int    `json:"maxEvidenceRounds"`
-		PromptVersion             string `json:"promptVersion"`
-		SchemaVersion             string `json:"schemaVersion"`
-		PreviousRequestCount      int    `json:"previousRequestCount"`
-		ObservationCount          int    `json:"observationCount"`
-		ReadEvidenceCount         int    `json:"readEvidenceCount"`
-		CustomAssetTypeCount      int    `json:"customAssetTypeCount"`
-		CustomFieldCount          int    `json:"customFieldCount"`
-		TagCount                  int    `json:"tagCount"`
-		VocabularyRequestCount    int    `json:"vocabularyRequestCount"`
-		VocabularyDefinitionCount int    `json:"vocabularyDefinitionCount"`
-	}{
-		Phase: string(investigation.Phase), EvidenceRound: investigation.EvidenceRound, MaxEvidenceRounds: investigation.MaxEvidenceRounds,
-		PromptVersion: safeGoogleDiagnosticVersion(investigation.PromptVersion), SchemaVersion: safeGoogleDiagnosticVersion(investigation.SchemaVersion),
-		PreviousRequestCount: len(investigation.PreviousRequests), ObservationCount: len(investigation.Observations), ReadEvidenceCount: len(investigation.ReadEvidence),
-		CustomAssetTypeCount: len(investigation.Vocabulary.CustomAssetTypes), CustomFieldCount: len(investigation.Vocabulary.CustomFields), TagCount: len(investigation.Vocabulary.Tags),
-		VocabularyRequestCount: len(investigation.VocabularyRequests), VocabularyDefinitionCount: len(investigation.VocabularyDefinitions),
-	}
-	rendered, err := json.Marshal(payload)
-	if err != nil {
-		return nil
-	}
-	return []ports.LanguageInferenceDiagnostic{{Title: "Language investigation (" + turnLabel + ")", Detail: string(rendered)}}
-}
-
-func safeGoogleDiagnosticVersion(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" || len(value) > 100 {
-		return "unknown"
-	}
-	for _, char := range value {
-		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '.' || char == '-' || char == '_' {
-			continue
-		}
-		return "unknown"
-	}
-	return value
 }
 
 type geminiGenerateContentRequest struct {
