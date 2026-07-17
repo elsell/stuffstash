@@ -74,7 +74,9 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 		t.Fatalf("expected bounded investigation prompt, got %+v", request["contents"])
 	}
 	requestText := string(mustJSON(t, request))
-	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") || !strings.Contains(requestText, "winter-clothing") || !strings.Contains(requestText, "lifecycleScope") {
+	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") ||
+		!strings.Contains(requestText, "subject in A inside B at C") || !strings.Contains(requestText, "[C, B, A]") ||
+		!strings.Contains(requestText, "winter-clothing") || !strings.Contains(requestText, "lifecycleScope") {
 		t.Fatalf("expected ordered destination-kind contract in prompt and schema, got %s", requestText)
 	}
 }

@@ -26,7 +26,7 @@ A past-tense location question about where someone put, left, stored, or stashed
 
 Preserve every intended storage destination in outer-to-inner containment order; not every named noun is a destination. Return one destinationKinds entry for every destinationPath entry in the same order: location for a place or room, container for a bin, box, cabinet, shelf, toolbox, surface, or other thing that can contain an asset. Classify the meaning expressed by the request; do not rely on a segment's array position. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
 
-Normalize inside-out grammar to storage order. For X in Y, output Y before X. Resolve repeated containment relations from the outer place toward the innermost container.
+Normalize the complete explicit enclosure chain to storage order. For X in Y, output Y before X. A chain shaped like subject in A inside B at C becomes [C, B, A], never [A, B, C]. A terminal place introduced by at, in, or inside is the outer destination when it encloses the requested storage chain; do not drop it as optional context. Resolve repeated containment relations from the outer place toward the innermost container.
 
 Spatial landmark relations such as under, beside, behind, or near do not by themselves mean containment. Keep a landmark phrase with the container it distinguishes as one destination mention; the landmark does not become a separate ancestor. An explicitly enclosing place or container remains its own outer destination segment. For example, crate under the bench in the workshop becomes [workshop, crate under the bench], never [workshop, bench, crate].
 
