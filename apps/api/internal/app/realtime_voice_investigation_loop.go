@@ -11,14 +11,24 @@ import (
 const realtimeVoiceInvestigationVersion = "voice-investigation-v1"
 
 func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, continueAfterClarification bool, emit RealtimeVoiceEventSink) error {
-	initialInput := agentmodel.InvestigationInput{
-		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: realtimeVoiceInvestigationVersion,
-		SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: transcript, MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
-	}
-	step, err := a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, initialInput, emit)
+	vocabulary, vocabularyCatalog, err := a.loadRealtimeVoiceVocabulary(ctx, session.TenantID, session.InventoryID)
 	if err != nil {
 		return err
 	}
+	initialInput := agentmodel.InvestigationInput{
+		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: realtimeVoiceInvestigationVersion,
+		SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: transcript, MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
+		Vocabulary: vocabulary,
+	}
+	step, err := a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, initialInput, nil, emit)
+	if err != nil {
+		return err
+	}
+	vocabularyDefinitions, err := vocabularyCatalog.resolve(step.VocabularyRequests)
+	if err != nil {
+		return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
+	}
+	vocabularyRequests := append([]agentmodel.VoiceVocabularyRequest{}, step.VocabularyRequests...)
 	if step.Decision == agentmodel.InvestigationDecisionFinish {
 		if step.Intent.Kind != agentmodel.IntentKindUnsupported {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
@@ -62,8 +72,10 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 			MaxEvidenceRounds: agentmodel.MaxEvidenceRounds, CanonicalIntent: &intentCopy,
 			PreviousRequests: append([]agentmodel.SearchRequest{}, requests...), Observations: append([]agentmodel.CandidateObservation{}, observations...),
 			ReadEvidence: append([]agentmodel.ReadEvidence{}, readEvidence...),
+			Vocabulary:   vocabulary, VocabularyRequests: append([]agentmodel.VoiceVocabularyRequest{}, vocabularyRequests...),
+			VocabularyDefinitions: append([]agentmodel.VoiceVocabularyDefinition{}, vocabularyDefinitions...),
 		}
-		step, err = a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, assessmentInput, emit)
+		step, err = a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, assessmentInput, readState.toolResults, emit)
 		if err != nil {
 			return err
 		}
@@ -72,6 +84,10 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		}
 		if step.Decision == agentmodel.InvestigationDecisionSearchAgain {
 			if evidenceRound == agentmodel.MaxEvidenceRounds {
+				return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
+			}
+			vocabularyRequests, vocabularyDefinitions, err = mergeRealtimeVoiceVocabularyResolution(vocabularyCatalog, vocabularyRequests, vocabularyDefinitions, step.VocabularyRequests)
+			if err != nil {
 				return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 			}
 			continue
@@ -88,7 +104,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 	return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 }
 
-func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, investigation agentmodel.InvestigationInput, emit RealtimeVoiceEventSink) (agentmodel.InvestigationStep, error) {
+func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, investigation agentmodel.InvestigationInput, toolResults []ports.AgentToolResult, emit RealtimeVoiceEventSink) (agentmodel.InvestigationStep, error) {
 	turn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 		TenantID: session.TenantID, InventoryID: session.InventoryID, Principal: session.Principal,
 		Transcript: transcript, ConversationTurns: safeRealtimeVoiceConversationTurns(conversationTurns),
@@ -96,7 +112,7 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 		PreviousTurns: investigation.EvidenceRound, Investigation: &investigation,
 	})
 	if err != nil {
-		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, investigation.EvidenceRound+1, false, nil, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
+		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, investigation.EvidenceRound+1, false, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
 			return agentmodel.InvestigationStep{}, diagnosticErr
 		}
 		return agentmodel.InvestigationStep{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}

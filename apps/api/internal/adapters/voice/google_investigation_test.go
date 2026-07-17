@@ -23,7 +23,8 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
           "decision":"search",
           "intent":{"kind":"read","operation":"locate","subjectMention":"Sarah winter coat","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
-          "searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"Sarah winter coat","kindHint":"","visibleAssetId":"","searchProbes":["Sarah winter coat","Sarah winter clothes","winter clothing"]}],
+          "searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"Sarah winter coat","kindHint":"","visibleAssetId":"","searchProbes":["Sarah winter coat","Sarah winter clothes","winter clothing"],"lifecycleScope":"active"}],
+          "vocabularyRequests":[{"kind":"custom_asset_type","key":"winter-clothing"}],
           "resolutions":[],
           "rationale":"Gather authorized candidates for the remembered title."
         }`))
@@ -40,6 +41,7 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 			Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1",
 			SchemaVersion: "voice-investigation-v1", Transcript: "Where are Sarah's winter coat?",
 			MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
+			Vocabulary:        agentmodel.VoiceVocabularyManifest{CustomAssetTypes: []agentmodel.VoiceVocabularyAssetType{{Key: "winter-clothing", DisplayName: "Winter Clothing"}}},
 		},
 	})
 	if err != nil {
@@ -50,6 +52,9 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 	}
 	if got := turn.Investigation.SearchRequests[0].SearchProbes; len(got) != 3 || got[1] != "Sarah winter clothes" {
 		t.Fatalf("expected diverse model-owned probes, got %+v", got)
+	}
+	if turn.Investigation.SearchRequests[0].LifecycleScope != agentmodel.LifecycleScopeActive || len(turn.Investigation.VocabularyRequests) != 1 {
+		t.Fatalf("expected lifecycle-scoped read and targeted vocabulary request, got %+v", turn.Investigation)
 	}
 	if _, exists := request["tools"]; exists {
 		t.Fatalf("investigation must not expose provider-callable tools: %+v", request)
@@ -66,7 +71,7 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 		t.Fatalf("expected bounded investigation prompt, got %+v", request["contents"])
 	}
 	requestText := string(mustJSON(t, request))
-	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") {
+	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") || !strings.Contains(requestText, "winter-clothing") || !strings.Contains(requestText, "lifecycleScope") {
 		t.Fatalf("expected ordered destination-kind contract in prompt and schema, got %s", requestText)
 	}
 }

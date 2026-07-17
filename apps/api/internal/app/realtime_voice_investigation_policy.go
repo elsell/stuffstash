@@ -19,6 +19,7 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 	allCandidates := map[string]agentmodel.CandidateObservation{}
 	coverage := map[agentmodel.SemanticReferenceKey]bool{}
 	discoveryCoverage := map[agentmodel.SemanticReferenceKey]bool{}
+	discoveryScopes := map[agentmodel.SemanticReferenceKey][]agentmodel.LifecycleScope{}
 	for _, evidence := range readEvidence {
 		if evidence.Validate() != nil {
 			return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
@@ -27,6 +28,7 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		switch evidence.ReadKind {
 		case agentmodel.InvestigationReadSearchAssets, agentmodel.InvestigationReadListInventory, agentmodel.InvestigationReadListContents:
 			discoveryCoverage[evidence.ReferenceKey] = true
+			discoveryScopes[evidence.ReferenceKey] = append(discoveryScopes[evidence.ReferenceKey], evidence.LifecycleScope.Effective())
 		}
 	}
 	for _, observation := range observations {
@@ -69,6 +71,12 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		}
 		mention := realtimeVoiceInvestigationReferenceMention(canonicalIntent, reference)
 		resolution = realtimeVoiceExactTitleResolution(mention, resolution, byReference[reference])
+		for _, candidateID := range resolution.CandidateIDs {
+			candidate := byReference[reference][candidateID]
+			if !realtimeVoiceLifecycleScopeIncludes(discoveryScopes[reference], candidate.LifecycleState) {
+				return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+			}
+		}
 		ordered = append(ordered, resolution)
 	}
 	if canonicalIntent.Operation == agentmodel.OperationMove || canonicalIntent.Operation == agentmodel.OperationCreate {
@@ -80,6 +88,20 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	return step, nil
+}
+
+func realtimeVoiceLifecycleScopeIncludes(scopes []agentmodel.LifecycleScope, lifecycle string) bool {
+	lifecycle = strings.TrimSpace(lifecycle)
+	if lifecycle == "" {
+		lifecycle = string(agentmodel.LifecycleScopeActive)
+	}
+	for _, scope := range scopes {
+		effective := scope.Effective()
+		if effective == agentmodel.LifecycleScopeAll || string(effective) == lifecycle {
+			return true
+		}
+	}
+	return false
 }
 
 func sameRealtimeVoiceInvestigationIntent(left, right agentmodel.Intent) bool {

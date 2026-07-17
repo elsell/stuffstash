@@ -21,6 +21,10 @@ Preserve every named destination segment in outer-to-inner containment order. Re
 
 For search_assets, generate 2 to 5 diverse probes when the words permit it: the concise mention, proper-name anchors, distinctive content words, semantic categories, morphology, and likely transcription corrections. Do not use generic words such as item, thing, place, storage, furniture, or room as standalone probes. A search probe is only a retrieval hypothesis.
 
+Every read request must set lifecycleScope to active, archived, or all. Use archived for the existing subject of a restore request, all only when the request genuinely spans lifecycle states, and otherwise active. Lifecycle scope does not bypass authorization.
+
+The typed input includes a scoped vocabulary manifest of active custom asset types, custom fields, and a bounded tag list. Use it as vocabulary guidance, never as proof of an asset's metadata. Request full metadata only for relevant manifest keys through vocabularyRequests. Copy keys exactly; never invent or emit custom type, field, or tag IDs. A finish decision must have an empty vocabularyRequests array.
+
 Never emit commands, executable arguments, approval claims, a question to the user, conversational prose, invented IDs, or provider-specific fields. Rationale and evidence are short decision summaries, not hidden reasoning.`
 
 func geminiInvestigationPrompt(input ports.LanguageInferenceInput) string {
@@ -100,7 +104,12 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		"kindHint":       {Type: "string", Enum: []string{"", "item", "container", "location"}},
 		"visibleAssetId": {Type: "string"},
 		"searchProbes":   stringArray(0, agentmodel.MaxSearchProbesPerRequest),
-	}, Required: []string{"referenceKey", "readKind", "mention", "kindHint", "visibleAssetId", "searchProbes"}}
+		"lifecycleScope": {Type: "string", Enum: []string{"active", "archived", "all"}},
+	}, Required: []string{"referenceKey", "readKind", "mention", "kindHint", "visibleAssetId", "searchProbes", "lifecycleScope"}}
+	vocabularyRequest := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
+		"kind": {Type: "string", Enum: []string{"custom_asset_type", "custom_field", "tag"}},
+		"key":  {Type: "string"},
+	}, Required: []string{"kind", "key"}}
 
 	resolutionBranch := func(status string, minimum, maximum int) geminiSchema {
 		return geminiSchema{Type: "object", Properties: map[string]geminiSchema{
@@ -126,11 +135,13 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 	}
 	searchItem := searchRequest
 	resolutionItem := resolution
+	vocabularyRequestItem := vocabularyRequest
 	return &geminiSchema{Type: "object", Properties: map[string]geminiSchema{
-		"decision":       {Type: "string", Enum: decisions},
-		"intent":         intent,
-		"searchRequests": {Type: "array", Items: &searchItem, MinItems: searchMin, MaxItems: searchMax},
-		"resolutions":    {Type: "array", Items: &resolutionItem, MinItems: resolutionMin, MaxItems: resolutionMax},
-		"rationale":      {Type: "string", Description: fmt.Sprintf("Concise decision summary for evidence round %d.", input.EvidenceRound)},
-	}, Required: []string{"decision", "intent", "searchRequests", "resolutions", "rationale"}}
+		"decision":           {Type: "string", Enum: decisions},
+		"intent":             intent,
+		"searchRequests":     {Type: "array", Items: &searchItem, MinItems: searchMin, MaxItems: searchMax},
+		"resolutions":        {Type: "array", Items: &resolutionItem, MinItems: resolutionMin, MaxItems: resolutionMax},
+		"rationale":          {Type: "string", Description: fmt.Sprintf("Concise decision summary for evidence round %d.", input.EvidenceRound)},
+		"vocabularyRequests": {Type: "array", Items: &vocabularyRequestItem, MinItems: 0, MaxItems: agentmodel.MaxVoiceVocabularyRequests},
+	}, Required: []string{"decision", "intent", "searchRequests", "resolutions", "rationale", "vocabularyRequests"}}
 }

@@ -140,7 +140,7 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 		Source:         audit.SourceConversation,
 		Query:          args.Query,
 		Mode:           "fuzzy",
-		LifecycleState: "active",
+		LifecycleState: args.LifecycleState,
 		Limit:          args.Limit,
 	})
 	if err != nil {

@@ -139,6 +139,25 @@ func (kind InvestigationReadKind) Valid() bool {
 	}
 }
 
+type LifecycleScope string
+
+const (
+	LifecycleScopeActive   LifecycleScope = "active"
+	LifecycleScopeArchived LifecycleScope = "archived"
+	LifecycleScopeAll      LifecycleScope = "all"
+)
+
+func (scope LifecycleScope) Valid() bool {
+	return scope == "" || scope == LifecycleScopeActive || scope == LifecycleScopeArchived || scope == LifecycleScopeAll
+}
+
+func (scope LifecycleScope) Effective() LifecycleScope {
+	if scope == "" {
+		return LifecycleScopeActive
+	}
+	return scope
+}
+
 type ResolutionStatus string
 
 const (
@@ -263,11 +282,12 @@ type SearchRequest struct {
 	KindHint       string                `json:"kindHint"`
 	VisibleAssetID string                `json:"visibleAssetId"`
 	SearchProbes   []string              `json:"searchProbes"`
+	LifecycleScope LifecycleScope        `json:"lifecycleScope"`
 }
 
 func (request SearchRequest) Validate() error {
 	if !request.ReferenceKey.Valid() || !request.ReadKind.Valid() || !bounded(request.Mention, 300, true) ||
-		!bounded(request.VisibleAssetID, 200, true) || len(request.SearchProbes) > MaxSearchProbesPerRequest {
+		!bounded(request.VisibleAssetID, 200, true) || len(request.SearchProbes) > MaxSearchProbesPerRequest || !request.LifecycleScope.Valid() {
 		return ErrInvalidVoiceInvestigation
 	}
 	if request.KindHint != "" && request.KindHint != "item" && request.KindHint != "container" && request.KindHint != "location" {
@@ -342,12 +362,13 @@ type ReadEvidence struct {
 	Probe          string                `json:"probe,omitempty"`
 	VisibleAssetID string                `json:"visibleAssetId,omitempty"`
 	CandidateCount int                   `json:"candidateCount"`
+	LifecycleScope LifecycleScope        `json:"lifecycleScope"`
 }
 
 func (evidence ReadEvidence) Validate() error {
 	if evidence.EvidenceRound < 1 || evidence.EvidenceRound > MaxEvidenceRounds || !evidence.ReferenceKey.Valid() ||
 		!evidence.ReadKind.Valid() || !bounded(evidence.Probe, 200, true) || !bounded(evidence.VisibleAssetID, 200, true) ||
-		evidence.CandidateCount < 0 || evidence.CandidateCount > MaxCandidateObservations {
+		evidence.CandidateCount < 0 || evidence.CandidateCount > MaxCandidateObservations || !evidence.LifecycleScope.Valid() {
 		return ErrInvalidVoiceInvestigation
 	}
 	switch evidence.ReadKind {
@@ -406,27 +427,31 @@ func (resolution Resolution) Validate() error {
 }
 
 type InvestigationInput struct {
-	Phase             InvestigationPhase     `json:"phase"`
-	PromptVersion     string                 `json:"promptVersion"`
-	SchemaVersion     string                 `json:"schemaVersion"`
-	Transcript        string                 `json:"transcript"`
-	EvidenceRound     int                    `json:"evidenceRound"`
-	MaxEvidenceRounds int                    `json:"maxEvidenceRounds"`
-	CanonicalIntent   *Intent                `json:"canonicalIntent,omitempty"`
-	PreviousRequests  []SearchRequest        `json:"previousRequests"`
-	Observations      []CandidateObservation `json:"observations"`
-	ReadEvidence      []ReadEvidence         `json:"readEvidence"`
+	Phase                 InvestigationPhase          `json:"phase"`
+	PromptVersion         string                      `json:"promptVersion"`
+	SchemaVersion         string                      `json:"schemaVersion"`
+	Transcript            string                      `json:"transcript"`
+	EvidenceRound         int                         `json:"evidenceRound"`
+	MaxEvidenceRounds     int                         `json:"maxEvidenceRounds"`
+	CanonicalIntent       *Intent                     `json:"canonicalIntent,omitempty"`
+	PreviousRequests      []SearchRequest             `json:"previousRequests"`
+	Observations          []CandidateObservation      `json:"observations"`
+	ReadEvidence          []ReadEvidence              `json:"readEvidence"`
+	Vocabulary            VoiceVocabularyManifest     `json:"vocabulary"`
+	VocabularyRequests    []VoiceVocabularyRequest    `json:"vocabularyRequests"`
+	VocabularyDefinitions []VoiceVocabularyDefinition `json:"vocabularyDefinitions"`
 }
 
 func (input InvestigationInput) Validate() error {
 	if !input.Phase.Valid() || !bounded(input.PromptVersion, 100, false) || !bounded(input.SchemaVersion, 100, false) ||
 		!bounded(input.Transcript, maxInvestigationTextRunes, false) || input.MaxEvidenceRounds < 1 || input.MaxEvidenceRounds > MaxEvidenceRounds ||
 		input.EvidenceRound < 0 || input.EvidenceRound > input.MaxEvidenceRounds || len(input.PreviousRequests) > MaxSearchRequestsPerStep*MaxEvidenceRounds ||
-		len(input.Observations) > MaxCandidateObservations || len(input.ReadEvidence) > MaxReadEvidenceRecords {
+		len(input.Observations) > MaxCandidateObservations || len(input.ReadEvidence) > MaxReadEvidenceRecords || input.Vocabulary.Validate() != nil ||
+		len(input.VocabularyRequests) > MaxVoiceVocabularyRequests || len(input.VocabularyDefinitions) > MaxVoiceVocabularyRequests {
 		return ErrInvalidVoiceInvestigation
 	}
 	if input.Phase == InvestigationPhaseInitial {
-		if input.EvidenceRound != 0 || input.CanonicalIntent != nil || len(input.PreviousRequests) != 0 || len(input.Observations) != 0 || len(input.ReadEvidence) != 0 {
+		if input.EvidenceRound != 0 || input.CanonicalIntent != nil || len(input.PreviousRequests) != 0 || len(input.Observations) != 0 || len(input.ReadEvidence) != 0 || len(input.VocabularyRequests) != 0 || len(input.VocabularyDefinitions) != 0 {
 			return ErrInvalidVoiceInvestigation
 		}
 	} else {
@@ -449,6 +474,9 @@ func (input InvestigationInput) Validate() error {
 			return ErrInvalidVoiceInvestigation
 		}
 	}
+	if !validVoiceVocabularyResolution(input.VocabularyRequests, input.VocabularyDefinitions) {
+		return ErrInvalidVoiceInvestigation
+	}
 	for _, request := range input.PreviousRequests {
 		if !requestCoveredByReadEvidence(request, input.ReadEvidence) {
 			return ErrInvalidVoiceInvestigation
@@ -459,7 +487,7 @@ func (input InvestigationInput) Validate() error {
 
 func readEvidenceMatchesRequest(evidence ReadEvidence, requests []SearchRequest) bool {
 	for _, request := range requests {
-		if request.ReferenceKey != evidence.ReferenceKey || request.ReadKind != evidence.ReadKind {
+		if request.ReferenceKey != evidence.ReferenceKey || request.ReadKind != evidence.ReadKind || request.LifecycleScope.Effective() != evidence.LifecycleScope.Effective() {
 			continue
 		}
 		if request.ReadKind == InvestigationReadSearchAssets {
@@ -482,7 +510,7 @@ func requestCoveredByReadEvidence(request SearchRequest, records []ReadEvidence)
 		for _, probe := range request.SearchProbes {
 			covered := false
 			for _, record := range records {
-				if record.ReferenceKey == request.ReferenceKey && record.ReadKind == request.ReadKind && strings.EqualFold(strings.TrimSpace(record.Probe), strings.TrimSpace(probe)) {
+				if record.ReferenceKey == request.ReferenceKey && record.ReadKind == request.ReadKind && request.LifecycleScope.Effective() == record.LifecycleScope.Effective() && strings.EqualFold(strings.TrimSpace(record.Probe), strings.TrimSpace(probe)) {
 					covered = true
 					break
 				}
@@ -494,7 +522,7 @@ func requestCoveredByReadEvidence(request SearchRequest, records []ReadEvidence)
 		return true
 	}
 	for _, record := range records {
-		if record.ReferenceKey == request.ReferenceKey && record.ReadKind == request.ReadKind &&
+		if record.ReferenceKey == request.ReferenceKey && record.ReadKind == request.ReadKind && request.LifecycleScope.Effective() == record.LifecycleScope.Effective() &&
 			(request.ReadKind == InvestigationReadListInventory || strings.TrimSpace(record.VisibleAssetID) == strings.TrimSpace(request.VisibleAssetID)) {
 			return true
 		}
@@ -503,16 +531,17 @@ func requestCoveredByReadEvidence(request SearchRequest, records []ReadEvidence)
 }
 
 type InvestigationStep struct {
-	Decision       InvestigationDecision `json:"decision"`
-	Intent         Intent                `json:"intent"`
-	SearchRequests []SearchRequest       `json:"searchRequests"`
-	Resolutions    []Resolution          `json:"resolutions"`
-	Rationale      string                `json:"rationale"`
+	Decision           InvestigationDecision    `json:"decision"`
+	Intent             Intent                   `json:"intent"`
+	SearchRequests     []SearchRequest          `json:"searchRequests"`
+	Resolutions        []Resolution             `json:"resolutions"`
+	Rationale          string                   `json:"rationale"`
+	VocabularyRequests []VoiceVocabularyRequest `json:"vocabularyRequests"`
 }
 
 func (step InvestigationStep) Validate() error {
 	if !step.Decision.Valid() || step.Intent.Validate() != nil || !bounded(step.Rationale, maxInvestigationEvidenceRunes, true) ||
-		len(step.SearchRequests) > MaxSearchRequestsPerStep || len(step.Resolutions) > MaxDestinationSegments+1 {
+		len(step.SearchRequests) > MaxSearchRequestsPerStep || len(step.Resolutions) > MaxDestinationSegments+1 || len(step.VocabularyRequests) > MaxVoiceVocabularyRequests {
 		return ErrInvalidVoiceInvestigation
 	}
 	for _, request := range step.SearchRequests {
@@ -530,17 +559,57 @@ func (step InvestigationStep) Validate() error {
 		}
 		seen[resolution.ReferenceKey] = struct{}{}
 	}
+	vocabularySeen := map[string]struct{}{}
+	for _, request := range step.VocabularyRequests {
+		if request.Validate() != nil {
+			return ErrInvalidVoiceInvestigation
+		}
+		key := string(request.Kind) + "\x00" + request.Key
+		if _, exists := vocabularySeen[key]; exists {
+			return ErrInvalidVoiceInvestigation
+		}
+		vocabularySeen[key] = struct{}{}
+	}
 	switch step.Decision {
 	case InvestigationDecisionSearch, InvestigationDecisionSearchAgain:
 		if len(step.SearchRequests) == 0 || len(step.Resolutions) != 0 {
 			return ErrInvalidVoiceInvestigation
 		}
 	case InvestigationDecisionFinish:
-		if len(step.SearchRequests) != 0 || len(step.Resolutions) == 0 {
+		if len(step.SearchRequests) != 0 || len(step.Resolutions) == 0 || len(step.VocabularyRequests) != 0 {
 			return ErrInvalidVoiceInvestigation
 		}
 	}
 	return nil
+}
+
+func validVoiceVocabularyResolution(requests []VoiceVocabularyRequest, definitions []VoiceVocabularyDefinition) bool {
+	requested := map[string]struct{}{}
+	for _, request := range requests {
+		if request.Validate() != nil {
+			return false
+		}
+		key := string(request.Kind) + "\x00" + request.Key
+		if _, exists := requested[key]; exists {
+			return false
+		}
+		requested[key] = struct{}{}
+	}
+	resolved := map[string]struct{}{}
+	for _, definition := range definitions {
+		if definition.Validate() != nil {
+			return false
+		}
+		key := string(definition.Kind) + "\x00" + definition.Key
+		if _, exists := requested[key]; !exists {
+			return false
+		}
+		if _, exists := resolved[key]; exists {
+			return false
+		}
+		resolved[key] = struct{}{}
+	}
+	return len(requested) == len(resolved)
 }
 
 func bounded(value string, limit int, optional bool) bool {

@@ -34,7 +34,7 @@ func newRealtimeVoiceInvestigationReadState(previous []agentmodel.SearchRequest,
 			return nil, ports.ErrInvalidProviderInput
 		}
 		for _, probe := range request.SearchProbes {
-			state.recordQuery(request.ReferenceKey, probe)
+			state.recordQuery(request.ReferenceKey, probe, request.LifecycleScope)
 		}
 	}
 	for _, observation := range observations {
@@ -95,7 +95,7 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 			}
 			state.readEvidence = append(state.readEvidence, agentmodel.ReadEvidence{
 				EvidenceRound: evidenceRound, ReferenceKey: request.ReferenceKey, ReadKind: request.ReadKind,
-				Probe: strings.TrimSpace(callSpec.probe), VisibleAssetID: strings.TrimSpace(request.VisibleAssetID), CandidateCount: len(observations),
+				Probe: strings.TrimSpace(callSpec.probe), VisibleAssetID: strings.TrimSpace(request.VisibleAssetID), CandidateCount: len(observations), LifecycleScope: request.LifecycleScope.Effective(),
 			})
 			for _, observation := range observations {
 				key := observation.ReferenceKey.String() + "\x00" + observation.CandidateID
@@ -132,15 +132,15 @@ func (a App) realtimeVoiceInvestigationCalls(request agentmodel.SearchRequest, s
 	case agentmodel.InvestigationReadSearchAssets:
 		calls := make([]realtimeVoiceInvestigationCall, 0, len(request.SearchProbes))
 		for _, probe := range request.SearchProbes {
-			if state.querySeen(request.ReferenceKey, probe) {
+			if state.querySeen(request.ReferenceKey, probe, request.LifecycleScope) {
 				return nil, ports.ErrInvalidProviderInput
 			}
-			state.recordQuery(request.ReferenceKey, probe)
-			calls = append(calls, realtimeVoiceInvestigationCall{probe: strings.TrimSpace(probe), call: ports.AgentToolCall{Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": strings.TrimSpace(probe), "limit": realtimeVoiceToolMaxResults}}})
+			state.recordQuery(request.ReferenceKey, probe, request.LifecycleScope)
+			calls = append(calls, realtimeVoiceInvestigationCall{probe: strings.TrimSpace(probe), call: ports.AgentToolCall{Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": strings.TrimSpace(probe), "lifecycleState": string(request.LifecycleScope.Effective()), "limit": realtimeVoiceToolMaxResults}}})
 		}
 		return calls, nil
 	case agentmodel.InvestigationReadListInventory:
-		arguments := map[string]any{"limit": realtimeVoiceToolMaxResults, "lifecycleState": "active"}
+		arguments := map[string]any{"limit": realtimeVoiceToolMaxResults, "lifecycleState": string(request.LifecycleScope.Effective())}
 		if request.KindHint != "" {
 			arguments["kind"] = request.KindHint
 		}
@@ -150,7 +150,7 @@ func (a App) realtimeVoiceInvestigationCalls(request agentmodel.SearchRequest, s
 		if !ok || (candidate.Kind != "location" && candidate.Kind != "container") {
 			return nil, ports.ErrInvalidProviderInput
 		}
-		arguments := map[string]any{"limit": realtimeVoiceToolMaxResults, "lifecycleState": "active", "parentAssetId": request.VisibleAssetID}
+		arguments := map[string]any{"limit": realtimeVoiceToolMaxResults, "lifecycleState": string(request.LifecycleScope.Effective()), "parentAssetId": request.VisibleAssetID}
 		return []realtimeVoiceInvestigationCall{{call: ports.AgentToolCall{Name: RealtimeVoiceToolListAuthorizedAssets, Arguments: arguments}}}, nil
 	case agentmodel.InvestigationReadAssetDetail:
 		if !state.assetVisibleForReference(request.ReferenceKey, request.VisibleAssetID) {
@@ -262,16 +262,20 @@ func (state *realtimeVoiceInvestigationReadState) assetVisibleForReference(refer
 	return exists
 }
 
-func (state *realtimeVoiceInvestigationReadState) querySeen(reference agentmodel.SemanticReferenceKey, query string) bool {
-	_, exists := state.seenQueries[reference][normalizeRealtimeVoiceInvestigationTitle(query)]
+func (state *realtimeVoiceInvestigationReadState) querySeen(reference agentmodel.SemanticReferenceKey, query string, lifecycle agentmodel.LifecycleScope) bool {
+	_, exists := state.seenQueries[reference][realtimeVoiceInvestigationQueryKey(query, lifecycle)]
 	return exists
 }
 
-func (state *realtimeVoiceInvestigationReadState) recordQuery(reference agentmodel.SemanticReferenceKey, query string) {
+func (state *realtimeVoiceInvestigationReadState) recordQuery(reference agentmodel.SemanticReferenceKey, query string, lifecycle agentmodel.LifecycleScope) {
 	if state.seenQueries[reference] == nil {
 		state.seenQueries[reference] = map[string]struct{}{}
 	}
-	state.seenQueries[reference][normalizeRealtimeVoiceInvestigationTitle(query)] = struct{}{}
+	state.seenQueries[reference][realtimeVoiceInvestigationQueryKey(query, lifecycle)] = struct{}{}
+}
+
+func realtimeVoiceInvestigationQueryKey(query string, lifecycle agentmodel.LifecycleScope) string {
+	return string(lifecycle.Effective()) + "\x00" + normalizeRealtimeVoiceInvestigationTitle(query)
 }
 
 func appendUniqueRealtimeVoiceInvestigation(values []string, additions ...string) []string {

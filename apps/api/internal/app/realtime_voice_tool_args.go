@@ -8,7 +8,7 @@ import (
 )
 
 func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "query", "limit"); err != nil {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "query", "lifecycleState", "limit"); err != nil {
 		return realtimeVoiceSearchArgs{}, err
 	}
 	query := strings.TrimSpace(stringArg(args["query"]))
@@ -19,7 +19,11 @@ func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs,
 	if err != nil {
 		return realtimeVoiceSearchArgs{}, err
 	}
-	return realtimeVoiceSearchArgs{Query: query, Limit: limit}, nil
+	lifecycleState, err := realtimeVoiceOptionalLifecycleState(args["lifecycleState"])
+	if err != nil {
+		return realtimeVoiceSearchArgs{}, err
+	}
+	return realtimeVoiceSearchArgs{Query: query, LifecycleState: lifecycleState, Limit: limit}, nil
 }
 
 func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, error) {
@@ -168,8 +172,9 @@ const (
 )
 
 type realtimeVoiceSearchArgs struct {
-	Query string
-	Limit int
+	Query          string
+	LifecycleState string
+	Limit          int
 }
 
 type realtimeVoiceListArgs struct {

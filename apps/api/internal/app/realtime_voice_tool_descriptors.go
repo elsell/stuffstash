@@ -7,7 +7,7 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 		{
 			Name:             RealtimeVoiceToolSearchAuthorizedAssets,
 			Label:            realtimeVoiceSearchAuthorizedAssetsPublicName,
-			Description:      "Search visible assets in the selected inventory by natural-language keywords. Use this for where-is, do-I-have, specific-item questions, checkout or return requests, and resolving resources for action plans. Arguments: query string, optional limit number. Results are JSON with asset metadata, opaque internal asset IDs for follow-up tool calls or action-plan arguments, checkout state when currently checked out, and containment paths. Do not speak or display asset IDs to the user.",
+			Description:      "Search visible assets in the selected inventory by natural-language keywords and lifecycle scope. Use this for where-is, do-I-have, specific-item questions, checkout or return requests, and resolving resources for action plans. Results are JSON with asset metadata, opaque internal asset IDs for follow-up tool calls or action-plan arguments, checkout state when currently checked out, and containment paths. Do not speak or display asset IDs to the user.",
 			ReadOnly:         true,
 			ProviderCallable: true,
 			Parameters: ports.AgentToolParameters{
@@ -16,6 +16,11 @@ func realtimeVoiceToolDescriptors() []ports.AgentToolDescriptor {
 					"query": {
 						Type:        ports.AgentToolParameterTypeString,
 						Description: "Short natural-language keywords for the visible asset, container, or location the user asked about.",
+					},
+					"lifecycleState": {
+						Type:        ports.AgentToolParameterTypeString,
+						Description: "Lifecycle scope: active, archived, or all. Defaults to active.",
+						Enum:        []string{"active", "archived", "all"},
 					},
 					"limit": {
 						Type:        ports.AgentToolParameterTypeInteger,
