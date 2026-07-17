@@ -44,7 +44,7 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 		mention := realtimeVoiceInvestigationReferenceMention(intent, reference)
 		exactID := ""
 		for _, candidate := range candidates {
-			if normalizeRealtimeVoiceInvestigationTitle(candidate.Title) != normalizeRealtimeVoiceInvestigationTitle(mention) {
+			if !realtimeVoiceInvestigationTitleMatchesMention(candidate.Title, mention) {
 				continue
 			}
 			if exactID != "" {

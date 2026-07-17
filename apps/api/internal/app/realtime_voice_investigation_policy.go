@@ -204,13 +204,12 @@ func realtimeVoiceExactTitleResolution(mention string, resolution agentmodel.Res
 	if resolution.Status == agentmodel.ResolutionCollection {
 		return resolution
 	}
-	normalizedMention := normalizeRealtimeVoiceInvestigationTitle(mention)
-	if normalizedMention == "" {
+	if normalizeRealtimeVoiceInvestigationTitle(mention) == "" {
 		return resolution
 	}
 	exact := []string{}
 	for id, candidate := range candidates {
-		if normalizeRealtimeVoiceInvestigationTitle(candidate.Title) == normalizedMention {
+		if realtimeVoiceInvestigationTitleMatchesMention(candidate.Title, mention) {
 			exact = append(exact, id)
 		}
 	}
@@ -228,6 +227,27 @@ func realtimeVoiceExactTitleResolution(mention string, resolution agentmodel.Res
 func normalizeRealtimeVoiceInvestigationTitle(value string) string {
 	words := strings.FieldsFunc(strings.ToLower(value), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) })
 	return strings.Join(words, " ")
+}
+
+func realtimeVoiceInvestigationTitleMatchesMention(title, mention string) bool {
+	normalizedTitle := normalizeRealtimeVoiceInvestigationTitle(title)
+	normalizedMention := normalizeRealtimeVoiceInvestigationTitle(mention)
+	if normalizedTitle == "" || normalizedMention == "" {
+		return false
+	}
+	if normalizedTitle == normalizedMention {
+		return true
+	}
+	words := strings.Fields(normalizedMention)
+	if len(words) < 2 {
+		return false
+	}
+	switch words[0] {
+	case "my", "the", "a", "an":
+		return normalizedTitle == strings.Join(words[1:], " ")
+	default:
+		return false
+	}
 }
 
 func canonicalRealtimeVoiceDestinationChain(resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation, destinationCount int) []agentmodel.Resolution {

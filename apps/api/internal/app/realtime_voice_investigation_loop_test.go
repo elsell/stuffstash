@@ -230,12 +230,12 @@ func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsA
 func TestRealtimeVoiceInvestigationLoopFinishesExactOrZeroPathWithoutRedundantSearchRound(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{
-		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill",
+		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "my Drill",
 		DestinationPath:  []string{"Kitchen", "Big cabinet", "Second shelf"},
 		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
 	}
 	requests := []agentmodel.SearchRequest{
-		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Drill", SearchProbes: []string{"drill"}},
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "my Drill", SearchProbes: []string{"drill"}},
 		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Kitchen", SearchProbes: []string{"kitchen"}},
 		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Big cabinet", SearchProbes: []string{"big cabinet"}},
 		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Second shelf", SearchProbes: []string{"second shelf"}},

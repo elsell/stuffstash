@@ -63,7 +63,7 @@ func realtimeVoiceRequiredEvidenceExactTarget(mention string, resolution agentmo
 	}
 	exact := ""
 	for _, observation := range observations {
-		if observation.ReferenceKey != agentmodel.SemanticReferenceSubject || normalizeRealtimeVoiceInvestigationTitle(observation.Title) != normalizeRealtimeVoiceInvestigationTitle(mention) {
+		if observation.ReferenceKey != agentmodel.SemanticReferenceSubject || !realtimeVoiceInvestigationTitleMatchesMention(observation.Title, mention) {
 			continue
 		}
 		if _, included := allowed[observation.CandidateID]; !included {
