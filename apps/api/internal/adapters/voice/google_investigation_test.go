@@ -152,6 +152,18 @@ func TestGeminiInvestigationPromptPreservesValidatedVocabularyAsCompleteUntruste
 	}
 }
 
+func TestGeminiEvidencePromptPermitsOnlyBoundedDestinationRepair(t *testing.T) {
+	t.Parallel()
+	prompt := geminiInvestigationPrompt(ports.LanguageInferenceInput{Investigation: &agentmodel.InvestigationInput{
+		Phase: agentmodel.InvestigationPhaseEvidenceAssessment,
+	}})
+	for _, required := range []string{"repair an incomplete or inside-out destinationPath", "preserve shape, kind, operation, subject", "return search_again", "fresh reads for every repaired destination reference"} {
+		if !strings.Contains(prompt, required) {
+			t.Fatalf("expected bounded destination-repair rule %q in prompt: %s", required, prompt)
+		}
+	}
+}
+
 func TestGeminiInvestigationSchemaAvoidsStatusSpecificResolutionBranches(t *testing.T) {
 	t.Parallel()
 

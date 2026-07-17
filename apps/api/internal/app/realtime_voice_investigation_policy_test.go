@@ -81,6 +81,39 @@ func TestRealtimeVoiceInvestigationPolicyTurnsBrokenDestinationChainIntoMissingS
 	}
 }
 
+func TestRealtimeVoiceInvestigationPolicyRequiresClarificationForPlausibleWriteDestination(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
+		DestinationPath: []string{"Live Room"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
+	}
+	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"drill"}},
+		{ReferenceKey: "destination.0", Status: agentmodel.ResolutionPlausible, CandidateIDs: []string{"rehearsal-room"}},
+	}}
+	observations := []agentmodel.CandidateObservation{
+		{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill", Title: "Drill", Kind: "item"},
+		{EvidenceRound: 1, ReferenceKey: "destination.0", CandidateID: "rehearsal-room", Title: "Rehearsal Room", Kind: "location"},
+	}
+	readEvidence := []agentmodel.ReadEvidence{
+		{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "drill", CandidateCount: 1},
+		{EvidenceRound: 1, ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "live room", CandidateCount: 1},
+	}
+	canonical, err := canonicalRealtimeVoiceInvestigationStep(intent, step, observations, readEvidence)
+	if err != nil {
+		t.Fatalf("canonicalize terminal step: %v", err)
+	}
+	response, err := realtimeVoiceInvestigationResponse(canonical.Intent, canonical.Resolutions, map[string]agentmodel.CandidateObservation{
+		"drill": observations[0], "rehearsal-room": observations[1],
+	})
+	if err != nil {
+		t.Fatalf("build clarification: %v", err)
+	}
+	if response.Kind != ports.StructuredAgentResponseKindClarification || !strings.Contains(response.DisplayResponse, "Rehearsal Room") || !strings.Contains(response.DisplayResponse, "Live Room") {
+		t.Fatalf("expected plausible write destination to require explicit clarification, got %+v", response)
+	}
+}
+
 func TestRealtimeVoiceInvestigationPolicyRejectsTerminalResolutionWithoutReadCoverage(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{

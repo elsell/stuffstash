@@ -265,6 +265,104 @@ func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsA
 	}
 }
 
+func TestRealtimeVoiceInvestigationLoopRepairsIncompleteDestinationPathWithinEvidenceBudget(t *testing.T) {
+	t.Parallel()
+	initialIntent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Patch Cable",
+		DestinationPath:  []string{"Accessory Rack", "Lower Basket"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
+	repairedIntent := initialIntent
+	repairedIntent.DestinationPath = []string{"Live Room", "Accessory Rack", "Lower Basket"}
+	repairedIntent.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: initialIntent, SearchRequests: []agentmodel.SearchRequest{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Patch Cable", SearchProbes: []string{"patch cable"}},
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", SearchProbes: []string{"lower basket"}},
+	}}
+	repair := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: repairedIntent, SearchRequests: []agentmodel.SearchRequest{
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Live Room", SearchProbes: []string{"live room"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", SearchProbes: []string{"lower basket"}},
+	}}
+	final := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: repairedIntent, Resolutions: []agentmodel.Resolution{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"cable-1"}},
+		{ReferenceKey: "destination.0", Status: agentmodel.ResolutionMissing},
+		{ReferenceKey: "destination.1", Status: agentmodel.ResolutionMissing},
+		{ReferenceKey: "destination.2", Status: agentmodel.ResolutionMissing},
+	}}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &repair}, {Investigation: &final}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room"}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("cable-1", "Patch Cable", asset.KindItem, ""), "audit-cable-repair")
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run repaired investigation: %v", err)
+	}
+	proposal := realtimeVoiceInvestigationProposedPlan(events)
+	if proposal == nil || len(proposal.Commands) != 4 || proposal.Commands[0].Summary != "Create Live Room" || proposal.Commands[3].Kind != "move_asset" {
+		t.Fatalf("expected repaired create/create/create/move review plan, got %+v", events)
+	}
+	if len(language.seenInvestigations) != 3 || language.seenInvestigations[2].EvidenceRound != 2 {
+		t.Fatalf("expected one bounded repair round, got %+v", language.seenInvestigations)
+	}
+}
+
+func TestRealtimeVoiceDestinationRepairRejectsSemanticDrift(t *testing.T) {
+	t.Parallel()
+	original := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange,
+		Operation: agentmodel.OperationMove, SubjectMention: "Patch Cable",
+		DestinationPath: []string{"Accessory Rack", "Lower Basket"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
+	valid := original
+	valid.DestinationPath = []string{"Live Room", "Accessory Rack", "Lower Basket"}
+	valid.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+	transcript := "Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room"
+	if !realtimeVoiceDestinationRepairAllowed(transcript, original, valid) {
+		t.Fatal("expected transcript-grounded additive repair to be allowed")
+	}
+	tests := map[string]agentmodel.Intent{
+		"operation changed": func() agentmodel.Intent {
+			candidate := valid
+			candidate.Operation = agentmodel.OperationCreate
+			return candidate
+		}(),
+		"subject changed": func() agentmodel.Intent { candidate := valid; candidate.SubjectMention = "Mixer"; return candidate }(),
+		"destination dropped": func() agentmodel.Intent {
+			candidate := valid
+			candidate.DestinationPath = []string{"Live Room", "Lower Basket"}
+			candidate.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer}
+			return candidate
+		}(),
+		"destination invented": func() agentmodel.Intent {
+			candidate := valid
+			candidate.DestinationPath = []string{"Secret Vault", "Accessory Rack", "Lower Basket"}
+			return candidate
+		}(),
+	}
+	for name, candidate := range tests {
+		candidate := candidate
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if realtimeVoiceDestinationRepairAllowed(transcript, original, candidate) {
+				t.Fatalf("expected semantic drift to be rejected: %+v", candidate)
+			}
+		})
+	}
+}
+
 func TestRealtimeVoiceInvestigationLoopFinishesExactOrZeroPathWithoutRedundantSearchRound(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{

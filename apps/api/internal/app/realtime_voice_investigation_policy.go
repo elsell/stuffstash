@@ -289,6 +289,17 @@ func realtimeVoiceInvestigationResponse(intent agentmodel.Intent, resolutions []
 		return investigationResponse(ports.StructuredAgentResponseKindUnsupportedAction, "I can't safely handle that request with inventory voice actions."), nil
 	}
 	for _, resolution := range resolutions {
+		if resolution.ReferenceKey == agentmodel.SemanticReferenceSubject || resolution.Status != agentmodel.ResolutionPlausible || len(resolution.CandidateIDs) != 1 {
+			continue
+		}
+		candidate, exists := candidates[resolution.CandidateIDs[0]]
+		if !exists {
+			return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
+		}
+		requested := realtimeVoiceInvestigationReferenceMention(intent, resolution.ReferenceKey)
+		return investigationResponse(ports.StructuredAgentResponseKindClarification, "I found "+candidate.Title+" as a possible match for "+requested+". Should I use it as the destination?"), nil
+	}
+	for _, resolution := range resolutions {
 		if resolution.Status == agentmodel.ResolutionAmbiguous {
 			choices := []string{}
 			for _, id := range resolution.CandidateIDs {
@@ -366,6 +377,15 @@ func realtimeVoiceInvestigationResponse(intent agentmodel.Intent, resolutions []
 		message = prefix + candidate.Title + ". Its recorded path is " + path + "."
 	}
 	return investigationResponse(ports.StructuredAgentResponseKindAnswer, message), nil
+}
+
+func hasRealtimeVoicePlausibleDestination(resolutions []agentmodel.Resolution) bool {
+	for _, resolution := range resolutions {
+		if resolution.ReferenceKey != agentmodel.SemanticReferenceSubject && resolution.Status == agentmodel.ResolutionPlausible {
+			return true
+		}
+	}
+	return false
 }
 
 func investigationResponse(kind ports.StructuredAgentResponseKind, message string) ports.StructuredAgentResponse {

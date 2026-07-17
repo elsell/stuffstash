@@ -58,7 +58,8 @@ func geminiInvestigationPrompt(input ports.LanguageInferenceInput) string {
 	} else {
 		lines = append(lines,
 			"Stage: evidence assessment.",
-			"Keep canonicalIntent unchanged. Candidate IDs must be copied from observations for the same reference. A sole semantically related candidate may be plausible even when wording differs. Comparable candidates are ambiguous.",
+			"Keep canonicalIntent unchanged except to repair an incomplete or inside-out destinationPath for create or move after rereading the transcript. A destination repair must preserve shape, kind, operation, subject, proposed kind, details, and every original destination exactly once; it may only reorder them or add an explicit enclosing place or container from the transcript. A repair must return search_again with fresh reads for every repaired destination reference and no resolutions.",
+			"Candidate IDs must be copied from observations for the same reference. A sole semantically related candidate may be plausible even when wording differs. Comparable candidates are ambiguous.",
 			"Existing destination candidates must be locations or containers and form the requested containment chain. Once an outer destination is missing, mark it and all deeper segments missing. A clear missing destination is missing, not unsupported and not a request for confirmation. A missing existing source for move, archive, restore, checkout, or return is absent.",
 			"Use search_again only for materially new probes or a required typed read. Otherwise finish with exactly one resolution for subject and every destination reference.",
 		)

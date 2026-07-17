@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -87,7 +89,17 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 			return err
 		}
 		if !sameRealtimeVoiceInvestigationIntent(canonicalIntent, step.Intent) {
-			return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
+			if evidenceRound == agentmodel.MaxEvidenceRounds || step.Decision != agentmodel.InvestigationDecisionSearchAgain ||
+				!realtimeVoiceDestinationRepairAllowed(transcript, canonicalIntent, step.Intent) ||
+				!realtimeVoiceDestinationRepairRequestsValid(step.Intent, step.SearchRequests) {
+				return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
+			}
+			canonicalIntent = step.Intent
+			step.SearchRequests = realtimeVoiceDestinationRequests(step.SearchRequests)
+			requests = realtimeVoiceSubjectRequests(requests)
+			observations = realtimeVoiceSubjectObservations(observations)
+			readEvidence = realtimeVoiceSubjectReadEvidence(readEvidence)
+			continue
 		}
 		requiredRead, required, requiredErr := realtimeVoiceRequiredEvidenceRequest(canonicalIntent, step, observations, readEvidence)
 		if requiredErr != nil {
@@ -124,6 +136,97 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 	return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 }
 
+func realtimeVoiceDestinationRepairAllowed(transcript string, original, repaired agentmodel.Intent) bool {
+	if (original.Operation != agentmodel.OperationCreate && original.Operation != agentmodel.OperationMove) ||
+		original.RequestShape != repaired.RequestShape || original.Kind != repaired.Kind || original.Operation != repaired.Operation ||
+		normalizeRealtimeVoiceSemanticMention(original.SubjectMention) != normalizeRealtimeVoiceSemanticMention(repaired.SubjectMention) ||
+		strings.TrimSpace(original.NewAssetKind) != strings.TrimSpace(repaired.NewAssetKind) || strings.TrimSpace(original.Details) != strings.TrimSpace(repaired.Details) ||
+		len(repaired.DestinationPath) < len(original.DestinationPath) || repaired.Validate() != nil {
+		return false
+	}
+	originalSegments := map[string]int{}
+	for _, mention := range original.DestinationPath {
+		key := normalizeRealtimeVoiceSemanticMention(mention)
+		originalSegments[key]++
+	}
+	repairedSegments := map[string]int{}
+	normalizedTranscript := normalizeRealtimeVoiceInvestigationTitle(transcript)
+	for _, mention := range repaired.DestinationPath {
+		normalizedMention := normalizeRealtimeVoiceInvestigationTitle(mention)
+		semanticMention := normalizeRealtimeVoiceSemanticMention(mention)
+		if semanticMention == "" || (!strings.Contains(normalizedTranscript, normalizedMention) && !strings.Contains(normalizedTranscript, semanticMention)) {
+			return false
+		}
+		key := semanticMention
+		repairedSegments[key]++
+	}
+	for key, count := range originalSegments {
+		if repairedSegments[key] < count {
+			return false
+		}
+	}
+	return true
+}
+
+func realtimeVoiceDestinationRepairRequestsValid(intent agentmodel.Intent, requests []agentmodel.SearchRequest) bool {
+	if len(requests) < len(intent.DestinationPath) || len(requests) > len(intent.DestinationPath)+1 {
+		return false
+	}
+	seen := map[agentmodel.SemanticReferenceKey]bool{}
+	subjectSeen := false
+	for _, request := range requests {
+		if request.ReferenceKey == agentmodel.SemanticReferenceSubject {
+			if subjectSeen || normalizeRealtimeVoiceSemanticMention(request.Mention) != normalizeRealtimeVoiceSemanticMention(intent.SubjectMention) {
+				return false
+			}
+			subjectSeen = true
+			continue
+		}
+		var index int
+		if _, err := fmt.Sscanf(request.ReferenceKey.String(), "destination.%d", &index); err != nil || index < 0 || index >= len(intent.DestinationPath) || seen[request.ReferenceKey] ||
+			normalizeRealtimeVoiceSemanticMention(request.Mention) != normalizeRealtimeVoiceSemanticMention(intent.DestinationPath[index]) {
+			return false
+		}
+		seen[request.ReferenceKey] = true
+	}
+	return len(seen) == len(intent.DestinationPath)
+}
+
+func normalizeRealtimeVoiceSemanticMention(value string) string {
+	words := strings.Fields(normalizeRealtimeVoiceInvestigationTitle(value))
+	if len(words) > 1 {
+		switch words[0] {
+		case "my", "the", "a", "an":
+			words = words[1:]
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+func realtimeVoiceDestinationRequests(requests []agentmodel.SearchRequest) []agentmodel.SearchRequest {
+	return slices.DeleteFunc(append([]agentmodel.SearchRequest{}, requests...), func(request agentmodel.SearchRequest) bool {
+		return request.ReferenceKey == agentmodel.SemanticReferenceSubject
+	})
+}
+
+func realtimeVoiceSubjectRequests(requests []agentmodel.SearchRequest) []agentmodel.SearchRequest {
+	return slices.DeleteFunc(append([]agentmodel.SearchRequest{}, requests...), func(request agentmodel.SearchRequest) bool {
+		return request.ReferenceKey != agentmodel.SemanticReferenceSubject
+	})
+}
+
+func realtimeVoiceSubjectObservations(observations []agentmodel.CandidateObservation) []agentmodel.CandidateObservation {
+	return slices.DeleteFunc(append([]agentmodel.CandidateObservation{}, observations...), func(observation agentmodel.CandidateObservation) bool {
+		return observation.ReferenceKey != agentmodel.SemanticReferenceSubject
+	})
+}
+
+func realtimeVoiceSubjectReadEvidence(evidence []agentmodel.ReadEvidence) []agentmodel.ReadEvidence {
+	return slices.DeleteFunc(append([]agentmodel.ReadEvidence{}, evidence...), func(record agentmodel.ReadEvidence) bool {
+		return record.ReferenceKey != agentmodel.SemanticReferenceSubject
+	})
+}
+
 func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, investigation agentmodel.InvestigationInput, toolResults []ports.AgentToolResult, emit RealtimeVoiceEventSink) (agentmodel.InvestigationStep, error) {
 	turn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
 		TenantID: session.TenantID, InventoryID: session.InventoryID, Principal: session.Principal,
@@ -156,7 +259,8 @@ func (a App) completeRealtimeVoiceInvestigationOutcome(ctx context.Context, sess
 		candidates[observation.CandidateID] = observation
 	}
 	if intent.Kind != agentmodel.IntentKindChange || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAmbiguous) ||
-		hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionUnsupported) || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAbsent) {
+		hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionUnsupported) || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAbsent) ||
+		hasRealtimeVoicePlausibleDestination(resolutions) {
 		response, err := realtimeVoiceInvestigationResponse(intent, resolutions, candidates)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
