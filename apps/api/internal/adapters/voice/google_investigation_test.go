@@ -279,6 +279,62 @@ func TestParseGeminiInvestigationTurnDropsDecisionIrrelevantCollections(t *testi
 	}
 }
 
+func TestParseGeminiInvestigationTurnCanonicalizesOperationAndReadDiscriminators(t *testing.T) {
+	t.Parallel()
+
+	t.Run("list inventory drops structurally irrelevant probes", func(t *testing.T) {
+		t.Parallel()
+		raw := `{"decision":"search","intent":{"kind":"read","operation":"list_inventory","subjectMention":"stuff","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"list_inventory","mention":"stuff","kindHint":"item","visibleAssetId":"","searchProbes":["stuff","item"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"List inventory."}`
+		turn, err := parseGeminiInvestigationTurn(raw)
+		if err != nil {
+			t.Fatalf("parse list inventory: %v", err)
+		}
+		if got := turn.Investigation.SearchRequests[0].SearchProbes; len(got) != 0 {
+			t.Fatalf("list inventory retained irrelevant probes: %+v", got)
+		}
+	})
+
+	t.Run("non containment operation keeps subject and drops contextual destination", func(t *testing.T) {
+		t.Parallel()
+		raw := `{"decision":"search","intent":{"kind":"change","operation":"checkout","subjectMention":"garden shears","newAssetKind":"item","destinationPath":["yard"],"destinationKinds":["location"],"details":"using them in the yard"},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"garden shears","kindHint":"item","visibleAssetId":"","searchProbes":["garden shears"],"lifecycleScope":"active"},{"referenceKey":"destination.0","readKind":"search_assets","mention":"yard","kindHint":"location","visibleAssetId":"","searchProbes":["yard"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Find checkout subject."}`
+		turn, err := parseGeminiInvestigationTurn(raw)
+		if err != nil {
+			t.Fatalf("parse checkout: %v", err)
+		}
+		step := turn.Investigation
+		if len(step.Intent.DestinationPath) != 0 || len(step.SearchRequests) != 1 || step.SearchRequests[0].ReferenceKey != agentmodel.SemanticReferenceSubject {
+			t.Fatalf("checkout retained contextual destination: %+v", step)
+		}
+	})
+
+	t.Run("sole subject-like destination reference is relabeled", func(t *testing.T) {
+		t.Parallel()
+		raw := `{"decision":"search","intent":{"kind":"read","operation":"list_contents","subjectMention":"toolbox","newAssetKind":"","destinationPath":["toolbox"],"destinationKinds":["container"],"details":""},"searchRequests":[{"referenceKey":"destination.0","readKind":"list_inventory","mention":"toolbox","kindHint":"container","visibleAssetId":"","searchProbes":["toolbox"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Find container."}`
+		turn, err := parseGeminiInvestigationTurn(raw)
+		if err != nil {
+			t.Fatalf("parse contents subject: %v", err)
+		}
+		step := turn.Investigation
+		if len(step.Intent.DestinationPath) != 0 || len(step.SearchRequests) != 1 || step.SearchRequests[0].ReferenceKey != agentmodel.SemanticReferenceSubject || len(step.SearchRequests[0].SearchProbes) != 0 {
+			t.Fatalf("contents subject was not canonicalized: %+v", step)
+		}
+	})
+}
+
+func TestGeminiInvestigationPromptDefinesGeneralContainmentAndCustodySemantics(t *testing.T) {
+	t.Parallel()
+
+	prompt := geminiInvestigationPrompt(ports.LanguageInferenceInput{Investigation: &agentmodel.InvestigationInput{
+		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
+		Transcript: "generated request", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
+	}})
+	for _, rule := range []string{"Only create and move", "Usage, borrower, purpose", "Imperative return", "Y before X", "must not search again merely to confirm absence"} {
+		if !strings.Contains(prompt, rule) {
+			t.Fatalf("prompt is missing general rule %q: %s", rule, prompt)
+		}
+	}
+}
+
 func TestGoogleGeminiLanguageInferenceRejectsInvalidInvestigationPayload(t *testing.T) {
 	t.Parallel()
 

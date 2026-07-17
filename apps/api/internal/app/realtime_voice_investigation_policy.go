@@ -83,12 +83,47 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 	if canonicalIntent.Operation == agentmodel.OperationMove || canonicalIntent.Operation == agentmodel.OperationCreate {
 		ordered = canonicalRealtimeVoiceDestinationChain(ordered, allCandidates, len(canonicalIntent.DestinationPath))
 	}
+	if canonicalIntent.Operation == agentmodel.OperationListContents && len(ordered) == 1 {
+		ordered[0] = canonicalRealtimeVoiceContentsResolution(ordered[0], observations, readEvidence)
+	}
 	step.Intent = canonicalIntent
 	step.Resolutions = ordered
 	if step.Validate() != nil {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	return step, nil
+}
+
+func canonicalRealtimeVoiceContentsResolution(resolution agentmodel.Resolution, observations []agentmodel.CandidateObservation, evidence []agentmodel.ReadEvidence) agentmodel.Resolution {
+	targetID := ""
+	for _, record := range evidence {
+		if record.ReferenceKey == agentmodel.SemanticReferenceSubject && record.ReadKind == agentmodel.InvestigationReadListContents && strings.TrimSpace(record.VisibleAssetID) != "" {
+			targetID = record.VisibleAssetID
+		}
+	}
+	if targetID == "" {
+		return resolution
+	}
+	contents := make([]agentmodel.CandidateObservation, 0)
+	for _, observation := range observations {
+		if observation.ReferenceKey == agentmodel.SemanticReferenceSubject && observation.ParentAssetID == targetID {
+			contents = append(contents, observation)
+		}
+	}
+	sort.Slice(contents, func(i, j int) bool {
+		if contents[i].Title == contents[j].Title {
+			return contents[i].CandidateID < contents[j].CandidateID
+		}
+		return contents[i].Title < contents[j].Title
+	})
+	ids := make([]string, 0, len(contents))
+	for _, item := range contents {
+		ids = append(ids, item.CandidateID)
+	}
+	return agentmodel.Resolution{
+		ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection,
+		CandidateIDs: ids, Evidence: "The application selected the authorized direct contents returned for the resolved subject.",
+	}
 }
 
 func canonicalRealtimeVoiceNoCandidateStatuses(intent agentmodel.Intent, resolutions []agentmodel.Resolution) []agentmodel.Resolution {
@@ -166,6 +201,9 @@ func realtimeVoiceInvestigationReferenceMention(intent agentmodel.Intent, refere
 }
 
 func realtimeVoiceExactTitleResolution(mention string, resolution agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) agentmodel.Resolution {
+	if resolution.Status == agentmodel.ResolutionCollection {
+		return resolution
+	}
 	normalizedMention := normalizeRealtimeVoiceInvestigationTitle(mention)
 	if normalizedMention == "" {
 		return resolution

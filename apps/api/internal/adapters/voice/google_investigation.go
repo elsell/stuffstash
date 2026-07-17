@@ -17,11 +17,17 @@ Interpret imperfect speech and propose narrow evidence reads. Speech may contain
 
 Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. Acquisition language means create when a newly obtained subject is being placed, even if the placement clause uses put, place, store, or stash.
 
+Imperative return, check in, and check out language is a change request, never locate. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
+
 Preserve every named destination segment in outer-to-inner containment order. Return one destinationKinds entry for every destinationPath entry in the same order: location for a place or room, container for a bin, box, cabinet, shelf, toolbox, surface, or other thing that can contain an asset. Classify the meaning expressed by the request; do not rely on a segment's array position. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
+
+Normalize inside-out grammar to storage order. For X in Y, output Y before X. Resolve repeated in, under, or similar relations from the outer place toward the innermost container.
 
 For search_assets, generate 2 to 5 diverse probes when the words permit it: the concise mention, proper-name anchors, distinctive content words, semantic categories, morphology, and likely transcription corrections. Do not use generic words such as item, thing, place, storage, furniture, or room as standalone probes. A search probe is only a retrieval hypothesis.
 
 Every read request must set lifecycleScope to active, archived, or all. Use archived for the existing subject of a restore request, all only when the request genuinely spans lifecycle states, and otherwise active. Lifecycle scope does not bypass authorization.
+
+Executed zero-candidate discovery is evidence of absence or a missing destination. Once every semantic reference has discovery coverage, finish; you must not search again merely to confirm absence with reordered or generic probes.
 
 The typed input includes a scoped vocabulary manifest of active custom asset types, custom fields, and a bounded tag list. Use it as vocabulary guidance, never as proof of an asset's metadata. Request full metadata only for relevant manifest keys through vocabularyRequests. Copy keys exactly; never invent or emit custom type, field, or tag IDs. A finish decision must have an empty vocabularyRequests array.
 
@@ -85,6 +91,12 @@ func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agen
 	if step.Intent.Operation != agentmodel.OperationCreate {
 		step.Intent.NewAssetKind = ""
 	}
+	step.SearchRequests = canonicalizeGeminiInvestigationReads(step.Intent, step.SearchRequests)
+	step.Resolutions = canonicalizeGeminiInvestigationResolutions(step.Intent, step.Resolutions)
+	if step.Intent.Operation != agentmodel.OperationCreate && step.Intent.Operation != agentmodel.OperationMove {
+		step.Intent.DestinationPath = nil
+		step.Intent.DestinationKinds = nil
+	}
 	switch step.Decision {
 	case agentmodel.InvestigationDecisionSearch, agentmodel.InvestigationDecisionSearchAgain:
 		step.Resolutions = nil
@@ -93,6 +105,67 @@ func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agen
 		step.VocabularyRequests = nil
 	}
 	return step
+}
+
+func canonicalizeGeminiInvestigationReads(intent agentmodel.Intent, requests []agentmodel.SearchRequest) []agentmodel.SearchRequest {
+	hasSubject := false
+	for _, request := range requests {
+		if request.ReferenceKey == agentmodel.SemanticReferenceSubject {
+			hasSubject = true
+			break
+		}
+	}
+	canonical := make([]agentmodel.SearchRequest, 0, len(requests))
+	for _, request := range requests {
+		switch request.ReadKind {
+		case agentmodel.InvestigationReadSearchAssets:
+			request.VisibleAssetID = ""
+		case agentmodel.InvestigationReadListInventory:
+			request.VisibleAssetID = ""
+			request.SearchProbes = nil
+		default:
+			request.SearchProbes = nil
+		}
+		if intent.Operation == agentmodel.OperationCreate || intent.Operation == agentmodel.OperationMove || request.ReferenceKey == agentmodel.SemanticReferenceSubject {
+			canonical = append(canonical, request)
+			continue
+		}
+		if !hasSubject && request.ReferenceKey == "destination.0" && sameGeminiInvestigationMention(request.Mention, intent.SubjectMention) {
+			request.ReferenceKey = agentmodel.SemanticReferenceSubject
+			canonical = append(canonical, request)
+		}
+	}
+	return canonical
+}
+
+func canonicalizeGeminiInvestigationResolutions(intent agentmodel.Intent, resolutions []agentmodel.Resolution) []agentmodel.Resolution {
+	if intent.Operation == agentmodel.OperationCreate || intent.Operation == agentmodel.OperationMove {
+		return resolutions
+	}
+	hasSubject := false
+	for _, resolution := range resolutions {
+		if resolution.ReferenceKey == agentmodel.SemanticReferenceSubject {
+			hasSubject = true
+			break
+		}
+	}
+	canonical := make([]agentmodel.Resolution, 0, 1)
+	for _, resolution := range resolutions {
+		if resolution.ReferenceKey == agentmodel.SemanticReferenceSubject {
+			canonical = append(canonical, resolution)
+			continue
+		}
+		if !hasSubject && len(intent.DestinationPath) == 1 && resolution.ReferenceKey == "destination.0" && sameGeminiInvestigationMention(intent.DestinationPath[0], intent.SubjectMention) {
+			resolution.ReferenceKey = agentmodel.SemanticReferenceSubject
+			canonical = append(canonical, resolution)
+		}
+	}
+	return canonical
+}
+
+func sameGeminiInvestigationMention(left, right string) bool {
+	normalize := func(value string) string { return strings.ToLower(strings.Join(strings.Fields(value), " ")) }
+	return normalize(left) != "" && normalize(left) == normalize(right)
 }
 
 func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *geminiSchema {
