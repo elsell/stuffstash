@@ -23,6 +23,7 @@ func TestRealtimeVoiceInvestigationLoopAnswersFromPlausibleApproximateMatch(t *t
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &final}}}
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are Sarah's winter coat?"}
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
 	closet := realtimeVoiceInvestigationAsset("closet-1", "Hall closet", asset.KindContainer, "")
 	clothes := realtimeVoiceInvestigationAsset("winter-clothes-1", "Sarah Winter Clothes and Shoes", asset.KindItem, closet.ID.String())
@@ -33,7 +34,7 @@ func TestRealtimeVoiceInvestigationLoopAnswersFromPlausibleApproximateMatch(t *t
 		t.Fatalf("start session: %v", err)
 	}
 	events := []RealtimeVoiceEvent{}
-	err = application.runRealtimeVoiceInvestigationLoop(context.Background(), session, "Where are Sarah's winter coat?", nil, false, func(event RealtimeVoiceEvent) error {
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
 		events = append(events, event)
 		return nil
 	})
@@ -74,6 +75,7 @@ func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsA
 	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &final}}}
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move the drill to the upper shelf in the blue cabinet in the garage"}
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
 	drill := realtimeVoiceInvestigationAsset("drill-1", "Drill", asset.KindItem, "")
 	seedRealtimeVoiceLoopAsset(t, store, drill, "audit-drill")
@@ -82,7 +84,7 @@ func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsA
 		t.Fatalf("start session: %v", err)
 	}
 	events := []RealtimeVoiceEvent{}
-	err = application.runRealtimeVoiceInvestigationLoop(context.Background(), session, "Move the drill to the upper shelf in the blue cabinet in the garage", nil, false, func(event RealtimeVoiceEvent) error {
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
 		events = append(events, event)
 		return nil
 	})

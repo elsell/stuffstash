@@ -5,21 +5,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestRealtimeVoiceDerivesEffectiveTranscriptForClarificationFollowUp(t *testing.T) {
 	t.Parallel()
 
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the follow-up.",
-				DisplayResponse: "I understand the follow-up.",
-			},
-		},
-	}}
+	language := realtimeVoiceUnsupportedScript()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Kitchen."}
 	resolver.providers.LanguageInference = language
@@ -56,15 +49,7 @@ func TestRealtimeVoiceDerivesEffectiveTranscriptForClarificationFollowUp(t *test
 func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *testing.T) {
 	t.Parallel()
 
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the safe follow-up context.",
-				DisplayResponse: "I understand the safe follow-up context.",
-			},
-		},
-	}}
+	language := realtimeVoiceUnsupportedScript()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Kitchen."}
 	resolver.providers.LanguageInference = language
@@ -156,15 +141,7 @@ func TestRealtimeVoiceSendsOnlyBoundedSafeConversationContextToLanguagePort(t *t
 func TestRealtimeVoiceDerivesEffectiveTranscriptForReadClarificationFollowUp(t *testing.T) {
 	t.Parallel()
 
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the read follow-up.",
-				DisplayResponse: "I understand the read follow-up.",
-			},
-		},
-	}}
+	language := realtimeVoiceUnsupportedScript()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Water bottle."}
 	resolver.providers.LanguageInference = language
@@ -196,15 +173,7 @@ func TestRealtimeVoiceDerivesEffectiveTranscriptForReadClarificationFollowUp(t *
 func TestRealtimeVoiceDerivesEffectiveTranscriptForReturnClarificationFollowUp(t *testing.T) {
 	t.Parallel()
 
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I understand the return follow-up.",
-				DisplayResponse: "I understand the return follow-up.",
-			},
-		},
-	}}
+	language := realtimeVoiceUnsupportedScript()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Drill."}
 	resolver.providers.LanguageInference = language
@@ -231,4 +200,19 @@ func TestRealtimeVoiceDerivesEffectiveTranscriptForReturnClarificationFollowUp(t
 	if len(language.seenTranscripts) == 0 || language.seenTranscripts[0] != "Return it. Follow-up answer: Drill." {
 		t.Fatalf("expected model to receive effective return follow-up transcript, got %+v", language.seenTranscripts)
 	}
+}
+
+func realtimeVoiceUnsupportedScript() *scriptedRealtimeLanguageInference {
+	step := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish,
+		Intent: agentmodel.Intent{
+			Kind:      agentmodel.IntentKindUnsupported,
+			Operation: agentmodel.OperationUnsupported,
+		},
+		Resolutions: []agentmodel.Resolution{{
+			ReferenceKey: agentmodel.SemanticReferenceSubject,
+			Status:       agentmodel.ResolutionUnsupported,
+		}},
+	}
+	return &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &step}}}
 }

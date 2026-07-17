@@ -134,7 +134,7 @@ func successfulRealtimeVoiceResolver() *fakeRealtimeVoiceProviderResolver {
 			TextToSpeechProfileID:      "tts-profile",
 			LanguagePromptTemplate:     "Prefer concise spoken answers.",
 			SpeechToText:               resolvedSpeechToText{transcript: "Where are my tools?"},
-			LanguageInference:          &resolvedLanguageInference{response: "The tools are in the office."},
+			LanguageInference:          &resolvedLanguageInference{},
 			TextToSpeech:               &resolvedTextToSpeech{},
 		},
 	}

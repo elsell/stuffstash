@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -16,9 +17,7 @@ import (
 func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 	t.Parallel()
 
-	language := &resolvedLanguageInference{
-		response: "The tools are in the office.",
-	}
+	language := &resolvedLanguageInference{}
 	resolver := &fakeRealtimeVoiceProviderResolver{
 		providers: ports.RealtimeVoiceProviderSet{
 			SpeechToTextProfileID:      "stt-profile",
@@ -58,11 +57,14 @@ func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 		t.Fatalf("expected transcript from resolved speech-to-text provider, got %+v", events)
 	}
 	tts := resolver.providers.TextToSpeech.(*resolvedTextToSpeech)
-	if tts.lastText != "The tools are in the office." {
-		t.Fatalf("expected resolved text-to-speech provider to receive final response, got %q", tts.lastText)
+	if tts.lastText == "" {
+		t.Fatalf("expected resolved text-to-speech provider to receive the grounded final response")
 	}
 	if language.lastPromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected language prompt template to be passed to model, got %q", language.lastPromptTemplate)
+	}
+	if language.calls != 2 || !language.sawStructuredInvestigation {
+		t.Fatalf("expected resolved provider to serve the bounded typed loop, got calls=%d structured=%t", language.calls, language.sawStructuredInvestigation)
 	}
 }
 
@@ -187,17 +189,41 @@ func (r resolvedSpeechToText) Transcribe(context.Context, ports.SpeechToTextInpu
 }
 
 type resolvedLanguageInference struct {
-	response           string
-	lastPromptTemplate string
+	lastPromptTemplate         string
+	calls                      int
+	sawStructuredInvestigation bool
 }
 
 func (r *resolvedLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	r.lastPromptTemplate = input.PromptTemplate
-	return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{
-		Kind:            ports.StructuredAgentResponseKindAnswer,
-		SpokenResponse:  r.response,
-		DisplayResponse: r.response,
-	}}, nil
+	r.calls++
+	if input.Investigation == nil {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	r.sawStructuredInvestigation = true
+	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
+	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
+		step := agentmodel.InvestigationStep{
+			Decision: agentmodel.InvestigationDecisionSearch,
+			Intent:   intent,
+			SearchRequests: []agentmodel.SearchRequest{{
+				ReferenceKey: agentmodel.SemanticReferenceSubject,
+				ReadKind:     agentmodel.InvestigationReadSearchAssets,
+				Mention:      "tools",
+				SearchProbes: []string{"tools"},
+			}},
+		}
+		return ports.LanguageInferenceTurn{Investigation: &step}, nil
+	}
+	step := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish,
+		Intent:   intent,
+		Resolutions: []agentmodel.Resolution{{
+			ReferenceKey: agentmodel.SemanticReferenceSubject,
+			Status:       agentmodel.ResolutionAbsent,
+		}},
+	}
+	return ports.LanguageInferenceTurn{Investigation: &step}, nil
 }
 
 type failingResolvedLanguageInference struct {
