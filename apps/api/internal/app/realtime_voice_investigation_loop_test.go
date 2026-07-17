@@ -53,6 +53,43 @@ func TestRealtimeVoiceInvestigationLoopAnswersFromPlausibleApproximateMatch(t *t
 	}
 }
 
+func TestRealtimeVoiceInvestigationLoopReturnsUnsupportedActionAfterBoundedEvidence(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{Kind: agentmodel.IntentKindUnsupported, Operation: agentmodel.OperationUnsupported, SubjectMention: "rename an item"}
+	initial := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionSearch, Intent: intent,
+		SearchRequests: []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "rename an item", SearchProbes: []string{"rename"}}},
+	}
+	final := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish, Intent: intent,
+		Resolutions: []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionUnsupported, Evidence: "The requested operation is outside the supported taxonomy."}},
+	}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &final}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Rename an item"}
+	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run unsupported investigation: %v", err)
+	}
+	response := realtimeVoiceInvestigationCompletedResponse(events)
+	if response == nil || response.Kind != ports.StructuredAgentResponseKindUnsupportedAction {
+		t.Fatalf("expected bounded unsupported response, got %+v", events)
+	}
+	if language.callCount != 2 {
+		t.Fatalf("expected initial and evidence turns, got %d", language.callCount)
+	}
+}
+
 func TestRealtimeVoiceInvestigationLoopCompletesRequiredContentsEvidenceAfterTargetResolution(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationListContents, SubjectMention: "Office"}

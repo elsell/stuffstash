@@ -235,6 +235,75 @@ func TestCompileRealtimeVoiceActionPlanReportsAlreadySatisfiedChangesAsNoOp(t *t
 	}
 }
 
+func TestCompileRealtimeVoiceActionPlanEnforcesLifecyclePreconditions(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		intent      agentmodel.Intent
+		resolutions []agentmodel.Resolution
+		candidates  map[string]agentmodel.CandidateObservation
+	}{
+		{
+			name:        "archived move subject",
+			intent:      agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill", DestinationPath: []string{"Garage"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}},
+			resolutions: []agentmodel.Resolution{voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "drill-id"), voicePlanResolution("destination.0", agentmodel.ResolutionStrong, "garage-id")},
+			candidates: map[string]agentmodel.CandidateObservation{
+				"drill-id": func() agentmodel.CandidateObservation {
+					candidate := voicePlanCandidate(agentmodel.SemanticReferenceSubject, "drill-id", "Drill", "item", "")
+					candidate.LifecycleState = "archived"
+					return candidate
+				}(),
+				"garage-id": voicePlanCandidate("destination.0", "garage-id", "Garage", "location", ""),
+			},
+		},
+		{
+			name:        "archived destination",
+			intent:      agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "Charger", NewAssetKind: "item", DestinationPath: []string{"Old box"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindContainer}},
+			resolutions: []agentmodel.Resolution{voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionMissing), voicePlanResolution("destination.0", agentmodel.ResolutionStrong, "box-id")},
+			candidates: map[string]agentmodel.CandidateObservation{
+				"box-id": func() agentmodel.CandidateObservation {
+					candidate := voicePlanCandidate("destination.0", "box-id", "Old box", "container", "")
+					candidate.LifecycleState = "archived"
+					return candidate
+				}(),
+			},
+		},
+		{
+			name:        "archived checkout subject",
+			intent:      agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCheckout, SubjectMention: "Camera"},
+			resolutions: []agentmodel.Resolution{voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "camera-id")},
+			candidates: map[string]agentmodel.CandidateObservation{
+				"camera-id": func() agentmodel.CandidateObservation {
+					candidate := voicePlanCandidate(agentmodel.SemanticReferenceSubject, "camera-id", "Camera", "item", "")
+					candidate.LifecycleState = "archived"
+					return candidate
+				}(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if _, err := compileRealtimeVoiceActionPlan(tt.intent, tt.resolutions, tt.candidates); err == nil {
+				t.Fatal("expected invalid lifecycle combination to be rejected")
+			}
+		})
+	}
+
+	archivedReturn := voicePlanCandidate(agentmodel.SemanticReferenceSubject, "camera-id", "Camera", "item", "")
+	archivedReturn.LifecycleState = "archived"
+	archivedReturn.CheckoutState = "checked_out"
+	compiled, err := compileRealtimeVoiceActionPlan(
+		agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationReturn, SubjectMention: "Camera"},
+		[]agentmodel.Resolution{voicePlanResolution(agentmodel.SemanticReferenceSubject, agentmodel.ResolutionStrong, "camera-id")},
+		map[string]agentmodel.CandidateObservation{"camera-id": archivedReturn},
+	)
+	if err != nil || compiled.Disposition != realtimeVoicePlanReady {
+		t.Fatalf("expected archived checked-out asset to remain returnable, got %+v, %v", compiled, err)
+	}
+}
+
 func TestCompileRealtimeVoiceActionPlanRejectsCrossReferenceCandidateID(t *testing.T) {
 	t.Parallel()
 

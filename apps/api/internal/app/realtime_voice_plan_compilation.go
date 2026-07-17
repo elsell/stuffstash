@@ -86,8 +86,11 @@ func compileRealtimeVoiceMovePlan(intent agentmodel.Intent, resolutions []agentm
 		return realtimeVoiceCompiledActionPlan{}, ports.ErrInvalidProviderInput
 	}
 	item, err := realtimeVoicePlanCandidateForResolution(subject, candidates)
-	if err != nil {
-		return realtimeVoiceCompiledActionPlan{}, err
+	if err != nil || item.LifecycleState != "active" {
+		if err != nil {
+			return realtimeVoiceCompiledActionPlan{}, err
+		}
+		return realtimeVoiceCompiledActionPlan{}, ports.ErrInvalidProviderInput
 	}
 	commands, parentAssetID, parentCommandID, createdDestinations, err := compileRealtimeVoiceDestinationPath(intent, resolutions, candidates)
 	if err != nil || (parentAssetID == "" && parentCommandID == "") {
@@ -127,7 +130,7 @@ func compileRealtimeVoiceDestinationPath(intent agentmodel.Intent, resolutions [
 				return nil, "", "", false, ports.ErrInvalidProviderInput
 			}
 			candidate, err := realtimeVoicePlanCandidateForResolution(resolution, candidates)
-			if err != nil || (candidate.Kind != "location" && candidate.Kind != "container") || (index > 0 && candidate.ParentAssetID != parentAssetID) {
+			if err != nil || candidate.LifecycleState != "active" || (candidate.Kind != "location" && candidate.Kind != "container") || (index > 0 && candidate.ParentAssetID != parentAssetID) {
 				return nil, "", "", false, ports.ErrInvalidProviderInput
 			}
 			parentAssetID = candidate.CandidateID
@@ -161,6 +164,12 @@ func compileRealtimeVoiceSingleAssetPlan(intent agentmodel.Intent, resolutions [
 	candidate, err := realtimeVoicePlanCandidateForResolution(subject, candidates)
 	if err != nil {
 		return realtimeVoiceCompiledActionPlan{}, err
+	}
+	if intent.Operation == agentmodel.OperationCheckout && candidate.LifecycleState != "active" {
+		return realtimeVoiceCompiledActionPlan{}, ports.ErrInvalidProviderInput
+	}
+	if intent.Operation == agentmodel.OperationReturn && candidate.LifecycleState == "archived" && candidate.CheckoutState != "checked_out" {
+		return realtimeVoiceCompiledActionPlan{}, ports.ErrInvalidProviderInput
 	}
 	var commandKind actionplan.CommandKind
 	var alreadySatisfied bool

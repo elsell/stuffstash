@@ -47,7 +47,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 	}
 	canonicalIntent := step.Intent
-	if canonicalIntent.Validate() != nil || canonicalIntent.Kind == agentmodel.IntentKindUnsupported {
+	if canonicalIntent.Validate() != nil {
 		return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 	}
 	readState, err := newRealtimeVoiceInvestigationReadState(nil, nil, nil)
