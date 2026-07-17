@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -50,6 +51,25 @@ func newRealtimeVoiceInvestigationReadState(previous []agentmodel.SearchRequest,
 		state.readEvidence = append(state.readEvidence, evidence)
 	}
 	return state, nil
+}
+
+func (state *realtimeVoiceInvestigationReadState) resetDestinationScope() {
+	if state == nil {
+		return
+	}
+	for reference := range state.seenQueries {
+		if reference != agentmodel.SemanticReferenceSubject {
+			delete(state.seenQueries, reference)
+		}
+	}
+	for reference := range state.visible {
+		if reference != agentmodel.SemanticReferenceSubject {
+			delete(state.visible, reference)
+		}
+	}
+	state.readEvidence = slices.DeleteFunc(state.readEvidence, func(evidence agentmodel.ReadEvidence) bool {
+		return evidence.ReferenceKey != agentmodel.SemanticReferenceSubject
+	})
 }
 
 func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session RealtimeVoiceSession, evidenceRound int, requests []agentmodel.SearchRequest, state *realtimeVoiceInvestigationReadState, emit RealtimeVoiceEventSink) (realtimeVoiceInvestigationReadResult, error) {

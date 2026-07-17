@@ -378,6 +378,13 @@ func TestRealtimeVoiceDestinationRepairRejectsSemanticDrift(t *testing.T) {
 	if realtimeVoiceDestinationRepairAllowed("Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room beside a Cart", original, partial) {
 		t.Fatal("expected partial-token transcript match to be rejected")
 	}
+	if realtimeVoiceDestinationRepairRequestsValid(valid, []agentmodel.SearchRequest{
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadAssetDetail, Mention: "Live Room", KindHint: "location", VisibleAssetID: "stale-id"},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", KindHint: "container", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", KindHint: "container", SearchProbes: []string{"lower basket"}},
+	}) {
+		t.Fatal("expected repaired destination reads to reject stale ID-targeted capabilities")
+	}
 }
 
 func TestRealtimeVoiceInvestigationLoopFinishesExactOrZeroPathWithoutRedundantSearchRound(t *testing.T) {

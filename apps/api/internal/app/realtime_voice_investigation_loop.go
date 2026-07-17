@@ -99,6 +99,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 			requests = realtimeVoiceSubjectRequests(requests)
 			observations = realtimeVoiceSubjectObservations(observations)
 			readEvidence = realtimeVoiceSubjectReadEvidence(readEvidence)
+			readState.resetDestinationScope()
 			continue
 		}
 		requiredRead, required, requiredErr := realtimeVoiceRequiredEvidenceRequest(canonicalIntent, step, observations, readEvidence)
@@ -193,6 +194,9 @@ func realtimeVoiceDestinationRepairRequestsValid(intent agentmodel.Intent, reque
 			}
 			subjectSeen = true
 			continue
+		}
+		if request.ReadKind != agentmodel.InvestigationReadSearchAssets || strings.TrimSpace(request.VisibleAssetID) != "" {
+			return false
 		}
 		var index int
 		if _, err := fmt.Sscanf(request.ReferenceKey.String(), "destination.%d", &index); err != nil || index < 0 || index >= len(intent.DestinationPath) || seen[request.ReferenceKey] ||

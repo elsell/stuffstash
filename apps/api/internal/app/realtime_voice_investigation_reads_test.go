@@ -220,6 +220,37 @@ func TestRealtimeVoiceInvestigationReadsDropsRepeatedProbeWhenStepStillMakesProg
 	}
 }
 
+func TestRealtimeVoiceInvestigationReadStateClearsDestinationCapabilitiesForRepair(t *testing.T) {
+	t.Parallel()
+	state, err := newRealtimeVoiceInvestigationReadState(
+		[]agentmodel.SearchRequest{
+			{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "drill", SearchProbes: []string{"drill"}},
+			{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "rack", SearchProbes: []string{"rack"}},
+		},
+		[]agentmodel.CandidateObservation{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill-1", Title: "Drill", Kind: "item"},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", CandidateID: "rack-1", Title: "Rack", Kind: "container"},
+		},
+		[]agentmodel.ReadEvidence{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "drill", CandidateCount: 1},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "rack", CandidateCount: 1},
+		},
+	)
+	if err != nil {
+		t.Fatalf("new read state: %v", err)
+	}
+	state.resetDestinationScope()
+	if state.querySeen("destination.0", "rack", agentmodel.LifecycleScopeActive) || state.assetVisibleForReference("destination.0", "rack-1") {
+		t.Fatal("expected stale destination query and visible ID capability to be cleared")
+	}
+	if !state.querySeen(agentmodel.SemanticReferenceSubject, "drill", agentmodel.LifecycleScopeActive) || !state.assetVisibleForReference(agentmodel.SemanticReferenceSubject, "drill-1") {
+		t.Fatal("expected subject evidence and visibility to remain available")
+	}
+	if len(state.readEvidence) != 1 || state.readEvidence[0].ReferenceKey != agentmodel.SemanticReferenceSubject {
+		t.Fatalf("expected only subject read evidence after repair reset, got %+v", state.readEvidence)
+	}
+}
+
 func TestRealtimeVoiceInvestigationReadsMapInventoryContentsAndTypedHistory(t *testing.T) {
 	t.Parallel()
 
