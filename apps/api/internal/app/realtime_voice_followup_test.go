@@ -206,8 +206,9 @@ func realtimeVoiceUnsupportedScript() *scriptedRealtimeLanguageInference {
 	step := agentmodel.InvestigationStep{
 		Decision: agentmodel.InvestigationDecisionFinish,
 		Intent: agentmodel.Intent{
-			Kind:      agentmodel.IntentKindUnsupported,
-			Operation: agentmodel.OperationUnsupported,
+			RequestShape: agentmodel.RequestShapeSingleTarget,
+			Kind:         agentmodel.IntentKindUnsupported,
+			Operation:    agentmodel.OperationUnsupported,
 		},
 		Resolutions: []agentmodel.Resolution{{
 			ReferenceKey: agentmodel.SemanticReferenceSubject,

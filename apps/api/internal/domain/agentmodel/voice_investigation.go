@@ -39,6 +39,23 @@ func (kind IntentKind) Valid() bool {
 	}
 }
 
+type RequestShape string
+
+const (
+	RequestShapeSingleTarget     RequestShape = "single_target"
+	RequestShapeCollectionTarget RequestShape = "collection_target"
+	RequestShapeCompound         RequestShape = "compound"
+)
+
+func (shape RequestShape) Valid() bool {
+	switch shape {
+	case RequestShapeSingleTarget, RequestShapeCollectionTarget, RequestShapeCompound:
+		return true
+	default:
+		return false
+	}
+}
+
 type Operation string
 
 const (
@@ -88,6 +105,31 @@ func (operation Operation) changesInventory() bool {
 	default:
 		return false
 	}
+}
+
+func CanonicalizeIntent(intent Intent) Intent {
+	shape := intent.RequestShape
+	if shape == RequestShapeCompound || (shape == RequestShapeCollectionTarget && intent.Operation.changesInventory()) {
+		intent.Operation = OperationUnsupported
+	}
+	switch {
+	case intent.Operation.readOnly():
+		intent.Kind = IntentKindRead
+	case intent.Operation.changesInventory():
+		intent.Kind = IntentKindChange
+	case intent.Operation == OperationUnsupported:
+		intent.Kind = IntentKindUnsupported
+	default:
+		intent.Kind = ""
+	}
+	if intent.Operation != OperationCreate {
+		intent.NewAssetKind = ""
+	}
+	if intent.Operation != OperationCreate && intent.Operation != OperationMove {
+		intent.DestinationPath = nil
+		intent.DestinationKinds = nil
+	}
+	return intent
 }
 
 type InvestigationDecision string
@@ -226,6 +268,7 @@ func (kind DestinationKind) Valid() bool {
 }
 
 type Intent struct {
+	RequestShape     RequestShape      `json:"requestShape"`
 	Kind             IntentKind        `json:"kind"`
 	Operation        Operation         `json:"operation"`
 	SubjectMention   string            `json:"subjectMention"`
@@ -236,7 +279,7 @@ type Intent struct {
 }
 
 func (intent Intent) Validate() error {
-	if !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
+	if !intent.RequestShape.Valid() || !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
 		!bounded(intent.Details, MaxInvestigationDetailRunes, true) || len(intent.DestinationPath) > MaxDestinationSegments ||
 		len(intent.DestinationKinds) != len(intent.DestinationPath) {
 		return ErrInvalidVoiceInvestigation
@@ -270,6 +313,11 @@ func (intent Intent) Validate() error {
 			return ErrInvalidVoiceInvestigation
 		}
 	} else if strings.TrimSpace(intent.NewAssetKind) != "" {
+		return ErrInvalidVoiceInvestigation
+	}
+	shape := intent.RequestShape
+	if (shape == RequestShapeCompound && intent.Operation != OperationUnsupported) ||
+		(shape == RequestShapeCollectionTarget && intent.Operation.changesInventory()) {
 		return ErrInvalidVoiceInvestigation
 	}
 	return nil

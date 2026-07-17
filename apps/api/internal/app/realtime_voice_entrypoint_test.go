@@ -61,7 +61,7 @@ func TestRealtimeVoiceProductionEntrypointSupportsReadOperationMatrix(t *testing
 			seedRealtimeVoiceLoopAsset(t, store, container, "audit-matrix-container")
 			seedRealtimeVoiceLoopAsset(t, store, subject, "audit-matrix-subject")
 
-			intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: testCase.operation, SubjectMention: "Subject record"}
+			intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: testCase.operation, SubjectMention: "Subject record"}
 			if testCase.operation == agentmodel.OperationListInventory {
 				intent.SubjectMention = ""
 			}
@@ -126,7 +126,7 @@ func TestRealtimeVoiceProductionEntrypointSupportsChangeOperationMatrix(t *testi
 				seedRealtimeVoiceOpenCheckout(t, store, subject.ID)
 			}
 
-			intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: operation, SubjectMention: "Change subject"}
+			intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: operation, SubjectMention: "Change subject"}
 			requests := []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Change subject", SearchProbes: []string{"Change subject"}}}
 			resolutions := []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{subject.ID.String()}}}
 			switch operation {
@@ -186,7 +186,7 @@ func TestRealtimeVoiceProductionEntrypointHandlesAmbiguousAndAbsentEvidence(t *t
 				seedRealtimeVoiceLoopAsset(t, store, item, fmt.Sprintf("audit-evidence-%d", index))
 				ids = append(ids, item.ID.String())
 			}
-			intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Matching record"}
+			intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Matching record"}
 			initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{{
 				ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Matching record", SearchProbes: []string{"Matching record"},
 			}}}
@@ -225,7 +225,7 @@ func TestRealtimeVoiceProductionEntrypointRejectsMalformedStructuredTurn(t *test
 
 func TestRealtimeVoiceProductionEntrypointBoundsInvestigationReads(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Timed subject"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Timed subject"}
 	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{{
 		ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Timed subject", SearchProbes: []string{"Timed subject"},
 	}}}

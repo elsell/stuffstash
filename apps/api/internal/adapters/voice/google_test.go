@@ -124,7 +124,7 @@ func TestGoogleGeminiLanguageInferenceUsesAPIKeyBackend(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
           "decision":"search",
-          "intent":{"kind":"read","operation":"locate","subjectMention":"tools","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
+          "intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"tools","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
           "searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"tools","kindHint":"","visibleAssetId":"","searchProbes":["tools"],"lifecycleScope":"active"}],
           "vocabularyRequests":[],"resolutions":[],"rationale":"Gather candidates."
         }`))

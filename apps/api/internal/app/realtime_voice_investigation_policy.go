@@ -163,7 +163,7 @@ func realtimeVoiceLifecycleScopeIncludes(scopes []agentmodel.LifecycleScope, lif
 }
 
 func sameRealtimeVoiceInvestigationIntent(left, right agentmodel.Intent) bool {
-	if left.Kind != right.Kind || left.Operation != right.Operation || strings.TrimSpace(left.SubjectMention) != strings.TrimSpace(right.SubjectMention) ||
+	if left.RequestShape != right.RequestShape || left.Kind != right.Kind || left.Operation != right.Operation || strings.TrimSpace(left.SubjectMention) != strings.TrimSpace(right.SubjectMention) ||
 		strings.TrimSpace(left.NewAssetKind) != strings.TrimSpace(right.NewAssetKind) ||
 		len(left.DestinationPath) != len(right.DestinationPath) || len(left.DestinationKinds) != len(right.DestinationKinds) {
 		return false

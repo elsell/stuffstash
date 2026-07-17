@@ -27,7 +27,7 @@ type realtimeVoiceCompiledActionPlan struct {
 }
 
 func compileRealtimeVoiceActionPlan(intent agentmodel.Intent, resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) (realtimeVoiceCompiledActionPlan, error) {
-	if intent.Validate() != nil || intent.Kind != agentmodel.IntentKindChange {
+	if intent.Validate() != nil || intent.Kind != agentmodel.IntentKindChange || intent.RequestShape != agentmodel.RequestShapeSingleTarget {
 		return realtimeVoiceCompiledActionPlan{}, ports.ErrInvalidProviderInput
 	}
 	switch intent.Operation {

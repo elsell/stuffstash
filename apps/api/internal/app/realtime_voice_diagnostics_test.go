@@ -72,7 +72,7 @@ func TestRealtimeVoiceTypedInvestigationDiagnosticsRespectSessionSetting(t *test
 							t.Fatalf("diagnostic leaked %q: %+v", forbidden, diagnostic)
 						}
 					}
-					if !strings.Contains(diagnostic.Detail, `"operation":"locate"`) || !strings.Contains(diagnostic.Message, "Language investigation") {
+					if !strings.Contains(diagnostic.Detail, `"requestShape":"single_target"`) || !strings.Contains(diagnostic.Detail, `"operation":"locate"`) || !strings.Contains(diagnostic.Message, "Language investigation") {
 						t.Fatalf("expected safe typed diagnostic metadata: %+v", diagnostic)
 					}
 				}
@@ -179,7 +179,7 @@ func TestRealtimeVoiceTypedResponsePreservesTextToSpeechBoundaries(t *testing.T)
 }
 
 func realtimeVoiceTypedLocateTurns(candidateID, title string) (agentmodel.InvestigationStep, agentmodel.InvestigationStep) {
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: title}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: title}
 	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{{
 		ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: title, SearchProbes: []string{title},
 	}}}

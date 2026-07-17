@@ -57,7 +57,8 @@ type lateFailingLanguageModel struct{}
 func (lateFailingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	if input.Investigation != nil && input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
 		intent := agentmodel.Intent{
-			Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
+			RequestShape: agentmodel.RequestShapeSingleTarget,
+			Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
 			DestinationPath: []string{"Kitchen"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 		}
 		return typedVoiceInvestigationTurn(input, intent, nil)

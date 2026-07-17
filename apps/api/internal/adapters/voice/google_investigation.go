@@ -16,9 +16,11 @@ const voiceInvestigationContract = `You are the bounded semantic investigator fo
 
 Interpret imperfect speech and propose narrow evidence reads. Speech may contain approximate titles, singular/plural errors, category substitutions, or transcription errors. You may be creative about search hypotheses, but inventory facts must come only from authorized observations.
 
+Classify request shape before operation. single_target means one operation on one subject or proposed new asset. collection_target means one operation targets an explicit set, category, universal quantification, or unbounded collection. compound means two or more requested operations, including sequential operations on one subject. Collection reads may be supported. Every collection-targeted change and compound request is unsupported; never keep only one change from a compound request.
+
 Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
 
-An imperative return or check in instruction selects the return operation, never locate. An imperative check out instruction selects the checkout operation. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
+An imperative return or check in instruction selects the return operation, never locate. In an asset command, return has its ordinary physical-custody meaning: mark a checked-out asset as returned. Never reinterpret it as a programming or API request to return, find, or display a record. An imperative check out instruction selects the checkout operation. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
 
 A past-tense location question about where someone put, left, stored, or stashed an existing subject is locate. An imperative instruction to put, move, store, or stash a subject at a named destination is a change. A placement verb alone does not make a question a move.
 
@@ -93,16 +95,9 @@ func parseGeminiInvestigationTurn(raw string) (ports.LanguageInferenceTurn, erro
 }
 
 func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agentmodel.InvestigationStep {
-	step.Intent.Kind = geminiIntentKindForOperation(step.Intent.Operation)
-	if step.Intent.Operation != agentmodel.OperationCreate {
-		step.Intent.NewAssetKind = ""
-	}
+	step.Intent = agentmodel.CanonicalizeIntent(step.Intent)
 	step.SearchRequests = canonicalizeGeminiInvestigationReads(step.Intent, step.SearchRequests)
 	step.Resolutions = canonicalizeGeminiInvestigationResolutions(step.Intent, step.Resolutions)
-	if step.Intent.Operation != agentmodel.OperationCreate && step.Intent.Operation != agentmodel.OperationMove {
-		step.Intent.DestinationPath = nil
-		step.Intent.DestinationKinds = nil
-	}
 	switch step.Decision {
 	case agentmodel.InvestigationDecisionSearch, agentmodel.InvestigationDecisionSearchAgain:
 		step.Resolutions = nil
@@ -111,21 +106,6 @@ func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agen
 		step.VocabularyRequests = nil
 	}
 	return step
-}
-
-func geminiIntentKindForOperation(operation agentmodel.Operation) agentmodel.IntentKind {
-	switch operation {
-	case agentmodel.OperationLocate, agentmodel.OperationExists, agentmodel.OperationListInventory, agentmodel.OperationListContents,
-		agentmodel.OperationDetail, agentmodel.OperationCheckoutStatus, agentmodel.OperationAssetHistory, agentmodel.OperationCheckoutHistory:
-		return agentmodel.IntentKindRead
-	case agentmodel.OperationCreate, agentmodel.OperationMove, agentmodel.OperationArchive, agentmodel.OperationRestore,
-		agentmodel.OperationCheckout, agentmodel.OperationReturn:
-		return agentmodel.IntentKindChange
-	case agentmodel.OperationUnsupported:
-		return agentmodel.IntentKindUnsupported
-	default:
-		return ""
-	}
 }
 
 func canonicalizeGeminiInvestigationReads(intent agentmodel.Intent, requests []agentmodel.SearchRequest) []agentmodel.SearchRequest {
@@ -256,9 +236,14 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		return geminiSchema{Type: "array", Items: &item}
 	}
 	referenceKeys := []string{"subject", "destination.0", "destination.1", "destination.2", "destination.3", "destination.4", "destination.5"}
+	operationDescription := "Canonical user-requested operation. In an asset command, return means physical custody return, never find or display; check-in is return; check-out is checkout; a past-tense location question is locate."
+	if input.Phase == agentmodel.InvestigationPhaseEvidenceAssessment {
+		operationDescription += " It must exactly preserve canonicalIntent.operation."
+	}
 	intent := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
+		"requestShape":    {Type: "string", Enum: []string{"single_target", "collection_target", "compound"}, Description: "Classify independently of operation: one operation on one subject is single_target; one operation over a set or collection is collection_target; two or more requested operations is compound."},
 		"kind":            {Type: "string", Enum: []string{"read", "change", "unsupported"}},
-		"operation":       {Type: "string", Enum: []string{"locate", "exists", "list_inventory", "list_contents", "detail", "checkout_status", "asset_history", "checkout_history", "create", "move", "archive", "restore", "checkout", "return", "unsupported"}},
+		"operation":       {Type: "string", Enum: []string{"locate", "exists", "list_inventory", "list_contents", "detail", "checkout_status", "asset_history", "checkout_history", "create", "move", "archive", "restore", "checkout", "return", "unsupported"}, Description: operationDescription},
 		"subjectMention":  {Type: "string"},
 		"newAssetKind":    {Type: "string", Enum: []string{"", "item", "container", "location"}},
 		"destinationPath": stringArray(),
@@ -266,7 +251,7 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 			Type: "string", Enum: []string{"location", "container"},
 		}},
 		"details": {Type: "string"},
-	}, Required: []string{"kind", "operation", "subjectMention", "newAssetKind", "destinationPath", "destinationKinds", "details"}}
+	}, Required: []string{"requestShape", "kind", "operation", "subjectMention", "newAssetKind", "destinationPath", "destinationKinds", "details"}}
 
 	readKinds := []string{"search_assets", "list_inventory"}
 	if input.Phase == agentmodel.InvestigationPhaseEvidenceAssessment {

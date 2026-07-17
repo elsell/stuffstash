@@ -27,6 +27,7 @@ func emitRealtimeVoiceInvestigationDiagnostic(session RealtimeVoiceSession, inpu
 		VocabularyRequestCount    int    `json:"vocabularyRequestCount"`
 		VocabularyDefinitionCount int    `json:"vocabularyDefinitionCount"`
 		Decision                  string `json:"decision"`
+		RequestShape              string `json:"requestShape"`
 		IntentKind                string `json:"intentKind"`
 		Operation                 string `json:"operation"`
 		SearchRequestCount        int    `json:"searchRequestCount"`
@@ -37,7 +38,7 @@ func emitRealtimeVoiceInvestigationDiagnostic(session RealtimeVoiceSession, inpu
 		PreviousRequestCount: len(input.PreviousRequests), ObservationCount: len(input.Observations), ReadEvidenceCount: len(input.ReadEvidence),
 		CustomAssetTypeCount: len(input.Vocabulary.CustomAssetTypes), CustomFieldCount: len(input.Vocabulary.CustomFields), TagCount: len(input.Vocabulary.Tags),
 		VocabularyRequestCount: len(input.VocabularyRequests), VocabularyDefinitionCount: len(input.VocabularyDefinitions),
-		Decision: string(step.Decision), IntentKind: string(step.Intent.Kind), Operation: string(step.Intent.Operation),
+		Decision: string(step.Decision), RequestShape: string(step.Intent.RequestShape), IntentKind: string(step.Intent.Kind), Operation: string(step.Intent.Operation),
 		SearchRequestCount: len(step.SearchRequests), ResolutionCount: len(step.Resolutions),
 	}
 	detail, err := json.Marshal(payload)

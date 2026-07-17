@@ -550,7 +550,7 @@ func (d *denyEditAfterProposalAuthorizer) RevokeInventoryEditor(ctx context.Cont
 type actionPlanProposalLanguageModel struct{}
 
 func (m actionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "water bottle", NewAssetKind: "item"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "water bottle", NewAssetKind: "item"}
 	return typedVoiceInvestigationTurn(input, intent, nil)
 }
 
@@ -558,7 +558,8 @@ type moveActionPlanProposalLanguageModel struct{}
 
 func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	intent := agentmodel.Intent{
-		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
 		DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 	}
 	return typedVoiceInvestigationTurn(input, intent, nil)
@@ -571,13 +572,13 @@ func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, inpu
 	if strings.Contains(strings.ToLower(input.Transcript), "toolbox") {
 		subject = "Toolbox"
 	}
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: subject}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: subject}
 	return typedVoiceInvestigationTurn(input, intent, nil)
 }
 
 type restoreActionPlanProposalLanguageModel struct{}
 
 func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationRestore, SubjectMention: "water bottle"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationRestore, SubjectMention: "water bottle"}
 	return typedVoiceInvestigationTurn(input, intent, nil)
 }

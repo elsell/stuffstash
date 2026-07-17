@@ -109,7 +109,7 @@ func seedHiddenVoiceVocabulary(t *testing.T, ctx context.Context, store *memory.
 
 func TestRealtimeVoiceInvestigationCarriesManifestThenOnlyRequestedDefinitions(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "camp medicine"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "camp medicine"}
 	initial := agentmodel.InvestigationStep{
 		Decision: agentmodel.InvestigationDecisionSearch, Intent: intent,
 		SearchRequests:     []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "camp medicine", SearchProbes: []string{"camp medicine"}}},

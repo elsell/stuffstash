@@ -25,7 +25,7 @@ func (DevFakeLanguageInference) NextTurn(_ context.Context, input ports.Language
 	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
 		return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{
 			Decision: agentmodel.InvestigationDecisionSearch,
-			Intent:   agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"},
+			Intent:   agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"},
 			SearchRequests: []agentmodel.SearchRequest{{
 				ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
 				Mention: "tools", SearchProbes: []string{"tools"}, LifecycleScope: agentmodel.LifecycleScopeActive,

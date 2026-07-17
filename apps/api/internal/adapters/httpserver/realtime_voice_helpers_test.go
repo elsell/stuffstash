@@ -195,7 +195,7 @@ func (m failingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceI
 }
 
 func voiceReadIntent(operation agentmodel.Operation, subject string) agentmodel.Intent {
-	return agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: operation, SubjectMention: subject}
+	return agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: operation, SubjectMention: subject}
 }
 
 func typedVoiceInvestigationTurn(input ports.LanguageInferenceInput, intent agentmodel.Intent, capture *string) (ports.LanguageInferenceTurn, error) {

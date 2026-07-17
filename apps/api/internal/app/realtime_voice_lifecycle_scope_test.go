@@ -28,7 +28,7 @@ func TestRealtimeVoiceInvestigationAllowsSameProbeAcrossDifferentLifecycleScopes
 
 func TestCanonicalRealtimeVoiceInvestigationRejectsCandidateOutsideDiscoveryLifecycleScope(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "old drill"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "old drill"}
 	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"drill-1"}}}}
 	observations := []agentmodel.CandidateObservation{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill-1", Title: "Old drill", Kind: "item", LifecycleState: "archived"}}
 	evidence := []agentmodel.ReadEvidence{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "old drill", CandidateCount: 1, LifecycleScope: agentmodel.LifecycleScopeActive}}

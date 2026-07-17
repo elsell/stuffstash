@@ -10,7 +10,7 @@ import (
 
 func TestRealtimeVoiceInvestigationPolicyMakesSoleExactTitleDominateDistractors(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Wireless Microphone"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Wireless Microphone"}
 	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
 		ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAmbiguous,
 		CandidateIDs: []string{"exact", "partial"},
@@ -32,7 +32,7 @@ func TestRealtimeVoiceInvestigationPolicyMakesSoleExactTitleDominateDistractors(
 
 func TestRealtimeVoiceInvestigationPolicyRejectsCrossReferenceCandidate(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill", DestinationPath: []string{"garage"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill", DestinationPath: []string{"garage"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
 	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
 		{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"garage-id"}},
 		{ReferenceKey: "destination.0", Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"garage-id"}},
@@ -47,7 +47,8 @@ func TestRealtimeVoiceInvestigationPolicyRejectsCrossReferenceCandidate(t *testi
 func TestRealtimeVoiceInvestigationPolicyTurnsBrokenDestinationChainIntoMissingSuffix(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{
-		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
 		DestinationPath:  []string{"garage", "blue cabinet", "upper shelf"},
 		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
 	}
@@ -83,7 +84,8 @@ func TestRealtimeVoiceInvestigationPolicyTurnsBrokenDestinationChainIntoMissingS
 func TestRealtimeVoiceInvestigationPolicyRejectsTerminalResolutionWithoutReadCoverage(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{
-		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
 		DestinationPath: []string{"garage", "cabinet"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer},
 	}
 	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
@@ -108,7 +110,8 @@ func TestRealtimeVoiceInvestigationPolicyRejectsDestinationKindMutationAcrossTur
 	t.Parallel()
 
 	canonical := agentmodel.Intent{
-		Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
 		DestinationPath: []string{"Workshop"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 	}
 	mutated := canonical
@@ -120,7 +123,7 @@ func TestRealtimeVoiceInvestigationPolicyRejectsDestinationKindMutationAcrossTur
 
 func TestRealtimeVoiceInvestigationPolicyAnchorsInitialDetailsAcrossEvidenceTurns(t *testing.T) {
 	t.Parallel()
-	canonical := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationCheckoutStatus, SubjectMention: "loaner flashlight", Details: ""}
+	canonical := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationCheckoutStatus, SubjectMention: "loaner flashlight", Details: ""}
 	provider := canonical
 	provider.Details = "Checked out at a provider-observed time"
 	if !sameRealtimeVoiceInvestigationIntent(canonical, provider) {
@@ -140,7 +143,7 @@ func TestRealtimeVoiceInvestigationPolicyAnchorsInitialDetailsAcrossEvidenceTurn
 
 func TestRealtimeVoiceInvestigationPolicyAcceptsAbsentAfterExecutedZeroMatchSearch(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationExists, SubjectMention: "moon boots"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationExists, SubjectMention: "moon boots"}
 	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
 		ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent,
 	}}}
@@ -155,7 +158,7 @@ func TestRealtimeVoiceInvestigationPolicyDerivesNoCandidateStatusFromReferenceRo
 
 	t.Run("missing existing source becomes absent", func(t *testing.T) {
 		t.Parallel()
-		intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: "drill"}
+		intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: "drill"}
 		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
 			ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionMissing,
 		}}}
@@ -172,7 +175,8 @@ func TestRealtimeVoiceInvestigationPolicyDerivesNoCandidateStatusFromReferenceRo
 	t.Run("absent create subject and destination become missing", func(t *testing.T) {
 		t.Parallel()
 		intent := agentmodel.Intent{
-			Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "charger", NewAssetKind: "item",
+			RequestShape: agentmodel.RequestShapeSingleTarget,
+			Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "charger", NewAssetKind: "item",
 			DestinationPath: []string{"garage"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 		}
 		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
@@ -197,7 +201,8 @@ func TestRealtimeVoiceInvestigationPolicyDerivesNoCandidateStatusFromReferenceRo
 	t.Run("absent move destination becomes missing", func(t *testing.T) {
 		t.Parallel()
 		intent := agentmodel.Intent{
-			Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
+			RequestShape: agentmodel.RequestShapeSingleTarget,
+			Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
 			DestinationPath: []string{"kitchen"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 		}
 		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
@@ -221,7 +226,7 @@ func TestRealtimeVoiceInvestigationPolicyDerivesNoCandidateStatusFromReferenceRo
 
 func TestRealtimeVoiceInvestigationResponseCalibratesPlausibleMatch(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Sarah winter coat"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Sarah winter coat"}
 	resolutions := []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionPlausible, CandidateIDs: []string{"clothes"}}}
 	candidates := map[string]agentmodel.CandidateObservation{"clothes": {
 		EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "clothes", Title: "Sarah Winter Clothes and Shoes", Kind: "container", ContainmentPath: []string{"Basement", "Storage room", "Sarah Winter Clothes and Shoes"},
@@ -237,7 +242,7 @@ func TestRealtimeVoiceInvestigationResponseCalibratesPlausibleMatch(t *testing.T
 
 func TestRealtimeVoiceInvestigationResponseNamesMissingExistingSubject(t *testing.T) {
 	t.Parallel()
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "my passport", DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "my passport", DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
 	response, err := realtimeVoiceInvestigationResponse(intent, []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent}}, nil)
 	if err != nil {
 		t.Fatalf("render absent source: %v", err)

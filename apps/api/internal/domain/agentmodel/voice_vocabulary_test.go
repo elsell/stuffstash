@@ -31,7 +31,7 @@ func TestVoiceVocabularyManifestAndTargetedDefinitionsValidateWithoutInternalIDs
 
 func TestInvestigationStepBoundsAndDeduplicatesVocabularyRequests(t *testing.T) {
 	t.Parallel()
-	intent := Intent{Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "camp medicine"}
+	intent := Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "camp medicine"}
 	read := SearchRequest{ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Mention: "camp medicine", SearchProbes: []string{"camp medicine"}}
 	step := InvestigationStep{Decision: InvestigationDecisionSearch, Intent: intent, SearchRequests: []SearchRequest{read}, VocabularyRequests: []VoiceVocabularyRequest{{Kind: VoiceVocabularyKindCustomAssetType, Key: "medicine"}, {Kind: VoiceVocabularyKindCustomField, Key: "expiration-date"}}}
 	if err := step.Validate(); err != nil {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 
@@ -24,7 +25,7 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 		}
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
           "decision":"search",
-          "intent":{"kind":"read","operation":"locate","subjectMention":"Sarah winter coat","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
+          "intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"Sarah winter coat","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
           "searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"Sarah winter coat","kindHint":"","visibleAssetId":"","searchProbes":["Sarah winter coat","Sarah winter clothes","winter clothing"],"lifecycleScope":"active"}],
           "vocabularyRequests":[{"kind":"custom_asset_type","key":"winter-clothing"}],
           "resolutions":[],
@@ -191,6 +192,45 @@ func TestGeminiInitialInvestigationSchemaRequiresEvidenceSearchWithoutPrematureR
 	if visibleIDs := request.Properties["visibleAssetId"].Enum; len(visibleIDs) != 1 || visibleIDs[0] != "" {
 		t.Fatalf("initial reads cannot target an unseen ID, got %+v", visibleIDs)
 	}
+	intent := schema.Properties["intent"]
+	if shapes := intent.Properties["requestShape"].Enum; len(shapes) != 3 || shapes[0] != "single_target" || shapes[1] != "collection_target" || shapes[2] != "compound" {
+		t.Fatalf("intent schema must require typed request shape, got %+v", shapes)
+	}
+	if !slices.Contains(intent.Required, "requestShape") {
+		t.Fatalf("requestShape must be required, got %+v", intent.Required)
+	}
+	if !strings.Contains(intent.Properties["requestShape"].Description, "compound") || !strings.Contains(intent.Properties["operation"].Description, "physical custody") {
+		t.Fatalf("semantic discriminators need local schema guidance, got shape=%q operation=%q", intent.Properties["requestShape"].Description, intent.Properties["operation"].Description)
+	}
+}
+
+func TestParseGeminiInvestigationTurnCanonicalizesUnsafeRequestShapesToUnsupported(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		shape string
+	}{
+		{name: "collection mutation", shape: "collection_target"},
+		{name: "compound request", shape: "compound"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			raw := `{"decision":"search","intent":{"requestShape":"` + test.shape + `","kind":"change","operation":"move","subjectMention":"tools","newAssetKind":"","destinationPath":["garage"],"destinationKinds":["location"],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"tools","kindHint":"item","visibleAssetId":"","searchProbes":["tools"],"lifecycleScope":"active"},{"referenceKey":"destination.0","readKind":"search_assets","mention":"garage","kindHint":"location","visibleAssetId":"","searchProbes":["garage"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Classify request."}`
+			turn, err := parseGeminiInvestigationTurn(raw)
+			if err != nil {
+				t.Fatalf("parse request shape: %v", err)
+			}
+			intent := turn.Investigation.Intent
+			if intent.Operation != agentmodel.OperationUnsupported || intent.Kind != agentmodel.IntentKindUnsupported || string(intent.RequestShape) != test.shape {
+				t.Fatalf("unsafe shape was not canonicalized to unsupported: %+v", intent)
+			}
+			if len(intent.DestinationPath) != 0 || len(turn.Investigation.SearchRequests) != 1 || turn.Investigation.SearchRequests[0].ReferenceKey != agentmodel.SemanticReferenceSubject {
+				t.Fatalf("unsupported canonicalization retained executable destinations: %+v", turn.Investigation)
+			}
+		})
+	}
 }
 
 func TestParseGeminiInvestigationTurnPreservesOrderedDestinationKinds(t *testing.T) {
@@ -209,7 +249,7 @@ func TestParseGeminiInvestigationTurnPreservesOrderedDestinationKinds(t *testing
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			raw := `{"decision":"search","intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":` + test.path + `,"destinationKinds":` + test.kinds + `,"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"]}],"resolutions":[],"rationale":"Gather evidence."}`
+			raw := `{"decision":"search","intent":{"requestShape":"single_target","kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":` + test.path + `,"destinationKinds":` + test.kinds + `,"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"]}],"resolutions":[],"rationale":"Gather evidence."}`
 			turn, err := parseGeminiInvestigationTurn(raw)
 			if err != nil {
 				t.Fatalf("parse investigation turn: %v", err)
@@ -230,7 +270,7 @@ func TestParseGeminiInvestigationTurnPreservesOrderedDestinationKinds(t *testing
 func TestParseGeminiInvestigationTurnClearsCreateOnlyKindFromOtherOperations(t *testing.T) {
 	t.Parallel()
 
-	raw := `{"decision":"search","intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"item","destinationPath":["garage"],"destinationKinds":["location"],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Gather evidence."}`
+	raw := `{"decision":"search","intent":{"requestShape":"single_target","kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"item","destinationPath":["garage"],"destinationKinds":["location"],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Gather evidence."}`
 	turn, err := parseGeminiInvestigationTurn(raw)
 	if err != nil {
 		t.Fatalf("parse investigation turn: %v", err)
@@ -250,7 +290,7 @@ func TestParseGeminiInvestigationTurnDropsDecisionIrrelevantCollections(t *testi
 	}{
 		{
 			name: "search drops premature resolutions",
-			raw:  `{"decision":"search","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[{"referenceKey":"subject","status":"absent","candidateIds":[],"evidence":"premature"}],"vocabularyRequests":[],"rationale":"Gather evidence."}`,
+			raw:  `{"decision":"search","intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[{"referenceKey":"subject","status":"absent","candidateIds":[],"evidence":"premature"}],"vocabularyRequests":[],"rationale":"Gather evidence."}`,
 			check: func(t *testing.T, step agentmodel.InvestigationStep) {
 				if len(step.Resolutions) != 0 || len(step.SearchRequests) != 1 {
 					t.Fatalf("search retained decision-irrelevant resolutions: %+v", step)
@@ -259,7 +299,7 @@ func TestParseGeminiInvestigationTurnDropsDecisionIrrelevantCollections(t *testi
 		},
 		{
 			name: "finish drops repeated reads and vocabulary requests",
-			raw:  `{"decision":"finish","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[{"referenceKey":"subject","status":"strong","candidateIds":["drill-1"],"evidence":"authorized candidate"}],"vocabularyRequests":[{"kind":"tag","key":"tools"}],"rationale":"Finish from evidence."}`,
+			raw:  `{"decision":"finish","intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[{"referenceKey":"subject","status":"strong","candidateIds":["drill-1"],"evidence":"authorized candidate"}],"vocabularyRequests":[{"kind":"tag","key":"tools"}],"rationale":"Finish from evidence."}`,
 			check: func(t *testing.T, step agentmodel.InvestigationStep) {
 				if len(step.SearchRequests) != 0 || len(step.VocabularyRequests) != 0 || len(step.Resolutions) != 1 {
 					t.Fatalf("finish retained decision-irrelevant requests: %+v", step)
@@ -284,7 +324,7 @@ func TestParseGeminiInvestigationTurnCanonicalizesOperationAndReadDiscriminators
 
 	t.Run("list inventory drops structurally irrelevant probes", func(t *testing.T) {
 		t.Parallel()
-		raw := `{"decision":"search","intent":{"kind":"read","operation":"list_inventory","subjectMention":"stuff","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"list_inventory","mention":"stuff","kindHint":"item","visibleAssetId":"","searchProbes":["stuff","item"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"List inventory."}`
+		raw := `{"decision":"search","intent":{"requestShape":"collection_target","kind":"read","operation":"list_inventory","subjectMention":"stuff","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"list_inventory","mention":"stuff","kindHint":"item","visibleAssetId":"","searchProbes":["stuff","item"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"List inventory."}`
 		turn, err := parseGeminiInvestigationTurn(raw)
 		if err != nil {
 			t.Fatalf("parse list inventory: %v", err)
@@ -296,7 +336,7 @@ func TestParseGeminiInvestigationTurnCanonicalizesOperationAndReadDiscriminators
 
 	t.Run("non containment operation keeps subject and drops contextual destination", func(t *testing.T) {
 		t.Parallel()
-		raw := `{"decision":"search","intent":{"kind":"change","operation":"checkout","subjectMention":"garden shears","newAssetKind":"item","destinationPath":["yard"],"destinationKinds":["location"],"details":"using them in the yard"},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"garden shears","kindHint":"item","visibleAssetId":"","searchProbes":["garden shears"],"lifecycleScope":"active"},{"referenceKey":"destination.0","readKind":"search_assets","mention":"yard","kindHint":"location","visibleAssetId":"","searchProbes":["yard"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Find checkout subject."}`
+		raw := `{"decision":"search","intent":{"requestShape":"single_target","kind":"change","operation":"checkout","subjectMention":"garden shears","newAssetKind":"item","destinationPath":["yard"],"destinationKinds":["location"],"details":"using them in the yard"},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"garden shears","kindHint":"item","visibleAssetId":"","searchProbes":["garden shears"],"lifecycleScope":"active"},{"referenceKey":"destination.0","readKind":"search_assets","mention":"yard","kindHint":"location","visibleAssetId":"","searchProbes":["yard"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Find checkout subject."}`
 		turn, err := parseGeminiInvestigationTurn(raw)
 		if err != nil {
 			t.Fatalf("parse checkout: %v", err)
@@ -309,7 +349,7 @@ func TestParseGeminiInvestigationTurnCanonicalizesOperationAndReadDiscriminators
 
 	t.Run("sole subject-like destination reference is relabeled", func(t *testing.T) {
 		t.Parallel()
-		raw := `{"decision":"search","intent":{"kind":"read","operation":"list_contents","subjectMention":"toolbox","newAssetKind":"","destinationPath":["toolbox"],"destinationKinds":["container"],"details":""},"searchRequests":[{"referenceKey":"destination.0","readKind":"list_inventory","mention":"toolbox","kindHint":"container","visibleAssetId":"","searchProbes":["toolbox"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Find container."}`
+		raw := `{"decision":"search","intent":{"requestShape":"single_target","kind":"read","operation":"list_contents","subjectMention":"toolbox","newAssetKind":"","destinationPath":["toolbox"],"destinationKinds":["container"],"details":""},"searchRequests":[{"referenceKey":"destination.0","readKind":"list_inventory","mention":"toolbox","kindHint":"container","visibleAssetId":"","searchProbes":["toolbox"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Find container."}`
 		turn, err := parseGeminiInvestigationTurn(raw)
 		if err != nil {
 			t.Fatalf("parse contents subject: %v", err)
@@ -328,7 +368,7 @@ func TestGeminiInvestigationPromptDefinesGeneralContainmentAndCustodySemantics(t
 		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
 		Transcript: "generated request", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
 	}})
-	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "imperative return", "return operation", "past-tense location question", "placement verb alone", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
+	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "imperative return", "physical-custody meaning", "programming or API request", "return operation", "past-tense location question", "placement verb alone", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
 		if !strings.Contains(prompt, rule) {
 			t.Fatalf("prompt is missing general rule %q: %s", rule, prompt)
 		}
@@ -339,7 +379,7 @@ func TestParseGeminiInvestigationTurnDerivesLifecycleTransitionDiscoveryScope(t 
 	t.Parallel()
 
 	for _, operation := range []string{"archive", "restore"} {
-		raw := `{"decision":"search","intent":{"kind":"change","operation":"` + operation + `","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search lifecycle subject."}`
+		raw := `{"decision":"search","intent":{"requestShape":"single_target","kind":"change","operation":"` + operation + `","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search lifecycle subject."}`
 		turn, err := parseGeminiInvestigationTurn(raw)
 		if err != nil {
 			t.Fatalf("parse %s scope: %v", operation, err)
@@ -353,7 +393,7 @@ func TestParseGeminiInvestigationTurnDerivesLifecycleTransitionDiscoveryScope(t 
 func TestParseGeminiInvestigationTurnDoesNotRewriteLifecycleScopeOnIDReads(t *testing.T) {
 	t.Parallel()
 
-	raw := `{"decision":"search_again","intent":{"kind":"change","operation":"archive","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"asset_detail","mention":"drill","kindHint":"item","visibleAssetId":"drill-1","searchProbes":[],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Read visible detail."}`
+	raw := `{"decision":"search_again","intent":{"requestShape":"single_target","kind":"change","operation":"archive","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"asset_detail","mention":"drill","kindHint":"item","visibleAssetId":"drill-1","searchProbes":[],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Read visible detail."}`
 	turn, err := parseGeminiInvestigationTurn(raw)
 	if err != nil {
 		t.Fatalf("parse id read scope: %v", err)
@@ -366,7 +406,7 @@ func TestParseGeminiInvestigationTurnDoesNotRewriteLifecycleScopeOnIDReads(t *te
 func TestParseGeminiInvestigationTurnRemovesOnlyExactStructuralDuplicates(t *testing.T) {
 	t.Parallel()
 
-	raw := `{"decision":"finish","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[],"resolutions":[{"referenceKey":"subject","status":"ambiguous","candidateIds":["drill-1","drill-1","drill-2"],"evidence":"two visible candidates"}],"vocabularyRequests":[],"rationale":"Clarify the candidates."}`
+	raw := `{"decision":"finish","intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[],"resolutions":[{"referenceKey":"subject","status":"ambiguous","candidateIds":["drill-1","drill-1","drill-2"],"evidence":"two visible candidates"}],"vocabularyRequests":[],"rationale":"Clarify the candidates."}`
 	turn, err := parseGeminiInvestigationTurn(raw)
 	if err != nil {
 		t.Fatalf("parse duplicate candidate IDs: %v", err)
@@ -375,7 +415,7 @@ func TestParseGeminiInvestigationTurnRemovesOnlyExactStructuralDuplicates(t *tes
 		t.Fatalf("expected stable exact deduplication, got %+v", got)
 	}
 
-	raw = `{"decision":"search","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["Drill"," drill ","cordless-drill","cordless drill"],"lifecycleScope":"active"},{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["Drill"," drill ","cordless-drill","cordless drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search."}`
+	raw = `{"decision":"search","intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["Drill"," drill ","cordless-drill","cordless drill"],"lifecycleScope":"active"},{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["Drill"," drill ","cordless-drill","cordless drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search."}`
 	turn, err = parseGeminiInvestigationTurn(raw)
 	if err != nil {
 		t.Fatalf("parse duplicate reads and probes: %v", err)
@@ -413,7 +453,7 @@ func TestGeminiInvestigationSchemaKeepsUpperBoundsInProjectValidation(t *testing
 func TestParseGeminiInvestigationTurnDerivesRedundantKindFromOperation(t *testing.T) {
 	t.Parallel()
 
-	raw := `{"decision":"search","intent":{"kind":"change","operation":"asset_history","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search history subject."}`
+	raw := `{"decision":"search","intent":{"requestShape":"single_target","kind":"change","operation":"asset_history","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search history subject."}`
 	turn, err := parseGeminiInvestigationTurn(raw)
 	if err != nil {
 		t.Fatalf("parse operation with redundant kind mismatch: %v", err)
@@ -429,7 +469,7 @@ func TestGoogleGeminiLanguageInferenceRejectsInvalidInvestigationPayload(t *test
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
           "decision":"finish",
-          "intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":["garage"],"destinationKinds":["location"],"details":""},
+          "intent":{"requestShape":"single_target","kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"","destinationPath":["garage"],"destinationKinds":["location"],"details":""},
           "searchRequests":[],
           "resolutions":[{"referenceKey":"subject","status":"strong","candidateIds":["invented-id"],"evidence":"guess"}],
           "commands":[{"kind":"move_asset"}],

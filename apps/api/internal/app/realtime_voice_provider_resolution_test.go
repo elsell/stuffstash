@@ -201,7 +201,7 @@ func (r *resolvedLanguageInference) NextTurn(_ context.Context, input ports.Lang
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
 	r.sawStructuredInvestigation = true
-	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
 	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
 		step := agentmodel.InvestigationStep{
 			Decision: agentmodel.InvestigationDecisionSearch,

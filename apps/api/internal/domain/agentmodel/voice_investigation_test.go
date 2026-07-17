@@ -19,6 +19,7 @@ func TestVoiceInvestigationEnumsRejectUnknownValues(t *testing.T) {
 		{name: "resolution status", valid: func(value string) bool { return ResolutionStatus(value).Valid() }},
 		{name: "phase", valid: func(value string) bool { return InvestigationPhase(value).Valid() }},
 		{name: "destination kind", valid: func(value string) bool { return DestinationKind(value).Valid() }},
+		{name: "request shape", valid: func(value string) bool { return RequestShape(value).Valid() }},
 	}
 
 	for _, test := range tests {
@@ -51,26 +52,36 @@ func TestIntentValidatesOperationCoherenceAndBounds(t *testing.T) {
 	t.Parallel()
 
 	valid := Intent{
-		Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill",
+		RequestShape: RequestShapeSingleTarget,
+		Kind:         IntentKindChange, Operation: OperationMove, SubjectMention: "drill",
 		DestinationPath: []string{"garage", "cabinet"}, DestinationKinds: []DestinationKind{DestinationKindLocation, DestinationKindContainer},
 	}
 	if err := valid.Validate(); err != nil {
 		t.Fatalf("expected valid move intent, got %v", err)
+	}
+	for _, shape := range []RequestShape{RequestShapeCollectionTarget, RequestShapeCompound} {
+		unsupported := Intent{RequestShape: shape, Kind: IntentKindUnsupported, Operation: OperationUnsupported, SubjectMention: "requested change"}
+		if err := unsupported.Validate(); err != nil {
+			t.Fatalf("expected canonical unsupported %s intent, got %v", shape, err)
+		}
 	}
 
 	tests := []struct {
 		name   string
 		intent Intent
 	}{
-		{name: "read kind with write operation", intent: Intent{Kind: IntentKindRead, Operation: OperationMove, SubjectMention: "drill"}},
-		{name: "move without destination", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill"}},
-		{name: "create without subject", intent: Intent{Kind: IntentKindChange, Operation: OperationCreate, NewAssetKind: "item"}},
-		{name: "unsupported asset kind", intent: Intent{Kind: IntentKindChange, Operation: OperationCreate, SubjectMention: "charger", NewAssetKind: "vehicle"}},
-		{name: "too many destination segments", intent: Intent{Kind: IntentKindChange, Operation: OperationCreate, SubjectMention: "charger", DestinationPath: []string{"a", "b", "c", "d", "e", "f", "g"}}},
-		{name: "missing destination kind", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"toolbox"}}},
-		{name: "extra destination kind", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"garage"}, DestinationKinds: []DestinationKind{DestinationKindLocation, DestinationKindContainer}}},
-		{name: "item destination kind", intent: Intent{Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"toolbox"}, DestinationKinds: []DestinationKind{"item"}}},
-		{name: "unbounded details", intent: Intent{Kind: IntentKindChange, Operation: OperationCheckout, SubjectMention: "drill", Details: strings.Repeat("x", MaxInvestigationDetailRunes+1)}},
+		{name: "unknown request shape", intent: Intent{RequestShape: "provider_specific", Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "drill"}},
+		{name: "read kind with write operation", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindRead, Operation: OperationMove, SubjectMention: "drill"}},
+		{name: "collection mutation", intent: Intent{RequestShape: RequestShapeCollectionTarget, Kind: IntentKindChange, Operation: OperationArchive, SubjectMention: "tools"}},
+		{name: "compound supported operation", intent: Intent{RequestShape: RequestShapeCompound, Kind: IntentKindChange, Operation: OperationArchive, SubjectMention: "drill"}},
+		{name: "move without destination", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill"}},
+		{name: "create without subject", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationCreate, NewAssetKind: "item"}},
+		{name: "unsupported asset kind", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationCreate, SubjectMention: "charger", NewAssetKind: "vehicle"}},
+		{name: "too many destination segments", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationCreate, SubjectMention: "charger", DestinationPath: []string{"a", "b", "c", "d", "e", "f", "g"}}},
+		{name: "missing destination kind", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"toolbox"}}},
+		{name: "extra destination kind", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"garage"}, DestinationKinds: []DestinationKind{DestinationKindLocation, DestinationKindContainer}}},
+		{name: "item destination kind", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "drill", DestinationPath: []string{"toolbox"}, DestinationKinds: []DestinationKind{"item"}}},
+		{name: "unbounded details", intent: Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindChange, Operation: OperationCheckout, SubjectMention: "drill", Details: strings.Repeat("x", MaxInvestigationDetailRunes+1)}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -79,6 +90,20 @@ func TestIntentValidatesOperationCoherenceAndBounds(t *testing.T) {
 				t.Fatalf("expected invalid intent %+v", test.intent)
 			}
 		})
+	}
+}
+
+func TestCanonicalizeIntentDerivesUnsupportedFromUnsafeRequestShape(t *testing.T) {
+	t.Parallel()
+
+	for _, intent := range []Intent{
+		{RequestShape: RequestShapeCollectionTarget, Kind: IntentKindChange, Operation: OperationMove, SubjectMention: "tools", DestinationPath: []string{"garage"}, DestinationKinds: []DestinationKind{DestinationKindLocation}},
+		{RequestShape: RequestShapeCompound, Kind: IntentKindChange, Operation: OperationArchive, SubjectMention: "drill"},
+	} {
+		canonical := CanonicalizeIntent(intent)
+		if canonical.RequestShape != intent.RequestShape || canonical.Operation != OperationUnsupported || canonical.Kind != IntentKindUnsupported || len(canonical.DestinationPath) != 0 {
+			t.Fatalf("canonical unsafe shape = %+v", canonical)
+		}
 	}
 }
 
@@ -181,7 +206,7 @@ func TestResolutionEnforcesStatusCandidateCardinality(t *testing.T) {
 func TestInvestigationInputValidatesPhaseRoundAndEvidenceBounds(t *testing.T) {
 	t.Parallel()
 
-	intent := Intent{Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "winter clothes"}
+	intent := Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "winter clothes"}
 	input := InvestigationInput{
 		Phase:             InvestigationPhaseEvidenceAssessment,
 		PromptVersion:     "voice-investigation-v1",
@@ -247,7 +272,7 @@ func TestReadEvidenceValidatesCompletedSafeReadBounds(t *testing.T) {
 func TestInvestigationStepValidatesDecisionSpecificPayload(t *testing.T) {
 	t.Parallel()
 
-	intent := Intent{Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "winter clothes"}
+	intent := Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "winter clothes"}
 	request := SearchRequest{ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Mention: "winter clothes", SearchProbes: []string{"winter clothes"}}
 	resolution := Resolution{ReferenceKey: SemanticReferenceSubject, Status: ResolutionStrong, CandidateIDs: []string{"asset-1"}}
 

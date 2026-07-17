@@ -8,7 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-const realtimeVoiceInvestigationVersion = "voice-investigation-v1"
+const realtimeVoiceInvestigationVersion = "voice-investigation-v2"
 
 func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, continueAfterClarification bool, emit RealtimeVoiceEventSink) error {
 	vocabulary, vocabularyCatalog, err := a.loadRealtimeVoiceVocabulary(ctx, session.TenantID, session.InventoryID)
@@ -23,6 +23,13 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 	step, err := a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, initialInput, nil, emit)
 	if err != nil {
 		return err
+	}
+	if step.Intent.Operation == agentmodel.OperationUnsupported {
+		response, responseErr := realtimeVoiceInvestigationResponse(step.Intent, nil, nil)
+		if responseErr != nil {
+			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
+		}
+		return a.completeRealtimeVoiceResponse(ctx, session, response, nil, nil, emit, continueAfterClarification)
 	}
 	vocabularyDefinitions, err := vocabularyCatalog.resolve(step.VocabularyRequests)
 	if err != nil {
@@ -130,7 +137,11 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 		}
 		return agentmodel.InvestigationStep{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 	}
-	if turn.Investigation == nil || turn.Investigation.Validate() != nil {
+	if turn.Investigation == nil || turn.Investigation.Intent.RequestShape == "" {
+		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+	}
+	turn.Investigation.Intent = agentmodel.CanonicalizeIntent(turn.Investigation.Intent)
+	if turn.Investigation.Validate() != nil {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	if err := emitRealtimeVoiceInvestigationDiagnostic(session, investigation, *turn.Investigation, emit); err != nil {
