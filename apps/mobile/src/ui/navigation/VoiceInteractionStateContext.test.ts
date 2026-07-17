@@ -103,7 +103,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       tenantName: 'Home tenant',
       inventoryName: 'Home',
       progressLabel: 'Done',
-      responseKind: 'answer',
+      responseKind: 'answer' as const,
       debugEvents: []
     };
     expect(refreshClarificationFollowUpAvailability(answerState, false)).toBe(answerState);

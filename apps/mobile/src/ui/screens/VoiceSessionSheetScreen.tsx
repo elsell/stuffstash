@@ -433,12 +433,12 @@ function VoiceSessionSheet({
                 <View style={styles.responseIcon}>
                   <MessageCircle color={palette.accentStrong} size={18} strokeWidth={2.4} />
                 </View>
-                <Text style={styles.responseText}>{session.response}</Text>
+                <Text accessibilityLiveRegion="polite" style={styles.responseText}>{session.response}</Text>
               </View>
             ) : null}
 
             {state.realtime?.errorMessage ? (
-              <View style={styles.errorSection}>
+              <View accessibilityLiveRegion="assertive" style={styles.errorSection}>
                 <Text style={styles.sectionLabel}>Voice failed</Text>
                 <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
                 {session.recoveryAction?.target === 'provider_profiles' ? (
@@ -492,7 +492,7 @@ function VoiceSessionSheet({
               bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
             ]}>
               <View style={styles.progressGroup}>
-                <Text style={styles.progressTitle}>{session.progressLabel}</Text>
+                <Text accessibilityLiveRegion="polite" style={styles.progressTitle}>{session.progressLabel}</Text>
                 <Text
                   numberOfLines={bottomAction.kind === 'review_decision' ? 1 : 2}
                   style={styles.progressHint}
