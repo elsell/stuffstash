@@ -328,10 +328,38 @@ func TestGeminiInvestigationPromptDefinesGeneralContainmentAndCustodySemantics(t
 		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
 		Transcript: "generated request", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
 	}})
-	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "Imperative return", "past-tense location question", "placement verb alone", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
+	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "imperative return", "return operation", "past-tense location question", "placement verb alone", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
 		if !strings.Contains(prompt, rule) {
 			t.Fatalf("prompt is missing general rule %q: %s", rule, prompt)
 		}
+	}
+}
+
+func TestParseGeminiInvestigationTurnDerivesLifecycleTransitionDiscoveryScope(t *testing.T) {
+	t.Parallel()
+
+	for _, operation := range []string{"archive", "restore"} {
+		raw := `{"decision":"search","intent":{"kind":"change","operation":"` + operation + `","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search lifecycle subject."}`
+		turn, err := parseGeminiInvestigationTurn(raw)
+		if err != nil {
+			t.Fatalf("parse %s scope: %v", operation, err)
+		}
+		if got := turn.Investigation.SearchRequests[0].LifecycleScope; got != agentmodel.LifecycleScopeAll {
+			t.Fatalf("%s subject scope = %q, want all", operation, got)
+		}
+	}
+}
+
+func TestParseGeminiInvestigationTurnDoesNotRewriteLifecycleScopeOnIDReads(t *testing.T) {
+	t.Parallel()
+
+	raw := `{"decision":"search_again","intent":{"kind":"change","operation":"archive","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"asset_detail","mention":"drill","kindHint":"item","visibleAssetId":"drill-1","searchProbes":[],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Read visible detail."}`
+	turn, err := parseGeminiInvestigationTurn(raw)
+	if err != nil {
+		t.Fatalf("parse id read scope: %v", err)
+	}
+	if got := turn.Investigation.SearchRequests[0].LifecycleScope; got != agentmodel.LifecycleScopeActive {
+		t.Fatalf("id read scope = %q, want provider-selected active scope", got)
 	}
 }
 

@@ -18,7 +18,7 @@ Interpret imperfect speech and propose narrow evidence reads. Speech may contain
 
 Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
 
-Imperative return, check in, and check out language is a change request, never locate. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
+An imperative return or check in instruction selects the return operation, never locate. An imperative check out instruction selects the checkout operation. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
 
 A past-tense location question about where someone put, left, stored, or stashed an existing subject is locate. An imperative instruction to put, move, store, or stash a subject at a named destination is a change. A placement verb alone does not make a question a move.
 
@@ -147,6 +147,11 @@ func canonicalizeGeminiInvestigationReads(intent agentmodel.Intent, requests []a
 			request.SearchProbes = nil
 		default:
 			request.SearchProbes = nil
+		}
+		if request.ReferenceKey == agentmodel.SemanticReferenceSubject &&
+			(request.ReadKind == agentmodel.InvestigationReadSearchAssets || request.ReadKind == agentmodel.InvestigationReadListInventory || request.ReadKind == agentmodel.InvestigationReadListContents) &&
+			(intent.Operation == agentmodel.OperationArchive || intent.Operation == agentmodel.OperationRestore) {
+			request.LifecycleScope = agentmodel.LifecycleScopeAll
 		}
 		if intent.Operation == agentmodel.OperationCreate || intent.Operation == agentmodel.OperationMove || request.ReferenceKey == agentmodel.SemanticReferenceSubject {
 			canonical = append(canonical, request)
