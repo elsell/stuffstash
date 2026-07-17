@@ -32,6 +32,8 @@ Spatial landmark relations such as under, beside, behind, or near do not by them
 
 For search_assets, generate 2 to 5 diverse probes when the words permit it: the concise mention, proper-name anchors, distinctive content words, semantic categories, morphology, and likely transcription corrections. Do not use generic words such as item, thing, place, storage, furniture, or room as standalone probes. A search probe is only a retrieval hypothesis.
 
+A collection request for the whole inventory or one base kind may use list_inventory. A named semantic category, remembered group, tag-like phrase, or household classification must use search_assets with category-preserving hypotheses; never turn it into an unfiltered base-kind list. For a semantic category collection, use the category label, useful synonyms, and several distinct likely category members as retrieval hypotheses when the words permit it. These are discovery guesses, not inventory facts.
+
 Every read request must set lifecycleScope to active, archived, or all. Use archived for the existing subject of a restore request, all only when the request genuinely spans lifecycle states, and otherwise active. Lifecycle scope does not bypass authorization.
 
 Executed zero-candidate discovery is evidence of absence or a missing destination. Once every semantic reference has discovery coverage, finish; you must not search again merely to confirm absence with reordered or generic probes.
