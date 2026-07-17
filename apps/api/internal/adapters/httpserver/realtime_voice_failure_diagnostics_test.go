@@ -42,12 +42,12 @@ func TestRealtimeVoiceQueryStreamsSanitizedLanguageFailureDiagnosticBeforeFailur
 		t.Fatalf("expected language failure diagnostic before session.failed, got %+v", events)
 	}
 	detail, _ := events[diagnosticIndex]["detail"].(string)
-	for _, required := range []string{`"turn": 2`, `"previousTurns": 1`, `"toolResultCount": 2`, "search_authorized_assets", "provider_http_status_429"} {
+	for _, required := range []string{`"phase": "evidence_assessment"`, `"evidenceRound": 1`, `"maxEvidenceRounds": 2`, `"previousRequestCount": 2`, `"toolResultCount": 2`, "search_authorized_assets", "provider_http_status_429"} {
 		if !strings.Contains(detail, required) {
 			t.Fatalf("expected diagnostic detail to include %q, got %s", required, detail)
 		}
 	}
-	if strings.Contains(detail, "provider.invalid") || strings.Contains(detail, "should-not-leak") || strings.Contains(strings.ToLower(detail), "bearer ") {
+	if strings.Contains(detail, "provider.invalid") || strings.Contains(detail, "should-not-leak") || strings.Contains(strings.ToLower(detail), "bearer ") || strings.Contains(detail, "finalOnly") || strings.Contains(detail, "previousTurns") {
 		t.Fatalf("diagnostic leaked unsafe provider detail: %s", detail)
 	}
 }

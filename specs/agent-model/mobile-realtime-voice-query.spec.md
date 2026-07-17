@@ -643,6 +643,8 @@ Developer diagnostics must not include raw audio bytes, provider credentials, be
 
 Developer diagnostics should make the loop understandable without drowning out state changes. Each investigation call may identify its phase, evidence round, safe typed outcome, and bounded counts. Versions must use a restricted character set and length before emission. Diagnostics must remain bounded and provider-independent.
 
+Language-inference failure diagnostics must use the same bounded investigation-input metadata as successful calls: phase, evidence round, maximum evidence rounds, safe prompt and schema versions, and bounded request, observation, read-evidence, vocabulary, and completed-read counts. They must not retain superseded provider-loop concepts such as `finalOnly`, `previousTurns`, raw model turns, or provider-authored tool results.
+
 Tool progress events must not include raw model reasoning, raw prompts, raw transcript text, raw query text, raw tool inputs, raw tool outputs, resource identifiers, exact resource titles, hidden IDs, result counts that can reveal hidden inventory data, credentials, bearer tokens, provider responses, authorization decisions, or stack traces.
 
 ## Structured Final Response

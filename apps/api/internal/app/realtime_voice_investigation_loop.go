@@ -112,7 +112,7 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 		PreviousTurns:  investigation.EvidenceRound, Investigation: &investigation,
 	})
 	if err != nil {
-		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, investigation.EvidenceRound+1, false, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
+		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, investigation, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
 			return agentmodel.InvestigationStep{}, diagnosticErr
 		}
 		return agentmodel.InvestigationStep{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}

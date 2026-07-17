@@ -108,12 +108,12 @@ func TestRealtimeVoiceTypedContinuationFailureRetainsSafeReadDiagnostics(t *test
 		t.Fatalf("expected language inference stage failure, got %v", err)
 	}
 	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Language provider failed")
-	for _, required := range []string{`"turn": 2`, `"previousTurns": 1`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets, "provider_http_status_429"} {
+	for _, required := range []string{`"phase": "evidence_assessment"`, `"evidenceRound": 1`, `"maxEvidenceRounds": 2`, `"previousRequestCount": 1`, `"observationCount": 1`, `"readEvidenceCount": 1`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets, "provider_http_status_429"} {
 		if !strings.Contains(diagnostic.Detail, required) {
 			t.Fatalf("expected safe continuation diagnostic to contain %q, got %s", required, diagnostic.Detail)
 		}
 	}
-	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(diagnostic.Detail, "should-not-leak") {
+	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(diagnostic.Detail, "should-not-leak") || strings.Contains(diagnostic.Detail, "finalOnly") || strings.Contains(diagnostic.Detail, "previousTurns") {
 		t.Fatalf("provider internals leaked through diagnostic: %s", diagnostic.Detail)
 	}
 }
