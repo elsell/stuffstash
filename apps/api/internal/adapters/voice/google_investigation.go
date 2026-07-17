@@ -19,9 +19,11 @@ Classify exactly one operation. Read operations are locate, exists, list_invento
 
 Imperative return, check in, and check out language is a change request, never locate. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
 
-Preserve every named destination segment in outer-to-inner containment order. Return one destinationKinds entry for every destinationPath entry in the same order: location for a place or room, container for a bin, box, cabinet, shelf, toolbox, surface, or other thing that can contain an asset. Classify the meaning expressed by the request; do not rely on a segment's array position. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
+Preserve every intended storage destination in outer-to-inner containment order; not every named noun is a destination. Return one destinationKinds entry for every destinationPath entry in the same order: location for a place or room, container for a bin, box, cabinet, shelf, toolbox, surface, or other thing that can contain an asset. Classify the meaning expressed by the request; do not rely on a segment's array position. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
 
-Normalize inside-out grammar to storage order. For X in Y, output Y before X. Resolve repeated in, under, or similar relations from the outer place toward the innermost container.
+Normalize inside-out grammar to storage order. For X in Y, output Y before X. Resolve repeated containment relations from the outer place toward the innermost container.
+
+Spatial landmark relations such as under, beside, behind, or near do not by themselves mean containment. Keep a landmark phrase with the container it distinguishes as one destination mention; the landmark does not become a separate ancestor. An explicitly enclosing place or container remains its own outer destination segment. For example, crate under the bench in the workshop becomes [workshop, crate under the bench], never [workshop, bench, crate].
 
 For search_assets, generate 2 to 5 diverse probes when the words permit it: the concise mention, proper-name anchors, distinctive content words, semantic categories, morphology, and likely transcription corrections. Do not use generic words such as item, thing, place, storage, furniture, or room as standalone probes. A search probe is only a retrieval hypothesis.
 

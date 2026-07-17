@@ -328,7 +328,7 @@ func TestGeminiInvestigationPromptDefinesGeneralContainmentAndCustodySemantics(t
 		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
 		Transcript: "generated request", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
 	}})
-	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "Imperative return", "Y before X", "must not search again merely to confirm absence"} {
+	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "Imperative return", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
 		if !strings.Contains(prompt, rule) {
 			t.Fatalf("prompt is missing general rule %q: %s", rule, prompt)
 		}
