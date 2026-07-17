@@ -89,18 +89,24 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 			return err
 		}
 		if !sameRealtimeVoiceInvestigationIntent(canonicalIntent, step.Intent) {
-			if evidenceRound == agentmodel.MaxEvidenceRounds || step.Decision != agentmodel.InvestigationDecisionSearchAgain ||
-				!realtimeVoiceDestinationRepairAllowed(transcript, canonicalIntent, step.Intent) ||
-				!realtimeVoiceDestinationRepairRequestsValid(step.Intent, step.SearchRequests) {
+			if evidenceRound < agentmodel.MaxEvidenceRounds && step.Decision == agentmodel.InvestigationDecisionSearchAgain &&
+				realtimeVoiceDestinationRepairAllowed(transcript, canonicalIntent, step.Intent) &&
+				realtimeVoiceDestinationRepairRequestsValid(step.Intent, step.SearchRequests) {
+				canonicalIntent = step.Intent
+				step.SearchRequests = realtimeVoiceDestinationRequests(step.SearchRequests)
+				requests = realtimeVoiceSubjectRequests(requests)
+				observations = realtimeVoiceSubjectObservations(observations)
+				readEvidence = realtimeVoiceSubjectReadEvidence(readEvidence)
+				readState.resetDestinationScope()
+				continue
+			}
+			completed, ok := realtimeVoiceExactOrZeroCompletion(canonicalIntent, step, observations, readEvidence)
+			if !ok {
 				return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 			}
-			canonicalIntent = step.Intent
-			step.SearchRequests = realtimeVoiceDestinationRequests(step.SearchRequests)
-			requests = realtimeVoiceSubjectRequests(requests)
-			observations = realtimeVoiceSubjectObservations(observations)
-			readEvidence = realtimeVoiceSubjectReadEvidence(readEvidence)
-			readState.resetDestinationScope()
-			continue
+			step = completed
+		} else if completed, ok := realtimeVoiceExactOrZeroCompletion(canonicalIntent, step, observations, readEvidence); ok {
+			step = completed
 		}
 		requiredRead, required, requiredErr := realtimeVoiceRequiredEvidenceRequest(canonicalIntent, step, observations, readEvidence)
 		if requiredErr != nil {
@@ -111,9 +117,6 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 				Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: canonicalIntent,
 				SearchRequests: []agentmodel.SearchRequest{requiredRead}, Rationale: "Complete operation-required typed evidence.",
 			}
-		}
-		if completed, ok := realtimeVoiceExactOrZeroCompletion(canonicalIntent, step, observations, readEvidence); ok {
-			step = completed
 		}
 		if step.Decision == agentmodel.InvestigationDecisionSearchAgain {
 			if evidenceRound == agentmodel.MaxEvidenceRounds {

@@ -1,11 +1,14 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 )
 
 func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmodel.InvestigationStep, observations []agentmodel.CandidateObservation, evidence []agentmodel.ReadEvidence) (agentmodel.InvestigationStep, bool) {
-	if step.Decision != agentmodel.InvestigationDecisionSearchAgain || (intent.Operation != agentmodel.OperationCreate && intent.Operation != agentmodel.OperationMove) {
+	if (step.Decision != agentmodel.InvestigationDecisionSearchAgain && step.Decision != agentmodel.InvestigationDecisionFinish) ||
+		(intent.Operation != agentmodel.OperationCreate && intent.Operation != agentmodel.OperationMove) {
 		return step, false
 	}
 	covered := map[agentmodel.SemanticReferenceKey]bool{}
@@ -30,6 +33,19 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 			continue
 		}
 		candidates := byReference[reference]
+		if reference != agentmodel.SemanticReferenceSubject {
+			var destinationIndex int
+			if _, err := fmt.Sscanf(reference.String(), "destination.%d", &destinationIndex); err != nil || destinationIndex < 0 || destinationIndex >= len(intent.DestinationKinds) {
+				return step, false
+			}
+			compatible := make([]agentmodel.CandidateObservation, 0, len(candidates))
+			for _, candidate := range candidates {
+				if candidate.Kind == string(intent.DestinationKinds[destinationIndex]) {
+					compatible = append(compatible, candidate)
+				}
+			}
+			candidates = compatible
+		}
 		if len(candidates) == 0 {
 			status := agentmodel.ResolutionAbsent
 			if intent.Operation == agentmodel.OperationCreate || reference != agentmodel.SemanticReferenceSubject {
