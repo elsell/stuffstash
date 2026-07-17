@@ -24,6 +24,7 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 	}
 	resolutions := make([]agentmodel.Resolution, 0, len(realtimeVoiceInvestigationReferenceKeys(intent)))
 	missingSuffix := false
+	destinationParentID := ""
 	for _, reference := range realtimeVoiceInvestigationReferenceKeys(intent) {
 		if !covered[reference] {
 			return step, false
@@ -33,6 +34,31 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 			continue
 		}
 		candidates := byReference[reference]
+		mention := realtimeVoiceInvestigationReferenceMention(intent, reference)
+		if reference == agentmodel.SemanticReferenceSubject && intent.Operation == agentmodel.OperationCreate {
+			exactIDs := make([]string, 0, 1)
+			for _, candidate := range candidates {
+				if realtimeVoiceInvestigationTitleMatchesMention(candidate.Title, mention) {
+					exactIDs = append(exactIDs, candidate.CandidateID)
+				}
+			}
+			switch len(exactIDs) {
+			case 0:
+				resolutions = append(resolutions, agentmodel.Resolution{
+					ReferenceKey: reference, Status: agentmodel.ResolutionMissing,
+					Evidence: "Executed authorized discovery returned no exact normalized-title candidate for the proposed create subject.",
+				})
+				continue
+			case 1:
+				resolutions = append(resolutions, agentmodel.Resolution{
+					ReferenceKey: reference, Status: agentmodel.ResolutionStrong, CandidateIDs: exactIDs,
+					Evidence: "The application selected the sole authorized exact normalized title match for this reference.",
+				})
+				continue
+			default:
+				return step, false
+			}
+		}
 		if reference != agentmodel.SemanticReferenceSubject {
 			var destinationIndex int
 			if _, err := fmt.Sscanf(reference.String(), "destination.%d", &destinationIndex); err != nil || destinationIndex < 0 || destinationIndex >= len(intent.DestinationKinds) {
@@ -40,7 +66,9 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 			}
 			compatible := make([]agentmodel.CandidateObservation, 0, len(candidates))
 			for _, candidate := range candidates {
-				if candidate.Kind == string(intent.DestinationKinds[destinationIndex]) {
+				correctKind := candidate.Kind == string(intent.DestinationKinds[destinationIndex])
+				correctParent := destinationIndex == 0 || (destinationParentID != "" && candidate.ParentAssetID == destinationParentID)
+				if correctKind && correctParent {
 					compatible = append(compatible, candidate)
 				}
 			}
@@ -57,7 +85,6 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 			}
 			continue
 		}
-		mention := realtimeVoiceInvestigationReferenceMention(intent, reference)
 		exactID := ""
 		for _, candidate := range candidates {
 			if !realtimeVoiceInvestigationTitleMatchesMention(candidate.Title, mention) {
@@ -75,6 +102,9 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 			ReferenceKey: reference, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{exactID},
 			Evidence: "The application selected the sole authorized exact normalized title match for this reference.",
 		})
+		if reference != agentmodel.SemanticReferenceSubject {
+			destinationParentID = exactID
+		}
 	}
 	completed := agentmodel.InvestigationStep{
 		Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: resolutions,

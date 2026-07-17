@@ -20,8 +20,18 @@ func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports
 	a.realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
 		SpeechToText:      stt,
 		LanguageInference: lm,
+		ResponseGenerator: a.voiceResponseGenerator,
 		TextToSpeech:      tts,
 	}}
+	return a
+}
+
+func (a App) WithRealtimeVoiceResponseGenerator(generator ports.VoiceResponseGenerator) App {
+	a.voiceResponseGenerator = generator
+	if resolver, ok := a.realtimeVoiceProviders.(staticRealtimeVoiceProviderResolver); ok {
+		resolver.providers.ResponseGenerator = generator
+		a.realtimeVoiceProviders = resolver
+	}
 	return a
 }
 
@@ -46,7 +56,10 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if err != nil {
 		return RealtimeVoiceSession{}, err
 	}
-	if providers.SpeechToText == nil || providers.LanguageInference == nil || providers.TextToSpeech == nil {
+	if a.voiceResponseGenerator != nil {
+		providers.ResponseGenerator = a.voiceResponseGenerator
+	}
+	if providers.SpeechToText == nil || providers.LanguageInference == nil || providers.ResponseGenerator == nil || providers.TextToSpeech == nil {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
 
@@ -69,6 +82,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		DeveloperDiagnostics:       input.DeveloperDiagnostics,
 		speechToText:               providers.SpeechToText,
 		languageInference:          providers.LanguageInference,
+		responseGenerator:          providers.ResponseGenerator,
 		textToSpeech:               providers.TextToSpeech,
 	}
 	now := a.clock.Now()
@@ -122,7 +136,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return ports.ErrInvalidProviderInput
 	}
 
-	if input.Session.speechToText == nil || input.Session.languageInference == nil || input.Session.textToSpeech == nil {
+	if input.Session.speechToText == nil || input.Session.languageInference == nil || input.Session.responseGenerator == nil || input.Session.textToSpeech == nil {
 		return apperrors.ErrInvalidInput
 	}
 	if err := a.ensureRealtimeVoiceAccess(ctx, input.Session.Principal, input.Session.TenantID, input.Session.InventoryID); err != nil {

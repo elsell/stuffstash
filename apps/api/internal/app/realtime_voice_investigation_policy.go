@@ -72,6 +72,7 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		}
 		mention := realtimeVoiceInvestigationReferenceMention(canonicalIntent, reference)
 		resolution = realtimeVoiceExactTitleResolution(mention, resolution, byReference[reference])
+		resolution = realtimeVoiceCalibratedStrongResolution(mention, resolution, byReference[reference])
 		for _, candidateID := range resolution.CandidateIDs {
 			candidate := byReference[reference][candidateID]
 			if !realtimeVoiceLifecycleScopeIncludes(discoveryScopes[reference], candidate.LifecycleState) {
@@ -92,6 +93,19 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	return step, nil
+}
+
+func realtimeVoiceCalibratedStrongResolution(mention string, resolution agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) agentmodel.Resolution {
+	if resolution.Status != agentmodel.ResolutionStrong || len(resolution.CandidateIDs) != 1 {
+		return resolution
+	}
+	candidate, found := candidates[resolution.CandidateIDs[0]]
+	if !found || realtimeVoiceInvestigationTitleMatchesMention(candidate.Title, mention) {
+		return resolution
+	}
+	resolution.Status = agentmodel.ResolutionPlausible
+	resolution.Evidence = "The application calibrated the sole authorized non-exact title match as plausible."
+	return resolution
 }
 
 func canonicalRealtimeVoiceContentsResolution(resolution agentmodel.Resolution, observations []agentmodel.CandidateObservation, evidence []agentmodel.ReadEvidence) agentmodel.Resolution {
@@ -284,9 +298,12 @@ func missingRealtimeVoiceDestinationResolution(reference agentmodel.SemanticRefe
 	return agentmodel.Resolution{ReferenceKey: reference, Status: agentmodel.ResolutionMissing, Evidence: "No authorized candidate forms the requested destination chain."}
 }
 
-func realtimeVoiceInvestigationResponse(intent agentmodel.Intent, resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) (ports.StructuredAgentResponse, error) {
+func realtimeVoiceInvestigationResponseBrief(intent agentmodel.Intent, resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation) (agentmodel.GroundedVoiceResponseBrief, error) {
 	if intent.Kind == agentmodel.IntentKindUnsupported || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionUnsupported) {
-		return investigationResponse(ports.StructuredAgentResponseKindUnsupportedAction, "I can't safely handle that request with inventory voice actions."), nil
+		return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+			Kind: agentmodel.ResponseBriefKindUnsupported, Mode: agentmodel.ResponseAnswerModeUnsupported,
+			Operation: agentmodel.OperationUnsupported, Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceAbsent,
+		})
 	}
 	for _, resolution := range resolutions {
 		if resolution.ReferenceKey == agentmodel.SemanticReferenceSubject || resolution.Status != agentmodel.ResolutionPlausible || len(resolution.CandidateIDs) != 1 {
@@ -294,89 +311,188 @@ func realtimeVoiceInvestigationResponse(intent agentmodel.Intent, resolutions []
 		}
 		candidate, exists := candidates[resolution.CandidateIDs[0]]
 		if !exists {
-			return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
+			return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
 		}
 		requested := realtimeVoiceInvestigationReferenceMention(intent, resolution.ReferenceKey)
-		return investigationResponse(ports.StructuredAgentResponseKindClarification, "I found "+candidate.Title+" as a possible match for "+requested+". Should I use it as the destination?"), nil
+		return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+			Kind: agentmodel.ResponseBriefKindClarification, Mode: agentmodel.ResponseAnswerModeClarify, Operation: intent.Operation,
+			Subject: requested, Confidence: agentmodel.ResponseConfidencePlausible,
+			Findings: []agentmodel.ResponseFinding{realtimeVoiceResponseFinding("finding.0", candidate)},
+		})
 	}
 	for _, resolution := range resolutions {
 		if resolution.Status == agentmodel.ResolutionAmbiguous {
-			choices := []string{}
-			for _, id := range resolution.CandidateIDs {
-				candidate, exists := candidates[id]
-				if !exists {
-					return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
-				}
-				choice := candidate.Title
-				if len(candidate.ContainmentPath) > 1 {
-					choice += " at " + strings.Join(candidate.ContainmentPath[:len(candidate.ContainmentPath)-1], " / ")
-				}
-				choices = append(choices, choice)
+			findings, truncated, err := realtimeVoiceResponseFindings(agentmodel.ResponseAnswerModeClarify, resolution.CandidateIDs, candidates)
+			if err != nil {
+				return agentmodel.GroundedVoiceResponseBrief{}, err
 			}
-			return investigationResponse(ports.StructuredAgentResponseKindClarification, "I found multiple plausible matches: "+strings.Join(choices, "; ")+". Which one did you mean?"), nil
+			return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+				Kind: agentmodel.ResponseBriefKindClarification, Mode: agentmodel.ResponseAnswerModeClarify, Operation: intent.Operation,
+				Subject: realtimeVoiceInvestigationReferenceMention(intent, resolution.ReferenceKey), Confidence: agentmodel.ResponseConfidenceAmbiguous, Findings: findings, Truncated: truncated,
+			})
 		}
 	}
 	subject, exists := realtimeVoiceInvestigationResolution(resolutions, agentmodel.SemanticReferenceSubject)
 	if !exists {
-		return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
+		return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
 	}
 	if intent.Kind == agentmodel.IntentKindChange {
 		if subject.Status == agentmodel.ResolutionAbsent {
-			return investigationResponse(ports.StructuredAgentResponseKindClarification, "I couldn't find an existing match for "+strings.TrimSpace(intent.SubjectMention)+". Please describe it another way."), nil
+			return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+				Kind: agentmodel.ResponseBriefKindClarification, Mode: agentmodel.ResponseAnswerModeClarify, Operation: intent.Operation,
+				Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceAbsent,
+			})
 		}
-		return ports.StructuredAgentResponse{}, errors.New("change intent requires action-plan compilation")
+		return agentmodel.GroundedVoiceResponseBrief{}, errors.New("change intent requires action-plan compilation")
 	}
 	if subject.Status == agentmodel.ResolutionAbsent {
-		return investigationResponse(ports.StructuredAgentResponseKindAnswer, "I couldn't find a visible match in this inventory."), nil
+		return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+			Kind: agentmodel.ResponseBriefKindAnswer, Mode: agentmodel.ResponseAnswerModeNotFound, Operation: intent.Operation,
+			Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceAbsent,
+		})
 	}
-	if subject.Status == agentmodel.ResolutionCollection {
-		titles := realtimeVoiceInvestigationCandidateTitles(subject.CandidateIDs, candidates)
-		if len(titles) == 0 {
-			return investigationResponse(ports.StructuredAgentResponseKindAnswer, "I didn't find any visible items matching that request."), nil
-		}
-		return investigationResponse(ports.StructuredAgentResponseKindAnswer, fmt.Sprintf("I found %d visible matches: %s.", len(titles), strings.Join(titles, ", "))), nil
+	mode := realtimeVoiceResponseAnswerMode(intent.Operation)
+	findings, truncated, err := realtimeVoiceResponseFindings(mode, subject.CandidateIDs, candidates)
+	if err != nil {
+		return agentmodel.GroundedVoiceResponseBrief{}, err
 	}
-	if len(subject.CandidateIDs) != 1 {
-		return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
+	confidence := agentmodel.ResponseConfidenceStrong
+	if subject.Status == agentmodel.ResolutionPlausible {
+		confidence = agentmodel.ResponseConfidencePlausible
 	}
-	candidate, exists := candidates[subject.CandidateIDs[0]]
-	if !exists {
-		return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
+	if subject.Status == agentmodel.ResolutionCollection && intent.Operation == agentmodel.OperationLocate && len(findings) == 1 && (findings[0].Kind == "container" || findings[0].Kind == "location") {
+		confidence = agentmodel.ResponseConfidencePlausible
 	}
-	var message string
-	switch intent.Operation {
+	return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+		Kind: agentmodel.ResponseBriefKindAnswer, Mode: mode, Operation: intent.Operation,
+		Subject: intent.SubjectMention, Confidence: confidence, Findings: findings, Truncated: truncated,
+	})
+}
+
+func realtimeVoiceResponseAnswerMode(operation agentmodel.Operation) agentmodel.ResponseAnswerMode {
+	switch operation {
+	case agentmodel.OperationLocate:
+		return agentmodel.ResponseAnswerModeLocate
+	case agentmodel.OperationListInventory:
+		return agentmodel.ResponseAnswerModeInventory
+	case agentmodel.OperationListContents:
+		return agentmodel.ResponseAnswerModeContents
 	case agentmodel.OperationExists:
-		message = "Yes, I found " + candidate.Title + "."
-	case agentmodel.OperationCheckoutStatus:
-		if candidate.CheckoutState == "checked_out" {
-			if len(candidate.Facts) > 0 {
-				message = candidate.Title + ": " + candidate.Facts[0] + "."
-			} else {
-				message = candidate.Title + " is currently checked out."
-			}
-		} else {
-			message = candidate.Title + " is currently available."
-		}
+		return agentmodel.ResponseAnswerModeExists
 	case agentmodel.OperationDetail:
-		message = candidate.Title + " is recorded as a " + candidate.Kind + "."
+		return agentmodel.ResponseAnswerModeDetail
 	case agentmodel.OperationAssetHistory, agentmodel.OperationCheckoutHistory:
-		if len(candidate.Facts) == 0 {
-			message = "I found no recorded history for " + candidate.Title + "."
-		} else {
-			message = candidate.Title + ": " + candidate.Facts[0] + "."
-		}
+		return agentmodel.ResponseAnswerModeHistory
+	case agentmodel.OperationCheckoutStatus:
+		return agentmodel.ResponseAnswerModeCheckout
 	default:
-		prefix := ""
-		if subject.Status == agentmodel.ResolutionPlausible {
-			prefix = "I think you mean "
-		}
-		path := strings.Join(candidate.ContainmentPath, " / ")
-		if path == "" {
-			path = candidate.Title
-		}
-		message = prefix + candidate.Title + ". Its recorded path is " + path + "."
+		return agentmodel.ResponseAnswerModeDetail
 	}
-	return investigationResponse(ports.StructuredAgentResponseKindAnswer, message), nil
+}
+
+func realtimeVoiceResponseFindings(mode agentmodel.ResponseAnswerMode, ids []string, candidates map[string]agentmodel.CandidateObservation) ([]agentmodel.ResponseFinding, bool, error) {
+	items := make([]agentmodel.CandidateObservation, 0, len(ids))
+	for _, id := range ids {
+		candidate, exists := candidates[id]
+		if !exists {
+			return nil, false, ports.ErrInvalidProviderInput
+		}
+		items = append(items, candidate)
+	}
+	sort.Slice(items, func(i, j int) bool {
+		if mode == agentmodel.ResponseAnswerModeInventory && (items[i].Kind == "item") != (items[j].Kind == "item") {
+			return items[i].Kind == "item"
+		}
+		if items[i].Title == items[j].Title {
+			return items[i].CandidateID < items[j].CandidateID
+		}
+		return items[i].Title < items[j].Title
+	})
+	findings := make([]agentmodel.ResponseFinding, 0, min(len(items), 8))
+	presentationCost := 0
+	for index, candidate := range items {
+		finding := realtimeVoiceResponseFinding(fmt.Sprintf("finding.%d", index), candidate)
+		cost := len(finding.Title)
+		if len(finding.ContainmentPath) > 1 {
+			parent := finding.ContainmentPath[len(finding.ContainmentPath)-2]
+			if !strings.EqualFold(parent, finding.Title) {
+				cost += len(parent)
+			}
+		}
+		if len(findings) > 0 && (len(findings) >= 8 || presentationCost+cost > 320) {
+			break
+		}
+		findings = append(findings, finding)
+		presentationCost += cost
+	}
+	return findings, len(findings) < len(items), nil
+}
+
+func realtimeVoiceResponseFinding(key string, candidate agentmodel.CandidateObservation) agentmodel.ResponseFinding {
+	path := candidate.ContainmentPath
+	if len(path) > 2 {
+		path = path[len(path)-2:]
+	}
+	facts := make([]string, 0, min(len(candidate.Facts), 3))
+	factCost := 0
+	factsTruncated := false
+	firstNonemptyFact := ""
+	for _, fact := range candidate.Facts {
+		fact = strings.TrimSpace(fact)
+		if fact == "" {
+			continue
+		}
+		if firstNonemptyFact == "" {
+			firstNonemptyFact = fact
+		}
+		if len(facts) >= 3 {
+			factsTruncated = true
+			break
+		}
+		if factCost+len(fact) > 180 {
+			factsTruncated = true
+			continue
+		}
+		facts = append(facts, fact)
+		factCost += len(fact)
+	}
+	if len(facts) == 0 && firstNonemptyFact != "" {
+		facts = append(facts, truncateRealtimeVoiceResponseFact(firstNonemptyFact, 180))
+		factsTruncated = true
+	}
+	return agentmodel.ResponseFinding{
+		FactKey: key, Title: candidate.Title, Kind: candidate.Kind, LifecycleState: candidate.LifecycleState, CheckoutState: candidate.CheckoutState,
+		ContainmentPath: append([]string{}, path...), Facts: facts, FactsTruncated: factsTruncated || len(facts) < len(candidate.Facts),
+	}
+}
+
+func truncateRealtimeVoiceResponseFact(value string, maxBytes int) string {
+	value = strings.TrimSpace(value)
+	if len(value) <= maxBytes {
+		return value
+	}
+	end := 0
+	for index := range value {
+		if index > maxBytes {
+			break
+		}
+		end = index
+	}
+	if end == 0 {
+		return ""
+	}
+	value = strings.TrimSpace(value[:end])
+	if wordBoundary := strings.LastIndexByte(value, ' '); wordBoundary >= maxBytes/2 {
+		value = strings.TrimSpace(value[:wordBoundary])
+	}
+	return value
+}
+
+func validatedRealtimeVoiceResponseBrief(brief agentmodel.GroundedVoiceResponseBrief) (agentmodel.GroundedVoiceResponseBrief, error) {
+	if brief.Validate() != nil {
+		return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
+	}
+	return brief, nil
 }
 
 func hasRealtimeVoicePlausibleDestination(resolutions []agentmodel.Resolution) bool {
@@ -408,15 +524,4 @@ func hasRealtimeVoiceInvestigationStatus(resolutions []agentmodel.Resolution, st
 		}
 	}
 	return false
-}
-
-func realtimeVoiceInvestigationCandidateTitles(ids []string, candidates map[string]agentmodel.CandidateObservation) []string {
-	titles := []string{}
-	for _, id := range ids {
-		if candidate, exists := candidates[id]; exists {
-			titles = append(titles, candidate.Title)
-		}
-	}
-	sort.Strings(titles)
-	return titles
 }

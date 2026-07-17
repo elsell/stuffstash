@@ -31,6 +31,10 @@ func (f GoogleProviderProfileFactory) SpeechToTextProvider(ctx context.Context, 
 }
 
 func (f GoogleProviderProfileFactory) LanguageInferenceProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
+	return f.RealtimeLanguageProvider(ctx, config)
+}
+
+func (f GoogleProviderProfileFactory) RealtimeLanguageProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error) {
 	if config.Profile.Capability != agentmodel.ProviderCapabilityLanguageInference {
 		return nil, ports.ErrInvalidProviderInput
 	}

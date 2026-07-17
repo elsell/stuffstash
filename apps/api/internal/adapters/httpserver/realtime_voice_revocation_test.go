@@ -27,7 +27,7 @@ func TestRealtimeVoiceWebSocketRechecksRevokedInventoryAccessBeforeProviderDiscl
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "owner-user"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "owner-user"}},
 		ids:         []string{"voice-session-id"},
-	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers)
+	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 	if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer-user"}, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatalf("grant viewer: %v", err)
 	}

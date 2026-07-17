@@ -30,7 +30,7 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 		ids:         []string{"garage-id", "tools-id", "voice-session-id", "tool-call-id", "response-id"},
 	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Where are my tools?"}, scriptedLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio-1"), []byte("spoken-audio-2")},
-	})
+	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Garage", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "container", "Tools", "garage-id")
 
@@ -101,7 +101,8 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "Tools. Its recorded path is Garage / Tools." {
+	spoken, _ := response["spokenResponse"].(string)
+	if !strings.Contains(strings.ToLower(spoken), "tools") || !strings.Contains(strings.ToLower(spoken), "garage") || strings.Contains(strings.ToLower(spoken), "visible match") {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if response["kind"] != "answer" {
@@ -518,7 +519,8 @@ func TestRealtimeVoiceQuerySearchResultIncludesContainingLocationForWhereQuestio
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "Water bottle. Its recorded path is Office / Water bottle." {
+	spoken, _ := response["spokenResponse"].(string)
+	if !strings.Contains(strings.ToLower(spoken), "water bottle") || !strings.Contains(strings.ToLower(spoken), "office") || strings.Contains(strings.ToLower(spoken), "visible match") {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if !strings.Contains(language.lastToolResult, "Office") || !strings.Contains(language.lastToolResult, "Water bottle") {
@@ -551,7 +553,7 @@ func TestRealtimeVoiceQueryCanListVisibleItemsInSelectedInventory(t *testing.T) 
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "I found 2 visible matches: Laptop, Water bottle." {
+	if response["spokenResponse"] != "You have Laptop and Water bottle." {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if !strings.Contains(language.lastToolResult, "Water bottle") || !strings.Contains(language.lastToolResult, "Laptop") {

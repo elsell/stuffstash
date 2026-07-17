@@ -16,7 +16,7 @@ const voiceInvestigationContract = `You are the bounded semantic investigator fo
 
 Interpret imperfect speech and propose narrow evidence reads. Speech may contain approximate titles, singular/plural errors, category substitutions, or transcription errors. You may be creative about search hypotheses, but inventory facts must come only from authorized observations.
 
-Classify request shape before operation. single_target means one operation on one subject or proposed new asset. collection_target means one operation targets an explicit set, category, universal quantification, or unbounded collection. compound means two or more requested operations, including sequential operations on one subject. Collection reads may be supported. Every collection-targeted change and compound request is unsupported; never keep only one change from a compound request.
+Classify request shape before operation. Request shape describes how many subjects the user targets, not how many records an answer may contain. single_target means one operation on one subject or proposed new asset. A list_contents question about one named location or container is single_target even though its answer may contain many items. collection_target means one operation targets an explicit set, category, universal quantification, unbounded collection, or the inventory as a whole; list_inventory is collection_target. compound means two or more requested operations, including sequential operations on one subject. Collection reads may be supported. Every collection-targeted change and compound request is unsupported; never keep only one change from a compound request.
 
 Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
 
@@ -281,7 +281,7 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		operationDescription += " It must exactly preserve canonicalIntent.operation."
 	}
 	intent := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
-		"requestShape":    {Type: "string", Enum: []string{"single_target", "collection_target", "compound"}, Description: "Classify independently of operation: one operation on one subject is single_target; one operation over a set or collection is collection_target; two or more requested operations is compound."},
+		"requestShape":    {Type: "string", Enum: []string{"single_target", "collection_target", "compound"}, Description: "Count targeted subjects, not answer records: list_contents of one named place is single_target; list_inventory or a category/set is collection_target; two or more operations is compound."},
 		"kind":            {Type: "string", Enum: []string{"read", "change", "unsupported"}},
 		"operation":       {Type: "string", Enum: []string{"locate", "exists", "list_inventory", "list_contents", "detail", "checkout_status", "asset_history", "checkout_history", "create", "move", "archive", "restore", "checkout", "return", "unsupported"}, Description: operationDescription},
 		"subjectMention":  {Type: "string"},

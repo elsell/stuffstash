@@ -50,6 +50,31 @@ func TestRealtimeVoiceExactOrZeroCompletionIgnoresWrongKindDestinationDistractor
 	}
 }
 
+func TestRealtimeVoiceExactOrZeroCompletionTreatsNonExactCreateSubjectCandidatesAsDistractors(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate,
+		SubjectMention: "Apple TV remote", NewAssetKind: "item", DestinationPath: []string{"Living room", "Box under the TV"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer},
+	}
+	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: intent}
+	completed, ok := realtimeVoiceExactOrZeroCompletion(intent, step,
+		[]agentmodel.CandidateObservation{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "tv", Title: "Television", Kind: "item"},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", CandidateID: "living-room", Title: "Living room", Kind: "location"},
+			{EvidenceRound: 1, ReferenceKey: "destination.1", CandidateID: "toolbox", Title: "Toolbox", Kind: "container", ParentAssetID: "garage"},
+		},
+		[]agentmodel.ReadEvidence{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "apple tv remote", CandidateCount: 1},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "living room", CandidateCount: 1},
+			{EvidenceRound: 1, ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "box under the tv", CandidateCount: 1},
+		},
+	)
+	if !ok || len(completed.Resolutions) != 3 || completed.Resolutions[0].Status != agentmodel.ResolutionMissing || completed.Resolutions[1].Status != agentmodel.ResolutionStrong || completed.Resolutions[2].Status != agentmodel.ResolutionMissing {
+		t.Fatalf("expected missing create subject and nested destination with exact parent, got ok=%t step=%+v", ok, completed)
+	}
+}
+
 func TestRealtimeVoiceExactOrZeroCompletionDoesNotPromoteFuzzySameKindDestination(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{

@@ -31,7 +31,7 @@ func (r staticRealtimeVoiceProviderResolver) ResolveRealtimeVoiceProviders(conte
 	return r.providers, nil
 }
 
-func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.SpeechToTextProvider, ports.LanguageInferenceProvider, ports.TextToSpeechProvider, error) {
+func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.SpeechToTextProvider, ports.RealtimeLanguageProvider, ports.TextToSpeechProvider, error) {
 	if cfg.VoiceGoogleEnabled {
 		if err := validateGoogleVoiceConfig(cfg); err != nil {
 			return nil, nil, nil, err
@@ -62,7 +62,7 @@ func buildRealtimeVoiceProviders(ctx context.Context, cfg config.Config) (ports.
 	return nil, nil, nil, nil
 }
 
-func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource oauth2.TokenSource) (ports.SpeechToTextProvider, ports.LanguageInferenceProvider, ports.TextToSpeechProvider, error) {
+func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource oauth2.TokenSource) (ports.SpeechToTextProvider, ports.RealtimeLanguageProvider, ports.TextToSpeechProvider, error) {
 	if !cfg.VoiceGoogleEnabled {
 		if cfg.VoiceDevFakeEnabled {
 			return voice.DevFakeSpeechToText{}, voice.DevFakeLanguageInference{}, voice.DevFakeTextToSpeech{}, nil
@@ -91,11 +91,12 @@ func buildRealtimeVoiceProvidersWithTokenSource(cfg config.Config, tokenSource o
 		}), nil
 }
 
-func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories repositories, vault ports.ProviderCredentialVault, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) ports.RealtimeVoiceProviderResolver {
+func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories repositories, vault ports.ProviderCredentialVault, stt ports.SpeechToTextProvider, lm ports.RealtimeLanguageProvider, tts ports.TextToSpeechProvider) ports.RealtimeVoiceProviderResolver {
 	if stt != nil && lm != nil && tts != nil {
 		return staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
 			SpeechToText:      stt,
 			LanguageInference: lm,
+			ResponseGenerator: lm,
 			TextToSpeech:      tts,
 		}}
 	}

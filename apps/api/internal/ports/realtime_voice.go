@@ -37,6 +37,15 @@ type LanguageInferenceProvider interface {
 	NextTurn(ctx context.Context, input LanguageInferenceInput) (LanguageInferenceTurn, error)
 }
 
+type VoiceResponseGenerator interface {
+	GenerateResponse(ctx context.Context, input VoiceResponseGenerationInput) (VoiceResponseGenerationResult, error)
+}
+
+type RealtimeLanguageProvider interface {
+	LanguageInferenceProvider
+	VoiceResponseGenerator
+}
+
 type LanguageInferenceProviderProbe interface {
 	ProbeLanguageInference(ctx context.Context) error
 }
@@ -67,6 +76,18 @@ type AgentConversationTurn struct {
 
 type LanguageInferenceTurn struct {
 	Investigation *agentmodel.InvestigationStep
+}
+
+type VoiceResponseGenerationInput struct {
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Principal   identity.Principal
+	Brief       agentmodel.GroundedVoiceResponseBrief
+}
+
+type VoiceResponseGenerationResult struct {
+	SpokenResponse  string `json:"spokenResponse"`
+	DisplayResponse string `json:"displayResponse"`
 }
 
 type AgentToolCall struct {
@@ -143,6 +164,7 @@ type RealtimeVoiceProviderSet struct {
 	LanguagePromptTemplate     string
 	SpeechToText               SpeechToTextProvider
 	LanguageInference          LanguageInferenceProvider
+	ResponseGenerator          VoiceResponseGenerator
 	TextToSpeech               TextToSpeechProvider
 }
 

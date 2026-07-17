@@ -81,6 +81,7 @@ type App struct {
 	providerProfileService       agentmodelapp.Service
 	speechToText                 ports.SpeechToTextProvider
 	languageInference            ports.LanguageInferenceProvider
+	voiceResponseGenerator       ports.VoiceResponseGenerator
 	textToSpeech                 ports.TextToSpeechProvider
 	realtimeVoiceProviders       ports.RealtimeVoiceProviderResolver
 	thumbnailWarmState           *primaryThumbnailWarmState
@@ -152,6 +153,7 @@ type Dependencies struct {
 	RealtimeVoiceToolCallTimeout     time.Duration
 	SpeechToText                     ports.SpeechToTextProvider
 	LanguageInference                ports.LanguageInferenceProvider
+	VoiceResponseGenerator           ports.VoiceResponseGenerator
 	TextToSpeech                     ports.TextToSpeechProvider
 	RealtimeVoiceProviderResolver    ports.RealtimeVoiceProviderResolver
 }
@@ -173,10 +175,11 @@ func New(deps Dependencies) App {
 	defaultPageLimit := normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit)
 	primaryThumbnailWarmConcurrency := normalizePrimaryThumbnailWarmConcurrency(deps.PrimaryThumbnailWarmConcurrency)
 	realtimeVoiceProviders := deps.RealtimeVoiceProviderResolver
-	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.LanguageInference != nil && deps.TextToSpeech != nil {
+	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.LanguageInference != nil && deps.VoiceResponseGenerator != nil && deps.TextToSpeech != nil {
 		realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
 			SpeechToText:      deps.SpeechToText,
 			LanguageInference: deps.LanguageInference,
+			ResponseGenerator: deps.VoiceResponseGenerator,
 			TextToSpeech:      deps.TextToSpeech,
 		}}
 	}
@@ -244,6 +247,7 @@ func New(deps Dependencies) App {
 		realtimeVoiceToolCallTimeout: normalizeRealtimeVoiceToolCallTimeout(deps.RealtimeVoiceToolCallTimeout),
 		speechToText:                 deps.SpeechToText,
 		languageInference:            deps.LanguageInference,
+		voiceResponseGenerator:       deps.VoiceResponseGenerator,
 		textToSpeech:                 deps.TextToSpeech,
 		realtimeVoiceProviders:       realtimeVoiceProviders,
 		thumbnailWarmState:           newPrimaryThumbnailWarmState(primaryThumbnailWarmConcurrency),

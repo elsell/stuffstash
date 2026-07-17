@@ -135,6 +135,7 @@ func successfulRealtimeVoiceResolver() *fakeRealtimeVoiceProviderResolver {
 			LanguagePromptTemplate:     "Prefer concise spoken answers.",
 			SpeechToText:               resolvedSpeechToText{transcript: "Where are my tools?"},
 			LanguageInference:          &resolvedLanguageInference{},
+			ResponseGenerator:          &resolvedLanguageInference{},
 			TextToSpeech:               &resolvedTextToSpeech{},
 		},
 	}

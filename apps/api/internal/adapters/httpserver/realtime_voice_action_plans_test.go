@@ -315,7 +315,7 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 		},
 	}, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Restore the water bottle."}, restoreActionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
-	})
+	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
 	if _, err := application.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{

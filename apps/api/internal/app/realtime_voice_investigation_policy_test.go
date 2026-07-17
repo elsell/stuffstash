@@ -1,11 +1,11 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
-	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestRealtimeVoiceInvestigationPolicyMakesSoleExactTitleDominateDistractors(t *testing.T) {
@@ -27,6 +27,23 @@ func TestRealtimeVoiceInvestigationPolicyMakesSoleExactTitleDominateDistractors(
 	resolution := canonical.Resolutions[0]
 	if resolution.Status != agentmodel.ResolutionStrong || len(resolution.CandidateIDs) != 1 || resolution.CandidateIDs[0] != "exact" {
 		t.Fatalf("expected sole exact title to dominate, got %+v", resolution)
+	}
+}
+
+func TestRealtimeVoiceInvestigationPolicyDowngradesNonExactStrongMatch(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
+	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
+		ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"toolbox"},
+	}}}
+	observations := []agentmodel.CandidateObservation{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "toolbox", Title: "Toolbox", Kind: "container", ContainmentPath: []string{"Garage", "Toolbox"}}}
+	evidence := []agentmodel.ReadEvidence{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "tools", CandidateCount: 1}}
+	canonical, err := canonicalRealtimeVoiceInvestigationStep(intent, step, observations, evidence)
+	if err != nil {
+		t.Fatalf("canonicalize terminal step: %v", err)
+	}
+	if canonical.Resolutions[0].Status != agentmodel.ResolutionPlausible {
+		t.Fatalf("expected non-exact strong match to be calibrated as plausible, got %+v", canonical.Resolutions[0])
 	}
 }
 
@@ -103,14 +120,14 @@ func TestRealtimeVoiceInvestigationPolicyRequiresClarificationForPlausibleWriteD
 	if err != nil {
 		t.Fatalf("canonicalize terminal step: %v", err)
 	}
-	response, err := realtimeVoiceInvestigationResponse(canonical.Intent, canonical.Resolutions, map[string]agentmodel.CandidateObservation{
+	brief, err := realtimeVoiceInvestigationResponseBrief(canonical.Intent, canonical.Resolutions, map[string]agentmodel.CandidateObservation{
 		"drill": observations[0], "rehearsal-room": observations[1],
 	})
 	if err != nil {
 		t.Fatalf("build clarification: %v", err)
 	}
-	if response.Kind != ports.StructuredAgentResponseKindClarification || !strings.Contains(response.DisplayResponse, "Rehearsal Room") || !strings.Contains(response.DisplayResponse, "Live Room") {
-		t.Fatalf("expected plausible write destination to require explicit clarification, got %+v", response)
+	if brief.Kind != agentmodel.ResponseBriefKindClarification || brief.Subject != "Live Room" || len(brief.Findings) != 1 || brief.Findings[0].Title != "Rehearsal Room" {
+		t.Fatalf("expected plausible write destination to require explicit clarification, got %+v", brief)
 	}
 }
 
@@ -264,23 +281,165 @@ func TestRealtimeVoiceInvestigationResponseCalibratesPlausibleMatch(t *testing.T
 	candidates := map[string]agentmodel.CandidateObservation{"clothes": {
 		EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "clothes", Title: "Sarah Winter Clothes and Shoes", Kind: "container", ContainmentPath: []string{"Basement", "Storage room", "Sarah Winter Clothes and Shoes"},
 	}}
-	response, err := realtimeVoiceInvestigationResponse(intent, resolutions, candidates)
+	brief, err := realtimeVoiceInvestigationResponseBrief(intent, resolutions, candidates)
 	if err != nil {
 		t.Fatalf("render response: %v", err)
 	}
-	if response.Kind != ports.StructuredAgentResponseKindAnswer || response.SpokenResponse != "I think you mean Sarah Winter Clothes and Shoes. Its recorded path is Basement / Storage room / Sarah Winter Clothes and Shoes." {
-		t.Fatalf("unexpected calibrated response: %+v", response)
+	if brief.Kind != agentmodel.ResponseBriefKindAnswer || brief.Confidence != agentmodel.ResponseConfidencePlausible || brief.Mode != agentmodel.ResponseAnswerModeLocate {
+		t.Fatalf("unexpected calibrated brief: %+v", brief)
+	}
+}
+
+func TestRealtimeVoiceInvestigationResponseAnswersWhereCollectionIs(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeCollectionTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
+	resolutions := []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection, CandidateIDs: []string{"toolbox"}}}
+	candidates := map[string]agentmodel.CandidateObservation{"toolbox": {
+		EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "toolbox", Title: "Toolbox", Kind: "container", ContainmentPath: []string{"Garage", "Toolbox"},
+	}}
+	brief, err := realtimeVoiceInvestigationResponseBrief(intent, resolutions, candidates)
+	if err != nil {
+		t.Fatalf("render response: %v", err)
+	}
+	if brief.Mode != agentmodel.ResponseAnswerModeLocate || brief.Confidence != agentmodel.ResponseConfidencePlausible || len(brief.Findings) != 1 || brief.Findings[0].Title != "Toolbox" {
+		t.Fatalf("expected grounded collection location brief, got %+v", brief)
+	}
+}
+
+func TestRealtimeVoiceInvestigationResponsePreservesDifferentCollectionLocations(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeCollectionTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
+	resolutions := []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection, CandidateIDs: []string{"drill", "shears"}}}
+	candidates := map[string]agentmodel.CandidateObservation{
+		"drill":  {EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill", Title: "Cordless drill", Kind: "item", ContainmentPath: []string{"Garage", "Toolbox", "Cordless drill"}},
+		"shears": {EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "shears", Title: "Garden shears", Kind: "item", ContainmentPath: []string{"Garage", "Garden shears"}},
+	}
+	brief, err := realtimeVoiceInvestigationResponseBrief(intent, resolutions, candidates)
+	if err != nil {
+		t.Fatalf("render response: %v", err)
+	}
+	if len(brief.Findings) != 2 || len(brief.Findings[0].ContainmentPath) != 2 || len(brief.Findings[1].ContainmentPath) != 2 {
+		t.Fatalf("expected each location to survive the brief, got %+v", brief)
+	}
+}
+
+func TestRealtimeVoiceInvestigationResponseUsesHouseholdLanguageForLists(t *testing.T) {
+	t.Parallel()
+	candidates := map[string]agentmodel.CandidateObservation{
+		"bottle": {EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "bottle", Title: "Water bottle", Kind: "item"},
+		"laptop": {EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "laptop", Title: "Laptop", Kind: "item"},
+	}
+	resolutions := []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection, CandidateIDs: []string{"bottle", "laptop"}}}
+
+	inventory, err := realtimeVoiceInvestigationResponseBrief(agentmodel.Intent{RequestShape: agentmodel.RequestShapeCollectionTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationListInventory, SubjectMention: "items"}, resolutions, candidates)
+	if err != nil {
+		t.Fatalf("render inventory response: %v", err)
+	}
+	if inventory.Mode != agentmodel.ResponseAnswerModeInventory || len(inventory.Findings) != 2 {
+		t.Fatalf("unexpected inventory response: %+v", inventory)
+	}
+
+	contentsResolution := []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection, CandidateIDs: []string{"bottle"}}}
+	contents, err := realtimeVoiceInvestigationResponseBrief(agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationListContents, SubjectMention: "Office"}, contentsResolution, map[string]agentmodel.CandidateObservation{"bottle": candidates["bottle"]})
+	if err != nil {
+		t.Fatalf("render contents response: %v", err)
+	}
+	if contents.Mode != agentmodel.ResponseAnswerModeContents || contents.Subject != "Office" || len(contents.Findings) != 1 {
+		t.Fatalf("unexpected contents response: %+v", contents)
 	}
 }
 
 func TestRealtimeVoiceInvestigationResponseNamesMissingExistingSubject(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "my passport", DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
-	response, err := realtimeVoiceInvestigationResponse(intent, []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent}}, nil)
+	brief, err := realtimeVoiceInvestigationResponseBrief(intent, []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent}}, nil)
 	if err != nil {
 		t.Fatalf("render absent source: %v", err)
 	}
-	if response.Kind != ports.StructuredAgentResponseKindClarification || !strings.Contains(strings.ToLower(response.SpokenResponse), "passport") {
-		t.Fatalf("expected useful subject-specific clarification, got %+v", response)
+	if brief.Kind != agentmodel.ResponseBriefKindClarification || brief.Subject != "my passport" || brief.Confidence != agentmodel.ResponseConfidenceAbsent {
+		t.Fatalf("expected useful subject-specific clarification, got %+v", brief)
+	}
+}
+
+func TestRealtimeVoiceResponseFindingsAreBoundedForSpokenRealization(t *testing.T) {
+	t.Parallel()
+	ids := make([]string, 0, 20)
+	candidates := map[string]agentmodel.CandidateObservation{}
+	for index := 0; index < 20; index++ {
+		id := fmt.Sprintf("item-%d", index)
+		title := fmt.Sprintf("Household item with a deliberately descriptive title %d", index)
+		ids = append(ids, id)
+		candidates[id] = agentmodel.CandidateObservation{
+			EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: id,
+			Title: title, Kind: "item", LifecycleState: "active", CheckoutState: "available",
+			ContainmentPath: []string{"A very descriptive room", "A very descriptive cabinet", title},
+			Facts:           []string{strings.Repeat("history ", 30), "Moved to the cabinet"},
+		}
+	}
+	findings, truncated, err := realtimeVoiceResponseFindings(agentmodel.ResponseAnswerModeInventory, ids, candidates)
+	if err != nil {
+		t.Fatalf("bound response findings: %v", err)
+	}
+	if !truncated || len(findings) == 0 || len(findings) >= len(ids) {
+		t.Fatalf("expected a non-empty truncated presentation subset, got truncated=%t count=%d", truncated, len(findings))
+	}
+	for _, finding := range findings {
+		if len(finding.ContainmentPath) > 2 || len(finding.Facts) > 3 || !finding.FactsTruncated {
+			t.Fatalf("expected bounded path and facts, got %+v", finding)
+		}
+	}
+}
+
+func TestRealtimeVoiceInventoryBriefPrioritizesItemsOverPlaces(t *testing.T) {
+	t.Parallel()
+	ids := make([]string, 0, 9)
+	candidates := map[string]agentmodel.CandidateObservation{}
+	for index := 0; index < 8; index++ {
+		id := fmt.Sprintf("place-%d", index)
+		ids = append(ids, id)
+		candidates[id] = agentmodel.CandidateObservation{
+			EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: id,
+			Title: fmt.Sprintf("A location %d", index), Kind: "location",
+		}
+	}
+	ids = append(ids, "item")
+	candidates["item"] = agentmodel.CandidateObservation{
+		EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "item",
+		Title: "Zebra label maker", Kind: "item",
+	}
+	brief, err := realtimeVoiceInvestigationResponseBrief(
+		agentmodel.Intent{RequestShape: agentmodel.RequestShapeCollectionTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationListInventory, SubjectMention: "stuff"},
+		[]agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection, CandidateIDs: ids}}, candidates,
+	)
+	if err != nil {
+		t.Fatalf("build inventory brief: %v", err)
+	}
+	if len(realtimeVoiceInventoryResponseFindings(brief.Findings)) != 1 || realtimeVoiceInventoryResponseFindings(brief.Findings)[0].Title != "Zebra label maker" {
+		t.Fatalf("expected bounded inventory summary to retain the item, got %+v", brief.Findings)
+	}
+}
+
+func TestRealtimeVoiceResponseFindingRetainsEvidenceAfterOversizedFact(t *testing.T) {
+	t.Parallel()
+	finding := realtimeVoiceResponseFinding("finding.0", agentmodel.CandidateObservation{
+		EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill", Title: "Drill", Kind: "item",
+		Facts: []string{strings.Repeat("oversized history detail ", 20), "Returned July 3"},
+	})
+	if len(finding.Facts) == 0 {
+		t.Fatal("expected at least one bounded history fact")
+	}
+	if finding.Facts[0] != "Returned July 3" {
+		t.Fatalf("expected later bounded fact to survive, got %+v", finding.Facts)
+	}
+	if !finding.FactsTruncated {
+		t.Fatal("expected omitted oversized evidence to be disclosed")
+	}
+
+	onlyOversized := realtimeVoiceResponseFinding("finding.0", agentmodel.CandidateObservation{
+		EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "case", Title: "Camera case", Kind: "item",
+		Facts: []string{strings.Repeat("checked out and returned with detailed notes ", 20)},
+	})
+	if len(onlyOversized.Facts) != 1 || len(onlyOversized.Facts[0]) > 180 || !onlyOversized.FactsTruncated {
+		t.Fatalf("expected a safe bounded fallback fact, got %+v", onlyOversized)
 	}
 }

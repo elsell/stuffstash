@@ -39,7 +39,7 @@ func TestGoogleGeminiLiveMoveWaterBottleToMissingKitchenProposesPlan(t *testing.
 	defer cancel()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
-	resolver.providers.LanguageInference = voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
+	gemini := voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
 		ProjectID:    projectID,
 		Location:     location,
 		Model:        model,
@@ -47,6 +47,8 @@ func TestGoogleGeminiLiveMoveWaterBottleToMissingKitchenProposesPlan(t *testing.
 		TokenSource:  liveGoogleTokenSource(t, ctx),
 		HTTPTimeout:  120 * time.Second,
 	})
+	resolver.providers.LanguageInference = gemini
+	resolver.providers.ResponseGenerator = gemini
 	resolver.providers.TextToSpeech = &resolvedTextToSpeech{}
 	application, store := newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t, resolver, newFakeRealtimeSessionRepository(), &fakeIDGenerator{})
 	office := assetItem("office-1", "tenant-home", "inventory-home", asset.KindLocation, "")
@@ -125,7 +127,7 @@ func TestGoogleGeminiLiveMoveWaterBottleToNestedMissingPathProposesPlan(t *testi
 	defer cancel()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the second shelf in the big cabinet in the kitchen."}
-	resolver.providers.LanguageInference = voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
+	gemini := voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
 		ProjectID:    projectID,
 		Location:     location,
 		Model:        model,
@@ -133,6 +135,8 @@ func TestGoogleGeminiLiveMoveWaterBottleToNestedMissingPathProposesPlan(t *testi
 		TokenSource:  liveGoogleTokenSource(t, ctx),
 		HTTPTimeout:  120 * time.Second,
 	})
+	resolver.providers.LanguageInference = gemini
+	resolver.providers.ResponseGenerator = gemini
 	resolver.providers.TextToSpeech = &resolvedTextToSpeech{}
 	application, store := newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t, resolver, newFakeRealtimeSessionRepository(), &fakeIDGenerator{})
 	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
@@ -197,10 +201,11 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 			terms:      []string{"water", "office"},
 		},
 		{
-			name:       "where category like household phrase",
-			transcript: "Where are my tools?",
-			expect:     liveGeminiVoiceExpectAnswer,
-			terms:      []string{"toolbox"},
+			name:         "where category like household phrase",
+			transcript:   "Where are my tools?",
+			expect:       liveGeminiVoiceExpectAnswer,
+			terms:        []string{"toolbox"},
+			assertAnswer: assertLiveGeminiVoiceLocativeAnswer,
 		},
 		{
 			name:       "broad item list",
@@ -344,7 +349,7 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 
 			resolver := successfulRealtimeVoiceResolver()
 			resolver.providers.SpeechToText = resolvedSpeechToText{transcript: scenario.transcript}
-			resolver.providers.LanguageInference = voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
+			gemini := voice.NewGoogleGeminiLanguageInference(voice.GoogleGeminiConfig{
 				ProjectID:    projectID,
 				Location:     location,
 				Model:        model,
@@ -352,6 +357,9 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 				TokenSource:  tokenSource,
 				HTTPTimeout:  120 * time.Second,
 			})
+			recorder := liveGeminiVoiceProviderRecorder{t: t, provider: gemini}
+			resolver.providers.LanguageInference = recorder
+			resolver.providers.ResponseGenerator = recorder
 			tts := &resolvedTextToSpeech{}
 			resolver.providers.TextToSpeech = tts
 			application, store := newRealtimeVoiceResolutionTestAppWithStoreSessionsAndIDs(t, resolver, newFakeRealtimeSessionRepository(), &fakeIDGenerator{})
@@ -379,6 +387,23 @@ func TestGoogleGeminiLiveRealisticVoiceCorpus(t *testing.T) {
 	}
 }
 
+type liveGeminiVoiceProviderRecorder struct {
+	t        *testing.T
+	provider ports.RealtimeLanguageProvider
+}
+
+func (r liveGeminiVoiceProviderRecorder) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	result, err := r.provider.NextTurn(ctx, input)
+	r.t.Logf("investigation input: %+v\ninvestigation result: %+v\ninvestigation error: %v", input.Investigation, result.Investigation, err)
+	return result, err
+}
+
+func (r liveGeminiVoiceProviderRecorder) GenerateResponse(ctx context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	result, err := r.provider.GenerateResponse(ctx, input)
+	r.t.Logf("grounded response brief: %+v\ngenerated response: %+v\ngeneration error: %v\nvalidation error: %v", input.Brief, result, err, validateRealtimeVoiceGeneratedResponse(input.Brief, result))
+	return result, err
+}
+
 func liveGoogleTokenSource(t *testing.T, ctx context.Context) oauth2.TokenSource {
 	t.Helper()
 
@@ -401,11 +426,12 @@ const (
 )
 
 type liveGeminiVoiceCorpusCase struct {
-	name       string
-	transcript string
-	expect     liveGeminiVoiceExpectation
-	terms      []string
-	assertPlan func(*testing.T, RealtimeVoiceActionPlanProposal, []RealtimeVoiceEvent)
+	name         string
+	transcript   string
+	expect       liveGeminiVoiceExpectation
+	terms        []string
+	assertAnswer func(*testing.T, string, []RealtimeVoiceEvent)
+	assertPlan   func(*testing.T, RealtimeVoiceActionPlanProposal, []RealtimeVoiceEvent)
 }
 
 func seedLiveGeminiVoiceHousehold(t *testing.T, ctx context.Context, store interface {

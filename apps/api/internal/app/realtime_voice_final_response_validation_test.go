@@ -106,3 +106,41 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 		}
 	}
 }
+
+func TestRealtimeVoiceResponseGenerationFailureDoesNotReachMobileOrTTS(t *testing.T) {
+	t.Parallel()
+
+	tts := &resolvedTextToSpeech{}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.ResponseGenerator = failingVoiceResponseGenerator{err: errors.New("generation unavailable")}
+	resolver.providers.TextToSpeech = tts
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if realtimeVoiceErrorCode(err) != realtimeVoiceFailureLanguageInference {
+		t.Fatalf("expected language inference failure, got %v", err)
+	}
+	if tts.lastText != "" {
+		t.Fatalf("failed generated response reached TTS: %q", tts.lastText)
+	}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAssistantResponseStarted || event.Type == RealtimeVoiceEventAssistantResponseCompleted {
+			t.Fatalf("failed generated response reached mobile: %+v", event)
+		}
+	}
+}
+
+type failingVoiceResponseGenerator struct {
+	err error
+}
+
+func (f failingVoiceResponseGenerator) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	return ports.VoiceResponseGenerationResult{}, f.err
+}

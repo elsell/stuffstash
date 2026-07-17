@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -164,7 +165,7 @@ func TestRealtimeVoiceInvestigationLoopCompletesRequiredContentsEvidenceAfterTar
 		t.Fatalf("run contents investigation: %v", err)
 	}
 	response := realtimeVoiceInvestigationCompletedResponse(events)
-	if response == nil || response.SpokenResponse != "I found 1 visible matches: Water bottle." {
+	if response == nil || !strings.Contains(strings.ToLower(response.SpokenResponse), "office") || !strings.Contains(strings.ToLower(response.SpokenResponse), "water bottle") || strings.Contains(strings.ToLower(response.SpokenResponse), "visible match") {
 		t.Fatalf("expected contents grounded after required read, got %+v", events)
 	}
 	if len(language.seenInvestigations) != 3 {

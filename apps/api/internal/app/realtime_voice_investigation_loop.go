@@ -27,9 +27,13 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		return err
 	}
 	if step.Intent.Operation == agentmodel.OperationUnsupported {
-		response, responseErr := realtimeVoiceInvestigationResponse(step.Intent, nil, nil)
+		brief, responseErr := realtimeVoiceInvestigationResponseBrief(step.Intent, nil, nil)
 		if responseErr != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
+		}
+		response, responseErr := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		if responseErr != nil {
+			return responseErr
 		}
 		return a.completeRealtimeVoiceResponse(ctx, session, response, nil, nil, emit, continueAfterClarification)
 	}
@@ -46,9 +50,13 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
 		}
-		response, err := realtimeVoiceInvestigationResponse(canonical.Intent, canonical.Resolutions, nil)
+		brief, err := realtimeVoiceInvestigationResponseBrief(canonical.Intent, canonical.Resolutions, nil)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, nil, nil, emit)
+		}
+		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		if err != nil {
+			return err
 		}
 		return a.completeRealtimeVoiceResponse(ctx, session, response, nil, nil, emit, continueAfterClarification)
 	}
@@ -280,9 +288,13 @@ func (a App) completeRealtimeVoiceInvestigationOutcome(ctx context.Context, sess
 	if intent.Kind != agentmodel.IntentKindChange || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAmbiguous) ||
 		hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionUnsupported) || hasRealtimeVoiceInvestigationStatus(resolutions, agentmodel.ResolutionAbsent) ||
 		hasRealtimeVoicePlausibleDestination(resolutions) {
-		response, err := realtimeVoiceInvestigationResponse(intent, resolutions, candidates)
+		brief, err := realtimeVoiceInvestigationResponseBrief(intent, resolutions, candidates)
 		if err != nil {
 			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+		}
+		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		if err != nil {
+			return err
 		}
 		return a.completeRealtimeVoiceResponse(ctx, session, response, toolCallIDs, toolResults, emit, continueAfterClarification)
 	}
@@ -294,7 +306,15 @@ func (a App) completeRealtimeVoiceInvestigationOutcome(ctx context.Context, sess
 		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
 	}
 	if compiled.Disposition == realtimeVoicePlanNoOp {
-		return a.completeRealtimeVoiceResponse(ctx, session, investigationResponse(ports.StructuredAgentResponseKindAnswer, compiled.NoOpSummary), toolCallIDs, toolResults, emit, continueAfterClarification)
+		brief, err := realtimeVoiceNoOpResponseBrief(intent, resolutions, candidates, compiled.NoOpSummary)
+		if err != nil {
+			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
+		}
+		response, err := a.generateRealtimeVoiceResponse(ctx, session, brief)
+		if err != nil {
+			return err
+		}
+		return a.completeRealtimeVoiceResponse(ctx, session, response, toolCallIDs, toolResults, emit, continueAfterClarification)
 	}
 	record, err := a.CreateActionPlan(ctx, CreateActionPlanInput{
 		Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID,
@@ -313,6 +333,24 @@ func (a App) completeRealtimeVoiceInvestigationOutcome(ctx context.Context, sess
 		return err
 	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: session.ID, ActionPlan: &proposal})
+}
+
+func realtimeVoiceNoOpResponseBrief(intent agentmodel.Intent, resolutions []agentmodel.Resolution, candidates map[string]agentmodel.CandidateObservation, summary string) (agentmodel.GroundedVoiceResponseBrief, error) {
+	subject, found := realtimeVoiceInvestigationResolution(resolutions, agentmodel.SemanticReferenceSubject)
+	if !found || len(subject.CandidateIDs) != 1 {
+		return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
+	}
+	candidate, found := candidates[subject.CandidateIDs[0]]
+	if !found {
+		return agentmodel.GroundedVoiceResponseBrief{}, ports.ErrInvalidProviderInput
+	}
+	finding := realtimeVoiceResponseFinding("finding.0", candidate)
+	finding.Facts = []string{strings.TrimSpace(summary)}
+	finding.FactsTruncated = false
+	return validatedRealtimeVoiceResponseBrief(agentmodel.GroundedVoiceResponseBrief{
+		Kind: agentmodel.ResponseBriefKindAnswer, Mode: agentmodel.ResponseAnswerModeDetail, Operation: intent.Operation,
+		Subject: intent.SubjectMention, Confidence: agentmodel.ResponseConfidenceStrong, Findings: []agentmodel.ResponseFinding{finding},
+	})
 }
 
 func mergeRealtimeVoiceInvestigationObservations(existing, additions []agentmodel.CandidateObservation) []agentmodel.CandidateObservation {

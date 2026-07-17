@@ -47,6 +47,9 @@ func assertLiveGeminiVoiceCorpusOutcome(t *testing.T, scenario liveGeminiVoiceCo
 			t.Fatalf("expected spoken answer, response=%+v spoken=%q\n%s", completed, spoken, liveGeminiVoiceDiagnostics(events))
 		}
 		assertLiveGeminiVoiceTextContains(t, spoken, scenario.terms, events)
+		if scenario.assertAnswer != nil {
+			scenario.assertAnswer(t, spoken, events)
+		}
 	case liveGeminiVoiceExpectFallForward:
 		if proposed != nil {
 			t.Fatalf("expected fall-forward response, got action plan %+v\n%s", proposed, liveGeminiVoiceDiagnostics(events))
@@ -60,6 +63,18 @@ func assertLiveGeminiVoiceCorpusOutcome(t *testing.T, scenario liveGeminiVoiceCo
 		assertLiveGeminiVoiceTextContains(t, spoken, scenario.terms, events)
 	default:
 		t.Fatalf("unknown expectation %q", scenario.expect)
+	}
+}
+
+func assertLiveGeminiVoiceLocativeAnswer(t *testing.T, spoken string, events []RealtimeVoiceEvent) {
+	t.Helper()
+
+	normalized := strings.ToLower(spoken)
+	if strings.Contains(normalized, "visible match") || strings.Contains(normalized, "candidate") || strings.Contains(normalized, "resolution") {
+		t.Fatalf("expected household language rather than search mechanics, got %q\n%s", spoken, liveGeminiVoiceDiagnostics(events))
+	}
+	if !strings.Contains(normalized, " in ") && !strings.Contains(normalized, " at ") && !strings.Contains(normalized, " inside ") {
+		t.Fatalf("expected answer to say where the collection is, got %q\n%s", spoken, liveGeminiVoiceDiagnostics(events))
 	}
 }
 

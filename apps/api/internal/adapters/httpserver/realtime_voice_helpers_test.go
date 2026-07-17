@@ -33,7 +33,52 @@ func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.Speech
 	t.Helper()
 
 	application := newSeededTestApp(t, state)
-	return application.WithRealtimeVoiceProviders(stt, lm, tts)
+	return application.WithRealtimeVoiceProviders(stt, lm, tts).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+}
+
+type httpTestVoiceResponseGenerator struct{}
+
+func (httpTestVoiceResponseGenerator) GenerateResponse(_ context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	brief := input.Brief
+	titles := make([]string, 0, len(brief.Findings))
+	for _, finding := range brief.Findings {
+		titles = append(titles, finding.Title)
+	}
+	text := "I couldn't find " + brief.Subject + " in this inventory."
+	switch brief.Mode {
+	case agentmodel.ResponseAnswerModeLocate:
+		finding := brief.Findings[0]
+		path := finding.ContainmentPath
+		if len(path) <= 1 && finding.Kind == "item" {
+			text = "I found " + finding.Title + ", but it isn't assigned to a location."
+			break
+		}
+		location := finding.Title
+		if len(path) > 1 && (finding.Kind == "item" || brief.Confidence == agentmodel.ResponseConfidenceStrong) {
+			location = path[len(path)-2]
+		} else if len(path) == 1 && finding.Kind == "item" {
+			location = path[0]
+		}
+		prefix := "I found " + finding.Title
+		if brief.Confidence == agentmodel.ResponseConfidencePlausible {
+			prefix = "I think " + brief.Subject + " are probably"
+		}
+		text = prefix + " in " + location + "."
+	case agentmodel.ResponseAnswerModeInventory:
+		text = "You have " + strings.Join(titles, " and ") + "."
+	case agentmodel.ResponseAnswerModeContents:
+		text = brief.Subject + " contains " + strings.Join(titles, " and ") + "."
+	case agentmodel.ResponseAnswerModeClarify:
+		text = "I found " + strings.Join(titles, " or ") + " as possible matches. Which one did you mean?"
+	case agentmodel.ResponseAnswerModeUnsupported:
+		text = "I can't help with that inventory request."
+	case agentmodel.ResponseAnswerModeExists, agentmodel.ResponseAnswerModeDetail, agentmodel.ResponseAnswerModeHistory, agentmodel.ResponseAnswerModeCheckout:
+		text = "I found " + strings.Join(titles, " and ") + "."
+		if len(brief.Findings) == 1 && len(brief.Findings[0].Facts) > 0 {
+			text = brief.Findings[0].Title + ": " + brief.Findings[0].Facts[len(brief.Findings[0].Facts)-1]
+		}
+	}
+	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}, nil
 }
 
 func seedVoiceAsset(t *testing.T, application app.App, principalID string, tenantID string, inventoryID string, kind string, title string, parentAssetID string) {

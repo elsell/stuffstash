@@ -67,7 +67,7 @@ func newRealtimeVoiceReviewTestAppWithStore(t *testing.T, languageInference port
 		ids:         []string{"voice-session-id", "plan-id", "command-id", "response-id"},
 	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Add a water bottle."}, languageInference, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
-	})
+	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 	return application, store
 }
 

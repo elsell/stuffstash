@@ -49,6 +49,26 @@ func (DevFakeLanguageInference) NextTurn(_ context.Context, input ports.Language
 
 func (DevFakeLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
 
+func (DevFakeLanguageInference) GenerateResponse(_ context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	if input.Brief.Validate() != nil {
+		return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
+	}
+	text := "I couldn't find that in this inventory."
+	if len(input.Brief.Findings) > 0 {
+		finding := input.Brief.Findings[0]
+		location := finding.Title
+		if len(finding.ContainmentPath) > 0 {
+			location = finding.ContainmentPath[len(finding.ContainmentPath)-1]
+		}
+		prefix := "I found it"
+		if input.Brief.Confidence == agentmodel.ResponseConfidencePlausible {
+			prefix = "I think it's"
+		}
+		text = prefix + " in " + location + "."
+	}
+	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}, nil
+}
+
 type DevFakeTextToSpeech struct{}
 
 func (DevFakeTextToSpeech) Synthesize(_ context.Context, input ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
