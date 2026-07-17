@@ -99,7 +99,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - The switcher must make the tenant boundary visible with the current tenant as a prominent top section and a smaller `Switch tenant` action.
   - Tapping `Switch tenant` must show the API-visible tenant list. Selecting a tenant must return the sheet to the inventory list scoped to that tenant.
   - Inventory switching that changes the selected inventory for mobile queries and commands during the current app session.
-  - A `Recently changed` section near the top with a bounded set of compact shared asset entries and a `See all` action. Entries must include API-derived relative update context so the section communicates why each asset is recent.
+  - A `Recently changed` section near the top with a bounded set of compact shared asset entries and a `See all` action. Entries must include API-derived relative update context so the section communicates why each asset is recent. The section must include active assets only; archived assets remain available through Browse lifecycle filtering and must be excluded before applying the Home result bound.
   - A `Checked out` attention section that appears only when assets are checked out and uses compact shared asset entries with direct Return actions instead of large image-dominant cards. A quiet empty sentence must not reserve a full section when there is nothing checked out.
   - No permanent Locations or Places preview. Place discovery belongs to the `Places` scope in Browse; an empty-inventory onboarding state may offer a contextual create-place or browse-places action.
 - Home must not show dashboard metric tiles. The inventory home workspace is a browse and recency surface, not an analytics dashboard.
