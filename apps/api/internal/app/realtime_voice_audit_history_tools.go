@@ -138,11 +138,13 @@ func (a App) realtimeVoiceAuditHistoryAssetToolItem(ctx context.Context, session
 		locationTitle = item.Title.String()
 	}
 	return realtimeVoiceAssetToolItem{
+		AssetID:         item.ID.String(),
 		Title:           item.Title.String(),
 		Kind:            item.Kind.String(),
 		Description:     item.Description.String(),
 		InventoryName:   inventoryName,
 		LifecycleState:  item.LifecycleState.String(),
+		ParentAssetID:   item.ParentAssetID.String(),
 		ParentTitle:     parentTitle,
 		ParentKind:      parentKind,
 		LocationTitle:   locationTitle,

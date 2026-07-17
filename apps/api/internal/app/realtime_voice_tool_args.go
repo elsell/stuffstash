@@ -207,6 +207,7 @@ type realtimeVoiceAssetToolItem struct {
 	Description     string                             `json:"description,omitempty"`
 	InventoryName   string                             `json:"inventoryName"`
 	LifecycleState  string                             `json:"lifecycleState"`
+	ParentAssetID   string                             `json:"parentAssetId,omitempty"`
 	ParentTitle     string                             `json:"parentTitle,omitempty"`
 	ParentKind      string                             `json:"parentKind,omitempty"`
 	LocationTitle   string                             `json:"locationTitle,omitempty"`

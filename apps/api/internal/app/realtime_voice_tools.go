@@ -278,6 +278,7 @@ func (a App) realtimeVoiceAssetToolItemWithCheckout(ctx context.Context, session
 		Description:     item.Description.String(),
 		InventoryName:   inventoryName,
 		LifecycleState:  item.LifecycleState.String(),
+		ParentAssetID:   item.ParentAssetID.String(),
 		ParentTitle:     parentTitle,
 		ParentKind:      parentKind,
 		LocationTitle:   locationTitle,
