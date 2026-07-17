@@ -428,6 +428,54 @@ The first graph-like loop nodes are:
 - `finalize`: validate a structured final response, synthesize speech, and complete the session.
 - `recover`: produce a bounded safe final response when the loop cannot make more progress but can still explain the outcome without leaking internals.
 
+### Bounded interpretation and evidence contract
+
+The production loop must use a project-owned, typed interpretation and evidence contract between the application and the language-inference provider. This contract replaces transcript-specific server heuristics, free-form provider tool-loop control, and prompt-only repair as the normal mechanism for deciding what the user meant, what to read, and whether enough evidence exists. It must not create a second legacy or fallback voice path. Once promoted, the bounded investigation coordinator is the single production path for supported voice requests; local completion remains limited to clearly unsafe, unsupported, cancelled, or irreducibly deictic requests that do not require inventory evidence.
+
+The contract must represent at least:
+
+- loop phase, prompt version, schema version, current evidence round, and maximum evidence rounds;
+- intent kind and one typed operation from the supported read and change operation taxonomy;
+- the user's subject mention, ordered outer-to-inner destination path, optional new-asset kind, and bounded safe details;
+- stable semantic reference keys, initially `subject` and ordered `destination.<index>` keys;
+- typed read requests with a reference key, read kind, mention, optional kind hint, optional previously-visible asset ID, and multiple bounded search probes;
+- observations containing only authorized, tenant- and inventory-scoped candidates returned by application reads;
+- reference resolutions with a typed status and zero, one, or multiple candidate IDs drawn from observations for that same reference; and
+- one transition: gather initial evidence, gather one additional materially different evidence round, or finish.
+
+The first production evidence budget is two read rounds. A round may execute multiple narrow reads for different semantic references or complementary probes, but the application must deduplicate equivalent queries, reject repeated work as progress, bound total requests and result sizes, and stop on cancellation or timeout. Typed follow-up reads such as asset detail, contents, asset history, or checkout history may consume the second round when required by the operation. The provider may request one additional round only when it identifies a genuinely new probe or required typed read; it must not spend the budget repeating a failed query in different punctuation or word order.
+
+The language model owns the fuzzy judgments that benefit from language understanding:
+
+- interpreting intent and operation from imperfect speech;
+- separating a subject from an outer-to-inner destination path;
+- generating diverse search probes from proper names, distinctive content words, semantic categories, morphology, likely speech-to-text substitutions, and the user's phrasing;
+- assessing whether authorized candidates are strong, plausible, ambiguous, absent, or missing for the relevant semantic reference; and
+- deciding whether a materially different second evidence round is useful.
+
+The language model must be free to generate several search probes without requiring an exact title or exact transcript match. Search probes are retrieval hypotheses, not inventory facts. They must remain bounded, reference-scoped, and free of opaque IDs unless the ID was returned for that reference by an earlier authorized observation. Tenant prompt guidance may influence interpretation and vocabulary but must not weaken the typed schema, budgets, provenance, approval, authorization, or terminal-outcome rules.
+
+The application owns all deterministic policy and product outcomes:
+
+- execution of authorized reads through application services;
+- candidate deduplication and reference-scoped visible-ID provenance;
+- operation anchoring so a provider cannot reinterpret a create as a move, a move as a create, or a read as a write after evidence arrives;
+- sole exact normalized-title dominance over partial distractors while preserving ambiguity when multiple exact visible titles exist;
+- destination candidate kind and containment-chain validation;
+- missing-suffix behavior: after one destination segment is established as missing, deeper requested segments are treated as missing rather than spuriously matched elsewhere;
+- lifecycle and custody preconditions, including already-satisfied no-op responses;
+- terminal outcome selection and grounded response rendering;
+- deterministic compilation of supported changes into existing action-plan commands; and
+- the mandatory pause at review with no model turn, final speech, or execution claim after a plan is proposed.
+
+An investigation response is untrusted even when it satisfies the provider schema. The application must reject unknown enum values, changed canonical intent, missing or duplicate reference resolutions, unseen or cross-reference candidate IDs, invalid candidate cardinality, repeated queries, ungrounded typed reads, over-budget transitions, executable commands, and unsafe or unbounded text. Provider adapters must use native schema-constrained JSON output for this contract where supported and translate only between provider DTOs and project-owned types.
+
+For a clear supported change, a missing destination is evidence for a reviewable plan, not a reason to ask for a second conversational confirmation. The application compiler must create each missing destination segment in order, connect dependent commands with `parentCommandId`, and then create or move the subject into the deepest destination. Existing visible path prefixes must be referenced by their authorized opaque IDs. Clarification is reserved for genuine semantic ambiguity, multiple materially plausible visible candidates, a missing source for an operation on an existing asset, an unsafe request, or information the user must supply before a safe plan can be formed.
+
+Read answers must communicate calibrated uncertainty. A sole strong candidate may be answered directly. A sole plausible candidate may be presented as likely or possible using product-owned wording. Multiple materially plausible candidates require a useful clarification that distinguishes them without exposing hidden data. No-match wording must describe the authorized search evidence and a useful next step; it must not claim that the entire inventory is empty unless a broad authorized list proves that fact.
+
+The bounded investigation contract is internal to the API. It must not add provider-specific messages or expose investigation DTOs to mobile. The existing `agent.progress`, tool progress, clarification, structured final-response, and action-plan event families remain the mobile contract. Mobile must continue to pause at action-plan review, support bounded same-session clarification only when the server returns `clarification`, and never require a second yes/no voice turn merely to authorize creation of a clear missing destination.
+
 Safe `agent.progress` statuses must use a bounded product-owned vocabulary so mobile can render phase-aware UI without provider-specific details. The first statuses are `understanding`, `exploring`, `planning`, `reviewing`, `answering`, and `recovering`. The server may add safe message text, but it must not expose raw prompts, raw transcripts, raw tool arguments, raw model output, provider errors, credentials, internal IDs, or hidden inventory data in progress events.
 
 The `understand` node must emit the `understanding` progress status before any terminal local completion, including locally detected unsafe requests, unsupported provider-credential requests, destructive inventory/database requests, and under-specified deictic move destinations. These local completions must still avoid calling the language provider, but mobile should see the same graph phase vocabulary as provider-backed sessions.
@@ -454,9 +502,9 @@ For same-session clarification follow-ups, the application loop may derive a bou
 
 When the effective transcript combines a generic read question with a concrete follow-up answer, such as "Where is it? Follow-up answer: Water bottle", "What's in it? Follow-up answer: Toolbox", or "When did I move it? Follow-up answer: Water bottle", read-tool query selection should use the concrete follow-up answer as the lookup object, contents target, or history target. It must not search for generic pronouns or scaffolding words such as "it", "follow-up", or "answer" when the follow-up answer contains the requested item, location, or container name.
 
-Server-selected exploration is part of the smart loop and must remain bounded. When the model's first read misses a specific singular object that appears to have been distorted by speech-to-text or provider query phrasing, the application may run one narrow read-only retry derived from meaningful transcript object words. It must not convert a plural category question or broad inventory question into repeated broad list/search calls, and it must not execute write proposals from this repair path.
+Application-selected exploration is limited to validating and executing the typed, reference-scoped read plan and to required typed follow-up reads implied by the resolved operation. The application may add morphology-preserving lexical anchors from the same semantic reference, but it must not parse household phrases with a growing list of transcript templates, guess an unrelated category, convert a narrow no-match into a broad inventory list, or execute write proposals from the read path. Speech-to-text recovery should normally come from the provider's diverse bounded hypotheses and evidence assessment.
 
-The first model turn in a realtime voice session should be a forced context-gathering turn when provider-native function-calling controls support it. On that first turn the application should expose only read tools and request that the provider choose one of them, so inventory requests do not bypass authorized lookup because a structured final-response schema was also present. Later turns may expose the approval-plan proposal tool and let the model either call another tool or produce a structured final response. Provider-independent ports should express this as a tool-choice requirement rather than leaking provider names such as Gemini `ANY` mode into the application layer.
+The first provider turn in a realtime voice session should be a schema-constrained interpretation and evidence-planning turn. The provider returns typed search hypotheses rather than directly controlling native inventory function calls. The application validates and executes those hypotheses through the project-owned read dispatcher, then supplies bounded observations to a schema-constrained assessment turn. Native function calling may remain available for provider diagnostics or separately specified integrations, but it must not be the production voice loop's primary control mechanism. Provider names and native function-calling modes must not leak into the application contract.
 
 The first query loop exposed only read-only tools to the model. The first approval-backed mobile slice may add exactly one non-mutating write-intent tool: `propose_action_plan`.
 
@@ -503,9 +551,9 @@ The voice tool adapter may canonicalize provider-produced `create_item` and `cre
 
 The voice tool adapter may reorder commands inside a proposed action plan when a command references another command in the same plan through `parentCommandId`. The stored plan must use an executable order where the referenced create command appears before the dependent create or move command. This compatibility normalization is allowed only within the proposed plan and must not invent commands, bypass validation, or reorder unrelated commands in a way that changes user intent.
 
-The exact utterance `Move my water bottle to the kitchen.` is a required Gemini live-regression scenario. Given a visible active item named `Water bottle`, an existing containing location named `Office`, and no visible location or container named `Kitchen`, the Gemini language adapter must drive the agent toward a reviewable action plan that creates `Kitchen` and moves the existing water bottle into it. It must not end the session with a final answer such as `I can't find a water bottle` after the tool results have shown the water bottle. This scenario should be covered by deterministic application tests and by an opt-in live Gemini adapter test that can run with Application Default Credentials or an explicit test access token.
+The live-regression suite must cover the semantic family where a user requests moving a visible existing item into a clear missing destination. The expected outcome is a reviewable plan that creates the destination and moves the existing item; a no-match answer or a question asking whether to create the clear destination is a failure. Fixtures should be generated from declarative intent, inventory topology, and expected semantic predicates so production behavior is not tuned to one household title or frozen utterance. Deterministic application tests must cover the invariant, and opt-in live provider tests must use several independently realized phrasings, nouns, names, and destination types.
 
-The Gemini live-regression suite must include a small realistic voice corpus that exercises the agent loop with phrases a home user is likely to say or receive from speech-to-text. The corpus is an evaluation artifact, not an exhaustive prompt example list. It should include normal spoken requests, casual phrasing, nested containment, ambiguous or likely mistranscribed phrases, and adversarial or unsupported requests. Each scenario must assert one of these outcomes:
+The Gemini live-regression suite must include a realistic, declaratively generated voice corpus that exercises the agent loop with phrases a home user is likely to say or receive from speech-to-text. The corpus is an evaluation artifact, not an exhaustive prompt example list or a source of production branching logic. It should include normal spoken requests, casual phrasing, nested containment, ambiguous or likely mistranscribed phrases, and adversarial or unsupported requests. A held-out realization set must vary household nouns, names, topology depth, wording, morphology, and transcription-like substitutions without exposing exact expected titles in approximate-match inputs. Each scenario must assert one of these outcomes:
 
 - A factual answer completes with speech and uses visible tool results.
 - A reviewable action plan is proposed and the loop pauses before final speech.
@@ -534,6 +582,8 @@ The corpus must cover at least these behaviors:
 - Asking for a dangerous, destructive, provider-configuration, credential, or unrelated system action.
 
 Live corpus tuning must optimize the general contract, tool metadata, loop repair behavior, and concise prompt rules. It must not add a one-off instruction for every corpus utterance. Adding a representative example is acceptable only when it teaches a general class of behavior, such as clear missing destinations being represented as dependent create commands before a move. A live corpus pass is successful only when every expected-success scenario succeeds and every expected-non-success scenario falls forward with a user-actionable response instead of producing a generic voice failure, transport/provider error, hidden diagnostic, or contradictory final response.
+
+Evaluation must report results by semantic scenario family and realization source, including deterministic grammar realizations and provider-generated holdouts. Release evidence must distinguish provider or API availability failures from semantic and contract failures, report instrumentation completeness, and retain full safe traces for failed trials. Promotion requires zero invented or cross-reference IDs, zero writes before recorded approval, zero dropped named destination segments, exact semantic command graphs for supported write fixtures, and no dead-end creation-confirmation question for clear missing destinations. Repeated live trials should include pass^k-style stability evidence for representative families rather than relying on a single green run.
 
 ## Voice Evaluation Skill And Harness
 

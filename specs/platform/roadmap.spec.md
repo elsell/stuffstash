@@ -145,9 +145,11 @@ The web audit and Browse parity work needs a production-shaped path through:
 3. Complete clickable web and mobile inventory invitations.
    - Use `specs/identity-access/tenant-inventory-access.spec.md`, `specs/identity-access/authentication-flow.spec.md`, `specs/identity-access/mobile-oidc-authentication.spec.md`, and the web/mobile platform specs as the source of truth.
    - Prove canonical link creation, token redaction, sign-in return, authenticated preview, explicit acceptance, terminal states, and post-accept inventory entry with two identities.
-4. Deepen the production mobile voice session surface.
+4. Productionalize the bounded voice investigation loop and keep the mobile review surface contract-compatible.
    - Use `specs/agent-model/mobile-realtime-voice-query.spec.md` as the source of truth.
-   - Show safe progress steps, full ephemeral transcript, final spoken response, cancellation, errors, and developer diagnostics without turning voice into a separate primary page.
+   - Replace transcript-specific loop routing and prompt-only repair with typed intent, reference-scoped evidence hypotheses, bounded two-round exploration, deterministic outcome rendering, and operation-specific action-plan compilation.
+   - Preserve authorization, audit, approval, cancellation, provider pluggability, existing realtime event families, and mobile action-plan review behavior.
+   - Validate with deterministic invariants, generated and held-out semantic corpus realizations, adversarial boundary tests, mobile contract tests, live Gemini trials, and production-versus-baseline evidence without hard-coding household utterances into the runtime pipeline.
 5. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
