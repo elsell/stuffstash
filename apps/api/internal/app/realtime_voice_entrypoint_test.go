@@ -206,9 +206,7 @@ func TestRealtimeVoiceProductionEntrypointRejectsMalformedStructuredTurn(t *test
 
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "generated malformed-output request"}
-	resolver.providers.LanguageInference = &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Final: &ports.StructuredAgentResponse{
-		Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "Unstructured bypass", DisplayResponse: "Unstructured bypass",
-	}}}}
+	resolver.providers.LanguageInference = &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{}}}
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {
@@ -268,10 +266,10 @@ func TestRealtimeVoiceInvestigationReadsDoNotMaskParentDeadline(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
-	_, _, err = application.executeRealtimeVoiceTool(ctx, session, "", nil, ports.AgentToolCall{
+	_, err = application.executeRealtimeVoiceTool(ctx, session, ports.AgentToolCall{
 		ID: "bounded-search", Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "Timed subject"},
 	}, map[string]struct{}{})
-	if !errors.Is(err, context.DeadlineExceeded) || recoverableRealtimeVoiceToolError(err) {
+	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("expected parent deadline to remain terminal, got %T %[1]v", err)
 	}
 }

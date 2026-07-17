@@ -349,8 +349,10 @@ func (providerResolverSpeechToText) Transcribe(context.Context, ports.SpeechToTe
 type providerResolverLanguageInference struct{}
 
 func (providerResolverLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "answer"}}, nil
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
+
+func (providerResolverLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
 
 type providerResolverTextToSpeech struct{}
 

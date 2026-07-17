@@ -1,12 +1,10 @@
 package voice
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -59,9 +57,7 @@ func (p GoogleGeminiSpeechToText) Transcribe(ctx context.Context, input ports.Sp
 				}},
 			},
 		}},
-		GenerationConfig: &geminiGenerationConfig{
-			Temperature: 0,
-		},
+		GenerationConfig: &geminiGenerationConfig{Temperature: 0},
 	}
 	var response geminiGenerateContentResponse
 	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
@@ -80,9 +76,7 @@ func (p GoogleGeminiSpeechToText) ProbeSpeechToText(ctx context.Context) error {
 			Role:  "user",
 			Parts: []geminiPart{{Text: "Provider diagnostic. Reply with the single word ready."}},
 		}},
-		GenerationConfig: &geminiGenerationConfig{
-			Temperature: 0,
-		},
+		GenerationConfig: &geminiGenerationConfig{Temperature: 0},
 	}
 	var response geminiGenerateContentResponse
 	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
@@ -106,29 +100,28 @@ func NewGoogleGeminiLanguageInference(cfg GoogleGeminiConfig) GoogleGeminiLangua
 	}
 }
 
+// NextTurn accepts only the project-owned structured investigation contract.
+// Gemini never receives provider-callable inventory tools and cannot author a
+// final response, executable command, or action plan through this adapter.
 func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if input.Investigation != nil {
-		if err := input.Investigation.Validate(); err != nil {
-			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-		}
+	if input.Investigation == nil || input.Investigation.Validate() != nil {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
-	contents, err := languageContents(input)
-	if err != nil {
-		return ports.LanguageInferenceTurn{}, err
-	}
-	prompt := firstLanguagePromptText(contents)
+	prompt := geminiInvestigationPrompt(input)
 	request := geminiGenerateContentRequest{
-		Contents:         contents,
-		Tools:            geminiToolsForTurn(input),
-		ToolConfig:       geminiToolConfigForTurn(input),
-		GenerationConfig: geminiGenerationConfigForTurn(input),
+		Contents: []geminiContent{{Role: "user", Parts: []geminiPart{{Text: prompt}}}},
+		GenerationConfig: &geminiGenerationConfig{
+			Temperature:        0,
+			ResponseMimeType:   "application/json",
+			ResponseJSONSchema: geminiInvestigationResponseSchema(*input.Investigation),
+		},
 	}
 	var lastErr error
-	for attempt := 0; attempt < googleLanguageInferenceAttempts(input); attempt++ {
+	for attempt := 0; attempt < googleStructuredInferenceAttempts; attempt++ {
 		var response geminiGenerateContentResponse
 		if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
 			lastErr = err
-			if !retryableGoogleLanguageInferenceError(err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
+			if !retryableGoogleLanguageInferenceError(err) || attempt+1 >= googleStructuredInferenceAttempts {
 				return ports.LanguageInferenceTurn{}, err
 			}
 			if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
@@ -136,33 +129,12 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 			}
 			continue
 		}
-		if calls := geminiFunctionCalls(response); len(calls) > 0 {
-			turn, err := parseGeminiFunctionCalls(calls, input.Tools)
-			if err != nil {
-				lastErr = err
-				if !retryableGoogleStructuredOutputError(input, err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
-					return ports.LanguageInferenceTurn{}, err
-				}
-				if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
-					return ports.LanguageInferenceTurn{}, err
-				}
-				continue
-			}
-			if input.IncludeDiagnostics {
-				turn.Diagnostics = languageInferenceDiagnostics(input, prompt, geminiFunctionCallDiagnostic(calls))
-			}
-			return turn, nil
-		}
+
 		rawText := firstGeminiText(response)
-		var turn ports.LanguageInferenceTurn
-		if input.Investigation != nil {
-			turn, err = parseGeminiInvestigationTurn(rawText)
-		} else {
-			turn, err = parseLanguageTurn(rawText, input.Tools, input.PlanOnly)
-		}
+		turn, err := parseGeminiInvestigationTurn(rawText)
 		if err != nil {
 			lastErr = err
-			if !retryableGoogleStructuredOutputError(input, err) || attempt+1 >= googleLanguageInferenceAttempts(input) {
+			if attempt+1 >= googleStructuredInferenceAttempts {
 				return ports.LanguageInferenceTurn{}, err
 			}
 			if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
@@ -171,7 +143,7 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 			continue
 		}
 		if input.IncludeDiagnostics {
-			turn.Diagnostics = languageInferenceDiagnostics(input, prompt, rawText)
+			turn.Diagnostics = languageInferenceDiagnostics(input)
 		}
 		return turn, nil
 	}
@@ -181,524 +153,78 @@ func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports
 	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
+// ProbeLanguageInference is deliberately separate from NextTurn. Provider
+// readiness does not need, and must not reopen, a legacy final-response mode in
+// the production language-inference port.
 func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
-	turn, err := p.NextTurn(ctx, ports.LanguageInferenceInput{
-		Transcript: "Provider diagnostic. Return a final answer that says Provider profile test succeeded.",
-		FinalOnly:  true,
-	})
-	if err != nil {
+	request := geminiGenerateContentRequest{
+		Contents: []geminiContent{{
+			Role:  "user",
+			Parts: []geminiPart{{Text: "Provider diagnostic. Reply with the single word ready."}},
+		}},
+		GenerationConfig: &geminiGenerationConfig{Temperature: 0},
+	}
+	var response geminiGenerateContentResponse
+	if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
 		return err
 	}
-	if turn.Final == nil || strings.TrimSpace(turn.Final.SpokenResponse) == "" {
+	if strings.TrimSpace(firstGeminiText(response)) == "" {
 		return ports.ErrInvalidProviderInput
 	}
 	return nil
 }
 
-func geminiToolsForTurn(input ports.LanguageInferenceInput) []geminiTool {
-	if input.FinalOnly || input.PlanOnly || input.Investigation != nil {
-		return nil
-	}
-	return geminiTools(input.Tools)
-}
-
-func geminiToolConfigForTurn(input ports.LanguageInferenceInput) *geminiToolConfig {
-	if input.FinalOnly || input.PlanOnly || input.Investigation != nil || !input.RequireToolCall || len(input.Tools) == 0 {
-		return nil
-	}
-	names := make([]string, 0, len(input.Tools))
-	for _, tool := range input.Tools {
-		if googleGeminiProviderCallableTool(tool) {
-			names = append(names, tool.Name)
-		}
-	}
-	if len(names) == 0 {
-		return nil
-	}
-	return &geminiToolConfig{FunctionCallingConfig: &geminiFunctionCallingConfig{
-		Mode:                 "ANY",
-		AllowedFunctionNames: names,
-	}}
-}
-
-func geminiGenerationConfigForTurn(input ports.LanguageInferenceInput) *geminiGenerationConfig {
-	config := &geminiGenerationConfig{Temperature: 0}
-	if input.Investigation != nil {
-		config.ResponseMimeType = "application/json"
-		config.ResponseJSONSchema = geminiInvestigationResponseSchema(*input.Investigation)
-		return config
-	}
-	if input.PlanOnly {
-		config.ResponseMimeType = "application/json"
-		config.ResponseJSONSchema = geminiActionPlanResponseSchema()
-		return config
-	}
-	if len(geminiToolsForTurn(input)) > 0 && !input.FinalOnly {
-		return config
-	}
-	config.ResponseMimeType = "application/json"
-	config.ResponseSchema = geminiFinalResponseSchema()
-	return config
-}
-
-func languagePrompt(input ports.LanguageInferenceInput) string {
-	if input.Investigation != nil {
-		return geminiInvestigationPrompt(input)
-	}
-	lines := []string{}
-	transcript := safeGoogleConversationPromptText(input.Transcript, 1000)
-	if template := strings.TrimSpace(input.PromptTemplate); template != "" {
-		lines = append(lines,
-			"Tenant language-model guidance:",
-			template,
-			"Mandatory Stuff Stash agent contract:",
-		)
-	}
-	if input.RequireToolCall && !input.FinalOnly {
-		if input.PreviousTurns > 0 {
-			lines = append(lines, []string{
-				"You are the Stuff Stash inventory voice agent.",
-				"This turn must gather missing context with exactly one provided read tool.",
-				"For add, create, move, put, place, store, or stash requests, search the named destination, outer room, place, or container now. Do not repeat the source-item search unless the source was not found.",
-				"Use short search keywords copied from the destination phrase, such as living room, garage, kitchen, cabinet, box, shelf, drawer, or counter.",
-				"Do not answer yet and do not propose changes on this turn.",
-			}...)
-			lines = append(lines, languageConversationContextLines(input)...)
-			lines = append(lines, []string{
-				"Current transcript: " + transcript,
-				"Transcript: " + transcript,
-			}...)
-			return strings.Join(lines, "\n")
-		}
-		lines = append(lines, []string{
-			"You are the Stuff Stash inventory voice agent.",
-			"This turn must gather context with exactly one provided read tool.",
-			"Use search_authorized_assets for specific items, where-is questions, resolving named locations or containers, and write requests that mention named inventory things.",
-			"For add/create requests into a nested destination, search the outermost room, place, or container separately first, such as living room, garage, office, kitchen, cabinet, box, shelf, drawer, or counter; do not search only the item or the whole destination phrase.",
-			"For move/archive/restore requests involving an existing item, this first read turn must search the source item first, not the destination.",
-			"Use list_authorized_assets for broad inventory lists or questions about what is inside a known place.",
-			"Use short search keywords copied from the transcript. Do not answer yet and do not propose changes on this turn.",
-		}...)
-		lines = append(lines, languageConversationContextLines(input)...)
-		lines = append(lines, []string{
-			"Current transcript: " + transcript,
-			"Transcript: " + transcript,
-		}...)
-		return strings.Join(lines, "\n")
-	}
-	if input.PlanOnly {
-		lines = append(lines, []string{
-			"You are the Stuff Stash inventory voice planner.",
-			"Return strict JSON matching the provided actionPlan response schema.",
-			"Do not return a final answer. Do not ask whether to create a clear missing destination; the action plan is the user review step.",
-			"Use only tool results as source of truth for existing assets and opaque asset IDs.",
-			"For move_asset, assetId must be copied from a read-tool result.",
-			"For missing named destinations, create every missing path segment in order and reference earlier create commands with parentCommandId.",
-			"Use create_asset with kind container for household containers or surfaces. Use create_location only for true rooms or places.",
-			"Use create_asset with kind item for new items. Put the item directly in its existing parent with parentAssetId, or in a newly-created parent with parentCommandId.",
-			"Never include assetId in create_asset arguments. Never add a move_asset command for an item created earlier in the same plan.",
-			"For nested missing destinations, create every missing path segment in order, then move or create the requested item into the deepest created command.",
-			"For example, if the user says move my water bottle to the second shelf in the big cabinet in the kitchen and none of that path is visible, create Kitchen, create Big cabinet with parentCommandId cmd-kitchen, create Second shelf with parentCommandId cmd-big-cabinet, then move the water bottle with parentCommandId cmd-second-shelf.",
-			"When a new item should go inside an existing parent, use one create_asset command with parentAssetId set to the visible parent. When it should go inside a parent created earlier in the same plan, use parentCommandId on the item create command. Do not create the item and then move it.",
-			"If a missing container belongs inside an existing visible location, create the container with parentAssetId set to that visible location assetId, then create or move the item with parentCommandId set to the container command id.",
-			"For example, if the user adds a new remote to a missing box under an existing Living room, create Box under the TV with kind container and parentAssetId set to Living room's assetId, then create Apple TV remote with kind item and parentCommandId set to the box command id. Do not create the new item first and do not add a move_asset command for the new item.",
-		}...)
-		lines = append(lines, languageConversationContextLines(input)...)
-		lines = append(lines, []string{
-			"Current transcript: " + transcript,
-			"Transcript: " + transcript,
-		}...)
-		return strings.Join(lines, "\n")
-	}
-	lines = append(lines, []string{
-		"You are the Stuff Stash inventory voice agent.",
-		"Use only the provided native read tools for inventory lookup. Action plans are produced only by a separate structured planner phase, not by native function calls in this turn.",
-		"Return strict JSON only when producing a final response.",
-		"Tool results are compact JSON and are the only source of truth for inventory contents, locations, containment, and counts.",
-		"For a specific item or where-is question, call search_authorized_assets first with short keywords.",
-		"For where-is questions, if search_authorized_assets returns the requested item with locationTitle or containmentPath, answer from that result instead of listing unrelated assets.",
-		"containmentPath ends with the returned asset itself; never say an item is inside itself.",
-		"For broad list questions, call list_authorized_assets with filters.",
-		"For questions about what is in a place, list with parentTitle or locationTitle when known.",
-		"For write requests involving an existing asset, use read tools to find the source asset before the planner phase.",
-		"For moving, archiving, restoring, checking out, or returning an existing asset, gather that source asset's assetId from a read tool result first.",
-		"If a move request names a source item and you do not have that item's assetId from a read tool, call search_authorized_assets for the source item before the planner phase.",
-		"For add/create requests for a new item, gather the named destination location or container with read tools before the planner phase.",
-		"Do not invent an assetId for a new item; the planner phase will create new inventory only after enough context is gathered.",
-		"For write requests, the session is not complete until the separate planner phase prepares a reviewable action plan or a necessary clarification is returned.",
-		"For create or move requests that mention an existing location or container, resolve it with read tools first and use the returned assetId as parentAssetId.",
-		"For nested create or move requests, resolve named outer locations and containers as separate search terms before proposing. A combined phrase search returning no matches does not prove each path segment is missing.",
-		"If a transcript says a missing container or surface is in a room, search the room before proposing a plan.",
-		"If only a combined nested destination phrase has been searched and returned no matches, search a separate outer location or container term before proposing a plan.",
-		"Assume the user wants missing named locations, containers, or household surfaces created when the destination is clear, such as Kitchen, Living room, Garage, Box under the TV, Big cabinet, Counter, or Second shelf.",
-		"For a clear write request with a missing destination, do not ask whether to create it; let the structured planner phase prepare the mobile review step.",
-		"Ask for clarification instead only when the requested destination is ambiguous, conflicts with visible inventory, or appears likely to be a speech-to-text mistranscription.",
-		"assetId and parentAssetId must be opaque assetId values copied exactly from successful search_authorized_assets or list_authorized_assets tool results.",
-		"Never use titles, lowercase names, or guessed IDs such as water bottle, kitchen, or kitchen-1 as assetId or parentAssetId.",
-		"Never use parentTitle, locationTitle, or raw titles as executable action-plan parent references.",
-		"If a tool result contains the requested source asset, do not later say you cannot find that asset.",
-		"If you can answer without another tool call, return a final response that follows the provided response schema.",
-		"Never invent assets, locations, quantities, or containment paths that are not in tool results.",
-		"If a search has no matches, say you could not find a visible match and give a concise next step, such as asking for a more specific item name or adding the missing thing. Do not say the whole inventory is empty unless a broad list tool result proves it.",
-		"Do not include reasoning, IDs, markdown, or extra fields.",
-	}...)
-	lines = append(lines, languageConversationContextLines(input)...)
-	lines = append(lines, []string{
-		"Current transcript: " + transcript,
-		"Transcript: " + transcript,
-	}...)
-	return strings.Join(lines, "\n")
-}
-
-func languageConversationContextLines(input ports.LanguageInferenceInput) []string {
-	if len(input.ConversationTurns) == 0 {
-		return nil
-	}
-	lines := []string{
-		"Same-session safe conversation context:",
-		"Use this only to resolve the current follow-up. Tool results remain the source of truth for inventory data.",
-	}
-	for _, turn := range input.ConversationTurns {
-		text := safeGoogleConversationPromptText(turn.Text, 500)
-		if text == "" {
-			continue
-		}
-		switch turn.Role {
-		case ports.AgentConversationRoleUser:
-			lines = append(lines, "user: "+text)
-		case ports.AgentConversationRoleAssistant:
-			kind := safeGoogleConversationPromptText(turn.Kind, 80)
-			if kind != "" {
-				lines = append(lines, "assistant "+kind+": "+text)
-			} else {
-				lines = append(lines, "assistant: "+text)
-			}
-		}
-	}
-	if len(lines) == 2 {
-		return nil
-	}
-	return lines
-}
-
-func languageContents(input ports.LanguageInferenceInput) ([]geminiContent, error) {
-	contents := []geminiContent{{
-		Role:  "user",
-		Parts: []geminiPart{{Text: languagePrompt(input)}},
-	}}
-	for _, result := range input.ToolResults {
-		if strings.TrimSpace(result.Name) == "" || strings.TrimSpace(result.Content) == "" {
-			continue
-		}
-		callName := strings.TrimSpace(result.Call.Name)
-		if callName == "" {
-			callName = result.Name
-		}
-		if callName != "" && result.Call.Arguments != nil {
-			contents = append(contents, geminiContent{
-				Role: "model",
-				Parts: []geminiPart{{
-					FunctionCall: &geminiFunctionCall{
-						Name: callName,
-						Args: result.Call.Arguments,
-					},
-				}},
-			})
-		}
-		response, err := geminiFunctionResponsePayload(result.Content)
-		if err != nil {
-			return nil, ports.ErrInvalidProviderInput
-		}
-		contents = append(contents, geminiContent{
-			Role: "user",
-			Parts: []geminiPart{{
-				FunctionResponse: &geminiFunctionResponse{
-					Name:     callName,
-					Response: response,
-				},
-			}},
-		})
-	}
-	return contents, nil
-}
-
-func firstLanguagePromptText(contents []geminiContent) string {
-	if len(contents) == 0 || len(contents[0].Parts) == 0 {
-		return ""
-	}
-	return contents[0].Parts[0].Text
-}
-
-func languageInferenceDiagnostics(input ports.LanguageInferenceInput, prompt string, modelTurn string) []ports.LanguageInferenceDiagnostic {
-	diagnostics := []ports.LanguageInferenceDiagnostic{}
+func languageInferenceDiagnostics(input ports.LanguageInferenceInput) []ports.LanguageInferenceDiagnostic {
 	turnLabel := fmt.Sprintf("turn %d", input.PreviousTurns+1)
-	if strings.TrimSpace(prompt) != "" {
-		detail := prompt
-		if input.PreviousTurns > 0 {
-			detail = "Prompt scaffolding repeated from the first language-model turn; full prompt omitted to keep diagnostics readable."
-		}
-		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language prompt (" + turnLabel + ")", Detail: detail})
+	if input.Investigation == nil {
+		return nil
 	}
-	if detail := languageToolCatalogDiagnostic(input); detail != "" {
-		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language tool catalog (" + turnLabel + ")", Detail: detail})
-	}
-	if strings.TrimSpace(modelTurn) != "" {
-		diagnostics = append(diagnostics, ports.LanguageInferenceDiagnostic{Title: "Language model turn (" + turnLabel + ")", Detail: modelTurn})
-	}
-	return diagnostics
-}
-
-func languageToolCatalogDiagnostic(input ports.LanguageInferenceInput) string {
-	type toolDiagnostic struct {
-		Name             string   `json:"name"`
-		ReadOnly         bool     `json:"readOnly"`
-		ProviderCallable bool     `json:"providerCallable"`
-		RequiresApproval bool     `json:"requiresApproval"`
-		MutatesInventory bool     `json:"mutatesInventory"`
-		Required         []string `json:"required,omitempty"`
-	}
+	investigation := input.Investigation
 	payload := struct {
-		FinalOnly       bool             `json:"finalOnly"`
-		PlanOnly        bool             `json:"planOnly"`
-		RequireToolCall bool             `json:"requireToolCall"`
-		ToolCount       int              `json:"toolCount"`
-		Tools           []toolDiagnostic `json:"tools,omitempty"`
+		Phase                     string `json:"phase"`
+		EvidenceRound             int    `json:"evidenceRound"`
+		MaxEvidenceRounds         int    `json:"maxEvidenceRounds"`
+		PromptVersion             string `json:"promptVersion"`
+		SchemaVersion             string `json:"schemaVersion"`
+		PreviousRequestCount      int    `json:"previousRequestCount"`
+		ObservationCount          int    `json:"observationCount"`
+		ReadEvidenceCount         int    `json:"readEvidenceCount"`
+		CustomAssetTypeCount      int    `json:"customAssetTypeCount"`
+		CustomFieldCount          int    `json:"customFieldCount"`
+		TagCount                  int    `json:"tagCount"`
+		VocabularyRequestCount    int    `json:"vocabularyRequestCount"`
+		VocabularyDefinitionCount int    `json:"vocabularyDefinitionCount"`
 	}{
-		FinalOnly:       input.FinalOnly,
-		PlanOnly:        input.PlanOnly,
-		RequireToolCall: input.RequireToolCall,
-		ToolCount:       len(input.Tools),
-		Tools:           make([]toolDiagnostic, 0, len(input.Tools)),
+		Phase: string(investigation.Phase), EvidenceRound: investigation.EvidenceRound, MaxEvidenceRounds: investigation.MaxEvidenceRounds,
+		PromptVersion: safeGoogleDiagnosticVersion(investigation.PromptVersion), SchemaVersion: safeGoogleDiagnosticVersion(investigation.SchemaVersion),
+		PreviousRequestCount: len(investigation.PreviousRequests), ObservationCount: len(investigation.Observations), ReadEvidenceCount: len(investigation.ReadEvidence),
+		CustomAssetTypeCount: len(investigation.Vocabulary.CustomAssetTypes), CustomFieldCount: len(investigation.Vocabulary.CustomFields), TagCount: len(investigation.Vocabulary.Tags),
+		VocabularyRequestCount: len(investigation.VocabularyRequests), VocabularyDefinitionCount: len(investigation.VocabularyDefinitions),
 	}
-	for _, tool := range input.Tools {
-		name := strings.TrimSpace(tool.Name)
-		if name == "" {
-			continue
-		}
-		payload.Tools = append(payload.Tools, toolDiagnostic{
-			Name:             name,
-			ReadOnly:         tool.ReadOnly,
-			ProviderCallable: !input.FinalOnly && !input.PlanOnly && googleGeminiProviderCallableTool(tool),
-			RequiresApproval: tool.RequiresApproval,
-			MutatesInventory: tool.MutatesInventory,
-			Required:         append([]string{}, tool.Parameters.Required...),
-		})
-	}
-	rendered, err := json.MarshalIndent(payload, "", "  ")
+	rendered, err := json.Marshal(payload)
 	if err != nil {
-		return ""
-	}
-	return safeGoogleConversationPromptText(string(rendered), 4000)
-}
-
-func geminiFunctionCallDiagnostic(calls []geminiFunctionCall) string {
-	payload, err := json.MarshalIndent(calls, "", "  ")
-	if err != nil {
-		return "Gemini returned function calls."
-	}
-	return string(payload)
-}
-
-func geminiFunctionResponsePayload(content string) (map[string]any, error) {
-	var payload map[string]any
-	decoder := json.NewDecoder(bytes.NewReader([]byte(content)))
-	decoder.UseNumber()
-	if err := decoder.Decode(&payload); err != nil {
-		return nil, err
-	}
-	var extra any
-	if err := decoder.Decode(&extra); err != io.EOF {
-		return nil, ports.ErrInvalidProviderInput
-	}
-	return payload, nil
-}
-
-func geminiTools(tools []ports.AgentToolDescriptor) []geminiTool {
-	declarations := make([]geminiFunctionDeclaration, 0, len(tools))
-	for _, tool := range tools {
-		if !googleGeminiProviderCallableTool(tool) {
-			continue
-		}
-		declarations = append(declarations, geminiFunctionDeclaration{
-			Name:        tool.Name,
-			Description: tool.Description,
-			Parameters:  geminiParameters(tool.Parameters),
-		})
-	}
-	if len(declarations) == 0 {
 		return nil
 	}
-	return []geminiTool{{FunctionDeclarations: declarations}}
+	return []ports.LanguageInferenceDiagnostic{{Title: "Language investigation (" + turnLabel + ")", Detail: string(rendered)}}
 }
 
-func geminiFinalResponseSchema() *geminiSchema {
-	return &geminiSchema{
-		Type: "object",
-		Properties: map[string]geminiSchema{
-			"final": {
-				Type: "object",
-				Properties: map[string]geminiSchema{
-					"kind": {
-						Type: "string",
-						Enum: []string{
-							string(ports.StructuredAgentResponseKindAnswer),
-							string(ports.StructuredAgentResponseKindClarification),
-							string(ports.StructuredAgentResponseKindUnsupportedAction),
-							string(ports.StructuredAgentResponseKindSafeFailure),
-						},
-					},
-					"spokenResponse": {
-						Type:        "string",
-						Description: "Short user-facing response that will be spoken aloud.",
-					},
-					"displayResponse": {
-						Type:        "string",
-						Description: "Short user-facing response for the app to display.",
-					},
-				},
-				Required: []string{"kind", "spokenResponse", "displayResponse"},
-			},
-		},
-		Required: []string{"final"},
+func safeGoogleDiagnosticVersion(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" || len(value) > 100 {
+		return "unknown"
 	}
-}
-
-func geminiParameters(parameters ports.AgentToolParameters) geminiSchema {
-	properties := map[string]geminiSchema{}
-	for name, parameter := range parameters.Properties {
-		property := geminiSchema{
-			Type:        geminiSchemaType(parameter.Type),
-			Description: parameter.Description,
-			Enum:        append([]string{}, parameter.Enum...),
-			Properties:  geminiProperties(parameter.Properties),
-			Required:    append([]string{}, parameter.Required...),
+	for _, char := range value {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '.' || char == '-' || char == '_' {
+			continue
 		}
-		if parameter.Items != nil {
-			item := geminiParameterSchema(*parameter.Items)
-			property.Items = &item
-		}
-		properties[name] = property
+		return "unknown"
 	}
-	return geminiSchema{
-		Type:       "object",
-		Properties: properties,
-		Required:   append([]string{}, parameters.Required...),
-	}
-}
-
-func geminiParameterSchema(parameter ports.AgentToolParameter) geminiSchema {
-	schema := geminiSchema{
-		Type:        geminiSchemaType(parameter.Type),
-		Description: parameter.Description,
-		Enum:        append([]string{}, parameter.Enum...),
-		Properties:  geminiProperties(parameter.Properties),
-		Required:    append([]string{}, parameter.Required...),
-	}
-	if parameter.Items != nil {
-		item := geminiParameterSchema(*parameter.Items)
-		schema.Items = &item
-	}
-	return schema
-}
-
-func geminiProperties(parameters map[string]ports.AgentToolParameter) map[string]geminiSchema {
-	if len(parameters) == 0 {
-		return nil
-	}
-	properties := map[string]geminiSchema{}
-	for name, parameter := range parameters {
-		properties[name] = geminiParameterSchema(parameter)
-	}
-	return properties
-}
-
-func geminiSchemaType(value ports.AgentToolParameterType) string {
-	switch value {
-	case ports.AgentToolParameterTypeInteger:
-		return "integer"
-	case ports.AgentToolParameterTypeObject:
-		return "object"
-	case ports.AgentToolParameterTypeArray:
-		return "array"
-	default:
-		return "string"
-	}
-}
-
-func parseGeminiFunctionCalls(calls []geminiFunctionCall, tools []ports.AgentToolDescriptor) (ports.LanguageInferenceTurn, error) {
-	allowedTools := allowedToolNames(tools)
-	toolCalls := make([]ports.AgentToolCall, 0, len(calls))
-	for index, call := range calls {
-		name := strings.TrimSpace(call.Name)
-		if !allowedTools[name] || call.Args == nil {
-			return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-		}
-		toolCalls = append(toolCalls, ports.AgentToolCall{
-			ID:        fmt.Sprintf("gemini-call-%d", index+1),
-			Name:      name,
-			Arguments: call.Args,
-		})
-	}
-	if len(toolCalls) == 0 {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	return ports.LanguageInferenceTurn{ToolCalls: toolCalls}, nil
-}
-
-func allowedToolNames(tools []ports.AgentToolDescriptor) map[string]bool {
-	allowed := make(map[string]bool, len(tools))
-	for _, tool := range tools {
-		if googleGeminiProviderCallableTool(tool) {
-			allowed[tool.Name] = true
-		}
-	}
-	return allowed
-}
-
-func googleGeminiProviderCallableTool(tool ports.AgentToolDescriptor) bool {
-	return tool.ReadOnly
-}
-
-func isAllowedStructuredResponseKind(kind ports.StructuredAgentResponseKind) bool {
-	switch kind {
-	case ports.StructuredAgentResponseKindAnswer,
-		ports.StructuredAgentResponseKindClarification,
-		ports.StructuredAgentResponseKindUnsupportedAction,
-		ports.StructuredAgentResponseKindSafeFailure:
-		return true
-	default:
-		return false
-	}
-}
-
-func stringValue(value any) string {
-	text, _ := value.(string)
-	return text
-}
-
-func boundedNonEmpty(value string, max int) bool {
-	trimmed := strings.TrimSpace(value)
-	return trimmed != "" && len(trimmed) <= max
-}
-
-func boundedOptional(value string, max int) bool {
-	return strings.TrimSpace(value) == "" || len(value) <= max
+	return value
 }
 
 type geminiGenerateContentRequest struct {
 	Contents         []geminiContent         `json:"contents"`
-	Tools            []geminiTool            `json:"tools,omitempty"`
-	ToolConfig       *geminiToolConfig       `json:"toolConfig,omitempty"`
 	GenerationConfig *geminiGenerationConfig `json:"generationConfig,omitempty"`
-}
-
-type geminiToolConfig struct {
-	FunctionCallingConfig *geminiFunctionCallingConfig `json:"functionCallingConfig,omitempty"`
-}
-
-type geminiFunctionCallingConfig struct {
-	Mode                 string   `json:"mode"`
-	AllowedFunctionNames []string `json:"allowedFunctionNames,omitempty"`
 }
 
 type geminiContent struct {
@@ -707,35 +233,13 @@ type geminiContent struct {
 }
 
 type geminiPart struct {
-	Text             string                  `json:"text,omitempty"`
-	InlineData       *geminiInlineData       `json:"inlineData,omitempty"`
-	FunctionCall     *geminiFunctionCall     `json:"functionCall,omitempty"`
-	FunctionResponse *geminiFunctionResponse `json:"functionResponse,omitempty"`
+	Text       string            `json:"text,omitempty"`
+	InlineData *geminiInlineData `json:"inlineData,omitempty"`
 }
 
 type geminiInlineData struct {
 	MimeType string `json:"mimeType"`
 	Data     string `json:"data"`
-}
-
-type geminiFunctionCall struct {
-	Name string         `json:"name"`
-	Args map[string]any `json:"args"`
-}
-
-type geminiFunctionResponse struct {
-	Name     string         `json:"name"`
-	Response map[string]any `json:"response"`
-}
-
-type geminiTool struct {
-	FunctionDeclarations []geminiFunctionDeclaration `json:"functionDeclarations"`
-}
-
-type geminiFunctionDeclaration struct {
-	Name        string       `json:"name"`
-	Description string       `json:"description,omitempty"`
-	Parameters  geminiSchema `json:"parameters"`
 }
 
 type geminiSchema struct {
@@ -753,6 +257,5 @@ type geminiSchema struct {
 type geminiGenerationConfig struct {
 	Temperature        float64       `json:"temperature"`
 	ResponseMimeType   string        `json:"responseMimeType,omitempty"`
-	ResponseSchema     *geminiSchema `json:"responseSchema,omitempty"`
 	ResponseJSONSchema *geminiSchema `json:"responseJsonSchema,omitempty"`
 }

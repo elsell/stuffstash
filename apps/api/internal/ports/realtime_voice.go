@@ -48,12 +48,7 @@ type LanguageInferenceInput struct {
 	Transcript         string
 	ConversationTurns  []AgentConversationTurn
 	PromptTemplate     string
-	Tools              []AgentToolDescriptor
-	ToolResults        []AgentToolResult
 	PreviousTurns      int
-	FinalOnly          bool
-	PlanOnly           bool
-	RequireToolCall    bool
 	IncludeDiagnostics bool
 	Investigation      *agentmodel.InvestigationInput
 }
@@ -71,43 +66,7 @@ type AgentConversationTurn struct {
 	Text string
 }
 
-type AgentToolDescriptor struct {
-	Name             string
-	Label            string
-	Description      string
-	ReadOnly         bool
-	ProviderCallable bool
-	RequiresApproval bool
-	MutatesInventory bool
-	Parameters       AgentToolParameters
-}
-
-type AgentToolParameters struct {
-	Properties map[string]AgentToolParameter
-	Required   []string
-}
-
-type AgentToolParameter struct {
-	Type        AgentToolParameterType
-	Description string
-	Enum        []string
-	Properties  map[string]AgentToolParameter
-	Required    []string
-	Items       *AgentToolParameter
-}
-
-type AgentToolParameterType string
-
-const (
-	AgentToolParameterTypeString  AgentToolParameterType = "string"
-	AgentToolParameterTypeInteger AgentToolParameterType = "integer"
-	AgentToolParameterTypeObject  AgentToolParameterType = "object"
-	AgentToolParameterTypeArray   AgentToolParameterType = "array"
-)
-
 type LanguageInferenceTurn struct {
-	ToolCalls     []AgentToolCall
-	Final         *StructuredAgentResponse
 	Investigation *agentmodel.InvestigationStep
 	Diagnostics   []LanguageInferenceDiagnostic
 }

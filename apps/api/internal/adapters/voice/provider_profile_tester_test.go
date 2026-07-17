@@ -101,6 +101,20 @@ func TestProviderProfileTesterRejectsSpeechToTextAdapterWithoutProbe(t *testing.
 	}
 }
 
+func TestProviderProfileTesterRejectsLanguageInferenceAdapterWithoutProbe(t *testing.T) {
+	t.Parallel()
+
+	profile := providerResolverProfile(t, "lm-profile", agentmodel.ProviderCapabilityLanguageInference, agentmodel.ProviderProfileDisabled, agentmodel.CredentialStatusConfigured)
+	tester := NewProviderProfileTester(nonProbeLanguageInferenceFactory{})
+	_, err := tester.TestProviderProfile(context.Background(), ports.ProviderProfileTestInput{
+		Profile: profile, CredentialPurpose: ports.ProviderCredentialPurposeOAuthBearer,
+		Credential: []byte("token"), TestedAt: time.Date(2026, 6, 26, 10, 0, 0, 0, time.UTC),
+	})
+	if !errors.Is(err, ports.ErrInvalidProviderInput) {
+		t.Fatalf("expected invalid provider input, got %v", err)
+	}
+}
+
 func TestProviderProfileTesterRejectsNilProviderAdapter(t *testing.T) {
 	t.Parallel()
 
@@ -146,6 +160,26 @@ func (nonProbeSpeechToTextFactory) TextToSpeechProvider(context.Context, Provide
 	return providerResolverTextToSpeech{}, nil
 }
 
+type nonProbeLanguageInferenceFactory struct{}
+
+func (nonProbeLanguageInferenceFactory) SpeechToTextProvider(context.Context, ProviderProfileProviderConfig) (ports.SpeechToTextProvider, error) {
+	return providerResolverSpeechToText{}, nil
+}
+
+func (nonProbeLanguageInferenceFactory) LanguageInferenceProvider(context.Context, ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
+	return languageInferenceWithoutProbe{}, nil
+}
+
+func (nonProbeLanguageInferenceFactory) TextToSpeechProvider(context.Context, ProviderProfileProviderConfig) (ports.TextToSpeechProvider, error) {
+	return providerResolverTextToSpeech{}, nil
+}
+
+type languageInferenceWithoutProbe struct{}
+
+func (languageInferenceWithoutProbe) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+}
+
 type probeProviderProfileFactory struct {
 	stt      probeSpeechToTextDouble
 	language probeLanguageInferenceDouble
@@ -184,7 +218,7 @@ type probeLanguageInferenceDouble struct {
 }
 
 func (p *probeLanguageInferenceDouble) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "ready", DisplayResponse: "ready"}}, nil
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 func (p *probeLanguageInferenceDouble) ProbeLanguageInference(context.Context) error {

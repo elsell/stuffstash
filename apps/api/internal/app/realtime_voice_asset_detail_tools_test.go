@@ -15,7 +15,7 @@ func TestRealtimeVoiceGetAssetDetailToolRequiresVisibleAsset(t *testing.T) {
 
 	application := newActionPlanExecutionTestApp(&fakeActionPlanRepository{}, &fakeAssetRepository{}, &fakeIDGenerator{})
 
-	_, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+	_, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), ports.AgentToolCall{
 		ID:        "tool-call-detail",
 		Name:      RealtimeVoiceToolGetAssetDetail,
 		Arguments: map[string]any{"assetId": "hidden-asset"},
@@ -47,7 +47,7 @@ func TestRealtimeVoiceGetAssetDetailToolReturnsSafeCheckoutState(t *testing.T) {
 		},
 	}, &fakeIDGenerator{})
 
-	result, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+	result, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), ports.AgentToolCall{
 		ID:        "tool-call-detail",
 		Name:      RealtimeVoiceToolGetAssetDetail,
 		Arguments: map[string]any{"assetId": "drill-1"},
@@ -94,7 +94,7 @@ func TestRealtimeVoiceGetAssetDetailToolReturnsBoundedVisibleAssetDetail(t *test
 		},
 	}, &fakeIDGenerator{})
 
-	result, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+	result, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), ports.AgentToolCall{
 		ID:        "tool-call-detail",
 		Name:      RealtimeVoiceToolGetAssetDetail,
 		Arguments: map[string]any{"assetId": "water-bottle-1"},

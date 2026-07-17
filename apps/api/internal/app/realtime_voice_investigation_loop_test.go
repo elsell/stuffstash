@@ -48,8 +48,8 @@ func TestRealtimeVoiceInvestigationLoopAnswersFromPlausibleApproximateMatch(t *t
 	if got := resolver.providers.TextToSpeech.(*resolvedTextToSpeech).lastText; got != response.SpokenResponse {
 		t.Fatalf("expected only grounded response to be spoken, got %q", got)
 	}
-	if len(language.seenTools) != 2 || len(language.seenTools[0]) != 0 || len(language.seenTools[1]) != 0 {
-		t.Fatalf("investigation turns must not expose tools: %+v", language.seenTools)
+	if language.callCount != 2 {
+		t.Fatalf("expected initial and evidence investigation calls, got %d", language.callCount)
 	}
 }
 

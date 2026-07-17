@@ -3,6 +3,7 @@ package voice
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -73,6 +74,29 @@ func TestGoogleGeminiLanguageInferenceUsesStructuredInvestigationContract(t *tes
 	requestText := string(mustJSON(t, request))
 	if !strings.Contains(requestText, "destinationKinds") || !strings.Contains(requestText, "do not rely on a segment's array position") || !strings.Contains(requestText, "winter-clothing") || !strings.Contains(requestText, "lifecycleScope") {
 		t.Fatalf("expected ordered destination-kind contract in prompt and schema, got %s", requestText)
+	}
+}
+
+func TestGoogleGeminiLanguageInferenceRejectsMissingInvestigationWithoutCallingProvider(t *testing.T) {
+	t.Parallel()
+
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{"final":{"kind":"answer","spokenResponse":"legacy","displayResponse":"legacy"}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
+		ProjectID: "project", Location: "us-central1", Model: "gemini-test",
+		BaseURL: server.URL, TokenSource: staticTokenSource{}, HTTPClient: server.Client(),
+	})
+	_, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{Transcript: "Where are my tools?"})
+	if !errors.Is(err, ports.ErrInvalidProviderInput) {
+		t.Fatalf("expected missing typed investigation to be rejected, got %v", err)
+	}
+	if calls != 0 {
+		t.Fatalf("missing investigation must fail before provider I/O, got %d calls", calls)
 	}
 }
 

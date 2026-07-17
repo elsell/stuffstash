@@ -29,7 +29,7 @@ func TestRealtimeVoiceListAuthorizedAssetsToolCanListRootLevelAssets(t *testing.
 		},
 	}, &fakeIDGenerator{})
 
-	result, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+	result, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), ports.AgentToolCall{
 		ID:   "tool-call-root-list",
 		Name: RealtimeVoiceToolListAuthorizedAssets,
 		Arguments: map[string]any{
@@ -75,7 +75,7 @@ func TestRealtimeVoiceListAuthorizedAssetsRequiresParentIDVisibility(t *testing.
 	t.Parallel()
 
 	application := newActionPlanExecutionTestApp(&fakeActionPlanRepository{}, &fakeAssetRepository{}, &fakeIDGenerator{})
-	_, _, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), "", nil, ports.AgentToolCall{
+	_, err := application.executeRealtimeVoiceTool(context.Background(), checkoutToolSession(), ports.AgentToolCall{
 		ID:        "tool-call-hidden-parent",
 		Name:      RealtimeVoiceToolListAuthorizedAssets,
 		Arguments: map[string]any{"parentAssetId": "hidden-parent", "limit": 10},

@@ -51,7 +51,6 @@ func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
 		"list_asset_audit_history",
 		"list_asset_checkout_history",
 		"list_checked_out_assets",
-		"propose_action_plan",
 		"chain of thought",
 		"reasoning:",
 		"raw prompt",

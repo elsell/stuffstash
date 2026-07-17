@@ -80,8 +80,8 @@ func TestRealtimeVoiceFallsForwardForProviderCredentialRequestWithoutLanguagePro
 			if tts.lastText != tt.spoken {
 				t.Fatalf("expected unsupported response to be spoken, got %q", tts.lastText)
 			}
-			if len(language.seenTools) != 0 {
-				t.Fatalf("expected language provider not to be called, got %+v", language.seenTools)
+			if language.callCount != 0 {
+				t.Fatalf("expected language provider not to be called, got %d calls", language.callCount)
 			}
 			if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressUnderstanding) {
 				t.Fatalf("expected local unsupported response to emit understanding progress, got %+v", events)

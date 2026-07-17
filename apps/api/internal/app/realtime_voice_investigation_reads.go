@@ -83,7 +83,7 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 				return realtimeVoiceInvestigationReadResult{}, err
 			}
 			visibleIDs := state.visibleIDs(request.ReferenceKey)
-			result, _, err := a.executeRealtimeVoiceTool(ctx, session, "", state.toolResults, call, visibleIDs)
+			result, err := a.executeRealtimeVoiceTool(ctx, session, call, visibleIDs)
 			if err != nil {
 				_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: session.ID, ToolCallID: call.ID, ToolLabel: label, Code: "invalid_tool_request", Message: "I could not check that safely."})
 				return realtimeVoiceInvestigationReadResult{}, err

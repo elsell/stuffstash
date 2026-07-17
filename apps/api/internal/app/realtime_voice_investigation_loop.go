@@ -120,7 +120,7 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 	if err := emitRealtimeVoiceDiagnostics(session, turn.Diagnostics, emit); err != nil {
 		return agentmodel.InvestigationStep{}, err
 	}
-	if turn.Investigation == nil || turn.Final != nil || len(turn.ToolCalls) != 0 || turn.Investigation.Validate() != nil {
+	if turn.Investigation == nil || turn.Investigation.Validate() != nil {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	return *turn.Investigation, nil

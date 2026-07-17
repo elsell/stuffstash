@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"regexp"
 	"strings"
@@ -10,8 +9,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
-
-var realtimeVoicePlannerPlacementNowPattern = regexp.MustCompile(`\b(?:(?:is|are|was|were)\b|(?:it|this|that|there)\s+s\b)(?:\s+\S+){0,8}\s+in(?:\s+\S+){0,8}\s+now\b`)
 
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {
 	a.speechToText = stt
@@ -159,32 +156,6 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	return a.runRealtimeVoiceInvestigationLoop(ctx, input.Session, effectiveTranscript, input.ConversationTurns, input.ContinueAfterClarification, emit)
 }
 
-func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
-	payload, err := json.Marshal(call.Arguments)
-	if err != nil {
-		return "", ports.ErrInvalidProviderInput
-	}
-	return strings.TrimSpace(call.Name) + ":" + string(payload), nil
-}
-
-func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
-	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
-		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. For existing assets, assetId and parentAssetId must be opaque assetId values copied exactly from successful read tool results; never use titles or guessed IDs. For a new item, use one create_asset command with title or name and kind item; never include assetId and never add a move_asset command for that newly-created item. Put the new item directly in an existing visible parent with parentAssetId, or in a newly-created parent with parentCommandId. For missing destinations, create every missing location/container first, then reference those create commands with parentCommandId. If a missing container belongs inside an existing visible location, create the container with parentAssetId set to that visible location assetId, then create or move the requested item into the container with parentCommandId."
-	}
-	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
-}
-
-func realtimeVoiceToolCallDiagnosticDetail(call ports.AgentToolCall) string {
-	payload, err := json.MarshalIndent(map[string]any{
-		"name":      call.Name,
-		"arguments": redactRealtimeVoiceDiagnosticValue(call.Arguments),
-	}, "", "  ")
-	if err != nil {
-		return "Tool call arguments could not be rendered safely."
-	}
-	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
-}
-
 func emitRealtimeVoiceDiagnostics(session RealtimeVoiceSession, diagnostics []ports.LanguageInferenceDiagnostic, emit RealtimeVoiceEventSink) error {
 	if !session.DeveloperDiagnostics {
 		return nil
@@ -203,29 +174,6 @@ func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, 
 		message = "Agent diagnostic"
 	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentDiagnostic, SessionID: sessionID, Message: message, Detail: safeRealtimeVoiceDiagnosticText(detail, 4000)})
-}
-
-func realtimeVoiceFinalDiagnosticDetail(response ports.StructuredAgentResponse) string {
-	payload, err := json.MarshalIndent(map[string]any{
-		"kind":            response.Kind,
-		"spokenResponse":  response.SpokenResponse,
-		"displayResponse": response.DisplayResponse,
-	}, "", "  ")
-	if err != nil {
-		return "Final response could not be rendered safely."
-	}
-	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
-}
-
-func realtimeVoiceToolResultDiagnosticDetail(result ports.AgentToolResult) string {
-	payload, err := json.MarshalIndent(map[string]any{
-		"name":    result.Name,
-		"content": redactRealtimeVoiceDiagnosticString(result.Content),
-	}, "", "  ")
-	if err != nil {
-		return "Tool result could not be rendered safely."
-	}
-	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
 }
 
 func safeRealtimeVoiceDiagnosticText(value string, maxLength int) string {
@@ -264,116 +212,11 @@ var realtimeVoiceDiagnosticRawResponseAssignmentPattern = regexp.MustCompile(`(?
 var realtimeVoiceDiagnosticUnsafePhrasePattern = regexp.MustCompile(`(?i)\b(raw[-_ ]?(prompt|query|transcript|model[-_ ]?response|provider[-_ ]?response)|stack[-_ ]?trace|provider[-_ ]+session[-_ ]+id)\b`)
 var realtimeVoiceDiagnosticURLPattern = regexp.MustCompile(`(?i)\b(?:https?|wss?)://[^\s"',\]}]+`)
 
-func redactRealtimeVoiceDiagnosticValue(value any) any {
-	switch typed := value.(type) {
-	case map[string]any:
-		redacted := map[string]any{}
-		for key, nested := range typed {
-			if unsafeRealtimeVoiceDiagnosticKey(key) {
-				redacted[key] = "[redacted]"
-				continue
-			}
-			redacted[key] = redactRealtimeVoiceDiagnosticValue(nested)
-		}
-		return redacted
-	case []any:
-		redacted := make([]any, 0, len(typed))
-		for _, nested := range typed {
-			redacted = append(redacted, redactRealtimeVoiceDiagnosticValue(nested))
-		}
-		return redacted
-	case string:
-		return redactRealtimeVoiceDiagnosticString(typed)
-	default:
-		return typed
-	}
-}
-
-func unsafeRealtimeVoiceDiagnosticKey(key string) bool {
-	normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(key, "_", ""), "-", ""), " ", ""))
-	for _, token := range []string{"apikey", "authorization", "bearer", "credential", "password", "providersessionid", "secret", "token"} {
-		if strings.Contains(normalized, token) {
-			return true
-		}
-	}
-	return false
-}
-
 func (a App) ensureRealtimeVoiceDependencies() error {
 	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.realtimeVoiceProviders == nil || a.realtimeSessions == nil {
 		return apperrors.ErrInvalidInput
 	}
 	return nil
-}
-
-func recoverableRealtimeVoiceToolError(err error) bool {
-	return errors.Is(err, ports.ErrInvalidProviderInput) ||
-		errors.Is(err, apperrors.ErrInvalidInput) ||
-		errors.Is(err, errRealtimeVoiceToolCallTimedOut) ||
-		errors.Is(err, ErrValidation)
-}
-
-func realtimeVoicePlannerOnlyTurnHasActionPlan(turn ports.LanguageInferenceTurn) bool {
-	return turn.Final == nil &&
-		len(turn.ToolCalls) == 1 &&
-		turn.ToolCalls[0].Name == RealtimeVoiceToolProposeActionPlan
-}
-
-func realtimeVoicePlannerOnlyTurnCanProceed(turn ports.LanguageInferenceTurn) bool {
-	return realtimeVoicePlannerOnlyTurnHasActionPlan(turn) ||
-		realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn)
-}
-
-func realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn ports.LanguageInferenceTurn) bool {
-	if turn.Final == nil {
-		return false
-	}
-	if realtimeVoicePlannerFinalClaimsMutation(*turn.Final) {
-		return false
-	}
-	switch turn.Final.Kind {
-	case ports.StructuredAgentResponseKindClarification,
-		ports.StructuredAgentResponseKindUnsupportedAction,
-		ports.StructuredAgentResponseKindSafeFailure:
-		return true
-	default:
-		return false
-	}
-}
-
-func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentResponse) bool {
-	text := normalizedRealtimeVoiceVerbText(response.SpokenResponse + " " + response.DisplayResponse)
-	for _, token := range []string{
-		" added ",
-		" archived ",
-		" checked in ",
-		" checked out ",
-		" created ",
-		" is now in ",
-		" moved ",
-		" placed ",
-		" put ",
-		" restored ",
-		" returned ",
-		" stashed ",
-		" stored ",
-		" updated ",
-	} {
-		if strings.Contains(text, token) {
-			return true
-		}
-	}
-	if realtimeVoicePlannerPlacementNowPattern.MatchString(text) {
-		return true
-	}
-	return false
-}
-
-func realtimeVoicePlannerContractRepairResult(id string) (ports.AgentToolResult, error) {
-	return realtimeVoiceToolErrorResult(ports.AgentToolCall{
-		ID:   id,
-		Name: RealtimeVoiceToolProposeActionPlan,
-	}, "planner_contract_rejected", "Planner-only turns must return exactly one propose_action_plan request. Do not return a final answer from planner mode and do not call read tools from planner mode. Retry propose_action_plan with valid structured commands, or return a safe clarification, unsupported_action, or safe_failure response if no reviewable plan can be prepared.", true)
 }
 
 func (a App) MarkRealtimeVoiceSessionFailed(ctx context.Context, session RealtimeVoiceSession, safeFailureCode string) error {

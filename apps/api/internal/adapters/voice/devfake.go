@@ -3,6 +3,7 @@ package voice
 import (
 	"context"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -18,25 +19,35 @@ func (DevFakeSpeechToText) Transcribe(_ context.Context, input ports.SpeechToTex
 type DevFakeLanguageInference struct{}
 
 func (DevFakeLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "dev-search-assets",
-				Name: "search_authorized_assets",
-				Arguments: map[string]any{
-					"query": "tools",
-				},
-			}},
-		}, nil
+	if input.Investigation == nil || input.Investigation.Validate() != nil {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  "I checked your inventory for tools. Open the voice details to see the result.",
-			DisplayResponse: "I checked your inventory for tools. Open the voice details to see the result.",
-		},
-	}, nil
+	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
+		return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{
+			Decision: agentmodel.InvestigationDecisionSearch,
+			Intent:   agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"},
+			SearchRequests: []agentmodel.SearchRequest{{
+				ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
+				Mention: "tools", SearchProbes: []string{"tools"}, LifecycleScope: agentmodel.LifecycleScopeActive,
+			}},
+			Rationale: "Gather visible candidates.",
+		}}, nil
+	}
+	resolution := agentmodel.Resolution{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent, Evidence: "No visible candidate matched."}
+	if len(input.Investigation.Observations) > 0 {
+		resolution.Status = agentmodel.ResolutionPlausible
+		resolution.CandidateIDs = []string{input.Investigation.Observations[0].CandidateID}
+		resolution.Evidence = "A visible candidate matched."
+	}
+	return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{
+		Decision:    agentmodel.InvestigationDecisionFinish,
+		Intent:      *input.Investigation.CanonicalIntent,
+		Resolutions: []agentmodel.Resolution{resolution},
+		Rationale:   "Resolve from authorized evidence.",
+	}}, nil
 }
+
+func (DevFakeLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
 
 type DevFakeTextToSpeech struct{}
 
