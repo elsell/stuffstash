@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Stuff Stash needs a first production-shaped mobile voice slice that proves the core conversational loop with real audio input, speech-to-text, language inference, tool calls, structured final output, text-to-speech, and streamed audio playback.
+Stuff Stash needs a first production-shaped mobile voice slice that proves the core conversational loop with real audio input, speech-to-text, language inference, typed inventory reads, structured terminal outcomes, text-to-speech, and streamed audio playback.
 
 The first testable user experience is:
 
@@ -10,8 +10,8 @@ The first testable user experience is:
 2. The user asks a read-only inventory question, such as "Where are my tools?" or "What is in the garage?"
 3. The mobile app streams audio to the core API.
 4. The core API transcribes the audio through a speech-to-text port.
-5. The core API runs the agent loop with the project-owned tool catalog.
-6. The agent loop may call read-only inventory tools one or more times.
+5. The core API runs the agent loop with the project-owned typed read dispatcher.
+6. The agent loop may request one or more bounded, authorized inventory reads.
 7. The agent loop produces a structured final response.
 8. The core API streams the final spoken response through a text-to-speech port.
 9. The mobile app plays speech audio as soon as useful audio chunks are available.
@@ -27,7 +27,7 @@ This spec includes:
 - Client audio upload.
 - Speech-to-text events.
 - Agent progress and tool-call events.
-- Read-only internal tool loop.
+- Typed internal read dispatcher.
 - Structured final response.
 - Text-to-speech streaming back to mobile.
 - First mobile display behavior for debug/progress events.
@@ -63,22 +63,22 @@ The core API owns:
 - Safe final response events.
 - Safe observability.
 
-Language inference must be phase-aware. Provider adapters must not rely on prompt text alone when a provider offers native constrained output. For Gemini, final-response turns and action-plan planner turns must request `application/json` output with a provider-native response schema. Schema-constrained provider text must parse as exactly one JSON object with no trailing JSON values or explanatory text. Read turns may use native function calling with a required tool-call configuration when the loop needs inventory context. The planner turn must not expose `propose_action_plan` as a provider-callable function; instead, the provider returns a schema-constrained action-plan object that the API converts into the same internal action-plan proposal path used by other adapters. The API remains responsible for authorization, visible-ID validation, tenant and inventory scoping, action-plan persistence, approval, audit, and execution.
+Language inference must be phase-aware and schema constrained. The provider returns only the project-owned investigation step for the initial interpretation or evidence-assessment phase. It does not author tool calls, final user responses, executable commands, or action plans. For Gemini, every investigation turn must request `application/json` with a provider-native response schema, and the response must parse as exactly one JSON object with no trailing values or explanatory text. The API remains responsible for authorized reads, visible-ID provenance, deterministic response rendering, action-plan compilation and persistence, approval, audit, and execution.
 
 For clear write requests, the loop should follow an explicit state sequence:
 
-1. Gather required inventory context with read-only tools.
-2. Ask the language provider for a constrained action-plan object when enough context exists to propose a safe reviewable plan.
-3. Validate and persist the action plan through the application service.
-4. Pause the session and emit `action.plan.proposed` until the user approves or cancels.
+1. Ask the provider for a typed intent and reference-scoped read plan.
+2. Execute the validated reads through application services and return bounded observations for one evidence assessment, with at most one materially different additional round.
+3. Resolve references under application-owned provenance and policy, then compile supported changes deterministically into an action plan.
+4. Persist the compiled plan and pause the session at `action.plan.proposed` until the user approves or cancels.
 
-The loop must not continue calling the language model after a valid action plan has been proposed. If a constrained planner output is invalid, the loop may retry with safe structured repair context, but it must not let a later final answer override a previously valid plan.
+The loop must not call the language model after it has compiled and persisted a valid action plan. Invalid investigation output must never be reinterpreted as executable plan content, and no later model text may override a proposed plan.
 
-Approved voice create-asset action plans must execute through the same application create command semantics as REST and mobile Add. If a reviewed create command places the new asset inside an existing item, execution must promote that parent item into a container in the same authoritative unit of work, with audit history for the parent promotion and child creation. Voice adapters and websocket handlers must not perform client-side or transport-layer kind mutation.
+Approved voice create-asset action plans must execute through the same application command semantics as REST and mobile Add. The compiler may target only inventory root or a grounded destination whose kind is location or container; it must not reinterpret or promote an existing item into a container. Voice adapters and WebSocket handlers must not mutate asset kinds or containment semantics.
 
 The API may complete obvious unsafe or under-specified transcripts locally after transcription and before language inference. This includes provider credential requests, broad destructive database or inventory wipe requests, and vague deictic move destinations such as "over there" or "to the side" when no concrete place is named. Broad destructive inventory requests include clear requests to delete, erase, remove, clear, empty, reset, or purge all assets, items, things, stuff, records, entries, or inventory contents. These local completions must return structured safe final or clarification responses and must not call the language provider.
 
-The internal agent loop may use the project-owned tool catalog specified by `specs/agent-model/mcp-agent-tools.spec.md`, but it must call tools in-process through application services and ports. It must not call the public MCP transport for this first mobile loop.
+The internal agent loop may dispatch project-owned read operations specified by `specs/agent-model/mcp-agent-tools.spec.md`, but it must call them in-process through application services and ports. It must not expose that catalog for provider control or call the public MCP transport for this mobile loop.
 
 ## User Workflows
 
@@ -137,11 +137,11 @@ The mobile app must show:
 - Audio playback state.
 - Cancellation and failure states.
 
-The mobile state layer must apply safe realtime session events incrementally as they arrive. It must not wait for the WebSocket session to finish before updating visible progress, final transcript, safe tool progress, final response, speech playback state, or safe failure state. This allows the sheet and collapsed voice accessory to reflect transcription, tool execution, model response preparation, and speech playback while the server-side loop is still running.
+The mobile state layer must apply safe realtime session events incrementally as they arrive. It must not wait for the WebSocket session to finish before updating visible progress, final transcript, safe tool progress, final response, speech playback state, or safe failure state. This allows the sheet and collapsed voice accessory to reflect transcription, inventory reads, evidence assessment, response preparation, and speech playback while the server-side loop is still running.
 
 Safe agent progress events should be summarized as lightweight user-facing status rather than exposed as raw event logs. The active voice sheet may render a compact bounded progress trace for multi-step understanding, exploration, planning, answering, and recovery while no action-plan review body is present, so users can see the smart loop moving without enabling developer diagnostics. The active voice sheet must not render progress as an expanding table above the action-plan review because that can push the approval prompt and command list below the visible area. When a proposed action plan exists, the confirmation prompt and command list must remain the primary visible body content, with current progress represented by compact chrome such as the bottom status label, a slim activity bar, or an activity indicator. Tool-call events may be displayed in a developer diagnostics panel only when developer diagnostics are explicitly enabled. Diagnostics must be visually secondary, collapsed by default, placed after the review content, and must not expose hidden resource data, raw query text, raw transcripts, raw prompts, raw model responses, provider credentials, internal IDs, or internal stack details.
 
-When a speech, language, or speech-output provider fails after earlier session work has succeeded, the client-facing failure copy must describe the failed stage without implying that no model or tool calls happened. A language-inference failure can occur on a continuation turn after successful tool calls. In developer-diagnostic sessions, the API must emit a sanitized diagnostic before returning the safe failure so the mobile sheet can show the failed turn number, whether the call was final-only, prior safe tool names, and a safe error category. This diagnostic must not include raw provider response bodies, prompts, transcripts, credentials, endpoint URLs, stack traces, hidden inventory data, or bearer material.
+When a speech, language, or speech-output provider fails after earlier session work has succeeded, the client-facing failure copy must describe the failed stage without implying that no model or read work happened. A language-inference failure can occur during evidence assessment after successful reads. In developer-diagnostic sessions, the API must emit a sanitized diagnostic before returning the safe failure so the mobile sheet can show the investigation phase, evidence round, prior safe read names, and a safe error category. This diagnostic must not include raw provider response bodies, prompts, transcripts, credentials, endpoint URLs, stack traces, hidden inventory data, or bearer material.
 
 The mobile state layer may maintain a bounded ephemeral progress timeline for the active session for compact summaries and developer inspection. The visible sheet should show the current milestone rather than all milestones by default. The timeline may include safe client and server milestones such as audio upload, API connection, transcription completion, safe `agent.progress` messages, response preparation, speech playback, cancellation, completion, and safe failure. It must not include raw tool arguments, raw provider output, internal IDs, provider errors, prompts, credentials, bearer material, audio bytes, stack traces, or partial transcript history. The mobile application boundary must still redact obvious unsafe terms from progress labels before they reach visible state, even though the API is also responsible for safe progress messages. Duplicate adjacent progress labels should collapse into one visible step so compact sheets stay readable.
 
@@ -362,13 +362,13 @@ Client messages must include monotonic per-session sequence metadata once a sess
 
 ## Action Plan Events
 
-`action.plan.proposed` contains the safe persisted action-plan review payload for mobile. It must include plan ID, confirmation summary, command summaries, risk summaries, and no raw transcript, raw prompt, raw model response, credentials, provider session IDs, hidden resource data, or approval claims. For existing-asset commands such as move, archive, restore, checkout, and return, the API should enrich the mobile review command with the authorized visible asset title and kind instead of relying only on provider-written command summary text.
+`action.plan.proposed` contains the safe persisted action-plan review payload for mobile. It must include plan ID, confirmation summary, command summaries, risk summaries, and no raw transcript, raw prompt, raw model response, credentials, provider session IDs, hidden resource data, or approval claims. For existing-asset commands such as move, archive, restore, checkout, and return, the application-compiled review command must include the authorized visible asset title and kind.
 
 Mobile must not enter review for a malformed `action.plan.proposed` event whose plan ID is missing or empty after normalization. It must fail the visible session safely instead of showing an approval surface that cannot send a valid review decision.
 
-The mobile review sheet must treat API-enriched command titles and kinds as verified display context for existing-asset changes. If an existing-asset review command is missing a verified title, mobile may show the provider-written command summary as supporting text, but it must not present that summary as the resolved asset title. The primary review row must use a neutral fallback such as `Selected item`, `Selected container`, `Selected location`, or `Selected asset` until the API supplies verified context.
+The mobile review sheet must treat application-compiled command titles and kinds as verified display context for existing-asset changes. If an existing-asset review command is missing a verified title, mobile may show its application-generated command summary as supporting text, but it must not present that summary as the resolved asset title. The primary review row must use a neutral fallback such as `Selected item`, `Selected container`, `Selected location`, or `Selected asset` until the API supplies verified context.
 
-When the API emits `action.plan.proposed`, the mobile app must enter the `review` stage and show the proposal in the voice sheet. The first mobile slice may show disabled or not-yet-wired approval actions, but it must not silently execute the plan. The final spoken response for a proposed write may explain that the user should review the suggested change.
+When the API emits `action.plan.proposed`, the mobile app must enter the `review` stage and show the proposal in the voice sheet. The loop must stop there without `assistant.response.completed`, text-to-speech events, or `session.completed` until the user explicitly approves or cancels. It must never silently execute the plan.
 
 The next mobile review slice must let the user approve or cancel the proposed action plan from the voice sheet using the existing realtime WebSocket session. The mobile client must send `action.plan.approve` or `action.plan.cancel` with the server-created session ID, the proposed plan ID, and monotonic client sequence metadata. Approval may additionally send only bounded reviewed create-command edits keyed by command ID and safe photo metadata. Cancellation must not send edits. The client must not send replacement command kinds, arbitrary command arguments, summaries, risks, approval claims, tenant IDs, inventory IDs, credentials, prompt text, transcript text, or model output in the review decision message.
 
@@ -404,29 +404,25 @@ The agent loop must:
 
 - Use the authenticated principal.
 - Use the selected tenant and inventory scope.
-- Use the project-owned tool catalog.
-- Provide the language model with only the tools allowed for the current mobile slice.
+- Use the project-owned typed investigation and read-dispatch contracts.
+- Give the language model only authorized, bounded vocabulary and observations, never direct execution control.
 - Treat model output as untrusted.
-- Validate tool-call requests before execution.
-- Authorize every tool execution through the owning application service and authorization port.
-- Allow multiple tool-call iterations when needed.
-- Stop when the model produces a structured final response, proposes an action plan for user review, a safe failure occurs, cancellation is requested, or the session times out.
-- Instruct the model to use tool results as the source of truth and to avoid inventing locations, quantities, or inventory contents that are not present in tool results.
+- Validate every typed read request before execution.
+- Authorize every read through the owning application service and authorization port.
+- Allow no more than two materially distinct evidence rounds.
+- Render grounded read responses and compile supported changes in application code.
+- Stop at a grounded response, action-plan review, safe failure, cancellation, or timeout.
 
-The Go application service owns the realtime voice agent loop. The loop should use a small graph-like state machine inspired by durable agent runtimes: explicit state, named steps, bounded turns, safe progress events, model-visible tool results, and terminal outcomes. The implementation must remain project-owned Go code behind Stuff Stash ports and must not depend on Python, JavaScript, provider-hosted agent runtimes, LangGraph, LangChain, or provider-specific agent SDKs for core control flow.
+The Go application service owns the realtime voice agent loop. The loop should use a small graph-like state machine inspired by durable agent runtimes: explicit state, named steps, bounded turns, safe progress events, provider-visible bounded observations, and terminal outcomes. The implementation must remain project-owned Go code behind Stuff Stash ports and must not depend on Python, JavaScript, provider-hosted agent runtimes, LangGraph, LangChain, or provider-specific agent SDKs for core control flow.
 
-The default realtime voice path must be this graph-like smart loop. The mobile voice experience must not maintain a separate one-shot query path that bypasses clarification handling, server-selected exploration, action-plan review, loop repair, or tool-result grounding for normal user requests.
+The default realtime voice path must be this graph-like bounded loop. The mobile voice experience must not maintain a separate one-shot, legacy tool loop, planner, or fallback path that bypasses clarification handling, action-plan review, or evidence grounding for normal user requests.
 
-The first graph-like loop nodes are:
+The bounded loop nodes are:
 
-- `transcribe`: convert audio into an ephemeral final transcript.
-- `understand`: classify the safe request shape and reject obvious unsafe or under-specified local requests before provider calls.
-- `explore`: run bounded read-only inventory lookup through project-owned tools before final answers or planner turns when inventory context is needed.
-- `agent`: request the next model turn from the configured language provider.
-- `tools`: validate and execute one or more requested project-owned tools.
-- `plan`: request a constrained action-plan object for supported write requests once enough context exists.
-- `finalize`: validate a structured final response, synthesize speech, and complete the session.
-- `recover`: produce a bounded safe final response when the loop cannot make more progress but can still explain the outcome without leaking internals.
+- `investigate`: ask the configured provider for a schema-constrained intent, semantic references, and bounded read hypotheses.
+- `read`: validate and execute reference-scoped authorized reads, retaining observations and explicit zero-match evidence.
+- `resolve`: assess at most one additional evidence round, then apply application-owned provenance, lifecycle, ambiguity, exact-match, containment, and terminal-response policy.
+- `compile`: render a grounded read response or deterministically compile a supported change into an action plan and pause at review.
 
 ### Bounded interpretation and evidence contract
 
@@ -496,19 +492,11 @@ The bounded investigation contract is internal to the API. It must not add provi
 
 Safe `agent.progress` statuses must use a bounded product-owned vocabulary so mobile can render phase-aware UI without provider-specific details. The first statuses are `understanding`, `exploring`, `planning`, `reviewing`, `answering`, and `recovering`. The server may add safe message text, but it must not expose raw prompts, raw transcripts, raw tool arguments, raw model output, provider errors, credentials, internal IDs, or hidden inventory data in progress events.
 
-The `understand` node must emit the `understanding` progress status before any terminal local completion, including locally detected unsafe requests, unsupported provider-credential requests, destructive inventory/database requests, and under-specified deictic move destinations. These local completions must still avoid calling the language provider, but mobile should see the same graph phase vocabulary as provider-backed sessions.
+The voice entrypoint must emit the `understanding` progress status before any terminal local completion, including locally detected unsafe requests, unsupported provider-credential requests, destructive inventory/database requests, and under-specified deictic move destinations. These local completions avoid language inference while preserving the same mobile progress vocabulary as provider-backed sessions.
 
-Recoverable tool-call failures must not fail the whole voice session by default. If a model asks for an unknown tool, malformed tool arguments, unsafe proposal arguments, a duplicate exact tool call, or another expected validation failure, the loop must emit a safe `tool.call.failed` event and append a structured error tool result back to the model. The model then gets another turn to repair the tool call, ask for clarification, or produce a safe unsupported-action response. If the model produces a final clarification asking whether to create a clear missing destination for a write request, such as "I can't find the second shelf in the big cabinet in the kitchen. Do you want me to create it?", after a prior authorized read result has already shown the requested source item, the loop must treat that as a recoverable agent-contract failure rather than a terminal final response. It should append safe repair feedback and give the model another bounded tool-capable turn so it can call `propose_action_plan`. If the source item itself is not visible in prior read results, the loop must not force an action plan. Fatal failures such as provider transport errors, authentication or authorization failures, context cancellation, text-to-speech failures, and persistence failures may still terminate the session with a safe failure code.
+Malformed investigation steps, repeated or invalid read requests, ungrounded resolutions, and provider transport failures must fail safely. A failed read does not establish evidence, and the application must not send a synthetic tool error to the model as a repair conversation. If the evidence budget is exhausted without a valid terminal resolution, the application may render only a bounded application-owned safe response; it must not invoke a legacy final-only or tool-repair turn.
 
-Structured error results from read tools do not count as successful inventory context. They may be sent back to the model as repair feedback, but they must not satisfy required context-gathering gates, read-only finalization gates, contents-list gates, or planner-readiness gates by themselves.
-
-For move-style utterances, if a read tool search for the requested source item returns no visible matches, the loop must fall forward with a structured clarification before planner mode. It must not ask the model to create the source as a side effect of a move request, and it must not spend repeated repair turns on action plans that invent or create the missing source. Missing destinations are different: once the source item is visible, clear missing destination names should become reviewable create-and-move action plans.
-
-The structured error tool result must be provider-independent JSON and must include only safe fields such as the tool name, a stable error code, a short safe message, and whether the model may retry. It must not include raw provider output, stack traces, raw prompts, raw transcript text, credentials, bearer tokens, hidden resource data, exact unauthorized IDs, or unredacted tool arguments.
-
-The loop must maintain a bounded remaining-step budget. If the model continues asking for tools when no more tool execution budget remains, the loop should request one final-only model turn using the accumulated tool results and no tool catalog. If the model still does not produce a valid structured final response, the `recover` node must complete with a safe final response instead of returning a generic transport failure whenever text-to-speech is available.
-
-If a model turn returns neither a valid structured final response nor any tool calls, the loop must treat that as a recoverable agent-contract failure. It should enter the `recover` node, emit safe recovering/answering progress, synthesize the bounded safe-failure response when text-to-speech is available, and complete the session rather than surfacing a generic provider input failure to mobile.
+For move-style requests, zero-match authorized discovery for the existing source must produce a structured clarification. It must never create the source as a side effect. Missing destinations are different: once the source is grounded, clear missing destination segments become deterministic dependent create commands followed by the move.
 
 The loop should optimize for low-friction autonomy. For write-like requests, it should gather enough visible context through read tools to propose a complete approval plan in one session when practical, including multiple dependent commands. It should ask a clarification only when the requested object, destination, or command cannot be resolved safely or unambiguously from visible authorized data.
 
@@ -516,64 +504,33 @@ Clarification is a continuation state, not a forced session reset. When a final 
 
 Same-session clarification follow-ups must carry bounded safe conversation context through the project-owned language inference port. The context may include prior final user transcripts and assistant response kind/display text from the same realtime session. The first context window is the last six raw same-session conversation turns before role filtering, then filtered to user and assistant roles only. Each retained turn must bound text to 500 characters and kind to 80 characters after redacting obvious credential, bearer, and provider-session material. It must not include raw audio, partial transcripts, raw prompts, raw model responses, provider diagnostics, hidden inventory data, tool arguments, tool results, credentials, bearer material, endpoint URLs, stack traces, internal IDs, malformed roles, or older out-of-window turns. Provider adapters may render this context into provider-native prompt/content shapes, but provider-specific conversation message types must not cross the language inference port.
 
-For same-session clarification follow-ups, the application loop may derive a bounded effective transcript from the latest safe prior user intent and the current final transcript. The prior intent may be a read question or a write request when it was followed by an assistant clarification. The effective transcript is for loop classification, tool selection, and language inference input only; the client-facing `transcript.final` event must still contain the exact current final transcript. The derived text must use only bounded safe same-session context and must not include raw audio, partial transcripts, raw prompts, raw model responses, provider diagnostics, hidden inventory data, tool arguments, tool results, credentials, bearer material, endpoint URLs, stack traces, or internal IDs. If there is no prior actionable user intent followed by an assistant clarification, the loop must use the current final transcript alone.
+For same-session clarification follow-ups, the application loop may derive a bounded effective transcript from the latest safe prior user intent and the current final transcript. The prior intent may be a read question or a write request when it was followed by an assistant clarification. The effective transcript is for intent interpretation, read planning, and language inference input only; the client-facing `transcript.final` event must still contain the exact current final transcript. The derived text must use only bounded safe same-session context and must not include raw audio, partial transcripts, raw prompts, raw model responses, provider diagnostics, hidden inventory data, read arguments, observations, credentials, bearer material, endpoint URLs, stack traces, or internal IDs. If there is no prior actionable user intent followed by an assistant clarification, the loop must use the current final transcript alone.
 
 When the effective transcript combines a generic read question with a concrete follow-up answer, such as "Where is it? Follow-up answer: Water bottle", "What's in it? Follow-up answer: Toolbox", or "When did I move it? Follow-up answer: Water bottle", read-tool query selection should use the concrete follow-up answer as the lookup object, contents target, or history target. It must not search for generic pronouns or scaffolding words such as "it", "follow-up", or "answer" when the follow-up answer contains the requested item, location, or container name.
 
 Application-selected exploration is limited to validating and executing the typed, reference-scoped read plan and to required typed follow-up reads implied by the resolved operation. The application may add morphology-preserving lexical anchors from the same semantic reference, but it must not parse household phrases with a growing list of transcript templates, guess an unrelated category, convert a narrow no-match into a broad inventory list, or execute write proposals from the read path. Speech-to-text recovery should normally come from the provider's diverse bounded hypotheses and evidence assessment.
 
-The first provider turn in a realtime voice session should be a schema-constrained interpretation and evidence-planning turn. The provider returns typed search hypotheses rather than directly controlling native inventory function calls. The application validates and executes those hypotheses through the project-owned read dispatcher, then supplies bounded observations to a schema-constrained assessment turn. Native function calling may remain available for provider diagnostics or separately specified integrations, but it must not be the production voice loop's primary control mechanism. Provider names and native function-calling modes must not leak into the application contract.
+The first provider turn in a realtime voice session should be a schema-constrained interpretation and evidence-planning turn. The provider returns typed search hypotheses rather than directly controlling native inventory function calls. The application validates and executes those hypotheses through the project-owned read dispatcher, then supplies bounded observations to a schema-constrained assessment turn. The production voice loop must not use provider-native function calling as its control mechanism. Provider names and native function-calling modes must not leak into the application contract.
 
-The first query loop exposed only read-only tools to the model. The first approval-backed mobile slice may add exactly one non-mutating write-intent tool: `propose_action_plan`.
-
-The first read-only tools are:
-
-- Search authorized assets.
-- Get asset detail.
-- List assets in a location.
-- List root-level assets in an inventory.
-- List authorized assets by safe filters such as kind, lifecycle state, and optional parent or location title.
-- List safe audit history for an already-visible asset.
-
-Tool descriptors must use project-owned names, descriptions, read-only markers, and parameter metadata. Provider adapters may translate that metadata into provider-native schemas, but provider-specific tool declaration types must not cross the language inference port.
+The typed read dispatcher supports project-owned read kinds for asset search, broad inventory listing, direct contents listing, asset detail, asset history, and checkout history. The provider selects read kinds and bounded reference-scoped parameters through the investigation schema; it does not receive provider-callable inventory functions. The application translates validated read requests into in-process application queries and emits the existing safe tool progress events for observability and mobile diagnostics.
 
 The asset-detail read tool must be scoped to an asset ID returned by an earlier authorized read tool in the same agent session. It must reject IDs that have not been made visible to the session and must not leak whether a rejected ID exists elsewhere. It must use the authorized asset-detail application query so normal inventory view authorization, safe read audit, and domain validation are preserved. It may return safe bounded asset fields such as title, kind, description, lifecycle state, inventory name, parent title, containing location title, containment path, tag names where available, and current checkout state. It must not return raw custom-field payloads, hidden resources, provider details, credentials, bearer material, raw transcripts, raw prompts, raw audit metadata, internal authorization data, operation IDs, or stack traces. The language model should use this tool when an earlier search or list result identifies the likely asset but the next answer or action needs a more precise current detail snapshot.
 
 The audit-history read tool must be scoped to an asset ID returned by an earlier authorized read tool in the same agent session. It must reject IDs that have not been made visible to the session and must not leak whether a rejected ID exists elsewhere. It must use an asset-scoped audit-history application query backed by an audit repository port filter for tenant, inventory, target type, target ID, newest-first ordering, and limit. It must not scan generic tenant or inventory audit pages in memory to approximate asset history. The application query must authorize inventory view access and emit one intentional safe audit-read record for the history lookup, not one audit-read record per internal page. It may return safe audit fields such as action, source, occurred-at time, target type, target title, asset kind, previous parent title, new parent title, lifecycle state changes, and a concise summary. Historical parent titles must be resolved through an authorization-aware application boundary or omitted as unavailable. The tool must not return raw audit metadata wholesale, provider details, credentials, bearer material, raw transcripts, raw prompts, hidden resource data, internal authorization data, operation IDs, or stack traces. The tool is intended for questions such as "when did I move this item?", "who changed this?", "when was this created?", and "where was this before?" The language model must use this tool, together with normal asset lookup tools, for history and movement questions instead of guessing from current containment alone.
 
-The checkout-history read tool must likewise be scoped to an asset ID returned by an earlier authorized read tool in the same agent session. For specific checkout or return history questions such as "who checked out the drill?", "who had the drill?", "who borrowed it?", "when was the drill checked out?", or "was the drill returned?", the loop must not answer only from generic search metadata after resolving the visible asset. It should call `list_asset_checkout_history` for that visible asset before finalizing. Same-session clarification follow-ups may combine a generic checkout-history question with a concrete item answer, such as "Who had it? Follow-up answer: Drill", and must resolve the visible item before calling checkout history. The checked-out-assets list tool returns authorized visible assets and may establish asset visibility for a later asset-scoped checkout-history read in the same session. A failed or rejected checkout-history tool call must not satisfy the requirement to read checkout history before finalizing. Broad checkout-state questions such as "what is checked out?" should be able to use the checked-out-assets list tool on the initial context-gathering turn.
+The checkout-history read must likewise be scoped to an asset ID already visible for the same semantic reference. Specific checkout or return history questions require that typed read after discovery; generic search metadata is not sufficient evidence. Failed or rejected typed reads do not satisfy operation-specific evidence requirements.
 
-`propose_action_plan` is not an inventory mutation tool. It may persist a proposed action plan through the action-plan application boundary and return a safe plan summary for mobile review. It must not execute asset, location, tenant, sharing, provider-profile, audit mutation, import/export, or raw repository operations. Its arguments must be bounded, typed, validated by the application boundary, and free of raw prompts, raw transcripts, raw provider responses, credentials, bearer tokens, provider session IDs, hidden resource data, and approval claims.
+The application compiler, not the provider, owns executable command shapes. It compiles create, move, archive, restore, checkout, and return intents from canonical intent, grounded resolutions, and authorized observations. Existing resources use only opaque IDs proven for the same reference. Clear missing destination segments become ordered create commands linked by `parentCommandId`; visible path prefixes use `parentAssetId`. A named destination may not be silently dropped or replaced with inventory root.
 
-After `propose_action_plan` succeeds, the realtime loop must pause the agent run and emit the proposed plan for mobile review. It must not ask the language model for another final response, synthesize a spoken response, emit `session.completed`, or let a later model turn override the proposed plan before the user approves or cancels the plan. The WebSocket session should remain open for the explicit approval decision. After approval or cancellation, the server may emit the corresponding action-plan terminal event and close or complete the realtime session.
+New items and containers compile to `create_asset`; true locations compile to `create_location`. Existing-asset commands compile only from a single strong or plausible grounded subject. Lifecycle and custody operations become product-owned no-op answers when already satisfied. The compiler must reject ambiguity, missing existing sources, broken containment chains, unsupported operations, and any attempt to use provider evidence text as command content.
 
-If one or more `propose_action_plan` attempts failed validation for a write request, the loop must not accept a later final `answer` as terminal. Such a final response must be treated as a recoverable agent-contract failure and converted into safe repair feedback. The model may still produce a final `clarification`, `unsupported_action`, or `safe_failure` response when no valid proposal can be prepared. The spoken response must not say an item was added, moved, created, archived, restored, or otherwise changed unless the approved action-plan execution path actually completed that change.
-
-The same rejected-plan rule applies when the realtime loop reaches its final-only fallback after exhausting tool turns. A final-only answer must not override earlier rejected action-plan feedback or imply that a write occurred; the API must recover safely instead of speaking the unsupported claim.
-
-Write proposals must include executable command arguments as structured JSON. For create or move requests that reference an existing location or container, the loop must first use read tools to resolve the visible resource and then place the returned `assetId` in `parentAssetId`. For requests that require missing parent containers or locations to be created, the loop may propose an ordered multi-command plan and use `parentCommandId` to place later creates or moves inside earlier creates. The agent should assume that a clear named missing destination, such as `Kitchen`, `Living room`, `Garage`, `Box under the TV`, `Big cabinet`, or `Second shelf`, is intended to be created unless the phrase is ambiguous, conflicts with visible inventory, or looks likely to be a speech-to-text mistranscription. A request such as "move my water bottle to the kitchen" when Kitchen does not exist should propose creating the Kitchen location first, then moving the existing water bottle into that newly-created location. A nested request such as "move my water bottle to the second shelf in the big cabinet in the kitchen" when the destination path is missing should propose the full dependency chain, for example create `Kitchen`, create `Big cabinet` inside `Kitchen`, create `Second shelf` inside `Big cabinet`, then move the existing water bottle into `Second shelf`. For a clear write request with a missing destination, the agent must use the reviewable action-plan proposal path instead of asking a final yes/no clarification such as "would you like me to create it"; the mobile approval surface is the confirmation step. Parent or location titles may be used only as read filters; they must not be persisted as executable action-plan arguments.
-
-For nested create or move requests, the agent should resolve named outer locations and containers as separate search terms rather than only searching the whole phrase. If a combined phrase search returns no matches, that does not prove each named path segment is missing. For example, if a user asks to add something to a box under the TV in the living room and `Living room` is visible, the proposal should create only the missing box under the TV inside the existing Living room and then create or move the requested item into that box.
-
-Casual acquisition phrasing such as "I got a phone charger and put it in the office" is a create-style request when the direct object is introduced by acquisition language and the placement phrase uses a pronoun such as `it`. The smart loop should proactively read the named destination just as it does for explicit `add` or `create` requests, so the planner can reference an existing visible parent by `parentAssetId` instead of guessing, creating a duplicate destination, or proposing a root-level item.
-
-The action-plan tool contract must distinguish create, move, checkout, and return command shapes. New items and new containers must use `create_asset`; `create_location` is reserved for true locations and must not be combined with `kind: container`. `create_asset` arguments must contain a title or name and an asset kind, and must never contain `assetId`; `assetId` is only valid for operations against existing assets returned by authorized read tools. `checkout_asset` and `return_asset` arguments must contain an existing visible `assetId` and may contain safe user-provided `details`. When the user asks to add a new item into a missing container under an existing visible parent, the proposed plan should first create the container with `parentAssetId` set to the visible parent asset ID, then create the item with `parentCommandId` set to the container command ID.
-
-When the transcript names a destination, a proposed root-level item create is invalid unless the transcript explicitly asks for a root or top-level item. For example, "add a phone charger to the office" must either create the phone charger under the visible Office asset or ask a clarification; it must not create the phone charger at the inventory root.
-
-The voice tool adapter may canonicalize a dependent command reference when a provider places an earlier command ID in `parentAssetId` instead of `parentCommandId`. This compatibility normalization is allowed only when the value exactly matches an earlier command ID in the same proposed plan. Stored action-plan commands must still use canonical executable arguments.
-
-The voice tool adapter may also canonicalize a provider-produced `create_asset` command whose arguments specify `kind: location` into the domain command kind `create_location`. This compatibility normalization preserves model tolerance while keeping stored action plans aligned with Stuff Stash domain language.
-
-The voice tool adapter may canonicalize provider-produced `create_item` and `create_container` command kinds into the domain command kind `create_asset` with `kind: item` or `kind: container` in the structured command arguments. This compatibility normalization is allowed because item and container are asset kinds in the Stuff Stash domain, not separate action-plan command kinds. It must not create new domain command kinds or persist provider-only command names.
-
-The voice tool adapter may reorder commands inside a proposed action plan when a command references another command in the same plan through `parentCommandId`. The stored plan must use an executable order where the referenced create command appears before the dependent create or move command. This compatibility normalization is allowed only within the proposed plan and must not invent commands, bypass validation, or reorder unrelated commands in a way that changes user intent.
+After compilation and persistence, the loop emits `action.plan.proposed` and pauses without final speech or `session.completed`. The WebSocket remains available for explicit approval or cancellation. User-facing text must not claim that a change occurred until approved action-plan execution actually succeeds.
 
 The live-regression suite must cover the semantic family where a user requests moving a visible existing item into a clear missing destination. The expected outcome is a reviewable plan that creates the destination and moves the existing item; a no-match answer or a question asking whether to create the clear destination is a failure. Fixtures should be generated from declarative intent, inventory topology, and expected semantic predicates so production behavior is not tuned to one household title or frozen utterance. Deterministic application tests must cover the invariant, and opt-in live provider tests must use several independently realized phrasings, nouns, names, and destination types.
 
 The Gemini live-regression suite must include a realistic, declaratively generated voice corpus that exercises the agent loop with phrases a home user is likely to say or receive from speech-to-text. The corpus is an evaluation artifact, not an exhaustive prompt example list or a source of production branching logic. It should include normal spoken requests, casual phrasing, nested containment, ambiguous or likely mistranscribed phrases, and adversarial or unsupported requests. A held-out realization set must vary household nouns, names, topology depth, wording, morphology, and transcription-like substitutions without exposing exact expected titles in approximate-match inputs. Each scenario must assert one of these outcomes:
 
-- A factual answer completes with speech and uses visible tool results.
+- A factual answer completes with speech and is grounded in authorized observations.
 - A reviewable action plan is proposed and the loop pauses before final speech.
 - A clarification, unsupported-action response, or safe failure completes with an actionable next step rather than a dead-end provider error.
 
@@ -599,7 +556,7 @@ The corpus must cover at least these behaviors:
 - Asking for a change where speech-to-text produced an unclear or unlikely destination.
 - Asking for a dangerous, destructive, provider-configuration, credential, or unrelated system action.
 
-Live corpus tuning must optimize the general contract, tool metadata, loop repair behavior, and concise prompt rules. It must not add a one-off instruction for every corpus utterance. Adding a representative example is acceptable only when it teaches a general class of behavior, such as clear missing destinations being represented as dependent create commands before a move. A live corpus pass is successful only when every expected-success scenario succeeds and every expected-non-success scenario falls forward with a user-actionable response instead of producing a generic voice failure, transport/provider error, hidden diagnostic, or contradictory final response.
+Live corpus tuning must optimize the general investigation schema, typed-read metadata, grounding policy, compiler behavior, and concise prompt rules. It must not add a one-off instruction for every corpus utterance. Adding a representative example is acceptable only when it teaches a general class of behavior, such as clear missing destinations being represented as dependent create commands before a move. A live corpus pass is successful only when every expected-success scenario succeeds and every expected-non-success scenario falls forward with a user-actionable response instead of producing a generic voice failure, transport/provider error, hidden diagnostic, or contradictory final response.
 
 Evaluation must report results by semantic scenario family and realization source, including deterministic grammar realizations and provider-generated holdouts. Release evidence must distinguish provider or API availability failures from semantic and contract failures, report instrumentation completeness, and retain full safe traces for failed trials. Promotion requires zero invented or cross-reference IDs, zero writes before recorded approval, zero dropped named destination segments, exact semantic command graphs for supported write fixtures, and no dead-end creation-confirmation question for clear missing destinations. Repeated live trials should include pass^k-style stability evidence for representative families rather than relying on a single green run.
 
@@ -617,29 +574,21 @@ The evaluation workflow may produce durable artifacts for synthetic opt-in corpu
 
 Live corpus tests must log the same full event trace for failed scenarios that they log for successful scenarios. A provider failure, timeout, invalid model response, assertion failure, or unexpected session completion must still leave enough trace evidence for the evaluation harness to extract the transcript, provider stage, safe failure code, tool calls, tool results, and last spoken text when present.
 
-Provider adapters may perform bounded retries for transient language-inference failures, including rate-limited HTTP responses and malformed structured planner/final responses from a provider that otherwise returned successfully. Retries must be internal to the adapter, must not re-execute Stuff Stash tools or inventory writes, must preserve the same transcript, prompt, tool results, and tenant/inventory context, and must remain bounded so voice sessions fail safely instead of hanging indefinitely.
+Provider adapters may perform bounded retries for transient language-inference failures, including rate-limited HTTP responses and malformed structured investigation responses from a provider that otherwise returned successfully. Retries must be internal to the adapter, must not re-execute Stuff Stash reads or inventory writes, must preserve the same investigation input and tenant/inventory context, and must remain bounded so voice sessions fail safely instead of hanging indefinitely.
 
-The skill may use the Codex CLI as an optional judge for trace review, but the primary agent remains responsible for evaluating the judge reasoning. A green Codex-judge verdict must not be accepted blindly. The agent must read the judge explanation, compare it to the trace and rubric, and identify any changes needed in prompts, schemas, loop policy, tool metadata, fixtures, or product behavior.
+The skill may use the Codex CLI as an optional judge for trace review, but the primary agent remains responsible for evaluating the judge reasoning. A green Codex-judge verdict must not be accepted blindly. The agent must read the judge explanation, compare it to the trace and rubric, and identify any changes needed in prompts, schemas, loop policy, typed-read metadata, fixtures, or product behavior.
 
 The evaluator must prefer realistic home-inventory utterances and traces. Fast deterministic unit tests remain necessary for safety invariants, but they are not a substitute for live trace evaluation.
 
-The realtime loop must track the set of opaque `assetId` values returned by successful authorized read tools during the current session. `propose_action_plan` must reject any `assetId` or `parentAssetId` that is not in that session-visible set before persisting the proposed plan. This provenance check is in addition to action-plan command validation and execution-time authorization.
+The realtime loop must retain opaque candidate IDs by semantic reference. A resolution or compiled command may use an ID only when a successful authorized observation exposed it for that same reference. Cross-reference, invented, hidden, or wrong-inventory IDs must fail before plan persistence in addition to normal execution-time authorization.
 
-The realtime loop must reject a proposed `move_asset` command that moves an asset to inventory root when the transcript appears to name a destination, unless the transcript itself clearly asks for root, top level, no parent, or removal from a container/location. If the model searches for a destination, finds no visible match, and then proposes root as a substitute, the loop must treat that as a recoverable invalid tool request and give the model a chance to ask a clarification or propose a better action plan. This prevents likely speech-to-text errors such as "move my drill to the side" from becoming destructive or confusing root moves.
-
-The realtime loop must also reject approval plans whose existing asset or existing parent references do not align with the transcript. For existing asset moves, the referenced asset title should have meaningful title words present in the transcript or another explicit user-provided reference from the current session. For existing parent locations or containers, the referenced parent title should likewise be named by the user. Generic place or container words such as room, box, shelf, drawer, cabinet, bin, basket, closet, or counter are not sufficient by themselves to prove that a multi-word existing parent was named; a multi-word existing parent needs all meaningful parent-title words represented in the transcript with singular/plural tolerance, such as living and room for Living room or big and cabinet for Big cabinet. If the model proposes moving unrelated visible items or substitutes a visible location the user did not name, the loop must return a recoverable invalid tool result rather than showing that plan for approval.
-
-The action-plan proposal tool must reject creating a root location or container whose title and kind exactly match an already visible authorized asset in the selected inventory. The model should repair by resolving that existing parent with read tools and using its `assetId` as `parentAssetId` for dependent creates or moves. This prevents a combined-path miss, such as no result for "box under the TV in the living room", from causing a duplicate `Living room` create when `Living room` already exists.
-
-When prior read tool results in the same session show that a destination phrase returned no visible match, a later action plan must still account for that phrase when it is a clear part of the user's requested destination. It may account for it by creating a location or container command with the missing segment's meaningful words in the command title. It must not silently drop the missing segment and place the item or moved asset in a broader parent.
-
-When `propose_action_plan` rejects provider output for invalid or unprovenanced IDs, the retryable tool result returned to the model must include safe repair guidance. That guidance should state that `assetId` and `parentAssetId` must be copied from successful authorized read tool results, that guessed IDs or titles are not executable IDs, and that missing destinations should be represented as earlier create commands referenced by `parentCommandId`. The repair guidance must not leak hidden assets, raw prompts, credentials, stack traces, or provider internals.
+Destination compilation must preserve the canonical outer-to-inner path. Existing destination candidates must be locations or containers connected by the observed parent chain. After the first missing segment, all deeper segments are missing and compile in order; no segment may be dropped, substituted with an unrelated visible asset, or silently replaced with inventory root.
 
 The mobile approval sheet must present multi-step plans as an explicit review surface, not a generic confirmation sentence. It should separate what Stuff Stash will use from what it will create, show nested placement in readable language, keep approve and cancel controls fixed in the bottom action area, and avoid raw IDs, provider terminology, diagnostics, or hidden model details. For dependent creates, the user should be able to see the hierarchy before approval, such as `Living room` as an existing location, `Box underneath the TV` as a new container inside it, and `Apple TV remote` as a new item inside the new container.
 
 The loop must not expose direct write tools, provider profile tools, tenant configuration tools, sharing tools, audit mutation tools, import/export tools, or raw repository access. Any future direct execution must go through an approved action-plan execution service.
 
-Tool results provided to the language model must be structured, safe, and useful enough for accurate answers. For visible assets, read-only tool output should include:
+Observations provided to the language model must be structured, safe, and useful enough for accurate resolution. For visible assets, they may include:
 
 - Title.
 - Kind.
@@ -649,39 +598,13 @@ Tool results provided to the language model must be structured, safe, and useful
 - Parent title and parent kind when present.
 - Nearest containing location title when present.
 - Human-readable containment path from outermost visible container or location to the asset.
-- Opaque `assetId` values for visible assets when needed for follow-up tool calls or action-plan arguments.
-- Custom fields only after a field sensitivity and provider-disclosure policy exists. The first improved catalog must omit custom field values from cloud-provider tool results.
+- Opaque candidate IDs needed for reference-scoped follow-up reads or compilation.
+- Custom fields only after a field sensitivity and provider-disclosure policy exists. Until then, cloud-provider observations must omit custom field values.
 - Match metadata that helps the model understand why a result was returned.
 
-Tool results must not include raw authorization decisions, hidden resources, bearer tokens, provider credentials, raw prompts, raw model responses, raw audio, generated speech, custom field values before a sensitivity policy exists, internal stack traces, or infrastructure details. Internal resource identifiers may be provided to the in-process agent loop only when needed to chain read-only tool calls or prepare an action plan for a visible resource the tool returned. Final user-facing responses, mobile progress events, and mobile action-plan review text must not speak or display those identifiers.
+Observations must not include raw authorization decisions, hidden resources, bearer tokens, provider credentials, raw prompts, raw model responses, raw audio, generated speech, custom field values before a sensitivity policy exists, internal stack traces, or infrastructure details. Final user-facing responses, mobile progress events, and mobile action-plan review text must not speak or display internal identifiers.
 
-For specific where-is questions, when a search result clearly returns the requested item and includes `locationTitle` or `containmentPath`, the agent should answer from that result without issuing broad follow-up list calls. `containmentPath` is ordered from outermost visible parent to the asset itself; the last element is the returned asset, not a container that contains itself. User-facing answers must not describe an item as being inside itself.
-
-The first implementation may expose structured tool results as compact JSON strings through the language inference port while provider-native tool schemas are still evolving. The JSON shape must remain project-owned and provider-independent.
-
-Gemini language inference must request structured final responses through provider-native structured output controls instead of relying only on prompt wording. The adapter must set JSON response MIME type and a response schema for the final-response envelope on final-only turns, and must set JSON response MIME type and the provider-supported JSON schema field for the action-plan envelope on planner-only turns. The prompt may briefly tell the model to follow the provided response schema, but it must not duplicate the full JSON schema or maintain a separate hand-written final JSON example that can drift from the actual provider schema.
-
-The Gemini `generateContent` adapter must not depend on combining native function calling with structured-output response schemas in the same turn for Gemini 2.5 models. Tool turns are native function-calling turns and should not request a textual JSON response schema. Final turns and planner turns are schema-constrained structured-output turns and must not expose provider-callable tools. The application loop owns this phase transition: gather authorized context through read tools, then call either the constrained action-plan planner for write intents or the constrained final-response generator for answer intents. This follows the current provider contract instead of relying on prompt text to force JSON while tools are also available.
-
-When the application loop enters planner-only mode, the language port result should contain exactly one internal `propose_action_plan` tool call unless the model cannot prepare a safe plan and returns a final `clarification`, `unsupported_action`, or `safe_failure`. A planner-only turn that returns a final `answer`, no tool call, a read tool call, or multiple tool calls is a recoverable agent-contract failure. The loop must not execute read tools from planner-only output and must not speak a final answer that bypasses the reviewable action-plan phase.
-
-When the loop requires a first context-gathering tool call, the language adapter should use a compact read-only prompt for that turn. The prompt should direct the model to choose an appropriate authorized read tool and should not include the full write/action-plan contract or instructions for tools that are unavailable on that turn. For nested add/create destinations, the first read strategy should prefer resolving the outermost named place or container separately instead of searching the whole path phrase first. Later turns that include `propose_action_plan` must restore the full action-plan contract and structured final-response controls.
-
-The application loop may override a provider-requested read tool call with a server-selected read when the loop has enough safe context to know the provider's requested read is not the next minimal read needed for the user's intent. This override is allowed only for bounded context-gathering phases:
-
-- For contents questions such as "what's in the toolbox", after a read result returns a visible location or container named by the transcript, the loop may force `list_authorized_assets` scoped to that exact location or parent title. If multiple visible locations or containers overlap the transcript, the loop must prefer exact phrase coverage, stronger word coverage, and direct containers over broad locations.
-- For add/create requests where the first read only proves a new item is missing and the transcript names a destination, the loop may force one destination search using the likely outer room, place, or container from the transcript before entering the planner phase.
-- For nested create or move requests where a combined destination phrase misses, the loop may force one search for the likely outer parent before entering the planner phase.
-
-The application loop may also perform narrowly bounded proactive read-only calls without a provider-requested tool call when the transcript has an unambiguous grammar and the read cannot mutate inventory. This is allowed only for exact context gathering that a provider prompt would otherwise be required to select: resolving the named target of a contents question, and resolving the named parent of a simple non-nested create/add request. It must not proactively execute write tools, broad exploratory lists, nested path expansion, source-item substitution, destructive actions, provider-profile actions, or reads that depend on guessing hidden state. Proactive reads must have deterministic tests and negative coverage for nested or ambiguous phrasing.
-
-Server-selected reads must preserve tenant, inventory, authorization, and visible-resource scoping. They must emit developer diagnostics when developer diagnostics are enabled. They must be minimization-preserving: the loop must not replace a narrow no-match lookup with a broad list of unrelated visible inventory merely to help the model guess a category or synonym.
-
-The first improved implementation may expose a generic filtered list tool that covers list-by-location, list-root-level, and list-by-kind behavior before separate public tool names are added. The generic list tool must provide an explicit root-level filter, such as `parentScope: root`, because omitting a parent or location filter means "all visible assets" rather than "only assets at inventory root." Root-level filtering must not be combined with parent-title or location-title filters. The first voice tool catalog must support at least these user intents accurately for visible inventory data:
-
-- "Where is my water bottle?" returns the containing location or containment path when available.
-- "What items do I have?" returns visible item-kind assets in the selected inventory.
-- "What is in the office?" returns visible children of the matching location or container when available.
+For specific location questions, a grounded candidate with a containment path is sufficient; the loop must not broaden the read merely to seek more context. `containmentPath` is ordered from outermost visible parent to the asset itself, and user-facing answers must not describe an asset as being inside itself.
 
 ## Tool Progress Events
 
@@ -710,17 +633,17 @@ Tool progress events must use bland denial and not-found behavior. They must not
 
 ## Developer Diagnostics
 
-Mobile developer diagnostics may expose verbose realtime agent-loop details when diagnostics are explicitly enabled for a development build. Developer diagnostics are not normal user-facing product copy and must stay behind the diagnostics flag. They may include the final transcript, the server-owned prompt text sent through the language-inference port, the model turn shape, tool names, tool-call arguments, safe tool result JSON, action-plan proposal payload summaries, and final structured response content.
+Mobile developer diagnostics may expose verbose realtime agent-loop details when diagnostics are explicitly enabled for a development build. Developer diagnostics are not normal user-facing product copy and must stay behind the diagnostics flag. They may include the final transcript, server-owned prompt text, investigation phase and schema version, typed read kind, bounded safe read results, action-plan proposal summaries, and final structured response content.
 
 Developer diagnostics must not include raw audio bytes, provider credentials, bearer tokens, API keys, encrypted credential ciphertext, provider session identifiers, raw HTTP headers, stack traces, or hidden inventory resources. The realtime `session.start` contract must carry an explicit developer-diagnostics opt-in, and the API must stream `agent.diagnostic` events or diagnostic detail payloads only for sessions that opted in at start. Normal tool progress events must stay safe and bland; verbose tool arguments, tool results, prompt text, and model turn content belong only in separate `agent.diagnostic` events. The API must redact unsafe key names, bearer-token phrases, and bounded diagnostic text before streaming diagnostics. The mobile app may render diagnostic details as selectable text to support debugging poor model behavior, but it must clearly keep them inside the diagnostics section and must not speak diagnostic text.
 
-Developer diagnostics should make the loop understandable without drowning out state changes. The first language-model call may include the full server-owned prompt. Later calls should identify the model turn and may elide repeated prompt scaffolding with a short marker while still showing the observable model turn, tool-call request, tool result, action-plan proposal, or final structured response. When diagnostics are enabled, provider adapters should also emit a compact per-turn view of the allowed project-owned tool catalog and tool-choice mode, including whether the turn is final-only, planner-only, or requires a tool call. This catalog diagnostic must be bounded and must not include provider credentials, raw HTTP headers, raw audio, hidden inventory resources, tool results, or provider-specific session identifiers.
+Developer diagnostics should make the loop understandable without drowning out state changes. The initial investigation call may include the full server-owned prompt. Evidence-assessment calls may elide repeated scaffolding while identifying the evidence round, read kinds, observation count, and terminal decision. Diagnostics must remain bounded and must not include provider credentials, raw HTTP headers, raw audio, hidden inventory resources, raw read results, or provider-specific session identifiers.
 
 Tool progress events must not include raw model reasoning, raw prompts, raw transcript text, raw query text, raw tool inputs, raw tool outputs, resource identifiers, exact resource titles, hidden IDs, result counts that can reveal hidden inventory data, credentials, bearer tokens, provider responses, authorization decisions, or stack traces.
 
 ## Structured Final Response
 
-Every successful agent loop must produce a structured final response, even for read-only answers.
+Every terminal answer, clarification, unsupported-action response, safe failure, or successful application-owned no-op must produce a structured final response. A proposed action plan is instead terminal at `action.plan.proposed` until approval or cancellation and must not also produce a final response.
 
 The first structured final response shape must include:
 
@@ -738,7 +661,7 @@ The first structured final response shape must include:
 
 `spokenResponse` is the only field that may be sent to text-to-speech in the first slice.
 
-The model must be instructed that `spokenResponse` is what the user will hear. It must be concise, natural, and free of JSON, Markdown tables, hidden reasoning, provider details, implementation details, and unsafe secrets.
+The application must render `spokenResponse` from the grounded terminal outcome. It must be concise, natural, calibrated to resolution confidence, and free of JSON, Markdown tables, hidden reasoning, provider details, implementation details, and unsafe secrets.
 
 `displayResponse` may be the same as `spokenResponse` in the first slice.
 
@@ -746,39 +669,25 @@ The final response must not include raw chain-of-thought, raw model reasoning, r
 
 ## Prompt Templates
 
-The first real provider adapters may use a fixed project-owned prompt template for the voice loop.
+The first real provider adapters may use a fixed project-owned prompt template for the voice investigation contract. Prompt text explains the semantic task, evidence budget, confidence meanings, and missing-destination behavior; the provider-native schema is authoritative for structure and must not be duplicated as a drifting hand-written JSON example.
 
-Provider adapters that support native tool or function calling must use the provider-native tool calling mechanism for tool selection instead of asking the model to emit project-defined tool-call JSON in text. For Gemini on Vertex AI, the adapter must send the project-owned read-only tool catalog as `functionDeclarations` with OpenAPI-compatible parameter schemas, parse returned `functionCall` parts into project-owned `AgentToolCall` values, and send tool outputs back as `functionResponse` parts on later turns.
+For Gemini on Vertex AI, both initial interpretation and evidence-assessment turns must use JSON response MIME type and the concrete investigation response schema. The adapter must not send provider-callable inventory tools, request a final-response envelope, or request an action-plan envelope. It translates only between provider JSON and the project-owned investigation types.
 
-Native provider tool calling is an adapter concern. Application services, domain services, REST adapters, mobile clients, and tool execution code must continue to use project-owned tool descriptors, tool calls, tool results, and structured final responses. Provider-native tool declaration, function-call, and function-response shapes must not leak across the language inference port. The Gemini adapter must treat native function declarations as a read-tool surface only: non-read-only descriptors such as the internal `propose_action_plan` tool must never be exposed as provider-callable functions, even if their project-owned descriptor is marked provider-callable for compatibility with other adapters or internal loop phases.
-
-The agent loop must allow multiple distinct read-only tool calls across turns when needed to answer the user accurately. Loop control must be owned by the application agent loop rather than provider-specific adapter shortcuts. If the model asks for an identical tool name and argument set that has already been executed in the same session, the loop must not execute the duplicate call again, but it must continue executing other unseen tool calls in the same model turn. It may request one explicit finalization-only model turn using the existing tool results and no tool catalog; if the model still does not produce a valid final response, the session must fail safely.
-
-Provider adapters may continue to use structured JSON output for final responses when the provider supports it. Native tool calling must not loosen the final response validator, read-only/write boundaries, tenant and inventory scoping, or redaction rules.
-
-Action-plan proposal is a structured-output phase, not a provider tool-calling phase. For Gemini on Vertex AI, the adapter must force planner turns with `responseMimeType: application/json` and a concrete JSON schema for the Stuff Stash action-plan envelope. Gemini planner turns must use the provider field that supports the required schema shape, such as `responseJsonSchema` on Vertex AI when command-specific branches are needed. The schema must require `actionPlan.intentSummary`, `actionPlan.modelInterpretationSummary`, `actionPlan.confirmationSummary`, and `actionPlan.commands`, and must define `commands[]` with command-specific schema branches for create, move, archive, restore, checkout, and return commands. The planner schema must not be derived from an unconstrained provider tool argument object, because that permits valid JSON that is still not a valid executable plan.
-
-The action-plan schema should use provider-supported structured-output features such as field descriptions, enum values, required fields, and nullable root-parent references where available. Prompt text must not duplicate the full schema. Where a provider accepts but does not reliably follow branch constraints in nested objects, the adapter may prefer simpler required fields with explicit empty-string sentinels for unused references, such as requiring both `parentAssetId` and `parentCommandId` while allowing one to be empty. Provider schema constraints are a quality and safety aid, but the application loop must still validate command semantics through project-owned action-plan parsing, authorization, tenancy, and approval rules before presenting or applying any change.
-
-For nested create or move requests, the application agent loop must prefer gathering enough read context to distinguish existing parents from missing path segments before entering the structured planner phase. If a create/add request names a missing inner container or surface under a named outer room, place, or container, and the first read only proves the inner segment is missing, the loop must request at least one additional read for the likely outer parent before asking the model for an action plan.
-
-Action-plan validation must reject plans that create a requested move source when the transcript phrased the source as an existing item to move. A missing source should fall forward with a clarification or safe response, not silently become a new inventory item.
-
-Action-plan validation must also reject root creates for containers or surfaces when a visible parent location or container named in the transcript was returned by read tools. In that case the plan must either use the visible parent's `parentAssetId` or, if the visible parent is not sufficient, fail safely and ask the planner to repair the parent reference.
+The prompt must clearly separate provider and application responsibilities. The model interprets imperfect language, proposes bounded search hypotheses, and assesses authorized observations. The application executes reads, anchors intent, validates provenance and containment, renders terminal responses, compiles commands, and controls review and execution. Tenant prompt customization may influence wording and household vocabulary but cannot transfer those application responsibilities to the model.
 
 Future tenant-managed provider profiles must support model-specific prompt template configuration because smaller or local models may need different instructions, output examples, or schema wording. Prompt templates must be configuration data resolved through the provider-profile/application boundary, not hard-coded provider adapter behavior.
 
 Prompt template customization must preserve required security and product guardrails:
 
-- The structured response contract.
-- The allowed tool catalog.
+- The typed investigation and resolution contract.
+- The allowed read kinds and evidence budget.
 - Tenant and inventory scope.
 - Read-only/write confirmation boundaries.
 - Safe error behavior.
 - Redaction and retention rules.
 - Prohibition on exposing hidden identifiers, credentials, raw prompts, raw transcripts, raw audio, generated speech, or hidden resources.
 
-Provider-specific prompt templates may tune wording and examples, but they must not loosen authorization, tenancy, tool validation, action-plan, confirmation, or audit requirements.
+Provider-specific prompt templates may tune wording and general examples, but they must not loosen authorization, tenancy, read validation, grounding, deterministic compilation, confirmation, or audit requirements.
 
 ## Final Response Streaming
 
@@ -839,7 +748,7 @@ The server must enforce configured session, silence, provider, tool-call, and id
 
 The HTTP realtime voice adapter must enforce a per-message client idle timeout while waiting for audio chunks, `audio.end`, or `session.cancel`, separate from the whole-session deadline. The first runtime knob is `STUFF_STASH_REALTIME_VOICE_IDLE_TIMEOUT`, defaulting to 15 seconds. Invalid, empty, zero, or negative values must fall back to the safe default rather than disabling the idle timeout.
 
-The realtime voice application loop must enforce a per-tool-call timeout around every project-owned inventory tool execution, separate from provider HTTP timeouts and the WebSocket idle timeout. The first runtime knob is `STUFF_STASH_REALTIME_VOICE_TOOL_CALL_TIMEOUT`, defaulting to 10 seconds. Invalid, empty, zero, or negative values must fall back to the safe default rather than disabling tool-call deadlines. A tool-call timeout must cancel the tool context and be surfaced as a safe `tool.call.failed` event plus a structured tool error result so the model loop can recover with a clarification, safe failure, or final response instead of hanging the session.
+The realtime voice application loop must enforce a per-tool-call timeout around every project-owned inventory read, separate from provider HTTP timeouts and the WebSocket idle timeout. The first runtime knob is `STUFF_STASH_REALTIME_VOICE_TOOL_CALL_TIMEOUT`, defaulting to 10 seconds. Invalid, empty, zero, or negative values must fall back to the safe default rather than disabling read deadlines. A read timeout must cancel the read context and emit a safe `tool.call.failed` event. The failed read must not establish evidence or be sent back to the provider as a repair conversation; the application must terminate that stage with a bounded clarification or safe failure instead of hanging the session.
 
 The first Google provider bridge must use a configured provider HTTP timeout, defaulting to 60 seconds for local smoke testing unless runtime configuration overrides it. Tenant-managed Google provider profiles may also carry a provider-runtime HTTP timeout option so slow model turns can be tuned without changing code. Invalid, empty, zero, or negative timeout values must be rejected or ignored safely rather than disabling timeouts.
 
@@ -867,7 +776,7 @@ The system must:
 - Authorize selected tenant and inventory scope before processing audio.
 - Reject cross-tenant and cross-inventory attempts.
 - Reject hidden-resource access through tool calls.
-- Reject state-changing tool calls in the first slice.
+- Reject direct or model-authored state-changing calls; state changes may occur only through an approved application-compiled action plan.
 - Avoid logging raw audio, raw transcripts, raw prompts, raw provider responses, raw model reasoning, generated speech, credentials, or bearer tokens.
 - Avoid returning hidden resource data in transcript, progress, tool, final response, or TTS events.
 - Map provider and tool failures to safe user-facing errors.
@@ -877,7 +786,7 @@ Read tool executions must follow the safe read audit requirements of the underly
 
 ## Testing
 
-Tests must use fakes for speech-to-text, language inference, text-to-speech, tool catalog, inventory application services, authorization, realtime transport, observability, microphone capture, and audio playback where focused unit or adapter behavior is under test.
+Tests must use fakes for speech-to-text, language inference, text-to-speech, the typed read dispatcher, inventory application services, authorization, realtime transport, observability, microphone capture, and audio playback where focused unit or adapter behavior is under test.
 
 Realtime boundary tests must exercise the actual API WebSocket adapter with configured authentication and authorization adapters.
 
@@ -887,7 +796,7 @@ Tests must cover:
 - Successful typed-transcript equivalent for deterministic agent-loop tests.
 - Partial transcript events.
 - Final transcript event.
-- Multiple tool-call iterations before final response.
+- Multiple typed reads across bounded evidence rounds before a terminal outcome.
 - Safe tool progress events.
 - Structured final response validation.
 - Rejection of unvalidated `assistant.response.delta` text before mobile display or text-to-speech.
@@ -898,12 +807,12 @@ Tests must cover:
 - Missing, disabled, archived, malformed, unsupported, or unusable provider profiles.
 - Speech-to-text failure.
 - Language inference failure.
-- Malformed model tool call.
-- Malformed model final response.
+- Malformed investigation output or invalid typed read request.
+- Malformed or unsafe application-rendered final response rejected before mobile display or text-to-speech.
 - Text-to-speech failure.
 - Unauthorized, unauthenticated, wrong-tenant, wrong-inventory, viewer-hidden-resource, expired-token, malformed-token, and privilege-escalation attempts.
-- Model attempts to call write tools or unlisted tools.
-- Model attempts to smuggle hidden IDs, authorization claims, or approval claims through tool inputs or final output.
+- Provider output attempts to introduce executable commands, cross-reference opaque IDs, or unsupported read kinds.
+- Provider output attempts to smuggle hidden IDs, authorization claims, or approval claims through investigation output or resolved references.
 - Hidden ID probing, wrong-inventory asset detail attempts, and count leakage through progress events.
 - Voice read audit emission for underlying read operations without leaking transcript, provider, or raw tool content.
 - Redaction of raw audio, raw transcripts, raw query text, raw prompts, raw tool inputs, raw tool outputs, raw provider responses, raw model reasoning, generated speech, credentials, bearer tokens, hidden resources, and stack traces from mobile state persistence, debug history, crash reports, analytics, API session metadata, audit, observability, logs, progress events, final responses, and TTS.
