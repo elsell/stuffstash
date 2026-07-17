@@ -40,7 +40,7 @@ func geminiInvestigationPrompt(input ports.LanguageInferenceInput) string {
 	if investigation.Phase == agentmodel.InvestigationPhaseInitial {
 		lines = append(lines,
 			"Stage: initial interpretation.",
-			"Return search for supported requests and generate reference-scoped reads for the subject and every named destination. For create, search the proposed new subject for duplicates. Return finish only for unsupported intent, with an unsupported subject resolution.",
+			"Return search for every request and leave resolutions empty. Generate reference-scoped reads for the subject and every named destination. For create, search the proposed new subject for duplicates. For unsupported intent, use one narrow subject search so the evidence turn can finish unsupported.",
 		)
 	} else {
 		lines = append(lines,
@@ -69,16 +69,31 @@ func parseGeminiInvestigationTurn(raw string) (ports.LanguageInferenceTurn, erro
 	if err := decoder.Decode(&extra); err != io.EOF {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
+	step = canonicalizeGeminiInvestigationStep(step)
 	if err := step.Validate(); err != nil {
 		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 	}
 	return ports.LanguageInferenceTurn{Investigation: &step}, nil
 }
 
+func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agentmodel.InvestigationStep {
+	if step.Intent.Operation != agentmodel.OperationCreate {
+		step.Intent.NewAssetKind = ""
+	}
+	switch step.Decision {
+	case agentmodel.InvestigationDecisionSearch, agentmodel.InvestigationDecisionSearchAgain:
+		step.Resolutions = nil
+	case agentmodel.InvestigationDecisionFinish:
+		step.SearchRequests = nil
+		step.VocabularyRequests = nil
+	}
+	return step
+}
+
 func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *geminiSchema {
-	stringArray := func(minimum, maximum int) geminiSchema {
+	stringArray := func() geminiSchema {
 		item := geminiSchema{Type: "string"}
-		return geminiSchema{Type: "array", Items: &item, MinItems: minimum, MaxItems: maximum}
+		return geminiSchema{Type: "array", Items: &item}
 	}
 	referenceKeys := []string{"subject", "destination.0", "destination.1", "destination.2", "destination.3", "destination.4", "destination.5"}
 	intent := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
@@ -86,10 +101,10 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		"operation":       {Type: "string", Enum: []string{"locate", "exists", "list_inventory", "list_contents", "detail", "checkout_status", "asset_history", "checkout_history", "create", "move", "archive", "restore", "checkout", "return", "unsupported"}},
 		"subjectMention":  {Type: "string"},
 		"newAssetKind":    {Type: "string", Enum: []string{"", "item", "container", "location"}},
-		"destinationPath": stringArray(0, agentmodel.MaxDestinationSegments),
+		"destinationPath": stringArray(),
 		"destinationKinds": {Type: "array", Items: &geminiSchema{
 			Type: "string", Enum: []string{"location", "container"},
-		}, MinItems: 0, MaxItems: agentmodel.MaxDestinationSegments},
+		}},
 		"details": {Type: "string"},
 	}, Required: []string{"kind", "operation", "subjectMention", "newAssetKind", "destinationPath", "destinationKinds", "details"}}
 
@@ -97,13 +112,17 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 	if input.Phase == agentmodel.InvestigationPhaseEvidenceAssessment {
 		readKinds = append(readKinds, "list_contents", "asset_detail", "asset_history", "checkout_history")
 	}
+	visibleAssetID := geminiSchema{Type: "string"}
+	if input.Phase == agentmodel.InvestigationPhaseInitial {
+		visibleAssetID.Enum = []string{""}
+	}
 	searchRequest := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
 		"referenceKey":   {Type: "string", Enum: referenceKeys},
 		"readKind":       {Type: "string", Enum: readKinds},
 		"mention":        {Type: "string"},
 		"kindHint":       {Type: "string", Enum: []string{"", "item", "container", "location"}},
-		"visibleAssetId": {Type: "string"},
-		"searchProbes":   stringArray(0, agentmodel.MaxSearchProbesPerRequest),
+		"visibleAssetId": visibleAssetID,
+		"searchProbes":   stringArray(),
 		"lifecycleScope": {Type: "string", Enum: []string{"active", "archived", "all"}},
 	}, Required: []string{"referenceKey", "readKind", "mention", "kindHint", "visibleAssetId", "searchProbes", "lifecycleScope"}}
 	vocabularyRequest := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
@@ -111,37 +130,34 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		"key":  {Type: "string"},
 	}, Required: []string{"kind", "key"}}
 
-	resolutionBranch := func(status string, minimum, maximum int) geminiSchema {
-		return geminiSchema{Type: "object", Properties: map[string]geminiSchema{
-			"referenceKey": {Type: "string", Enum: referenceKeys},
-			"status":       {Type: "string", Enum: []string{status}},
-			"candidateIds": stringArray(minimum, maximum),
-			"evidence":     {Type: "string"},
-		}, Required: []string{"referenceKey", "status", "candidateIds", "evidence"}}
-	}
-	resolution := geminiSchema{AnyOf: []geminiSchema{
-		resolutionBranch("strong", 1, 1), resolutionBranch("plausible", 1, 1),
-		resolutionBranch("ambiguous", 2, agentmodel.MaxCandidateObservations),
-		resolutionBranch("collection", 0, agentmodel.MaxCandidateObservations),
-		resolutionBranch("absent", 0, 0), resolutionBranch("missing", 0, 0), resolutionBranch("unsupported", 0, 0),
-	}}
+	// Keep provider constraints structural and bounded. Status-specific candidate
+	// cardinality belongs to InvestigationStep.Validate; encoding seven branches
+	// here exceeds Gemini's structured-output state budget for this contract.
+	resolution := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
+		"referenceKey": {Type: "string", Enum: referenceKeys},
+		"status":       {Type: "string", Enum: []string{"strong", "plausible", "ambiguous", "collection", "absent", "missing", "unsupported"}},
+		"candidateIds": stringArray(),
+		"evidence":     {Type: "string"},
+	}, Required: []string{"referenceKey", "status", "candidateIds", "evidence"}}
 
-	decisions := []string{"search", "finish"}
-	searchMin, searchMax, resolutionMin, resolutionMax := 0, agentmodel.MaxSearchRequestsPerStep, 0, agentmodel.MaxDestinationSegments+1
+	decisions := []string{"search"}
 	if input.Phase == agentmodel.InvestigationPhaseEvidenceAssessment {
 		decisions = []string{"search_again", "finish"}
-		searchMin, searchMax = 0, agentmodel.MaxSearchRequestsPerStep
-		resolutionMin, resolutionMax = 0, agentmodel.MaxDestinationSegments+1
 	}
 	searchItem := searchRequest
 	resolutionItem := resolution
 	vocabularyRequestItem := vocabularyRequest
+	resolutionsSchema := geminiSchema{Type: "array", Items: &resolutionItem}
+	if input.Phase == agentmodel.InvestigationPhaseInitial {
+		zero := 0
+		resolutionsSchema.MaxItems = &zero
+	}
 	return &geminiSchema{Type: "object", Properties: map[string]geminiSchema{
 		"decision":           {Type: "string", Enum: decisions},
 		"intent":             intent,
-		"searchRequests":     {Type: "array", Items: &searchItem, MinItems: searchMin, MaxItems: searchMax},
-		"resolutions":        {Type: "array", Items: &resolutionItem, MinItems: resolutionMin, MaxItems: resolutionMax},
+		"searchRequests":     {Type: "array", Items: &searchItem},
+		"resolutions":        resolutionsSchema,
 		"rationale":          {Type: "string", Description: fmt.Sprintf("Concise decision summary for evidence round %d.", input.EvidenceRound)},
-		"vocabularyRequests": {Type: "array", Items: &vocabularyRequestItem, MinItems: 0, MaxItems: agentmodel.MaxVoiceVocabularyRequests},
+		"vocabularyRequests": {Type: "array", Items: &vocabularyRequestItem},
 	}, Required: []string{"decision", "intent", "searchRequests", "resolutions", "rationale", "vocabularyRequests"}}
 }

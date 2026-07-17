@@ -15,6 +15,7 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 	if step.Decision != agentmodel.InvestigationDecisionFinish || step.Validate() != nil || !sameRealtimeVoiceInvestigationIntent(canonicalIntent, step.Intent) {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
+	step.Resolutions = canonicalRealtimeVoiceNoCandidateStatuses(canonicalIntent, step.Resolutions)
 	byReference := map[agentmodel.SemanticReferenceKey]map[string]agentmodel.CandidateObservation{}
 	allCandidates := map[string]agentmodel.CandidateObservation{}
 	coverage := map[agentmodel.SemanticReferenceKey]bool{}
@@ -88,6 +89,28 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	return step, nil
+}
+
+func canonicalRealtimeVoiceNoCandidateStatuses(intent agentmodel.Intent, resolutions []agentmodel.Resolution) []agentmodel.Resolution {
+	canonical := append([]agentmodel.Resolution{}, resolutions...)
+	for index := range canonical {
+		resolution := &canonical[index]
+		if resolution.Status != agentmodel.ResolutionAbsent && resolution.Status != agentmodel.ResolutionMissing {
+			continue
+		}
+		if resolution.ReferenceKey == agentmodel.SemanticReferenceSubject {
+			if intent.Operation == agentmodel.OperationCreate {
+				resolution.Status = agentmodel.ResolutionMissing
+			} else {
+				resolution.Status = agentmodel.ResolutionAbsent
+			}
+			continue
+		}
+		if intent.Operation == agentmodel.OperationCreate || intent.Operation == agentmodel.OperationMove {
+			resolution.Status = agentmodel.ResolutionMissing
+		}
+	}
+	return canonical
 }
 
 func realtimeVoiceLifecycleScopeIncludes(scopes []agentmodel.LifecycleScope, lifecycle string) bool {

@@ -198,7 +198,7 @@ type geminiSchema struct {
 	Items       *geminiSchema           `json:"items,omitempty"`
 	AnyOf       []geminiSchema          `json:"anyOf,omitempty"`
 	MinItems    int                     `json:"minItems,omitempty"`
-	MaxItems    int                     `json:"maxItems,omitempty"`
+	MaxItems    *int                    `json:"maxItems,omitempty"`
 }
 
 type geminiGenerationConfig struct {

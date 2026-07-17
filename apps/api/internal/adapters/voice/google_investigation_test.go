@@ -100,6 +100,50 @@ func TestGoogleGeminiLanguageInferenceRejectsMissingInvestigationWithoutCallingP
 	}
 }
 
+func TestGeminiInvestigationSchemaBoundsProviderStateSpaceWithoutEncodingResolutionPolicy(t *testing.T) {
+	t.Parallel()
+
+	schema := geminiInvestigationResponseSchema(agentmodel.InvestigationInput{Phase: agentmodel.InvestigationPhaseEvidenceAssessment})
+	resolution := schema.Properties["resolutions"].Items
+	if resolution == nil {
+		t.Fatal("resolution item schema is missing")
+	}
+	if len(resolution.AnyOf) != 0 {
+		t.Fatalf("provider schema must not multiply states with per-status branches: %+v", resolution.AnyOf)
+	}
+	statuses := resolution.Properties["status"].Enum
+	if len(statuses) != 7 {
+		t.Fatalf("expected one bounded status enum, got %+v", statuses)
+	}
+	if candidateIDs := resolution.Properties["candidateIds"]; candidateIDs.Type != "array" || candidateIDs.MaxItems != nil {
+		t.Fatalf("candidate cardinality belongs to project validation, got %+v", candidateIDs)
+	}
+	for _, property := range []string{"searchRequests", "resolutions", "vocabularyRequests"} {
+		if bounded := schema.Properties[property]; bounded.MinItems != 0 || bounded.MaxItems != nil {
+			t.Fatalf("%s cardinality belongs to project validation, got %+v", property, bounded)
+		}
+	}
+}
+
+func TestGeminiInitialInvestigationSchemaRequiresEvidenceSearchWithoutPrematureResolution(t *testing.T) {
+	t.Parallel()
+
+	schema := geminiInvestigationResponseSchema(agentmodel.InvestigationInput{Phase: agentmodel.InvestigationPhaseInitial})
+	if decisions := schema.Properties["decision"].Enum; len(decisions) != 1 || decisions[0] != "search" {
+		t.Fatalf("initial turn must always gather bounded evidence, got %+v", decisions)
+	}
+	if resolutions := schema.Properties["resolutions"]; resolutions.MaxItems == nil || *resolutions.MaxItems != 0 {
+		t.Fatalf("initial resolutions must be structurally empty, got %+v", resolutions)
+	}
+	request := schema.Properties["searchRequests"].Items
+	if request == nil {
+		t.Fatal("initial read request schema is missing")
+	}
+	if visibleIDs := request.Properties["visibleAssetId"].Enum; len(visibleIDs) != 1 || visibleIDs[0] != "" {
+		t.Fatalf("initial reads cannot target an unseen ID, got %+v", visibleIDs)
+	}
+}
+
 func TestParseGeminiInvestigationTurnPreservesOrderedDestinationKinds(t *testing.T) {
 	t.Parallel()
 
@@ -130,6 +174,58 @@ func TestParseGeminiInvestigationTurnPreservesOrderedDestinationKinds(t *testing
 					t.Fatalf("unexpected destination kind at %d: got %q want %q", index, got[index], test.want[index])
 				}
 			}
+		})
+	}
+}
+
+func TestParseGeminiInvestigationTurnClearsCreateOnlyKindFromOtherOperations(t *testing.T) {
+	t.Parallel()
+
+	raw := `{"decision":"search","intent":{"kind":"change","operation":"move","subjectMention":"drill","newAssetKind":"item","destinationPath":["garage"],"destinationKinds":["location"],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Gather evidence."}`
+	turn, err := parseGeminiInvestigationTurn(raw)
+	if err != nil {
+		t.Fatalf("parse investigation turn: %v", err)
+	}
+	if turn.Investigation.Intent.NewAssetKind != "" {
+		t.Fatalf("non-create intent retained create-only kind: %+v", turn.Investigation.Intent)
+	}
+}
+
+func TestParseGeminiInvestigationTurnDropsDecisionIrrelevantCollections(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		raw   string
+		check func(*testing.T, agentmodel.InvestigationStep)
+	}{
+		{
+			name: "search drops premature resolutions",
+			raw:  `{"decision":"search","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[{"referenceKey":"subject","status":"absent","candidateIds":[],"evidence":"premature"}],"vocabularyRequests":[],"rationale":"Gather evidence."}`,
+			check: func(t *testing.T, step agentmodel.InvestigationStep) {
+				if len(step.Resolutions) != 0 || len(step.SearchRequests) != 1 {
+					t.Fatalf("search retained decision-irrelevant resolutions: %+v", step)
+				}
+			},
+		},
+		{
+			name: "finish drops repeated reads and vocabulary requests",
+			raw:  `{"decision":"finish","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[{"referenceKey":"subject","status":"strong","candidateIds":["drill-1"],"evidence":"authorized candidate"}],"vocabularyRequests":[{"kind":"tag","key":"tools"}],"rationale":"Finish from evidence."}`,
+			check: func(t *testing.T, step agentmodel.InvestigationStep) {
+				if len(step.SearchRequests) != 0 || len(step.VocabularyRequests) != 0 || len(step.Resolutions) != 1 {
+					t.Fatalf("finish retained decision-irrelevant requests: %+v", step)
+				}
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			turn, err := parseGeminiInvestigationTurn(test.raw)
+			if err != nil {
+				t.Fatalf("parse investigation turn: %v", err)
+			}
+			test.check(t, *turn.Investigation)
 		})
 	}
 }

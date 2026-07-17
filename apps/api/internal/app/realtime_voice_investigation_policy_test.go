@@ -129,6 +129,75 @@ func TestRealtimeVoiceInvestigationPolicyAcceptsAbsentAfterExecutedZeroMatchSear
 	}
 }
 
+func TestRealtimeVoiceInvestigationPolicyDerivesNoCandidateStatusFromReferenceRole(t *testing.T) {
+	t.Parallel()
+
+	t.Run("missing existing source becomes absent", func(t *testing.T) {
+		t.Parallel()
+		intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: "drill"}
+		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
+			ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionMissing,
+		}}}
+		evidence := []agentmodel.ReadEvidence{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "drill", CandidateCount: 0}}
+		canonical, err := canonicalRealtimeVoiceInvestigationStep(intent, step, nil, evidence)
+		if err != nil {
+			t.Fatalf("canonicalize source status: %v", err)
+		}
+		if canonical.Resolutions[0].Status != agentmodel.ResolutionAbsent {
+			t.Fatalf("expected existing source absence, got %+v", canonical.Resolutions)
+		}
+	})
+
+	t.Run("absent create subject and destination become missing", func(t *testing.T) {
+		t.Parallel()
+		intent := agentmodel.Intent{
+			Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "charger", NewAssetKind: "item",
+			DestinationPath: []string{"garage"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
+		}
+		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
+			{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent},
+			{ReferenceKey: "destination.0", Status: agentmodel.ResolutionAbsent},
+		}}
+		evidence := []agentmodel.ReadEvidence{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "charger", CandidateCount: 0},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "garage", CandidateCount: 0},
+		}
+		canonical, err := canonicalRealtimeVoiceInvestigationStep(intent, step, nil, evidence)
+		if err != nil {
+			t.Fatalf("canonicalize create statuses: %v", err)
+		}
+		for _, resolution := range canonical.Resolutions {
+			if resolution.Status != agentmodel.ResolutionMissing {
+				t.Fatalf("expected create references to be missing, got %+v", canonical.Resolutions)
+			}
+		}
+	})
+
+	t.Run("absent move destination becomes missing", func(t *testing.T) {
+		t.Parallel()
+		intent := agentmodel.Intent{
+			Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "drill",
+			DestinationPath: []string{"kitchen"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
+		}
+		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
+			{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"drill-1"}},
+			{ReferenceKey: "destination.0", Status: agentmodel.ResolutionAbsent},
+		}}
+		observations := []agentmodel.CandidateObservation{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill-1", Title: "Drill", Kind: "item"}}
+		evidence := []agentmodel.ReadEvidence{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "drill", CandidateCount: 1},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "kitchen", CandidateCount: 0},
+		}
+		canonical, err := canonicalRealtimeVoiceInvestigationStep(intent, step, observations, evidence)
+		if err != nil {
+			t.Fatalf("canonicalize destination status: %v", err)
+		}
+		if canonical.Resolutions[1].Status != agentmodel.ResolutionMissing {
+			t.Fatalf("expected missing destination, got %+v", canonical.Resolutions)
+		}
+	})
+}
+
 func TestRealtimeVoiceInvestigationResponseCalibratesPlausibleMatch(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Sarah winter coat"}
