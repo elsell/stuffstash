@@ -49,3 +49,25 @@ func TestRealtimeVoiceExactOrZeroCompletionIgnoresWrongKindDestinationDistractor
 		t.Fatalf("expected wrong-kind destination distractor to count as missing, got ok=%t step=%+v", ok, completed)
 	}
 }
+
+func TestRealtimeVoiceExactOrZeroCompletionDoesNotPromoteFuzzySameKindDestination(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove,
+		SubjectMention: "Drill", DestinationPath: []string{"Live Room"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
+	}
+	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: intent}
+	completed, ok := realtimeVoiceExactOrZeroCompletion(intent, step,
+		[]agentmodel.CandidateObservation{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "drill", Title: "Drill", Kind: "item"},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", CandidateID: "rehearsal-room", Title: "Rehearsal Room", Kind: "location"},
+		},
+		[]agentmodel.ReadEvidence{
+			{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "drill", CandidateCount: 1},
+			{EvidenceRound: 1, ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "live room", CandidateCount: 1},
+		},
+	)
+	if ok || completed.Decision != agentmodel.InvestigationDecisionSearchAgain {
+		t.Fatalf("expected fuzzy same-kind destination to remain model-owned, got ok=%t step=%+v", ok, completed)
+	}
+}
