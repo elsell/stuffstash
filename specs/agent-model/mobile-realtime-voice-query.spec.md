@@ -471,6 +471,8 @@ Vocabulary payloads must be deterministically bounded. The first limits are 32 c
 
 Vocabulary manifests may be cached only behind the application boundary. Any cache key must include tenant ID, inventory ID, lifecycle view, and the authorization/disclosure policy version; entries must never be shared across tenants or inventories. Definition and tag create, update, archive, restore, or effective-scope changes must invalidate the affected entries. Provider requests and diagnostics must not expose cache keys, tenant IDs, inventory IDs, internal definition IDs, or tag IDs as vocabulary data.
 
+Authorization must be refreshed at the start of every submitted audio turn, including follow-up turns on an existing realtime session. The application must verify current tenant view and active inventory view access before speech-to-text, vocabulary loading, language inference, or any inventory read. Access revoked after `session.started` therefore fails the turn without disclosing audio-derived text or inventory vocabulary to a provider.
+
 The application owns all deterministic policy and product outcomes:
 
 - execution of authorized reads through application services;

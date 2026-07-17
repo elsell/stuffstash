@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -32,11 +35,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if input.InputAudio.MimeType != "audio/mp4" || input.InputAudio.Channels != 1 {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
-	if err := a.authorizer.CheckTenant(ctx, input.Principal, ports.TenantPermissionView, input.TenantID); err != nil {
-		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
-		return RealtimeVoiceSession{}, err
-	}
-	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureRealtimeVoiceAccess(ctx, input.Principal, input.TenantID, input.InventoryID); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
 	providers, err := a.realtimeVoiceProviders.ResolveRealtimeVoiceProviders(ctx, ports.RealtimeVoiceProviderResolutionInput{
@@ -126,6 +125,9 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if input.Session.speechToText == nil || input.Session.languageInference == nil || input.Session.textToSpeech == nil {
 		return apperrors.ErrInvalidInput
 	}
+	if err := a.ensureRealtimeVoiceAccess(ctx, input.Session.Principal, input.Session.TenantID, input.Session.InventoryID); err != nil {
+		return err
+	}
 	transcription, err := input.Session.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
 		TenantID:    input.Session.TenantID,
 		InventoryID: input.Session.InventoryID,
@@ -154,6 +156,14 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, nil, emit, input.ContinueAfterClarification)
 	}
 	return a.runRealtimeVoiceInvestigationLoop(ctx, input.Session, effectiveTranscript, input.ConversationTurns, input.ContinueAfterClarification, emit)
+}
+
+func (a App) ensureRealtimeVoiceAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	if err := a.authorizer.CheckTenant(ctx, principal, ports.TenantPermissionView, tenantID); err != nil {
+		a.recordAuthorizationDenied(ctx, principal, tenantID)
+		return err
+	}
+	return a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionView)
 }
 
 func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, emit RealtimeVoiceEventSink) error {
