@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -18,6 +19,8 @@ Interpret imperfect speech and propose narrow evidence reads. Speech may contain
 Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
 
 Imperative return, check in, and check out language is a change request, never locate. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
+
+A past-tense location question about where someone put, left, stored, or stashed an existing subject is locate. An imperative instruction to put, move, store, or stash a subject at a named destination is a change. A placement verb alone does not make a question a move.
 
 Preserve every intended storage destination in outer-to-inner containment order; not every named noun is a destination. Return one destinationKinds entry for every destinationPath entry in the same order: location for a place or room, container for a bin, box, cabinet, shelf, toolbox, surface, or other thing that can contain an asset. Classify the meaning expressed by the request; do not rely on a segment's array position. Use subject for the subject reference and destination.0 through destination.5 for ordered destinations. Keep relational words that distinguish a container inside its segment.
 
@@ -90,6 +93,7 @@ func parseGeminiInvestigationTurn(raw string) (ports.LanguageInferenceTurn, erro
 }
 
 func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agentmodel.InvestigationStep {
+	step.Intent.Kind = geminiIntentKindForOperation(step.Intent.Operation)
 	if step.Intent.Operation != agentmodel.OperationCreate {
 		step.Intent.NewAssetKind = ""
 	}
@@ -109,6 +113,21 @@ func canonicalizeGeminiInvestigationStep(step agentmodel.InvestigationStep) agen
 	return step
 }
 
+func geminiIntentKindForOperation(operation agentmodel.Operation) agentmodel.IntentKind {
+	switch operation {
+	case agentmodel.OperationLocate, agentmodel.OperationExists, agentmodel.OperationListInventory, agentmodel.OperationListContents,
+		agentmodel.OperationDetail, agentmodel.OperationCheckoutStatus, agentmodel.OperationAssetHistory, agentmodel.OperationCheckoutHistory:
+		return agentmodel.IntentKindRead
+	case agentmodel.OperationCreate, agentmodel.OperationMove, agentmodel.OperationArchive, agentmodel.OperationRestore,
+		agentmodel.OperationCheckout, agentmodel.OperationReturn:
+		return agentmodel.IntentKindChange
+	case agentmodel.OperationUnsupported:
+		return agentmodel.IntentKindUnsupported
+	default:
+		return ""
+	}
+}
+
 func canonicalizeGeminiInvestigationReads(intent agentmodel.Intent, requests []agentmodel.SearchRequest) []agentmodel.SearchRequest {
 	hasSubject := false
 	for _, request := range requests {
@@ -122,6 +141,7 @@ func canonicalizeGeminiInvestigationReads(intent agentmodel.Intent, requests []a
 		switch request.ReadKind {
 		case agentmodel.InvestigationReadSearchAssets:
 			request.VisibleAssetID = ""
+			request.SearchProbes = canonicalizeGeminiSearchProbes(request.SearchProbes)
 		case agentmodel.InvestigationReadListInventory:
 			request.VisibleAssetID = ""
 			request.SearchProbes = nil
@@ -137,10 +157,52 @@ func canonicalizeGeminiInvestigationReads(intent agentmodel.Intent, requests []a
 			canonical = append(canonical, request)
 		}
 	}
+	return deduplicateGeminiInvestigationReads(canonical)
+}
+
+func canonicalizeGeminiSearchProbes(probes []string) []string {
+	canonical := make([]string, 0, len(probes))
+	seen := map[string]struct{}{}
+	for _, probe := range probes {
+		probe = strings.TrimSpace(probe)
+		key := normalizeGeminiSearchProbe(probe)
+		if key == "" {
+			canonical = append(canonical, probe)
+			continue
+		}
+		if _, duplicate := seen[key]; duplicate {
+			continue
+		}
+		seen[key] = struct{}{}
+		canonical = append(canonical, probe)
+	}
+	return canonical
+}
+
+func normalizeGeminiSearchProbe(probe string) string {
+	words := strings.FieldsFunc(strings.ToLower(probe), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) })
+	return strings.Join(words, " ")
+}
+
+func deduplicateGeminiInvestigationReads(requests []agentmodel.SearchRequest) []agentmodel.SearchRequest {
+	canonical := make([]agentmodel.SearchRequest, 0, len(requests))
+	seen := map[string]struct{}{}
+	for _, request := range requests {
+		encoded, _ := json.Marshal(request)
+		key := string(encoded)
+		if _, duplicate := seen[key]; duplicate {
+			continue
+		}
+		seen[key] = struct{}{}
+		canonical = append(canonical, request)
+	}
 	return canonical
 }
 
 func canonicalizeGeminiInvestigationResolutions(intent agentmodel.Intent, resolutions []agentmodel.Resolution) []agentmodel.Resolution {
+	for index := range resolutions {
+		resolutions[index].CandidateIDs = deduplicateGeminiCandidateIDs(resolutions[index].CandidateIDs)
+	}
 	if intent.Operation == agentmodel.OperationCreate || intent.Operation == agentmodel.OperationMove {
 		return resolutions
 	}
@@ -161,6 +223,19 @@ func canonicalizeGeminiInvestigationResolutions(intent agentmodel.Intent, resolu
 			resolution.ReferenceKey = agentmodel.SemanticReferenceSubject
 			canonical = append(canonical, resolution)
 		}
+	}
+	return canonical
+}
+
+func deduplicateGeminiCandidateIDs(ids []string) []string {
+	canonical := make([]string, 0, len(ids))
+	seen := map[string]struct{}{}
+	for _, id := range ids {
+		if _, duplicate := seen[id]; duplicate {
+			continue
+		}
+		seen[id] = struct{}{}
+		canonical = append(canonical, id)
 	}
 	return canonical
 }
@@ -232,10 +307,14 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		zero := 0
 		resolutionsSchema.MaxItems = &zero
 	}
+	searchRequestsSchema := geminiSchema{Type: "array", Items: &searchItem}
+	if input.Phase == agentmodel.InvestigationPhaseInitial {
+		searchRequestsSchema.MinItems = 1
+	}
 	return &geminiSchema{Type: "object", Properties: map[string]geminiSchema{
 		"decision":           {Type: "string", Enum: decisions},
 		"intent":             intent,
-		"searchRequests":     {Type: "array", Items: &searchItem},
+		"searchRequests":     searchRequestsSchema,
 		"resolutions":        resolutionsSchema,
 		"rationale":          {Type: "string", Description: fmt.Sprintf("Concise decision summary for evidence round %d.", input.EvidenceRound)},
 		"vocabularyRequests": {Type: "array", Items: &vocabularyRequestItem},

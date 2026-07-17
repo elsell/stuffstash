@@ -149,7 +149,7 @@ func TestGeminiInvestigationPromptPreservesValidatedVocabularyAsCompleteUntruste
 	}
 }
 
-func TestGeminiInvestigationSchemaBoundsProviderStateSpaceWithoutEncodingResolutionPolicy(t *testing.T) {
+func TestGeminiInvestigationSchemaAvoidsStatusSpecificResolutionBranches(t *testing.T) {
 	t.Parallel()
 
 	schema := geminiInvestigationResponseSchema(agentmodel.InvestigationInput{Phase: agentmodel.InvestigationPhaseEvidenceAssessment})
@@ -164,12 +164,12 @@ func TestGeminiInvestigationSchemaBoundsProviderStateSpaceWithoutEncodingResolut
 	if len(statuses) != 7 {
 		t.Fatalf("expected one bounded status enum, got %+v", statuses)
 	}
-	if candidateIDs := resolution.Properties["candidateIds"]; candidateIDs.Type != "array" || candidateIDs.MaxItems != nil {
-		t.Fatalf("candidate cardinality belongs to project validation, got %+v", candidateIDs)
+	if candidateIDs := resolution.Properties["candidateIds"]; candidateIDs.Type != "array" || candidateIDs.MinItems != 0 {
+		t.Fatalf("candidate status cardinality belongs to project validation, got %+v", candidateIDs)
 	}
 	for _, property := range []string{"searchRequests", "resolutions", "vocabularyRequests"} {
-		if bounded := schema.Properties[property]; bounded.MinItems != 0 || bounded.MaxItems != nil {
-			t.Fatalf("%s cardinality belongs to project validation, got %+v", property, bounded)
+		if bounded := schema.Properties[property]; bounded.MinItems != 0 {
+			t.Fatalf("%s phase cardinality belongs to project validation, got %+v", property, bounded)
 		}
 	}
 }
@@ -328,10 +328,70 @@ func TestGeminiInvestigationPromptDefinesGeneralContainmentAndCustodySemantics(t
 		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
 		Transcript: "generated request", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
 	}})
-	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "Imperative return", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
+	for _, rule := range []string{"newly obtained subject cannot be moved", "Only create and move", "Usage, borrower, purpose", "Imperative return", "past-tense location question", "placement verb alone", "Y before X", "not every named noun is a destination", "Spatial landmark relations", "[workshop, crate under the bench]", "must not search again merely to confirm absence"} {
 		if !strings.Contains(prompt, rule) {
 			t.Fatalf("prompt is missing general rule %q: %s", rule, prompt)
 		}
+	}
+}
+
+func TestParseGeminiInvestigationTurnRemovesOnlyExactStructuralDuplicates(t *testing.T) {
+	t.Parallel()
+
+	raw := `{"decision":"finish","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[],"resolutions":[{"referenceKey":"subject","status":"ambiguous","candidateIds":["drill-1","drill-1","drill-2"],"evidence":"two visible candidates"}],"vocabularyRequests":[],"rationale":"Clarify the candidates."}`
+	turn, err := parseGeminiInvestigationTurn(raw)
+	if err != nil {
+		t.Fatalf("parse duplicate candidate IDs: %v", err)
+	}
+	if got := turn.Investigation.Resolutions[0].CandidateIDs; len(got) != 2 || got[0] != "drill-1" || got[1] != "drill-2" {
+		t.Fatalf("expected stable exact deduplication, got %+v", got)
+	}
+
+	raw = `{"decision":"search","intent":{"kind":"read","operation":"locate","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["Drill"," drill ","cordless-drill","cordless drill"],"lifecycleScope":"active"},{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["Drill"," drill ","cordless-drill","cordless drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search."}`
+	turn, err = parseGeminiInvestigationTurn(raw)
+	if err != nil {
+		t.Fatalf("parse duplicate reads and probes: %v", err)
+	}
+	if len(turn.Investigation.SearchRequests) != 1 || len(turn.Investigation.SearchRequests[0].SearchProbes) != 2 {
+		t.Fatalf("expected exact duplicate reads and normalized probes to be removed, got %+v", turn.Investigation.SearchRequests)
+	}
+}
+
+func TestGeminiInvestigationSchemaKeepsUpperBoundsInProjectValidation(t *testing.T) {
+	t.Parallel()
+
+	schema := geminiInvestigationResponseSchema(agentmodel.InvestigationInput{Phase: agentmodel.InvestigationPhaseEvidenceAssessment})
+	intent := schema.Properties["intent"]
+	searchRequests := schema.Properties["searchRequests"]
+	for name, value := range map[string]*int{
+		"destinationPath":    intent.Properties["destinationPath"].MaxItems,
+		"destinationKinds":   intent.Properties["destinationKinds"].MaxItems,
+		"searchRequests":     searchRequests.MaxItems,
+		"searchProbes":       searchRequests.Items.Properties["searchProbes"].MaxItems,
+		"resolutions":        schema.Properties["resolutions"].MaxItems,
+		"candidateIds":       schema.Properties["resolutions"].Items.Properties["candidateIds"].MaxItems,
+		"vocabularyRequests": schema.Properties["vocabularyRequests"].MaxItems,
+	} {
+		if value != nil {
+			t.Fatalf("%s maxItems must remain in project validation for Gemini state limits, got %v", name, *value)
+		}
+	}
+	initial := geminiInvestigationResponseSchema(agentmodel.InvestigationInput{Phase: agentmodel.InvestigationPhaseInitial})
+	if got := initial.Properties["searchRequests"].MinItems; got != 1 {
+		t.Fatalf("initial searchRequests minItems = %d, want 1", got)
+	}
+}
+
+func TestParseGeminiInvestigationTurnDerivesRedundantKindFromOperation(t *testing.T) {
+	t.Parallel()
+
+	raw := `{"decision":"search","intent":{"kind":"change","operation":"asset_history","subjectMention":"drill","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},"searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"drill","kindHint":"item","visibleAssetId":"","searchProbes":["drill"],"lifecycleScope":"active"}],"resolutions":[],"vocabularyRequests":[],"rationale":"Search history subject."}`
+	turn, err := parseGeminiInvestigationTurn(raw)
+	if err != nil {
+		t.Fatalf("parse operation with redundant kind mismatch: %v", err)
+	}
+	if turn.Investigation.Intent.Kind != agentmodel.IntentKindRead || turn.Investigation.Intent.Operation != agentmodel.OperationAssetHistory {
+		t.Fatalf("expected operation-owned read kind, got %+v", turn.Investigation.Intent)
 	}
 }
 
