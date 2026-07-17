@@ -15,7 +15,7 @@ const voiceInvestigationContract = `You are the bounded semantic investigator fo
 
 Interpret imperfect speech and propose narrow evidence reads. Speech may contain approximate titles, singular/plural errors, category substitutions, or transcription errors. You may be creative about search hypotheses, but inventory facts must come only from authorized observations.
 
-Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. Acquisition language means create when a newly obtained subject is being placed, even if the placement clause uses put, place, store, or stash.
+Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
 
 Imperative return, check in, and check out language is a change request, never locate. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
 

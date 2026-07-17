@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -10,6 +11,24 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+func TestRealtimeVoiceCheckoutHistoryObservationIncludesBoundedCheckoutDetails(t *testing.T) {
+	t.Parallel()
+	payload, err := json.Marshal(realtimeVoiceAssetCheckoutHistoryToolOutput{
+		Asset:   realtimeVoiceAssetToolItem{AssetID: "flashlight-1", Title: "Loaner flashlight", Kind: "item"},
+		Entries: []realtimeVoiceAssetCheckoutHistoryEntry{{CheckedOutAt: "2026-06-29T13:00:00Z", CheckoutDetails: "Loaned to Sam"}},
+	})
+	if err != nil {
+		t.Fatalf("marshal checkout history: %v", err)
+	}
+	observations, err := realtimeVoiceInvestigationObservationsFromToolResult(2, agentmodel.SemanticReferenceSubject, "", ports.AgentToolResult{Name: RealtimeVoiceToolListAssetCheckoutHistory, Content: string(payload)})
+	if err != nil || len(observations) != 1 {
+		t.Fatalf("map checkout history: %+v, %v", observations, err)
+	}
+	if len(observations[0].Facts) != 1 || !strings.Contains(observations[0].Facts[0], "Sam") {
+		t.Fatalf("expected authorized checkout details in bounded fact, got %+v", observations[0].Facts)
+	}
+}
 
 func TestRealtimeVoiceInvestigationReadsMergeSearchProbeEvidenceByReference(t *testing.T) {
 	t.Parallel()

@@ -202,6 +202,9 @@ func realtimeVoiceInvestigationObservationsFromToolResult(round int, reference a
 		facts := make([]string, 0, len(output.Entries))
 		for _, entry := range output.Entries {
 			fact := "Checked out at " + entry.CheckedOutAt
+			if details := boundedRealtimeVoiceCheckoutFact(entry.CheckoutDetails, 300); details != "" {
+				fact += ": " + details
+			}
 			if entry.ReturnedAt != "" {
 				fact += " and returned at " + entry.ReturnedAt
 			}
@@ -211,6 +214,14 @@ func realtimeVoiceInvestigationObservationsFromToolResult(round int, reference a
 	default:
 		return nil, ports.ErrInvalidProviderInput
 	}
+}
+
+func boundedRealtimeVoiceCheckoutFact(value string, limit int) string {
+	runes := []rune(strings.TrimSpace(value))
+	if len(runes) > limit {
+		runes = runes[:limit]
+	}
+	return strings.TrimSpace(string(runes))
 }
 
 func realtimeVoiceInvestigationObservationFromItem(round int, reference agentmodel.SemanticReferenceKey, probe string, item realtimeVoiceAssetToolItem, facts []string) agentmodel.CandidateObservation {

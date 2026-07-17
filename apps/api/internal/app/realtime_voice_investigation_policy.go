@@ -164,7 +164,7 @@ func realtimeVoiceLifecycleScopeIncludes(scopes []agentmodel.LifecycleScope, lif
 
 func sameRealtimeVoiceInvestigationIntent(left, right agentmodel.Intent) bool {
 	if left.Kind != right.Kind || left.Operation != right.Operation || strings.TrimSpace(left.SubjectMention) != strings.TrimSpace(right.SubjectMention) ||
-		strings.TrimSpace(left.NewAssetKind) != strings.TrimSpace(right.NewAssetKind) || strings.TrimSpace(left.Details) != strings.TrimSpace(right.Details) ||
+		strings.TrimSpace(left.NewAssetKind) != strings.TrimSpace(right.NewAssetKind) ||
 		len(left.DestinationPath) != len(right.DestinationPath) || len(left.DestinationKinds) != len(right.DestinationKinds) {
 		return false
 	}
@@ -291,7 +291,7 @@ func realtimeVoiceInvestigationResponse(intent agentmodel.Intent, resolutions []
 	}
 	if intent.Kind == agentmodel.IntentKindChange {
 		if subject.Status == agentmodel.ResolutionAbsent {
-			return investigationResponse(ports.StructuredAgentResponseKindClarification, "I couldn't find the existing item you want to change. Please describe it another way."), nil
+			return investigationResponse(ports.StructuredAgentResponseKindClarification, "I couldn't find an existing match for "+strings.TrimSpace(intent.SubjectMention)+". Please describe it another way."), nil
 		}
 		return ports.StructuredAgentResponse{}, errors.New("change intent requires action-plan compilation")
 	}
@@ -318,7 +318,11 @@ func realtimeVoiceInvestigationResponse(intent agentmodel.Intent, resolutions []
 		message = "Yes, I found " + candidate.Title + "."
 	case agentmodel.OperationCheckoutStatus:
 		if candidate.CheckoutState == "checked_out" {
-			message = candidate.Title + " is currently checked out."
+			if len(candidate.Facts) > 0 {
+				message = candidate.Title + ": " + candidate.Facts[0] + "."
+			} else {
+				message = candidate.Title + " is currently checked out."
+			}
 		} else {
 			message = candidate.Title + " is currently available."
 		}

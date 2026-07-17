@@ -108,6 +108,14 @@ func TestRealtimeVoiceInvestigationLoopCompletesRequiredContentsEvidenceAfterTar
 	}
 }
 
+func TestRealtimeVoiceCurrentCheckoutStatusRequiresCheckoutEvidence(t *testing.T) {
+	t.Parallel()
+	readKind, required := realtimeVoiceOperationRequiredRead(agentmodel.OperationCheckoutStatus)
+	if !required || readKind != agentmodel.InvestigationReadCheckoutHistory {
+		t.Fatalf("checkout status must require checkout history evidence, got %q required=%t", readKind, required)
+	}
+}
+
 func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsAtReview(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{

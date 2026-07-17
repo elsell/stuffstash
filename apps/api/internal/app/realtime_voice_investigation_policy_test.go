@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -117,6 +118,26 @@ func TestRealtimeVoiceInvestigationPolicyRejectsDestinationKindMutationAcrossTur
 	}
 }
 
+func TestRealtimeVoiceInvestigationPolicyAnchorsInitialDetailsAcrossEvidenceTurns(t *testing.T) {
+	t.Parallel()
+	canonical := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationCheckoutStatus, SubjectMention: "loaner flashlight", Details: ""}
+	provider := canonical
+	provider.Details = "Checked out at a provider-observed time"
+	if !sameRealtimeVoiceInvestigationIntent(canonical, provider) {
+		t.Fatal("evidence-only detail rewrite should not mutate anchored intent identity")
+	}
+	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: provider, Resolutions: []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"flashlight-1"}}}}
+	observations := []agentmodel.CandidateObservation{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, CandidateID: "flashlight-1", Title: "Loaner flashlight", Kind: "item", LifecycleState: "active"}}
+	evidence := []agentmodel.ReadEvidence{{EvidenceRound: 1, ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Probe: "loaner flashlight", CandidateCount: 1, LifecycleScope: agentmodel.LifecycleScopeActive}}
+	result, err := canonicalRealtimeVoiceInvestigationStep(canonical, step, observations, evidence)
+	if err != nil {
+		t.Fatalf("canonicalize evidence detail rewrite: %v", err)
+	}
+	if result.Intent.Details != "" {
+		t.Fatalf("evidence turn changed anchored details: %+v", result.Intent)
+	}
+}
+
 func TestRealtimeVoiceInvestigationPolicyAcceptsAbsentAfterExecutedZeroMatchSearch(t *testing.T) {
 	t.Parallel()
 	intent := agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationExists, SubjectMention: "moon boots"}
@@ -211,5 +232,17 @@ func TestRealtimeVoiceInvestigationResponseCalibratesPlausibleMatch(t *testing.T
 	}
 	if response.Kind != ports.StructuredAgentResponseKindAnswer || response.SpokenResponse != "I think you mean Sarah Winter Clothes and Shoes. Its recorded path is Basement / Storage room / Sarah Winter Clothes and Shoes." {
 		t.Fatalf("unexpected calibrated response: %+v", response)
+	}
+}
+
+func TestRealtimeVoiceInvestigationResponseNamesMissingExistingSubject(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "my passport", DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation}}
+	response, err := realtimeVoiceInvestigationResponse(intent, []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent}}, nil)
+	if err != nil {
+		t.Fatalf("render absent source: %v", err)
+	}
+	if response.Kind != ports.StructuredAgentResponseKindClarification || !strings.Contains(strings.ToLower(response.SpokenResponse), "passport") {
+		t.Fatalf("expected useful subject-specific clarification, got %+v", response)
 	}
 }

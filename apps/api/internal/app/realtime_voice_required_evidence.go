@@ -85,7 +85,7 @@ func realtimeVoiceOperationRequiredRead(operation agentmodel.Operation) (agentmo
 		return agentmodel.InvestigationReadAssetDetail, true
 	case agentmodel.OperationAssetHistory:
 		return agentmodel.InvestigationReadAssetHistory, true
-	case agentmodel.OperationCheckoutHistory:
+	case agentmodel.OperationCheckoutStatus, agentmodel.OperationCheckoutHistory:
 		return agentmodel.InvestigationReadCheckoutHistory, true
 	default:
 		return "", false

@@ -38,7 +38,9 @@ func TestRealtimeVoiceProductionEntrypointSupportsReadOperationMatrix(t *testing
 		{operation: agentmodel.OperationDetail, requests: func(subjectID, _ asset.ID) []agentmodel.SearchRequest {
 			return append(realtimeVoiceSubjectSearchRequests(subjectID, ""), agentmodel.SearchRequest{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadAssetDetail, VisibleAssetID: subjectID.String()})
 		}, status: agentmodel.ResolutionStrong, candidate: realtimeVoiceSubjectCandidate},
-		{operation: agentmodel.OperationCheckoutStatus, requests: realtimeVoiceSubjectSearchRequests, status: agentmodel.ResolutionStrong, candidate: realtimeVoiceSubjectCandidate},
+		{operation: agentmodel.OperationCheckoutStatus, requests: func(subjectID, _ asset.ID) []agentmodel.SearchRequest {
+			return append(realtimeVoiceSubjectSearchRequests(subjectID, ""), agentmodel.SearchRequest{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadCheckoutHistory, VisibleAssetID: subjectID.String()})
+		}, status: agentmodel.ResolutionStrong, candidate: realtimeVoiceSubjectCandidate},
 		{operation: agentmodel.OperationAssetHistory, requests: func(subjectID, _ asset.ID) []agentmodel.SearchRequest {
 			return append(realtimeVoiceSubjectSearchRequests(subjectID, ""), agentmodel.SearchRequest{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadAssetHistory, VisibleAssetID: subjectID.String()})
 		}, status: agentmodel.ResolutionStrong, candidate: realtimeVoiceSubjectCandidate},
