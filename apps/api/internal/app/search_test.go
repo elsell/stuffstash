@@ -259,11 +259,11 @@ func TestRealtimeVoiceSearchToolWritesConversationReadAudit(t *testing.T) {
 		MaxPageLimit:     20,
 	})
 
-	_, _, err := application.executeRealtimeVoiceTool(context.Background(), RealtimeVoiceSession{
+	_, err := application.executeRealtimeVoiceTool(context.Background(), RealtimeVoiceSession{
 		TenantID:    tenantID,
 		InventoryID: inventoryID,
 		Principal:   identity.Principal{ID: identity.PrincipalID("speaker")},
-	}, "", nil, ports.AgentToolCall{
+	}, ports.AgentToolCall{
 		ID:   "tool-search",
 		Name: RealtimeVoiceToolSearchAuthorizedAssets,
 		Arguments: map[string]any{

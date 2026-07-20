@@ -20,11 +20,12 @@
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import type { InventoryTagRepository } from '$lib/ports/inventoryTagRepository';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
   import type { AssetThumbnailLoaderLifecycle } from '$lib/ports/assetThumbnailLoader';
 
-  type WorkspaceRepository = InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & AssetThumbnailLoaderLifecycle;
+  type WorkspaceRepository = InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoaderLifecycle;
 
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
@@ -35,6 +36,7 @@
   let workspaceError = $state('');
   let authNotice = $state<Exclude<SignInState, 'default'> | null>(null);
   let authObserver: AuthObserver | null = null;
+  const workspaceObserver = new InMemoryWorkspaceObserver();
   let ownedRepository: WorkspaceRepository | null = null;
 
   onMount(() => {
@@ -54,11 +56,10 @@
         config = loadedConfig;
         session = getStoredSession();
         if (session) {
-          const observer = new InMemoryWorkspaceObserver();
           const nextRepository = new StuffStashInventoryRepository(
             loadedConfig,
             () => getStoredSession()?.idToken ?? null,
-            observer
+            workspaceObserver
           );
           ownedRepository = nextRepository;
           const nextWorkspace = await nextRepository.loadWorkspace();
@@ -154,7 +155,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {repository} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {repository} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>

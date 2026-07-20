@@ -5,375 +5,99 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func TestRealtimeVoiceStreamsVerboseAgentDiagnostics(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Diagnostics: []ports.LanguageInferenceDiagnostic{{
-				Title:  "Language prompt",
-				Detail: "Transcript: move my water bottle to the kitchen\napiKey: should-not-leak\nBearer abc123",
-			}},
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-kitchen",
-				Name: RealtimeVoiceToolProposeActionPlan,
-				Arguments: map[string]any{
-					"commandKind":                "create_asset",
-					"intentSummary":              "Move the water bottle to a new Kitchen location.",
-					"modelInterpretationSummary": "The user wants the visible water bottle moved to Kitchen, which should be created.",
-					"confirmationSummary":        "Create Kitchen and move the water bottle there?",
-					"commandSummary":             "Create Kitchen",
-					"arguments": map[string]any{
-						"title": "Kitchen",
-						"kind":  "location",
-					},
-				},
-			}},
-		},
-		{
-			Diagnostics: []ports.LanguageInferenceDiagnostic{{
-				Title:  "Language model turn",
-				Detail: `{"final":{"kind":"answer","spokenResponse":"I checked your inventory.","displayResponse":"I checked your inventory."}}`,
-			}},
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I checked your inventory.",
-				DisplayResponse: "I checked your inventory.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
-	resolver.providers.LanguageInference = language
-	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
-	waterBottleTitle, _ := asset.NewTitle("Water bottle")
-	waterBottle.Title = waterBottleTitle
-	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-
-	var promptDiagnostic, toolStarted, toolCompleted, toolResultDiagnostic *RealtimeVoiceEvent
-	for index := range events {
-		event := &events[index]
-		switch {
-		case event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Language prompt":
-			promptDiagnostic = event
-		case event.Type == RealtimeVoiceEventToolCallStarted:
-			toolStarted = event
-		case event.Type == RealtimeVoiceEventToolCallCompleted:
-			toolCompleted = event
-		case event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Tool result received":
-			toolResultDiagnostic = event
-		}
-	}
-	if promptDiagnostic == nil || !strings.Contains(promptDiagnostic.Detail, "move my water bottle to the kitchen") {
-		t.Fatalf("expected prompt diagnostic, got %+v", events)
-	}
-	if strings.Contains(promptDiagnostic.Detail, "should-not-leak") || strings.Contains(promptDiagnostic.Detail, "abc123") || !strings.Contains(promptDiagnostic.Detail, "[redacted-key]") {
-		t.Fatalf("expected redacted prompt diagnostic, got %q", promptDiagnostic.Detail)
-	}
-	if toolStarted == nil || toolStarted.Detail != "" {
-		t.Fatalf("expected bland tool start event, got %+v", toolStarted)
-	}
-	if toolCompleted == nil || toolCompleted.Detail != "" {
-		t.Fatalf("expected bland tool completed event, got %+v", toolCompleted)
-	}
-	if toolResultDiagnostic == nil || !strings.Contains(toolResultDiagnostic.Detail, `"content"`) || !strings.Contains(toolResultDiagnostic.Detail, "propose_action_plan") {
-		t.Fatalf("expected tool result diagnostic, got %+v", toolResultDiagnostic)
-	}
-}
-
 func TestRealtimeVoiceDiagnosticRedactionCoversHeaderBearerTokens(t *testing.T) {
 	t.Parallel()
-
 	for _, input := range []string{
 		"Authorization: bearer abc/def==",
 		"token: bearer abc/def==",
 		"authorization=bearer abc/def==",
 	} {
 		redacted := safeRealtimeVoiceDiagnosticText(input, 500)
-		if strings.Contains(redacted, "abc/def") || strings.Contains(strings.ToLower(redacted), "bearer ") {
-			t.Fatalf("expected header bearer token to be redacted, input %q became %q", input, redacted)
-		}
-		if !strings.Contains(redacted, "[redacted") {
-			t.Fatalf("expected redaction marker, input %q became %q", input, redacted)
+		if strings.Contains(redacted, "abc/def") || strings.Contains(strings.ToLower(redacted), "bearer ") || !strings.Contains(redacted, "[redacted") {
+			t.Fatalf("expected bearer material to be redacted, input %q became %q", input, redacted)
 		}
 	}
 }
 
-func TestRealtimeVoiceOmitsVerboseDiagnosticsByDefault(t *testing.T) {
+func TestRealtimeVoiceTypedInvestigationDiagnosticsRespectSessionSetting(t *testing.T) {
 	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Diagnostics: []ports.LanguageInferenceDiagnostic{{
-				Title:  "Language prompt",
-				Detail: "Transcript: move my water bottle to the kitchen\nBearer should-not-leak",
-			}},
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "I checked your inventory.",
-				DisplayResponse: "I checked your inventory.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
-	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	for _, event := range events {
-		if event.Type == RealtimeVoiceEventAgentDiagnostic || event.Detail != "" {
-			t.Fatalf("expected default session to omit verbose diagnostics, got %+v from %+v", event, events)
-		}
+	for _, enabled := range []bool{false, true} {
+		enabled := enabled
+		t.Run(map[bool]string{false: "disabled", true: "enabled"}[enabled], func(t *testing.T) {
+			t.Parallel()
+			initial, final := realtimeVoiceTypedLocateTurns("diagnostic-subject", "Diagnostic subject")
+			language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
+				{Investigation: &initial},
+				{Investigation: &final},
+			}}
+			resolver := successfulRealtimeVoiceResolver()
+			resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "generated diagnostic request"}
+			resolver.providers.LanguageInference = language
+			application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+			seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("diagnostic-subject", "Diagnostic subject", asset.KindItem, ""), "audit-diagnostic-subject")
+			input := defaultRealtimeVoiceSessionInput()
+			input.DeveloperDiagnostics = enabled
+			session, err := application.StartRealtimeVoiceSession(context.Background(), input)
+			if err != nil {
+				t.Fatalf("start session: %v", err)
+			}
+			events := []RealtimeVoiceEvent{}
+			if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+				events = append(events, event)
+				return nil
+			}); err != nil {
+				t.Fatalf("run voice entrypoint: %v", err)
+			}
+			diagnostics := []RealtimeVoiceEvent{}
+			for _, event := range events {
+				if event.Type == RealtimeVoiceEventAgentDiagnostic {
+					diagnostics = append(diagnostics, event)
+				}
+			}
+			if !enabled && len(diagnostics) != 0 {
+				t.Fatalf("diagnostics-disabled session leaked diagnostics: %+v", diagnostics)
+			}
+			if enabled {
+				if len(diagnostics) != 2 {
+					t.Fatalf("expected typed-turn diagnostics, got %+v", events)
+				}
+				for _, diagnostic := range diagnostics {
+					for _, forbidden := range []string{"generated diagnostic request", "Diagnostic subject", "diagnostic-subject", "search_assets", "subjectMention"} {
+						if strings.Contains(diagnostic.Detail, forbidden) {
+							t.Fatalf("diagnostic leaked %q: %+v", forbidden, diagnostic)
+						}
+					}
+					if !strings.Contains(diagnostic.Detail, `"requestShape":"single_target"`) || !strings.Contains(diagnostic.Detail, `"operation":"locate"`) || !strings.Contains(diagnostic.Message, "Language investigation") {
+						t.Fatalf("expected safe typed diagnostic metadata: %+v", diagnostic)
+					}
+				}
+			}
+		})
 	}
 }
 
-func TestRealtimeVoiceStreamsServerSelectedReadDiagnosticsWhenEnabled(t *testing.T) {
+func TestRealtimeVoiceTypedContinuationFailureRetainsSafeReadDiagnostics(t *testing.T) {
 	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "The toolbox contains the cordless drill.",
-				DisplayResponse: "The toolbox contains the cordless drill.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "What's in the toolbox?"}
-	resolver.providers.LanguageInference = language
-	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	toolbox := assetItem("toolbox-1", "tenant-home", "inventory-home", asset.KindContainer, "")
-	toolboxTitle, _ := asset.NewTitle("Toolbox")
-	toolbox.Title = toolboxTitle
-	drill := assetItem("cordless-drill-1", "tenant-home", "inventory-home", asset.KindItem, "toolbox-1")
-	drillTitle, _ := asset.NewTitle("Cordless drill")
-	drill.Title = drillTitle
-	seedRealtimeVoiceLoopAsset(t, store, toolbox, "audit-toolbox")
-	seedRealtimeVoiceLoopAsset(t, store, drill, "audit-drill")
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-
-	targetRead := findRealtimeVoiceDiagnosticEvent(t, events, "Server-selected contents target read")
-	if !strings.Contains(targetRead.Detail, RealtimeVoiceToolSearchAuthorizedAssets) || !strings.Contains(targetRead.Detail, `"query": "toolbox"`) {
-		t.Fatalf("expected target-read diagnostic to show selected search call, got %s", targetRead.Detail)
-	}
-	contentsList := findRealtimeVoiceDiagnosticEvent(t, events, "Server-selected contents list")
-	if !strings.Contains(contentsList.Detail, RealtimeVoiceToolListAuthorizedAssets) || !strings.Contains(contentsList.Detail, `"parentTitle": "Toolbox"`) {
-		t.Fatalf("expected contents-list diagnostic to show selected list call, got %s", contentsList.Detail)
-	}
-	if len(language.seenToolResults) != 1 || len(language.seenToolResults[0]) < 2 || !containsAll(language.seenToolResults[0][1].Content, "Toolbox", "Cordless drill") {
-		t.Fatalf("expected model to receive server-selected read results, got %+v", language.seenToolResults)
-	}
-}
-
-func TestRealtimeVoiceOmitsRecoverableToolErrorDiagnosticsByDefault(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "tool-plan-1",
-				Name: RealtimeVoiceToolProposeActionPlan,
-				Arguments: map[string]any{
-					"commandKind":                "create_asset",
-					"intentSummary":              "Create an item.",
-					"modelInterpretationSummary": "The user wants to add an item.",
-					"confirmationSummary":        "Create item?",
-					"commandSummary":             "Create item",
-					"arguments": map[string]any{
-						"apiKey": "secret",
-					},
-				},
-			}},
-		},
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindClarification,
-				SpokenResponse:  "I could not prepare that change safely.",
-				DisplayResponse: "I could not prepare that change safely.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Add an item."}
-	resolver.providers.LanguageInference = language
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	for _, event := range events {
-		if event.Type == RealtimeVoiceEventAgentDiagnostic || event.Detail != "" {
-			t.Fatalf("expected default recoverable tool failure to omit verbose diagnostics, got %+v from %+v", event, events)
-		}
-	}
-}
-
-func TestRealtimeVoiceReturnsRecoverableToolErrorsToModel(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "tool-plan-1",
-				Name: RealtimeVoiceToolProposeActionPlan,
-				Arguments: map[string]any{
-					"commandKind":                "create_asset",
-					"intentSummary":              "Create an item.",
-					"modelInterpretationSummary": "The user wants to add an item.",
-					"confirmationSummary":        "Create item?",
-					"commandSummary":             "Create item",
-					"arguments": map[string]any{
-						"apiKey": "secret",
-					},
-				},
-			}},
-		},
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindClarification,
-				SpokenResponse:  "I could not prepare that change safely. Please try again with the item name and location.",
-				DisplayResponse: "I could not prepare that change safely. Please try again with the item name and location.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Add an item."}
-	resolver.providers.LanguageInference = language
-	tts := &resolvedTextToSpeech{}
-	resolver.providers.TextToSpeech = tts
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	if len(language.seenToolResults) < 2 || len(language.seenToolResults[1]) != 1 {
-		t.Fatalf("expected recoverable tool error to be returned to model, got %+v", language.seenToolResults)
-	}
-	if !strings.Contains(language.seenToolResults[1][0].Content, `"status":"error"`) || !strings.Contains(language.seenToolResults[1][0].Content, `"retryable":true`) {
-		t.Fatalf("expected safe retryable tool error result, got %s", language.seenToolResults[1][0].Content)
-	}
-	if !strings.Contains(language.seenToolResults[1][0].Content, "parentCommandId") || !strings.Contains(language.seenToolResults[1][0].Content, "missing location/container") {
-		t.Fatalf("expected action-plan repair guidance in tool error result, got %s", language.seenToolResults[1][0].Content)
-	}
-	if _, leaked := language.seenToolResults[1][0].Call.Arguments["apiKey"]; leaked {
-		t.Fatalf("rejected tool arguments leaked into provider-bound call history: %+v", language.seenToolResults[1][0].Call.Arguments)
-	}
-	seenFailureEvent := false
-	seenFailureDiagnostic := false
-	failureDiagnosticDetail := ""
-	for _, event := range events {
-		if event.Type == RealtimeVoiceEventToolCallFailed && event.Code == "invalid_tool_request" {
-			seenFailureEvent = true
-		}
-		if event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Tool result received" && strings.Contains(event.Detail, `\"status\":\"error\"`) && strings.Contains(event.Detail, `\"retryable\":true`) {
-			seenFailureDiagnostic = true
-			failureDiagnosticDetail = event.Detail
-		}
-	}
-	if !seenFailureEvent {
-		t.Fatalf("expected safe tool failure event, got %+v", events)
-	}
-	if !seenFailureDiagnostic {
-		t.Fatalf("expected safe tool failure diagnostic, got %+v", events)
-	}
-	if strings.Contains(failureDiagnosticDetail, "apiKey") || strings.Contains(failureDiagnosticDetail, "secret") {
-		t.Fatalf("expected failed tool diagnostic to omit rejected sensitive arguments, got %q", failureDiagnosticDetail)
-	}
-	if tts.lastText != "I could not prepare that change safely. Please try again with the item name and location." {
-		t.Fatalf("expected recovered final response to be spoken, got %q", tts.lastText)
-	}
-}
-
-func TestRealtimeVoiceEmitsDiagnosticWhenLanguageContinuationFailsAfterTools(t *testing.T) {
-	t.Parallel()
-
+	initial, _ := realtimeVoiceTypedLocateTurns("failure-subject", "Failure subject")
 	language := &scriptedRealtimeLanguageInference{
-		turns: []ports.LanguageInferenceTurn{{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-1",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "water bottle"},
-			}},
-		}},
-		errs: []error{nil, safeRealtimeVoiceDiagnosticFailure{safe: "provider_http_status_429"}},
+		turns: []ports.LanguageInferenceTurn{{Investigation: &initial}},
+		errs:  []error{nil, safeRealtimeVoiceDiagnosticFailure{safe: "provider_http_status_429"}},
 	}
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "generated continuation-failure request"}
 	resolver.providers.LanguageInference = language
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
-	waterBottleTitle, _ := asset.NewTitle("Water bottle")
-	waterBottle.Title = waterBottleTitle
-	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("failure-subject", "Failure subject", asset.KindItem, ""), "audit-failure-subject")
+	input := defaultRealtimeVoiceSessionInput()
+	input.DeveloperDiagnostics = true
+	session, err := application.StartRealtimeVoiceSession(context.Background(), input)
 	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
+		t.Fatalf("start session: %v", err)
 	}
 	events := []RealtimeVoiceEvent{}
 	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
@@ -381,264 +105,92 @@ func TestRealtimeVoiceEmitsDiagnosticWhenLanguageContinuationFailsAfterTools(t *
 		return nil
 	})
 	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureLanguageInference {
-		t.Fatalf("expected language inference failure, got %v", err)
-	}
-
-	var diagnostic *RealtimeVoiceEvent
-	for index := range events {
-		event := &events[index]
-		if event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == "Language provider failed" {
-			diagnostic = event
-			break
-		}
-	}
-	if diagnostic == nil {
-		t.Fatalf("expected failed continuation diagnostic, got %+v", events)
-	}
-	for _, required := range []string{`"turn": 2`, `"previousTurns": 1`, `"finalOnly": false`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets, "language_inference_failed", "provider_http_status_429"} {
-		if !strings.Contains(diagnostic.Detail, required) {
-			t.Fatalf("expected diagnostic to contain %q, got %s", required, diagnostic.Detail)
-		}
-	}
-	if strings.Contains(diagnostic.Detail, "should-not-leak") || strings.Contains(strings.ToLower(diagnostic.Detail), "bearer ") || strings.Contains(diagnostic.Detail, "provider.invalid") {
-		t.Fatalf("expected provider failure diagnostic to be redacted, got %s", diagnostic.Detail)
-	}
-}
-
-func TestRealtimeVoiceDowngradesUnsafeProviderDiagnosticCategories(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{
-		turns: []ports.LanguageInferenceTurn{{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-1",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "water bottle"},
-			}},
-		}},
-		errs: []error{nil, safeRealtimeVoiceDiagnosticFailure{safe: "provider_http_status_429 https://provider.invalid project-id should-not-leak"}},
-	}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move my water bottle to the kitchen."}
-	resolver.providers.LanguageInference = language
-	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
-	waterBottleTitle, _ := asset.NewTitle("Water bottle")
-	waterBottle.Title = waterBottleTitle
-	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err == nil {
-		t.Fatalf("expected language inference failure")
+		t.Fatalf("expected language inference stage failure, got %v", err)
 	}
 	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Language provider failed")
-	if !strings.Contains(diagnostic.Detail, "provider_request_failed") {
-		t.Fatalf("expected unsafe provider diagnostic to downgrade, got %s", diagnostic.Detail)
-	}
-	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(diagnostic.Detail, "project-id") || strings.Contains(diagnostic.Detail, "should-not-leak") {
-		t.Fatalf("unsafe provider diagnostic leaked, got %s", diagnostic.Detail)
-	}
-}
-
-func TestRealtimeVoiceEmitsSafeTextToSpeechFailureDiagnosticAfterToolWork(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-1",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "water bottle"},
-			}},
-		},
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "Your water bottle is in the Office.",
-				DisplayResponse: "Your water bottle is in the Office.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
-	resolver.providers.LanguageInference = language
-	resolver.providers.TextToSpeech = failingResolvedTextToSpeech{err: safeRealtimeVoiceDiagnosticFailure{safe: "provider_timeout"}}
-	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
-	waterBottleTitle, _ := asset.NewTitle("Water bottle")
-	waterBottle.Title = waterBottleTitle
-	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
-		t.Fatalf("expected text-to-speech failure, got %v", err)
-	}
-	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
-	for _, required := range []string{`"stage": "text_to_speech"`, `"safeCode": "text_to_speech_failed"`, `"safeError": "provider_timeout"`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets} {
+	for _, required := range []string{`"phase": "evidence_assessment"`, `"evidenceRound": 1`, `"maxEvidenceRounds": 2`, `"previousRequestCount": 1`, `"observationCount": 1`, `"readEvidenceCount": 1`, `"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets, "provider_http_status_429"} {
 		if !strings.Contains(diagnostic.Detail, required) {
-			t.Fatalf("expected diagnostic to contain %q, got %s", required, diagnostic.Detail)
+			t.Fatalf("expected safe continuation diagnostic to contain %q, got %s", required, diagnostic.Detail)
 		}
 	}
-	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(strings.ToLower(diagnostic.Detail), "bearer ") || strings.Contains(diagnostic.Detail, "should-not-leak") {
-		t.Fatalf("expected text-to-speech diagnostic to be redacted, got %s", diagnostic.Detail)
+	if strings.Contains(diagnostic.Detail, "provider.invalid") || strings.Contains(diagnostic.Detail, "should-not-leak") || strings.Contains(diagnostic.Detail, "finalOnly") || strings.Contains(diagnostic.Detail, "previousTurns") {
+		t.Fatalf("provider internals leaked through diagnostic: %s", diagnostic.Detail)
 	}
 }
 
-func TestRealtimeVoiceTextToSpeechFailureDiagnosticKeepsToolWorkDuringRecovery(t *testing.T) {
+func TestRealtimeVoiceTypedResponsePreservesTextToSpeechBoundaries(t *testing.T) {
 	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:        "search-1",
-				Name:      RealtimeVoiceToolSearchAuthorizedAssets,
-				Arguments: map[string]any{"query": "water bottle"},
-			}},
-		},
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "raw prompt: should not be spoken",
-				DisplayResponse: "raw prompt: should not be displayed",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
-	resolver.providers.LanguageInference = language
-	resolver.providers.TextToSpeech = failingResolvedTextToSpeech{err: safeRealtimeVoiceDiagnosticFailure{safe: "provider_timeout"}}
-	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	waterBottle := assetItem("water-bottle-1", "tenant-home", "inventory-home", asset.KindItem, "")
-	waterBottleTitle, _ := asset.NewTitle("Water bottle")
-	waterBottle.Title = waterBottleTitle
-	seedRealtimeVoiceLoopAsset(t, store, waterBottle, "audit-water-bottle")
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
-		t.Fatalf("expected text-to-speech failure, got %v", err)
-	}
-	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
-	for _, required := range []string{`"toolResultCount": 1`, RealtimeVoiceToolSearchAuthorizedAssets} {
-		if !strings.Contains(diagnostic.Detail, required) {
-			t.Fatalf("expected recovery diagnostic to contain %q, got %s", required, diagnostic.Detail)
-		}
+	for _, testCase := range []struct {
+		name          string
+		provider      ports.TextToSpeechProvider
+		wantFailure   bool
+		wantSafeError string
+		wantChunks    int
+	}{
+		{name: "provider failure", provider: failingResolvedTextToSpeech{err: safeRealtimeVoiceDiagnosticFailure{safe: "provider_timeout"}}, wantFailure: true, wantSafeError: "provider_timeout"},
+		{name: "malformed output", provider: malformedResolvedTextToSpeech{}, wantFailure: true, wantSafeError: "invalid_provider_output"},
+		{name: "empty chunks compacted", provider: resolvedTextToSpeechWithChunks{chunks: [][]byte{[]byte("speech"), nil}}, wantChunks: 1},
+	} {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			initial, final := realtimeVoiceTypedLocateTurns("speech-subject", "Speech subject")
+			resolver := successfulRealtimeVoiceResolver()
+			resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "generated speech-boundary request"}
+			resolver.providers.LanguageInference = &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &final}}}
+			resolver.providers.TextToSpeech = testCase.provider
+			application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+			seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("speech-subject", "Speech subject", asset.KindItem, ""), "audit-speech-subject")
+			input := defaultRealtimeVoiceSessionInput()
+			input.DeveloperDiagnostics = true
+			session, err := application.StartRealtimeVoiceSession(context.Background(), input)
+			if err != nil {
+				t.Fatalf("start session: %v", err)
+			}
+			events := []RealtimeVoiceEvent{}
+			err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+				events = append(events, event)
+				return nil
+			})
+			if testCase.wantFailure {
+				if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
+					t.Fatalf("expected text-to-speech stage failure, got %v", err)
+				}
+				diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
+				if !strings.Contains(diagnostic.Detail, testCase.wantSafeError) || !strings.Contains(diagnostic.Detail, `"toolResultCount": 1`) {
+					t.Fatalf("expected safe TTS diagnostic, got %s", diagnostic.Detail)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("run voice entrypoint: %v", err)
+			}
+			audioChunks := []RealtimeVoiceEvent{}
+			for _, event := range events {
+				if event.Type == RealtimeVoiceEventTextToSpeechAudioChunk {
+					audioChunks = append(audioChunks, event)
+				}
+			}
+			if len(audioChunks) != testCase.wantChunks || !audioChunks[len(audioChunks)-1].FinalChunk {
+				t.Fatalf("expected compacted final speech chunks, got %+v", audioChunks)
+			}
+		})
 	}
 }
 
-func TestRealtimeVoiceTreatsMalformedTextToSpeechOutputAsSpeechOutputFailure(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "The tools are in the garage.",
-				DisplayResponse: "The tools are in the garage.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are my tools?"}
-	resolver.providers.LanguageInference = language
-	resolver.providers.TextToSpeech = malformedResolvedTextToSpeech{}
-	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-
-	sessionInput := defaultRealtimeVoiceSessionInput()
-	sessionInput.DeveloperDiagnostics = true
-	session, err := application.StartRealtimeVoiceSession(context.Background(), sessionInput)
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
-		t.Fatalf("expected malformed text-to-speech output to be stage failure, got %v", err)
-	}
-	diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")
-	for _, required := range []string{`"stage": "text_to_speech"`, `"safeCode": "text_to_speech_failed"`, `"safeError": "invalid_provider_output"`} {
-		if !strings.Contains(diagnostic.Detail, required) {
-			t.Fatalf("expected malformed output diagnostic to contain %q, got %s", required, diagnostic.Detail)
-		}
-	}
-}
-
-func TestRealtimeVoiceCompactsTextToSpeechChunksBeforeMarkingFinalChunk(t *testing.T) {
-	t.Parallel()
-
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{
-		{
-			Final: &ports.StructuredAgentResponse{
-				Kind:            ports.StructuredAgentResponseKindAnswer,
-				SpokenResponse:  "The tools are in the garage.",
-				DisplayResponse: "The tools are in the garage.",
-			},
-		},
-	}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are my tools?"}
-	resolver.providers.LanguageInference = language
-	resolver.providers.TextToSpeech = resolvedTextToSpeechWithChunks{chunks: [][]byte{[]byte("speech"), nil}}
-	application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-	audioChunks := []RealtimeVoiceEvent{}
-	for _, event := range events {
-		if event.Type == RealtimeVoiceEventTextToSpeechAudioChunk {
-			audioChunks = append(audioChunks, event)
-		}
-	}
-	if len(audioChunks) != 1 || !audioChunks[0].FinalChunk {
-		t.Fatalf("expected one compacted final audio chunk, got %+v", audioChunks)
-	}
+func realtimeVoiceTypedLocateTurns(candidateID, title string) (agentmodel.InvestigationStep, agentmodel.InvestigationStep) {
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: title}
+	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{{
+		ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: title, SearchProbes: []string{title},
+	}}}
+	final := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
+		ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{candidateID},
+	}}}
+	return initial, final
 }
 
 func findRealtimeVoiceDiagnosticEvent(t *testing.T, events []RealtimeVoiceEvent, message string) RealtimeVoiceEvent {
 	t.Helper()
-
 	for _, event := range events {
 		if event.Type == RealtimeVoiceEventAgentDiagnostic && event.Message == message {
 			return event
@@ -648,21 +200,15 @@ func findRealtimeVoiceDiagnosticEvent(t *testing.T, events []RealtimeVoiceEvent,
 	return RealtimeVoiceEvent{}
 }
 
-type safeRealtimeVoiceDiagnosticFailure struct {
-	safe string
-}
+type safeRealtimeVoiceDiagnosticFailure struct{ safe string }
 
 func (e safeRealtimeVoiceDiagnosticFailure) Error() string {
 	return "provider failure with raw endpoint https://provider.invalid bearer should-not-leak"
 }
 
-func (e safeRealtimeVoiceDiagnosticFailure) SafeRealtimeVoiceDiagnostic() string {
-	return e.safe
-}
+func (e safeRealtimeVoiceDiagnosticFailure) SafeRealtimeVoiceDiagnostic() string { return e.safe }
 
-type failingResolvedTextToSpeech struct {
-	err error
-}
+type failingResolvedTextToSpeech struct{ err error }
 
 func (f failingResolvedTextToSpeech) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
 	return ports.TextToSpeechResult{}, f.err
@@ -674,9 +220,7 @@ func (malformedResolvedTextToSpeech) Synthesize(context.Context, ports.TextToSpe
 	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: [][]byte{nil}}, nil
 }
 
-type resolvedTextToSpeechWithChunks struct {
-	chunks [][]byte
-}
+type resolvedTextToSpeechWithChunks struct{ chunks [][]byte }
 
 func (r resolvedTextToSpeechWithChunks) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
 	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: r.chunks}, nil

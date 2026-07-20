@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assetId } from '../../domain/assets/AssetSummary';
+import { assetId, type AssetSummary } from '../../domain/assets/AssetSummary';
 import {
   inventoryId,
   tenantId
@@ -218,20 +218,9 @@ describe('HomeDashboardQuery', () => {
         photoLabel: 'Needs photo',
         imagePlaceholderLabel: 'Box',
         checkedOutLabel: 'Checked out'
-      },
-      {
-        id: 'asset-old-router',
-        title: 'Old router',
-        kindLabel: 'Item',
-        customTypeLabel: undefined,
-        description: 'Retired network hardware.',
-        locationTrailLabel: 'Office / Office bin',
-        parentLocationTrail: [{ id: 'asset-office', title: 'Office', isImmediateParent: true }],
-        updatedAtLabel: 'Updated last week',
-        photoLabel: 'Photo ready',
-        imagePlaceholderLabel: 'Item'
       }
     ]);
+    expect(dashboard.recentAssets.some((asset) => asset.id === 'asset-old-router')).toBe(false);
     expect(dashboard.checkedOutAssets).toEqual([
       {
         id: 'asset-camera-bag',
@@ -246,6 +235,53 @@ describe('HomeDashboardQuery', () => {
         imagePlaceholderLabel: 'Box',
         checkedOutLabel: 'Checked out'
       }
+    ]);
+  });
+
+  it('excludes archived assets before applying the recently changed result bound', async () => {
+    const archivedAssets: AssetSummary[] = Array.from({ length: 10 }, (_, index) => ({
+      id: assetId(`asset-archived-${index}`),
+      title: `Archived ${index}`,
+      kind: 'item',
+      lifecycleState: 'archived',
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home'],
+      parentLocationTrail: [],
+      description: '',
+      updatedAtLabel: 'Updated recently',
+      hasPhoto: false
+    }));
+    const activeAsset: AssetSummary = {
+      id: assetId('asset-active-after-archive-bound'),
+      title: 'Active after archive bound',
+      kind: 'item',
+      lifecycleState: 'active',
+      locationLabel: 'Inventory root',
+      locationTrail: ['Home'],
+      parentLocationTrail: [],
+      description: '',
+      updatedAtLabel: 'Updated recently',
+      hasPhoto: false
+    };
+    const query = new HomeDashboardQuery(new FakeInventorySummaryRepository({
+      tenants: [{ id: tenantId('tenant-home'), name: 'Home' }],
+      defaultInventoryId: inventoryId('inventory-home'),
+      inventories: [{
+        id: inventoryId('inventory-home'),
+        tenantId: tenantId('tenant-home'),
+        name: 'Home',
+        role: 'owner',
+        permissions: ['view'],
+        description: '',
+        updatedAtLabel: 'Updated recently',
+        locationCount: 0,
+        locations: [],
+        assets: [...archivedAssets, activeAsset]
+      }]
+    }));
+
+    expect((await query.execute()).recentAssets.map((asset) => asset.id)).toEqual([
+      'asset-active-after-archive-bound'
     ]);
   });
 });

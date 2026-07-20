@@ -49,9 +49,8 @@ import {
   assetLifecycleConfirmation,
   assetLifecycleFailurePresentation,
   assetDetailLoadErrorPresentation,
-  assetLifecycleOverflowMenu,
-  assetDetailOverflowControlState,
-  assetLifecycleOverflowPresentation
+  assetOverflowMenuActions,
+  handleAssetOverflowAction,
 } from './AssetLifecyclePresentation';
 import {
   assetWorkspaceSuccessStatus,
@@ -64,6 +63,7 @@ import {
   hasDirtyEditAssetDraft,
   normalizedEditDraft
 } from './AssetDetailEditPresentation';
+import { assetOverflowMenuGroups } from './AssetOverflowMenu';
 
 describe('navigateAfterDeletedAsset', () => {
   it('builds explicit asset detail route params for card navigation', () => {
@@ -110,19 +110,6 @@ describe('navigateAfterDeletedAsset', () => {
     });
 
     expect(calls).toEqual(['replace:/']);
-  });
-});
-
-describe('asset detail overflow control', () => {
-  it('exposes pending state as a disabled accessibility control', () => {
-    expect(assetDetailOverflowControlState(false)).toEqual({
-      disabled: false,
-      accessibilityState: { disabled: false }
-    });
-    expect(assetDetailOverflowControlState(true)).toEqual({
-      disabled: true,
-      accessibilityState: { disabled: true }
-    });
   });
 });
 
@@ -856,37 +843,52 @@ describe('asset lifecycle presentation helpers', () => {
     });
   });
 
-  it('names the current asset in the lifecycle overflow context', () => {
-    expect(assetLifecycleOverflowPresentation({
-      title: 'Water bottle',
-      lifecycleLabel: 'Active'
-    })).toEqual({
-      title: 'Water bottle actions',
-      message: 'History, lifecycle, and other actions for this asset.'
-    });
-  });
-
-  it('orders native asset actions as history, lifecycle, destructive, then cancel', () => {
-    expect(assetLifecycleOverflowMenu({
-      title: 'Tool box',
-      lifecycleLabel: 'Archived',
+  it('orders semantic native asset actions without modal indexes or a cancel row', () => {
+    expect(assetOverflowMenuActions({
       canArchive: false,
       canRestore: true,
       canDeletePermanently: true
-    })).toEqual({
-      title: 'Tool box actions',
-      message: 'History, lifecycle, and other actions for this asset.',
-      actionRows: [
-        { kind: 'restore', label: 'Restore', isDestructive: false },
-        { kind: 'delete', label: 'Delete permanently', isDestructive: true }
-      ],
-      options: ['Checkout history', 'History', 'Restore', 'Delete permanently', 'Cancel'],
-      checkoutHistoryIndex: 0,
-      auditIndex: 1,
-      lifecycleActionIndexes: [2, 3],
-      cancelIndex: 4,
-      destructiveIndex: 3
+    })).toEqual([
+      { id: 'checkout-history', label: 'Checkout history', section: 'history', systemImage: 'clock.arrow.circlepath', isDestructive: false },
+      { id: 'history', label: 'History', section: 'history', systemImage: 'clock', isDestructive: false },
+      { id: 'restore', label: 'Restore', section: 'lifecycle', systemImage: 'arrow.uturn.backward', isDestructive: false },
+      { id: 'delete', label: 'Delete permanently', section: 'destructive', systemImage: 'trash', isDestructive: true }
+    ]);
+  });
+
+  it('dispatches each semantic menu action only to its intended callback', () => {
+    const calls: string[] = [];
+    const callbacks = {
+      onCheckoutHistory: () => calls.push('checkout-history'),
+      onHistory: () => calls.push('history'),
+      onLifecycleAction: (action: 'archive' | 'restore' | 'delete') => calls.push(action)
+    };
+
+    handleAssetOverflowAction('checkout-history', callbacks);
+    handleAssetOverflowAction('history', callbacks);
+    handleAssetOverflowAction('archive', callbacks);
+    handleAssetOverflowAction('restore', callbacks);
+    handleAssetOverflowAction('delete', callbacks);
+
+    expect(calls).toEqual(['checkout-history', 'history', 'archive', 'restore', 'delete']);
+  });
+
+  it('builds native header menu groups with direct one-tap action callbacks', () => {
+    const calls: string[] = [];
+    const groups = assetOverflowMenuGroups({
+      asset: { title: 'Drill', canArchive: true, canRestore: false, canDeletePermanently: true },
+      onCheckoutHistory: () => calls.push('checkout-history'),
+      onHistory: () => calls.push('history'),
+      onLifecycleAction: (action) => calls.push(action)
     });
+
+    expect(groups.map((group) => group.id)).toEqual(['history', 'lifecycle', 'destructive']);
+    expect(groups.flatMap((group) => group.items.map((item) => item.id))).toEqual([
+      'checkout-history', 'history', 'archive', 'delete'
+    ]);
+    groups[0]?.items[1]?.onPress();
+    groups[1]?.items[0]?.onPress();
+    expect(calls).toEqual(['history', 'archive']);
   });
 
   it('turns lifecycle failures into action-specific recovery copy', () => {

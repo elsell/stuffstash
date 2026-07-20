@@ -147,18 +147,6 @@ func firstGeminiText(response geminiGenerateContentResponse) string {
 	return ""
 }
 
-func geminiFunctionCalls(response geminiGenerateContentResponse) []geminiFunctionCall {
-	calls := []geminiFunctionCall{}
-	for _, candidate := range response.Candidates {
-		for _, part := range candidate.Content.Parts {
-			if part.FunctionCall != nil {
-				calls = append(calls, *part.FunctionCall)
-			}
-		}
-	}
-	return calls
-}
-
 type geminiGenerateContentResponse struct {
 	Candidates []struct {
 		Content struct {

@@ -1,7 +1,9 @@
+import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { TagChip } from './AssetTagChips';
+import { MobileRenderHarness } from '../../test-support/render';
+import { AssetTagChips, TagChip } from './AssetTagChips';
 import { assetTagChipLayoutPresentation, assetTagChipPresentation, assetTagChipStylePresentation } from './AssetTagChipsPresentation';
-import { darkPalette } from '../theme/tokens';
+import { darkPalette, lightPalette } from '../theme/tokens';
 
 vi.mock('react-native', () => ({
   Pressable: 'Pressable',
@@ -117,6 +119,18 @@ describe('assetTagChipPresentation', () => {
 
     expect(label?.props?.style).toMatchObject({ color: darkPalette.text });
   });
+
+  it('uses the concrete light semantic border for an uncolored chip', async () => {
+    const harness = new MobileRenderHarness();
+    await harness.render(createElement(AssetTagChips, {
+      palette: lightPalette,
+      tags: [{ ...tag('plain'), color: undefined }]
+    }));
+
+    const chip = harness.all().find((node) => styleValue(node.props.style, 'borderWidth') === 1);
+    expect(styleValue(chip?.props.style, 'borderColor')).toBe(lightPalette.border);
+    await harness.unmount();
+  });
 });
 
 function tag(id: string) {
@@ -153,4 +167,13 @@ function findFirstByType(node: unknown, type: unknown): ElementNode | undefined 
     }
   }
   return findFirstByType(children, type);
+}
+
+function styleValue(style: unknown, key: string): unknown {
+  const entries = Array.isArray(style) ? style.flat(Infinity) : [style];
+  return entries.reduce<unknown>((value, entry) => {
+    if (!entry || typeof entry !== 'object') return value;
+    const record = entry as Record<string, unknown>;
+    return key in record ? record[key] : value;
+  }, undefined);
 }

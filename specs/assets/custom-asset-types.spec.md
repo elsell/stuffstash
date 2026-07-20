@@ -8,6 +8,8 @@ An asset with a custom asset type is still a normal asset. Base `kind` controls 
 
 ## Scope
 
+Cross-platform settings navigation and custom asset type management interaction behavior are defined by `specs/platform/client-settings-management.spec.md`. That client spec must preserve the additive scope, immutable key, compatibility, permission, and lifecycle rules defined here.
+
 This spec covers the first custom asset type API and the changes needed for custom field definitions and asset custom field validation.
 
 This spec does not implement multiple custom asset types per asset, custom type inheritance, icons, display ordering, import/export, search indexing, or UI editing flows. Restore and hard-delete behavior is defined by `specs/platform/resource-lifecycle.spec.md`.
@@ -114,11 +116,17 @@ Inventory-scoped create requires `inventory.configure`.
 
 Inventory-scoped list requires `inventory.view` and returns the effective custom asset types available to that inventory.
 
+Tenant and inventory list endpoints default to `lifecycleState=active` and accept `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all`. Any other value must return the standard invalid-input response.
+
+For every lifecycle view, effective inventory listing returns matching tenant-scoped custom asset types first, then matching inventory-scoped custom asset types. An archived inherited type is visible for lifecycle management context but remains tenant-owned and cannot be mutated through an inventory endpoint.
+
 Inventory-scoped update requires `inventory.configure` and may update only custom asset types owned by that inventory. Tenant-scoped types inherited by an inventory must be updated through the tenant endpoint.
 
 Inventory-scoped archive requires `inventory.configure` and may archive only custom asset types owned by that inventory. Tenant-scoped types inherited by an inventory must be archived through the tenant endpoint.
 
 Collection endpoints must use cursor pagination with `limit` and `cursor`.
+
+Collection cursors must bind lifecycle state, tenant ID, inventory ID when present, and effective-scope mode. Cursors reused across lifecycle views, tenants, inventories, or scope modes must fail safely. Active, archived, and all views must preserve the same authentication, authorization, tenant isolation, and inventory isolation; lifecycle filtering must never broaden visibility.
 
 Successful responses must use the standard success envelope.
 
@@ -319,6 +327,8 @@ Domain and application tests must cover:
 - Existing custom field definition targets for archived custom asset types staying intact.
 - Rejection when an inventory update attempts to update an inherited tenant-scoped custom asset type.
 - Effective inventory listing.
+- Active-by-default and explicit active, archived, and all tenant and effective-inventory list behavior.
+- Effective-inventory archived ordering and inherited read-only ownership semantics.
 - Duplicate effective keys.
 - Field applicability `all_assets`.
 - Field applicability `custom_asset_types`.
@@ -344,6 +354,7 @@ Adversarial API tests must cover:
 - Hidden custom asset type targets.
 - Duplicate target IDs.
 - Wrong-scope cursors.
+- Unknown lifecycle filters and cursors reused across lifecycle views.
 
 PostgreSQL tests must cover:
 

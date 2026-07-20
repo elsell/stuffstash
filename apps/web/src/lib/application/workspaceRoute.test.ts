@@ -3,6 +3,48 @@ import type { WorkspaceMode } from '$lib/domain/inventory';
 import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
+  it('parses and formats canonical account-oriented settings routes', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/settings'))).toMatchObject({
+      mode: 'settings',
+      settingsLevel: 'overview',
+      settingsCollection: null
+    });
+    expect(parseWorkspaceRoute(new URL('https://app.test/settings/tenants/tenant_1/fields?lifecycle=archived'))).toMatchObject({
+      mode: 'settings',
+      tenantId: 'tenant_1',
+      settingsLevel: 'tenant',
+      settingsCollection: 'fields',
+      settingsLifecycle: 'archived'
+    });
+    expect(
+      parseWorkspaceRoute(
+        new URL('https://app.test/settings/tenants/tenant_1/inventories/inv_1/asset-types/type_1/edit')
+      )
+    ).toMatchObject({
+      mode: 'settings',
+      tenantId: 'tenant_1',
+      inventoryId: 'inv_1',
+      settingsLevel: 'inventory',
+      settingsCollection: 'asset-types',
+      settingsResourceId: 'type_1',
+      settingsResourceAction: 'edit'
+    });
+    expect(
+      workspaceRouteHref(
+        {
+          mode: 'settings',
+          settingsLevel: 'inventory',
+          settingsCollection: 'tags',
+          settingsResourceAction: 'new',
+          tenantId: 'tenant_1',
+          inventoryId: 'inv_1'
+        },
+        null,
+        null
+      )
+    ).toBe('/settings/tenants/tenant_1/inventories/inv_1/tags/new');
+  });
+
   it('parses and formats the canonical Browse state', () => {
     const route = parseWorkspaceRoute(
       new URL(

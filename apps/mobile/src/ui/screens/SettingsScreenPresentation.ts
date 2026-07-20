@@ -1,10 +1,18 @@
 import type { AppearancePreference } from '../../application/settings/AppearancePreference';
+import { spacing } from '../theme/tokens';
+
+export const settingsLayoutMetrics = {
+  bottomSpacing: spacing.xl,
+  horizontalInset: spacing.md,
+  minimumTouchTarget: 44,
+  sectionSpacing: spacing.lg
+} as const;
 
 export type SettingsDestination =
   | 'account'
   | 'appearance'
-  | 'sharing'
-  | 'voice-setup'
+  | 'tenant-settings'
+  | 'inventory-settings'
   | 'connection'
   | 'about'
   | 'diagnostics';
@@ -43,7 +51,7 @@ export type SettingsRootRow = {
 };
 
 export type SettingsRootSection = {
-  readonly id: 'account' | 'preferences' | 'inventory-administration' | 'tenant-administration' | 'connection' | 'about';
+  readonly id: 'account' | 'preferences' | 'scope' | 'connection' | 'about';
   readonly title?: string;
   readonly rows: readonly SettingsRootRow[];
 };
@@ -65,32 +73,16 @@ export function buildSettingsRootSections(
     }
   ];
 
-  if (input.selectedInventory.permissions.includes('share')) {
-    sections.push({
-      id: 'inventory-administration',
-      title: 'Inventory',
-      rows: [row(
-        'sharing',
-        'Sharing',
-        input.selectedInventory.name,
-        'sharing',
-        `Manage invitations for the ${input.selectedInventory.name} inventory`
-      )]
-    });
-  }
-
-  if (input.selectedTenant.permissions.includes('configure')) {
-    const readiness = voiceReadinessLabel(input.voiceReadiness);
-    sections.push({
-      id: 'tenant-administration',
-      title: 'Tenant Administration',
-      rows: [{
-        ...row('voice-setup', 'Voice Setup', readiness, 'voice-setup',
-          `Open Voice Setup for the ${input.selectedTenant.name} tenant. ${readiness}`),
-        context: `Shared with ${input.selectedTenant.name}`
-      }]
-    });
-  }
+  sections.push({
+    id: 'scope',
+    title: 'Household and Inventory',
+    rows: [
+      row('tenant-settings', input.selectedTenant.name, 'Household settings', 'tenant-settings',
+        `Open household settings for ${input.selectedTenant.name}`),
+      row('inventory-settings', input.selectedInventory.name, `In ${input.selectedTenant.name}`, 'inventory-settings',
+        `Open inventory settings for ${input.selectedInventory.name}, in ${input.selectedTenant.name}`)
+    ]
+  });
 
   sections.push(
     {
@@ -149,16 +141,5 @@ export function serverHostname(serverUrl: string): string {
     return new URL(serverUrl).host || serverUrl;
   } catch {
     return serverUrl;
-  }
-}
-
-function voiceReadinessLabel(readiness: string | undefined): string {
-  switch (readiness) {
-    case 'ready':
-      return 'Ready';
-    case 'needs_attention':
-      return 'Needs attention';
-    default:
-      return 'Check setup';
   }
 }

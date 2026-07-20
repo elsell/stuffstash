@@ -77,7 +77,10 @@ export class HomeDashboardQuery {
         updatedAtLabel: item.updatedAtLabel
       })),
       canAdd: inventory.permissions.includes('create_asset'),
-      recentAssets: inventory.assets.slice(0, 10).map(toAssetCardViewModel),
+      recentAssets: inventory.assets
+        .filter((asset) => asset.lifecycleState === 'active')
+        .slice(0, 10)
+        .map(toAssetCardViewModel),
       checkedOutAssets: checkedOutAssets.slice(0, 10).map(toAssetCardViewModel),
       assetTags: [...(inventory.assetTags ?? [])]
     };

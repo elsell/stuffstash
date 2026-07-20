@@ -3,7 +3,6 @@
   import Home from '@lucide/svelte/icons/house';
   import Plus from '@lucide/svelte/icons/plus';
   import Compass from '@lucide/svelte/icons/compass';
-  import Settings from '@lucide/svelte/icons/settings';
   import Upload from '@lucide/svelte/icons/upload';
   import { workspaceAddAvailability } from '$lib/application/workspaceAddAvailability';
   import { mobileShellNavigationItems, shellAddHref, type ShellNavigationDestination, type ShellNavigationIcon } from '$lib/application/workspaceShellNavigation';
@@ -45,7 +44,6 @@
     home: Home,
     browse: Compass,
     import: Upload,
-    settings: Settings
   };
 
   function addHref(): string {

@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight, MoveRight, Plus } from 'lucide-react-native';
 import type {
   AssetCardViewModel,
@@ -29,6 +29,7 @@ import {
   type ContainedAssetsSectionHeading,
   type ContainedAssetRowViewModel
 } from './ContainedAssetsPresentation';
+import { AppTextInput } from './AppTextInput';
 
 export type ContainedWorkspaceListItem =
   | { readonly key: string; readonly kind: 'section'; readonly heading: ContainedAssetsSectionHeading }
@@ -135,7 +136,7 @@ export function ContainedContentsSearch({
   const styles = createStyles(palette);
   return (
     <View style={styles.contentsSearch}>
-      <TextInput
+      <AppTextInput
         accessibilityLabel="Search contents"
         autoCapitalize="none"
         onChangeText={onChangeQuery}
@@ -415,8 +416,8 @@ function createStyles(palette: MobileColorPalette) {
     primarySpatialAction: { backgroundColor: palette.action },
     secondarySpatialAction: {
       backgroundColor: palette.elevatedSurface,
-      borderColor: palette.controlBorder,
-      borderWidth: 1
+      borderColor: palette.border,
+      borderWidth: StyleSheet.hairlineWidth
     },
     spatialActionPressed: { opacity: 0.82 },
     primarySpatialText: {
@@ -441,7 +442,7 @@ function createStyles(palette: MobileColorPalette) {
       minHeight: 88,
       paddingVertical: spacing.sm
     },
-    childRowPressed: { backgroundColor: palette.selected },
+    childRowPressed: { opacity: 0.82 },
     childSeparator: {
       backgroundColor: palette.border,
       height: StyleSheet.hairlineWidth,

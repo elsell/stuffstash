@@ -19,6 +19,8 @@ This spec covers the first native tag slice:
 
 This spec does not define tag hierarchies, global tenant-level tags, tag merge workflows, rule-based automatic tagging, tag permissions independent from inventory permissions, or tag analytics.
 
+Cross-platform tag-management navigation and interaction behavior are defined by `specs/platform/client-settings-management.spec.md`. That client spec does not add tenant tags, tag inheritance, restore, or hard delete.
+
 ## Domain Model
 
 `AssetTag` is an inventory-scoped aggregate.
@@ -168,7 +170,12 @@ Asset create and edit flows must let users:
 - Select existing active tags.
 - Remove assigned tags.
 - Create a new tag inline with display name and optional color where the UI already supports editing asset metadata.
-- Choose the optional tag color with a color-picker affordance on clients that support native color input; text entry may remain as a fallback for platforms without a native picker.
+- Choose the optional tag color through the browser-native color input on web, the native SwiftUI color picker supplied by the pinned Expo UI integration on iOS, and an accessible project-owned full-spectrum picker on Android. The Android picker must reach arbitrary valid `#RRGGBB` colors and include labeled hex entry as a fallback because the pinned Expo SDK has no equivalent native Android picker. Mobile must not reduce the full picker to a fixed set of swatches.
+- Use optional labeled quick swatches without losing access to the full picker, and clear an existing color through an explicit accessible action. Hex text entry may be offered as an advanced web fallback but must not replace the browser-native input.
+
+Tag-management collection rows on web and mobile must reserve a leading circular color slot for every tag. Colored tags use a filled circle; tags without a color use an empty outlined circle with sufficient contrast. The reserved slot keeps names aligned across mixed-color lists. The tag name must be the row's only visible text; the row must not repeat the visible indicator with a `No color`, color-name, or hex-value subtitle. The circle or row must expose a text accessibility value such as `Blue color` or `No color`, and tag identity, selection, and state must never rely on color alone.
+
+The iOS bridge must use pinned `@expo/ui 55.0.17`, justified in `specs/platform/tooling-versions.spec.md`. Review must cover Expo SDK compatibility, iOS behavior, accessibility, maintenance posture, and supply-chain risk. The client must not claim that this package supplies a native Android color picker.
 
 Web tag selection lists and web or mobile tag filter option lists must sort active tags alphabetically by display name using locale-aware, case-insensitive collation. Assigned tag chips may preserve the order supplied by the asset when that order is used for compact overflow or otherwise communicates content order.
 
@@ -184,11 +191,11 @@ The first inline creation behavior may create the tag immediately before saving 
 
 Tag controls must remain secondary to the asset title, kind, parent/location, photo, and checkout state.
 
-Mobile Browse must keep the first viewport focused on inventory content rather than summoning the keyboard. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. The primary `All`, `Places`, `Containers`, and `Items` scope control must remain visible outside secondary Filters. Lifecycle, availability, and tag browse controls must be disclosed through the compact Filters control; Sort must use its own control. Tag browse suggestions must be sorted alphabetically by display label so the filter sheet is predictable.
+Mobile Browse must keep the first viewport focused on inventory content rather than summoning the keyboard. The search field placeholder or adjacent affordance must make clear that tags are searched alongside asset and location text. Asset Type (`All`, `Places`, `Containers`, and `Items`), lifecycle, availability, and tag browse controls must be disclosed through the compact Filters control; Sort must use its own control. Type must participate in the same draft, apply, reset, cancellation, count, removable-token, and durable-route model as the other applied filters. Tag browse suggestions must be sorted alphabetically by display label so the filter sheet is predictable.
 Web and mobile tag browse controls must behave as multi-select filters over the current result set. Selecting or clearing a tag must not change the text in the search field. Selected tags must compose with the current text query and other filters, and more than one tag may be selected at once.
 Web tag browse filters must use durable route state with repeatable tag identifiers so refresh, back navigation, and shared links preserve the selected tag filter set without replacing the text query.
 When mobile opens search from a known tag chip with selected tag IDs, the search text input must not auto-focus. Tag-driven navigation is a browse/filter entry point, not a text-entry entry point.
-Mobile filter controls must use consistent titled groups and shared option controls. The secondary filter groups are `Tags`, `Status`, and `Availability`; option copy must use consistent noun or adjective labels such as `Active`, `Archived`, `Any`, `Checked out`, and `Available`. Applied tags must remain visible by display name as removable tokens when the sheet is closed. Filter selection must use accessible selected semantics and a non-color state indicator.
+Mobile filter controls must use consistent titled groups and shared option controls. The filter groups are `Type`, `Status`, `Availability`, and `Tags`; option copy must use consistent noun or adjective labels such as `All`, `Items`, `Active`, `Archived`, `Any`, `Checked out`, and `Available`. Applied tags must remain visible by display name as removable tokens when the sheet is closed. Filter selection must use accessible selected semantics and a non-color state indicator.
 
 ## Tests
 
@@ -203,3 +210,7 @@ Required coverage:
 - Homebox CSV `HB.labels` and `HB.tags` mapping.
 - Homebox live tag color preservation.
 - Import execution tag create/reuse counts and assignment.
+- Web and mobile tag-manager row rendering with mixed colored and uncolored tags, including the invariant leading-slot alignment, outlined no-color state, non-color accessible value, contrast, and large-text behavior.
+- Web tag create/edit using native color-input semantics for arbitrary selection and explicit clearing, including keyboard and screen-reader behavior.
+- iOS tag create/edit using the native SwiftUI picker and Android tag create/edit using the accessible full-spectrum project picker with labeled hex fallback, both covering arbitrary selection, explicit clearing, and VoiceOver/TalkBack behavior; fixed quick swatches may be tested only as an additional shortcut.
+- Visual verification of mixed colored and uncolored manager rows and the open picker in light, dark, increased-contrast, narrow/reflow, and large accessibility text presentations where the platform supports them.

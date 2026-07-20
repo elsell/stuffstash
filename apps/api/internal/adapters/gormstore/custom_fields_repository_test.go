@@ -91,6 +91,54 @@ func TestStorePaginatesCustomFieldDefinitions(t *testing.T) {
 	}
 }
 
+func TestStoreListsArchivedEffectiveCustomFieldDefinitionsInScopeOrder(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Tools")
+
+	tenantDefinition := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID, "", customfield.ScopeTenant, "serial", customfield.FieldTypeText, nil)
+	inventoryDefinition := customFieldDefinition(t, "01ARZ3NDEKTSV4RRFFQ69G5FAY", tenantID, inventoryID, customfield.ScopeInventory, "condition", customfield.FieldTypeText, nil)
+	if err := saveCustomFieldDefinition(t, ctx, store, tenantDefinition); err != nil {
+		t.Fatalf("save tenant definition: %v", err)
+	}
+	if err := saveCustomFieldDefinition(t, ctx, store, inventoryDefinition); err != nil {
+		t.Fatalf("save inventory definition: %v", err)
+	}
+	tenantDefinition.LifecycleState = customfield.DefinitionLifecycleArchived
+	inventoryDefinition.LifecycleState = customfield.DefinitionLifecycleArchived
+	if err := store.UpdateCustomFieldDefinitionLifecycle(ctx, tenantDefinition, auditRecord(t, "audit-tenant-field-archive", tenantID, "", audit.ActionCustomFieldDefinitionArchived)); err != nil {
+		t.Fatalf("archive tenant definition: %v", err)
+	}
+	if err := store.UpdateCustomFieldDefinitionLifecycle(ctx, inventoryDefinition, auditRecord(t, "audit-inventory-field-archive", tenantID, inventoryID, audit.ActionCustomFieldDefinitionArchived)); err != nil {
+		t.Fatalf("archive inventory definition: %v", err)
+	}
+
+	items, err := store.ListInventoryCustomFieldDefinitions(ctx, tenantID, inventoryID, ports.CustomFieldDefinitionPageRequest{Limit: 10, Lifecycle: ports.CustomizationLifecycleArchived})
+	if err != nil {
+		t.Fatalf("list archived effective definitions: %v", err)
+	}
+	if len(items) != 2 || items[0].ID != tenantDefinition.ID || items[1].ID != inventoryDefinition.ID {
+		t.Fatalf("expected inherited archived definition before inventory definition, got %+v", items)
+	}
+	for _, filter := range []ports.CustomizationLifecycleFilter{"", ports.CustomizationLifecycleActive} {
+		active, err := store.ListInventoryCustomFieldDefinitions(ctx, tenantID, inventoryID, ports.CustomFieldDefinitionPageRequest{Limit: 10, Lifecycle: filter})
+		if err != nil || len(active) != 0 {
+			t.Fatalf("expected %q filter to hide archived definitions, items=%+v err=%v", filter, active, err)
+		}
+	}
+	all, err := store.ListInventoryCustomFieldDefinitions(ctx, tenantID, inventoryID, ports.CustomFieldDefinitionPageRequest{Limit: 10, Lifecycle: ports.CustomizationLifecycleAll})
+	if err != nil || len(all) != 2 || all[0].ID != tenantDefinition.ID || all[1].ID != inventoryDefinition.ID {
+		t.Fatalf("expected all effective definitions in scope order, items=%+v err=%v", all, err)
+	}
+	tenantItems, err := store.ListTenantCustomFieldDefinitions(ctx, tenantID, ports.CustomFieldDefinitionPageRequest{Limit: 10, Lifecycle: ports.CustomizationLifecycleArchived})
+	if err != nil || len(tenantItems) != 1 || tenantItems[0].ID != tenantDefinition.ID {
+		t.Fatalf("expected tenant archived definition only, items=%+v err=%v", tenantItems, err)
+	}
+}
+
 func TestStoreRejectsDuplicateCustomFieldDefinitionKeys(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t, ctx)

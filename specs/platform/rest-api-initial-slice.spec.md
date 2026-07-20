@@ -119,6 +119,9 @@ The first protected REST slice includes:
 - Asset listing defaults to active assets and may request `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all`.
 - Asset listing defaults to stable ID-ascending order and may request `sort=updated_desc` for most recently changed assets.
 - Asset listing cursors must include lifecycle and sort scope validation.
+- Tenant and effective-inventory custom field definition and custom asset type listing default to active records and accept `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all`.
+- Customization list cursors must include lifecycle, tenant, inventory when present, and effective-scope validation. Reusing a cursor across those boundaries must fail safely.
+- Customization archived and all views preserve the list endpoint's existing permission and isolation rules. Effective-inventory results may include matching inherited tenant records for presentation, but inventory endpoints must not mutate those tenant-owned records.
 - Asset list responses, asset detail responses, and asset mutation responses must include `createdAt` and `updatedAt` timestamps in RFC 3339 format.
 - Asset update must support replacing title, description, parent asset reference, and custom field values.
 - Asset update must not support kind changes, lifecycle changes, tenant changes, or inventory changes.

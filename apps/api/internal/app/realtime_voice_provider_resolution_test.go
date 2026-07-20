@@ -3,10 +3,12 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -16,9 +18,7 @@ import (
 func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 	t.Parallel()
 
-	language := &resolvedLanguageInference{
-		response: "The tools are in the office.",
-	}
+	language := &resolvedLanguageInference{}
 	resolver := &fakeRealtimeVoiceProviderResolver{
 		providers: ports.RealtimeVoiceProviderSet{
 			SpeechToTextProfileID:      "stt-profile",
@@ -27,6 +27,7 @@ func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 			LanguagePromptTemplate:     "Prefer concise spoken answers.",
 			SpeechToText:               resolvedSpeechToText{transcript: "Where are my tools?"},
 			LanguageInference:          language,
+			ResponseGenerator:          language,
 			TextToSpeech:               &resolvedTextToSpeech{},
 		},
 	}
@@ -58,11 +59,14 @@ func TestRealtimeVoiceSessionResolvesAndUsesSessionProviders(t *testing.T) {
 		t.Fatalf("expected transcript from resolved speech-to-text provider, got %+v", events)
 	}
 	tts := resolver.providers.TextToSpeech.(*resolvedTextToSpeech)
-	if tts.lastText != "The tools are in the office." {
-		t.Fatalf("expected resolved text-to-speech provider to receive final response, got %q", tts.lastText)
+	if tts.lastText == "" {
+		t.Fatalf("expected resolved text-to-speech provider to receive the grounded final response")
 	}
 	if language.lastPromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected language prompt template to be passed to model, got %q", language.lastPromptTemplate)
+	}
+	if language.calls != 2 || !language.sawStructuredInvestigation {
+		t.Fatalf("expected resolved provider to serve the bounded typed loop, got calls=%d structured=%t", language.calls, language.sawStructuredInvestigation)
 	}
 }
 
@@ -187,17 +191,95 @@ func (r resolvedSpeechToText) Transcribe(context.Context, ports.SpeechToTextInpu
 }
 
 type resolvedLanguageInference struct {
-	response           string
-	lastPromptTemplate string
+	lastPromptTemplate         string
+	calls                      int
+	sawStructuredInvestigation bool
 }
 
 func (r *resolvedLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	r.lastPromptTemplate = input.PromptTemplate
-	return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{
-		Kind:            ports.StructuredAgentResponseKindAnswer,
-		SpokenResponse:  r.response,
-		DisplayResponse: r.response,
-	}}, nil
+	r.calls++
+	if input.Investigation == nil {
+		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	}
+	r.sawStructuredInvestigation = true
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"}
+	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
+		step := agentmodel.InvestigationStep{
+			Decision: agentmodel.InvestigationDecisionSearch,
+			Intent:   intent,
+			SearchRequests: []agentmodel.SearchRequest{{
+				ReferenceKey: agentmodel.SemanticReferenceSubject,
+				ReadKind:     agentmodel.InvestigationReadSearchAssets,
+				Mention:      "tools",
+				SearchProbes: []string{"tools"},
+			}},
+		}
+		return ports.LanguageInferenceTurn{Investigation: &step}, nil
+	}
+	step := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish,
+		Intent:   intent,
+		Resolutions: []agentmodel.Resolution{{
+			ReferenceKey: agentmodel.SemanticReferenceSubject,
+			Status:       agentmodel.ResolutionAbsent,
+		}},
+	}
+	return ports.LanguageInferenceTurn{Investigation: &step}, nil
+}
+
+func (r *resolvedLanguageInference) GenerateResponse(_ context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	return resolvedVoiceResponse(input.Brief), nil
+}
+
+func resolvedVoiceResponse(brief agentmodel.GroundedVoiceResponseBrief) ports.VoiceResponseGenerationResult {
+	titles := make([]string, 0, len(brief.Findings))
+	for _, finding := range brief.Findings {
+		titles = append(titles, finding.Title)
+	}
+	text := "I couldn't find " + brief.Subject + " in this inventory."
+	displayText := text
+	switch brief.Mode {
+	case agentmodel.ResponseAnswerModeLocate:
+		location := brief.Findings[0].Title
+		path := brief.Findings[0].ContainmentPath
+		if len(path) == 0 || (len(path) == 1 && brief.Findings[0].Kind == "item" && strings.EqualFold(path[0], brief.Findings[0].Title)) {
+			text = "I found " + brief.Findings[0].Title + ", but it isn't assigned to a location."
+			break
+		}
+		if len(path) > 1 && (brief.Findings[0].Kind == "item" || brief.Confidence == agentmodel.ResponseConfidenceStrong) {
+			location = path[len(path)-2]
+		} else if len(path) == 1 && brief.Findings[0].Kind == "item" {
+			location = path[0]
+		}
+		prefix := "I found " + brief.Findings[0].Title
+		if brief.Confidence == agentmodel.ResponseConfidencePlausible {
+			prefix = "I think " + brief.Subject + " are probably"
+		}
+		text = prefix + " in " + location + "."
+		displayText = text
+		if brief.Confidence == agentmodel.ResponseConfidencePlausible {
+			displayText = "I think " + brief.Findings[0].Title + " is probably in " + location + "."
+		}
+	case agentmodel.ResponseAnswerModeInventory:
+		text = "You have " + strings.Join(titles, " and ") + "."
+	case agentmodel.ResponseAnswerModeContents:
+		text = brief.Subject + " contains " + strings.Join(titles, " and ") + "."
+	case agentmodel.ResponseAnswerModeClarify:
+		text = "I found " + strings.Join(titles, " or ") + " as possible matches. Which one did you mean?"
+	case agentmodel.ResponseAnswerModeUnsupported:
+		text = "I can't help with that inventory request."
+	case agentmodel.ResponseAnswerModeNotFound:
+	case agentmodel.ResponseAnswerModeExists, agentmodel.ResponseAnswerModeDetail, agentmodel.ResponseAnswerModeHistory, agentmodel.ResponseAnswerModeCheckout:
+		text = "I found " + strings.Join(titles, " and ") + "."
+		if len(brief.Findings) == 1 && len(brief.Findings[0].Facts) > 0 {
+			text = brief.Findings[0].Title + ": " + brief.Findings[0].Facts[len(brief.Findings[0].Facts)-1]
+		}
+	}
+	if displayText == "I couldn't find "+brief.Subject+" in this inventory." {
+		displayText = text
+	}
+	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: displayText}
 }
 
 type failingResolvedLanguageInference struct {

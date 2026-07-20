@@ -33,14 +33,12 @@ const (
 	RealtimeVoiceToolListAssetAuditHistory        = "list_asset_audit_history"
 	RealtimeVoiceToolListCheckedOutAssets         = "list_checked_out_assets"
 	RealtimeVoiceToolListAssetCheckoutHistory     = "list_asset_checkout_history"
-	RealtimeVoiceToolProposeActionPlan            = "propose_action_plan"
 	realtimeVoiceSearchAuthorizedAssetsPublicName = "Search inventory"
 	realtimeVoiceGetAssetDetailPublicName         = "Inspect item"
 	realtimeVoiceListAuthorizedAssetsPublicName   = "List inventory"
 	realtimeVoiceListAssetAuditHistoryPublicName  = "Check history"
 	realtimeVoiceListCheckedOutAssetsPublicName   = "List checked out"
 	realtimeVoiceListCheckoutHistoryPublicName    = "Checkout history"
-	realtimeVoiceProposeActionPlanPublicName      = "Prepare change"
 	realtimeVoiceFailureSpeechToText              = "speech_to_text_failed"
 	realtimeVoiceFailureLanguageInference         = "language_inference_failed"
 	realtimeVoiceFailureTextToSpeech              = "text_to_speech_failed"
@@ -82,6 +80,7 @@ type RealtimeVoiceSession struct {
 	DeveloperDiagnostics       bool
 	speechToText               ports.SpeechToTextProvider
 	languageInference          ports.LanguageInferenceProvider
+	responseGenerator          ports.VoiceResponseGenerator
 	textToSpeech               ports.TextToSpeechProvider
 }
 

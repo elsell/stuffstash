@@ -1,7 +1,12 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Check, X } from 'lucide-react-native';
+import { useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Check, Palette, X } from 'lucide-react-native';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
+import { FullSpectrumTagColorPicker } from './FullSpectrumTagColorPicker';
+import { tagColorModalLayout } from './TagColorPickerPresentation';
+import { AppTextInput, appKeyboardDismissMode } from './AppTextInput';
 
 export const tagColorChoices = [
   '#2F80ED',
@@ -11,6 +16,7 @@ export const tagColorChoices = [
   '#DC2626',
   '#0F766E'
 ] as const;
+const tagColorNames: Readonly<Record<string, string>> = { '#2F80ED': 'Blue', '#2E7D32': 'Green', '#7C3AED': 'Purple', '#D97706': 'Orange', '#DC2626': 'Red', '#0F766E': 'Teal' };
 
 type TagColorPickerProps = {
   readonly value: string;
@@ -26,9 +32,32 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
   const normalizedValue = normalizeColor(value);
   const hasTypedColor = value.trim().length > 0;
   const invalidTypedColor = hasTypedColor && normalizedValue === undefined;
+  const customSelected = hasTypedColor && !tagColorChoices.includes(normalizedValue as typeof tagColorChoices[number]);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customDraft, setCustomDraft] = useState('');
+  const [modalHeight, setModalHeight] = useState(0);
+  const { fontScale } = useWindowDimensions();
+  const normalizedDraft = normalizeColor(customDraft);
+  const validDraft = !customDraft.trim() || Boolean(normalizedDraft);
+  const modalLayout = tagColorModalLayout({ availableHeight: modalHeight, fontScale });
+
+  function openCustom(): void {
+    if (disabled) return;
+    setCustomDraft(normalizedValue ?? '');
+    setCustomOpen(true);
+  }
+
+  function closeCustom(): void { setCustomOpen(false); }
+
+  function applyCustom(): void {
+    if (!validDraft) return;
+    onChange(normalizedDraft ?? '');
+    setCustomOpen(false);
+  }
+
   return (
     <View accessibilityLabel="Tag color choices" style={styles.shell}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatches}>
+      <View style={styles.swatches}>
         <Pressable
           accessibilityLabel="No tag color"
           accessibilityRole="button"
@@ -43,7 +72,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           const selected = normalizedValue === color;
           return (
             <Pressable
-              accessibilityLabel={`Choose tag color ${color}`}
+              accessibilityLabel={`Choose ${tagColorName(color)} tag color`}
               accessibilityRole="button"
               accessibilityState={{ disabled, selected }}
               disabled={disabled}
@@ -60,12 +89,51 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
             </Pressable>
           );
         })}
-      </ScrollView>
-      <Text style={invalidTypedColor ? styles.invalidLabel : styles.fallbackLabel}>
-        {invalidTypedColor ? 'Enter a #RRGGBB color' : 'Or type a hex color'}
-      </Text>
+      </View>
+      <Pressable
+        accessibilityLabel="Choose a custom tag color"
+        accessibilityRole="button"
+        accessibilityState={{ disabled, selected: customSelected }}
+        disabled={disabled}
+        onPress={openCustom}
+        style={[styles.customButton, customSelected ? styles.selectedSwatch : null, disabled ? styles.disabled : null]}
+      >
+        <View testID="custom-tag-color-indicator" style={[styles.customIndicator, normalizedValue && customSelected ? { backgroundColor: normalizedValue } : null]}>
+          {customSelected && normalizedValue ? <Check color={swatchForeground(normalizedValue)} size={14} strokeWidth={2.8} /> : <Palette color={colors.textMuted} size={16} />}
+        </View>
+        <Text style={styles.customLabel}>Custom…</Text>
+      </Pressable>
+      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Choose Custom… to correct this color.</Text> : null}
+      {customOpen ? <Modal animationType="slide" onRequestClose={closeCustom} presentationStyle="pageSheet" visible>
+        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.safeArea}>
+        <View accessibilityViewIsModal onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)} style={styles.modalShell}>
+          <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>Custom color</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : 'No color'}</Text></View></View>
+          <View style={styles.pickerSurface}>
+            <FullSpectrumTagColorPicker compact={modalLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={setCustomDraft} />
+          </View>
+          <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.supplementaryContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.supplementaryScroll}>
+            <Text style={styles.inputLabel}>Hex color</Text>
+            <AppTextInput accessibilityLabel="Custom tag color hex value" autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder="#2F80ED" placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
+            {!validDraft ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Enter a #RRGGBB color.</Text> : null}
+            <Pressable accessibilityRole="button" onPress={() => setCustomDraft('')} style={styles.clearAction}><Text style={styles.clearActionText}>Clear color</Text></Pressable>
+          </ScrollView>
+          <View style={styles.modalActions}>
+            <Pressable accessibilityRole="button" onPress={closeCustom} style={styles.cancelAction}><Text style={styles.cancelActionText}>Cancel</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: !validDraft }} disabled={!validDraft} onPress={applyCustom} style={[styles.doneAction, !validDraft ? styles.disabled : null]}><Text style={styles.doneActionText}>Done</Text></Pressable>
+          </View>
+        </View>
+        </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal> : null}
     </View>
   );
+}
+
+export function tagColorName(color: string | undefined): string {
+  if (!color) return 'No color';
+  const normalized = normalizeColor(color);
+  return normalized ? tagColorNames[normalized] ?? `Custom color ${normalized}` : 'Invalid color';
 }
 
 export function swatchForeground(color: string): '#000000' | '#FFFFFF' {
@@ -92,8 +160,11 @@ function createStyles(colors: MobileColorPalette) {
     gap: spacing.xs,
     minWidth: 0
   },
+  safeArea: { backgroundColor: colors.background, flex: 1 },
   swatches: {
     alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.xs,
     paddingVertical: 2
   },
@@ -102,9 +173,9 @@ function createStyles(colors: MobileColorPalette) {
     borderColor: colors.border,
     borderRadius: radius.lg,
     borderWidth: 1,
-    height: 32,
+    height: 44,
     justifyContent: 'center',
-    width: 32
+    width: 44
   },
   clearSwatch: {
     alignItems: 'center',
@@ -112,9 +183,9 @@ function createStyles(colors: MobileColorPalette) {
     borderColor: colors.border,
     borderRadius: radius.lg,
     borderWidth: 1,
-    height: 32,
+    height: 44,
     justifyContent: 'center',
-    width: 32
+    width: 44
   },
   selectedSwatch: {
     borderColor: colors.action,
@@ -123,17 +194,20 @@ function createStyles(colors: MobileColorPalette) {
   disabled: {
     opacity: 0.55
   },
-  fallbackLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
   invalidLabel: {
     color: colors.warning,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0
-  }
+  },
+  customButton: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.sm },
+  customIndicator: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 11, borderWidth: 1, height: 22, justifyContent: 'center', width: 22 },
+  customLabel: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
+  modalShell: { flex: 1, paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  modalHeader: { minHeight: 48, justifyContent: 'center' }, modalTitle: { color: colors.text, fontSize: 24, fontWeight: '800' }, modalSubtitle: { color: colors.textMuted, fontSize: 14, marginTop: spacing.xs },
+  pickerSurface: { flexShrink: 0, marginTop: spacing.md }, supplementaryScroll: { flex: 1, marginTop: spacing.md }, supplementaryContent: { gap: spacing.md, paddingBottom: spacing.md }, inputLabel: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  hexInput: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: 44, paddingHorizontal: spacing.sm },
+  clearAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', minHeight: 44 }, clearActionText: { color: colors.warning, fontSize: 16, fontWeight: '700' },
+  modalActions: { flexDirection: 'row', gap: spacing.sm, paddingBottom: spacing.md, paddingTop: spacing.sm }, cancelAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 48 }, cancelActionText: { color: colors.text, fontSize: 16, fontWeight: '700' }, doneAction: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, flex: 1, justifyContent: 'center', minHeight: 48 }, doneActionText: { color: colors.onAction, fontSize: 16, fontWeight: '800' }
   });
 }

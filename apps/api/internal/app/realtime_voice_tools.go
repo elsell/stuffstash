@@ -17,33 +17,30 @@ import (
 
 const realtimeVoiceToolMaxResults = 20
 
-func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, transcript string, priorResults []ports.AgentToolResult, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
+func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, error) {
 	toolCtx, cancel := context.WithTimeout(ctx, a.realtimeVoiceToolCallTimeout)
 	defer cancel()
 	switch call.Name {
 	case RealtimeVoiceToolSearchAuthorizedAssets:
 		result, err := a.executeRealtimeVoiceSearchTool(toolCtx, session, call)
-		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolGetAssetDetail:
 		result, err := a.executeRealtimeVoiceAssetDetailTool(toolCtx, session, call, visibleAssetIDs)
-		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAuthorizedAssets:
-		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call)
-		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call, visibleAssetIDs)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAssetAuditHistory:
 		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(toolCtx, session, call, visibleAssetIDs)
-		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListCheckedOutAssets:
 		result, err := a.executeRealtimeVoiceCheckedOutAssetsTool(toolCtx, session, call)
-		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolListAssetCheckoutHistory:
 		result, err := a.executeRealtimeVoiceAssetCheckoutHistoryTool(toolCtx, session, call, visibleAssetIDs)
-		return result, nil, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolProposeActionPlan:
-		result, proposal, err := a.executeRealtimeVoiceProposeActionPlanTool(toolCtx, session, transcript, priorResults, call, visibleAssetIDs)
-		return result, proposal, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	default:
-		return ports.AgentToolResult{}, nil, ports.ErrInvalidProviderInput
+		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}
 }
 
@@ -55,77 +52,6 @@ func realtimeVoiceToolDeadlineError(parentCtx context.Context, toolCtx context.C
 		return errRealtimeVoiceToolCallTimedOut
 	}
 	return err
-}
-
-func (a App) executeRealtimeVoiceProposeActionPlanTool(ctx context.Context, session RealtimeVoiceSession, transcript string, priorResults []ports.AgentToolResult, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, *RealtimeVoiceActionPlanProposal, error) {
-	args, err := parseRealtimeVoiceActionPlanArgs(call.Arguments, transcript)
-	if err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := validateRealtimeVoiceActionPlanVisibleIDs(args.Commands, visibleAssetIDs); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := a.validateRealtimeVoiceActionPlanTranscriptAlignment(ctx, session, args.Commands, transcript); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := validateRealtimeVoiceMoveRequestUsesVisibleSource(args.Commands, transcript, priorResults); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := validateRealtimeVoiceMoveRequestDoesNotCreateMissingSource(args.Commands, transcript, priorResults); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := validateRealtimeVoiceRootCreatesUseVisibleParents(args.Commands, transcript, priorResults); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := validateRealtimeVoiceMissingDestinationSegmentsAccountedFor(args.Commands, transcript, priorResults); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	if err := validateRealtimeVoiceMissingDestinationHierarchy(args.Commands, transcript, priorResults); err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	record, err := a.CreateActionPlan(ctx, CreateActionPlanInput{
-		Principal:                  session.Principal,
-		TenantID:                   session.TenantID,
-		InventoryID:                session.InventoryID,
-		Source:                     session.Source,
-		RealtimeSessionID:          session.ID,
-		IntentSummary:              args.IntentSummary,
-		ModelInterpretationSummary: args.ModelInterpretationSummary,
-		ConfirmationSummary:        args.ConfirmationSummary,
-		Commands:                   args.Commands,
-		Risks:                      args.Risks,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	proposal, err := a.realtimeVoiceActionPlanProposal(ctx, session, record)
-	if err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	payload, err := json.Marshal(struct {
-		Tool       string                          `json:"tool"`
-		ActionPlan RealtimeVoiceActionPlanProposal `json:"actionPlan"`
-	}{
-		Tool:       call.Name,
-		ActionPlan: proposal,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, nil, err
-	}
-	return ports.AgentToolResult{
-		CallID:  call.ID,
-		Name:    call.Name,
-		Call:    call,
-		Content: string(payload),
-	}, &proposal, nil
-}
-
-func realtimeVoiceActionPlanCommandRecord(command ActionPlanCommandInput) (ports.ActionPlanCommandRecord, error) {
-	payload, err := json.Marshal(command.Arguments)
-	if err != nil {
-		return ports.ActionPlanCommandRecord{}, ports.ErrInvalidProviderInput
-	}
-	return ports.ActionPlanCommandRecord{Kind: command.Kind, ArgumentsJSON: payload}, nil
 }
 
 func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
@@ -140,7 +66,7 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 		Source:         audit.SourceConversation,
 		Query:          args.Query,
 		Mode:           "fuzzy",
-		LifecycleState: "active",
+		LifecycleState: args.LifecycleState,
 		Limit:          args.Limit,
 	})
 	if err != nil {
@@ -164,10 +90,15 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 	})
 }
 
-func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
+func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, error) {
 	args, err := parseRealtimeVoiceListArgs(call.Arguments)
 	if err != nil {
 		return ports.AgentToolResult{}, err
+	}
+	if args.ParentAssetID != "" {
+		if _, visible := visibleAssetIDs[args.ParentAssetID]; !visible {
+			return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
+		}
 	}
 	inventoryItem, err := a.GetInventory(ctx, GetInventoryInput{
 		Principal:   session.Principal,
@@ -204,6 +135,9 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 			if args.Kind != "" && toolItem.Kind != args.Kind.String() {
 				continue
 			}
+			if args.ParentAssetID != "" && toolItem.ParentAssetID != args.ParentAssetID {
+				continue
+			}
 			if args.ParentTitle != "" && !strings.EqualFold(toolItem.ParentTitle, args.ParentTitle) {
 				continue
 			}
@@ -231,6 +165,7 @@ func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeV
 		Filters: map[string]string{
 			"kind":           args.Kind.String(),
 			"lifecycleState": args.LifecycleState,
+			"parentAssetId":  args.ParentAssetID,
 			"parentTitle":    args.ParentTitle,
 			"locationTitle":  args.LocationTitle,
 			"parentScope":    args.ParentScope,
@@ -278,6 +213,7 @@ func (a App) realtimeVoiceAssetToolItemWithCheckout(ctx context.Context, session
 		Description:     item.Description.String(),
 		InventoryName:   inventoryName,
 		LifecycleState:  item.LifecycleState.String(),
+		ParentAssetID:   item.ParentAssetID.String(),
 		ParentTitle:     parentTitle,
 		ParentKind:      parentKind,
 		LocationTitle:   locationTitle,
@@ -341,52 +277,6 @@ func realtimeVoiceToolResult(call ports.AgentToolCall, output realtimeVoiceAsset
 		Call:    call,
 		Content: string(payload),
 	}, nil
-}
-
-func realtimeVoiceToolErrorResult(call ports.AgentToolCall, code string, message string, retryable bool) (ports.AgentToolResult, error) {
-	payload, err := json.Marshal(struct {
-		Tool      string `json:"tool"`
-		Status    string `json:"status"`
-		Code      string `json:"code"`
-		Message   string `json:"message"`
-		Retryable bool   `json:"retryable"`
-	}{
-		Tool:      call.Name,
-		Status:    "error",
-		Code:      code,
-		Message:   message,
-		Retryable: retryable,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, err
-	}
-	return ports.AgentToolResult{
-		CallID:  call.ID,
-		Name:    call.Name,
-		Call:    ports.AgentToolCall{ID: call.ID, Name: call.Name, Arguments: map[string]any{}},
-		Content: string(payload),
-	}, nil
-}
-
-func collectRealtimeVoiceVisibleAssetIDs(result ports.AgentToolResult, visibleAssetIDs map[string]struct{}) error {
-	if visibleAssetIDs == nil || strings.TrimSpace(result.Content) == "" {
-		return nil
-	}
-	var output realtimeVoiceAssetToolOutput
-	if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
-		return ports.ErrInvalidProviderInput
-	}
-	for _, item := range output.Items {
-		id := strings.TrimSpace(item.AssetID)
-		if id == "" {
-			continue
-		}
-		if _, ok := asset.NewID(id); !ok {
-			return ports.ErrInvalidProviderInput
-		}
-		visibleAssetIDs[id] = struct{}{}
-	}
-	return nil
 }
 
 func realtimeVoiceToolLimit(raw any) (int, error) {

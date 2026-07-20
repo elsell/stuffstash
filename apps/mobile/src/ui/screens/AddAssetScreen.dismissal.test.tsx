@@ -62,6 +62,10 @@ vi.mock('../components/FullScreenPhotoViewer', () => ({
   FullScreenPhotoViewer: 'FullScreenPhotoViewer'
 }));
 
+vi.mock('../components/FullSpectrumTagColorPicker', () => ({
+  FullSpectrumTagColorPicker: 'FullSpectrumTagColorPicker'
+}));
+
 vi.mock('../theme/appearance', () => ({
   useAppearanceAwarePalette: () => ({
     accent: '#6B90AA',

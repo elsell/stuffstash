@@ -72,7 +72,7 @@ export function accessInvitationsHref(
   inventoryId: string | null,
   invitationStatus: InvitationStatusFilter
 ): string {
-  return workspaceRouteHref({ mode: 'settings', settingsSection: 'access', invitationStatus }, tenantId, inventoryId);
+  return workspaceRouteHref({ mode: 'settings', settingsLevel: 'inventory', tenantId, inventoryId, settingsCollection: 'access', settingsSection: 'access', invitationStatus }, tenantId, inventoryId);
 }
 
 export function invitationActionHref(
@@ -85,6 +85,10 @@ export function invitationActionHref(
   return workspaceRouteHref(
     {
       mode: 'settings',
+      settingsLevel: 'inventory',
+      tenantId,
+      inventoryId,
+      settingsCollection: 'access',
       settingsSection: 'access',
       invitationStatus,
       accessInvitationAction: action,

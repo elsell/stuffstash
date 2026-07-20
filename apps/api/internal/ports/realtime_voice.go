@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -36,24 +38,28 @@ type LanguageInferenceProvider interface {
 	NextTurn(ctx context.Context, input LanguageInferenceInput) (LanguageInferenceTurn, error)
 }
 
+type VoiceResponseGenerator interface {
+	GenerateResponse(ctx context.Context, input VoiceResponseGenerationInput) (VoiceResponseGenerationResult, error)
+}
+
+type RealtimeLanguageProvider interface {
+	LanguageInferenceProvider
+	VoiceResponseGenerator
+}
+
 type LanguageInferenceProviderProbe interface {
 	ProbeLanguageInference(ctx context.Context) error
 }
 
 type LanguageInferenceInput struct {
-	TenantID           tenant.ID
-	InventoryID        inventory.InventoryID
-	Principal          identity.Principal
-	Transcript         string
-	ConversationTurns  []AgentConversationTurn
-	PromptTemplate     string
-	Tools              []AgentToolDescriptor
-	ToolResults        []AgentToolResult
-	PreviousTurns      int
-	FinalOnly          bool
-	PlanOnly           bool
-	RequireToolCall    bool
-	IncludeDiagnostics bool
+	TenantID          tenant.ID
+	InventoryID       inventory.InventoryID
+	Principal         identity.Principal
+	Transcript        string
+	ConversationTurns []AgentConversationTurn
+	PromptTemplate    string
+	PreviousTurns     int
+	Investigation     *agentmodel.InvestigationInput
 }
 
 type AgentConversationRole string
@@ -69,49 +75,20 @@ type AgentConversationTurn struct {
 	Text string
 }
 
-type AgentToolDescriptor struct {
-	Name             string
-	Label            string
-	Description      string
-	ReadOnly         bool
-	ProviderCallable bool
-	RequiresApproval bool
-	MutatesInventory bool
-	Parameters       AgentToolParameters
-}
-
-type AgentToolParameters struct {
-	Properties map[string]AgentToolParameter
-	Required   []string
-}
-
-type AgentToolParameter struct {
-	Type        AgentToolParameterType
-	Description string
-	Enum        []string
-	Properties  map[string]AgentToolParameter
-	Required    []string
-	Items       *AgentToolParameter
-}
-
-type AgentToolParameterType string
-
-const (
-	AgentToolParameterTypeString  AgentToolParameterType = "string"
-	AgentToolParameterTypeInteger AgentToolParameterType = "integer"
-	AgentToolParameterTypeObject  AgentToolParameterType = "object"
-	AgentToolParameterTypeArray   AgentToolParameterType = "array"
-)
-
 type LanguageInferenceTurn struct {
-	ToolCalls   []AgentToolCall
-	Final       *StructuredAgentResponse
-	Diagnostics []LanguageInferenceDiagnostic
+	Investigation *agentmodel.InvestigationStep
 }
 
-type LanguageInferenceDiagnostic struct {
-	Title  string
-	Detail string
+type VoiceResponseGenerationInput struct {
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	Principal   identity.Principal
+	Brief       agentmodel.GroundedVoiceResponseBrief
+}
+
+type VoiceResponseGenerationResult struct {
+	SpokenResponse  string `json:"spokenResponse"`
+	DisplayResponse string `json:"displayResponse"`
 }
 
 type AgentToolCall struct {
@@ -145,7 +122,20 @@ type StructuredAgentResponse struct {
 	Kind            StructuredAgentResponseKind
 	SpokenResponse  string
 	DisplayResponse string
+	Artifacts       []StructuredAgentResponseArtifact
 	ToolCallIDs     []string
+}
+
+type StructuredAgentResponseArtifactType string
+
+const StructuredAgentResponseArtifactAssetReference StructuredAgentResponseArtifactType = "asset_reference"
+
+type StructuredAgentResponseArtifact struct {
+	Type      StructuredAgentResponseArtifactType
+	AssetID   asset.ID
+	Title     string
+	AssetKind asset.Kind
+	Context   string
 }
 
 type TextToSpeechProvider interface {
@@ -188,6 +178,7 @@ type RealtimeVoiceProviderSet struct {
 	LanguagePromptTemplate     string
 	SpeechToText               SpeechToTextProvider
 	LanguageInference          LanguageInferenceProvider
+	ResponseGenerator          VoiceResponseGenerator
 	TextToSpeech               TextToSpeechProvider
 }
 

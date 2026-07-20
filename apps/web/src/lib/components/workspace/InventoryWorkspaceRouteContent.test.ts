@@ -366,6 +366,7 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
     workspace: {
       data,
       repository,
+      observer: { record: () => {} },
       selectedTenant,
       selectedInventory,
       selectedLocation: null,
@@ -410,6 +411,11 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
       customizationAction: null,
       customAssetTypeId: null,
       customFieldDefinitionId: null,
+      settingsLevel: 'overview',
+      settingsCollection: null,
+      settingsLifecycle: 'active',
+      settingsResourceId: null,
+      settingsResourceAction: null,
       importSource: null,
       importJobId: null,
       importTab: null
@@ -424,6 +430,9 @@ async function routeContentProps(overrides: RouteContentOverrides = {}): Promise
 	    searchCheckoutState: 'any',
     handlers: {
       onHome: () => {},
+      onSettingsNavigate: () => {},
+      onSettingsTagsChange: () => {},
+      onSettingsPermissionDenied: async () => {},
       onOpenLocation: () => {},
       onBrowseStateChange: () => {},
       onBrowseLoadMore: async () => {},

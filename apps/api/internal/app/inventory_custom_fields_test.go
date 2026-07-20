@@ -85,6 +85,69 @@ func TestCreateAndListCustomFieldDefinitions(t *testing.T) {
 	if len(secondPage.Items) != 1 || secondPage.Items[0].ID != inventoryDefinition.ID || secondPage.HasMore {
 		t.Fatalf("expected second page with inventory definition, got %+v", secondPage)
 	}
+	_, err = application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal:      identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:       tenant.ID("tenant-one"),
+		InventoryID:    inventory.InventoryID("inventory-one"),
+		LifecycleState: "deleted",
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected invalid lifecycle filter rejection, got %v", err)
+	}
+	_, err = application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal:      identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:       tenant.ID("tenant-one"),
+		InventoryID:    inventory.InventoryID("inventory-one"),
+		LifecycleState: "archived",
+		Cursor:         *firstPage.NextCursor,
+	})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected lifecycle-bound cursor rejection, got %v", err)
+	}
+	customFields.items[0].LifecycleState = customfield.DefinitionLifecycleArchived
+	customFields.items[1].LifecycleState = customfield.DefinitionLifecycleArchived
+	archivedPage, err := application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal:      identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:       tenant.ID("tenant-one"),
+		InventoryID:    inventory.InventoryID("inventory-one"),
+		LifecycleState: "archived",
+		Limit:          2,
+	})
+	if err != nil {
+		t.Fatalf("list archived definitions: %v", err)
+	}
+	if len(archivedPage.Items) != 1 || archivedPage.Items[0].Scope != customfield.ScopeTenant || !archivedPage.HasMore || archivedPage.NextCursor == nil {
+		t.Fatalf("expected inherited archived definition first, got %+v", archivedPage)
+	}
+	archivedSecondPage, err := application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal:      identity.Principal{ID: identity.PrincipalID("viewer")},
+		TenantID:       tenant.ID("tenant-one"),
+		InventoryID:    inventory.InventoryID("inventory-one"),
+		LifecycleState: "archived",
+		Limit:          1,
+		Cursor:         *archivedPage.NextCursor,
+	})
+	if err != nil || len(archivedSecondPage.Items) != 1 || archivedSecondPage.Items[0].Scope != customfield.ScopeInventory {
+		t.Fatalf("expected inventory archived definition second, page=%+v err=%v", archivedSecondPage, err)
+	}
+	activePage, err := application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("viewer")}, TenantID: tenant.ID("tenant-one"), InventoryID: inventory.InventoryID("inventory-one"), LifecycleState: "active",
+	})
+	if err != nil || len(activePage.Items) != 0 {
+		t.Fatalf("expected explicit active view to hide archived definitions, page=%+v err=%v", activePage, err)
+	}
+	allPage, err := application.ListInventoryCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("viewer")}, TenantID: tenant.ID("tenant-one"), InventoryID: inventory.InventoryID("inventory-one"), LifecycleState: "all", Limit: 1,
+	})
+	if err != nil || len(allPage.Items) != 1 || allPage.Items[0].Scope != customfield.ScopeTenant || !allPage.HasMore {
+		t.Fatalf("expected all view with inherited definition first, page=%+v err=%v", allPage, err)
+	}
+	tenantArchived, err := application.ListTenantCustomFieldDefinitions(context.Background(), ListCustomFieldDefinitionsInput{
+		Principal: identity.Principal{ID: identity.PrincipalID("owner")}, TenantID: tenant.ID("tenant-one"), LifecycleState: "archived",
+	})
+	if err != nil || len(tenantArchived.Items) != 1 || tenantArchived.Items[0].Scope != customfield.ScopeTenant {
+		t.Fatalf("expected tenant archived definition only, page=%+v err=%v", tenantArchived, err)
+	}
 	if !observer.hasEvent(ports.EventCustomFieldDefinitionCreated) || !observer.hasEvent(ports.EventCustomFieldDefinitionsListed) {
 		t.Fatalf("expected custom field observability events, got %+v", observer.events)
 	}

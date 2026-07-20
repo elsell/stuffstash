@@ -177,7 +177,7 @@ func (s *Store) ListTenantCustomAssetTypes(_ context.Context, tenantID tenant.ID
 
 	items := []customfield.AssetType{}
 	for _, assetType := range s.customAssetTypes {
-		if assetType.TenantID.String() == tenantID.String() && assetType.Scope == customfield.ScopeTenant && assetType.IsActive() && assetType.CursorKey() > page.AfterAssetTypeKey {
+		if assetType.TenantID.String() == tenantID.String() && assetType.Scope == customfield.ScopeTenant && page.Lifecycle.Includes(assetType.LifecycleState.String()) && assetType.CursorKey() > page.AfterAssetTypeKey {
 			items = append(items, assetType)
 		}
 	}
@@ -190,7 +190,7 @@ func (s *Store) ListInventoryCustomAssetTypes(_ context.Context, tenantID tenant
 
 	items := []customfield.AssetType{}
 	for _, assetType := range s.customAssetTypes {
-		if assetType.TenantID.String() != tenantID.String() || !assetType.IsActive() || assetType.CursorKey() <= page.AfterAssetTypeKey {
+		if assetType.TenantID.String() != tenantID.String() || !page.Lifecycle.Includes(assetType.LifecycleState.String()) || assetType.CursorKey() <= page.AfterAssetTypeKey {
 			continue
 		}
 		if assetType.Scope == customfield.ScopeTenant || assetType.InventoryID.String() == inventoryID.String() {

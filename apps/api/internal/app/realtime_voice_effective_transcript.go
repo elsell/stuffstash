@@ -70,3 +70,81 @@ func realtimeVoiceLooksLikeConversationIntent(transcript string) bool {
 		realtimeVoiceLooksLikeReadQuestion(transcript) ||
 		realtimeVoiceLooksLikeContentsQuestion(transcript)
 }
+
+func realtimeVoiceLooksLikeWriteRequest(transcript string) bool {
+	if realtimeVoiceLooksLikeReadQuestion(transcript) {
+		return false
+	}
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	if realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(text) {
+		return true
+	}
+	for _, token := range []string{" add ", " archive ", " check in ", " check out ", " create ", " move ", " place ", " put ", " restore ", " return ", " stash ", " store ", " update "} {
+		if strings.Contains(text, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceLooksLikeReadQuestion(transcript string) bool {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, prefix := range []string{" where ", " what ", " when ", " who ", " which ", " do i ", " do we ", " did i ", " did we ", " can you find ", " find my ", " find the "} {
+		if strings.HasPrefix(text, prefix) {
+			return true
+		}
+	}
+	return strings.Contains(text, " where is ") ||
+		strings.Contains(text, " where are ") ||
+		strings.Contains(text, " what is ") ||
+		strings.Contains(text, " what are ")
+}
+
+func realtimeVoiceLooksLikeMoveRequest(transcript string) bool {
+	if realtimeVoiceLooksLikeReadQuestion(transcript) {
+		return false
+	}
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	for _, token := range []string{" move ", " put ", " place ", " store ", " stash "} {
+		if strings.Contains(text, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func realtimeVoiceLooksLikeContentsQuestion(transcript string) bool {
+	text := normalizedRealtimeVoiceVerbText(transcript)
+	return strings.Contains(text, " what s in ") ||
+		strings.Contains(text, " what is in ") ||
+		strings.Contains(text, " what are in ") ||
+		strings.Contains(text, " what do i have in ") ||
+		strings.Contains(text, " what do we have in ") ||
+		strings.Contains(text, " inside ")
+}
+
+func normalizedRealtimeVoiceVerbText(transcript string) string {
+	text := strings.ToLower(transcript)
+	for _, replacer := range []string{".", ",", "!", "?", ";", ":", "\"", "'", "(", ")", "[", "]", "{", "}"} {
+		text = strings.ReplaceAll(text, replacer, " ")
+	}
+	return " " + strings.Join(strings.Fields(text), " ") + " "
+}
+
+func realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(normalizedText string) bool {
+	acquisitionIndex := -1
+	for _, marker := range []string{" i got ", " we got ", " i bought ", " we bought ", " i picked up ", " we picked up "} {
+		if index := strings.Index(normalizedText, marker); index >= 0 && (acquisitionIndex == -1 || index < acquisitionIndex) {
+			acquisitionIndex = index
+		}
+	}
+	if acquisitionIndex == -1 {
+		return false
+	}
+	for _, marker := range []string{" put it in ", " put it into ", " put it inside ", " put it on ", " placed it in ", " placed it into ", " stored it in ", " stored it inside ", " stashed it in ", " stashed it inside "} {
+		if index := strings.Index(normalizedText, marker); index > acquisitionIndex {
+			return true
+		}
+	}
+	return false
+}

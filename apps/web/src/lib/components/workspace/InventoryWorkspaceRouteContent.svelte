@@ -25,6 +25,8 @@
   import type { InventoryAccessRepository } from '$lib/ports/inventoryAccessRepository';
   import type { InventoryAuditRepository } from '$lib/ports/inventoryAuditRepository';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import type { InventoryTagRepository } from '$lib/ports/inventoryTagRepository';
+  import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import type {
     AssetRouteAction,
@@ -35,7 +37,8 @@
 
   export type RouteContentWorkspace = {
     data: WorkspaceData;
-    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository;
+    repository: InventoryRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository;
+    observer: WorkspaceObserver;
     selectedTenant: Tenant | null;
     selectedInventory: Inventory | null;
     selectedLocation: LocationAsset | null;
@@ -75,6 +78,11 @@
     attachmentId: string | null;
     attachmentAction: WorkspaceRouteState['attachmentAction'];
     settingsSection: SettingsSection;
+    settingsLevel: WorkspaceRouteState['settingsLevel'];
+    settingsCollection: WorkspaceRouteState['settingsCollection'];
+    settingsLifecycle: WorkspaceRouteState['settingsLifecycle'];
+    settingsResourceId: WorkspaceRouteState['settingsResourceId'];
+    settingsResourceAction: WorkspaceRouteState['settingsResourceAction'];
     invitationStatus: WorkspaceRouteState['invitationStatus'];
     accessInvitationAction: WorkspaceRouteState['accessInvitationAction'];
     accessInvitationId: string | null;
@@ -136,6 +144,9 @@
     onOpenImportedAssetId: (assetId: string) => Promise<void>;
     onOpenInventoryAuditHistory: () => void;
     onSettingsSectionChange: (section: SettingsSection) => void;
+    onSettingsNavigate: (href: string) => void;
+    onSettingsTagsChange: (tags: import('$lib/domain/inventory').ManagedAssetTag[]) => void;
+    onSettingsPermissionDenied: () => Promise<void>;
     onInvitationStatusChange: (status: WorkspaceRouteState['invitationStatus']) => void;
     onAccessInvitationActionOpen: (action: WorkspaceRouteState['accessInvitationAction'], invitationId: string) => void;
     onAccessInvitationActionClose: () => void;
@@ -171,7 +182,7 @@
   import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
   import InventoryImportWorkspace from './InventoryImportWorkspace.svelte';
-  import InventorySettings from './InventorySettings.svelte';
+  import SettingsWorkspace from './settings/SettingsWorkspace.svelte';
   import LocationView from './LocationView.svelte';
 
   let {
@@ -321,31 +332,29 @@
     onOpenInventoryAuditHistory={handlers.onOpenInventoryAuditHistory}
   />
 {:else if route.mode === 'settings'}
-  <InventorySettings
+  <SettingsWorkspace
+    principal={workspace.data.context.principal}
     tenant={workspace.selectedTenant}
     inventory={workspace.selectedInventory}
-    inventoryCount={workspace.data.context.inventories.length}
-    accessRepository={workspace.repository}
-    auditRepository={workspace.repository}
-    customizationRepository={workspace.repository}
-    customAssetTypes={workspace.data.context.customAssetTypes}
-    customFieldDefinitions={workspace.data.context.customFieldDefinitions}
-    section={route.settingsSection}
-    invitationStatus={route.invitationStatus}
-    accessInvitationAction={route.accessInvitationAction}
-    accessInvitationId={route.accessInvitationId}
-    auditScope={route.auditScope}
-    customizationAction={route.customizationAction}
-    customAssetTypeId={route.customAssetTypeId}
-    customFieldDefinitionId={route.customFieldDefinitionId}
-    onSectionChange={handlers.onSettingsSectionChange}
-    onInvitationStatusChange={handlers.onInvitationStatusChange}
-    onAccessInvitationActionOpen={handlers.onAccessInvitationActionOpen}
-    onAccessInvitationActionClose={handlers.onAccessInvitationActionClose}
-    onAuditScopeChange={handlers.onAuditScopeChange}
-    onCustomizationArchiveOpen={handlers.onCustomizationArchiveOpen}
-    onCustomizationArchiveClose={handlers.onCustomizationArchiveClose}
-    onCustomizationChange={handlers.onCustomizationChange}
+    route={{
+      settingsLevel: route.settingsLevel,
+      settingsCollection: route.settingsCollection,
+      settingsLifecycle: route.settingsLifecycle,
+      settingsResourceId: route.settingsResourceId,
+      settingsResourceAction: route.settingsResourceAction,
+      invitationStatus: route.invitationStatus,
+      accessInvitationAction: route.accessInvitationAction,
+      accessInvitationId: route.accessInvitationId,
+      auditScope: route.auditScope
+    }}
+    repository={workspace.repository}
+    observer={workspace.observer}
+    currentAssetTypes={workspace.data.context.customAssetTypes}
+    currentFields={workspace.data.context.customFieldDefinitions}
+    onNavigate={handlers.onSettingsNavigate}
+    onSchemaChange={handlers.onCustomizationChange}
+    onTagsChange={handlers.onSettingsTagsChange}
+    onPermissionDenied={handlers.onSettingsPermissionDenied}
   />
 {:else}
   <HomeWorkspace

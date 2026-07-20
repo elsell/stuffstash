@@ -34,8 +34,8 @@ func TestRealtimeVoiceAmbiguousDestinationCompletesClarificationWithoutLanguageP
 	if completed == nil || completed.Kind != ports.StructuredAgentResponseKindClarification || completed.SpokenResponse != "I need to know where to move it before I can prepare that move." {
 		t.Fatalf("expected ambiguous destination clarification, got %+v", completed)
 	}
-	if len(language.seenTools) != 0 {
-		t.Fatalf("expected language provider not to be called, got %+v", language.seenTools)
+	if language.callCount != 0 {
+		t.Fatalf("expected language provider not to be called, got %d calls", language.callCount)
 	}
 	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressUnderstanding) {
 		t.Fatalf("expected local clarification to emit understanding progress, got %+v", events)

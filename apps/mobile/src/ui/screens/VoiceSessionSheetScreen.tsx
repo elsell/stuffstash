@@ -8,13 +8,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
 import { useAppServices } from '../navigation/AppServicesContext';
@@ -29,7 +29,10 @@ import {
   type VoicePlanPhotoDrafts
 } from './VoicePlanPhotoDraftState';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
+import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import type { VoiceSessionActionPlanCommand } from '../navigation/VoiceSessionPresentation';
+import { assetDetailHref } from './AssetDetailNavigation';
+import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
   voicePlanCommandEdits,
   type VoicePlanCommandDrafts,
@@ -198,6 +201,7 @@ export function VoiceSessionSheetScreen() {
         setCommandDraftState({ drafts: {} });
       }}
       onOpenProviderProfiles={() => router.push('/settings/voice')}
+      onOpenResponseArtifact={(artifact) => router.push(assetDetailHref(artifact.assetId))}
       onSessionMic={() => {
         void handleSessionMic();
       }}
@@ -220,6 +224,7 @@ function VoiceSessionSheet({
   onRemovePhoto,
   onRetryPhotos,
   onOpenProviderProfiles,
+  onOpenResponseArtifact,
   onReset,
   onSessionMic,
   onToggleDiagnostics,
@@ -246,6 +251,7 @@ function VoiceSessionSheet({
   readonly onClose: () => void;
   readonly onCancelSession: () => void;
   readonly onOpenProviderProfiles: () => void;
+  readonly onOpenResponseArtifact: (artifact: VoiceResponseArtifact) => void;
   readonly onReset: () => void;
   readonly onSessionMic: () => void;
   readonly onToggleDiagnostics: () => void;
@@ -307,6 +313,8 @@ function VoiceSessionSheet({
               styles.sessionContent,
               !body.hasBodyContent && styles.emptySessionContent
             ]}
+            keyboardDismissMode={appKeyboardDismissMode()}
+            keyboardShouldPersistTaps="handled"
           >
             {session.transcript ? (
               <View style={styles.sessionSection}>
@@ -431,12 +439,17 @@ function VoiceSessionSheet({
                 <View style={styles.responseIcon}>
                   <MessageCircle color={palette.accentStrong} size={18} strokeWidth={2.4} />
                 </View>
-                <Text style={styles.responseText}>{session.response}</Text>
+                <VoiceResponseEntityText
+                  enabled={state.stage === 'completed' || state.stage === 'failed'}
+                  onOpen={onOpenResponseArtifact}
+                  references={session.responseArtifacts}
+                  text={session.response}
+                />
               </View>
             ) : null}
 
             {state.realtime?.errorMessage ? (
-              <View style={styles.errorSection}>
+              <View accessibilityLiveRegion="assertive" style={styles.errorSection}>
                 <Text style={styles.sectionLabel}>Voice failed</Text>
                 <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
                 {session.recoveryAction?.target === 'provider_profiles' ? (
@@ -490,7 +503,7 @@ function VoiceSessionSheet({
               bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
             ]}>
               <View style={styles.progressGroup}>
-                <Text style={styles.progressTitle}>{session.progressLabel}</Text>
+                <Text accessibilityLiveRegion="polite" style={styles.progressTitle}>{session.progressLabel}</Text>
                 <Text
                   numberOfLines={bottomAction.kind === 'review_decision' ? 1 : 2}
                   style={styles.progressHint}
@@ -599,7 +612,7 @@ function EditablePlanCommandFields({
   if (editing) {
     return (
       <View style={styles.inlineNameEditor}>
-        <TextInput
+        <AppTextInput
           accessibilityLabel="Proposed item name"
           autoFocus
           maxLength={200}
@@ -711,7 +724,7 @@ function ParentPicker({
             <X color={palette.textMuted} size={21} strokeWidth={2.4} />
           </Pressable>
         </View>
-        <TextInput
+        <AppTextInput
           accessibilityLabel="Search containing locations"
           autoCapitalize="none"
           onChangeText={onChangeQuery}
@@ -720,7 +733,7 @@ function ParentPicker({
           style={styles.parentSearchInput}
           value={query}
         />
-        <ScrollView contentContainerStyle={styles.parentPickerList} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
           <ParentOption
             label="Inventory root"
             meta="No containing location"
@@ -1150,13 +1163,6 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.md
-  },
-  responseText: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
-    lineHeight: 24
   },
   reviewActionGroup: {
     flexDirection: 'row',

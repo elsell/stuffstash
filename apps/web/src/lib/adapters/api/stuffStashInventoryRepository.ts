@@ -35,9 +35,13 @@ import { normalizeImportSourceRequest } from '$lib/application/workspaceImportRe
 import { parseInvitationLink } from '$lib/application/invitationLink';
 import type {
   CustomAssetTypeDraft,
+  CustomAssetTypeUpdate,
   CustomFieldDefinitionDraft,
+  CustomFieldDefinitionUpdate,
+  CustomizationLifecycleFilter,
   InventoryCustomizationRepository
 } from '$lib/ports/inventoryCustomizationRepository';
+import type { InventoryTagRepository } from '$lib/ports/inventoryTagRepository';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import {
   mapAsset,
@@ -51,6 +55,7 @@ import {
   mapCustomFieldDefinition,
   mapCheckedOutAsset,
   mapInventory,
+  mapManagedAssetTag,
   mapPrincipal,
   mapSearchResult,
   mapTenant
@@ -64,7 +69,7 @@ const thumbnailConcurrency = 6;
 type ThumbnailResource = { url: string; headers: Record<string, string> };
 
 export class StuffStashInventoryRepository
-  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository
+  implements InventoryRepository, InventoryBrowseRepository, InventoryAccessRepository, InventoryAuditRepository, InventoryCustomizationRepository, InventoryTagRepository
 {
   private readonly client: StuffStashClient;
   private readonly uploadFetch: typeof fetch;
@@ -842,8 +847,13 @@ export class StuffStashInventoryRepository
     }
   }
 
-  async listInventoryCustomAssetTypes(tenantId: string, inventoryId: string, cursor?: string) {
-    const page = await this.client.listInventoryCustomAssetTypes(tenantId, inventoryId, 50, cursor);
+  async listInventoryCustomAssetTypes(tenantId: string, inventoryId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active') {
+    const page = await this.client.listInventoryCustomAssetTypes(tenantId, inventoryId, 50, cursor, lifecycleState);
+    return { items: page.items.map(mapCustomAssetType), pagination: page.pagination };
+  }
+
+  async listTenantCustomAssetTypes(tenantId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active') {
+    const page = await this.client.listTenantCustomAssetTypes(tenantId, 50, cursor, lifecycleState);
     return { items: page.items.map(mapCustomAssetType), pagination: page.pagination };
   }
 
@@ -856,6 +866,19 @@ export class StuffStashInventoryRepository
     return mapCustomAssetType(assetType);
   }
 
+  async updateCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    customAssetTypeId: string,
+    scope: 'tenant' | 'inventory',
+    update: CustomAssetTypeUpdate
+  ) {
+    const assetType = scope === 'tenant'
+      ? await this.client.updateTenantCustomAssetType(tenantId, customAssetTypeId, update)
+      : await this.client.updateInventoryCustomAssetType(tenantId, inventoryId, customAssetTypeId, update);
+    return mapCustomAssetType(assetType);
+  }
+
   async archiveCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory') {
     const assetType =
       scope === 'tenant'
@@ -864,8 +887,25 @@ export class StuffStashInventoryRepository
     return mapCustomAssetType(assetType);
   }
 
-  async listInventoryCustomFieldDefinitions(tenantId: string, inventoryId: string, cursor?: string) {
-    const page = await this.client.listInventoryCustomFieldDefinitions(tenantId, inventoryId, 50, cursor);
+  async restoreCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory') {
+    const assetType = scope === 'tenant'
+      ? await this.client.restoreTenantCustomAssetType(tenantId, customAssetTypeId)
+      : await this.client.restoreInventoryCustomAssetType(tenantId, inventoryId, customAssetTypeId);
+    return mapCustomAssetType(assetType);
+  }
+
+  async deleteCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string, scope: 'tenant' | 'inventory') {
+    if (scope === 'tenant') await this.client.deleteTenantCustomAssetType(tenantId, customAssetTypeId);
+    else await this.client.deleteInventoryCustomAssetType(tenantId, inventoryId, customAssetTypeId);
+  }
+
+  async listTenantCustomFieldDefinitions(tenantId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active') {
+    const page = await this.client.listTenantCustomFieldDefinitions(tenantId, 50, cursor, lifecycleState);
+    return { items: page.items.map(mapCustomFieldDefinition), pagination: page.pagination };
+  }
+
+  async listInventoryCustomFieldDefinitions(tenantId: string, inventoryId: string, cursor?: string, lifecycleState: CustomizationLifecycleFilter = 'active') {
+    const page = await this.client.listInventoryCustomFieldDefinitions(tenantId, inventoryId, 50, cursor, lifecycleState);
     return { items: page.items.map(mapCustomFieldDefinition), pagination: page.pagination };
   }
 
@@ -885,12 +925,54 @@ export class StuffStashInventoryRepository
     return mapCustomFieldDefinition(definition);
   }
 
+  async updateCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    definitionId: string,
+    scope: 'tenant' | 'inventory',
+    update: CustomFieldDefinitionUpdate
+  ) {
+    const definition = scope === 'tenant'
+      ? await this.client.updateTenantCustomFieldDefinition(tenantId, definitionId, update)
+      : await this.client.updateInventoryCustomFieldDefinition(tenantId, inventoryId, definitionId, update);
+    return mapCustomFieldDefinition(definition);
+  }
+
   async archiveCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory') {
     const definition =
       scope === 'tenant'
         ? await this.client.archiveTenantCustomFieldDefinition(tenantId, definitionId)
         : await this.client.archiveInventoryCustomFieldDefinition(tenantId, inventoryId, definitionId);
     return mapCustomFieldDefinition(definition);
+  }
+
+  async restoreCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory') {
+    const definition = scope === 'tenant'
+      ? await this.client.restoreTenantCustomFieldDefinition(tenantId, definitionId)
+      : await this.client.restoreInventoryCustomFieldDefinition(tenantId, inventoryId, definitionId);
+    return mapCustomFieldDefinition(definition);
+  }
+
+  async deleteCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string, scope: 'tenant' | 'inventory') {
+    if (scope === 'tenant') await this.client.deleteTenantCustomFieldDefinition(tenantId, definitionId);
+    else await this.client.deleteInventoryCustomFieldDefinition(tenantId, inventoryId, definitionId);
+  }
+
+  async listManagedAssetTags(tenantId: string, inventoryId: string, cursor?: string) {
+    const page = await this.client.listAssetTags(tenantId, inventoryId, 50, cursor);
+    return { items: page.items.map(mapManagedAssetTag), pagination: page.pagination };
+  }
+
+  async createManagedAssetTag(tenantId: string, inventoryId: string, draft: AssetTagDraft) {
+    return mapManagedAssetTag(await this.client.createAssetTag(tenantId, inventoryId, draft));
+  }
+
+  async updateManagedAssetTag(tenantId: string, inventoryId: string, tagId: string, update: { displayName: string; color?: string }) {
+    return mapManagedAssetTag(await this.client.updateAssetTag(tenantId, inventoryId, tagId, update));
+  }
+
+  async archiveManagedAssetTag(tenantId: string, inventoryId: string, tagId: string) {
+    return mapManagedAssetTag(await this.client.archiveAssetTag(tenantId, inventoryId, tagId));
   }
 
   private async loadTenantWorkspace(

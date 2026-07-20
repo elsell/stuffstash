@@ -170,12 +170,56 @@ func TestOpenAPIIsGenerated(t *testing.T) {
 	for _, operation := range expectedOperations {
 		assertOpenAPIPathMethod(t, body.Paths, operation.path, operation.method)
 	}
+	for _, path := range []string{
+		"/tenants/{tenantId}/custom-asset-types",
+		"/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types",
+		"/tenants/{tenantId}/custom-field-definitions",
+		"/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions",
+	} {
+		assertOpenAPIQueryEnum(t, body.Paths, path, "get", "lifecycleState", []string{"active", "archived", "all"})
+	}
 	if _, ok := body.Paths["/"]; ok {
 		t.Fatalf("expected OpenAPI to omit local API index path, got %s", response.Body.String())
 	}
 	if _, ok := body.Components.SecuritySchemes["bearerAuth"]; !ok {
 		t.Fatalf("expected OpenAPI to include bearer auth, got %+v", body.Components.SecuritySchemes)
 	}
+}
+
+func assertOpenAPIQueryEnum(t *testing.T, paths map[string]map[string]any, path string, method string, parameterName string, expected []string) {
+	t.Helper()
+	operation, ok := paths[path][method].(map[string]any)
+	if !ok {
+		t.Fatalf("expected OpenAPI operation %s %s", method, path)
+	}
+	parameters, ok := operation["parameters"].([]any)
+	if !ok {
+		t.Fatalf("expected OpenAPI parameters for %s %s", method, path)
+	}
+	for _, rawParameter := range parameters {
+		parameter, ok := rawParameter.(map[string]any)
+		if !ok || parameter["name"] != parameterName || parameter["in"] != "query" {
+			continue
+		}
+		if required, _ := parameter["required"].(bool); required {
+			t.Fatalf("expected optional query parameter %s on %s %s", parameterName, method, path)
+		}
+		schema, ok := parameter["schema"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected schema for query parameter %s on %s %s", parameterName, method, path)
+		}
+		rawEnum, ok := schema["enum"].([]any)
+		if !ok || len(rawEnum) != len(expected) {
+			t.Fatalf("expected enum %v for %s on %s %s, got %v", expected, parameterName, method, path, schema["enum"])
+		}
+		for index, value := range expected {
+			if rawEnum[index] != value {
+				t.Fatalf("expected enum %v for %s on %s %s, got %v", expected, parameterName, method, path, rawEnum)
+			}
+		}
+		return
+	}
+	t.Fatalf("expected query parameter %s on %s %s", parameterName, method, path)
 }
 
 func assertOpenAPIPathMethod(t *testing.T, paths map[string]map[string]any, path string, method string) {

@@ -93,6 +93,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		RealtimeVoiceToolCallTimeout:     cfg.RealtimeVoiceToolCallTimeout,
 		SpeechToText:                     stt,
 		LanguageInference:                languageInference,
+		VoiceResponseGenerator:           languageInference,
 		TextToSpeech:                     tts,
 		RealtimeVoiceProviderResolver:    realtimeVoiceProviderResolver,
 	})

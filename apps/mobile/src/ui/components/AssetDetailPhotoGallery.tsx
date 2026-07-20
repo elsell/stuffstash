@@ -164,9 +164,10 @@ function AddPhotosButton({
       style={({ pressed }) => [
         styles.addPhotoButton,
         {
-          backgroundColor: pressed ? palette.selected : palette.elevatedSurface,
-          borderColor: palette.controlBorder
-        }
+          backgroundColor: palette.elevatedSurface,
+          borderColor: palette.border
+        },
+        pressed ? styles.addPhotoButtonPressed : null
       ]}
     >
       <Camera color={palette.action} size={18} />
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
   addPhotoButton: {
     alignItems: 'center',
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'center',
@@ -238,6 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm
   },
+  addPhotoButtonPressed: { opacity: 0.82 },
   addPhotoText: {
     flexShrink: 1,
     fontSize: 15,

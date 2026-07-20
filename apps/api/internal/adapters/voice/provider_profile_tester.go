@@ -83,17 +83,7 @@ func probeLanguageInferenceProvider(ctx context.Context, provider ports.Language
 	if probe, ok := provider.(ports.LanguageInferenceProviderProbe); ok {
 		return probe.ProbeLanguageInference(ctx)
 	}
-	turn, err := provider.NextTurn(ctx, ports.LanguageInferenceInput{
-		Transcript: "Provider diagnostic. Return a final answer that says Provider profile test succeeded.",
-		FinalOnly:  true,
-	})
-	if err != nil {
-		return err
-	}
-	if turn.Final == nil || strings.TrimSpace(turn.Final.SpokenResponse) == "" {
-		return ports.ErrInvalidProviderInput
-	}
-	return nil
+	return ports.ErrInvalidProviderInput
 }
 
 func probeTextToSpeechProvider(ctx context.Context, provider ports.TextToSpeechProvider) error {

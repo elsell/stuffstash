@@ -8,7 +8,8 @@ vi.mock('react-native', () => ({
   Platform: { OS: 'android' },
   Pressable: 'Pressable',
   StyleSheet: {
-    create: (styles: unknown) => styles
+    create: (styles: unknown) => styles,
+    hairlineWidth: 0.5
   },
   Text: 'Text',
   useColorScheme: () => 'light',
@@ -71,9 +72,12 @@ describe('BrowsePlaceRow', () => {
       headers: { Authorization: 'Bearer test' }
     });
     expect(collectText(row)).not.toContain('Photo ready');
-    expect(styleValue(row.props?.style({ pressed: true }), 'backgroundColor')).not.toBe(
-      styleValue(row.props?.style({ pressed: false }), 'backgroundColor')
-    );
+    const idle = row.props?.style({ pressed: false });
+    const pressed = row.props?.style({ pressed: true });
+    expect(styleValue(pressed, 'opacity')).toBeLessThan(1);
+    expect(styleValue(pressed, 'backgroundColor')).toBe(styleValue(idle, 'backgroundColor'));
+    expect(styleValue(pressed, 'borderColor')).toBe(styleValue(idle, 'borderColor'));
+    expect(styleValue(pressed, 'borderWidth')).toBe(styleValue(idle, 'borderWidth'));
   });
 });
 

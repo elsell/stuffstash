@@ -2,11 +2,12 @@ import type {
   RealtimeVoiceTransport,
   RealtimeVoiceTransportInput,
   RealtimeVoiceTransportRunOptions,
+  VoiceAssistantResponseKind,
   VoiceActionPlanPhotoApprovalRequest,
   VoiceActionPlanCommandEdit,
   VoiceRealtimeEvent
 } from '../../application/voice/RealtimeVoiceSession';
-import { VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
+import { isValidVoiceActionPlanProposal, VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
 import {
   directUploadMethod,
   isDirectUploadTargetSupported,
@@ -129,6 +130,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let completed = false;
       let hasPendingActionPlan = false;
       let lastResponseKind = '';
+      let responseCompletedForTurn = false;
       let followUpPending = false;
       let followUpResolve: (() => void) | null = null;
       let followUpReject: ((error: Error) => void) | null = null;
@@ -276,6 +278,13 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           }
           const message = parseServerMessage(event.data, thisTransport.directUploadPolicy);
           validateServerMessage(message, sessionId, lastServerSeq);
+          if (
+            message.type === voiceServerMessage.sessionCompleted &&
+            !hasPendingActionPlan &&
+            !responseCompletedForTurn
+          ) {
+            throw new Error('Voice session completed without a structured response.');
+          }
           lastServerSeq = message.seq;
           if (message.type === voiceServerMessage.sessionStarted) {
             sessionId = message.sessionId;
@@ -289,6 +298,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           }
           if (message.type === voiceServerMessage.assistantResponseCompleted) {
             lastResponseKind = message.response.kind;
+            responseCompletedForTurn = true;
           }
           if (message.type === voiceServerMessage.actionPlanProposed) {
             hasPendingActionPlan = true;
@@ -310,6 +320,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
                   }
                   currentOnEvent = followUpOnEvent ?? onEvent;
                   followUpPending = true;
+                  responseCompletedForTurn = false;
+                  lastResponseKind = '';
                   const abortFollowUpHandler = () => {
                     if (!followUpPending) {
                       return;
@@ -578,9 +590,10 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
         type: voiceServerMessage.assistantResponseCompleted,
         sessionId: stringField(message, 'sessionId'),
         response: {
-          kind: stringField(response, 'kind'),
+          kind: assistantResponseKindField(response),
           spokenResponse: stringField(response, 'spokenResponse'),
-          displayResponse: stringField(response, 'displayResponse')
+          displayResponse: stringField(response, 'displayResponse'),
+          artifacts: voiceResponseArtifactsField(response)
         }
       };
     }
@@ -683,7 +696,7 @@ function objectField(message: Record<string, unknown>, field: string): Record<st
 
 function actionPlanField(message: Record<string, unknown>) {
   const actionPlan = objectField(message, 'actionPlan');
-  return {
+  const proposal = {
     planId: stringField(actionPlan, 'planId'),
     status: 'proposed' as const,
     confirmationSummary: stringField(actionPlan, 'confirmationSummary'),
@@ -709,6 +722,63 @@ function actionPlanField(message: Record<string, unknown>) {
       return item;
     })
   };
+  if (!isValidVoiceActionPlanProposal(proposal)) {
+    throw new Error('Voice action plan could not be reviewed safely.');
+  }
+  return proposal;
+}
+
+function assistantResponseKindField(message: Record<string, unknown>): VoiceAssistantResponseKind {
+  const value = stringField(message, 'kind');
+  switch (value) {
+    case 'answer':
+    case 'clarification':
+    case 'unsupported_action':
+    case 'safe_failure':
+      return value;
+    default:
+      throw new Error('Voice structured response kind is not supported.');
+  }
+}
+
+function voiceResponseArtifactsField(message: Record<string, unknown>) {
+  const raw = message.artifacts;
+  if (raw === undefined) {
+    return [];
+  }
+  if (!Array.isArray(raw) || raw.length > 16) {
+    throw new Error('Voice response artifacts must be a bounded array.');
+  }
+  const seen = new Set<string>();
+  return raw.map((item) => {
+    const artifact = objectValue(item, 'response.artifacts');
+    const allowed = new Set(['type', 'assetId', 'title', 'assetKind', 'context']);
+    if (Object.keys(artifact).some((key) => !allowed.has(key))) {
+      throw new Error('Voice response artifact contains unsupported fields.');
+    }
+    const type = stringField(artifact, 'type');
+    const assetIdValue = stringField(artifact, 'assetId').trim();
+    const title = stringField(artifact, 'title').trim();
+    const assetKind = voiceResponseAssetKind(stringField(artifact, 'assetKind'));
+    const rawContext = artifact.context;
+    const context = typeof rawContext === 'string' ? rawContext.trim() : undefined;
+    if (
+      type !== 'asset_reference' || assetIdValue.length > 200 || title.length > 500 ||
+      (rawContext !== undefined && (typeof rawContext !== 'string' || !context || context.length > 500 || context !== rawContext)) ||
+      seen.has(assetIdValue)
+    ) {
+      throw new Error('Voice response artifact is invalid.');
+    }
+    seen.add(assetIdValue);
+    return { type: 'asset_reference' as const, assetId: assetIdValue, title, assetKind, ...(context ? { context } : {}) };
+  });
+}
+
+function voiceResponseAssetKind(value: string): 'item' | 'container' | 'location' {
+  if (value === 'item' || value === 'container' || value === 'location') {
+    return value;
+  }
+  throw new Error('Voice response artifact asset kind is invalid.');
 }
 
 function optionalObjectField<T extends string>(field: T, value: string | undefined): { readonly [key in T]?: string } {

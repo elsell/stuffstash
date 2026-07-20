@@ -30,6 +30,9 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 	if strings.TrimSpace(response.DisplayResponse) != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
 		return ports.ErrInvalidProviderInput
 	}
+	if err := validateRealtimeVoiceResponseArtifacts(response.DisplayResponse, response.Artifacts); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -51,7 +54,6 @@ func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
 		"list_asset_audit_history",
 		"list_asset_checkout_history",
 		"list_checked_out_assets",
-		"propose_action_plan",
 		"chain of thought",
 		"reasoning:",
 		"raw prompt",

@@ -1391,6 +1391,9 @@ describe('StuffStashClient', () => {
       fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
         const request = new Request(input, init);
         requests.push(request);
+        if (request.method === 'DELETE') {
+          return new Response(null, { status: 204 });
+        }
         const path = new URL(request.url).pathname;
         if (path.includes('custom-asset-types')) {
           return Response.json({
@@ -1405,7 +1408,7 @@ describe('StuffStashClient', () => {
       }
     });
 
-    await expect(client.listInventoryCustomAssetTypes('tenant-one', 'inventory-one', 25)).resolves.toMatchObject({
+    await expect(client.listInventoryCustomAssetTypes('tenant-one', 'inventory-one', 25, undefined, 'archived')).resolves.toMatchObject({
       items: [{ id: 'type-medicine', displayName: 'Medicine', scope: 'inventory' }]
     });
     await expect(
@@ -1423,7 +1426,11 @@ describe('StuffStashClient', () => {
     await expect(client.archiveInventoryCustomAssetType('tenant-one', 'inventory-one', 'type-medicine')).resolves.toMatchObject({
       id: 'type-medicine'
     });
-    await expect(client.listInventoryCustomFieldDefinitions('tenant-one', 'inventory-one', 25)).resolves.toMatchObject({
+    await expect(client.restoreInventoryCustomAssetType('tenant-one', 'inventory-one', 'type-medicine')).resolves.toMatchObject({
+      id: 'type-medicine'
+    });
+    await expect(client.deleteInventoryCustomAssetType('tenant-one', 'inventory-one', 'type-medicine')).resolves.toBeUndefined();
+    await expect(client.listInventoryCustomFieldDefinitions('tenant-one', 'inventory-one', 25, undefined, 'all')).resolves.toMatchObject({
       items: [{ id: 'field-expiration', type: 'date', customAssetTypeIds: ['type-medicine'] }]
     });
     await expect(
@@ -1443,16 +1450,57 @@ describe('StuffStashClient', () => {
     await expect(client.archiveInventoryCustomFieldDefinition('tenant-one', 'inventory-one', 'field-expiration')).resolves.toMatchObject({
       id: 'field-expiration'
     });
+    await expect(client.restoreInventoryCustomFieldDefinition('tenant-one', 'inventory-one', 'field-expiration')).resolves.toMatchObject({
+      id: 'field-expiration'
+    });
+    await expect(client.deleteInventoryCustomFieldDefinition('tenant-one', 'inventory-one', 'field-expiration')).resolves.toBeUndefined();
 
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types?limit=25',
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types?limit=25&lifecycleState=archived',
       'POST http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types',
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types/type-medicine',
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types/type-medicine/archive',
-      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions?limit=25',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types/type-medicine/restore',
+      'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/custom-asset-types/type-medicine',
+      'GET http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions?limit=25&lifecycleState=all',
       'POST http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions',
       'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration',
-      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration/archive'
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration/archive',
+      'PATCH http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration/restore',
+      'DELETE http://api.local/tenants/tenant-one/inventories/inventory-one/custom-field-definitions/field-expiration'
+    ]);
+  });
+
+  it('supports tenant customization lifecycle recovery and deletion', async () => {
+    const requests: Request[] = [];
+    const assetType = { id: 'type-medicine', tenantId: 'tenant-one', scope: 'tenant', key: 'medicine', displayName: 'Medicine', description: '', lifecycleState: 'archived' };
+    const definition = { id: 'field-expiration', tenantId: 'tenant-one', scope: 'tenant', key: 'expiration-date', displayName: 'Expiration date', type: 'date', applicability: 'all_assets', customAssetTypeIds: [], enumOptions: null, lifecycleState: 'archived' };
+    const client = new StuffStashClient({
+      baseUrl: 'http://api.local',
+      tokenProvider: () => 'id-token',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        requests.push(request);
+        if (request.method === 'DELETE') return new Response(null, { status: 204 });
+        const data = request.url.includes('custom-asset-types') ? assetType : definition;
+        return Response.json({ data: request.method === 'GET' ? [data] : data, meta: request.method === 'GET' ? { pagination: { limit: 10, nextCursor: null, hasMore: false } } : {} });
+      }
+    });
+
+    await client.listTenantCustomAssetTypes('tenant-one', 10, undefined, 'archived');
+    await client.restoreTenantCustomAssetType('tenant-one', 'type-medicine');
+    await client.deleteTenantCustomAssetType('tenant-one', 'type-medicine');
+    await client.listTenantCustomFieldDefinitions('tenant-one', 10, undefined, 'all');
+    await client.restoreTenantCustomFieldDefinition('tenant-one', 'field-expiration');
+    await client.deleteTenantCustomFieldDefinition('tenant-one', 'field-expiration');
+
+    expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
+      'GET http://api.local/tenants/tenant-one/custom-asset-types?limit=10&lifecycleState=archived',
+      'PATCH http://api.local/tenants/tenant-one/custom-asset-types/type-medicine/restore',
+      'DELETE http://api.local/tenants/tenant-one/custom-asset-types/type-medicine',
+      'GET http://api.local/tenants/tenant-one/custom-field-definitions?limit=10&lifecycleState=all',
+      'PATCH http://api.local/tenants/tenant-one/custom-field-definitions/field-expiration/restore',
+      'DELETE http://api.local/tenants/tenant-one/custom-field-definitions/field-expiration'
     ]);
   });
 

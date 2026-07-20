@@ -328,6 +328,11 @@ func (f *providerResolverFactory) LanguageInferenceProvider(_ context.Context, c
 	return providerResolverLanguageInference{}, nil
 }
 
+func (f *providerResolverFactory) RealtimeLanguageProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error) {
+	f.record(config)
+	return providerResolverLanguageInference{}, nil
+}
+
 func (f *providerResolverFactory) TextToSpeechProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.TextToSpeechProvider, error) {
 	f.record(config)
 	return providerResolverTextToSpeech{}, nil
@@ -349,8 +354,14 @@ func (providerResolverSpeechToText) Transcribe(context.Context, ports.SpeechToTe
 type providerResolverLanguageInference struct{}
 
 func (providerResolverLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{Final: &ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "answer"}}, nil
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
+
+func (providerResolverLanguageInference) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	return ports.VoiceResponseGenerationResult{SpokenResponse: "response", DisplayResponse: "response"}, nil
+}
+
+func (providerResolverLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
 
 type providerResolverTextToSpeech struct{}
 

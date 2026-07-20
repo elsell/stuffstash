@@ -27,13 +27,14 @@ type CreateCustomAssetTypeInput struct {
 }
 
 type ListCustomAssetTypesInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Limit       int
-	Cursor      string
+	Principal      identity.Principal
+	Source         audit.Source
+	RequestID      string
+	TenantID       tenant.ID
+	InventoryID    inventory.InventoryID
+	Limit          int
+	Cursor         string
+	LifecycleState string
 }
 
 type GetCustomAssetTypeInput struct {
@@ -585,13 +586,18 @@ func (s Service) ListTenantCustomAssetTypes(ctx context.Context, input ListCusto
 	}
 
 	limit := appsupport.PageLimit(s.defaultPageLimit, s.maxPageLimit, input.Limit)
-	afterAssetTypeKey, err := decodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, input.Cursor)
+	lifecycle, ok := ports.ParseCustomizationLifecycleFilter(input.LifecycleState)
+	if !ok {
+		return ListCustomAssetTypesResult{}, apperrors.ErrInvalidInput
+	}
+	afterAssetTypeKey, err := decodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, lifecycle, input.Cursor)
 	if err != nil {
 		return ListCustomAssetTypesResult{}, apperrors.ErrInvalidInput
 	}
 	items, err := s.customAssetTypes.ListTenantCustomAssetTypes(ctx, input.TenantID, ports.CustomAssetTypePageRequest{
 		AfterAssetTypeKey: afterAssetTypeKey,
 		Limit:             limit + 1,
+		Lifecycle:         lifecycle,
 	})
 	if err != nil {
 		return ListCustomAssetTypesResult{}, err
@@ -605,13 +611,18 @@ func (s Service) ListInventoryCustomAssetTypes(ctx context.Context, input ListCu
 	}
 
 	limit := appsupport.PageLimit(s.defaultPageLimit, s.maxPageLimit, input.Limit)
-	afterAssetTypeKey, err := decodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, input.Cursor)
+	lifecycle, ok := ports.ParseCustomizationLifecycleFilter(input.LifecycleState)
+	if !ok {
+		return ListCustomAssetTypesResult{}, apperrors.ErrInvalidInput
+	}
+	afterAssetTypeKey, err := decodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, lifecycle, input.Cursor)
 	if err != nil {
 		return ListCustomAssetTypesResult{}, apperrors.ErrInvalidInput
 	}
 	items, err := s.customAssetTypes.ListInventoryCustomAssetTypes(ctx, input.TenantID, input.InventoryID, ports.CustomAssetTypePageRequest{
 		AfterAssetTypeKey: afterAssetTypeKey,
 		Limit:             limit + 1,
+		Lifecycle:         lifecycle,
 	})
 	if err != nil {
 		return ListCustomAssetTypesResult{}, err
@@ -620,21 +631,23 @@ func (s Service) ListInventoryCustomAssetTypes(ctx context.Context, input ListCu
 }
 
 func (s Service) customAssetTypeListResult(ctx context.Context, input ListCustomAssetTypesInput, items []customfield.AssetType, limit int) (ListCustomAssetTypesResult, error) {
+	lifecycle, _ := ports.ParseCustomizationLifecycleFilter(input.LifecycleState)
 	hasMore := len(items) > limit
 	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, items[len(items)-1].CursorKey())
+		nextCursor = encodeCustomAssetTypeCursor(input.TenantID, input.InventoryID, lifecycle, items[len(items)-1].CursorKey())
 	}
 
 	s.observer.Record(ctx, ports.Event{
 		Name:    ports.EventCustomAssetTypesListed,
 		Message: "custom asset types listed",
 		Fields: map[string]string{
-			"tenant_id":    input.TenantID.String(),
-			"inventory_id": input.InventoryID.String(),
-			"principal_id": input.Principal.ID.String(),
-			"limit":        strconv.Itoa(limit),
+			"tenant_id":       input.TenantID.String(),
+			"inventory_id":    input.InventoryID.String(),
+			"principal_id":    input.Principal.ID.String(),
+			"limit":           strconv.Itoa(limit),
+			"lifecycle_state": lifecycle.String(),
 		},
 	})
 	if err := s.saveReadAuditRecord(ctx, appsupport.AuditRecordInput{
@@ -647,7 +660,8 @@ func (s Service) customAssetTypeListResult(ctx context.Context, input ListCustom
 		TargetType:  audit.TargetTenant,
 		TargetID:    input.TenantID.String(),
 		Metadata: map[string]string{
-			"limit": strconv.Itoa(limit),
+			"limit":           strconv.Itoa(limit),
+			"lifecycle_state": lifecycle.String(),
 		},
 	}); err != nil {
 		return ListCustomAssetTypesResult{}, err
@@ -661,12 +675,12 @@ func (s Service) customAssetTypeListResult(ctx context.Context, input ListCustom
 	}, nil
 }
 
-func encodeCustomAssetTypeCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, key string) *string {
-	return appsupport.EncodePageCursor("custom_asset_types", customFieldDefinitionCursorScope(tenantID, inventoryID), key)
+func encodeCustomAssetTypeCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycle ports.CustomizationLifecycleFilter, key string) *string {
+	return appsupport.EncodePageCursor("custom_asset_types", customFieldDefinitionCursorScope(tenantID, inventoryID, lifecycle), key)
 }
 
-func decodeCustomAssetTypeCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (string, error) {
-	decoded, err := appsupport.DecodePageCursor("custom_asset_types", customFieldDefinitionCursorScope(tenantID, inventoryID), cursor)
+func decodeCustomAssetTypeCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycle ports.CustomizationLifecycleFilter, cursor string) (string, error) {
+	decoded, err := appsupport.DecodePageCursor("custom_asset_types", customFieldDefinitionCursorScope(tenantID, inventoryID, lifecycle), cursor)
 	if err != nil {
 		return "", err
 	}

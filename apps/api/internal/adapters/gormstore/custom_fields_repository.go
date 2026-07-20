@@ -236,10 +236,10 @@ func (s Store) CustomFieldDefinitionHasActiveAssetValues(ctx context.Context, te
 
 func (s Store) ListTenantCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	query := s.db.WithContext(ctx).Where(&customFieldDefinitionModel{
-		TenantID:       tenantID.String(),
-		Scope:          customfield.ScopeTenant.String(),
-		LifecycleState: customfield.DefinitionLifecycleActive.String(),
+		TenantID: tenantID.String(),
+		Scope:    customfield.ScopeTenant.String(),
 	})
+	query = applyCustomizationLifecycleFilter(query, page.Lifecycle)
 	return s.listCustomFieldDefinitions(ctx, query, page)
 }
 
@@ -266,12 +266,12 @@ func (s Store) CustomFieldDefinitionByID(ctx context.Context, tenantID tenant.ID
 
 func (s Store) ListInventoryCustomFieldDefinitions(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	query := s.db.WithContext(ctx).
-		Where(&customFieldDefinitionModel{TenantID: tenantID.String(), LifecycleState: customfield.DefinitionLifecycleActive.String()}).
+		Where(&customFieldDefinitionModel{TenantID: tenantID.String()}).
 		Where(clause.Or(
 			clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()},
 			clause.Eq{Column: "inventory_id", Value: inventoryID.String()},
 		))
-	return s.listCustomFieldDefinitions(ctx, query, page)
+	return s.listCustomFieldDefinitions(ctx, applyCustomizationLifecycleFilter(query, page.Lifecycle), page)
 }
 
 func scopedCustomFieldDefinitionQuery(db *gorm.DB, tenantID tenant.ID, inventoryID inventory.InventoryID, definitionID customfield.ID) *gorm.DB {
@@ -339,6 +339,17 @@ func customFieldDefinitionTargets(ctx context.Context, db *gorm.DB, definitions 
 		result[model.CustomFieldDefinitionID] = append(result[model.CustomFieldDefinitionID], targetID)
 	}
 	return result, nil
+}
+
+func applyCustomizationLifecycleFilter(query *gorm.DB, lifecycle ports.CustomizationLifecycleFilter) *gorm.DB {
+	switch lifecycle {
+	case ports.CustomizationLifecycleAll:
+		return query
+	case ports.CustomizationLifecycleArchived:
+		return query.Where(clause.Eq{Column: "lifecycle_state", Value: ports.CustomizationLifecycleArchived.String()})
+	default:
+		return query.Where(clause.Eq{Column: "lifecycle_state", Value: ports.CustomizationLifecycleActive.String()})
+	}
 }
 
 func customFieldDefinitionWriteError(err error) error {

@@ -15,11 +15,6 @@ export type AssetLifecycleConfirmation = {
   readonly isDestructive: boolean;
 };
 
-export type AssetLifecycleOverflowPresentation = {
-  readonly title: string;
-  readonly message: string;
-};
-
 export type AssetLifecycleFailurePresentation = {
   readonly title: string;
   readonly message: string;
@@ -30,16 +25,6 @@ export type AssetDetailLoadErrorPresentation = {
   readonly message: string;
   readonly canRetry: boolean;
 };
-
-export function assetDetailOverflowControlState(isActionPending: boolean): {
-  readonly disabled: boolean;
-  readonly accessibilityState: { readonly disabled: boolean };
-} {
-  return {
-    disabled: isActionPending,
-    accessibilityState: { disabled: isActionPending }
-  };
-}
 
 export function assetDetailLoadErrorPresentation(error: unknown): AssetDetailLoadErrorPresentation {
   if (isUnavailableAssetError(error)) {
@@ -57,14 +42,26 @@ export function assetDetailLoadErrorPresentation(error: unknown): AssetDetailLoa
   };
 }
 
-export type AssetLifecycleOverflowMenu = AssetLifecycleOverflowPresentation & {
-  readonly options: readonly string[];
-  readonly actionRows: readonly AssetLifecycleActionRow[];
-  readonly checkoutHistoryIndex: number;
-  readonly auditIndex: number;
-  readonly lifecycleActionIndexes: readonly number[];
-  readonly cancelIndex: number;
-  readonly destructiveIndex?: number;
+export type AssetOverflowMenuActionId = 'checkout-history' | 'history' | AssetLifecycleActionKind;
+export type AssetOverflowSystemImage =
+  | 'clock.arrow.circlepath'
+  | 'clock'
+  | 'archivebox'
+  | 'arrow.uturn.backward'
+  | 'trash';
+
+export type AssetOverflowMenuAction = {
+  readonly id: AssetOverflowMenuActionId;
+  readonly label: string;
+  readonly section: 'history' | 'lifecycle' | 'destructive';
+  readonly systemImage: AssetOverflowSystemImage;
+  readonly isDestructive: boolean;
+};
+
+export type AssetOverflowMenuCallbacks = {
+  readonly onCheckoutHistory: () => void;
+  readonly onHistory: () => void;
+  readonly onLifecycleAction: (action: AssetLifecycleActionKind) => void;
 };
 
 export function assetLifecycleActionRows(
@@ -118,35 +115,51 @@ export function assetLifecycleConfirmation(
   }
 }
 
-export function assetLifecycleOverflowPresentation(
-  asset: Pick<AssetDetailViewModel, 'title' | 'lifecycleLabel'>
-): AssetLifecycleOverflowPresentation {
-  return {
-    title: `${asset.title} actions`,
-    message: 'History, lifecycle, and other actions for this asset.'
-  };
+export function assetOverflowMenuActions(
+  asset: Pick<AssetDetailViewModel, 'canArchive' | 'canRestore' | 'canDeletePermanently'>
+): readonly AssetOverflowMenuAction[] {
+  return [
+    {
+      id: 'checkout-history',
+      label: 'Checkout history',
+      section: 'history',
+      systemImage: 'clock.arrow.circlepath',
+      isDestructive: false
+    },
+    {
+      id: 'history',
+      label: 'History',
+      section: 'history',
+      systemImage: 'clock',
+      isDestructive: false
+    },
+    ...assetLifecycleActionRows(asset).map((action): AssetOverflowMenuAction => ({
+      id: action.kind,
+      label: action.label,
+      section: action.isDestructive ? 'destructive' : 'lifecycle',
+      systemImage: action.kind === 'archive'
+        ? 'archivebox'
+        : action.kind === 'restore'
+          ? 'arrow.uturn.backward'
+          : 'trash',
+      isDestructive: action.isDestructive
+    }))
+  ];
 }
 
-export function assetLifecycleOverflowMenu(
-  asset: Pick<AssetDetailViewModel, 'title' | 'lifecycleLabel' | 'canArchive' | 'canRestore' | 'canDeletePermanently'>
-): AssetLifecycleOverflowMenu {
-  const overflow = assetLifecycleOverflowPresentation(asset);
-  const actionRows = assetLifecycleActionRows(asset);
-  const checkoutHistoryIndex = 0;
-  const auditIndex = 1;
-  const lifecycleActionIndexes = actionRows.map((_, index) => index + 2);
-  const cancelIndex = actionRows.length + 2;
-  const destructiveActionIndex = actionRows.findIndex((action) => action.isDestructive);
-  return {
-    ...overflow,
-    actionRows,
-    options: ['Checkout history', 'History', ...actionRows.map((action) => action.label), 'Cancel'],
-    checkoutHistoryIndex,
-    auditIndex,
-    lifecycleActionIndexes,
-    cancelIndex,
-    destructiveIndex: destructiveActionIndex >= 0 ? lifecycleActionIndexes[destructiveActionIndex] : undefined
-  };
+export function handleAssetOverflowAction(
+  action: AssetOverflowMenuActionId,
+  callbacks: AssetOverflowMenuCallbacks
+): void {
+  if (action === 'checkout-history') {
+    callbacks.onCheckoutHistory();
+    return;
+  }
+  if (action === 'history') {
+    callbacks.onHistory();
+    return;
+  }
+  callbacks.onLifecycleAction(action);
 }
 
 export function assetLifecycleFailurePresentation(

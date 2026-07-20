@@ -2,16 +2,16 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"regexp"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
-
-var realtimeVoicePlannerPlacementNowPattern = regexp.MustCompile(`\b(?:(?:is|are|was|were)\b|(?:it|this|that|there)\s+s\b)(?:\s+\S+){0,8}\s+in(?:\s+\S+){0,8}\s+now\b`)
 
 func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {
 	a.speechToText = stt
@@ -20,8 +20,18 @@ func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports
 	a.realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
 		SpeechToText:      stt,
 		LanguageInference: lm,
+		ResponseGenerator: a.voiceResponseGenerator,
 		TextToSpeech:      tts,
 	}}
+	return a
+}
+
+func (a App) WithRealtimeVoiceResponseGenerator(generator ports.VoiceResponseGenerator) App {
+	a.voiceResponseGenerator = generator
+	if resolver, ok := a.realtimeVoiceProviders.(staticRealtimeVoiceProviderResolver); ok {
+		resolver.providers.ResponseGenerator = generator
+		a.realtimeVoiceProviders = resolver
+	}
 	return a
 }
 
@@ -35,11 +45,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if input.InputAudio.MimeType != "audio/mp4" || input.InputAudio.Channels != 1 {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
-	if err := a.authorizer.CheckTenant(ctx, input.Principal, ports.TenantPermissionView, input.TenantID); err != nil {
-		a.recordAuthorizationDenied(ctx, input.Principal, input.TenantID)
-		return RealtimeVoiceSession{}, err
-	}
-	if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionView); err != nil {
+	if err := a.ensureRealtimeVoiceAccess(ctx, input.Principal, input.TenantID, input.InventoryID); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
 	providers, err := a.realtimeVoiceProviders.ResolveRealtimeVoiceProviders(ctx, ports.RealtimeVoiceProviderResolutionInput{
@@ -50,7 +56,10 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if err != nil {
 		return RealtimeVoiceSession{}, err
 	}
-	if providers.SpeechToText == nil || providers.LanguageInference == nil || providers.TextToSpeech == nil {
+	if a.voiceResponseGenerator != nil {
+		providers.ResponseGenerator = a.voiceResponseGenerator
+	}
+	if providers.SpeechToText == nil || providers.LanguageInference == nil || providers.ResponseGenerator == nil || providers.TextToSpeech == nil {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
 
@@ -73,6 +82,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		DeveloperDiagnostics:       input.DeveloperDiagnostics,
 		speechToText:               providers.SpeechToText,
 		languageInference:          providers.LanguageInference,
+		responseGenerator:          providers.ResponseGenerator,
 		textToSpeech:               providers.TextToSpeech,
 	}
 	now := a.clock.Now()
@@ -126,8 +136,11 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return ports.ErrInvalidProviderInput
 	}
 
-	if input.Session.speechToText == nil || input.Session.languageInference == nil || input.Session.textToSpeech == nil {
+	if input.Session.speechToText == nil || input.Session.languageInference == nil || input.Session.responseGenerator == nil || input.Session.textToSpeech == nil {
 		return apperrors.ErrInvalidInput
+	}
+	if err := a.ensureRealtimeVoiceAccess(ctx, input.Session.Principal, input.Session.TenantID, input.Session.InventoryID); err != nil {
+		return err
 	}
 	transcription, err := input.Session.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
 		TenantID:    input.Session.TenantID,
@@ -156,397 +169,15 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(effectiveTranscript); ok {
 		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, nil, emit, input.ContinueAfterClarification)
 	}
-
-	toolResults := []ports.AgentToolResult{}
-	toolCallIDs := []string{}
-	executedToolCalls := map[string]struct{}{}
-	visibleAssetIDs := map[string]struct{}{}
-	for turn := 0; turn < realtimeVoiceToolTurnBudget; turn++ {
-		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedReadCallWithoutModel(effectiveTranscript, turn, toolResults, ""); ok {
-			if strings.TrimSpace(call.ID) == "" {
-				call.ID = a.newRealtimeVoiceID()
-			}
-			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
-				return err
-			}
-			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, effectiveTranscript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
-			if err != nil {
-				return err
-			}
-			if proposal != nil {
-				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
-					return err
-				}
-				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
-					return err
-				}
-				return nil
-			}
-			if response, ok := realtimeVoiceMissingMoveSourceResponse(effectiveTranscript, toolResults); ok {
-				return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, toolResults, emit, input.ContinueAfterClarification)
-			}
-			if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(effectiveTranscript, toolResults) {
-				return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
-			}
-			continue
-		}
-		tools := realtimeVoiceToolDescriptors()
-		planOnly := realtimeVoiceShouldUseConstrainedPlanner(effectiveTranscript, turn, toolResults)
-		requireToolCall := !planOnly && realtimeVoiceShouldRequireReadTool(effectiveTranscript, turn, toolResults)
-		if requireToolCall {
-			tools = realtimeVoiceReadToolsForTurn(effectiveTranscript, turn, toolResults)
-		}
-		if planOnly {
-			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressPlanning, "Preparing a safe plan.", emit); err != nil {
-				return err
-			}
-		} else if requireToolCall {
-			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
-				return err
-			}
-		}
-		modelTurn, err := input.Session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
-			TenantID:           input.Session.TenantID,
-			InventoryID:        input.Session.InventoryID,
-			Principal:          input.Session.Principal,
-			Transcript:         effectiveTranscript,
-			ConversationTurns:  safeRealtimeVoiceConversationTurns(input.ConversationTurns),
-			PromptTemplate:     input.Session.LanguagePromptTemplate,
-			Tools:              tools,
-			ToolResults:        toolResults,
-			PreviousTurns:      turn,
-			PlanOnly:           planOnly,
-			RequireToolCall:    requireToolCall,
-			IncludeDiagnostics: input.Session.DeveloperDiagnostics,
-		})
-		if err != nil {
-			if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(input.Session, turn+1, false, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
-				return diagnosticErr
-			}
-			return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
-		}
-		if err := emitRealtimeVoiceDiagnostics(input.Session, modelTurn.Diagnostics, emit); err != nil {
-			return err
-		}
-		if planOnly && !realtimeVoicePlannerOnlyTurnCanProceed(modelTurn) {
-			result, resultErr := realtimeVoicePlannerContractRepairResult(a.newRealtimeVoiceID())
-			if resultErr != nil {
-				return resultErr
-			}
-			toolResults = append(toolResults, result)
-			if input.Session.DeveloperDiagnostics {
-				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Planner contract repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-					return err
-				}
-			}
-			continue
-		}
-		if input.Session.DeveloperDiagnostics {
-			for _, call := range modelTurn.ToolCalls {
-				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool call requested", realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
-					return err
-				}
-			}
-		}
-		if modelTurn.Final != nil {
-			if call, diagnosticTitle, ok := realtimeVoiceServerSelectedReadBeforeFinalCall(effectiveTranscript, toolResults); ok {
-				call.ID = a.newRealtimeVoiceID()
-				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking your inventory.", emit); err != nil {
-					return err
-				}
-				proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, effectiveTranscript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
-				if err != nil {
-					return err
-				}
-				if proposal != nil {
-					if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
-						return err
-					}
-					if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
-						return err
-					}
-					return nil
-				}
-				continue
-			}
-			if realtimeVoiceShouldRepairCreateClarification(effectiveTranscript, *modelTurn.Final, toolResults) {
-				result, resultErr := realtimeVoiceFinalClarificationRepairResult(a.newRealtimeVoiceID())
-				if resultErr != nil {
-					return resultErr
-				}
-				toolResults = append(toolResults, result)
-				if input.Session.DeveloperDiagnostics {
-					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Final clarification repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-						return err
-					}
-				}
-				continue
-			}
-			if realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(effectiveTranscript, *modelTurn.Final, toolResults) {
-				result, resultErr := realtimeVoiceFinalWriteClaimRepairResult(a.newRealtimeVoiceID())
-				if resultErr != nil {
-					return resultErr
-				}
-				toolResults = append(toolResults, result)
-				if input.Session.DeveloperDiagnostics {
-					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Final write claim repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-						return err
-					}
-				}
-				continue
-			}
-			if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
-				if recoverableRealtimeVoiceToolError(err) {
-					return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, toolResults, emit)
-				}
-				return err
-			}
-			if input.Session.DeveloperDiagnostics {
-				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Structured final response", realtimeVoiceFinalDiagnosticDetail(*modelTurn.Final), emit); err != nil {
-					return err
-				}
-			}
-			return a.completeRealtimeVoiceResponse(ctx, input.Session, *modelTurn.Final, toolCallIDs, toolResults, emit, input.ContinueAfterClarification)
-		}
-		if len(modelTurn.ToolCalls) == 0 {
-			return a.recoverRealtimeVoiceResponse(ctx, input.Session, toolCallIDs, toolResults, emit)
-		}
-		for _, call := range modelTurn.ToolCalls {
-			if selectedCall, diagnosticTitle := realtimeVoiceServerSelectedReadCall(effectiveTranscript, turn, toolResults, call); diagnosticTitle != "" {
-				call = selectedCall
-				if input.Session.DeveloperDiagnostics {
-					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, diagnosticTitle, realtimeVoiceToolCallDiagnosticDetail(call), emit); err != nil {
-						return err
-					}
-				}
-			}
-			signature, err := realtimeVoiceToolCallSignature(call)
-			if err != nil {
-				return err
-			}
-			if _, duplicate := executedToolCalls[signature]; duplicate {
-				toolCallID := strings.TrimSpace(call.ID)
-				if toolCallID == "" {
-					toolCallID = a.newRealtimeVoiceID()
-				}
-				toolLabel := realtimeVoiceToolLabel(call.Name)
-				toolCallIDs = append(toolCallIDs, toolCallID)
-				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "duplicate_tool_request", Message: "I already checked that."}); err != nil {
-					return err
-				}
-				result, resultErr := realtimeVoiceToolErrorResult(ports.AgentToolCall{
-					ID:        toolCallID,
-					Name:      call.Name,
-					Arguments: call.Arguments,
-				}, "duplicate_tool_request", "This exact tool request has already been executed. Use the existing tool result, make a distinct tool request, ask for clarification, or produce a final response.", true)
-				if resultErr != nil {
-					return resultErr
-				}
-				toolResults = append(toolResults, result)
-				continue
-			}
-			toolCallID := strings.TrimSpace(call.ID)
-			if toolCallID == "" {
-				toolCallID = a.newRealtimeVoiceID()
-			}
-			toolLabel := realtimeVoiceToolLabel(call.Name)
-			toolCallIDs = append(toolCallIDs, toolCallID)
-			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: "searching"}); err != nil {
-				return err
-			}
-			executableCall := ports.AgentToolCall{
-				ID:        toolCallID,
-				Name:      call.Name,
-				Arguments: call.Arguments,
-			}
-			result, proposal, err := a.executeRealtimeVoiceTool(ctx, input.Session, effectiveTranscript, toolResults, executableCall, visibleAssetIDs)
-			if err != nil {
-				if !recoverableRealtimeVoiceToolError(err) {
-					_ = emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "tool_failed", Message: "I could not check that safely."})
-					return err
-				}
-				if input.Session.DeveloperDiagnostics {
-					if diagnosticErr := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool validation failed", safeRealtimeVoiceErrorDetail(err), emit); diagnosticErr != nil {
-						return diagnosticErr
-					}
-				}
-				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallFailed, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Code: "invalid_tool_request", Message: "I need a little more detail to do that safely."}); err != nil {
-					return err
-				}
-				result, resultErr := realtimeVoiceToolErrorResult(executableCall, "invalid_tool_request", realtimeVoiceInvalidToolRequestRepairMessage(executableCall.Name), true)
-				if resultErr != nil {
-					return resultErr
-				}
-				if input.Session.DeveloperDiagnostics {
-					if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool result received", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-						return err
-					}
-				}
-				executedToolCalls[signature] = struct{}{}
-				toolResults = append(toolResults, result)
-				continue
-			}
-			executedToolCalls[signature] = struct{}{}
-			if realtimeVoiceToolReturnsVisibleAssetItems(call.Name) {
-				if err := collectRealtimeVoiceVisibleAssetIDs(result, visibleAssetIDs); err != nil {
-					return err
-				}
-			}
-			toolResults = append(toolResults, result)
-			if input.Session.DeveloperDiagnostics {
-				if err := emitRealtimeVoiceDiagnostic(input.Session.ID, "Tool result received", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-					return err
-				}
-			}
-			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: input.Session.ID, ToolCallID: toolCallID, ToolLabel: toolLabel, Status: realtimeVoiceToolCompletionStatus(result)}); err != nil {
-				return err
-			}
-			if proposal != nil {
-				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
-					return err
-				}
-				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
-					return err
-				}
-				return nil
-			}
-		}
-		if call, diagnosticTitle, ok := realtimeVoiceServerSelectedExplorationCall(effectiveTranscript, turn, toolResults, a.newRealtimeVoiceID()); ok {
-			if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressExploring, "Checking one more match.", emit); err != nil {
-				return err
-			}
-			proposal, err := a.executeRealtimeVoiceServerSelectedRead(ctx, input.Session, effectiveTranscript, call, diagnosticTitle, &toolResults, &toolCallIDs, executedToolCalls, visibleAssetIDs, emit)
-			if err != nil {
-				return err
-			}
-			if proposal != nil {
-				if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressReviewing, "Preparing a review.", emit); err != nil {
-					return err
-				}
-				if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: input.Session.ID, ActionPlan: proposal}); err != nil {
-					return err
-				}
-				return nil
-			}
-		}
-		if realtimeVoiceShouldFinalizeReadOnlyAfterToolTurn(effectiveTranscript, toolResults) {
-			return a.finalizeRealtimeVoiceWithToolResults(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, turn+1, emit, input.ContinueAfterClarification)
-		}
-		if response, ok := realtimeVoiceMissingMoveSourceResponse(effectiveTranscript, toolResults); ok {
-			return a.completeRealtimeVoiceResponse(ctx, input.Session, response, toolCallIDs, toolResults, emit, input.ContinueAfterClarification)
-		}
-	}
-	return a.finalizeRealtimeVoiceAfterToolBudget(ctx, input.Session, effectiveTranscript, input.ConversationTurns, toolResults, toolCallIDs, emit, input.ContinueAfterClarification)
+	return a.runRealtimeVoiceInvestigationLoop(ctx, input.Session, effectiveTranscript, input.ConversationTurns, input.ContinueAfterClarification, emit)
 }
 
-func (a App) finalizeRealtimeVoiceAfterToolBudget(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, toolResults []ports.AgentToolResult, toolCallIDs []string, emit RealtimeVoiceEventSink, continueAfterClarification ...bool) error {
-	return a.finalizeRealtimeVoiceWithToolResults(ctx, session, transcript, conversationTurns, toolResults, toolCallIDs, realtimeVoiceToolTurnBudget, emit, continueAfterClarification...)
-}
-
-func (a App) finalizeRealtimeVoiceWithToolResults(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, toolResults []ports.AgentToolResult, toolCallIDs []string, previousTurns int, emit RealtimeVoiceEventSink, continueAfterClarification ...bool) error {
-	if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressAnswering, "Preparing an answer.", emit); err != nil {
+func (a App) ensureRealtimeVoiceAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	if err := a.authorizer.CheckTenant(ctx, principal, ports.TenantPermissionView, tenantID); err != nil {
+		a.recordAuthorizationDenied(ctx, principal, tenantID)
 		return err
 	}
-	modelTurn, err := session.languageInference.NextTurn(ctx, ports.LanguageInferenceInput{
-		TenantID:           session.TenantID,
-		InventoryID:        session.InventoryID,
-		Principal:          session.Principal,
-		Transcript:         transcript,
-		ConversationTurns:  safeRealtimeVoiceConversationTurns(conversationTurns),
-		PromptTemplate:     session.LanguagePromptTemplate,
-		ToolResults:        toolResults,
-		PreviousTurns:      previousTurns,
-		FinalOnly:          true,
-		IncludeDiagnostics: session.DeveloperDiagnostics,
-	})
-	if err != nil {
-		if diagnosticErr := emitRealtimeVoiceLanguageFailureDiagnostic(session, previousTurns+1, true, toolResults, realtimeVoiceFailureLanguageInference, err, emit); diagnosticErr != nil {
-			return diagnosticErr
-		}
-		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
-	}
-	if err := emitRealtimeVoiceDiagnostics(session, modelTurn.Diagnostics, emit); err != nil {
-		return err
-	}
-	if modelTurn.Final == nil {
-		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
-	}
-	if realtimeVoiceShouldRepairCreateClarification(transcript, *modelTurn.Final, toolResults) {
-		result, resultErr := realtimeVoiceFinalClarificationRepairResult(a.newRealtimeVoiceID())
-		if resultErr != nil {
-			return resultErr
-		}
-		toolResults = append(toolResults, result)
-		if session.DeveloperDiagnostics {
-			if err := emitRealtimeVoiceDiagnostic(session.ID, "Final clarification repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-				return err
-			}
-		}
-		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
-	}
-	if realtimeVoiceShouldRepairWriteClaimAfterFailedProposal(transcript, *modelTurn.Final, toolResults) {
-		result, resultErr := realtimeVoiceFinalWriteClaimRepairResult(a.newRealtimeVoiceID())
-		if resultErr != nil {
-			return resultErr
-		}
-		toolResults = append(toolResults, result)
-		if session.DeveloperDiagnostics {
-			if err := emitRealtimeVoiceDiagnostic(session.ID, "Final write claim repaired", realtimeVoiceToolResultDiagnosticDetail(result), emit); err != nil {
-				return err
-			}
-		}
-		return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
-	}
-	if err := validateRealtimeVoiceFinalResponse(*modelTurn.Final); err != nil {
-		if recoverableRealtimeVoiceToolError(err) {
-			return a.recoverRealtimeVoiceResponse(ctx, session, toolCallIDs, toolResults, emit)
-		}
-		return err
-	}
-	if session.DeveloperDiagnostics {
-		if err := emitRealtimeVoiceDiagnostic(session.ID, "Structured final response", realtimeVoiceFinalDiagnosticDetail(*modelTurn.Final), emit); err != nil {
-			return err
-		}
-	}
-	return a.completeRealtimeVoiceResponse(ctx, session, *modelTurn.Final, toolCallIDs, toolResults, emit, continueAfterClarification...)
-}
-
-func realtimeVoiceToolCallSignature(call ports.AgentToolCall) (string, error) {
-	payload, err := json.Marshal(call.Arguments)
-	if err != nil {
-		return "", ports.ErrInvalidProviderInput
-	}
-	return strings.TrimSpace(call.Name) + ":" + string(payload), nil
-}
-
-func realtimeVoiceInvalidToolRequestRepairMessage(toolName string) string {
-	if strings.TrimSpace(toolName) == RealtimeVoiceToolProposeActionPlan {
-		return "The action-plan request was invalid or incomplete. Retry with corrected structured arguments. For existing assets, assetId and parentAssetId must be opaque assetId values copied exactly from successful read tool results; never use titles or guessed IDs. For a new item, use one create_asset command with title or name and kind item; never include assetId and never add a move_asset command for that newly-created item. Put the new item directly in an existing visible parent with parentAssetId, or in a newly-created parent with parentCommandId. For missing destinations, create every missing location/container first, then reference those create commands with parentCommandId. If a missing container belongs inside an existing visible location, create the container with parentAssetId set to that visible location assetId, then create or move the requested item into the container with parentCommandId."
-	}
-	return "The tool request was invalid or incomplete. Retry with corrected, authorized, structured arguments, or ask the user for clarification."
-}
-
-func realtimeVoiceToolCallDiagnosticDetail(call ports.AgentToolCall) string {
-	payload, err := json.MarshalIndent(map[string]any{
-		"name":      call.Name,
-		"arguments": redactRealtimeVoiceDiagnosticValue(call.Arguments),
-	}, "", "  ")
-	if err != nil {
-		return "Tool call arguments could not be rendered safely."
-	}
-	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
-}
-
-func emitRealtimeVoiceDiagnostics(session RealtimeVoiceSession, diagnostics []ports.LanguageInferenceDiagnostic, emit RealtimeVoiceEventSink) error {
-	if !session.DeveloperDiagnostics {
-		return nil
-	}
-	for _, diagnostic := range diagnostics {
-		if err := emitRealtimeVoiceDiagnostic(session.ID, diagnostic.Title, diagnostic.Detail, emit); err != nil {
-			return err
-		}
-	}
-	return nil
+	return a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionView)
 }
 
 func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, emit RealtimeVoiceEventSink) error {
@@ -555,29 +186,6 @@ func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, 
 		message = "Agent diagnostic"
 	}
 	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentDiagnostic, SessionID: sessionID, Message: message, Detail: safeRealtimeVoiceDiagnosticText(detail, 4000)})
-}
-
-func realtimeVoiceFinalDiagnosticDetail(response ports.StructuredAgentResponse) string {
-	payload, err := json.MarshalIndent(map[string]any{
-		"kind":            response.Kind,
-		"spokenResponse":  response.SpokenResponse,
-		"displayResponse": response.DisplayResponse,
-	}, "", "  ")
-	if err != nil {
-		return "Final response could not be rendered safely."
-	}
-	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
-}
-
-func realtimeVoiceToolResultDiagnosticDetail(result ports.AgentToolResult) string {
-	payload, err := json.MarshalIndent(map[string]any{
-		"name":    result.Name,
-		"content": redactRealtimeVoiceDiagnosticString(result.Content),
-	}, "", "  ")
-	if err != nil {
-		return "Tool result could not be rendered safely."
-	}
-	return safeRealtimeVoiceDiagnosticText(string(payload), 4000)
 }
 
 func safeRealtimeVoiceDiagnosticText(value string, maxLength int) string {
@@ -616,116 +224,11 @@ var realtimeVoiceDiagnosticRawResponseAssignmentPattern = regexp.MustCompile(`(?
 var realtimeVoiceDiagnosticUnsafePhrasePattern = regexp.MustCompile(`(?i)\b(raw[-_ ]?(prompt|query|transcript|model[-_ ]?response|provider[-_ ]?response)|stack[-_ ]?trace|provider[-_ ]+session[-_ ]+id)\b`)
 var realtimeVoiceDiagnosticURLPattern = regexp.MustCompile(`(?i)\b(?:https?|wss?)://[^\s"',\]}]+`)
 
-func redactRealtimeVoiceDiagnosticValue(value any) any {
-	switch typed := value.(type) {
-	case map[string]any:
-		redacted := map[string]any{}
-		for key, nested := range typed {
-			if unsafeRealtimeVoiceDiagnosticKey(key) {
-				redacted[key] = "[redacted]"
-				continue
-			}
-			redacted[key] = redactRealtimeVoiceDiagnosticValue(nested)
-		}
-		return redacted
-	case []any:
-		redacted := make([]any, 0, len(typed))
-		for _, nested := range typed {
-			redacted = append(redacted, redactRealtimeVoiceDiagnosticValue(nested))
-		}
-		return redacted
-	case string:
-		return redactRealtimeVoiceDiagnosticString(typed)
-	default:
-		return typed
-	}
-}
-
-func unsafeRealtimeVoiceDiagnosticKey(key string) bool {
-	normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(key, "_", ""), "-", ""), " ", ""))
-	for _, token := range []string{"apikey", "authorization", "bearer", "credential", "password", "providersessionid", "secret", "token"} {
-		if strings.Contains(normalized, token) {
-			return true
-		}
-	}
-	return false
-}
-
 func (a App) ensureRealtimeVoiceDependencies() error {
 	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.realtimeVoiceProviders == nil || a.realtimeSessions == nil {
 		return apperrors.ErrInvalidInput
 	}
 	return nil
-}
-
-func recoverableRealtimeVoiceToolError(err error) bool {
-	return errors.Is(err, ports.ErrInvalidProviderInput) ||
-		errors.Is(err, apperrors.ErrInvalidInput) ||
-		errors.Is(err, errRealtimeVoiceToolCallTimedOut) ||
-		errors.Is(err, ErrValidation)
-}
-
-func realtimeVoicePlannerOnlyTurnHasActionPlan(turn ports.LanguageInferenceTurn) bool {
-	return turn.Final == nil &&
-		len(turn.ToolCalls) == 1 &&
-		turn.ToolCalls[0].Name == RealtimeVoiceToolProposeActionPlan
-}
-
-func realtimeVoicePlannerOnlyTurnCanProceed(turn ports.LanguageInferenceTurn) bool {
-	return realtimeVoicePlannerOnlyTurnHasActionPlan(turn) ||
-		realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn)
-}
-
-func realtimeVoicePlannerOnlyTurnCanFinalizeSafely(turn ports.LanguageInferenceTurn) bool {
-	if turn.Final == nil {
-		return false
-	}
-	if realtimeVoicePlannerFinalClaimsMutation(*turn.Final) {
-		return false
-	}
-	switch turn.Final.Kind {
-	case ports.StructuredAgentResponseKindClarification,
-		ports.StructuredAgentResponseKindUnsupportedAction,
-		ports.StructuredAgentResponseKindSafeFailure:
-		return true
-	default:
-		return false
-	}
-}
-
-func realtimeVoicePlannerFinalClaimsMutation(response ports.StructuredAgentResponse) bool {
-	text := normalizedRealtimeVoiceVerbText(response.SpokenResponse + " " + response.DisplayResponse)
-	for _, token := range []string{
-		" added ",
-		" archived ",
-		" checked in ",
-		" checked out ",
-		" created ",
-		" is now in ",
-		" moved ",
-		" placed ",
-		" put ",
-		" restored ",
-		" returned ",
-		" stashed ",
-		" stored ",
-		" updated ",
-	} {
-		if strings.Contains(text, token) {
-			return true
-		}
-	}
-	if realtimeVoicePlannerPlacementNowPattern.MatchString(text) {
-		return true
-	}
-	return false
-}
-
-func realtimeVoicePlannerContractRepairResult(id string) (ports.AgentToolResult, error) {
-	return realtimeVoiceToolErrorResult(ports.AgentToolCall{
-		ID:   id,
-		Name: RealtimeVoiceToolProposeActionPlan,
-	}, "planner_contract_rejected", "Planner-only turns must return exactly one propose_action_plan request. Do not return a final answer from planner mode and do not call read tools from planner mode. Retry propose_action_plan with valid structured commands, or return a safe clarification, unsupported_action, or safe_failure response if no reviewable plan can be prepared.", true)
 }
 
 func (a App) MarkRealtimeVoiceSessionFailed(ctx context.Context, session RealtimeVoiceSession, safeFailureCode string) error {

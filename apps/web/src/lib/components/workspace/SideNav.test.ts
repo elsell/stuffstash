@@ -60,7 +60,7 @@ describe('SideNav', () => {
     const settings = Array.from(document.body.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]')).find(
       (candidate) => candidate.textContent?.trim() === 'Settings'
     );
-    expect(settings?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings');
+    expect(settings?.getAttribute('href')).toBe('/settings');
     settings?.click();
     expect(openedSettings).toBe(true);
   });
@@ -74,15 +74,11 @@ describe('SideNav', () => {
     expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Home');
     expect(document.body.querySelector('[aria-labelledby="primary-nav-label"]')?.textContent).toContain('Browse');
     expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Import');
-    expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).toContain('Settings');
+    expect(document.body.querySelector('[aria-labelledby="utility-nav-label"]')?.textContent).not.toContain('Settings');
     expect(linkContaining('Import').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/import');
 
     const currentDestinations = document.body.querySelectorAll<HTMLAnchorElement>('a[aria-current="page"]');
-    expect(currentDestinations).toHaveLength(1);
-    const current = currentDestinations[0];
-    expect(current?.textContent).toContain('Settings');
-    expect(current?.textContent).toContain('Access, fields, and audit');
-    expect(current?.getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings');
+    expect(currentDestinations).toHaveLength(0);
   });
 
   it('marks home as the current primary destination', () => {

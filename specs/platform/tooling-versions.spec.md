@@ -28,6 +28,9 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - TypeScript for mobile: `typescript 5.9.2`.
 - React types for mobile: `@types/react 19.2.17`.
 - Vitest for mobile application tests: `vitest 4.1.8`.
+- React Native Testing Library for behavioral mobile component tests: `@testing-library/react-native 14.0.1`. It is used with behavioral fakes and the real React reconciler so navigation, effects, and component state are exercised without module mocks or hand-indexed hook emulation.
+- React 19 test renderer used by React Native Testing Library: `test-renderer 1.2.0`. This is the modern custom renderer required by React Native Testing Library 14, not the deprecated `react-test-renderer`; its React `^19.0.0` peer range is compatible with the pinned React `19.2.0` and React Native `0.83.6` stack.
+- Reviewed `@jest/schemas 30.4.1` transitive schema dependency: `@sinclair/typebox 0.34.49`. The workspace override prevents the test renderer stack from floating to a release newer than the dependency-review cutoff while preserving the older React Native/Jest 29 dependency line independently.
 - Mobile generated API client workspace dependency: `@stuff-stash/api-client workspace:*`.
 - Expo Router for native mobile navigation: `expo-router 55.0.16`.
 - Expo development client for local physical-device SDK 55 testing: `expo-dev-client 55.0.35`.
@@ -38,15 +41,17 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Expo Audio for mobile voice recording and playback: `expo-audio 55.0.14`.
 - Expo FileSystem for mobile durable connection profile storage: `expo-file-system 55.0.22`.
 - Expo Image Picker for mobile create-form photo selection: `expo-image-picker 55.0.20`.
+- Expo UI for the native SwiftUI tag color picker on iOS: `@expo/ui 55.0.17`. This Expo SDK 55-aligned package is justified to preserve platform-native iOS color selection and accessibility semantics; it does not provide an equivalent native Android color picker, so Android uses a dependency-free project-owned full-spectrum picker with labeled hex fallback.
 - Expo Auth Session for mobile OIDC PKCE sign-in: `expo-auth-session 55.0.17`.
 - Expo Web Browser for system-browser OIDC session completion: `expo-web-browser 55.0.17`.
 - Expo Secure Store for native mobile token storage: `expo-secure-store 55.0.15`.
 - React Native Image Viewing for mobile draft photo preview carousel: `react-native-image-viewing 0.2.2`.
 - React Native Reanimated for Expo Router: `react-native-reanimated 4.2.1`.
 - React Native Worklets for Expo SDK 55 Reanimated: `react-native-worklets 0.7.4`.
-- React Navigation native runtime transitive dependency for Expo Router: `@react-navigation/native 7.2.6`.
+- React Native Keyboard Controller: `react-native-keyboard-controller 1.20.7`. This is the Expo SDK 55-compatible native integration selected by Expo's version check; its keyboard-attached extension supplies the project-owned iOS dismissal bar across single-line and multiline fields, bottom tabs, native stacks and sheets, and React Native modals, where React Native `0.83` core `InputAccessoryView` and view-hierarchy-bound sticky toolbars have documented or physically verified gaps. It reuses the already-pinned Reanimated runtime and remains hidden behind mobile UI adapter components.
+- React Navigation native runtime for Expo Router and dirty native-stack prevent-remove coordination: `@react-navigation/native 7.2.6`. It is a direct mobile dependency because the editor uses its public `usePreventRemove` hook; relying on Expo Router's transitive installation would make that safety boundary implicit and unstable.
 - React Navigation bottom tabs transitive dependency for Expo Router: `@react-navigation/bottom-tabs 7.17.0`.
-- React Navigation native stack transitive override for Expo Router peer alignment: `@react-navigation/native-stack 7.3.16`.
+- React Navigation native stack transitive override for Expo Router peer alignment: `@react-navigation/native-stack 7.14.5`. Expo Router `55.0.16` declares `^7.14.5`; this pinned adapter version exposes the native header-item contract required for routed iOS `UIBarButtonItem` menus instead of silently discarding those options.
 - React Navigation core transitive override for dependency freshness: `@react-navigation/core 7.18.0`.
 - React Navigation elements transitive override for native peer alignment: `@react-navigation/elements 2.9.20`.
 - React Navigation routers transitive override for dependency freshness: `@react-navigation/routers 7.5.5`.
@@ -126,6 +131,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Tooling changes must be atomic conventional commits.
 - The Go structural checker must inspect GORM adapter source with the Go AST and reject string-literal query fragments passed as the first argument to `Where`, `Order`, or `Joins`. This rule is scoped to `apps/api/internal/adapters/gormstore/*.go` so unrelated methods with the same names are not rejected.
 - Generated artifacts must include drift checks once generation is introduced.
+- The mobile UI structural checker must reject direct `TextInput` JSX usage in production mobile source outside the project-owned `AppTextInput` framework adapter. The checker must run in pre-commit and the blocking required-checks workflow so newly added fields cannot bypass the shared keyboard, accessibility, and dismissal contract.
 - Release version planning must be done by repository-owned scripts using Conventional Commit messages and SemVer. Do not add external release automation dependencies for version calculation.
 - A release commit on `main` must only create a new tag and GitHub release when commits since the last SemVer tag require a release.
 - Release image publication must produce immutable image digests. GitOps deployment state must prefer digests over mutable tags.

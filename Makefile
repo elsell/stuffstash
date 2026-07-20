@@ -1,4 +1,4 @@
-.PHONY: test api-release-build go-structural-check run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check required-checks release-plan-test selfhost-happy-path-check scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-e2e-install web-e2e-test web-shadcn-check mobile-test mobile-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
+.PHONY: test api-release-build go-structural-check mobile-ui-structural-check run run-oidc-local run-spicedb spicedb-up spicedb-down dex-local-config dex-local verify-local-api verify-dex-oidc-api verify-mobile-oidc-pkce verify-mobile-oidc-pkce-local verify-spicedb-adapter verify-garage-blobstore verify-postgres-adapter verify-migrations migrate-up migrate-status compose-up compose-up-spicedb compose-up-oidc compose-up-oidc-lan compose-down docker-build docker-build-web dependency-age-check required-checks release-plan-test selfhost-happy-path-check scripts-test docs-install docs-dev docs-build docs-preview web-install web-dev web-build web-check web-test web-e2e-install web-e2e-test web-shadcn-check mobile-test mobile-check api-openapi-generate api-client-generate api-client-check api-client-test api-client-check-generated
 
 GOCACHE ?= $(CURDIR)/.cache/go-build
 STUFF_STASH_DATABASE_DSN ?= postgres://stuffstash:stuffstash-local@localhost:5432/stuffstash?sslmode=disable
@@ -41,6 +41,9 @@ go-structural-check:
 	fi; \
 	printf '%s\n' "$$go_files" | xargs scripts/check-go-structural-rules.sh; \
 	printf '%s\n' "$$go_files" | xargs scripts/check-go-domain-imports.sh
+
+mobile-ui-structural-check:
+	scripts/check-mobile-ui-structural-rules.sh
 
 run:
 	GOCACHE=$(GOCACHE) go run ./apps/api/cmd/stuff-stash
@@ -187,7 +190,7 @@ docker-build-web:
 dependency-age-check:
 	python3 scripts/check-dependency-age.py
 
-required-checks: dependency-age-check scripts-test go-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
+required-checks: dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
 
 release-plan-test:
 	scripts/test-release-planner.sh
@@ -200,6 +203,7 @@ selfhost-happy-path-check:
 
 scripts-test: release-plan-test release-image-signing-test selfhost-happy-path-check
 	scripts/test-go-structural-rules.sh
+	scripts/test-mobile-ui-structural-rules.sh
 	scripts/test-mobile-association-files.sh
 	scripts/test-ios-associated-domains.sh
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'

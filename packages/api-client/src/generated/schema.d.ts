@@ -2912,6 +2912,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque cursor from the previous page */
                 cursor?: string;
+                /** @description Lifecycle filter; defaults to active */
+                lifecycleState?: "active" | "archived" | "all";
             };
             header?: {
                 /** @description Bearer dev:<principal-id> */
@@ -3192,6 +3194,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque cursor from the previous page */
                 cursor?: string;
+                /** @description Lifecycle filter; defaults to active */
+                lifecycleState?: "active" | "archived" | "all";
             };
             header?: {
                 /** @description Bearer dev:<principal-id> */
@@ -5324,6 +5328,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque cursor from the previous page */
                 cursor?: string;
+                /** @description Lifecycle filter; defaults to active */
+                lifecycleState?: "active" | "archived" | "all";
             };
             header?: {
                 /** @description Bearer dev:<principal-id> */
@@ -5618,6 +5624,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque cursor from the previous page */
                 cursor?: string;
+                /** @description Lifecycle filter; defaults to active */
+                lifecycleState?: "active" | "archived" | "all";
             };
             header?: {
                 /** @description Bearer dev:<principal-id> */

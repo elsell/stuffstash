@@ -240,7 +240,7 @@ function createStyles(colors: MobileColorPalette) {
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden'
   },
   standardCard: {
@@ -281,8 +281,7 @@ function createStyles(colors: MobileColorPalette) {
     width: 64
   },
   openRegionPressed: {
-    borderColor: colors.controlBorder,
-    borderWidth: 2
+    opacity: 0.82
   },
   openTextRegion: {
     borderRadius: radius.sm,
@@ -290,7 +289,7 @@ function createStyles(colors: MobileColorPalette) {
     minHeight: 44
   },
   openTextRegionPressed: {
-    backgroundColor: colors.selected
+    opacity: 0.82
   },
   imagePlaceholder: {
     color: colors.accentStrong,

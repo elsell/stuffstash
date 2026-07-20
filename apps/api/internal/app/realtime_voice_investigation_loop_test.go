@@ -1,0 +1,454 @@
+package app
+
+import (
+	"context"
+	"errors"
+	"strings"
+	"testing"
+
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+type unshapedRealtimeLanguageInference struct{}
+
+func (unshapedRealtimeLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	step := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionSearch,
+		Intent:   agentmodel.Intent{Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "drill"},
+		SearchRequests: []agentmodel.SearchRequest{{
+			ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
+			Mention: "drill", SearchProbes: []string{"drill"},
+		}},
+	}
+	return ports.LanguageInferenceTurn{Investigation: &step}, nil
+}
+
+func TestRealtimeVoiceInvestigationRejectsProviderIntentWithoutExplicitRequestShape(t *testing.T) {
+	t.Parallel()
+
+	session := RealtimeVoiceSession{languageInference: unshapedRealtimeLanguageInference{}}
+	input := agentmodel.InvestigationInput{
+		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: realtimeVoiceInvestigationVersion,
+		SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: "Where is the drill?", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
+	}
+	_, err := (App{}).nextRealtimeVoiceInvestigation(context.Background(), session, input.Transcript, nil, input, nil, func(RealtimeVoiceEvent) error { return nil })
+	if !errors.Is(err, ports.ErrInvalidProviderInput) {
+		t.Fatalf("missing explicit request shape error = %v, want invalid provider input", err)
+	}
+}
+
+func TestRealtimeVoiceInvestigationLoopAnswersFromPlausibleApproximateMatch(t *testing.T) {
+	t.Parallel()
+	initial := agentmodel.InvestigationStep{
+		Decision:       agentmodel.InvestigationDecisionSearch,
+		Intent:         agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "Sarah winter coat"},
+		SearchRequests: []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Sarah winter coat", SearchProbes: []string{"Sarah", "winter clothes"}}},
+	}
+	final := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish, Intent: initial.Intent,
+		Resolutions: []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionPlausible, CandidateIDs: []string{"winter-clothes-1"}}},
+	}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &final}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where are Sarah's winter coat?"}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	closet := realtimeVoiceInvestigationAsset("closet-1", "Hall closet", asset.KindContainer, "")
+	clothes := realtimeVoiceInvestigationAsset("winter-clothes-1", "Sarah Winter Clothes and Shoes", asset.KindItem, closet.ID.String())
+	seedRealtimeVoiceLoopAsset(t, store, closet, "audit-closet")
+	seedRealtimeVoiceLoopAsset(t, store, clothes, "audit-clothes")
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run investigation loop: %v", err)
+	}
+	response := realtimeVoiceInvestigationCompletedResponse(events)
+	if response == nil || response.Kind != ports.StructuredAgentResponseKindAnswer || response.SpokenResponse == "" {
+		t.Fatalf("expected grounded answer, got %+v", events)
+	}
+	if got := resolver.providers.TextToSpeech.(*resolvedTextToSpeech).lastText; got != response.SpokenResponse {
+		t.Fatalf("expected only grounded response to be spoken, got %q", got)
+	}
+	if language.callCount != 2 {
+		t.Fatalf("expected initial and evidence investigation calls, got %d", language.callCount)
+	}
+}
+
+func TestRealtimeVoiceInvestigationLoopReturnsUnsupportedActionAfterInitialClassification(t *testing.T) {
+	t.Parallel()
+	for _, shape := range []agentmodel.RequestShape{agentmodel.RequestShapeCollectionTarget, agentmodel.RequestShapeCompound} {
+		shape := shape
+		t.Run(string(shape), func(t *testing.T) {
+			t.Parallel()
+			intent := agentmodel.Intent{
+				RequestShape: shape, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "requested assets",
+				DestinationPath: []string{"destination"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
+			}
+			initial := agentmodel.InvestigationStep{
+				Decision: agentmodel.InvestigationDecisionSearch, Intent: intent,
+				SearchRequests: []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "requested assets", SearchProbes: []string{"requested assets"}}},
+			}
+			language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}}}
+			resolver := successfulRealtimeVoiceResolver()
+			resolver.providers.LanguageInference = language
+			resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Generated unsupported request"}
+			application, _ := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+			session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+			if err != nil {
+				t.Fatalf("start session: %v", err)
+			}
+			events := []RealtimeVoiceEvent{}
+			err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+				events = append(events, event)
+				return nil
+			})
+			if err != nil {
+				t.Fatalf("run unsupported investigation: %v", err)
+			}
+			response := realtimeVoiceInvestigationCompletedResponse(events)
+			if response == nil || response.Kind != ports.StructuredAgentResponseKindUnsupportedAction {
+				t.Fatalf("expected bounded unsupported response, got %+v", events)
+			}
+			if language.callCount != 1 {
+				t.Fatalf("expected one semantic classification turn, got %d", language.callCount)
+			}
+			if realtimeVoiceInvestigationHasEvent(events, RealtimeVoiceEventToolCallStarted) || realtimeVoiceInvestigationHasEvent(events, RealtimeVoiceEventToolCallCompleted) {
+				t.Fatalf("unsupported request must not execute inventory reads, got %+v", events)
+			}
+		})
+	}
+}
+
+func TestRealtimeVoiceInvestigationLoopCompletesRequiredContentsEvidenceAfterTargetResolution(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationListContents, SubjectMention: "Office"}
+	initial := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionSearch, Intent: intent,
+		SearchRequests: []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Office", SearchProbes: []string{"office"}}},
+	}
+	prematureFinish := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish, Intent: intent,
+		Resolutions: []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"office-1"}}},
+	}
+	final := agentmodel.InvestigationStep{
+		Decision: agentmodel.InvestigationDecisionFinish, Intent: intent,
+		Resolutions: []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionCollection, CandidateIDs: []string{"bottle-1"}}},
+	}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &prematureFinish}, {Investigation: &final}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "What is in the office?"}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	office := realtimeVoiceInvestigationAsset("office-1", "Office", asset.KindLocation, "")
+	bottle := realtimeVoiceInvestigationAsset("bottle-1", "Water bottle", asset.KindItem, office.ID.String())
+	seedRealtimeVoiceLoopAsset(t, store, office, "audit-office")
+	seedRealtimeVoiceLoopAsset(t, store, bottle, "audit-bottle")
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run contents investigation: %v", err)
+	}
+	response := realtimeVoiceInvestigationCompletedResponse(events)
+	if response == nil || !strings.Contains(strings.ToLower(response.SpokenResponse), "office") || !strings.Contains(strings.ToLower(response.SpokenResponse), "water bottle") || strings.Contains(strings.ToLower(response.SpokenResponse), "visible match") {
+		t.Fatalf("expected contents grounded after required read, got %+v", events)
+	}
+	if len(language.seenInvestigations) != 3 {
+		t.Fatalf("expected initial, target assessment, and contents assessment turns, got %d", len(language.seenInvestigations))
+	}
+	last := language.seenInvestigations[2]
+	foundRequiredRead := false
+	for _, evidence := range last.ReadEvidence {
+		if evidence.ReferenceKey == agentmodel.SemanticReferenceSubject && evidence.ReadKind == agentmodel.InvestigationReadListContents && evidence.VisibleAssetID == office.ID.String() {
+			foundRequiredRead = true
+		}
+	}
+	if !foundRequiredRead {
+		t.Fatalf("expected application-scheduled contents evidence, got %+v", last.ReadEvidence)
+	}
+}
+
+func TestRealtimeVoiceCurrentCheckoutStatusRequiresCheckoutEvidence(t *testing.T) {
+	t.Parallel()
+	readKind, required := realtimeVoiceOperationRequiredRead(agentmodel.OperationCheckoutStatus)
+	if !required || readKind != agentmodel.InvestigationReadCheckoutHistory {
+		t.Fatalf("checkout status must require checkout history evidence, got %q required=%t", readKind, required)
+	}
+}
+
+func TestRealtimeVoiceInvestigationLoopCompilesNestedMissingDestinationAndStopsAtReview(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Drill",
+		DestinationPath:  []string{"Garage", "Blue cabinet", "Upper shelf"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
+	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Drill", SearchProbes: []string{"drill"}},
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Garage", SearchProbes: []string{"garage"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Blue cabinet", SearchProbes: []string{"blue cabinet"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Upper shelf", SearchProbes: []string{"upper shelf"}},
+	}}
+	final := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"drill-1"}},
+		{ReferenceKey: "destination.0", Status: agentmodel.ResolutionMissing},
+		{ReferenceKey: "destination.1", Status: agentmodel.ResolutionMissing},
+		{ReferenceKey: "destination.2", Status: agentmodel.ResolutionMissing},
+	}}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &final}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move the drill to the upper shelf in the blue cabinet in the garage"}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	drill := realtimeVoiceInvestigationAsset("drill-1", "Drill", asset.KindItem, "")
+	seedRealtimeVoiceLoopAsset(t, store, drill, "audit-drill")
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run investigation loop: %v", err)
+	}
+	proposal := realtimeVoiceInvestigationProposedPlan(events)
+	if proposal == nil || len(proposal.Commands) != 4 {
+		t.Fatalf("expected create/create/create/move review plan, got %+v", events)
+	}
+	if proposal.Commands[0].Kind != "create_location" || proposal.Commands[3].Kind != "move_asset" {
+		t.Fatalf("unexpected compiled command graph: %+v", proposal.Commands)
+	}
+	if len(language.seenInvestigations) != 2 || language.seenInvestigations[1] == nil {
+		t.Fatalf("expected evidence assessment input, got %+v", language.seenInvestigations)
+	}
+	readEvidence := language.seenInvestigations[1].ReadEvidence
+	if len(readEvidence) != 4 {
+		t.Fatalf("expected one accumulated safe-read record for every semantic reference, got %+v", readEvidence)
+	}
+	for _, reference := range []agentmodel.SemanticReferenceKey{agentmodel.SemanticReferenceSubject, "destination.0", "destination.1", "destination.2"} {
+		found := false
+		for _, evidence := range readEvidence {
+			if evidence.ReferenceKey == reference {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected executed read evidence for %s, got %+v", reference, readEvidence)
+		}
+	}
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAssistantResponseCompleted || event.Type == RealtimeVoiceEventTextToSpeechAudioStarted || event.Type == RealtimeVoiceEventSessionCompleted {
+			t.Fatalf("loop must pause silently at review, got %+v", events)
+		}
+	}
+	if got := resolver.providers.TextToSpeech.(*resolvedTextToSpeech).lastText; got != "" {
+		t.Fatalf("action plan must not be spoken before approval, got %q", got)
+	}
+}
+
+func TestRealtimeVoiceInvestigationLoopRepairsIncompleteDestinationPathWithinEvidenceBudget(t *testing.T) {
+	t.Parallel()
+	initialIntent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "Patch Cable",
+		DestinationPath:  []string{"Accessory Rack", "Lower Basket"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
+	repairedIntent := initialIntent
+	repairedIntent.DestinationPath = []string{"Live Room", "Accessory Rack", "Lower Basket"}
+	repairedIntent.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: initialIntent, SearchRequests: []agentmodel.SearchRequest{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Patch Cable", SearchProbes: []string{"patch cable"}},
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", SearchProbes: []string{"lower basket"}},
+	}}
+	repair := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: repairedIntent, SearchRequests: []agentmodel.SearchRequest{
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Live Room", KindHint: "location", SearchProbes: []string{"live room"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", KindHint: "container", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", KindHint: "container", SearchProbes: []string{"lower basket"}},
+	}}
+	final := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: repairedIntent, Resolutions: []agentmodel.Resolution{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionStrong, CandidateIDs: []string{"cable-1"}},
+		{ReferenceKey: "destination.0", Status: agentmodel.ResolutionMissing},
+		{ReferenceKey: "destination.1", Status: agentmodel.ResolutionMissing},
+		{ReferenceKey: "destination.2", Status: agentmodel.ResolutionMissing},
+	}}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &repair}, {Investigation: &final}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room"}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("cable-1", "Patch Cable", asset.KindItem, ""), "audit-cable-repair")
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run repaired investigation: %v", err)
+	}
+	proposal := realtimeVoiceInvestigationProposedPlan(events)
+	if proposal == nil || len(proposal.Commands) != 4 || proposal.Commands[0].Summary != "Create Live Room" || proposal.Commands[3].Kind != "move_asset" {
+		t.Fatalf("expected repaired create/create/create/move review plan, got %+v", events)
+	}
+	if len(language.seenInvestigations) != 3 || language.seenInvestigations[2].EvidenceRound != 2 {
+		t.Fatalf("expected one bounded repair round, got %+v", language.seenInvestigations)
+	}
+}
+
+func TestRealtimeVoiceDestinationRepairRejectsSemanticDrift(t *testing.T) {
+	t.Parallel()
+	original := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange,
+		Operation: agentmodel.OperationMove, SubjectMention: "Patch Cable",
+		DestinationPath: []string{"Accessory Rack", "Lower Basket"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
+	valid := original
+	valid.DestinationPath = []string{"Live Room", "Accessory Rack", "Lower Basket"}
+	valid.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+	transcript := "Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room"
+	if !realtimeVoiceDestinationRepairAllowed(transcript, original, valid) {
+		t.Fatal("expected transcript-grounded additive repair to be allowed")
+	}
+	tests := map[string]agentmodel.Intent{
+		"operation changed": func() agentmodel.Intent {
+			candidate := valid
+			candidate.Operation = agentmodel.OperationCreate
+			return candidate
+		}(),
+		"subject changed": func() agentmodel.Intent { candidate := valid; candidate.SubjectMention = "Mixer"; return candidate }(),
+		"destination dropped": func() agentmodel.Intent {
+			candidate := valid
+			candidate.DestinationPath = []string{"Live Room", "Lower Basket"}
+			candidate.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer}
+			return candidate
+		}(),
+		"destination invented": func() agentmodel.Intent {
+			candidate := valid
+			candidate.DestinationPath = []string{"Secret Vault", "Accessory Rack", "Lower Basket"}
+			return candidate
+		}(),
+		"subject added as destination": func() agentmodel.Intent {
+			candidate := valid
+			candidate.DestinationPath = []string{"Patch Cable", "Live Room", "Accessory Rack", "Lower Basket"}
+			candidate.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+			return candidate
+		}(),
+		"original destination kind changed": func() agentmodel.Intent {
+			candidate := original
+			candidate.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer}
+			return candidate
+		}(),
+	}
+	for name, candidate := range tests {
+		candidate := candidate
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if realtimeVoiceDestinationRepairAllowed(transcript, original, candidate) {
+				t.Fatalf("expected semantic drift to be rejected: %+v", candidate)
+			}
+		})
+	}
+	partial := valid
+	partial.DestinationPath = []string{"Art", "Live Room", "Accessory Rack", "Lower Basket"}
+	partial.DestinationKinds = []agentmodel.DestinationKind{agentmodel.DestinationKindContainer, agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer}
+	if realtimeVoiceDestinationRepairAllowed("Move the Patch Cable into the Lower Basket inside the Accessory Rack at the Live Room beside a Cart", original, partial) {
+		t.Fatal("expected partial-token transcript match to be rejected")
+	}
+	if realtimeVoiceDestinationRepairRequestsValid(valid, []agentmodel.SearchRequest{
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadAssetDetail, Mention: "Live Room", KindHint: "location", VisibleAssetID: "stale-id"},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Accessory Rack", KindHint: "container", SearchProbes: []string{"accessory rack"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Lower Basket", KindHint: "container", SearchProbes: []string{"lower basket"}},
+	}) {
+		t.Fatal("expected repaired destination reads to reject stale ID-targeted capabilities")
+	}
+}
+
+func TestRealtimeVoiceInvestigationLoopFinishesExactOrZeroPathWithoutRedundantSearchRound(t *testing.T) {
+	t.Parallel()
+	intent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "my Drill",
+		DestinationPath:  []string{"Kitchen", "Big cabinet", "Second shelf"},
+		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer, agentmodel.DestinationKindContainer},
+	}
+	requests := []agentmodel.SearchRequest{
+		{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "my Drill", SearchProbes: []string{"drill"}},
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Kitchen", SearchProbes: []string{"kitchen"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Big cabinet", SearchProbes: []string{"big cabinet"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Second shelf", SearchProbes: []string{"second shelf"}},
+	}
+	initial := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: requests}
+	redundant := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearchAgain, Intent: intent, SearchRequests: []agentmodel.SearchRequest{
+		{ReferenceKey: "destination.0", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Kitchen", SearchProbes: []string{"kitchen room"}},
+		{ReferenceKey: "destination.1", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Big cabinet", SearchProbes: []string{"large cabinet"}},
+		{ReferenceKey: "destination.2", ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Second shelf", SearchProbes: []string{"shelf two"}},
+	}}
+	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &initial}, {Investigation: &redundant}}}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.LanguageInference = language
+	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Move the drill into the second shelf in the big cabinet in the kitchen"}
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("drill-1", "Drill", asset.KindItem, ""), "audit-drill-exact-zero")
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	events := []RealtimeVoiceEvent{}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+		events = append(events, event)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("run exact-or-zero investigation: %v", err)
+	}
+	proposal := realtimeVoiceInvestigationProposedPlan(events)
+	if proposal == nil || len(proposal.Commands) != 4 || proposal.Commands[3].ParentCommandID != proposal.Commands[2].ID {
+		t.Fatalf("expected nested create/create/create/move plan, got %+v", events)
+	}
+	if language.callCount != 2 {
+		t.Fatalf("expected no redundant third provider call, got %d", language.callCount)
+	}
+}
+
+func realtimeVoiceInvestigationCompletedResponse(events []RealtimeVoiceEvent) *ports.StructuredAgentResponse {
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventAssistantResponseCompleted {
+			return event.Response
+		}
+	}
+	return nil
+}
+
+func realtimeVoiceInvestigationProposedPlan(events []RealtimeVoiceEvent) *RealtimeVoiceActionPlanProposal {
+	for _, event := range events {
+		if event.Type == RealtimeVoiceEventActionPlanProposed {
+			return event.ActionPlan
+		}
+	}
+	return nil
+}

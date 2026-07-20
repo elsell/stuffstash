@@ -61,6 +61,7 @@ vi.mock('react', async (importOriginal) => ({
 vi.mock('react-native', () => ({
   ActivityIndicator: 'ActivityIndicator',
   Alert: { alert: alerts },
+  Platform: { OS: 'ios' },
   Pressable: 'Pressable',
   ScrollView: 'ScrollView',
   StyleSheet: { create: <T,>(styles: T) => styles },
@@ -73,6 +74,8 @@ vi.mock('react-native', () => ({
 vi.mock('lucide-react-native', () => ({
   Activity: 'ActivityIcon',
   AudioLines: 'AudioLinesIcon',
+  Boxes: 'BoxesIcon',
+  House: 'HouseIcon',
   Check: 'CheckIcon',
   ChevronRight: 'ChevronRightIcon',
   Info: 'InfoIcon',
@@ -173,7 +176,6 @@ describe('Settings root behavior', () => {
     hooks.values = [readySettingsState(['view']), undefined];
     const tree = render(SettingsScreen, {
       onNavigate: vi.fn(),
-      providerProfileSettingsQuery: { execute: vi.fn() } as never,
       settingsQuery: settingsQuery(['view'])
     });
 
@@ -186,7 +188,6 @@ describe('Settings root behavior', () => {
     hooks.values = [{ status: 'error', message: 'Settings are unavailable.' }, undefined];
     const tree = render(SettingsScreen, {
       onNavigate: vi.fn(),
-      providerProfileSettingsQuery: { execute: vi.fn() } as never,
       settingsQuery: { execute } as never
     });
 

@@ -300,6 +300,7 @@ export interface SearchAssetsOptions {
 
 export type CustomDefinitionScope = 'tenant' | 'inventory';
 export type CustomDefinitionLifecycleState = 'active' | 'archived';
+export type CustomDefinitionLifecycleFilter = CustomDefinitionLifecycleState | 'all';
 export type CustomFieldType = 'text' | 'number' | 'boolean' | 'date' | 'url' | 'enum';
 export type CustomFieldApplicability = 'all_assets' | 'custom_asset_types';
 
@@ -1030,11 +1031,16 @@ export class StuffStashClient {
     );
   }
 
-  async listTenantCustomAssetTypes(tenantId: string, limit = 50, cursor?: string): Promise<Page<CustomAssetType>> {
+  async listTenantCustomAssetTypes(
+    tenantId: string,
+    limit = 50,
+    cursor?: string,
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
+  ): Promise<Page<CustomAssetType>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/custom-asset-types', {
         headers: await this.authHeaders(),
-        params: { path: { tenantId }, query: { limit, cursor } }
+        params: { path: { tenantId }, query: { limit, cursor, lifecycleState } }
       })
     );
     return mapPage(envelope, mapCustomAssetType);
@@ -1076,16 +1082,36 @@ export class StuffStashClient {
     return mapCustomAssetType(envelope.data);
   }
 
+  async restoreTenantCustomAssetType(tenantId: string, customAssetTypeId: string): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/restore', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, customAssetTypeId } }
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async deleteTenantCustomAssetType(tenantId: string, customAssetTypeId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, customAssetTypeId } }
+      })
+    );
+  }
+
   async listInventoryCustomAssetTypes(
     tenantId: string,
     inventoryId: string,
     limit = 50,
-    cursor?: string
+    cursor?: string,
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
   ): Promise<Page<CustomAssetType>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types', {
         headers: await this.authHeaders(),
-        params: { path: { tenantId, inventoryId }, query: { limit, cursor } }
+        params: { path: { tenantId, inventoryId }, query: { limit, cursor, lifecycleState } }
       })
     );
     return mapPage(envelope, mapCustomAssetType);
@@ -1136,15 +1162,39 @@ export class StuffStashClient {
     return mapCustomAssetType(envelope.data);
   }
 
+  async restoreInventoryCustomAssetType(
+    tenantId: string,
+    inventoryId: string,
+    customAssetTypeId: string
+  ): Promise<CustomAssetType> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/restore', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, customAssetTypeId } }
+      })
+    );
+    return mapCustomAssetType(envelope.data);
+  }
+
+  async deleteInventoryCustomAssetType(tenantId: string, inventoryId: string, customAssetTypeId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, customAssetTypeId } }
+      })
+    );
+  }
+
   async listTenantCustomFieldDefinitions(
     tenantId: string,
     limit = 50,
-    cursor?: string
+    cursor?: string,
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
   ): Promise<Page<CustomFieldDefinition>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/custom-field-definitions', {
         headers: await this.authHeaders(),
-        params: { path: { tenantId }, query: { limit, cursor } }
+        params: { path: { tenantId }, query: { limit, cursor, lifecycleState } }
       })
     );
     return mapPage(envelope, mapCustomFieldDefinition);
@@ -1189,16 +1239,36 @@ export class StuffStashClient {
     return mapCustomFieldDefinition(envelope.data);
   }
 
+  async restoreTenantCustomFieldDefinition(tenantId: string, definitionId: string): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/custom-field-definitions/{definitionId}/restore', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, definitionId } }
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async deleteTenantCustomFieldDefinition(tenantId: string, definitionId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/custom-field-definitions/{definitionId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, definitionId } }
+      })
+    );
+  }
+
   async listInventoryCustomFieldDefinitions(
     tenantId: string,
     inventoryId: string,
     limit = 50,
-    cursor?: string
+    cursor?: string,
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
   ): Promise<Page<CustomFieldDefinition>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions', {
         headers: await this.authHeaders(),
-        params: { path: { tenantId, inventoryId }, query: { limit, cursor } }
+        params: { path: { tenantId, inventoryId }, query: { limit, cursor, lifecycleState } }
       })
     );
     return mapPage(envelope, mapCustomFieldDefinition);
@@ -1247,6 +1317,29 @@ export class StuffStashClient {
       })
     );
     return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async restoreInventoryCustomFieldDefinition(
+    tenantId: string,
+    inventoryId: string,
+    definitionId: string
+  ): Promise<CustomFieldDefinition> {
+    const envelope = await this.unwrap(
+      this.client.PATCH('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/restore', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, definitionId } }
+      })
+    );
+    return mapCustomFieldDefinition(envelope.data);
+  }
+
+  async deleteInventoryCustomFieldDefinition(tenantId: string, inventoryId: string, definitionId: string): Promise<void> {
+    await this.unwrapNoContent(
+      this.client.DELETE('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}', {
+        headers: await this.authHeaders(),
+        params: { path: { tenantId, inventoryId, definitionId } }
+      })
+    );
   }
 
   async listInventoryAccessGrants(

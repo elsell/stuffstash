@@ -14,6 +14,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -28,7 +29,7 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "plan-id", "command-id", "response-id"},
+		ids:         []string{"voice-session-id", "read-tool-id", "read-audit-id", "plan-id", "command-id", "response-id"},
 	}, fakeSpeechToText{transcript: "Add a water bottle."}, actionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
 	})
@@ -41,7 +42,7 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected action plan payload, got %+v", proposed)
 	}
-	if actionPlan["planId"] != "plan-id" || actionPlan["confirmationSummary"] != "Create item water bottle?" {
+	if actionPlan["planId"] != "plan-id" || actionPlan["confirmationSummary"] != "Create water bottle?" {
 		t.Fatalf("unexpected action plan payload: %+v", actionPlan)
 	}
 	commands, ok := actionPlan["commands"].([]any)
@@ -49,7 +50,7 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 		t.Fatalf("expected one safe command, got %+v", actionPlan["commands"])
 	}
 	command, ok := commands[0].(map[string]any)
-	if !ok || command["kind"] != "create_asset" || command["summary"] != "Create item water bottle" {
+	if !ok || command["kind"] != "create_asset" || command["summary"] != "Create water bottle" {
 		t.Fatalf("unexpected command payload: %+v", commands[0])
 	}
 	assertSafeRealtimeEvents(t, events, []string{"fake-audio", "apiKey", "Bearer", "provider_session_id"})
@@ -93,7 +94,7 @@ func TestRealtimeVoiceActionPlanApprovalAcceptsBoundedCreateEdits(t *testing.T) 
 	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSession(t)
 	writeRealtimeMessage(t, ctx, connection, map[string]any{
 		"type": "action.plan.approve", "seq": 4, "sessionId": sessionID, "planId": planID,
-		"commandEdits": []map[string]any{{"commandId": "command-id", "title": "Insulated water bottle", "parent": map[string]any{"kind": "root"}}},
+		"commandEdits": []map[string]any{{"commandId": "create-subject", "title": "Insulated water bottle", "parent": map[string]any{"kind": "root"}}},
 	})
 	approved := readRealtimeMessage(t, ctx, connection)
 	if approved["type"] != "action.plan.approved" || approved["status"] != "approved" {
@@ -158,7 +159,7 @@ func TestRealtimeVoiceActionPlanApprovalExecutesArchiveAsset(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetup(t, archiveActionPlanProposalLanguageModel{}, func(seedApplication app.App) {
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndTranscript(t, archiveActionPlanProposalLanguageModel{}, "Archive the water bottle.", func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
@@ -199,12 +200,12 @@ func TestRealtimeVoiceActionPlanArchiveFailureLeavesAssetActive(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, archiveActionPlanProposalLanguageModel{}, []string{
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, archiveActionPlanProposalLanguageModel{}, []string{
 		"location-id", "location-undo-id", "location-audit-id",
 		"asset-id", "asset-undo-id", "asset-audit-id",
 		"child-id", "child-undo-id", "child-audit-id",
 		"voice-session-id", "plan-id", "command-id", "response-id", "archive-undo-id", "archive-audit-id",
-	}, func(seedApplication app.App) {
+	}, "Archive Toolbox.", func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "container", "Toolbox", "")
@@ -246,12 +247,12 @@ func TestRealtimeVoiceActionPlanApprovalExecutesRestoreAsset(t *testing.T) {
 	t.Parallel()
 
 	var application app.App
-	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDs(t, restoreActionPlanProposalLanguageModel{}, []string{
+	ctx, connection, sessionID, planID := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, restoreActionPlanProposalLanguageModel{}, []string{
 		"location-id", "location-undo-id", "location-audit-id",
 		"asset-id", "asset-undo-id", "asset-audit-id",
 		"seed-archive-undo-id", "seed-archive-audit-id",
 		"voice-session-id", "plan-id", "command-id", "response-id", "restore-undo-id", "restore-audit-id",
-	}, func(seedApplication app.App) {
+	}, "Restore the water bottle.", func(seedApplication app.App) {
 		application = seedApplication
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 		seedVoiceAsset(t, seedApplication, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
@@ -314,7 +315,7 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 		},
 	}, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Restore the water bottle."}, restoreActionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
-	})
+	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
 	if _, err := application.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
@@ -394,7 +395,7 @@ func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference por
 func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
-	ids := []string{"voice-session-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
+	ids := []string{"voice-session-id", "read-tool-id", "read-audit-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
 	if setup != nil {
 		ids = []string{
 			"location-id", "location-undo-id", "location-audit-id",
@@ -549,178 +550,35 @@ func (d *denyEditAfterProposalAuthorizer) RevokeInventoryEditor(ctx context.Cont
 type actionPlanProposalLanguageModel struct{}
 
 func (m actionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-tool-call",
-				Name: "propose_action_plan",
-				Arguments: map[string]any{
-					"commandKind":                "create_asset",
-					"intentSummary":              "Create a water bottle item.",
-					"modelInterpretationSummary": "The user wants to add a water bottle to this inventory.",
-					"confirmationSummary":        "Create item water bottle?",
-					"commandSummary":             "Create item water bottle",
-					"argumentsJson":              `{"kind":"item","name":"water bottle"}`,
-					"riskSummary":                "Adds a new item to this inventory.",
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "I prepared that change for review.",
-			DisplayResponse: "I prepared that change for review.",
-		},
-	}, nil
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "water bottle", NewAssetKind: "item"}
+	return typedVoiceInvestigationTurn(input, intent, nil)
 }
 
 type moveActionPlanProposalLanguageModel struct{}
 
 func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "list-active-assets",
-				Name: "list_authorized_assets",
-				Arguments: map[string]any{
-					"lifecycleState": "active",
-					"limit":          float64(10),
-				},
-			}},
-		}, nil
+	intent := agentmodel.Intent{
+		RequestShape: agentmodel.RequestShapeSingleTarget,
+		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
+		DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
 	}
-	if len(input.ToolResults) == 1 {
-		assetID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Water bottle", "active")
-		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
-		}
-		parentID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Office", "active")
-		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
-		}
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-tool-call",
-				Name: "propose_action_plan",
-				Arguments: map[string]any{
-					"commandKind":                "move_asset",
-					"intentSummary":              "Move the water bottle to the office.",
-					"modelInterpretationSummary": "The user wants the visible water bottle moved into Office.",
-					"confirmationSummary":        "Move water bottle to Office?",
-					"commandSummary":             "Move water bottle to Office",
-					"argumentsJson":              `{"assetId":"` + assetID + `","parentAssetId":"` + parentID + `"}`,
-					"riskSummary":                "Moves an item in this inventory.",
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "I prepared that move for review.",
-			DisplayResponse: "I prepared that move for review.",
-		},
-	}, nil
+	return typedVoiceInvestigationTurn(input, intent, nil)
 }
 
 type archiveActionPlanProposalLanguageModel struct{}
 
 func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "list-active-assets",
-				Name: "list_authorized_assets",
-				Arguments: map[string]any{
-					"lifecycleState": "active",
-					"limit":          float64(10),
-				},
-			}},
-		}, nil
+	subject := "water bottle"
+	if strings.Contains(strings.ToLower(input.Transcript), "toolbox") {
+		subject = "Toolbox"
 	}
-	if len(input.ToolResults) == 1 {
-		assetID, err := firstToolResultAnyAssetID(input.ToolResults[0].Content, "active", "Water bottle", "Toolbox")
-		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
-		}
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-tool-call",
-				Name: "propose_action_plan",
-				Arguments: map[string]any{
-					"intentSummary":              "Archive the selected asset.",
-					"modelInterpretationSummary": "The user wants the visible selected asset archived.",
-					"confirmationSummary":        "Archive selected asset?",
-					"commands": []any{map[string]any{
-						"id":      "cmd-archive-asset",
-						"kind":    "archive_asset",
-						"summary": "Archive selected asset",
-						"arguments": map[string]any{
-							"assetId": assetID,
-						},
-					}},
-					"riskSummary": "Archives an asset in this inventory.",
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "I prepared that archive for review.",
-			DisplayResponse: "I prepared that archive for review.",
-		},
-	}, nil
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: subject}
+	return typedVoiceInvestigationTurn(input, intent, nil)
 }
 
 type restoreActionPlanProposalLanguageModel struct{}
 
 func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if len(input.ToolResults) == 0 {
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "list-archived-water-bottle",
-				Name: "list_authorized_assets",
-				Arguments: map[string]any{
-					"kind":           "item",
-					"lifecycleState": "archived",
-					"limit":          float64(10),
-				},
-			}},
-		}, nil
-	}
-	if len(input.ToolResults) == 1 {
-		assetID, err := firstToolResultAssetID(input.ToolResults[0].Content, "Water bottle", "archived")
-		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
-		}
-		return ports.LanguageInferenceTurn{
-			ToolCalls: []ports.AgentToolCall{{
-				ID:   "plan-tool-call",
-				Name: "propose_action_plan",
-				Arguments: map[string]any{
-					"intentSummary":              "Restore the water bottle.",
-					"modelInterpretationSummary": "The user wants the visible archived water bottle restored.",
-					"confirmationSummary":        "Restore water bottle?",
-					"commands": []any{map[string]any{
-						"id":      "cmd-restore-water-bottle",
-						"kind":    "restore_asset",
-						"summary": "Restore water bottle",
-						"arguments": map[string]any{
-							"assetId": assetID,
-						},
-					}},
-					"riskSummary": "Restores an item in this inventory.",
-				},
-			}},
-		}, nil
-	}
-	return ports.LanguageInferenceTurn{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "I prepared that restore for review.",
-			DisplayResponse: "I prepared that restore for review.",
-		},
-	}, nil
+	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationRestore, SubjectMention: "water bottle"}
+	return typedVoiceInvestigationTurn(input, intent, nil)
 }

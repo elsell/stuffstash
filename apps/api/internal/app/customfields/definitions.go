@@ -30,13 +30,14 @@ type CreateCustomFieldDefinitionInput struct {
 }
 
 type ListCustomFieldDefinitionsInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Limit       int
-	Cursor      string
+	Principal      identity.Principal
+	Source         audit.Source
+	RequestID      string
+	TenantID       tenant.ID
+	InventoryID    inventory.InventoryID
+	Limit          int
+	Cursor         string
+	LifecycleState string
 }
 
 type GetCustomFieldDefinitionInput struct {
@@ -370,13 +371,18 @@ func (s Service) ListTenantCustomFieldDefinitions(ctx context.Context, input Lis
 	}
 
 	limit := appsupport.PageLimit(s.defaultPageLimit, s.maxPageLimit, input.Limit)
-	afterDefinitionKey, err := decodeCustomFieldDefinitionCursor(input.TenantID, input.InventoryID, input.Cursor)
+	lifecycle, ok := ports.ParseCustomizationLifecycleFilter(input.LifecycleState)
+	if !ok {
+		return ListCustomFieldDefinitionsResult{}, apperrors.ErrInvalidInput
+	}
+	afterDefinitionKey, err := decodeCustomFieldDefinitionCursor(input.TenantID, input.InventoryID, lifecycle, input.Cursor)
 	if err != nil {
 		return ListCustomFieldDefinitionsResult{}, apperrors.ErrInvalidInput
 	}
 	items, err := s.customFields.ListTenantCustomFieldDefinitions(ctx, input.TenantID, ports.CustomFieldDefinitionPageRequest{
 		AfterDefinitionKey: afterDefinitionKey,
 		Limit:              limit + 1,
+		Lifecycle:          lifecycle,
 	})
 	if err != nil {
 		return ListCustomFieldDefinitionsResult{}, err
@@ -391,13 +397,18 @@ func (s Service) ListInventoryCustomFieldDefinitions(ctx context.Context, input 
 	}
 
 	limit := appsupport.PageLimit(s.defaultPageLimit, s.maxPageLimit, input.Limit)
-	afterDefinitionKey, err := decodeCustomFieldDefinitionCursor(input.TenantID, input.InventoryID, input.Cursor)
+	lifecycle, ok := ports.ParseCustomizationLifecycleFilter(input.LifecycleState)
+	if !ok {
+		return ListCustomFieldDefinitionsResult{}, apperrors.ErrInvalidInput
+	}
+	afterDefinitionKey, err := decodeCustomFieldDefinitionCursor(input.TenantID, input.InventoryID, lifecycle, input.Cursor)
 	if err != nil {
 		return ListCustomFieldDefinitionsResult{}, apperrors.ErrInvalidInput
 	}
 	items, err := s.customFields.ListInventoryCustomFieldDefinitions(ctx, input.TenantID, input.InventoryID, ports.CustomFieldDefinitionPageRequest{
 		AfterDefinitionKey: afterDefinitionKey,
 		Limit:              limit + 1,
+		Lifecycle:          lifecycle,
 	})
 	if err != nil {
 		return ListCustomFieldDefinitionsResult{}, err
@@ -407,21 +418,23 @@ func (s Service) ListInventoryCustomFieldDefinitions(ctx context.Context, input 
 }
 
 func (s Service) customFieldDefinitionListResult(ctx context.Context, input ListCustomFieldDefinitionsInput, items []customfield.Definition, limit int) (ListCustomFieldDefinitionsResult, error) {
+	lifecycle, _ := ports.ParseCustomizationLifecycleFilter(input.LifecycleState)
 	hasMore := len(items) > limit
 	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeCustomFieldDefinitionCursor(input.TenantID, input.InventoryID, items[len(items)-1].CursorKey())
+		nextCursor = encodeCustomFieldDefinitionCursor(input.TenantID, input.InventoryID, lifecycle, items[len(items)-1].CursorKey())
 	}
 
 	s.observer.Record(ctx, ports.Event{
 		Name:    ports.EventCustomFieldDefinitionsListed,
 		Message: "custom field definitions listed",
 		Fields: map[string]string{
-			"tenant_id":    input.TenantID.String(),
-			"inventory_id": input.InventoryID.String(),
-			"principal_id": input.Principal.ID.String(),
-			"limit":        strconv.Itoa(limit),
+			"tenant_id":       input.TenantID.String(),
+			"inventory_id":    input.InventoryID.String(),
+			"principal_id":    input.Principal.ID.String(),
+			"limit":           strconv.Itoa(limit),
+			"lifecycle_state": lifecycle.String(),
 		},
 	})
 	if err := s.saveReadAuditRecord(ctx, appsupport.AuditRecordInput{
@@ -434,7 +447,8 @@ func (s Service) customFieldDefinitionListResult(ctx context.Context, input List
 		TargetType:  audit.TargetTenant,
 		TargetID:    input.TenantID.String(),
 		Metadata: map[string]string{
-			"limit": strconv.Itoa(limit),
+			"limit":           strconv.Itoa(limit),
+			"lifecycle_state": lifecycle.String(),
 		},
 	}); err != nil {
 		return ListCustomFieldDefinitionsResult{}, err
@@ -539,12 +553,12 @@ func (s Service) validateCustomFieldTargetIDs(ctx context.Context, tenantID tena
 	return nil
 }
 
-func encodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, key string) *string {
-	return appsupport.EncodePageCursor("custom_field_definitions", customFieldDefinitionCursorScope(tenantID, inventoryID), key)
+func encodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycle ports.CustomizationLifecycleFilter, key string) *string {
+	return appsupport.EncodePageCursor("custom_field_definitions", customFieldDefinitionCursorScope(tenantID, inventoryID, lifecycle), key)
 }
 
-func decodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, cursor string) (string, error) {
-	decoded, err := appsupport.DecodePageCursor("custom_field_definitions", customFieldDefinitionCursorScope(tenantID, inventoryID), cursor)
+func decodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycle ports.CustomizationLifecycleFilter, cursor string) (string, error) {
+	decoded, err := appsupport.DecodePageCursor("custom_field_definitions", customFieldDefinitionCursorScope(tenantID, inventoryID, lifecycle), cursor)
 	if err != nil {
 		return "", err
 	}
@@ -554,9 +568,10 @@ func decodeCustomFieldDefinitionCursor(tenantID tenant.ID, inventoryID inventory
 	return decoded, nil
 }
 
-func customFieldDefinitionCursorScope(tenantID tenant.ID, inventoryID inventory.InventoryID) string {
+func customFieldDefinitionCursorScope(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycle ports.CustomizationLifecycleFilter) string {
+	scope := tenantID.String()
 	if inventoryID.String() == "" {
-		return tenantID.String()
+		return scope + ":" + lifecycle.String()
 	}
-	return tenantID.String() + ":" + inventoryID.String()
+	return scope + ":" + inventoryID.String() + ":" + lifecycle.String()
 }

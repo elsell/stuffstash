@@ -20,14 +20,20 @@ type ProviderProfileProviderFactory interface {
 	TextToSpeechProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.TextToSpeechProvider, error)
 }
 
+type ProviderProfileResolverFactory interface {
+	SpeechToTextProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.SpeechToTextProvider, error)
+	RealtimeLanguageProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error)
+	TextToSpeechProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.TextToSpeechProvider, error)
+}
+
 type ProviderProfileResolver struct {
 	profiles     ports.ProviderProfileRepository
 	voiceConfigs ports.VoiceProviderConfigurationRepository
 	vault        ports.ProviderCredentialVault
-	factory      ProviderProfileProviderFactory
+	factory      ProviderProfileResolverFactory
 }
 
-func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, voiceConfigs ports.VoiceProviderConfigurationRepository, vault ports.ProviderCredentialVault, factory ProviderProfileProviderFactory) ProviderProfileResolver {
+func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, voiceConfigs ports.VoiceProviderConfigurationRepository, vault ports.ProviderCredentialVault, factory ProviderProfileResolverFactory) ProviderProfileResolver {
 	return ProviderProfileResolver{
 		profiles:     profiles,
 		voiceConfigs: voiceConfigs,
@@ -78,7 +84,7 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
-	language, err := r.factory.LanguageInferenceProvider(ctx, languageConfig)
+	language, err := r.factory.RealtimeLanguageProvider(ctx, languageConfig)
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
@@ -96,6 +102,7 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 		LanguagePromptTemplate:     languageProfile.PromptTemplate.String(),
 		SpeechToText:               stt,
 		LanguageInference:          language,
+		ResponseGenerator:          language,
 		TextToSpeech:               tts,
 	}, nil
 }

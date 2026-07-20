@@ -108,7 +108,7 @@ describe('InventoryAuditPanel', () => {
 
     const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
     expect(scopeFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(2);
-    expect(link('Inventory').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity');
+    expect(link('Inventory').getAttribute('href')).toBe('/settings/tenants/tenant-one/inventories/inventory-one/activity');
     expect(link('Inventory').getAttribute('aria-current')).toBe('page');
   });
 
@@ -132,7 +132,7 @@ describe('InventoryAuditPanel', () => {
 
     const scopeFilter = document.body.querySelector<HTMLElement>('[role="group"][aria-label="Audit scope"]');
     expect(scopeFilter?.querySelectorAll('a[aria-current], a[data-selected]')).toHaveLength(2);
-    expect(link('Tenant').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant');
+    expect(link('Tenant').getAttribute('href')).toBe('/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant');
     expect(link('Tenant').getAttribute('aria-current')).toBe('page');
 
     link('Inventory').click();

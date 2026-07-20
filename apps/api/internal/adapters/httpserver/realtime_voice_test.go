@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -30,7 +31,7 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 		ids:         []string{"garage-id", "tools-id", "voice-session-id", "tool-call-id", "response-id"},
 	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Where are my tools?"}, scriptedLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio-1"), []byte("spoken-audio-2")},
-	})
+	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Garage", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "container", "Tools", "garage-id")
 
@@ -94,19 +95,45 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 		"session.completed",
 	)
 	assertNoRealtimeEventType(t, events, "assistant.response.delta")
-	assertSafeRealtimeEvents(t, events, []string{"fake-audio", "garage-id", "tools-id"})
+	assertSafeRealtimeEvents(t, events, []string{"fake-audio"})
 
 	final := findRealtimeEvent(t, events, "assistant.response.completed")
 	response, ok := final["response"].(map[string]any)
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "Your tools are in Garage." {
+	spoken, _ := response["spokenResponse"].(string)
+	if !strings.Contains(strings.ToLower(spoken), "tools") || !strings.Contains(strings.ToLower(spoken), "garage") || strings.Contains(strings.ToLower(spoken), "visible match") {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if response["kind"] != "answer" {
 		t.Fatalf("unexpected response kind: %+v", response)
 	}
+	artifacts, ok := response["artifacts"].([]any)
+	if !ok || len(artifacts) != 2 {
+		t.Fatalf("expected item and location navigation artifacts, got %+v", response["artifacts"])
+	}
+	titles := map[string]bool{}
+	artifactIDs := map[string]string{}
+	artifactContexts := map[string]string{}
+	for _, raw := range artifacts {
+		artifact, ok := raw.(map[string]any)
+		artifactID, hasArtifactID := artifact["assetId"].(string)
+		artifactTitle, hasArtifactTitle := artifact["title"].(string)
+		if !ok || artifact["type"] != "asset_reference" || !hasArtifactID || !hasArtifactTitle || strings.TrimSpace(artifactID) == "" {
+			t.Fatalf("invalid navigation artifact: %+v", raw)
+		}
+		titles[artifactTitle] = true
+		artifactIDs[artifactTitle] = artifactID
+		artifactContexts[artifactTitle], _ = artifact["context"].(string)
+	}
+	if !titles["Tools"] || !titles["Garage"] {
+		t.Fatalf("expected grounded Tools and Garage references, got %+v", artifacts)
+	}
+	if artifactContexts["Tools"] != "Garage" {
+		t.Fatalf("expected authorized parent context for Tools, got %+v", artifacts)
+	}
+	assertRealtimeAssetIDsOnlyInResponseArtifacts(t, events, []string{artifactIDs["Tools"], artifactIDs["Garage"]})
 
 	var speechChunks int
 	for _, event := range events {
@@ -129,26 +156,59 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 	}
 }
 
+func assertRealtimeAssetIDsOnlyInResponseArtifacts(t *testing.T, events []map[string]any, expectedIDs []string) {
+	t.Helper()
+	payload, err := json.Marshal(events)
+	if err != nil {
+		t.Fatalf("marshal realtime events: %v", err)
+	}
+	var scrubbed []map[string]any
+	if err := json.Unmarshal(payload, &scrubbed); err != nil {
+		t.Fatalf("copy realtime events: %v", err)
+	}
+	found := map[string]int{}
+	for _, event := range scrubbed {
+		if event["type"] != "assistant.response.completed" {
+			continue
+		}
+		response, _ := event["response"].(map[string]any)
+		artifacts, _ := response["artifacts"].([]any)
+		for _, rawArtifact := range artifacts {
+			artifact, _ := rawArtifact.(map[string]any)
+			id, _ := artifact["assetId"].(string)
+			for _, expectedID := range expectedIDs {
+				if id == expectedID {
+					found[id]++
+					artifact["assetId"] = "[authorized-reference]"
+				}
+			}
+		}
+	}
+	for _, expectedID := range expectedIDs {
+		if found[expectedID] != 1 {
+			t.Fatalf("expected exactly one authorized artifact for %q, got %d", expectedID, found[expectedID])
+		}
+	}
+	assertSafeRealtimeEvents(t, scrubbed, expectedIDs)
+}
+
 func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing.T) {
 	t.Parallel()
 
-	language := &scriptedFinalLanguageModel{finals: []ports.StructuredAgentResponse{
-		{
-			Kind:            ports.StructuredAgentResponseKindClarification,
-			SpokenResponse:  "Which item should I update?",
-			DisplayResponse: "Which item should I update?",
-		},
-		{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  "Got it. I will use the office context.",
-			DisplayResponse: "Got it. I will use the office context.",
-		},
-	}}
+	language := &scriptedFinalLanguageModel{}
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "clarification-response-id", "answer-response-id"},
+		ids: []string{
+			"first-item-id", "first-item-undo", "first-item-audit",
+			"second-item-id", "second-item-undo", "second-item-audit",
+			"office-id", "office-undo", "office-audit",
+			"voice-session-id", "clarification-response-id", "answer-response-id",
+		},
 	}, &scriptedSpeechToText{transcripts: []string{"Where should I put it?", "Put it in the office."}}, language, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "First item", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Second item", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
@@ -190,17 +250,24 @@ func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing
 	secondTurn := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 	secondResponse := findRealtimeEvent(t, secondTurn, "assistant.response.completed")
 	secondPayload, _ := secondResponse["response"].(map[string]any)
-	if secondPayload["kind"] != "answer" || secondPayload["spokenResponse"] != "Got it. I will use the office context." {
+	if secondPayload["kind"] != "answer" || !strings.Contains(secondPayload["spokenResponse"].(string), "Office") {
 		t.Fatalf("expected follow-up answer on same session, got %+v", secondPayload)
 	}
-	if len(language.inputs) < 2 || len(language.inputs[1].ConversationTurns) != 2 {
+	var followUpInput *ports.LanguageInferenceInput
+	for index := range language.inputs {
+		if len(language.inputs[index].ConversationTurns) == 2 {
+			followUpInput = &language.inputs[index]
+			break
+		}
+	}
+	if followUpInput == nil {
 		t.Fatalf("expected follow-up language turn to include prior user and assistant context, got %+v", language.inputs)
 	}
-	if language.inputs[1].ConversationTurns[0].Role != ports.AgentConversationRoleUser || language.inputs[1].ConversationTurns[0].Text != "Where should I put it?" {
-		t.Fatalf("unexpected prior user context: %+v", language.inputs[1].ConversationTurns)
+	if followUpInput.ConversationTurns[0].Role != ports.AgentConversationRoleUser || followUpInput.ConversationTurns[0].Text != "Where should I put it?" {
+		t.Fatalf("unexpected prior user context: %+v", followUpInput.ConversationTurns)
 	}
-	if language.inputs[1].ConversationTurns[1].Role != ports.AgentConversationRoleAssistant || language.inputs[1].ConversationTurns[1].Kind != string(ports.StructuredAgentResponseKindClarification) || language.inputs[1].ConversationTurns[1].Text != "Which item should I update?" {
-		t.Fatalf("unexpected prior assistant context: %+v", language.inputs[1].ConversationTurns)
+	if followUpInput.ConversationTurns[1].Role != ports.AgentConversationRoleAssistant || followUpInput.ConversationTurns[1].Kind != string(ports.StructuredAgentResponseKindClarification) {
+		t.Fatalf("unexpected prior assistant context: %+v", followUpInput.ConversationTurns)
 	}
 }
 
@@ -210,12 +277,14 @@ func TestRealtimeVoiceWebSocketFailsSafelyAtClarificationTurnLimit(t *testing.T)
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "clarification-1", "clarification-2", "clarification-3"},
-	}, &scriptedSpeechToText{transcripts: []string{"Move it.", "That one.", "Over there."}}, &scriptedFinalLanguageModel{finals: []ports.StructuredAgentResponse{
-		{Kind: ports.StructuredAgentResponseKindClarification, SpokenResponse: "Which item?", DisplayResponse: "Which item?"},
-		{Kind: ports.StructuredAgentResponseKindClarification, SpokenResponse: "Where should it go?", DisplayResponse: "Where should it go?"},
-		{Kind: ports.StructuredAgentResponseKindClarification, SpokenResponse: "Please name the destination.", DisplayResponse: "Please name the destination."},
-	}}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+		ids: []string{
+			"first-item-id", "first-item-undo", "first-item-audit",
+			"second-item-id", "second-item-undo", "second-item-audit",
+			"voice-session-id", "clarification-1", "clarification-2", "clarification-3",
+		},
+	}, &scriptedSpeechToText{transcripts: []string{"Move it.", "That one.", "Over there."}}, &scriptedFinalLanguageModel{alwaysAmbiguous: true}, fakeTextToSpeech{chunks: [][]byte{[]byte("spoken-audio")}})
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "First item", "")
+	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Second item", "")
 
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	t.Cleanup(server.Close)
@@ -479,13 +548,26 @@ func TestRealtimeVoiceQuerySearchesOnlySelectedInventory(t *testing.T) {
 		"isFinalChunk": true,
 	})
 	writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "audio.end", "seq": 3, "sessionId": sessionID})
-	_ = readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+	events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 
 	if !strings.Contains(language.lastToolResult, "Home Tools") {
 		t.Fatalf("expected selected inventory result, got %q", language.lastToolResult)
 	}
 	if strings.Contains(language.lastToolResult, "Shop Tools") {
 		t.Fatalf("expected voice search to exclude other inventory result, got %q", language.lastToolResult)
+	}
+	final := findRealtimeEvent(t, events, "assistant.response.completed")
+	response, ok := final["response"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected structured response, got %+v", final)
+	}
+	artifacts, ok := response["artifacts"].([]any)
+	if !ok || len(artifacts) != 1 {
+		t.Fatalf("expected one selected-inventory reference, got %+v", response["artifacts"])
+	}
+	artifact, ok := artifacts[0].(map[string]any)
+	if !ok || artifact["title"] != "Home Tools" {
+		t.Fatalf("wrong-inventory entity entered response references: %+v", artifacts)
 	}
 }
 
@@ -512,7 +594,8 @@ func TestRealtimeVoiceQuerySearchResultIncludesContainingLocationForWhereQuestio
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "Your water bottle is in Office." {
+	spoken, _ := response["spokenResponse"].(string)
+	if !strings.Contains(strings.ToLower(spoken), "water bottle") || !strings.Contains(strings.ToLower(spoken), "office") || strings.Contains(strings.ToLower(spoken), "visible match") {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if !strings.Contains(language.lastToolResult, "Office") || !strings.Contains(language.lastToolResult, "Water bottle") {
@@ -545,7 +628,7 @@ func TestRealtimeVoiceQueryCanListVisibleItemsInSelectedInventory(t *testing.T) 
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "You have Water bottle and Laptop." {
+	if response["spokenResponse"] != "You have Laptop and Water bottle." {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if !strings.Contains(language.lastToolResult, "Water bottle") || !strings.Contains(language.lastToolResult, "Laptop") {

@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { settingsLayoutMetrics } from './SettingsScreenPresentation';
 
 export function createSettingsScreenStyles(
   colors: MobileColorPalette,
@@ -7,27 +8,28 @@ export function createSettingsScreenStyles(
 ) {
   return StyleSheet.create({
     shell: { backgroundColor: colors.background, flex: 1 },
-    content: { paddingBottom: spacing.xl },
-    section: { marginTop: spacing.lg },
+    content: { paddingBottom: settingsLayoutMetrics.bottomSpacing },
+    contentBlock: { marginHorizontal: settingsLayoutMetrics.horizontalInset },
+    section: { marginTop: settingsLayoutMetrics.sectionSpacing },
     sectionTitle: {
       color: colors.textMuted,
       fontSize: 13,
       fontWeight: '600',
       marginBottom: spacing.xs,
-      marginHorizontal: spacing.lg,
+      marginHorizontal: settingsLayoutMetrics.horizontalInset,
       textTransform: 'uppercase'
     },
     sectionFooter: {
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 18,
-      marginHorizontal: spacing.lg,
+      marginHorizontal: settingsLayoutMetrics.horizontalInset,
       marginTop: spacing.xs
     },
     group: {
       backgroundColor: colors.surface,
       borderRadius: radius.md,
-      marginHorizontal: spacing.md,
+      marginHorizontal: settingsLayoutMetrics.horizontalInset,
       overflow: 'hidden'
     },
     navigationRow: {
@@ -61,10 +63,10 @@ export function createSettingsScreenStyles(
     actionRow: { justifyContent: 'center', minHeight: 52, minWidth: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     actionGroup: { flexDirection: layout.stacked ? 'column' : 'row', gap: spacing.sm },
     choiceGroup: { flexDirection: layout.stacked ? 'column' : 'row', gap: spacing.sm },
-    detailHeader: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+    detailHeader: { paddingHorizontal: settingsLayoutMetrics.horizontalInset, paddingTop: spacing.lg },
     detailTitle: { color: colors.text, fontSize: 24, fontWeight: '700' },
     detailSubtitle: { color: colors.textMuted, fontSize: 15, lineHeight: 21, marginTop: spacing.xs },
-    errorContainer: { flexGrow: 1, justifyContent: 'center', padding: spacing.lg },
+    errorContainer: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: settingsLayoutMetrics.horizontalInset, paddingVertical: spacing.lg },
     errorTitle: { color: colors.text, fontSize: 22, fontWeight: '700', textAlign: 'center' },
     errorMessage: { color: colors.textMuted, fontSize: 16, marginTop: spacing.sm, textAlign: 'center' },
     retryButton: {
@@ -81,6 +83,8 @@ export function createSettingsScreenStyles(
     dangerText: { color: colors.danger, fontSize: 17 },
     actionText: { color: colors.action, fontSize: 17 },
     valueText: { color: colors.text, fontSize: 17 },
-    secondaryText: { color: colors.textMuted, fontSize: 14, lineHeight: 20 }
+    secondaryText: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
+    loadingRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, minHeight: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+    loadingText: { color: colors.textMuted, flex: 1, fontSize: 14 }
   });
 }

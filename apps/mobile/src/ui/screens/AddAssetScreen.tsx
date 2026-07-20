@@ -11,7 +11,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +31,7 @@ import {
 } from '../../application/assets/AssetTagDraftResolution';
 import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
 import { TagColorPicker } from '../components/TagColorPicker';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import {
   ParentLookupQuery,
@@ -489,7 +489,7 @@ export function AddAssetScreen({
           styles.content,
           { paddingBottom: bottomChromeAllowance }
         ]}
-        keyboardDismissMode="interactive"
+        keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
       >
         {loadState.status === 'loading' ? (
@@ -543,7 +543,7 @@ export function AddAssetScreen({
                 />
 
                 <Text style={styles.fieldLabel}>What is it?</Text>
-                <TextInput
+                <AppTextInput
                   accessibilityLabel="Asset name"
                   onChangeText={setTitle}
                   placeholder="Furnace filter, passport, camping bin"
@@ -593,7 +593,7 @@ export function AddAssetScreen({
 
                 {showDetails ? (
                   <View>
-                    <TextInput
+                    <AppTextInput
                       accessibilityLabel="Asset description"
                       multiline
                       onChangeText={setDescription}
@@ -953,7 +953,7 @@ function ParentPicker({
       </Pressable>
       {isOpen ? (
         <View style={styles.parentMenu}>
-          <TextInput
+          <AppTextInput
             accessibilityLabel="Search parent"
             autoFocus
             onChangeText={onChangeQuery}
@@ -1124,22 +1124,13 @@ function AssetTagPicker({
         })}
       </View>
       <View style={styles.newTagRow}>
-        <TextInput
+        <AppTextInput
           accessibilityLabel="New tag name"
           onChangeText={setNewTagName}
           placeholder="New tag"
           placeholderTextColor={colors.textMuted}
           style={[styles.input, styles.newTagNameInput]}
           value={newTagName}
-        />
-        <TextInput
-          accessibilityLabel="New tag color"
-          autoCapitalize="characters"
-          onChangeText={setNewTagColor}
-          placeholder="#2F80ED"
-          placeholderTextColor={colors.textMuted}
-          style={[styles.input, styles.newTagColorInput]}
-          value={newTagColor}
         />
         <Pressable
           accessibilityRole="button"

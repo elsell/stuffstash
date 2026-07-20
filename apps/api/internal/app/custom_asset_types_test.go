@@ -71,6 +71,35 @@ func TestArchiveCustomAssetTypeRecordsAuditAndObservability(t *testing.T) {
 	}
 }
 
+func TestListCustomAssetTypesSupportsLifecycleViewsAtBothScopes(t *testing.T) {
+	tenantType := customAssetType(t, "tenant-type", "tenant-one", "", customfield.ScopeTenant, "tenant-type", "Tenant type")
+	inventoryType := customAssetType(t, "inventory-type", "tenant-one", "inventory-one", customfield.ScopeInventory, "inventory-type", "Inventory type")
+	tenantType.LifecycleState = customfield.AssetTypeLifecycleArchived
+	inventoryType.LifecycleState = customfield.AssetTypeLifecycleArchived
+	repository := &fakeCustomAssetTypeRepository{items: []customfield.AssetType{inventoryType, tenantType}}
+	application := New(Dependencies{
+		Observer: &fakeObserver{}, Authorizer: &fakeAuthorizer{}, Tenants: &fakeTenantRepository{exists: true}, TenantUnitOfWork: &fakeTenantRepository{exists: true},
+		Inventories: &fakeInventoryRepository{items: []inventory.Inventory{inventoryItem("inventory-one", "tenant-one", "Medicine")}}, CustomAssetTypes: repository,
+		CustomAssetTypeUnitOfWork: repository, Audit: &fakeAuditRepository{}, Outbox: &fakeOutbox{}, MaxPageLimit: 10,
+	})
+	for _, lifecycle := range []string{"", "active"} {
+		page, err := application.ListInventoryCustomAssetTypes(context.Background(), ListCustomAssetTypesInput{Principal: identity.Principal{ID: "viewer"}, TenantID: "tenant-one", InventoryID: "inventory-one", LifecycleState: lifecycle})
+		if err != nil || len(page.Items) != 0 {
+			t.Fatalf("expected %q view to hide archived types, page=%+v err=%v", lifecycle, page, err)
+		}
+	}
+	for _, lifecycle := range []string{"archived", "all"} {
+		page, err := application.ListInventoryCustomAssetTypes(context.Background(), ListCustomAssetTypesInput{Principal: identity.Principal{ID: "viewer"}, TenantID: "tenant-one", InventoryID: "inventory-one", LifecycleState: lifecycle, Limit: 10})
+		if err != nil || len(page.Items) != 2 || page.Items[0].Scope != customfield.ScopeTenant || page.Items[1].Scope != customfield.ScopeInventory {
+			t.Fatalf("expected %q types in scope order, page=%+v err=%v", lifecycle, page, err)
+		}
+	}
+	tenantPage, err := application.ListTenantCustomAssetTypes(context.Background(), ListCustomAssetTypesInput{Principal: identity.Principal{ID: "owner"}, TenantID: "tenant-one", LifecycleState: "archived"})
+	if err != nil || len(tenantPage.Items) != 1 || tenantPage.Items[0].Scope != customfield.ScopeTenant {
+		t.Fatalf("expected tenant archived type only, page=%+v err=%v", tenantPage, err)
+	}
+}
+
 type fakeCustomAssetTypeRepository struct {
 	items        []customfield.AssetType
 	auditRecords []audit.Record
@@ -162,7 +191,7 @@ func (f *fakeCustomAssetTypeRepository) CustomAssetTypeByID(_ context.Context, t
 func (f *fakeCustomAssetTypeRepository) ListTenantCustomAssetTypes(_ context.Context, tenantID tenant.ID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	items := []customfield.AssetType{}
 	for _, item := range f.items {
-		if item.TenantID.String() == tenantID.String() && item.Scope == customfield.ScopeTenant && item.IsActive() && item.CursorKey() > page.AfterAssetTypeKey {
+		if item.TenantID.String() == tenantID.String() && item.Scope == customfield.ScopeTenant && page.Lifecycle.Includes(item.LifecycleState.String()) && item.CursorKey() > page.AfterAssetTypeKey {
 			items = append(items, item)
 		}
 	}
@@ -172,7 +201,7 @@ func (f *fakeCustomAssetTypeRepository) ListTenantCustomAssetTypes(_ context.Con
 func (f *fakeCustomAssetTypeRepository) ListInventoryCustomAssetTypes(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomAssetTypePageRequest) ([]customfield.AssetType, error) {
 	items := []customfield.AssetType{}
 	for _, item := range f.items {
-		if item.TenantID.String() != tenantID.String() || !item.IsActive() || item.CursorKey() <= page.AfterAssetTypeKey {
+		if item.TenantID.String() != tenantID.String() || !page.Lifecycle.Includes(item.LifecycleState.String()) || item.CursorKey() <= page.AfterAssetTypeKey {
 			continue
 		}
 		if item.Scope == customfield.ScopeTenant || item.InventoryID.String() == inventoryID.String() {

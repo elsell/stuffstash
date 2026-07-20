@@ -65,7 +65,7 @@ describe('InventorySettings', () => {
     expect(settingsNav?.tagName).toBe('NAV');
     expect(settingsNav?.getAttribute('aria-label')).toBe('Settings sections');
     expect(linkStartingWith('Overview').getAttribute('aria-current')).toBe('page');
-    expect(linkStartingWith('Fields').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/fields');
+    expect(linkStartingWith('Fields').getAttribute('href')).toBe('/settings/tenants/tenant-one/inventories/inventory-one/fields');
     expect(document.body.textContent).toContain('Custom asset types and fields');
     expect(document.body.querySelector('.settings-section-context')).toBeNull();
     expect(document.body.querySelector('[aria-live="polite"]')?.textContent).toBe(
@@ -175,7 +175,7 @@ describe('InventorySettings', () => {
     });
 
     expect(document.body.textContent).toContain('Asset editsView only');
-    expect(linkStartingWith('Activity').getAttribute('href')).toBe('/tenants/tenant-one/inventories/inventory-one/settings/activity');
+    expect(linkStartingWith('Activity').getAttribute('href')).toBe('/settings/tenants/tenant-one/inventories/inventory-one/activity');
   });
 
   it('passes route-backed access invitation status links through settings', async () => {
@@ -217,7 +217,7 @@ describe('InventorySettings', () => {
     await flush();
 
     expect(linkStartingWith('Revoked').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/access?invitationStatus=revoked'
+      '/settings/tenants/tenant-one/inventories/inventory-one/access?invitationStatus=revoked'
     );
     expect(linkStartingWith('Revoked').getAttribute('aria-current')).toBe('page');
 
@@ -264,11 +264,11 @@ describe('InventorySettings', () => {
     await flush();
 
     expect(exactLink('Tenant').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
+      '/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant'
     );
     expect(exactLink('Tenant').getAttribute('aria-current')).toBe('page');
     expect(linkStartingWith('Activity').getAttribute('href')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/activity?auditScope=tenant'
+      '/settings/tenants/tenant-one/inventories/inventory-one/activity?auditScope=tenant'
     );
 
     exactLink('Inventory').click();
@@ -298,12 +298,20 @@ function fakeAuditRepository(): InventoryAuditRepository {
 
 function fakeCustomizationRepository(): InventoryCustomizationRepository {
   return {
+    listTenantCustomAssetTypes: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
     listInventoryCustomAssetTypes: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
     createCustomAssetType: async () => failRepositoryCall(),
+    updateCustomAssetType: async () => failRepositoryCall(),
     archiveCustomAssetType: async () => failRepositoryCall(),
+    restoreCustomAssetType: async () => failRepositoryCall(),
+    deleteCustomAssetType: async () => failRepositoryCall(),
+    listTenantCustomFieldDefinitions: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
     listInventoryCustomFieldDefinitions: async () => ({ items: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
     createCustomFieldDefinition: async () => failRepositoryCall(),
-    archiveCustomFieldDefinition: async () => failRepositoryCall()
+    updateCustomFieldDefinition: async () => failRepositoryCall(),
+    archiveCustomFieldDefinition: async () => failRepositoryCall(),
+    restoreCustomFieldDefinition: async () => failRepositoryCall(),
+    deleteCustomFieldDefinition: async () => failRepositoryCall()
   };
 }
 

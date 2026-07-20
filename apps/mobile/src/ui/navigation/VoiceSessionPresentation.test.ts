@@ -102,6 +102,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         progressLabel: 'Done',
         spokenResponse: 'Your water bottle is in the Office.',
+        responseArtifacts: [{ type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }],
         debugEvents: []
       },
       stage: 'completed',
@@ -302,13 +303,87 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 
+  it.each([
+    ['unsupported_action', 'Voice action unavailable', 'Try another way to make this change.'],
+    ['safe_failure', 'Could not finish safely', 'Start a fresh request or close this.']
+  ] as const)('presents completed %s outcomes distinctly from answers', (responseKind, title, bottomHint) => {
+    const realtime = {
+      status: 'completed' as const,
+      tenantName: 'Main tenant',
+      inventoryName: 'Home',
+      progressLabel: 'Done',
+      responseKind,
+      spokenResponse: 'This request could not be completed through voice.',
+      debugEvents: []
+    };
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime,
+      stage: 'completed',
+      status: 'ready'
+    })).toMatchObject({ title, tone: 'attention' });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime,
+      stage: 'completed',
+      tenantName: 'Main tenant'
+    })).toMatchObject({ title, bottomHint });
+  });
+
+  it.each([
+    ['executed', 'Change applied', 'The reviewed change was applied.'],
+    ['cancelled', 'Change cancelled', 'No change was made.']
+  ] as const)('presents %s action plans as distinct terminal outcomes', (status, title, bottomHint) => {
+    const realtime = {
+      status: 'completed' as const,
+      tenantName: 'Main tenant',
+      inventoryName: 'Home',
+      progressLabel: status === 'executed' ? 'Change applied' : 'Change cancelled',
+      actionPlan: {
+        planId: 'plan-1',
+        status,
+        confirmationSummary: 'Move the water bottle?',
+        commands: [{
+          id: 'command-1',
+          kind: 'move_asset',
+          operation: 'move',
+          summary: 'Move water bottle',
+          title: 'Water bottle',
+          assetKind: 'item'
+        }],
+        risks: []
+      },
+      debugEvents: []
+    };
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/',
+      realtime,
+      stage: 'completed',
+      status: 'ready'
+    })).toMatchObject({ title });
+
+    expect(buildVoiceSessionPresentation({
+      diagnosticsEnabled: false,
+      diagnosticsExpanded: false,
+      inventoryName: 'Home',
+      realtime,
+      stage: 'completed',
+      tenantName: 'Main tenant'
+    })).toMatchObject({ title, bottomHint });
+  });
+
   it('does not advertise same-session follow-up after clarification availability is gone', () => {
     const realtime = {
       status: 'completed' as const,
       tenantName: 'Main tenant',
       inventoryName: 'Home',
       progressLabel: 'Needs detail',
-      responseKind: 'clarification',
+      responseKind: 'clarification' as const,
       clarificationFollowUpAvailable: false,
       spokenResponse: 'Which item should I update?',
       debugEvents: []
@@ -401,6 +476,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         transcript: 'Where is my water bottle?',
         spokenResponse: 'Your water bottle is in the Office.',
+        responseArtifacts: [{ type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }],
         progressLabel: 'Done',
         debugEvents: [{ label: 'Inventory search', status: 'Completed' }]
       },
@@ -411,6 +487,9 @@ describe('VoiceSessionPresentation', () => {
     expect(session.title).toBe('Answer ready');
     expect(session.transcript).toBe('Where is my water bottle?');
     expect(session.response).toBe('Your water bottle is in the Office.');
+    expect(session.responseArtifacts).toEqual([
+      { type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }
+    ]);
     expect(session.diagnostics).toBeNull();
   });
 

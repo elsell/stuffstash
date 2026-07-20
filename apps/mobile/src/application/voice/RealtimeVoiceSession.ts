@@ -112,9 +112,10 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | {
       readonly type: 'assistant.response.completed';
       readonly response: {
-        readonly kind: string;
+        readonly kind: VoiceAssistantResponseKind;
         readonly spokenResponse: string;
         readonly displayResponse: string;
+        readonly artifacts?: readonly VoiceResponseArtifact[];
       };
     }
   | { readonly type: 'tts.audio.started'; readonly mimeType: string }
@@ -123,6 +124,20 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | { readonly type: 'session.completed' }
   | { readonly type: 'session.cancelled' }
 );
+
+export type VoiceAssistantResponseKind =
+  | 'answer'
+  | 'clarification'
+  | 'unsupported_action'
+  | 'safe_failure';
+
+export type VoiceResponseArtifact = {
+  readonly type: 'asset_reference';
+  readonly assetId: string;
+  readonly title: string;
+  readonly assetKind: 'item' | 'container' | 'location';
+  readonly context?: string;
+};
 
 export type VoiceActionPlanProposal = {
   readonly planId: string;
@@ -201,7 +216,8 @@ export type VoiceRealtimeState = {
   readonly partialTranscript?: string;
   readonly transcript?: string;
   readonly spokenResponse?: string;
-  readonly responseKind?: string;
+  readonly responseArtifacts?: readonly VoiceResponseArtifact[];
+  readonly responseKind?: VoiceAssistantResponseKind;
   readonly clarificationFollowUpAvailable?: boolean;
   readonly conversationPhase?: VoiceConversationPhase;
   readonly progressLabel?: string;
@@ -465,7 +481,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async retryPhotoAttachments(planId: string): Promise<VoicePhotoAttachmentStatus> {
-    const safePlanId = safeBoundedText(planId, 80);
+    const safePlanId = usableActionPlanId(planId);
     const retry = this.pendingPhotoRetriesByPlanId.get(safePlanId);
     if (!retry) {
       return {
@@ -516,7 +532,7 @@ export class RealtimeVoiceSessionController {
         };
       case 'action.plan.proposed': {
         const actionPlan = safeActionPlanProposal(event.actionPlan);
-        if (!actionPlan.planId) {
+        if (!actionPlan) {
           return withProgressStep(state, 'Review failed', {
             status: 'failed',
             actionPlan: undefined,
@@ -573,9 +589,11 @@ export class RealtimeVoiceSessionController {
       case 'assistant.response.started':
         return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing', conversationPhase: 'answering' });
       case 'assistant.response.completed':
+        const responseArtifacts = safeVoiceResponseArtifacts(event.response.artifacts ?? []);
         return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
           status: state.actionPlan ? 'review' : 'processing',
           spokenResponse: safeVisibleAssistantResponseText(event.response.displayResponse, event.response.spokenResponse, 500),
+          responseArtifacts,
           responseKind: event.response.kind,
           conversationPhase: 'answering'
         });
@@ -778,14 +796,37 @@ export class RealtimeVoiceSessionController {
   }
 }
 
+function safeVoiceResponseArtifacts(artifacts: readonly VoiceResponseArtifact[]): readonly VoiceResponseArtifact[] {
+  const safe: VoiceResponseArtifact[] = [];
+  const seen = new Set<string>();
+  for (const artifact of artifacts.slice(0, 16)) {
+    const assetIdValue = artifact.assetId.trim();
+    const title = safeVisibleResponseText(artifact.title, 500);
+    const context = artifact.context === undefined ? undefined : safeVisibleResponseText(artifact.context, 500);
+    if (
+      artifact.type !== 'asset_reference' ||
+      !assetIdValue || assetIdValue.length > 200 ||
+      !isMeaningfulVisibleResponseText(title) ||
+      (artifact.context !== undefined && !isMeaningfulVisibleResponseText(context ?? '')) ||
+      (artifact.assetKind !== 'item' && artifact.assetKind !== 'container' && artifact.assetKind !== 'location') ||
+      seen.has(assetIdValue)
+    ) {
+      continue;
+    }
+    seen.add(assetIdValue);
+    safe.push({ type: 'asset_reference', assetId: assetIdValue, title, assetKind: artifact.assetKind, ...(context ? { context } : {}) });
+  }
+  return safe;
+}
+
 function boundedCommandEdits(edits: readonly VoiceActionPlanCommandEdit[]): readonly VoiceActionPlanCommandEdit[] {
   if (edits.length > 10) {
     throw new Error('Too many voice plan edits were provided.');
   }
   const seen = new Set<string>();
   return edits.map((edit) => {
-    const commandId = safeBoundedText(edit.commandId, 80);
-    if (!commandId || seen.has(commandId) || (edit.title === undefined && edit.parent === undefined)) {
+    const commandId = usableOpaqueVoiceID(edit.commandId);
+    if (seen.has(commandId) || (edit.title === undefined && edit.parent === undefined)) {
       throw new Error('Voice plan edits could not be reviewed safely.');
     }
     seen.add(commandId);
@@ -797,10 +838,7 @@ function boundedCommandEdits(edits: readonly VoiceActionPlanCommandEdit[]): read
       return { commandId, ...(title ? { title } : {}), parent: { kind: 'root' as const } };
     }
     if (edit.parent) {
-      const id = safeBoundedText(edit.parent.id, 80);
-      if (!id) {
-        throw new Error('Voice plan edits could not be reviewed safely.');
-      }
+      const id = usableOpaqueVoiceID(edit.parent.id);
       return { commandId, ...(title ? { title } : {}), parent: { kind: edit.parent.kind, id } };
     }
     return { commandId, ...(title ? { title } : {}) };
@@ -978,29 +1016,90 @@ function safeDiagnosticStatus(status: string | undefined): string {
   }
 }
 
-function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionPlanProposal {
+function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionPlanProposal | null {
+  if (!isValidVoiceActionPlanProposal(proposal)) {
+    return null;
+  }
   const terminalStatuses: readonly VoiceActionPlanStatus[] = ['approved', 'cancelled', 'executed', 'failed'];
   const safeStatus: VoiceActionPlanStatus = terminalStatuses.includes(proposal.status)
     ? proposal.status
     : 'proposed';
   return {
-    planId: safeBoundedText(proposal.planId, 80),
+    planId: proposal.planId,
     status: safeStatus,
     confirmationSummary: safeBoundedActionPlanText(proposal.confirmationSummary, 180),
     commands: proposal.commands.map((command) => ({
-      id: command.id ? safeBoundedText(command.id, 80) : undefined,
+      id: command.id,
       kind: safeBoundedText(command.kind, 40),
       summary: safeBoundedActionPlanText(command.summary, 180),
       operation: command.operation ? safeBoundedText(command.operation, 40) : undefined,
       title: command.title ? safeBoundedActionPlanText(command.title, 120) : undefined,
       assetKind: command.assetKind ? safeBoundedText(command.assetKind, 40) : undefined,
-      parentAssetId: command.parentAssetId ? safeBoundedText(command.parentAssetId, 80) : undefined,
+      parentAssetId: command.parentAssetId,
       parentTitle: command.parentTitle ? safeBoundedActionPlanText(command.parentTitle, 120) : undefined,
       parentKind: command.parentKind ? safeBoundedText(command.parentKind, 40) : undefined,
-      parentCommandId: command.parentCommandId ? safeBoundedText(command.parentCommandId, 80) : undefined
+      parentCommandId: command.parentCommandId
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedActionPlanText(risk, 180)).filter(Boolean)
   };
+}
+
+const voiceActionPlanOperations = {
+  create_asset: 'create',
+  create_location: 'create',
+  move_asset: 'move',
+  update_asset: 'update',
+  archive_asset: 'archive',
+  restore_asset: 'restore',
+  checkout_asset: 'checkout',
+  return_asset: 'return'
+} as const;
+
+export function isValidVoiceActionPlanProposal(proposal: VoiceActionPlanProposal): boolean {
+  if (
+    proposal.status !== 'proposed' ||
+    !isValidOpaqueVoiceID(proposal.planId) ||
+    !proposal.confirmationSummary.trim() ||
+    proposal.commands.length === 0 ||
+    proposal.commands.length > 20
+  ) {
+    return false;
+  }
+  const seen = new Map<string, VoiceActionPlanCommand>();
+  for (const command of proposal.commands) {
+    if (!command.id || !isValidOpaqueVoiceID(command.id) || seen.has(command.id) || !command.summary.trim()) {
+      return false;
+    }
+    const expectedOperation = voiceActionPlanOperations[command.kind as keyof typeof voiceActionPlanOperations];
+    if (!expectedOperation || command.operation !== expectedOperation) {
+      return false;
+    }
+    if (command.assetKind && command.assetKind !== 'item' && command.assetKind !== 'container' && command.assetKind !== 'location') {
+      return false;
+    }
+    if (command.parentAssetId && (!isValidOpaqueVoiceID(command.parentAssetId) || command.parentCommandId)) {
+      return false;
+    }
+    if (command.parentCommandId) {
+      if (!isValidOpaqueVoiceID(command.parentCommandId)) {
+        return false;
+      }
+      const parent = seen.get(command.parentCommandId);
+      if (!parent || (parent.kind !== 'create_asset' && parent.kind !== 'create_location')) {
+        return false;
+      }
+    }
+    if (
+      (command.parentAssetId || command.parentCommandId) &&
+      command.kind !== 'create_asset' &&
+      command.kind !== 'create_location' &&
+      command.kind !== 'move_asset'
+    ) {
+      return false;
+    }
+    seen.set(command.id, command);
+  }
+  return true;
 }
 
 function actionPlanEventMatchesState(
@@ -1011,21 +1110,33 @@ function actionPlanEventMatchesState(
 }
 
 function usableActionPlanId(planId: string): string {
-  const safePlanId = safeBoundedText(planId, 80);
-  if (!safePlanId) {
+  if (!isValidOpaqueVoiceID(planId)) {
     throw new Error('Action plan review is no longer available.');
   }
-  return safePlanId;
+  return planId;
+}
+
+function usableOpaqueVoiceID(value: string): string {
+  if (!isValidOpaqueVoiceID(value)) {
+    throw new Error('Voice plan edits could not be reviewed safely.');
+  }
+  return value;
+}
+
+function isValidOpaqueVoiceID(value: string): boolean {
+  return value.length > 0 &&
+    value.length <= 200 &&
+    value === value.trim() &&
+    !/[\u0000-\u001f\u007f]/.test(value);
 }
 
 function boundedPhotoDrafts(drafts: VoiceActionPlanPhotoDrafts): VoiceActionPlanPhotoDrafts {
   const bounded: VoiceActionPlanPhotoDrafts = {};
   for (const [commandId, photos] of Object.entries(drafts).slice(0, 10)) {
-    const safeCommandId = safeBoundedText(commandId, 80);
-    if (!safeCommandId || photos.length === 0) {
+    if (!isValidOpaqueVoiceID(commandId) || photos.length === 0) {
       continue;
     }
-    bounded[safeCommandId] = photos.slice(0, 10).map((photo) => ({
+    bounded[commandId] = photos.slice(0, 10).map((photo) => ({
       fileName: safeBoundedText(photo.fileName, 160) || 'voice-photo.jpg',
       contentType: photo.contentType,
       contentBase64: photo.contentBase64,

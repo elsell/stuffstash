@@ -8,7 +8,7 @@ import (
 )
 
 func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "query", "limit"); err != nil {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "query", "lifecycleState", "limit"); err != nil {
 		return realtimeVoiceSearchArgs{}, err
 	}
 	query := strings.TrimSpace(stringArg(args["query"]))
@@ -19,11 +19,15 @@ func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs,
 	if err != nil {
 		return realtimeVoiceSearchArgs{}, err
 	}
-	return realtimeVoiceSearchArgs{Query: query, Limit: limit}, nil
+	lifecycleState, err := realtimeVoiceOptionalLifecycleState(args["lifecycleState"])
+	if err != nil {
+		return realtimeVoiceSearchArgs{}, err
+	}
+	return realtimeVoiceSearchArgs{Query: query, LifecycleState: lifecycleState, Limit: limit}, nil
 }
 
 func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentTitle", "locationTitle", "parentScope", "limit"); err != nil {
+	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentAssetId", "parentTitle", "locationTitle", "parentScope", "limit"); err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
 	kind, err := realtimeVoiceOptionalAssetKind(args["kind"])
@@ -38,6 +42,12 @@ func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, err
 	if err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
+	parentAssetID := strings.TrimSpace(stringArg(args["parentAssetId"]))
+	if parentAssetID != "" {
+		if _, ok := asset.NewID(parentAssetID); !ok {
+			return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
+		}
+	}
 	limit, err := realtimeVoiceToolLimit(args["limit"])
 	if err != nil {
 		return realtimeVoiceListArgs{}, err
@@ -50,10 +60,13 @@ func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, err
 	if err != nil {
 		return realtimeVoiceListArgs{}, err
 	}
-	if parentScope == realtimeVoiceParentScopeRoot && (parentTitle != "" || locationTitle != "") {
+	if parentScope == realtimeVoiceParentScopeRoot && (parentAssetID != "" || parentTitle != "" || locationTitle != "") {
 		return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
 	}
-	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentTitle: parentTitle, LocationTitle: locationTitle, ParentScope: parentScope, Limit: limit}, nil
+	if parentAssetID != "" && (parentTitle != "" || locationTitle != "") {
+		return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
+	}
+	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentAssetID: parentAssetID, ParentTitle: parentTitle, LocationTitle: locationTitle, ParentScope: parentScope, Limit: limit}, nil
 }
 
 func parseRealtimeVoiceAssetAuditHistoryArgs(args map[string]any) (realtimeVoiceAssetAuditHistoryArgs, error) {
@@ -159,13 +172,15 @@ const (
 )
 
 type realtimeVoiceSearchArgs struct {
-	Query string
-	Limit int
+	Query          string
+	LifecycleState string
+	Limit          int
 }
 
 type realtimeVoiceListArgs struct {
 	Kind           asset.Kind
 	LifecycleState string
+	ParentAssetID  string
 	ParentTitle    string
 	LocationTitle  string
 	ParentScope    string
@@ -207,6 +222,7 @@ type realtimeVoiceAssetToolItem struct {
 	Description     string                             `json:"description,omitempty"`
 	InventoryName   string                             `json:"inventoryName"`
 	LifecycleState  string                             `json:"lifecycleState"`
+	ParentAssetID   string                             `json:"parentAssetId,omitempty"`
 	ParentTitle     string                             `json:"parentTitle,omitempty"`
 	ParentKind      string                             `json:"parentKind,omitempty"`
 	LocationTitle   string                             `json:"locationTitle,omitempty"`

@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -74,46 +73,6 @@ func TestValidateRealtimeVoiceFinalResponseAllowsNaturalInventoryAnswer(t *testi
 	}
 }
 
-func TestRealtimeVoiceRecoversUnsafeFinalResponseBeforeMobileOrTTS(t *testing.T) {
-	t.Parallel()
-
-	tts := &resolvedTextToSpeech{}
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{
-		Final: &ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  `I found this: {"assetId":"water-bottle-1","title":"Water bottle"}`,
-			DisplayResponse: `Call list_authorized_assets with assetId water-bottle-1.`,
-		},
-	}}}
-	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
-	resolver.providers.LanguageInference = language
-	resolver.providers.TextToSpeech = tts
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
-	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
-	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
-	}
-	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
-		events = append(events, event)
-		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
-	}
-
-	const recovered = "I could not finish that voice request safely. Please try again with a little more detail."
-	if tts.lastText != recovered {
-		t.Fatalf("expected only recovered safe response to reach TTS, got %q", tts.lastText)
-	}
-	for _, event := range events {
-		if event.Response != nil && (strings.Contains(event.Response.SpokenResponse, "assetId") || strings.Contains(event.Response.DisplayResponse, "list_authorized_assets")) {
-			t.Fatalf("unsafe final response reached mobile event: %+v", event.Response)
-		}
-	}
-}
-
 func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	t.Parallel()
 
@@ -148,46 +107,40 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	}
 }
 
-func TestRealtimeVoiceRecoversEmptyModelTurnWithSafeSpokenResponse(t *testing.T) {
+func TestRealtimeVoiceResponseGenerationFailureDoesNotReachMobileOrTTS(t *testing.T) {
 	t.Parallel()
 
 	tts := &resolvedTextToSpeech{}
-	language := &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{}}}
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.SpeechToText = resolvedSpeechToText{transcript: "Where is my water bottle?"}
-	resolver.providers.LanguageInference = language
+	resolver.providers.ResponseGenerator = failingVoiceResponseGenerator{err: errors.New("generation unavailable")}
 	resolver.providers.TextToSpeech = tts
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
-
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {
-		t.Fatalf("start realtime voice session: %v", err)
+		t.Fatalf("start session: %v", err)
 	}
 	events := []RealtimeVoiceEvent{}
-	if err := application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(event RealtimeVoiceEvent) error {
 		events = append(events, event)
 		return nil
-	}); err != nil {
-		t.Fatalf("run realtime voice query: %v", err)
+	})
+	if realtimeVoiceErrorCode(err) != realtimeVoiceFailureLanguageInference {
+		t.Fatalf("expected language inference failure, got %v", err)
 	}
-
-	const recovered = "I could not finish that voice request safely. Please try again with a little more detail."
-	if tts.lastText != recovered {
-		t.Fatalf("expected recovered safe response to reach TTS, got %q", tts.lastText)
+	if tts.lastText != "" {
+		t.Fatalf("failed generated response reached TTS: %q", tts.lastText)
 	}
-	if !slicesContains(realtimeVoiceProgressStatuses(events), realtimeVoiceProgressRecovering) {
-		t.Fatalf("expected recovering progress before safe completion, got %+v", events)
-	}
-	completed := false
 	for _, event := range events {
-		if event.Type == RealtimeVoiceEventAssistantResponseCompleted && event.Response != nil {
-			completed = true
-			if event.Response.Kind != ports.StructuredAgentResponseKindSafeFailure || event.Response.SpokenResponse != recovered {
-				t.Fatalf("expected safe failure response, got %+v", event.Response)
-			}
+		if event.Type == RealtimeVoiceEventAssistantResponseStarted || event.Type == RealtimeVoiceEventAssistantResponseCompleted {
+			t.Fatalf("failed generated response reached mobile: %+v", event)
 		}
 	}
-	if !completed {
-		t.Fatalf("expected assistant response completion, got %+v", events)
-	}
+}
+
+type failingVoiceResponseGenerator struct {
+	err error
+}
+
+func (f failingVoiceResponseGenerator) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	return ports.VoiceResponseGenerationResult{}, f.err
 }

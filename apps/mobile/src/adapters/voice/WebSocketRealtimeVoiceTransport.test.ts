@@ -2,6 +2,75 @@ import { describe, expect, it } from 'vitest';
 import { WebSocketRealtimeVoiceTransport } from './WebSocketRealtimeVoiceTransport';
 
 describe('WebSocketRealtimeVoiceTransport', () => {
+  it('accepts bounded asset-reference artifacts from completed responses', async () => {
+    const socket = new FakeWebSocket();
+    const events: unknown[] = [];
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: []
+    }, async (event) => { events.push(event); });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.completed', seq: 2, sessionId: 'session-1',
+      response: {
+        kind: 'answer', spokenResponse: 'The drill is in the office.', displayResponse: 'The Drill is in the Office.',
+        artifacts: [
+          { type: 'asset_reference', assetId: 'drill', title: 'Drill', assetKind: 'item', context: 'Office' },
+          { type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }
+        ]
+      }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+
+    await run;
+    expect(events[1]).toMatchObject({
+      response: { artifacts: [
+        { type: 'asset_reference', assetId: 'drill', title: 'Drill', assetKind: 'item', context: 'Office' },
+        { type: 'asset_reference', assetId: 'office', title: 'Office', assetKind: 'location' }
+      ] }
+    });
+  });
+
+  it('rejects duplicate or provider-shaped response artifacts', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const run = transport.run({
+      tenantId: 'tenant-home', inventoryId: 'inventory-home', source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: []
+    }, async () => {});
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.completed', seq: 2, sessionId: 'session-1',
+      response: {
+        kind: 'answer', spokenResponse: 'The Drill is here.', displayResponse: 'The Drill is here.',
+        artifacts: [
+          { type: 'asset_reference', assetId: 'drill', title: 'Drill', assetKind: 'item' },
+          { type: 'asset_reference', assetId: 'drill', title: 'Other drill', assetKind: 'item', href: '/unsafe' }
+        ]
+      }
+    });
+
+    await expect(run).rejects.toThrow(/artifact/i);
+  });
+
   it('awaits an async OIDC token before opening the realtime socket', async () => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
@@ -32,7 +101,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       acceptedOutputAudio: { mimeTypes: ['audio/mpeg'] },
       acceptedCapabilities: ['speech_to_text', 'language_inference', 'text_to_speech']
     });
-    socket.receive({ type: 'session.completed', seq: 2, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'answer', spokenResponse: 'Done.', displayResponse: 'Done.' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
 
     await run;
     expect(socket.headers).toEqual({ Authorization: 'Bearer refreshed-id-token' });
@@ -323,7 +398,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       actionPlan: {
         planId: 'plan-1',
         confirmationSummary: 'Create item water bottle?',
-        commands: [{ id: 'cmd-water-bottle', kind: 'create_asset', summary: 'Create item water bottle' }],
+        commands: [{ id: 'cmd-water-bottle', kind: 'create_asset', operation: 'create', summary: 'Create item water bottle' }],
         risks: []
       }
     });
@@ -495,7 +570,13 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       status: 'searching',
       detail: '{\n  "locationTitle": "Kitchen"\n}'
     });
-    socket.receive({ type: 'session.completed', seq: 4, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 4,
+      sessionId: 'session-1',
+      response: { kind: 'answer', spokenResponse: 'Done.', displayResponse: 'Done.' }
+    });
+    socket.receive({ type: 'session.completed', seq: 5, sessionId: 'session-1' });
 
     await run;
     expect(socket.sent[0]).toMatchObject({ type: 'session.start', developerDiagnostics: true });
@@ -559,6 +640,168 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect((error as Error).message).toBe('Voice server sent a reserved response delta event.');
     expect((error as Error).message).not.toContain('secret-token');
     expect(events).toEqual([sessionStarted()]);
+  });
+
+  it('rejects unknown structured response kinds before forwarding them', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'action_plan', spokenResponse: 'Hidden plan.', displayResponse: 'Hidden plan.' }
+    });
+
+    await expect(run).rejects.toThrow('response kind');
+    expect(events).toEqual([sessionStarted()]);
+  });
+
+  it('rejects a response-less direct session completion before forwarding it', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({ type: 'session.completed', seq: 2, sessionId: 'session-1' });
+
+    await expect(run).rejects.toThrow('structured response');
+    expect(events).toEqual([sessionStarted()]);
+  });
+
+  it.each([
+    ['empty command list', []],
+    ['missing command id', [{ kind: 'create_asset', operation: 'create', summary: 'Create item' }]],
+    ['duplicate command ids', [
+      { id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item' },
+      { id: 'command-1', kind: 'move_asset', operation: 'move', summary: 'Move item' }
+    ]],
+    ['unknown command kind', [{ id: 'command-1', kind: 'delete_everything', operation: 'delete', summary: 'Delete everything' }]],
+    ['mismatched operation', [{ id: 'command-1', kind: 'archive_asset', operation: 'move', summary: 'Archive item' }]],
+    ['forward parent command reference', [
+      { id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', parentCommandId: 'command-2' },
+      { id: 'command-2', kind: 'create_asset', operation: 'create', summary: 'Create container' }
+    ]]
+  ])('rejects malformed action plans with %s', async (_name, commands) => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: unknown[] = [];
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'action.plan.proposed',
+      seq: 2,
+      sessionId: 'session-1',
+      actionPlan: {
+        planId: 'plan-1',
+        confirmationSummary: 'Review this change?',
+        commands,
+        risks: []
+      }
+    });
+
+    await expect(run).rejects.toThrow('action plan');
+    expect(events).toEqual([sessionStarted()]);
+  });
+
+  it('preserves opaque action plan identifiers exactly through review', async () => {
+    const socket = new FakeWebSocket();
+    const transport = new WebSocketRealtimeVoiceTransport({
+      apiBaseUrl: 'http://127.0.0.1:8080/',
+      tokenProvider: () => 'dev:user-1',
+      webSocketFactory: () => socket
+    });
+    const events: Array<{ readonly type: string; readonly actionPlan?: { readonly planId: string; readonly commands: readonly { readonly id?: string; readonly parentAssetId?: string }[] } }> = [];
+    const planId = `plan-${'p'.repeat(110)}`;
+    const commandId = `command-${'c'.repeat(110)}`;
+    const parentAssetId = `asset-${'a'.repeat(110)}`;
+    const run = transport.run({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      source: 'mobile_voice',
+      inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+      outputAudioMimeTypes: ['audio/mpeg'],
+      audioChunksBase64: ['YXVkaW8=']
+    }, async (event) => {
+      events.push(event);
+    });
+
+    socket.open();
+    socket.receive(sessionStarted());
+    socket.receive({
+      type: 'action.plan.proposed',
+      seq: 2,
+      sessionId: 'session-1',
+      actionPlan: {
+        planId,
+        confirmationSummary: 'Create item?',
+        commands: [{
+          id: commandId,
+          kind: 'create_asset',
+          operation: 'create',
+          summary: 'Create item',
+          parentAssetId
+        }],
+        risks: []
+      }
+    });
+    await waitForEventType(events, 'action.plan.proposed');
+
+    expect(events.at(-1)?.actionPlan).toMatchObject({
+      planId,
+      commands: [{ id: commandId, parentAssetId }]
+    });
+    await transport.cancelActionPlan(planId);
+    expect(socket.sent.at(-1)).toMatchObject({ type: 'action.plan.cancel', planId });
+    socket.receive({ type: 'action.plan.cancelled', seq: 3, sessionId: 'session-1', planId, status: 'cancelled' });
+    await run;
   });
 
   it('forwards safe session failure events as terminal states', async () => {
@@ -972,13 +1215,25 @@ describe('WebSocketRealtimeVoiceTransport', () => {
 
     socket.open();
     socket.receive(sessionStarted());
-    socket.receive({ type: 'session.completed', seq: 2, sessionId: 'session-1' });
+    socket.receive({
+      type: 'assistant.response.completed',
+      seq: 2,
+      sessionId: 'session-1',
+      response: { kind: 'answer', spokenResponse: 'Done.', displayResponse: 'Done.' }
+    });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
     socket.closeFromServer(1000, 'voice session completed');
 
     await expect(run).resolves.toBeUndefined();
     expect(events).toEqual([
       sessionStarted(),
-      { type: 'session.completed', seq: 2, sessionId: 'session-1' }
+      {
+        type: 'assistant.response.completed',
+        seq: 2,
+        sessionId: 'session-1',
+        response: { kind: 'answer', spokenResponse: 'Done.', displayResponse: 'Done.', artifacts: [] }
+      },
+      { type: 'session.completed', seq: 3, sessionId: 'session-1' }
     ]);
   });
 

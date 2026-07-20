@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
@@ -27,6 +28,42 @@ type CustomFieldDefinitionUnitOfWork interface {
 type CustomFieldDefinitionPageRequest struct {
 	AfterDefinitionKey string
 	Limit              int
+	Lifecycle          CustomizationLifecycleFilter
+}
+
+type CustomizationLifecycleFilter string
+
+const (
+	CustomizationLifecycleActive   CustomizationLifecycleFilter = "active"
+	CustomizationLifecycleArchived CustomizationLifecycleFilter = "archived"
+	CustomizationLifecycleAll      CustomizationLifecycleFilter = "all"
+)
+
+func ParseCustomizationLifecycleFilter(value string) (CustomizationLifecycleFilter, bool) {
+	switch CustomizationLifecycleFilter(strings.TrimSpace(value)) {
+	case "", CustomizationLifecycleActive:
+		return CustomizationLifecycleActive, true
+	case CustomizationLifecycleArchived:
+		return CustomizationLifecycleArchived, true
+	case CustomizationLifecycleAll:
+		return CustomizationLifecycleAll, true
+	default:
+		return "", false
+	}
+}
+
+func (f CustomizationLifecycleFilter) String() string {
+	return string(f)
+}
+
+func (f CustomizationLifecycleFilter) Includes(value string) bool {
+	if value == "" {
+		value = CustomizationLifecycleActive.String()
+	}
+	if f == "" {
+		return value == CustomizationLifecycleActive.String()
+	}
+	return f == CustomizationLifecycleAll || f.String() == value
 }
 
 type CustomAssetTypeRepository interface {
@@ -48,4 +85,5 @@ type CustomAssetTypeUnitOfWork interface {
 type CustomAssetTypePageRequest struct {
 	AfterAssetTypeKey string
 	Limit             int
+	Lifecycle         CustomizationLifecycleFilter
 }

@@ -344,17 +344,25 @@ type realtimeServerMessage struct {
 }
 
 type realtimeStructuredResponse struct {
-	ResponseID      string   `json:"responseId"`
-	SessionID       string   `json:"sessionId"`
-	TenantID        string   `json:"tenantId"`
-	InventoryID     string   `json:"inventoryId"`
-	Source          string   `json:"source"`
-	Kind            string   `json:"kind"`
-	SpokenResponse  string   `json:"spokenResponse"`
-	DisplayResponse string   `json:"displayResponse"`
-	Artifacts       []any    `json:"artifacts"`
-	ToolCallIDs     []string `json:"toolCallIds"`
-	AuditMetadata   struct{} `json:"auditMetadata"`
+	ResponseID      string                               `json:"responseId"`
+	SessionID       string                               `json:"sessionId"`
+	TenantID        string                               `json:"tenantId"`
+	InventoryID     string                               `json:"inventoryId"`
+	Source          string                               `json:"source"`
+	Kind            string                               `json:"kind"`
+	SpokenResponse  string                               `json:"spokenResponse"`
+	DisplayResponse string                               `json:"displayResponse"`
+	Artifacts       []realtimeStructuredResponseArtifact `json:"artifacts"`
+	ToolCallIDs     []string                             `json:"toolCallIds"`
+	AuditMetadata   struct{}                             `json:"auditMetadata"`
+}
+
+type realtimeStructuredResponseArtifact struct {
+	Type      string `json:"type"`
+	AssetID   string `json:"assetId"`
+	Title     string `json:"title"`
+	AssetKind string `json:"assetKind"`
+	Context   string `json:"context,omitempty"`
 }
 
 type realtimeActionPlanProposal struct {
@@ -692,6 +700,12 @@ func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *re
 }
 
 func realtimeStructuredResponseFromPort(response ports.StructuredAgentResponse) *realtimeStructuredResponse {
+	artifacts := make([]realtimeStructuredResponseArtifact, 0, len(response.Artifacts))
+	for _, artifact := range response.Artifacts {
+		artifacts = append(artifacts, realtimeStructuredResponseArtifact{
+			Type: string(artifact.Type), AssetID: artifact.AssetID.String(), Title: artifact.Title, AssetKind: artifact.AssetKind.String(), Context: artifact.Context,
+		})
+	}
 	return &realtimeStructuredResponse{
 		ResponseID:      response.ResponseID,
 		SessionID:       response.SessionID,
@@ -701,7 +715,7 @@ func realtimeStructuredResponseFromPort(response ports.StructuredAgentResponse) 
 		Kind:            string(response.Kind),
 		SpokenResponse:  response.SpokenResponse,
 		DisplayResponse: response.DisplayResponse,
-		Artifacts:       []any{},
+		Artifacts:       artifacts,
 		ToolCallIDs:     response.ToolCallIDs,
 	}
 }

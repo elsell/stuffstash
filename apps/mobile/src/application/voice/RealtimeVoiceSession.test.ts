@@ -410,7 +410,7 @@ describe('RealtimeVoiceSessionController', () => {
             planId: 'plan-1',
             status: 'proposed',
             confirmationSummary: 'Create item water bottle?',
-            commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+            commands: [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item water bottle' }],
             risks: ['Adds a new item to this inventory.']
           }
         },
@@ -441,7 +441,7 @@ describe('RealtimeVoiceSessionController', () => {
         planId: 'plan-1',
         status: 'proposed',
         confirmationSummary: 'Create item water bottle?',
-        commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+        commands: [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item water bottle' }],
         risks: ['Adds a new item to this inventory.']
       }
     });
@@ -471,6 +471,7 @@ describe('RealtimeVoiceSessionController', () => {
             commands: [{
               id: 'cmd-raw-query-notes',
               kind: 'create_asset',
+              operation: 'create',
               summary: 'Create Raw Query notes',
               title: 'Stack Trace book'
             }],
@@ -511,6 +512,7 @@ describe('RealtimeVoiceSessionController', () => {
             commands: [{
               id: 'cmd-1',
               kind: 'create_asset',
+              operation: 'create',
               summary: 'Create item apiKey: bearer should-not-leak',
               title: 'Stack Trace book',
               parentTitle: 'providerSessionId: live-1'
@@ -575,6 +577,86 @@ describe('RealtimeVoiceSessionController', () => {
       errorMessage: 'The proposed change could not be reviewed safely.'
     });
     expect(states.at(-1)?.actionPlan).toBeUndefined();
+  });
+
+  it.each([
+    ['no commands', []],
+    ['duplicate command ids', [
+      { id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item' },
+      { id: 'command-1', kind: 'move_asset', operation: 'move', summary: 'Move item' }
+    ]],
+    ['unknown command kind', [
+      { id: 'command-1', kind: 'erase_inventory', operation: 'delete', summary: 'Erase inventory' }
+    ]],
+    ['forward dependency', [
+      { id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', parentCommandId: 'command-2' },
+      { id: 'command-2', kind: 'create_asset', operation: 'create', summary: 'Create container' }
+    ]]
+  ])('fails safely instead of entering review for a malformed plan with %s', async (_name, commands) => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{
+        type: 'action.plan.proposed',
+        seq: 1,
+        sessionId: 'session-1',
+        actionPlan: {
+          planId: 'plan-1',
+          status: 'proposed',
+          confirmationSummary: 'Review this change?',
+          commands,
+          risks: []
+        }
+      }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      progressLabel: 'Review failed',
+      errorMessage: 'The proposed change could not be reviewed safely.'
+    });
+    expect(states.at(-1)?.actionPlan).toBeUndefined();
+  });
+
+  it('preserves opaque action plan and command identifiers without truncation', async () => {
+    const planId = `plan-${'p'.repeat(110)}`;
+    const commandId = `command-${'c'.repeat(110)}`;
+    const parentAssetId = `asset-${'a'.repeat(110)}`;
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{
+        type: 'action.plan.proposed',
+        seq: 1,
+        sessionId: 'session-1',
+        actionPlan: {
+          planId,
+          status: 'proposed',
+          confirmationSummary: 'Create item?',
+          commands: [{
+            id: commandId,
+            kind: 'create_asset',
+            operation: 'create',
+            summary: 'Create item',
+            parentAssetId
+          }],
+          risks: []
+        }
+      }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)?.actionPlan).toMatchObject({
+      planId,
+      commands: [{ id: commandId, parentAssetId }]
+    });
   });
 
 
@@ -1137,7 +1219,7 @@ describe('RealtimeVoiceSessionController', () => {
             planId: 'plan-current',
             status: 'proposed',
             confirmationSummary: 'Create item water bottle?',
-            commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
+            commands: [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item water bottle' }],
             risks: []
           }
         },
@@ -1361,7 +1443,8 @@ describe('RealtimeVoiceSessionController', () => {
           response: {
             kind: 'answer',
             spokenResponse: 'Your tools are in the garage.',
-            displayResponse: 'Your tools are in the garage.'
+            displayResponse: 'Your tools are in the Garage.',
+            artifacts: [{ type: 'asset_reference', assetId: 'garage', title: 'Garage', assetKind: 'location' }]
           }
         },
         { type: 'session.completed', seq: 2, sessionId: 'session-1' },
@@ -1389,8 +1472,11 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       progressLabel: 'Done',
-      spokenResponse: 'Your tools are in the garage.'
+      spokenResponse: 'Your tools are in the Garage.'
     });
+    expect(states.at(-1)?.responseArtifacts).toEqual([
+      { type: 'asset_reference', assetId: 'garage', title: 'Garage', assetKind: 'location' }
+    ]);
     expect(states.at(-1)?.actionPlan).toBeUndefined();
     expect(player.played).toEqual([]);
   });
@@ -1913,7 +1999,7 @@ class ReviewDecisionTransport implements RealtimeVoiceTransport {
         planId: 'plan-1',
         status: 'proposed',
         confirmationSummary: 'Create item water bottle?',
-        commands: this.options.commands ?? [{ id: 'cmd-water-bottle', kind: 'create_asset', summary: 'Create item water bottle' }],
+        commands: this.options.commands ?? [{ id: 'cmd-water-bottle', kind: 'create_asset', operation: 'create', summary: 'Create item water bottle' }],
         risks: ['Adds a new item to this inventory.']
       }
     });

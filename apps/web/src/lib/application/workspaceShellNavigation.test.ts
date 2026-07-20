@@ -29,9 +29,7 @@ describe('workspace shell navigation helpers', () => {
     expect(shellModeHref('home', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one');
     expect(shellModeHref('browse', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/browse');
     expect(shellModeHref('import', 'tenant-one', 'inventory-one')).toBe('/tenants/tenant-one/inventories/inventory-one/import');
-    expect(shellModeHref('settings', 'tenant-one', 'inventory-one', 'activity')).toBe(
-      '/tenants/tenant-one/inventories/inventory-one/settings/activity'
-    );
+    expect(shellModeHref('settings', 'tenant-one', 'inventory-one', 'activity')).toBe('/settings');
   });
 
   it('derives add hrefs for shell add controls', () => {
@@ -91,14 +89,6 @@ describe('workspace shell navigation helpers', () => {
             icon: 'import',
             href: '/tenants/tenant-one/inventories/inventory-one/import',
             current: false
-          },
-          {
-            mode: 'settings',
-            label: 'Settings',
-            description: 'Access, fields, and audit',
-            icon: 'settings',
-            href: '/tenants/tenant-one/inventories/inventory-one/settings/activity',
-            current: false
           }
         ]
       }
@@ -119,7 +109,7 @@ describe('workspace shell navigation helpers', () => {
       settingsSection: 'overview'
     });
 
-    expect(groups[1].destinations.map((destination) => destination.mode)).toEqual(['settings']);
+    expect(groups[1].destinations).toEqual([]);
   });
 
   it('builds mobile navigation items without desktop-only utility grouping', () => {
@@ -146,14 +136,6 @@ describe('workspace shell navigation helpers', () => {
         icon: 'browse',
         href: '/tenants/tenant-one/inventories/inventory-one/browse',
         current: true
-      },
-      {
-        mode: 'settings',
-        label: 'Settings',
-        description: 'Inventory settings',
-        icon: 'settings',
-        href: '/tenants/tenant-one/inventories/inventory-one/settings',
-        current: false
       }
     ]);
   });

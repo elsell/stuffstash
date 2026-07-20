@@ -195,7 +195,7 @@ export function AssetDetailAvailabilityButton({
       style={({ pressed }) => [
         styles.availabilityAction,
         quiet ? styles.quietAvailabilityAction : null,
-        pressed ? styles.actionPressed : null,
+        pressed ? (quiet ? styles.quietActionPressed : styles.actionPressed) : null,
         disabled ? styles.disabledAction : null
       ]}
     >
@@ -263,6 +263,9 @@ function createStyles(palette: MobileColorPalette) {
   quietAvailabilityAction: {
     backgroundColor: palette.surfaceMuted
   },
+  quietActionPressed: {
+    opacity: 0.82
+  },
   quietAvailabilityActionText: {
     color: palette.action
   },
@@ -301,9 +304,9 @@ function createStyles(palette: MobileColorPalette) {
   maintenanceAction: {
     alignItems: 'center',
     backgroundColor: palette.elevatedSurface,
-    borderColor: palette.controlBorder,
+    borderColor: palette.border,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     flexBasis: 140,
     flexGrow: 1,
     flexDirection: 'row',
@@ -314,7 +317,7 @@ function createStyles(palette: MobileColorPalette) {
     paddingVertical: spacing.sm
   },
   maintenanceActionPressed: {
-    backgroundColor: palette.selected
+    opacity: 0.82
   },
   maintenanceActionText: {
     color: palette.action,

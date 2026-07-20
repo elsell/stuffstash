@@ -1,6 +1,7 @@
 import type {
   VoiceActionPlanCommand,
   VoiceRealtimeState,
+  VoiceResponseArtifact,
   VoiceSafeDiagnosticEvent
 } from '../../application/voice/RealtimeVoiceSession';
 import { redactUnsafeVoiceText } from '../../application/voice/VoiceTextSafety';
@@ -91,12 +92,13 @@ export function buildVoiceAccessoryPresentation({
         tone: 'attention'
       };
     }
+    const terminal = completedVoicePresentation(realtime);
     return {
-      accessibilityLabel: 'Open voice answer',
+      accessibilityLabel: terminal.accessibilityLabel,
       primaryAction: 'expand',
       subtitle: safeAccessorySubtitle(realtime?.spokenResponse) ?? context,
-      title: 'Answer ready',
-      tone: 'ready'
+      title: terminal.title,
+      tone: terminal.tone
     };
   }
 
@@ -231,6 +233,7 @@ export type VoiceSessionPresentation = {
   readonly progressTrace: readonly string[];
   readonly recoveryAction?: VoiceSessionRecoveryAction;
   readonly response?: string;
+  readonly responseArtifacts: readonly VoiceResponseArtifact[];
   readonly title: string;
   readonly transcript?: string;
 };
@@ -321,6 +324,7 @@ export function buildVoiceSessionPresentation({
       ? { label: 'Voice providers', target: 'provider_profiles' }
       : undefined,
     response: realtime?.spokenResponse,
+    responseArtifacts: realtime?.responseArtifacts ?? [],
     title,
     transcript: realtime?.transcript ?? activePartialTranscript
   };
@@ -567,6 +571,9 @@ function titleForState(stage: VoiceInteractionStage, realtime: VoiceRealtimeStat
   if (stage === 'completed' && hasAvailableClarificationFollowUp(realtime)) {
     return 'Needs detail';
   }
+  if (stage === 'completed') {
+    return completedVoicePresentation(realtime).title;
+  }
   return titleForStage(stage);
 }
 
@@ -574,17 +581,65 @@ function bottomHintForState(stage: VoiceInteractionStage, realtime: VoiceRealtim
   if (stage === 'completed' && hasAvailableClarificationFollowUp(realtime)) {
     return 'Answer the follow-up to keep this conversation going.';
   }
+  if (stage === 'completed') {
+    return completedVoicePresentation(realtime).bottomHint;
+  }
   switch (stage) {
     case 'ready':
       return 'Ask a question about this inventory.';
-    case 'completed':
-      return 'You can ask another question or close this.';
     case 'cancelled':
       return 'You can start again when you are ready.';
     case 'failed':
       return 'Reset and try again when you are ready.';
     default:
       return 'Keep this open while Stuff Stash works.';
+  }
+}
+
+function completedVoicePresentation(realtime: VoiceRealtimeState | null | undefined): {
+  readonly accessibilityLabel: string;
+  readonly bottomHint: string;
+  readonly title: string;
+  readonly tone: VoiceAccessoryPresentation['tone'];
+} {
+  switch (realtime?.actionPlan?.status) {
+    case 'executed':
+      return {
+        accessibilityLabel: 'Open applied voice change',
+        bottomHint: 'The reviewed change was applied.',
+        title: 'Change applied',
+        tone: 'ready'
+      };
+    case 'cancelled':
+      return {
+        accessibilityLabel: 'Open cancelled voice change',
+        bottomHint: 'No change was made.',
+        title: 'Change cancelled',
+        tone: 'attention'
+      };
+  }
+  switch (realtime?.responseKind) {
+    case 'unsupported_action':
+      return {
+        accessibilityLabel: 'Open unsupported voice result',
+        bottomHint: 'Try another way to make this change.',
+        title: 'Voice action unavailable',
+        tone: 'attention'
+      };
+    case 'safe_failure':
+      return {
+        accessibilityLabel: 'Open safe voice result',
+        bottomHint: 'Start a fresh request or close this.',
+        title: 'Could not finish safely',
+        tone: 'attention'
+      };
+    default:
+      return {
+        accessibilityLabel: 'Open voice answer',
+        bottomHint: 'You can ask another question or close this.',
+        title: 'Answer ready',
+        tone: 'ready'
+      };
   }
 }
 

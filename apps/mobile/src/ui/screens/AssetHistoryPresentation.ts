@@ -1,4 +1,32 @@
-import type { AssetActivityEntry, AssetActivityRecordViewModel } from '../../application/assets/AssetActivityQuery';
+import type { AssetActivityEntry, AssetActivityRecordViewModel, AssetActivityView } from '../../application/assets/AssetActivityQuery';
+import type { NativeActionMenuGroup } from '../components/NativeActionMenu';
+
+export function historyFilterMenuGroups(
+  value: AssetActivityView,
+  onChange: (view: AssetActivityView) => void
+): readonly NativeActionMenuGroup[] {
+  return [{
+    id: 'history-filter',
+    items: [
+      {
+        id: 'changes',
+        label: 'Changes',
+        isSelected: value === 'changes',
+        onPress: () => {
+          if (value !== 'changes') onChange('changes');
+        }
+      },
+      {
+        id: 'all',
+        label: 'All events',
+        isSelected: value === 'all',
+        onPress: () => {
+          if (value !== 'all') onChange('all');
+        }
+      }
+    ]
+  }];
+}
 
 export function groupHistoryRecords(records: readonly AssetActivityRecordViewModel[]): readonly { readonly title: string; readonly data: readonly AssetActivityRecordViewModel[] }[] {
   const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });

@@ -496,7 +496,7 @@ func (f *fakeCustomFieldRepository) CustomFieldDefinitionByID(_ context.Context,
 func (f *fakeCustomFieldRepository) ListTenantCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	items := []customfield.Definition{}
 	for _, item := range f.items {
-		if item.TenantID.String() == tenantID.String() && item.Scope == customfield.ScopeTenant && item.CursorKey() > page.AfterDefinitionKey {
+		if item.TenantID.String() == tenantID.String() && item.Scope == customfield.ScopeTenant && page.Lifecycle.Includes(item.LifecycleState.String()) && item.CursorKey() > page.AfterDefinitionKey {
 			items = append(items, item)
 		}
 	}
@@ -506,7 +506,7 @@ func (f *fakeCustomFieldRepository) ListTenantCustomFieldDefinitions(_ context.C
 func (f *fakeCustomFieldRepository) ListInventoryCustomFieldDefinitions(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.CustomFieldDefinitionPageRequest) ([]customfield.Definition, error) {
 	items := []customfield.Definition{}
 	for _, item := range f.items {
-		if item.TenantID.String() != tenantID.String() || item.CursorKey() <= page.AfterDefinitionKey {
+		if item.TenantID.String() != tenantID.String() || !page.Lifecycle.Includes(item.LifecycleState.String()) || item.CursorKey() <= page.AfterDefinitionKey {
 			continue
 		}
 		if item.Scope == customfield.ScopeTenant || item.InventoryID.String() == inventoryID.String() {

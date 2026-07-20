@@ -14,6 +14,8 @@ This spec does not define the full asset aggregate, search model, UI editor, or 
 
 The detailed implementation contract for custom asset type APIs, field applicability, and asset assignment is defined in `specs/assets/custom-asset-types.spec.md`.
 
+Cross-platform settings navigation and custom field management interaction behavior are defined by `specs/platform/client-settings-management.spec.md`. That client spec must preserve the scope, inheritance, compatibility, and lifecycle rules defined here.
+
 The first asset slice stores validated custom field values once definitions exist for the target inventory.
 
 Custom asset types are user-defined classifications layered onto normal base assets. They do not replace the base asset model.
@@ -210,8 +212,12 @@ List endpoints:
 - Require authentication.
 - Tenant-scoped list requires `tenant.configure`.
 - Inventory-scoped list requires `inventory.view`.
-- Inventory-scoped list returns the effective definitions available to that inventory: tenant-scoped definitions first, then inventory-scoped definitions.
+- Default to `lifecycleState=active`.
+- Accept `lifecycleState=active`, `lifecycleState=archived`, or `lifecycleState=all`; any other value must return the standard invalid-input response.
+- Inventory-scoped list returns the effective definitions for the requested lifecycle view: matching tenant-scoped definitions first, then matching inventory-scoped definitions. Archived tenant definitions in an inventory result describe definitions inherited from that tenant that would become effective again if restored; inventory callers must not mutate them through inventory endpoints.
 - Must use cursor pagination with `limit` and `cursor`.
+- Must bind the requested lifecycle state, tenant ID, inventory ID when present, and effective-scope mode into cursor validation. A cursor from another lifecycle view, tenant, inventory, or scope must fail safely rather than skip, duplicate, or reveal records.
+- Must preserve the same authentication, authorization, tenant-isolation, and inventory-isolation behavior for active, archived, and all lifecycle views. Requesting archived records must not broaden visibility.
 - Must use the standard response envelope.
 
 Update endpoints:
@@ -281,5 +287,8 @@ Unknown field keys, fields that do not apply to the asset's custom asset type, w
 
 - Tests must verify custom field validation using fakes, not mocks.
 - Tests must cover tenant isolation, authorization, custom asset type applicability, type validation, unknown fields, fields that do not apply to the asset's custom asset type, conflicting field names, and conversational update proposals.
+- Tests must cover active-by-default and explicit active, archived, and all custom field definition listing for tenant and effective-inventory scopes.
+- Tests must cover effective-inventory archived ordering with inherited tenant definitions before inventory-owned definitions, without granting inventory mutation authority over inherited records.
+- Tests must cover unknown lifecycle filters and cursors reused across lifecycle, tenant, inventory, or effective-scope boundaries.
 - Security-sensitive custom field behavior must have adversarial end-to-end tests before public interaction points expose it.
 - The first API slice must include adversarial tests for unauthenticated requests, unrelated users, viewers attempting definition creation, duplicate keys, wrong tenant, wrong inventory, wrong-scope cursors, and asset values referencing hidden or unknown definitions.

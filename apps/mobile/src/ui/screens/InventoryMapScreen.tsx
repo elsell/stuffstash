@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Alert,
   AccessibilityInfo,
@@ -11,13 +10,11 @@ import {
   Image,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View
 } from 'react-native';
@@ -46,7 +43,6 @@ import { radius, spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import {
-  buildBrowseSurfaceOptions,
   buildInventoryMapEmptyColumnAction,
   buildInventoryMapBreadcrumbs,
   buildInventoryMapColumns,
@@ -66,6 +62,7 @@ import {
   shouldSelectInventoryMapBranchDuringSwipe,
   shouldSuppressInventoryMapScrollForBranchSwipe
 } from './InventoryMapPresentation';
+import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapColumnViewModel } from './InventoryMapPresentation';
 import { addHereRouteParams } from './AddAssetInitialParent';
 import {
@@ -73,16 +70,14 @@ import {
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
+import { AssetOverflowMenu } from './AssetOverflowMenu';
 import {
   assetPhotoViewerModel,
   isAssetPhotoId
 } from '../components/AssetPhotoWorkspacePresentation';
 import {
-  assetLifecycleActionRows,
   assetLifecycleConfirmation,
   assetLifecycleFailurePresentation,
-  assetDetailOverflowControlState,
-  assetLifecycleOverflowMenu,
   AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
 import {
@@ -96,6 +91,7 @@ import {
 } from './AssetWorkspaceStatusPresentation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 import { useAppFeedback } from '../feedback/AppFeedback';
+import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type InventoryMapScreenProps = {
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
@@ -646,7 +642,7 @@ export function InventoryMapScreen({
         </View>
         <View style={styles.searchBar}>
           <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
-          <TextInput
+          <AppTextInput
             accessibilityLabel="Find in inventory map"
             autoCapitalize="none"
             onChangeText={setQuery}
@@ -798,42 +794,6 @@ export function InventoryMapHeaderActions({
         selectedSurface={selectedSurface}
         onChangeSurface={onChangeSurface}
       />
-    </View>
-  );
-}
-
-export function BrowseSurfaceControl({
-  palette,
-  selectedSurface,
-  onChangeSurface
-}: {
-  readonly palette: MobileColorPalette;
-  readonly selectedSurface: InventoryMapSurface;
-  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
-}) {
-  const styles = createStyles(palette);
-  return (
-    <View accessibilityLabel="Browse view" accessibilityRole="tablist" style={[styles.surfaceControl, { backgroundColor: palette.surfaceMuted }]}>
-      {buildBrowseSurfaceOptions().map((option) => {
-        const selected = option.value === selectedSurface;
-        return (
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityState={{ selected }}
-            key={option.value}
-            onPress={() => onChangeSurface(option.value)}
-            style={({ pressed }) => [
-              styles.surfaceButton,
-              selected ? [styles.surfaceButtonSelected, { backgroundColor: palette.surface }] : null,
-              pressed ? { backgroundColor: palette.selected } : null
-            ]}
-          >
-            <Text style={[styles.surfaceText, { color: selected ? palette.text : palette.textMuted }]}>
-              {option.label}
-            </Text>
-          </Pressable>
-        );
-      })}
     </View>
   );
 }
@@ -1017,6 +977,7 @@ function InventoryMapColumn({
       <FlatList
         data={displayedColumn.assets}
         keyExtractor={(asset) => asset.id}
+        keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={!mapVerticalScrollLocked && !exiting}
         showsVerticalScrollIndicator={false}
@@ -1535,70 +1496,6 @@ function InventoryMapInfoSheet({
       }));
   }
 
-  function showMoreActions(detail: AssetDetailViewModel): void {
-    if (assetDetailOverflowControlState(pendingAction !== undefined).disabled) {
-      return;
-    }
-    const overflow = assetLifecycleOverflowMenu(detail);
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: overflow.title,
-          message: overflow.message,
-          options: [...overflow.options],
-          cancelButtonIndex: overflow.cancelIndex,
-          destructiveButtonIndex: overflow.destructiveIndex
-        },
-        (index) => {
-          const action = overflow.actionRows[index];
-          if (action) {
-            confirmLifecycleAction(action.kind, detail);
-            return;
-          }
-          if (index === overflow.checkoutHistoryIndex) {
-            onClose();
-            router.push(`/assets/${detail.id}/checkouts`);
-            return;
-          }
-          if (index === overflow.auditIndex) {
-            onClose();
-            router.push({
-              pathname: '/assets/[assetId]/history',
-              params: { assetId: detail.id, tenantId: detail.tenantId ?? '', inventoryId: detail.inventoryId ?? '', assetTitle: detail.title }
-            });
-          }
-        }
-      );
-      return;
-    }
-
-    Alert.alert(overflow.title, overflow.message, [
-      ...assetLifecycleActionRows(detail).map((action) => ({
-        text: action.label,
-        style: action.isDestructive ? 'destructive' as const : 'default' as const,
-        onPress: () => confirmLifecycleAction(action.kind, detail)
-      })),
-      {
-        text: 'Checkout history',
-        onPress: () => {
-          onClose();
-          router.push(`/assets/${detail.id}/checkouts`);
-        }
-      },
-      {
-        text: 'History',
-        onPress: () => {
-          onClose();
-          router.push({
-            pathname: '/assets/[assetId]/history',
-            params: { assetId: detail.id, tenantId: detail.tenantId ?? '', inventoryId: detail.inventoryId ?? '', assetTitle: detail.title }
-          });
-        }
-      },
-      { text: 'Cancel', style: 'cancel' }
-    ]);
-  }
-
   function confirmLifecycleAction(action: AssetLifecycleActionKind, detail: AssetDetailViewModel): void {
     const confirmation = assetLifecycleConfirmation(action, detail);
     Alert.alert(confirmation.title, confirmation.message, [
@@ -1729,7 +1626,29 @@ function InventoryMapInfoSheet({
                   router.push(`/assets/${detailState.asset.id}/edit`);
                 }}
                 onCheckout={() => void runCheckoutAction('checkout', detailState.asset)}
-                onMoreActions={() => showMoreActions(detailState.asset)}
+                overflowMenu={(
+                  <AssetOverflowMenu
+                    asset={detailState.asset}
+                    disabled={pendingAction !== undefined}
+                    onCheckoutHistory={() => {
+                      onClose();
+                      router.push(`/assets/${detailState.asset.id}/checkouts`);
+                    }}
+                    onHistory={() => {
+                      onClose();
+                      router.push({
+                        pathname: '/assets/[assetId]/history',
+                        params: {
+                          assetId: detailState.asset.id,
+                          tenantId: detailState.asset.tenantId ?? '',
+                          inventoryId: detailState.asset.inventoryId ?? '',
+                          assetTitle: detailState.asset.title
+                        }
+                      });
+                    }}
+                    onLifecycleAction={(action) => confirmLifecycleAction(action, detailState.asset)}
+                  />
+                )}
                 onMove={() => {
                   onClose();
                   router.push(`/assets/${detailState.asset.id}/move`);
@@ -1822,34 +1741,6 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '900',
     letterSpacing: 0,
     lineHeight: 30
-  },
-  surfaceControl: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    flexDirection: 'row',
-    gap: 2,
-    minWidth: 142,
-    padding: 2
-  },
-  surfaceButton: {
-    alignItems: 'center',
-    borderRadius: radius.sm,
-    flex: 1,
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs
-  },
-  surfaceButtonSelected: {
-    backgroundColor: colors.elevatedSurface
-  },
-  surfaceText: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  surfaceTextSelected: {
-    color: colors.text
   },
   searchBar: {
     alignItems: 'center',

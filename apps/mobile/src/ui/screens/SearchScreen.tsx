@@ -3,10 +3,10 @@ import { router } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
-  TextInput,
   useWindowDimensions,
   View
 } from 'react-native';
+import type { TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
 import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
@@ -28,10 +28,16 @@ import type {
 import type { LocationsQuery, LocationsViewModel } from '../../application/locations/LocationsQuery';
 import type { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { AssetCard } from '../components/AssetCard';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import { BrowsePlaceRow } from './BrowsePlaceRow';
+import {
+  browseRouteParamsForState,
+  consumeLocalBrowseRouteEffect,
+  type AppliedBrowseRouteState
+} from './BrowseRouteParams';
 import {
   BrowseEmptyState,
   BrowseLoadError,
@@ -55,13 +61,17 @@ import {
   browseScopeToKind,
   cancelPendingBrowseSearch,
   canLoadNextBrowsePage,
-  locationRowsFromAssetCards
+  commitBrowseFilterDraft,
+  locationRowsFromAssetCards,
+  openBrowseFilterDraft,
+  removeBrowseFilter
 } from './SearchScreenPresentation';
 import { createSearchScreenStyles } from './SearchScreen.styles';
 
 export { SearchHeader } from './BrowseHeader';
 
 type SearchScreenProps = {
+  readonly initialSurface?: InventoryMapSurface;
   readonly initialScope?: BrowseScope;
   readonly initialQuery?: string;
   readonly initialTagIds?: readonly string[];
@@ -121,6 +131,7 @@ function emptyResults(scope: BrowseScope = 'all', query = ''): BrowseResults {
 }
 
 export function SearchScreen({
+  initialSurface = 'list',
   initialScope = 'all',
   initialQuery = '',
   initialTagIds = [],
@@ -144,12 +155,13 @@ export function SearchScreen({
   const normalizedInitialTags = useMemo(() => uniqueTagIds(initialTagIds), [initialTagIds.join('|')]);
   const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<BrowseScope>(initialScope);
-  const [surface, setSurface] = useState<InventoryMapSurface>('list');
+  const [surface, setSurface] = useState<InventoryMapSurface>(initialSurface);
   const [lifecycleState, setLifecycleState] = useState<AssetBrowseLifecycleFilter>(initialLifecycleState);
   const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>(initialCheckoutState);
   const [sort, setSort] = useState<AssetBrowseSort>(initialSort);
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(normalizedInitialTags);
   const [filterDraft, setFilterDraft] = useState<BrowseDraftFilters>({
+    scope: initialScope,
     lifecycleState: initialLifecycleState,
     checkoutState: initialCheckoutState,
     tagIds: normalizedInitialTags
@@ -170,6 +182,7 @@ export function SearchScreen({
   const lastRequestedQuery = useRef(initialQuery.trim());
   const latestResults = useRef<BrowseResults>(emptyResults(initialScope));
   const locationCatalog = useRef<Promise<LocationsViewModel> | undefined>(undefined);
+  const localRouteEffectKeys = useRef(new Set<string>());
 
   useEffect(() => () => {
     if (queryTimer.current) clearTimeout(queryTimer.current);
@@ -177,15 +190,28 @@ export function SearchScreen({
 
   useEffect(() => {
     const nextQuery = initialQuery.trim();
-    cancelPendingBrowseSearch(queryTimer, nextQuery);
     const nextTags = uniqueTagIds(initialTagIds);
+    const routeKey = browseRouteStateKey({
+      surface: initialSurface,
+      scope: initialScope,
+      query: nextQuery,
+      tagIds: nextTags,
+      lifecycleState: initialLifecycleState,
+      checkoutState: initialCheckoutState,
+      sort: initialSort
+    });
+    if (consumeLocalBrowseRouteEffect(localRouteEffectKeys.current, routeKey)) {
+      return;
+    }
+    cancelPendingBrowseSearch(queryTimer, nextQuery);
     setQuery(nextQuery);
+    setSurface(initialSurface);
     setScope(initialScope);
     setLifecycleState(initialLifecycleState);
     setCheckoutState(initialCheckoutState);
     setSort(initialSort);
     setSelectedTagIds(nextTags);
-    setFilterDraft({ lifecycleState: initialLifecycleState, checkoutState: initialCheckoutState, tagIds: nextTags });
+    setFilterDraft({ scope: initialScope, lifecycleState: initialLifecycleState, checkoutState: initialCheckoutState, tagIds: nextTags });
     lastRequestedQuery.current = nextQuery;
     void loadFirstPage({
       query: nextQuery,
@@ -197,6 +223,7 @@ export function SearchScreen({
     });
   }, [
     initialQuery,
+    initialSurface,
     initialScope,
     initialLifecycleState,
     initialCheckoutState,
@@ -392,6 +419,7 @@ export function SearchScreen({
     if (queryTimer.current) clearTimeout(queryTimer.current);
     const normalized = nextQuery.trim();
     lastRequestedQuery.current = normalized;
+    syncBrowseRoute({ query: normalized });
     void loadFirstPage({ query: normalized });
   }
 
@@ -406,43 +434,67 @@ export function SearchScreen({
     submitQuery('');
   }
 
-  function updateScope(nextScope: BrowseScope): void {
-    const nextQuery = cancelPendingSearch();
-    setScope(nextScope);
-    void loadFirstPage({ query: nextQuery, scope: nextScope });
-  }
-
   function updateSort(nextSort: AssetBrowseSort): void {
     const nextQuery = cancelPendingSearch();
     setSort(nextSort);
+    syncBrowseRoute({ query: nextQuery, sort: nextSort });
     void loadFirstPage({ query: nextQuery, sort: nextSort });
   }
 
+  function updateSurface(nextSurface: InventoryMapSurface): void {
+    if (nextSurface === surface) return;
+    setSurface(nextSurface);
+    syncBrowseRoute({ surface: nextSurface });
+  }
+
   function openFilters(expanded: boolean): void {
-    if (expanded) setFilterDraft({ lifecycleState, checkoutState, tagIds: selectedTagIds });
+    if (expanded) setFilterDraft(openBrowseFilterDraft({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds }));
     setFiltersExpanded(expanded);
   }
 
   function applyFilters(filters: BrowseDraftFilters): void {
+    const committed = commitBrowseFilterDraft(filters);
     const nextQuery = cancelPendingSearch();
-    setLifecycleState(filters.lifecycleState);
-    setCheckoutState(filters.checkoutState);
-    setSelectedTagIds(filters.tagIds);
+    setLifecycleState(committed.lifecycleState);
+    setCheckoutState(committed.checkoutState);
+    setScope(committed.scope);
+    setSelectedTagIds(committed.tagIds);
     setFiltersExpanded(false);
-    void loadFirstPage({ ...filters, query: nextQuery });
+    syncBrowseRoute({ ...committed, query: nextQuery });
+    void loadFirstPage({ ...committed, query: nextQuery });
+  }
+
+  function syncBrowseRoute(next: Partial<AppliedBrowseRouteState>): void {
+    const routeState: AppliedBrowseRouteState = {
+      surface: next.surface ?? surface,
+      scope: next.scope ?? scope,
+      query: next.query ?? query,
+      tagIds: next.tagIds ?? selectedTagIds,
+      lifecycleState: next.lifecycleState ?? lifecycleState,
+      checkoutState: next.checkoutState ?? checkoutState,
+      sort: next.sort ?? sort
+    };
+    const currentRouteState: AppliedBrowseRouteState = {
+      surface: initialSurface,
+      scope: initialScope,
+      query: initialQuery.trim(),
+      tagIds: uniqueTagIds(initialTagIds),
+      lifecycleState: initialLifecycleState,
+      checkoutState: initialCheckoutState,
+      sort: initialSort
+    };
+    const routeKey = browseRouteStateKey(routeState);
+    if (routeKey === browseRouteStateKey(currentRouteState)) return;
+    localRouteEffectKeys.current.add(routeKey);
+    router.setParams(browseRouteParamsForState(routeState));
   }
 
   function clearFilters(): void {
-    applyFilters({ lifecycleState: 'active', checkoutState: 'any', tagIds: [] });
+    applyFilters({ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [] });
   }
 
   function removeFilter(token: BrowseFilterToken): void {
-    const next = {
-      lifecycleState: token.type === 'lifecycle' ? 'active' as const : lifecycleState,
-      checkoutState: token.type === 'checkout' ? 'any' as const : checkoutState,
-      tagIds: token.type === 'tag' ? selectedTagIds.filter((id) => id !== token.tagId) : selectedTagIds
-    };
-    applyFilters(next);
+    applyFilters(removeBrowseFilter({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds }, token));
   }
 
   function retryResults(): void {
@@ -457,7 +509,7 @@ export function SearchScreen({
   const resultScope = state.results.scope;
   const numColumns = browseColumnCount({ fontScale, scope: resultScope, width });
   const gridCardWidth = browseGridCardWidth(width, numColumns);
-  const hasActiveFilters = browseFilterCount({ lifecycleState, checkoutState, tagIds: selectedTagIds }) > 0;
+  const hasActiveFilters = browseFilterCount({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds }) > 0;
   const isInitialError = state.status === 'error' && state.phase === 'initial';
   const isPaginationError = state.status === 'error' && state.phase === 'pagination';
 
@@ -476,7 +528,7 @@ export function SearchScreen({
           photoSelectionQuery={photoSelectionQuery}
           selectedSurface={surface}
           onAdd={() => router.navigate('/add')}
-          onChangeSurface={setSurface}
+          onChangeSurface={updateSurface}
         />
       </SafeAreaView>
     );
@@ -490,6 +542,7 @@ export function SearchScreen({
         keyExtractor={keyBrowseListItem}
         columnWrapperStyle={numColumns === 2 ? styles.cardRow : undefined}
         contentContainerStyle={styles.content}
+        keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
         numColumns={numColumns}
         refreshing={isRefreshing}
@@ -523,11 +576,11 @@ export function SearchScreen({
             onAdd={() => router.navigate('/add')}
             onChangeDraftCheckoutState={(value) => setFilterDraft((draft) => ({ ...draft, checkoutState: value }))}
             onChangeDraftLifecycleState={(value) => setFilterDraft((draft) => ({ ...draft, lifecycleState: value }))}
+            onChangeDraftScope={(value) => setFilterDraft((draft) => ({ ...draft, scope: value }))}
             onChangeDraftTagIds={(value) => setFilterDraft((draft) => ({ ...draft, tagIds: value }))}
             onChangeQuery={scheduleSearch}
-            onChangeScope={updateScope}
             onChangeSort={updateSort}
-            onChangeSurface={setSurface}
+            onChangeSurface={updateSurface}
             onClearFilters={clearFilters}
             onClearQuery={clearSearch}
             onRemoveFilter={removeFilter}
@@ -602,6 +655,10 @@ function browseResultCount(results: BrowseResults): number {
 
 function uniqueTagIds(tagIds: readonly string[]): readonly string[] {
   return [...new Set(tagIds.map((id) => id.trim()).filter(Boolean))];
+}
+
+function browseRouteStateKey(state: AppliedBrowseRouteState): string {
+  return JSON.stringify({ ...state, query: state.query.trim(), tagIds: uniqueTagIds(state.tagIds) });
 }
 
 function readableError(_error: unknown, fallback: string): string {

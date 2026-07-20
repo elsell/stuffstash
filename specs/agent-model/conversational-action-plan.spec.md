@@ -88,6 +88,12 @@ The first persisted plan must not store raw transcript text. A safe `userIntentS
 
 The mobile realtime voice loop may expose a single proposal tool named `propose_action_plan`. This tool creates a persisted `proposed` action plan and returns a safe review payload to the realtime client. It is not a domain write command and must not mutate inventory resources.
 
+In the bounded production voice loop, the language model must not author executable action-plan commands. It may return only typed intent, ordered semantic references, bounded search hypotheses, and evidence resolutions through the project-owned investigation contract. After the application validates authorized evidence and chooses a terminal product outcome, an operation-specific application compiler must construct the existing typed command records for `create_asset`, `create_location`, `move_asset`, `archive_asset`, `restore_asset`, `checkout_asset`, and `return_asset`.
+
+The compiler must be deterministic for the same canonical intent and authorized evidence. It must use only reference-scoped opaque IDs returned by authorized reads, preserve operation anchors, enforce lifecycle and custody preconditions, create a clear missing destination path as an ordered command dependency graph, and stop at the persisted `proposed` state. A provider-produced command, command ID, executable argument object, approval claim, or alternate operation must be rejected by the investigation boundary rather than normalized into an executable plan.
+
+The existing `propose_action_plan` argument contract remains the internal application input used to persist and present a compiled plan and may remain available to other separately specified adapters. It is not a provider-callable tool in the bounded production voice loop. The realtime wire events, persisted action-plan shape, explicit mobile approval/cancellation messages, review edits, authorization, audit, and atomic execution semantics remain unchanged.
+
 The proposal tool must accept only:
 
 - either a single command kind from the initial command enumeration or an ordered bounded `commands` array,
