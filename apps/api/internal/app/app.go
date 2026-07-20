@@ -53,6 +53,7 @@ type App struct {
 	realtimeSessions             ports.RealtimeSessionRepository
 	actionPlans                  ports.ActionPlanRepository
 	importSources                ports.ImportSourceReader
+	importAttachmentSources      ports.ImportAttachmentSource
 	importJobs                   ports.ImportJobRepository
 	importSourceVault            ports.ImportJobSourceVault
 	importLinks                  ports.ImportLinkRepository
@@ -127,6 +128,7 @@ type Dependencies struct {
 	RealtimeSessions                 ports.RealtimeSessionRepository
 	ActionPlans                      ports.ActionPlanRepository
 	ImportSources                    ports.ImportSourceReader
+	ImportAttachmentSources          ports.ImportAttachmentSource
 	ImportJobs                       ports.ImportJobRepository
 	ImportSourceVault                ports.ImportJobSourceVault
 	ImportLinks                      ports.ImportLinkRepository
@@ -174,6 +176,10 @@ func New(deps Dependencies) App {
 	}
 	defaultPageLimit := normalizeDefaultPageLimit(deps.DefaultPageLimit, maxPageLimit)
 	primaryThumbnailWarmConcurrency := normalizePrimaryThumbnailWarmConcurrency(deps.PrimaryThumbnailWarmConcurrency)
+	importAttachmentSources := deps.ImportAttachmentSources
+	if importAttachmentSources == nil {
+		importAttachmentSources, _ = deps.ImportSources.(ports.ImportAttachmentSource)
+	}
 	realtimeVoiceProviders := deps.RealtimeVoiceProviderResolver
 	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.LanguageInference != nil && deps.VoiceResponseGenerator != nil && deps.TextToSpeech != nil {
 		realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
@@ -222,6 +228,7 @@ func New(deps Dependencies) App {
 		realtimeSessions:             deps.RealtimeSessions,
 		actionPlans:                  deps.ActionPlans,
 		importSources:                deps.ImportSources,
+		importAttachmentSources:      importAttachmentSources,
 		importJobs:                   deps.ImportJobs,
 		importSourceVault:            deps.ImportSourceVault,
 		importLinks:                  deps.ImportLinks,

@@ -281,31 +281,6 @@ func (i LegacyImporter) readLive(ctx context.Context, request ports.ImportSource
 					ContentType:   attachment.MIMEType,
 					Primary:       attachment.Primary,
 				}
-				if !request.FetchAttachmentBytes {
-					plan.Attachments = append(plan.Attachments, planned)
-					continue
-				}
-				content, contentType, err := importer.attachment(ctx, baseURL, token, detail.ID, attachment.ID)
-				if err != nil {
-					planned.UnavailableReason = safeHomeboxWarningDetail(err, "attachment could not be downloaded")
-					plan.Attachments = append(plan.Attachments, planned)
-					continue
-				}
-				if !supportedImageType(contentType) {
-					plan.Messages = append(plan.Messages, importplan.Message{
-						Code:       "attachment-unsupported-type",
-						Severity:   importplan.SeverityWarning,
-						Summary:    "Attachment type is not supported",
-						Detail:     contentType,
-						SourceID:   attachment.ID,
-						SourceName: detail.Name,
-					})
-					continue
-				}
-				planned.FileName = safeFileName(attachment.Title, defaultImageName(contentType))
-				planned.ContentType = contentType
-				planned.Content = content
-				planned.SizeBytes = len(content)
 				plan.Attachments = append(plan.Attachments, planned)
 			}
 		}

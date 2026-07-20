@@ -483,8 +483,8 @@ func TestDurableImportJobImportsAttachmentsThroughHTTPBoundary(t *testing.T) {
 	if searchPrimaryPhoto == nil || searchPrimaryPhoto.ID != attachmentResource.ResourceID {
 		t.Fatalf("expected imported attachment to be search primary photo, got %+v", searchPrimaryPhoto)
 	}
-	if got := sourceReader.fetchAttachmentBytesCalls(); len(got) != 3 || got[0] || got[1] || !got[2] {
-		t.Fatalf("expected preview/start preflight without bytes and worker apply with bytes, got %+v", got)
+	if planCalls, attachmentReads := sourceReader.readCounts(); planCalls != 3 || attachmentReads != 1 {
+		t.Fatalf("expected three byte-free plan reads and one attachment read, got plans=%d attachments=%d", planCalls, attachmentReads)
 	}
 }
 
@@ -626,7 +626,8 @@ type importJobResponse struct {
 
 type attachmentImportSource struct {
 	mu                     sync.Mutex
-	fetchAttachmentBytes   []bool
+	planCalls              int
+	attachmentReads        int
 	unexpectedRequestError error
 }
 
@@ -644,8 +645,7 @@ func (s *stalePreviewImportSource) ReadImportPlan(_ context.Context, request por
 		request.AllowPrivateNetwork ||
 		request.AllowInsecureTLS ||
 		request.FileName != "" ||
-		len(request.Content) != 0 ||
-		request.FetchAttachmentBytes {
+		len(request.Content) != 0 {
 		return importplan.Plan{}, errors.New("unexpected stale preview import source request")
 	}
 	s.mu.Lock()
@@ -676,7 +676,7 @@ func (s *stalePreviewImportSource) ReadImportPlan(_ context.Context, request por
 
 func (s *attachmentImportSource) ReadImportPlan(_ context.Context, request ports.ImportSourceRequest) (importplan.Plan, error) {
 	s.mu.Lock()
-	s.fetchAttachmentBytes = append(s.fetchAttachmentBytes, request.FetchAttachmentBytes)
+	s.planCalls++
 	s.mu.Unlock()
 	if request.SourceType != importplan.SourceLegacyHomebox ||
 		request.BaseURL != "https://homebox.example.test" ||
@@ -697,10 +697,6 @@ func (s *attachmentImportSource) ReadImportPlan(_ context.Context, request ports
 		ContentType:   "image/png",
 		Primary:       true,
 	}
-	if request.FetchAttachmentBytes {
-		attachment.Content = pngAttachmentContent()
-		attachment.SizeBytes = len(attachment.Content)
-	}
 	return importplan.Plan{
 		Source: importplan.SourceSummary{
 			Type:        importplan.SourceLegacyHomebox,
@@ -720,8 +716,19 @@ func (s *attachmentImportSource) ReadImportPlan(_ context.Context, request ports
 	}, nil
 }
 
-func (s *attachmentImportSource) fetchAttachmentBytesCalls() []bool {
+func (s *attachmentImportSource) OpenImportAttachmentSession(context.Context, ports.ImportSourceRequest) (ports.ImportAttachmentSession, error) {
+	return s, nil
+}
+
+func (s *attachmentImportSource) ReadImportAttachment(_ context.Context, attachment importplan.Attachment) (ports.ImportAttachmentContent, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return append([]bool{}, s.fetchAttachmentBytes...)
+	s.attachmentReads++
+	return ports.ImportAttachmentContent{FileName: attachment.FileName, ContentType: "image/png", Content: pngAttachmentContent()}, nil
+}
+
+func (s *attachmentImportSource) readCounts() (int, int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.planCalls, s.attachmentReads
 }

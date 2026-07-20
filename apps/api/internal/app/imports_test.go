@@ -184,9 +184,6 @@ func TestCreateImportJobStoresPreviewForInventoryHistory(t *testing.T) {
 	if source.lastRequest.Password != "secret" {
 		t.Fatalf("expected source reader to receive request credential for preview")
 	}
-	if source.lastRequest.FetchAttachmentBytes {
-		t.Fatalf("preview must not request attachment bytes")
-	}
 	if repository.jobs[job.ID].Source.Fingerprint != job.Source.Fingerprint {
 		t.Fatalf("expected repository to persist source fingerprint")
 	}
@@ -500,9 +497,6 @@ func TestStartImportJobStoresSourceOnlyAfterFingerprintMatch(t *testing.T) {
 	vault := application.importSourceVault.(*fakeImportSourceVault)
 	if vault.requests[job.ID].Password != "secret" {
 		t.Fatalf("expected start to store source material for worker")
-	}
-	if !vault.requests[job.ID].FetchAttachmentBytes {
-		t.Fatalf("expected stored worker source request to fetch attachment bytes")
 	}
 }
 

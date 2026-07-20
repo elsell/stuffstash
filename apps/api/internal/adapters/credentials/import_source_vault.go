@@ -101,47 +101,44 @@ func terminalImportJobStatuses() []importjob.Status {
 }
 
 type importSourcePayload struct {
-	SourceType           string `json:"sourceType"`
-	BaseURL              string `json:"baseUrl,omitempty"`
-	Username             string `json:"username,omitempty"`
-	Password             string `json:"password,omitempty"`
-	IncludeImages        bool   `json:"includeImages,omitempty"`
-	FetchAttachmentBytes bool   `json:"fetchAttachmentBytes,omitempty"`
-	AllowInsecureTLS     bool   `json:"allowInsecureTLS,omitempty"`
-	AllowPrivateNetwork  bool   `json:"allowPrivateNetwork,omitempty"`
-	MaxAttachmentBytes   int64  `json:"maxAttachmentBytes,omitempty"`
-	FileName             string `json:"fileName,omitempty"`
-	Content              []byte `json:"content,omitempty"`
+	SourceType          string `json:"sourceType"`
+	BaseURL             string `json:"baseUrl,omitempty"`
+	Username            string `json:"username,omitempty"`
+	Password            string `json:"password,omitempty"`
+	IncludeImages       bool   `json:"includeImages,omitempty"`
+	AllowInsecureTLS    bool   `json:"allowInsecureTLS,omitempty"`
+	AllowPrivateNetwork bool   `json:"allowPrivateNetwork,omitempty"`
+	MaxAttachmentBytes  int64  `json:"maxAttachmentBytes,omitempty"`
+	FileName            string `json:"fileName,omitempty"`
+	Content             []byte `json:"content,omitempty"`
 }
 
 func importSourcePayloadFromRequest(request ports.ImportSourceRequest) importSourcePayload {
 	return importSourcePayload{
-		SourceType:           string(request.SourceType),
-		BaseURL:              request.BaseURL,
-		Username:             request.Username,
-		Password:             request.Password,
-		IncludeImages:        request.IncludeImages,
-		FetchAttachmentBytes: request.FetchAttachmentBytes,
-		AllowInsecureTLS:     request.AllowInsecureTLS,
-		AllowPrivateNetwork:  request.AllowPrivateNetwork,
-		MaxAttachmentBytes:   request.MaxAttachmentBytes,
-		FileName:             request.FileName,
-		Content:              append([]byte{}, request.Content...),
+		SourceType:          string(request.SourceType),
+		BaseURL:             request.BaseURL,
+		Username:            request.Username,
+		Password:            request.Password,
+		IncludeImages:       request.IncludeImages,
+		AllowInsecureTLS:    request.AllowInsecureTLS,
+		AllowPrivateNetwork: request.AllowPrivateNetwork,
+		MaxAttachmentBytes:  request.MaxAttachmentBytes,
+		FileName:            request.FileName,
+		Content:             append([]byte{}, request.Content...),
 	}
 }
 
 func (p importSourcePayload) toRequest() ports.ImportSourceRequest {
 	return ports.ImportSourceRequest{
-		SourceType:           importplan.SourceType(p.SourceType),
-		BaseURL:              p.BaseURL,
-		Username:             p.Username,
-		Password:             p.Password,
-		IncludeImages:        p.IncludeImages,
-		FetchAttachmentBytes: p.FetchAttachmentBytes,
-		AllowInsecureTLS:     p.AllowInsecureTLS,
-		AllowPrivateNetwork:  p.AllowPrivateNetwork,
-		MaxAttachmentBytes:   p.MaxAttachmentBytes,
-		FileName:             p.FileName,
-		Content:              append([]byte{}, p.Content...),
+		SourceType:          importplan.SourceType(p.SourceType),
+		BaseURL:             p.BaseURL,
+		Username:            p.Username,
+		Password:            p.Password,
+		IncludeImages:       p.IncludeImages,
+		AllowInsecureTLS:    p.AllowInsecureTLS,
+		AllowPrivateNetwork: p.AllowPrivateNetwork,
+		MaxAttachmentBytes:  p.MaxAttachmentBytes,
+		FileName:            p.FileName,
+		Content:             append([]byte{}, p.Content...),
 	}
 }

@@ -154,20 +154,67 @@ func (f *fakeImportSourceReader) ReadImportPlan(_ context.Context, request ports
 	return f.plan, nil
 }
 
+func (f *fakeImportSourceReader) OpenImportAttachmentSession(context.Context, ports.ImportSourceRequest) (ports.ImportAttachmentSession, error) {
+	return planImportAttachmentSession{plan: f.plan}, nil
+}
+
 type phaseAwareImportSourceReader struct {
 	preview         importplan.Plan
 	apply           importplan.Plan
 	previewRequests int
 	applyRequests   int
+	readRequests    int
 }
 
-func (f *phaseAwareImportSourceReader) ReadImportPlan(_ context.Context, request ports.ImportSourceRequest) (importplan.Plan, error) {
-	if request.FetchAttachmentBytes {
+type recordingImportAttachmentSource struct {
+	contentBySourceID map[string]ports.ImportAttachmentContent
+	readSourceIDs     []string
+	openCount         int
+}
+
+func (f *recordingImportAttachmentSource) OpenImportAttachmentSession(context.Context, ports.ImportSourceRequest) (ports.ImportAttachmentSession, error) {
+	f.openCount++
+	return f, nil
+}
+
+func (f *recordingImportAttachmentSource) ReadImportAttachment(_ context.Context, attachment importplan.Attachment) (ports.ImportAttachmentContent, error) {
+	f.readSourceIDs = append(f.readSourceIDs, attachment.SourceID)
+	return f.contentBySourceID[attachment.SourceID], nil
+}
+
+func (f *phaseAwareImportSourceReader) ReadImportPlan(context.Context, ports.ImportSourceRequest) (importplan.Plan, error) {
+	f.readRequests++
+	if f.readRequests > 2 {
 		f.applyRequests++
 		return f.apply, nil
 	}
 	f.previewRequests++
 	return f.preview, nil
+}
+
+func (f *phaseAwareImportSourceReader) OpenImportAttachmentSession(context.Context, ports.ImportSourceRequest) (ports.ImportAttachmentSession, error) {
+	return planImportAttachmentSession{plan: f.apply}, nil
+}
+
+type planImportAttachmentSession struct {
+	plan importplan.Plan
+}
+
+func (s planImportAttachmentSession) ReadImportAttachment(_ context.Context, requested importplan.Attachment) (ports.ImportAttachmentContent, error) {
+	for _, attachment := range s.plan.Attachments {
+		if attachment.SourceID != requested.SourceID {
+			continue
+		}
+		if attachment.UnavailableReason != "" {
+			return ports.ImportAttachmentContent{}, errors.New(attachment.UnavailableReason)
+		}
+		return ports.ImportAttachmentContent{
+			FileName:    attachment.FileName,
+			ContentType: attachment.ContentType,
+			Content:     attachment.Content,
+		}, nil
+	}
+	return ports.ImportAttachmentContent{}, errors.New("attachment not found")
 }
 
 type fakeImportJobRepository struct {

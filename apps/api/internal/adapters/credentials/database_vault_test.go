@@ -146,7 +146,7 @@ func TestDatabaseImportJobSourceVaultTreatsExpiredSourceAsMissing(t *testing.T) 
 	}
 }
 
-func TestDatabaseImportJobSourceVaultPreservesApplyAttachmentByteFlag(t *testing.T) {
+func TestDatabaseImportJobSourceVaultPreservesAttachmentImportOptions(t *testing.T) {
 	t.Parallel()
 
 	scope := ports.ImportJobSourceScope{
@@ -159,14 +159,13 @@ func TestDatabaseImportJobSourceVaultPreservesApplyAttachmentByteFlag(t *testing
 	vault := NewDatabaseImportJobSourceVaultWithClock(repository, &vaultSealer{}, fixedClock{now: now})
 
 	err := vault.StoreImportJobSource(context.Background(), scope, ports.ImportSourceRequest{
-		SourceType:           importplan.SourceLegacyHomebox,
-		BaseURL:              "https://homebox.example.test/api/v1",
-		Username:             "owner@example.com",
-		Password:             "secret",
-		IncludeImages:        true,
-		FetchAttachmentBytes: true,
-		AllowPrivateNetwork:  true,
-		MaxAttachmentBytes:   1234,
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             "https://homebox.example.test/api/v1",
+		Username:            "owner@example.com",
+		Password:            "secret",
+		IncludeImages:       true,
+		AllowPrivateNetwork: true,
+		MaxAttachmentBytes:  1234,
 	}, now.Add(time.Minute), now)
 	if err != nil {
 		t.Fatalf("store import job source: %v", err)
@@ -179,11 +178,41 @@ func TestDatabaseImportJobSourceVaultPreservesApplyAttachmentByteFlag(t *testing
 	if !found {
 		t.Fatalf("expected stored import source")
 	}
-	if !request.IncludeImages || !request.FetchAttachmentBytes || !request.AllowPrivateNetwork {
+	if !request.IncludeImages || !request.AllowPrivateNetwork {
 		t.Fatalf("expected import source flags to round trip, got %+v", request)
 	}
 	if request.SourceType != importplan.SourceLegacyHomebox || request.MaxAttachmentBytes != 1234 || request.Password != "secret" {
 		t.Fatalf("unexpected import source request: %+v", request)
+	}
+}
+
+func TestDatabaseImportJobSourceVaultReadsLegacyAttachmentFetchPayload(t *testing.T) {
+	t.Parallel()
+
+	scope := ports.ImportJobSourceScope{
+		TenantID:    tenant.ID("tenant-home"),
+		InventoryID: inventory.InventoryID("inventory-home"),
+		JobID:       importjob.ID("job-one"),
+	}
+	now := time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC)
+	repository := &vaultImportSourceRepository{
+		found: true,
+		record: ports.ImportJobSourceRecord{
+			Scope: scope,
+			Sealed: ports.SealedImportJobSource{
+				Ciphertext: []byte(`sealed:{"sourceType":"legacy_homebox","baseUrl":"https://homebox.example.test/api/v1","username":"owner@example.com","password":"secret","includeImages":true,"fetchAttachmentBytes":true,"maxAttachmentBytes":1234}`),
+			},
+			ExpiresAt: now.Add(time.Minute),
+		},
+	}
+	vault := NewDatabaseImportJobSourceVaultWithClock(repository, &vaultSealer{}, fixedClock{now: now})
+
+	request, found, err := vault.ImportJobSourceRequest(context.Background(), scope)
+	if err != nil {
+		t.Fatalf("read legacy import source: %v", err)
+	}
+	if !found || !request.IncludeImages || request.Password != "secret" || request.MaxAttachmentBytes != 1234 {
+		t.Fatalf("unexpected recovered legacy source: found=%v request=%+v", found, request)
 	}
 }
 

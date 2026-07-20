@@ -604,7 +604,7 @@ Preview response must include:
 Preview must not persist source passwords or Homebox bearer tokens.
 Durable preview persists normalized plan metadata and source references, but not attachment bytes.
 Start request includes the same source input and user choices such as whether to import images so the source fingerprint can be revalidated before worker execution.
-Start and worker execution must store and use a source request that explicitly permits attachment byte fetching only after the previewed-to-running transition wins.
+Start and worker execution must store and use the reviewed source request only after the previewed-to-running transition wins. Calling the separate attachment-reader port from worker apply is the explicit capability that permits attachment byte fetching; plan reads never gain that capability.
 
 Worker apply behavior:
 
