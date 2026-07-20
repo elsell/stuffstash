@@ -50,7 +50,8 @@ export function AppearanceProvider({
   const [preference, setPreferenceState] = useState<AppearancePreference>('system');
   const persistedPreference = useRef<AppearancePreference>('system');
   const preferenceRequestSequence = useRef(0);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isPreferenceHydrated, setIsPreferenceHydrated] = useState(false);
+  const [isContrastHydrated, setIsContrastHydrated] = useState(false);
   const [increasedContrast, setIncreasedContrast] = useState(false);
 
   useEffect(() => {
@@ -60,13 +61,13 @@ export function AppearanceProvider({
         applyNativeAppearancePreference(savedPreference);
         persistedPreference.current = savedPreference;
         setPreferenceState(savedPreference);
-        setIsHydrated(true);
+        setIsPreferenceHydrated(true);
       }
     }).catch(() => {
       if (isCurrent) {
         applyNativeAppearancePreference('system');
         persistedPreference.current = 'system';
-        setIsHydrated(true);
+        setIsPreferenceHydrated(true);
       }
     });
     return () => {
@@ -76,15 +77,32 @@ export function AppearanceProvider({
 
   useEffect(() => {
     let isCurrent = true;
-    AccessibilityInfo.isHighTextContrastEnabled().then((enabled) => {
-      if (isCurrent) {
+    let receivedContrastEvent = false;
+    const contrastEvent = Platform.OS === 'ios'
+      ? 'darkerSystemColorsChanged' as const
+      : 'highTextContrastChanged' as const;
+    const subscription = AccessibilityInfo.addEventListener(
+      contrastEvent,
+      (enabled) => {
+        receivedContrastEvent = true;
         setIncreasedContrast(enabled);
       }
-    }).catch(() => undefined);
-    const subscription = AccessibilityInfo.addEventListener(
-      'highTextContrastChanged',
-      setIncreasedContrast
     );
+    const contrastEnabled = Platform.OS === 'ios'
+      ? AccessibilityInfo.isDarkerSystemColorsEnabled()
+      : AccessibilityInfo.isHighTextContrastEnabled();
+    contrastEnabled.then((enabled) => {
+      if (isCurrent) {
+        if (!receivedContrastEvent) {
+          setIncreasedContrast(enabled);
+        }
+        setIsContrastHydrated(true);
+      }
+    }).catch(() => {
+      if (isCurrent) {
+        setIsContrastHydrated(true);
+      }
+    });
     return () => {
       isCurrent = false;
       subscription.remove();
@@ -109,8 +127,9 @@ export function AppearanceProvider({
   }, [controller]);
 
   const resolvedColorScheme = resolveAppearanceColorScheme(preference, systemColorScheme);
+  const isHydrated = isPreferenceHydrated && isContrastHydrated;
   const palette = useMemo(
-    () => appearanceAwarePalette(resolvedColorScheme, Platform.OS, increasedContrast),
+    () => appearanceAwarePalette(resolvedColorScheme, increasedContrast),
     [increasedContrast, resolvedColorScheme]
   );
   const value = useMemo<AppearanceContextValue>(() => ({

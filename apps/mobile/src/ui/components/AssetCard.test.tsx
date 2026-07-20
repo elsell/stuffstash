@@ -14,7 +14,7 @@ vi.mock('react-native', () => ({
   ScrollView: 'ScrollView',
   StyleSheet: {
     create: (styles: unknown) => styles,
-    hairlineWidth: 1
+    hairlineWidth: 0.5
   },
   Text: 'Text',
   View: 'View'
@@ -157,6 +157,8 @@ describe('AssetCard', () => {
     });
 
     expect(styleValue(card.props?.style, 'backgroundColor')).toBe('#ffffff');
+    expect(styleValue(card.props?.style, 'borderColor')).toBe('#D9E1E6');
+    expect(styleValue(card.props?.style, 'borderWidth')).toBe(0.5);
     expect(styleValue(findFirstByText(card, 'Cordless drill')?.props?.style, 'color')).toBe('#243038');
   });
 
@@ -461,7 +463,7 @@ describe('AssetBreadcrumbTrail', () => {
     });
   });
 
-  it('gives the card open regions visible pressed feedback', () => {
+  it('uses opacity-only card feedback without introducing heavy borders or fills', () => {
     const card = AssetCard({
       asset: {
         id: 'asset-drill',
@@ -480,12 +482,17 @@ describe('AssetBreadcrumbTrail', () => {
     const openAsset = findFirstByAccessibilityLabel(card, 'Open asset Cordless drill');
     const mediaRegion = findFirstPressableByStyleValue(card, 'width', '100%');
 
-    expect(resolvePressableStyle(openAsset?.props?.style, true)).not.toEqual(
-      resolvePressableStyle(openAsset?.props?.style, false)
-    );
-    expect(resolvePressableStyle(mediaRegion?.props?.style, true)).not.toEqual(
-      resolvePressableStyle(mediaRegion?.props?.style, false)
-    );
+    const idleText = resolvePressableStyle(openAsset?.props?.style, false);
+    const pressedText = resolvePressableStyle(openAsset?.props?.style, true);
+    const idleMedia = resolvePressableStyle(mediaRegion?.props?.style, false);
+    const pressedMedia = resolvePressableStyle(mediaRegion?.props?.style, true);
+
+    expect(styleValue(pressedText, 'opacity')).toBeLessThan(1);
+    expect(styleValue(pressedMedia, 'opacity')).toBeLessThan(1);
+    for (const key of ['backgroundColor', 'borderColor', 'borderWidth']) {
+      expect(styleValue(pressedText, key)).toBe(styleValue(idleText, key));
+      expect(styleValue(pressedMedia, key)).toBe(styleValue(idleMedia, key));
+    }
   });
 
   it('does not render breadcrumbs when no parent trail exists', () => {

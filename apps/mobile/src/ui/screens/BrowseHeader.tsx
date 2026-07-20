@@ -548,7 +548,7 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     applyButton: { alignItems: 'center', backgroundColor: palette.action, borderRadius: radius.md, justifyContent: 'center', minHeight: 50 },
     applyButtonPressed: { backgroundColor: palette.actionPressed },
     applyButtonText: { color: palette.onAction, fontSize: 16, fontWeight: '700' },
-    controlPressed: { backgroundColor: palette.selected }
+    controlPressed: { opacity: 0.82 }
   });
 }
 

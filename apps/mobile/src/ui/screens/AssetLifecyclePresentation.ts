@@ -43,12 +43,18 @@ export function assetDetailLoadErrorPresentation(error: unknown): AssetDetailLoa
 }
 
 export type AssetOverflowMenuActionId = 'checkout-history' | 'history' | AssetLifecycleActionKind;
+export type AssetOverflowSystemImage =
+  | 'clock.arrow.circlepath'
+  | 'clock'
+  | 'archivebox'
+  | 'arrow.uturn.backward'
+  | 'trash';
 
 export type AssetOverflowMenuAction = {
   readonly id: AssetOverflowMenuActionId;
   readonly label: string;
   readonly section: 'history' | 'lifecycle' | 'destructive';
-  readonly systemImage: string;
+  readonly systemImage: AssetOverflowSystemImage;
   readonly isDestructive: boolean;
 };
 

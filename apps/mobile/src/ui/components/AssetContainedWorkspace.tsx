@@ -416,8 +416,8 @@ function createStyles(palette: MobileColorPalette) {
     primarySpatialAction: { backgroundColor: palette.action },
     secondarySpatialAction: {
       backgroundColor: palette.elevatedSurface,
-      borderColor: palette.controlBorder,
-      borderWidth: 1
+      borderColor: palette.border,
+      borderWidth: StyleSheet.hairlineWidth
     },
     spatialActionPressed: { opacity: 0.82 },
     primarySpatialText: {
@@ -442,7 +442,7 @@ function createStyles(palette: MobileColorPalette) {
       minHeight: 88,
       paddingVertical: spacing.sm
     },
-    childRowPressed: { backgroundColor: palette.selected },
+    childRowPressed: { opacity: 0.82 },
     childSeparator: {
       backgroundColor: palette.border,
       height: StyleSheet.hairlineWidth,

@@ -63,6 +63,7 @@ import {
   hasDirtyEditAssetDraft,
   normalizedEditDraft
 } from './AssetDetailEditPresentation';
+import { assetOverflowMenuGroups } from './AssetOverflowMenu';
 
 describe('navigateAfterDeletedAsset', () => {
   it('builds explicit asset detail route params for card navigation', () => {
@@ -870,6 +871,24 @@ describe('asset lifecycle presentation helpers', () => {
     handleAssetOverflowAction('delete', callbacks);
 
     expect(calls).toEqual(['checkout-history', 'history', 'archive', 'restore', 'delete']);
+  });
+
+  it('builds native header menu groups with direct one-tap action callbacks', () => {
+    const calls: string[] = [];
+    const groups = assetOverflowMenuGroups({
+      asset: { title: 'Drill', canArchive: true, canRestore: false, canDeletePermanently: true },
+      onCheckoutHistory: () => calls.push('checkout-history'),
+      onHistory: () => calls.push('history'),
+      onLifecycleAction: (action) => calls.push(action)
+    });
+
+    expect(groups.map((group) => group.id)).toEqual(['history', 'lifecycle', 'destructive']);
+    expect(groups.flatMap((group) => group.items.map((item) => item.id))).toEqual([
+      'checkout-history', 'history', 'archive', 'delete'
+    ]);
+    groups[0]?.items[1]?.onPress();
+    groups[1]?.items[0]?.onPress();
+    expect(calls).toEqual(['history', 'archive']);
   });
 
   it('turns lifecycle failures into action-specific recovery copy', () => {

@@ -182,11 +182,11 @@ function createStyles(palette: MobileColorPalette) {
     },
     quietAction: {
       backgroundColor: palette.surface,
-      borderColor: palette.controlBorder,
-      borderWidth: 1
+      borderColor: palette.border,
+      borderWidth: StyleSheet.hairlineWidth
     },
     quietActionPressed: {
-      backgroundColor: palette.selected
+      opacity: 0.82
     },
     actionText: {
       fontSize: 15,

@@ -55,7 +55,7 @@ function createStyles(palette: MobileColorPalette) {
       backgroundColor: palette.surface,
       borderColor: palette.border,
       borderRadius: radius.md,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       flexDirection: 'row',
       gap: spacing.sm,
       marginBottom: spacing.sm,
@@ -64,8 +64,7 @@ function createStyles(palette: MobileColorPalette) {
       padding: spacing.sm
     },
     rowPressed: {
-      backgroundColor: palette.selected,
-      borderColor: palette.controlBorder
+      opacity: 0.82
     },
     imageFrame: {
       alignItems: 'center',

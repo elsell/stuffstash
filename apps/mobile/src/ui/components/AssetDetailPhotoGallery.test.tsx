@@ -29,7 +29,8 @@ vi.mock('react-native', () => ({
   Pressable: 'Pressable',
   ScrollView: 'ScrollView',
   StyleSheet: {
-    create: (styles: unknown) => styles
+    create: (styles: unknown) => styles,
+    hairlineWidth: 0.5
   },
   Text: 'Text',
   View: 'View',
@@ -95,12 +96,18 @@ describe('AssetDetailPhotoGallery', () => {
     expect(addActions).toHaveLength(1);
     expect(addActions[0]?.props?.accessibilityRole).toBe('button');
     expect(resolvePressableStyle(addActions[0])).toEqual(expect.arrayContaining([
-      expect.objectContaining({ minHeight: 44, borderWidth: 1 }),
+      expect.objectContaining({ minHeight: 44, borderWidth: 0.5 }),
       expect.objectContaining({
         backgroundColor: lightHighContrastPalette.elevatedSurface,
-        borderColor: lightHighContrastPalette.controlBorder
+        borderColor: lightHighContrastPalette.border
       })
     ]));
+    const idleAdd = resolvePressableStyle(addActions[0]);
+    const pressedAdd = resolvePressableStyle(addActions[0], true);
+    expect(styleValue(pressedAdd, 'opacity')).toBeLessThan(1);
+    expect(styleValue(pressedAdd, 'backgroundColor')).toBe(styleValue(idleAdd, 'backgroundColor'));
+    expect(styleValue(pressedAdd, 'borderColor')).toBe(styleValue(idleAdd, 'borderColor'));
+    expect(styleValue(pressedAdd, 'borderWidth')).toBe(styleValue(idleAdd, 'borderWidth'));
     expect(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style).toEqual(expect.arrayContaining([
       expect.objectContaining({ borderWidth: 1 }),
       expect.objectContaining({
@@ -172,9 +179,9 @@ function press(node: ElementNode | undefined): void {
   onPress();
 }
 
-function resolvePressableStyle(node: ElementNode | undefined): unknown {
+function resolvePressableStyle(node: ElementNode | undefined, pressed = false): unknown {
   const style = node?.props?.style;
-  return typeof style === 'function' ? style({ pressed: false }) : style;
+  return typeof style === 'function' ? style({ pressed }) : style;
 }
 
 function styleValue(style: unknown, key: string): unknown {

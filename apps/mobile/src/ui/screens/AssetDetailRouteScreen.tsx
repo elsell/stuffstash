@@ -30,7 +30,9 @@ import {
   AssetPhotoUploadProgressViewModel
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
-import { AssetOverflowMenu } from './AssetOverflowMenu';
+import {
+  assetHeaderOverflowScreenOptions
+} from './AssetHeaderOverflow';
 import { AssetDetailRouteErrorState } from './AssetDetailRouteErrorState';
 import {
   assetPhotoViewerModel,
@@ -395,21 +397,18 @@ export function AssetDetailRouteScreen({
   }
 
   const presentedWorkspaceStatus = visibleAssetWorkspaceStatus(pendingAction, workspaceStatus);
+  const headerOverflow = screenState.status === 'ready' ? {
+    asset: screenState.asset,
+    disabled: pendingAction !== undefined,
+    onCheckoutHistory: () => router.push(`/assets/${screenState.asset.id}/checkouts`),
+    onHistory: () => openHistory(screenState.asset),
+    onLifecycleAction: (action: AssetLifecycleActionKind) => confirmLifecycleAction(action, screenState.asset)
+  } : undefined;
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
-        ...(screenState.status === 'ready' ? {
-          headerRight: () => (
-            <AssetOverflowMenu
-              asset={screenState.asset}
-              disabled={pendingAction !== undefined}
-              onCheckoutHistory={() => router.push(`/assets/${screenState.asset.id}/checkouts`)}
-              onHistory={() => openHistory(screenState.asset)}
-              onLifecycleAction={(action) => confirmLifecycleAction(action, screenState.asset)}
-            />
-          )
-        } : {})
+        ...(headerOverflow ? assetHeaderOverflowScreenOptions(headerOverflow) : {})
       }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}
       {screenState.status === 'error' ? (

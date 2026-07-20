@@ -9,10 +9,6 @@ import {
 } from './AssetDetailView';
 import { AppTextInput } from './AppTextInput';
 
-vi.mock('react', () => ({
-  useState: <Value,>(initial: Value) => [initial, vi.fn()]
-}));
-
 vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
   useState: <T,>(initial: T) => [initial, vi.fn()] as const

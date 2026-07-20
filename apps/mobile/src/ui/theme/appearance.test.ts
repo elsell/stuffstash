@@ -6,10 +6,8 @@ import {
   lightPalette
 } from './tokens';
 
-const dynamicColor = vi.fn((variants: Record<string, string>) => `dynamic:${variants.light}:${variants.dark}`);
-
 vi.mock('react-native', () => ({
-  DynamicColorIOS: (variants: Record<string, string>) => dynamicColor(variants),
+  DynamicColorIOS: (variants: Record<string, string>) => `dynamic:${variants.light}:${variants.dark}`,
   Platform: { OS: 'ios' }
 }));
 
@@ -20,21 +18,16 @@ import {
 } from './appearance';
 
 describe('appearance-aware mobile palette', () => {
-  it('creates iOS semantic colors with both appearances and contrast variants', () => {
-    const palette = appearanceAwarePalette('dark', 'ios');
-
-    expect(palette.background).toBe(`dynamic:${lightPalette.background}:${darkPalette.background}`);
-    expect(dynamicColor).toHaveBeenCalledWith({
-      light: lightPalette.background,
-      dark: darkPalette.background,
-      highContrastLight: lightHighContrastPalette.background,
-      highContrastDark: darkHighContrastPalette.background
-    });
+  it('uses the resolved concrete palette on the first iOS frame', () => {
+    expect(appearanceAwarePalette('light')).toBe(lightPalette);
+    expect(appearanceAwarePalette('dark')).toBe(darkPalette);
+    expect(appearanceAwarePalette('light', true)).toBe(lightHighContrastPalette);
+    expect(appearanceAwarePalette('dark', true)).toBe(darkHighContrastPalette);
   });
 
-  it('uses the resolved palette on platforms without DynamicColorIOS', () => {
-    expect(appearanceAwarePalette('dark', 'android')).toBe(darkPalette);
-    expect(appearanceAwarePalette('light', 'android')).toBe(lightPalette);
+  it('uses the resolved palette independently of native dynamic-color availability', () => {
+    expect(appearanceAwarePalette('dark')).toBe(darkPalette);
+    expect(appearanceAwarePalette('light')).toBe(lightPalette);
   });
 
   it('resolves explicit preferences independently of the system scheme', () => {

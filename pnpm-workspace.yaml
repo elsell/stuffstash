@@ -10,7 +10,7 @@ overrides:
   '@napi-rs/wasm-runtime': '1.1.4'
   '@react-navigation/core': '7.18.0'
   '@react-navigation/elements': '2.9.20'
-  '@react-navigation/native-stack': '7.3.16'
+  '@react-navigation/native-stack': '7.14.5'
   '@react-navigation/routers': '7.5.5'
   '@radix-ui/react-collection': '1.1.9'
   '@radix-ui/react-dialog': '1.1.16'

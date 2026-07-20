@@ -6,7 +6,7 @@ import {
   type AssetLifecycleActionKind
 } from './AssetLifecyclePresentation';
 
-type AssetOverflowMenuProps = {
+export type AssetOverflowMenuProps = {
   readonly asset: Pick<
     AssetDetailViewModel,
     'title' | 'canArchive' | 'canRestore' | 'canDeletePermanently'
@@ -24,9 +24,27 @@ export function AssetOverflowMenu({
   onHistory,
   onLifecycleAction
 }: AssetOverflowMenuProps) {
+  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction });
+
+  return (
+    <NativeActionMenu
+      accessibilityLabel={`More actions for ${asset.title}`}
+      disabled={disabled}
+      groups={groups}
+      trigger={{ kind: 'ellipsis' }}
+    />
+  );
+}
+
+export function assetOverflowMenuGroups({
+  asset,
+  onCheckoutHistory,
+  onHistory,
+  onLifecycleAction
+}: Omit<AssetOverflowMenuProps, 'disabled'>): readonly NativeActionMenuGroup[] {
   const callbacks = { onCheckoutHistory, onHistory, onLifecycleAction };
   const actions = assetOverflowMenuActions(asset);
-  const groups = (['history', 'lifecycle', 'destructive'] as const)
+  return (['history', 'lifecycle', 'destructive'] as const)
     .map((section): NativeActionMenuGroup => ({
       id: section,
       items: actions
@@ -40,13 +58,4 @@ export function AssetOverflowMenu({
         }))
     }))
     .filter((group) => group.items.length > 0);
-
-  return (
-    <NativeActionMenu
-      accessibilityLabel={`More actions for ${asset.title}`}
-      disabled={disabled}
-      groups={groups}
-      trigger={{ kind: 'ellipsis' }}
-    />
-  );
 }
