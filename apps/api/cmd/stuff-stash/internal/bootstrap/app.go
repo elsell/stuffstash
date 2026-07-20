@@ -31,6 +31,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		return app.App{}, err
 	}
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
+	importer := homebox.NewLegacyImporter(nil)
 	application := app.New(app.Dependencies{
 		Observer:                         observer,
 		Auth:                             authenticator,
@@ -69,7 +70,8 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		ProviderProfileTester:            voice.NewProviderProfileTester(googleProviderProfileFactory(cfg)),
 		RealtimeSessions:                 repositories.realtimeSessions,
 		ActionPlans:                      repositories.actionPlans,
-		ImportSources:                    homebox.NewLegacyImporter(nil),
+		ImportSources:                    importer,
+		ImportAttachmentSources:          importer,
 		ImportJobs:                       repositories.importJobs,
 		ImportSourceVault:                importSourceVault,
 		ImportLinks:                      repositories.importLinks,

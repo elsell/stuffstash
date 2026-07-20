@@ -145,7 +145,8 @@ func cloneImportPlan(plan importplan.Plan) importplan.Plan {
 	clone.Attachments = make([]importplan.Attachment, len(plan.Attachments))
 	for index, attachment := range plan.Attachments {
 		clone.Attachments[index] = attachment
-		clone.Attachments[index].Content = append([]byte(nil), attachment.Content...)
+		clone.Attachments[index].Content = nil
+		clone.Attachments[index].SizeBytes = 0
 	}
 	clone.Messages = append([]importplan.Message(nil), plan.Messages...)
 	return clone

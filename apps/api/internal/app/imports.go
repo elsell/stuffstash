@@ -242,9 +242,7 @@ func (a App) StartImportJob(ctx context.Context, input StartImportJobInput) (imp
 	if !updated {
 		return importjob.Record{}, ErrPrecondition
 	}
-	applySourceRequest := sourceRequest
-	applySourceRequest.FetchAttachmentBytes = true
-	if err := a.storeImportJobSource(ctx, job, applySourceRequest); err != nil {
+	if err := a.storeImportJobSource(ctx, job, sourceRequest); err != nil {
 		_ = a.failStartedImportJob(ctx, input.Principal, input.RequestID, job, "Import source credentials could not be stored", now, true, true)
 		return importjob.Record{}, err
 	}

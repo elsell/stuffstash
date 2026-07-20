@@ -105,12 +105,14 @@ Import jobs must not persist Homebox attachment bytes or other source attachment
 Attachment bytes must be fetched during apply when the source adapter and user options require attachment import.
 Source adapters must distinguish preview planning from apply execution at the port boundary.
 Preview planning may count and expose safe attachment metadata such as source attachment ID, target source asset ID, filename, content type, and primary-photo status, but it must not download or retain attachment bytes.
-Apply execution may fetch attachment bytes only through an explicit worker/apply source request.
+Import plans returned for apply must also remain attachment-byte-free. Apply execution may fetch attachment bytes only through an explicit attachment-reader port owned by the source adapter.
+The application service must request, validate, and persist at most one source attachment at a time, and must release that attachment's byte buffer before requesting the next attachment.
+Peak application memory used for source attachment content must therefore be bounded by one configured maximum-size attachment plus the normal validation and persistence overhead, rather than growing with the total attachment count.
 Source fingerprints must ignore attachment byte content, byte-size metadata, sniffed attachment content type, generated attachment filenames, and safe warning messages that are only knowable after apply downloads the attachment.
 Attachment source identity, target source asset identity, and primary-photo status remain preview-known fingerprint inputs.
 Attachment fingerprint input order must be deterministic so provider response ordering changes do not force a new preview when the attachment set is otherwise unchanged.
-Plan normalization used for fingerprinting, persisted preview metadata, and safe message handling must not mutate the source adapter's apply plan or remove attachment bytes needed by execution.
-If attachment bytes cannot be fetched during execution for an attachment that was visible during preview, the source adapter must keep the attachment's source identity in the execution plan and mark it unavailable instead of returning an empty attachment to the normal upload path.
+Plan normalization used for fingerprinting, persisted preview metadata, and safe message handling must not mutate the source adapter's plan.
+If attachment bytes cannot be fetched during execution for an attachment that was visible during preview, the application service must keep the attachment's source identity, count it as unavailable, and avoid returning an empty attachment to the normal upload path.
 The application service must count unavailable source attachments as skipped and report a source-download warning.
 It must not call the normal attachment creation path for unavailable source bytes, because normal upload validation errors describe malformed user content rather than a source download failure.
 
@@ -602,7 +604,7 @@ Preview response must include:
 Preview must not persist source passwords or Homebox bearer tokens.
 Durable preview persists normalized plan metadata and source references, but not attachment bytes.
 Start request includes the same source input and user choices such as whether to import images so the source fingerprint can be revalidated before worker execution.
-Start and worker execution must store and use a source request that explicitly permits attachment byte fetching only after the previewed-to-running transition wins.
+Start and worker execution must store and use the reviewed source request only after the previewed-to-running transition wins. Calling the separate attachment-reader port from worker apply is the explicit capability that permits attachment byte fetching; plan reads never gain that capability.
 
 Worker apply behavior:
 

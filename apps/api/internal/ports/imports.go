@@ -18,21 +18,59 @@ import (
 var ErrImportJobSourceUnreadable = errors.New("import job source material unreadable")
 
 type ImportSourceRequest struct {
-	SourceType           importplan.SourceType
-	BaseURL              string
-	Username             string
-	Password             string
-	IncludeImages        bool
-	FetchAttachmentBytes bool
-	AllowInsecureTLS     bool
-	AllowPrivateNetwork  bool
-	MaxAttachmentBytes   int64
-	FileName             string
-	Content              []byte
+	SourceType          importplan.SourceType
+	BaseURL             string
+	Username            string
+	Password            string
+	IncludeImages       bool
+	AllowInsecureTLS    bool
+	AllowPrivateNetwork bool
+	MaxAttachmentBytes  int64
+	FileName            string
+	Content             []byte
 }
 
 type ImportSourceReader interface {
 	ReadImportPlan(ctx context.Context, request ImportSourceRequest) (importplan.Plan, error)
+}
+
+type ImportAttachmentContent struct {
+	FileName    string
+	ContentType string
+	Content     []byte
+}
+
+type ImportAttachmentFailureReason string
+
+const (
+	ImportAttachmentDownloadFailed  ImportAttachmentFailureReason = "download_failed"
+	ImportAttachmentTooLarge        ImportAttachmentFailureReason = "too_large"
+	ImportAttachmentUnsupportedType ImportAttachmentFailureReason = "unsupported_type"
+)
+
+type ImportAttachmentReadError struct {
+	Reason ImportAttachmentFailureReason
+	cause  error
+}
+
+func (e ImportAttachmentReadError) Error() string {
+	return "source attachment could not be read"
+}
+
+func (e ImportAttachmentReadError) Unwrap() error {
+	return e.cause
+}
+
+func NewImportAttachmentReadError(reason ImportAttachmentFailureReason, cause error) error {
+	return ImportAttachmentReadError{Reason: reason, cause: cause}
+}
+
+type ImportAttachmentSession interface {
+	ReadImportAttachment(ctx context.Context, attachment importplan.Attachment) (ImportAttachmentContent, error)
+}
+
+type ImportAttachmentSource interface {
+	OpenImportAttachmentSession(ctx context.Context, request ImportSourceRequest) (ImportAttachmentSession, error)
 }
 
 type ImportJobPageRequest struct {

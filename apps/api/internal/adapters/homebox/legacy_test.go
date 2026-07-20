@@ -3,6 +3,7 @@ package homebox
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -234,57 +235,122 @@ func TestLegacyHomeboxLiveImportContinuesWhenTagListIsUnavailable(t *testing.T) 
 	}
 }
 
-func TestLegacyHomeboxApplyDownloadsAttachmentBytesWhenRequested(t *testing.T) {
+func TestLegacyHomeboxPlanDoesNotDownloadAttachmentBytes(t *testing.T) {
 	var attachmentDownloads int
 	server := newLegacyHomeboxTestServerWithAttachmentCounter(t, http.StatusOK, &attachmentDownloads)
 
 	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
-		SourceType:           importplan.SourceLegacyHomebox,
-		BaseURL:              server.URL,
-		Username:             "user@example.com",
-		Password:             "secret",
-		IncludeImages:        true,
-		FetchAttachmentBytes: true,
-		AllowPrivateNetwork:  true,
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             server.URL,
+		Username:            "user@example.com",
+		Password:            "secret",
+		IncludeImages:       true,
+		AllowPrivateNetwork: true,
 	})
 	if err != nil {
 		t.Fatalf("read private-network Homebox source: %v", err)
 	}
-	if attachmentDownloads != 1 {
-		t.Fatalf("apply downloaded attachment bytes %d times", attachmentDownloads)
+	if attachmentDownloads != 0 {
+		t.Fatalf("plan downloaded attachment bytes %d times", attachmentDownloads)
 	}
-	if len(plan.Attachments) != 1 || string(plan.Attachments[0].Content) != "image-bytes" {
-		t.Fatalf("expected downloaded attachment content, got %+v", plan.Attachments)
+	if len(plan.Attachments) != 1 || len(plan.Attachments[0].Content) != 0 {
+		t.Fatalf("expected byte-free attachment metadata, got %+v", plan.Attachments)
 	}
 }
 
-func TestLegacyHomeboxApplyPreservesAttachmentIdentityWhenDownloadFails(t *testing.T) {
+func TestLegacyHomeboxAttachmentSessionDownloadsRequestedAttachment(t *testing.T) {
 	var attachmentDownloads int
-	server := newLegacyHomeboxTestServerWithAttachmentResponse(t, http.StatusOK, http.StatusNotFound, &attachmentDownloads)
+	server := newLegacyHomeboxTestServerWithAttachmentCounter(t, http.StatusOK, &attachmentDownloads)
+	request := ports.ImportSourceRequest{
+		SourceType:          importplan.SourceLegacyHomebox,
+		BaseURL:             server.URL,
+		Username:            "user@example.com",
+		Password:            "secret",
+		IncludeImages:       true,
+		AllowPrivateNetwork: true,
+	}
+	importer := NewLegacyImporter(nil)
 
-	plan, err := NewLegacyImporter(nil).ReadImportPlan(context.Background(), ports.ImportSourceRequest{
-		SourceType:           importplan.SourceLegacyHomebox,
-		BaseURL:              server.URL,
-		Username:             "user@example.com",
-		Password:             "secret",
-		IncludeImages:        true,
-		FetchAttachmentBytes: true,
-		AllowPrivateNetwork:  true,
-	})
+	plan, err := importer.ReadImportPlan(context.Background(), request)
 	if err != nil {
 		t.Fatalf("read private-network Homebox source: %v", err)
 	}
+	session, err := importer.OpenImportAttachmentSession(context.Background(), request)
+	if err != nil {
+		t.Fatalf("open attachment session: %v", err)
+	}
+	content, err := session.ReadImportAttachment(context.Background(), plan.Attachments[0])
+	if err != nil {
+		t.Fatalf("read attachment: %v", err)
+	}
 	if attachmentDownloads != 1 {
-		t.Fatalf("apply downloaded attachment bytes %d times", attachmentDownloads)
+		t.Fatalf("attachment session downloaded bytes %d times", attachmentDownloads)
 	}
-	if len(plan.Attachments) != 1 || plan.Attachments[0].SourceID != "attachment-one" || len(plan.Attachments[0].Content) != 0 {
-		t.Fatalf("expected attachment identity without bytes, got %+v", plan.Attachments)
+	if string(content.Content) != "image-bytes" || content.ContentType != "image/jpeg" {
+		t.Fatalf("unexpected attachment content: %+v", content)
 	}
-	if plan.Attachments[0].UnavailableReason != "attachment could not be downloaded" {
-		t.Fatalf("expected unavailable attachment reason, got %+v", plan.Attachments[0])
+	if content.FileName != "drill.jpg" {
+		t.Fatalf("unexpected attachment file name: %q", content.FileName)
 	}
-	if len(plan.Messages) != 0 {
-		t.Fatalf("expected application layer to report unavailable attachment warning, got %+v", plan.Messages)
+}
+
+func TestLegacyHomeboxAttachmentSessionClassifiesSafeFailures(t *testing.T) {
+	tests := map[string]struct {
+		attachmentStatus      int
+		attachmentContentType string
+		attachmentBody        string
+		maxAttachmentBytes    int64
+		wantReason            ports.ImportAttachmentFailureReason
+	}{
+		"download failure": {
+			attachmentStatus: http.StatusNotFound,
+			wantReason:       ports.ImportAttachmentDownloadFailed,
+		},
+		"oversized": {
+			attachmentStatus:   http.StatusOK,
+			attachmentBody:     "image-bytes",
+			maxAttachmentBytes: 4,
+			wantReason:         ports.ImportAttachmentTooLarge,
+		},
+		"unsupported content": {
+			attachmentStatus:      http.StatusOK,
+			attachmentContentType: "text/plain",
+			attachmentBody:        "plain text",
+			wantReason:            ports.ImportAttachmentUnsupportedType,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			server := newLegacyHomeboxTestServerWithConfig(t, legacyHomeboxServerConfig{
+				itemDetailStatus:      http.StatusOK,
+				attachmentStatus:      test.attachmentStatus,
+				attachmentContentType: test.attachmentContentType,
+				attachmentBody:        test.attachmentBody,
+			})
+			request := ports.ImportSourceRequest{
+				SourceType:          importplan.SourceLegacyHomebox,
+				BaseURL:             server.URL,
+				Username:            "user@example.com",
+				Password:            "secret",
+				IncludeImages:       true,
+				AllowPrivateNetwork: true,
+				MaxAttachmentBytes:  test.maxAttachmentBytes,
+			}
+			importer := NewLegacyImporter(nil)
+			plan, err := importer.ReadImportPlan(context.Background(), request)
+			if err != nil {
+				t.Fatalf("read plan: %v", err)
+			}
+			session, err := importer.OpenImportAttachmentSession(context.Background(), request)
+			if err != nil {
+				t.Fatalf("open attachment session: %v", err)
+			}
+			_, err = session.ReadImportAttachment(context.Background(), plan.Attachments[0])
+			var readErr ports.ImportAttachmentReadError
+			if !errors.As(err, &readErr) || readErr.Reason != test.wantReason {
+				t.Fatalf("attachment error = %T %v, want reason %q", err, err, test.wantReason)
+			}
+		})
 	}
 }
 
@@ -361,12 +427,14 @@ func newLegacyHomeboxTestServerWithTags(t *testing.T, tagsJSON string, itemTagsJ
 }
 
 type legacyHomeboxServerConfig struct {
-	itemDetailStatus    int
-	attachmentStatus    int
-	attachmentDownloads *int
-	tagsStatus          int
-	tagsJSON            string
-	itemTagsJSON        string
+	itemDetailStatus      int
+	attachmentStatus      int
+	attachmentDownloads   *int
+	attachmentContentType string
+	attachmentBody        string
+	tagsStatus            int
+	tagsJSON              string
+	itemTagsJSON          string
 }
 
 func newLegacyHomeboxTestServerWithConfig(t *testing.T, config legacyHomeboxServerConfig) *httptest.Server {
@@ -376,6 +444,12 @@ func newLegacyHomeboxTestServerWithConfig(t *testing.T, config legacyHomeboxServ
 	}
 	if config.attachmentStatus == 0 {
 		config.attachmentStatus = http.StatusOK
+	}
+	if config.attachmentContentType == "" {
+		config.attachmentContentType = "image/jpeg"
+	}
+	if config.attachmentBody == "" {
+		config.attachmentBody = "image-bytes"
 	}
 	if config.tagsStatus == 0 {
 		config.tagsStatus = http.StatusOK
@@ -420,8 +494,8 @@ func newLegacyHomeboxTestServerWithConfig(t *testing.T, config legacyHomeboxServ
 				http.Error(w, "not found", config.attachmentStatus)
 				return
 			}
-			w.Header().Set("Content-Type", "image/jpeg")
-			_, _ = w.Write([]byte("image-bytes"))
+			w.Header().Set("Content-Type", config.attachmentContentType)
+			_, _ = w.Write([]byte(config.attachmentBody))
 		default:
 			http.NotFound(w, r)
 		}

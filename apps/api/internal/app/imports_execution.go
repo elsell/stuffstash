@@ -208,6 +208,7 @@ func (a App) applyImportPlan(ctx context.Context, command ports.ImportJobCommand
 	if err != nil {
 		return ImportResult{}, importSourceInputError(err)
 	}
+	plan = cloneImportPlan(plan)
 	result := ImportResult{}
 	checkPlan, err := a.normalizedImportPlanForJob(ctx, command.TenantID, command.InventoryID, plan)
 	if err != nil {
@@ -248,7 +249,7 @@ func (a App) applyImportPlan(ctx context.Context, command ports.ImportJobCommand
 	if err != nil {
 		return result, err
 	}
-	if err := a.applyImportAttachments(ctx, command, job.ID, sourceIdentity, plan, sourceToAssetID, &result); err != nil {
+	if err := a.applyImportAttachments(ctx, command, job.ID, sourceIdentity, sourceRequest, plan, sourceToAssetID, &result); err != nil {
 		return result, err
 	}
 	return result, nil
@@ -364,9 +365,18 @@ func (a App) applyImportAssets(ctx context.Context, command ports.ImportJobComma
 	return sourceToAssetID, nil
 }
 
-func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, plan importplan.Plan, sourceToAssetID map[string]string, result *ImportResult) error {
+func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, sourceRequest ports.ImportSourceRequest, plan importplan.Plan, sourceToAssetID map[string]string, result *ImportResult) error {
 	total := len(plan.Attachments)
+	var attachmentSession ports.ImportAttachmentSession
 	if total > 0 {
+		if a.importAttachmentSources == nil {
+			return ErrInvalidInput
+		}
+		var err error
+		attachmentSession, err = a.importAttachmentSources.OpenImportAttachmentSession(ctx, sourceRequest)
+		if err != nil {
+			return importSourceInputError(err)
+		}
 		if err := a.updateImportProgress(ctx, command, importjob.PhaseAttachments, 0, total, "Importing attachments"); err != nil {
 			return err
 		}
@@ -418,6 +428,22 @@ func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJob
 			}
 			continue
 		}
+		content, err := attachmentSession.ReadImportAttachment(ctx, attachment)
+		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return err
+			}
+			result.Counts.AttachmentsSkipped++
+			result.Messages = append(result.Messages, importAttachmentReadFailureMessage(err, attachment))
+			if err := a.updateImportProgress(ctx, command, importjob.PhaseAttachments, index+1, total, "Importing attachments"); err != nil {
+				return err
+			}
+			continue
+		}
+		attachment.FileName = content.FileName
+		attachment.ContentType = content.ContentType
+		attachment.Content = content.Content
+		attachment.SizeBytes = len(content.Content)
 		created, err := a.createImportedAttachment(ctx, command, jobID, sourceIdentity, parsedAssetID, attachment)
 		if err != nil {
 			if errors.Is(err, ports.ErrConflict) {
@@ -457,6 +483,32 @@ func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJob
 		}
 	}
 	return nil
+}
+
+func importAttachmentReadFailureMessage(err error, attachment importplan.Attachment) importplan.Message {
+	message := importplan.Message{
+		Code:       "attachment-unavailable",
+		Severity:   importplan.SeverityWarning,
+		Summary:    "Attachment could not be downloaded",
+		Detail:     "attachment could not be downloaded",
+		SourceID:   attachment.SourceID,
+		SourceName: attachment.FileName,
+	}
+	var readErr ports.ImportAttachmentReadError
+	if !errors.As(err, &readErr) {
+		return message
+	}
+	switch readErr.Reason {
+	case ports.ImportAttachmentTooLarge:
+		message.Code = "attachment-too-large"
+		message.Summary = "Attachment is too large"
+		message.Detail = "attachment exceeds the import size limit"
+	case ports.ImportAttachmentUnsupportedType:
+		message.Code = "attachment-unsupported-type"
+		message.Summary = "Attachment type is not supported"
+		message.Detail = "attachment content type is not supported"
+	}
+	return message
 }
 
 func (a App) createImportedAttachment(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, assetID asset.ID, planned importplan.Attachment) (media.Attachment, error) {

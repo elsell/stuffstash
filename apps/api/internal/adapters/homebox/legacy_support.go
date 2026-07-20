@@ -22,6 +22,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
+var errLegacyAttachmentTooLarge = errors.New("Homebox attachment exceeds import size limit")
+
 func (i LegacyImporter) withRequestOptions(request ports.ImportSourceRequest) LegacyImporter {
 	client := *i.client
 	if transport, ok := i.client.Transport.(*http.Transport); ok {
@@ -318,14 +320,14 @@ func (i LegacyImporter) attachment(ctx context.Context, baseURL string, token st
 	}
 	maxBytes := normalizedMaxAttachmentBytes(i.maxAttachmentBytes)
 	if resp.ContentLength > maxBytes {
-		return nil, "", errors.New("Homebox attachment exceeds import size limit")
+		return nil, "", errLegacyAttachmentTooLarge
 	}
 	content, err := io.ReadAll(io.LimitReader(resp.Body, maxBytes+1))
 	if err != nil {
 		return nil, "", err
 	}
 	if int64(len(content)) > maxBytes {
-		return nil, "", errors.New("Homebox attachment exceeds import size limit")
+		return nil, "", errLegacyAttachmentTooLarge
 	}
 	return content, sniffContentType(content, resp.Header.Get("Content-Type")), nil
 }
