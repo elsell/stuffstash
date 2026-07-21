@@ -14,6 +14,7 @@ const runtime = vi.hoisted(() => ({
 }));
 const inventory = vi.hoisted(() => ({
   loadWorkspace: vi.fn(async () => workspaceData()),
+  provisionPersonalWorkspace: vi.fn(async () => workspaceData()),
   loadAssetThumbnail: vi.fn(async () => null),
   dispose: vi.fn()
 }));
@@ -23,6 +24,7 @@ vi.mock('$lib/runtimeConfig', () => runtime);
 vi.mock('$lib/adapters/api/stuffStashInventoryRepository', () => ({
   StuffStashInventoryRepository: class {
     loadWorkspace = inventory.loadWorkspace;
+    provisionPersonalWorkspace = inventory.provisionPersonalWorkspace;
     loadAssetThumbnail = inventory.loadAssetThumbnail;
     dispose = inventory.dispose;
   }
@@ -48,11 +50,36 @@ afterEach(() => {
   auth.startSignIn.mockReset().mockResolvedValue(undefined);
   runtime.loadRuntimeConfig.mockReset().mockResolvedValue(runtimeConfig());
   inventory.loadWorkspace.mockReset().mockResolvedValue(workspaceData());
+  inventory.provisionPersonalWorkspace.mockReset().mockResolvedValue(workspaceData());
   inventory.loadAssetThumbnail.mockReset().mockResolvedValue(null);
   inventory.dispose.mockReset();
 });
 
 describe('root sign-in route', () => {
+  it('creates and enters a personal starter workspace for a new signed-in user', async () => {
+    auth.getStoredSession.mockReturnValue(session());
+    inventory.loadWorkspace.mockResolvedValueOnce(emptyWorkspaceData('Alex Rivera'));
+
+    component = mount(Page, { target: document.body });
+    await flush();
+
+    expect(inventory.provisionPersonalWorkspace).toHaveBeenCalledWith({
+      tenantName: 'Alex Rivera\u2019s household',
+      inventoryName: 'Home'
+    });
+    expect(document.body.textContent).not.toContain('Set up your workspace');
+  });
+
+  it('falls back to a generic household name when OIDC supplies no display name', async () => {
+    auth.getStoredSession.mockReturnValue(session());
+    inventory.loadWorkspace.mockResolvedValueOnce(emptyWorkspaceData());
+
+    component = mount(Page, { target: document.body });
+    await flush();
+
+    expect(inventory.provisionPersonalWorkspace).toHaveBeenCalledWith({ tenantName: 'My household', inventoryName: 'Home' });
+  });
+
   it('composes the provider-neutral ordinary sign-in presentation', async () => {
     component = mount(Page, { target: document.body });
     await flush();
@@ -187,6 +214,21 @@ function workspaceData() {
     },
     assets: [],
     checkedOutAssets: []
+  };
+}
+
+function emptyWorkspaceData(displayName?: string) {
+  const data = workspaceData();
+  return {
+    ...data,
+    context: {
+      ...data.context,
+      principal: { ...data.context.principal, displayName },
+      tenants: [],
+      inventories: [],
+      selectedTenantId: '',
+      selectedInventoryId: ''
+    }
   };
 }
 

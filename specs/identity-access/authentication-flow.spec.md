@@ -100,8 +100,9 @@ The authenticated principal must include:
 
 - Stable user ID.
 - Optional verified email address when the authentication adapter can provide one.
+- Optional display name when the authentication adapter can safely normalize one.
 
-Provider-specific claims must be normalized at the adapter edge. Domain behavior may use project-owned principal fields such as verified email, but must not depend on provider-specific claim names or token objects.
+Provider-specific claims must be normalized at the adapter edge. Domain behavior may use project-owned principal fields such as verified email and display name, but must not depend on provider-specific claim names or token objects. The OIDC adapter must normalize the standard `name` claim into the optional display name. Blank, control-character-bearing, or unreasonably long names must be discarded rather than exposed to product surfaces.
 
 Local development authentication may accept an optional email fixture in addition to the stable user ID so invitation flows can be tested without OIDC. The email fixture exists only in explicit local/test mode.
 
@@ -111,6 +112,7 @@ Stuff Stash must keep a durable user profile row for authenticated principals.
 
 - The user profile key is the stable internal principal ID.
 - The first profile fields are the stable principal ID and the latest verified email address supplied by the authentication adapter.
+- The request principal may carry the current normalized OIDC display name for low-risk presentation defaults without making that provider claim a durable user-profile dependency.
 - Authentication must upsert the user profile when a request includes profile information that is safe to store.
 - Audit records must not duplicate user profile fields such as email. They store the principal ID only.
 - Audit read responses may join audit records to user profiles and return a safe resolved principal object for display.

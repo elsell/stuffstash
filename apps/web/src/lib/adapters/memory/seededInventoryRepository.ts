@@ -122,6 +122,13 @@ export class SeededInventoryRepository
     return this.workspace();
   }
 
+  async provisionPersonalWorkspace(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
+    if (this.seed.tenants.length > 0) {
+      return this.selectTenant(this.seed.tenants[0].id);
+    }
+    return this.createTenantWithInventory(input);
+  }
+
   async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {
     const tenant = this.seed.tenants.find((candidate) => candidate.id === tenantId);
     if (!canCreateInventory(tenant)) {

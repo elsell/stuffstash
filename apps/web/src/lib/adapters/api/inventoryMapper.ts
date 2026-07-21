@@ -47,7 +47,8 @@ import {
 export function mapPrincipal(principal: ApiPrincipal): Principal {
   return {
     id: principal.id,
-    email: principal.email
+    email: principal.email,
+    displayName: principal.displayName
   };
 }
 

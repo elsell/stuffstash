@@ -27,6 +27,7 @@ import type {
 
 export interface InventoryRepository {
   loadWorkspace(): Promise<WorkspaceData>;
+  provisionPersonalWorkspace(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData>;
   createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData>;
   createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData>;
   selectTenant(tenantId: string): Promise<WorkspaceData>;

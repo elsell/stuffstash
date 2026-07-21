@@ -14,6 +14,7 @@ export interface StuffStashClientOptions {
 export interface Principal {
   id: string;
   email?: string;
+  displayName?: string;
 }
 
 export interface AccessSummary {
@@ -1938,7 +1939,7 @@ function mapDirectUpload(response: DirectUploadResponse): DirectUpload {
 }
 
 function mapPrincipal(response: PrincipalResponse): Principal {
-  return { id: response.id, email: response.email };
+  return { id: response.id, email: response.email, displayName: response.displayName };
 }
 
 function mapTenant(response: TenantResponse): Tenant {

@@ -937,7 +937,11 @@ Authenticated workspace loading must use real API discovery:
 - Tenant and inventory names in the context switcher must come from API responses, not placeholder labels.
 - Edit/add affordances must derive from effective inventory permissions in the API response, not from hard-coded editor assumptions.
 - Add/create asset affordances must require `create_asset`; broader edit affordances may use `edit_asset` or a separate edit capability.
-- If the authenticated user has no visible tenants or no visible inventories, the workspace must show the existing create/setup empty state rather than local seeded data.
+- If an authenticated user reaches the ordinary workspace with no visible tenants, the web app must immediately create a personal starter workspace and enter it instead of requiring a setup form. The tenant name must be `<OIDC display name>\u2019s household` when a safe normalized display name is available, otherwise `My household`; the first inventory name must be `Home`.
+- Personal starter provisioning must run only from the ordinary authenticated workspace entry. An invitation return path must remain authoritative through sign-in, preview, and explicit acceptance, and must never provision a personal tenant merely because the invited principal has no current tenant access.
+- Starter provisioning must re-check tenant discovery before creating anything so callback reloads and ordinary retries reuse access that has become visible. A partial prior attempt that created a visible tenant but no inventory must use the existing empty-tenant inventory flow and must not create a second tenant.
+- A starter provisioning failure must show fixed, actionable recovery guidance; raw API, OIDC, and persistence diagnostics must not be rendered.
+- If the authenticated user has a visible tenant but no visible inventories, the workspace must continue to show the existing create-inventory or denied empty state rather than automatically creating inside a shared tenant.
 
 Tenant and inventory switching must preserve the API boundary:
 

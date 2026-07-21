@@ -24,6 +24,7 @@
   import type { InventoryRepository } from '$lib/ports/inventoryRepository';
   import type { InventoryBrowseRepository } from '$lib/ports/inventoryBrowseRepository';
   import type { AssetThumbnailLoaderLifecycle } from '$lib/ports/assetThumbnailLoader';
+  import { provisionPersonalWorkspace } from '$lib/application/personalWorkspaceProvisioning';
 
   type WorkspaceRepository = InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoaderLifecycle;
 
@@ -62,7 +63,10 @@
             workspaceObserver
           );
           ownedRepository = nextRepository;
-          const nextWorkspace = await nextRepository.loadWorkspace();
+          let nextWorkspace = await nextRepository.loadWorkspace();
+          if (nextWorkspace.context.tenants.length === 0) {
+            nextWorkspace = await provisionPersonalWorkspace(nextRepository, nextWorkspace.context.principal);
+          }
           if (!mounted) return;
           repository = nextRepository;
           workspaceData = nextWorkspace;

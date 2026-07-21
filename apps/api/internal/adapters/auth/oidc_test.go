@@ -12,7 +12,7 @@ import (
 
 func TestOIDCAuthenticatorAcceptsVerifiedBearerToken(t *testing.T) {
 	authenticator := NewOIDCAuthenticator(&fakeTokenVerifier{
-		token: VerifiedToken{Issuer: "https://accounts.google.com", Subject: "google-user-123", Email: "Owner@Example.COM", EmailVerified: true},
+		token: VerifiedToken{Issuer: "https://accounts.google.com", Subject: "google-user-123", Email: "Owner@Example.COM", EmailVerified: true, Name: "Alex Rivera"},
 	})
 
 	principal, err := authenticator.Authenticate(context.Background(), "Bearer valid-id-token")
@@ -25,6 +25,23 @@ func TestOIDCAuthenticatorAcceptsVerifiedBearerToken(t *testing.T) {
 	}
 	if principal.Email.String() != "owner@example.com" {
 		t.Fatalf("unexpected principal email %q", principal.Email.String())
+	}
+	if principal.DisplayName.String() != "Alex Rivera" {
+		t.Fatalf("unexpected principal display name %q", principal.DisplayName.String())
+	}
+}
+
+func TestOIDCAuthenticatorDiscardsUnsafeDisplayName(t *testing.T) {
+	authenticator := NewOIDCAuthenticator(&fakeTokenVerifier{
+		token: VerifiedToken{Issuer: "https://accounts.google.com", Subject: "google-user-123", Name: "Alex\nRivera"},
+	})
+
+	principal, err := authenticator.Authenticate(context.Background(), "Bearer valid-id-token")
+	if err != nil {
+		t.Fatalf("authenticate: %v", err)
+	}
+	if principal.DisplayName.String() != "" {
+		t.Fatalf("expected unsafe display name to be discarded, got %q", principal.DisplayName.String())
 	}
 }
 

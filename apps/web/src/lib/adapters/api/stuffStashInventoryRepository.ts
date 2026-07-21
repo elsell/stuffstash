@@ -165,6 +165,15 @@ export class StuffStashInventoryRepository
     this.thumbnailCache.clear();
   }
 
+  async provisionPersonalWorkspace(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
+    const visibleTenants = await this.loadTenants();
+    if (visibleTenants.length > 0) {
+      const principal = mapPrincipal(await this.client.me());
+      return this.loadTenantWorkspace(principal, visibleTenants, visibleTenants[0].id, '');
+    }
+    return this.createTenantWithInventory(input);
+  }
+
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = mapTenant(await this.client.createTenant(input.tenantName));
     const inventory = mapInventory(await this.client.createInventory(tenant.id, input.inventoryName));
