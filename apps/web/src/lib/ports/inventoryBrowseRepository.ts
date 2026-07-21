@@ -14,6 +14,7 @@ export interface BrowseAssetsRequest {
   mode: SearchMode;
   limit: number;
   cursor?: string;
+  signal?: AbortSignal;
 }
 
 export interface BrowseAssetsPage {
@@ -26,5 +27,5 @@ export interface BrowseAssetsPage {
 export interface InventoryBrowseRepository {
   browseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage>;
   hasAnyAssets(tenantId: string, inventoryId: string): Promise<boolean>;
-  loadActiveContainmentMap(tenantId: string, inventoryId: string): Promise<Asset[]>;
+  loadActiveContainmentMap(tenantId: string, inventoryId: string, signal?: AbortSignal): Promise<Asset[]>;
 }

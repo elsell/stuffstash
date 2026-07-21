@@ -297,6 +297,7 @@ export interface SearchAssetsOptions {
   lifecycleState?: AssetLifecycleFilter;
   mode?: SearchMode;
   checkoutState?: 'any' | 'checked_out' | 'available';
+  signal?: AbortSignal;
 }
 
 export type CustomDefinitionScope = 'tenant' | 'inventory';
@@ -756,10 +757,12 @@ export class StuffStashClient {
     limit = 50,
     cursor?: string,
     lifecycleState: AssetLifecycleFilter = 'active',
-    sort: AssetListSort = 'id_asc'
+    sort: AssetListSort = 'id_asc',
+    signal?: AbortSignal
   ): Promise<Page<Asset>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId },
@@ -781,9 +784,10 @@ export class StuffStashClient {
     return mapAsset(envelope.data);
   }
 
-  async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+  async getAsset(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<Asset> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}', {
+        signal,
         headers: await this.authHeaders(),
         params: { path: { tenantId, inventoryId, assetId } }
       })
@@ -898,10 +902,12 @@ export class StuffStashClient {
     inventoryId: string,
     assetId: string,
     limit = 50,
-    cursor?: string
+    cursor?: string,
+    signal?: AbortSignal
   ): Promise<Page<AssetCheckout>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId, assetId },
@@ -912,9 +918,10 @@ export class StuffStashClient {
     return mapPage(envelope, mapAssetCheckout);
   }
 
-  async listCheckedOutAssets(tenantId: string, inventoryId: string, limit = 50, cursor?: string): Promise<Page<CheckedOutAsset>> {
+  async listCheckedOutAssets(tenantId: string, inventoryId: string, limit = 50, cursor?: string, signal?: AbortSignal): Promise<Page<CheckedOutAsset>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/checked-out-assets', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId },
@@ -929,6 +936,7 @@ export class StuffStashClient {
     const limit = options.limit ?? 20;
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/search/assets', {
+        signal: options.signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId },
@@ -1718,10 +1726,12 @@ export class StuffStashClient {
     inventoryId: string,
     assetId: string,
     limit = 10,
-    cursor?: string
+    cursor?: string,
+    signal?: AbortSignal
   ): Promise<Page<Attachment>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId, assetId },

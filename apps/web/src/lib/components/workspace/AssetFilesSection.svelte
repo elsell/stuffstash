@@ -23,7 +23,8 @@
     onChooseFile,
     onArchiveAttachment,
     onOpenAttachmentDelete,
-    attachmentDeleteHref
+    attachmentDeleteHref,
+    loading = false
   }: {
     attachments: AssetAttachment[];
     titleId?: string;
@@ -35,6 +36,7 @@
     onArchiveAttachment: (attachment: AssetAttachment) => void;
     onOpenAttachmentDelete: (event: MouseEvent, attachment: AssetAttachment) => void;
     attachmentDeleteHref: (attachment: AssetAttachment) => string;
+    loading?: boolean;
   } = $props();
 
   let status = $derived(assetFilesStatus(attachments.length));
@@ -56,7 +58,9 @@
     </div>
   </div>
   {#if error}<p id={errorId} class="denied-note" role="alert">{error.message}</p>{/if}
-  {#if status}
+  {#if loading}
+    <p role="status">Loading files…</p>
+  {:else if status}
     <div class="empty-state">
       <p>{status.message}</p>
     </div>

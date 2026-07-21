@@ -19,6 +19,20 @@ export interface AssetDetailIdentity {
   assetId: string;
 }
 
+export async function loadWorkspaceAssetDetailSupplements(
+  repository: AssetDetailRepository,
+  tenantId: string,
+  inventoryId: string,
+  assetId: string,
+  signal?: AbortSignal
+): Promise<{ attachments: AssetAttachment[]; checkoutHistory: AssetCheckout[] }> {
+  const [attachments, checkoutHistory] = await Promise.all([
+    repository.listAssetAttachments(tenantId, inventoryId, assetId, signal),
+    repository.listAssetCheckoutHistory(tenantId, inventoryId, assetId, signal)
+  ]);
+  return { attachments, checkoutHistory };
+}
+
 export interface WorkspaceAssetDetailState {
   data: WorkspaceData;
   loadedAssetDetail: Asset;
@@ -58,8 +72,9 @@ export async function loadWorkspaceAssetDetail(
 ): Promise<LoadWorkspaceAssetDetailResult> {
   try {
     const asset = await repository.getAsset(tenantId, inventoryId, assetId);
-    const attachments = await repository.listAssetAttachments(tenantId, inventoryId, assetId);
-    const checkoutHistory = await repository.listAssetCheckoutHistory(tenantId, inventoryId, assetId);
+    const { attachments, checkoutHistory } = await loadWorkspaceAssetDetailSupplements(
+      repository, tenantId, inventoryId, assetId
+    );
     return {
       loaded: true,
       asset,

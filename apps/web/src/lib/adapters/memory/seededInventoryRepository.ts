@@ -84,6 +84,10 @@ export class SeededInventoryRepository
     return asset.photo?.assetId === asset.id ? asset.photo : null;
   }
 
+  async loadAttachmentThumbnail(_asset: Asset, attachment: AssetAttachment): Promise<AssetAttachment> {
+    return attachment;
+  }
+
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = {
       id: `tenant-${Date.now()}`,

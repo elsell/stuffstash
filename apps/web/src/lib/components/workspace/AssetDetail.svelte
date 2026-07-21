@@ -65,6 +65,9 @@
     saving,
     attachments,
     checkoutHistory,
+    supplementsLoading = false,
+    filesLoading = supplementsLoading,
+    historyLoading = supplementsLoading,
     mediaPolicy,
     backHref,
     onBack,
@@ -99,6 +102,9 @@
     saving: boolean;
     attachments: AssetAttachment[];
     checkoutHistory: AssetCheckout[];
+    supplementsLoading?: boolean;
+    filesLoading?: boolean;
+    historyLoading?: boolean;
     mediaPolicy: MediaUploadPolicy;
     backHref: string;
     onBack: () => void;
@@ -795,6 +801,7 @@
     </section>
     <AssetFilesSection
       attachments={fileAttachments}
+      loading={filesLoading}
       {canEdit}
       {saving}
       active={asset.lifecycleState === 'active'}
@@ -806,7 +813,9 @@
     />
     <section class="detail-section" aria-labelledby="asset-checkout-history-title">
       <h2 id="asset-checkout-history-title">Checkout history</h2>
-      {#if checkoutHistory.length === 0}
+      {#if historyLoading}
+        <p role="status">Loading checkout history…</p>
+      {:else if checkoutHistory.length === 0}
         <p>No checkout history.</p>
       {:else}
         <div class="asset-list compact-list" aria-label="Checkout history">

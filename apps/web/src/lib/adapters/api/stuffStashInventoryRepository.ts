@@ -82,6 +82,10 @@ export class StuffStashInventoryRepository
   private disposed = false;
   private selectedTenantId = readSessionValue('stuffstash.selectedTenantId');
   private selectedInventoryId = readSessionValue('stuffstash.selectedInventoryId');
+  private principalCache: ReturnType<typeof mapPrincipal> | null = null;
+  private tenantCache: ReturnType<typeof mapTenant>[] | null = null;
+  private readonly browseCache = new Map<string, BrowseAssetsPage>();
+  private readonly containmentMapCache = new Map<string, Asset[]>();
 
   constructor(
     config: RuntimeConfig,
@@ -104,8 +108,11 @@ export class StuffStashInventoryRepository
   async loadWorkspace(): Promise<WorkspaceData> {
     this.observer.record('workspace.load_started');
     try {
-      const principal = mapPrincipal(await this.client.me());
-      const tenants = await this.loadTenants();
+      const [principal, tenants] = await Promise.all([
+        this.client.me().then(mapPrincipal),
+        this.loadTenants(true)
+      ]);
+      this.principalCache = principal;
       const selectedTenant = tenants.find((tenant) => tenant.id === this.selectedTenantId) ?? tenants[0] ?? null;
       if (!selectedTenant) {
         this.observer.record('workspace.loaded', { empty: true });
@@ -156,6 +163,18 @@ export class StuffStashInventoryRepository
     return { id: asset.primaryPhotoId, assetId: asset.id, url: resource.url, alt: asset.title };
   }
 
+  async loadAttachmentThumbnail(asset: Asset, attachment: AssetAttachment): Promise<AssetAttachment> {
+    if (this.disposed || !attachment.contentType.startsWith('image/')) return attachment;
+    const resource = await this.loadThumbnailResource(
+      attachment.tenantId,
+      attachment.inventoryId,
+      attachment.assetId,
+      attachment.id,
+      'small'
+    );
+    return resource ? { ...attachment, thumbnailUrl: resource.url, thumbnailHeaders: resource.headers } : attachment;
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
@@ -177,8 +196,11 @@ export class StuffStashInventoryRepository
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = mapTenant(await this.client.createTenant(input.tenantName));
     const inventory = mapInventory(await this.client.createInventory(tenant.id, input.inventoryName));
-    const principal = mapPrincipal(await this.client.me());
-    const tenants = (await this.client.listMyTenants()).items.map(mapTenant);
+    const [principal, tenants] = await Promise.all([
+      this.client.me().then(mapPrincipal),
+      this.loadTenants(true)
+    ]);
+    this.principalCache = principal;
     return this.loadTenantWorkspace(principal, tenants, tenant.id, inventory.id);
   }
 
@@ -190,14 +212,12 @@ export class StuffStashInventoryRepository
   }
 
   async selectInventory(tenantId: string, inventoryId: string): Promise<WorkspaceData> {
-    const principal = mapPrincipal(await this.client.me());
-    const tenants = await this.loadTenants();
+    const { principal, tenants } = await this.sessionContext();
     return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId, 'active');
   }
 
   async selectTenant(tenantId: string): Promise<WorkspaceData> {
-    const principal = mapPrincipal(await this.client.me());
-    const tenants = await this.loadTenants();
+    const { principal, tenants } = await this.sessionContext();
     return this.loadTenantWorkspace(principal, tenants, tenantId, '', 'active');
   }
 
@@ -206,8 +226,7 @@ export class StuffStashInventoryRepository
     inventoryId: string,
     lifecycleState: AssetLifecycleFilter
   ): Promise<WorkspaceData> {
-    const principal = mapPrincipal(await this.client.me());
-    const tenants = await this.loadTenants();
+    const { principal, tenants } = await this.sessionContext();
     return this.loadTenantWorkspace(principal, tenants, tenantId, inventoryId, lifecycleState);
   }
 
@@ -225,6 +244,7 @@ export class StuffStashInventoryRepository
           tagIds: draft.tagIds
         })
       );
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_created', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -237,6 +257,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.asset_tag_create_started');
     try {
       const tag = mapAssetTag(await this.client.createAssetTag(tenantId, inventoryId, draft));
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_tag_created');
       return tag;
     } catch (error) {
@@ -245,10 +266,10 @@ export class StuffStashInventoryRepository
     }
   }
 
-  async getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset> {
+  async getAsset(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<Asset> {
     this.observer.record('workspace.asset_detail_load_started');
     try {
-      const asset = await this.mapAssetWithPrimaryPhoto(await this.client.getAsset(tenantId, inventoryId, assetId), 'medium');
+      const asset = mapAsset(await this.client.getAsset(tenantId, inventoryId, assetId, signal));
       this.observer.record('workspace.asset_detail_loaded', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -269,6 +290,7 @@ export class StuffStashInventoryRepository
           tagIds: draft.tagIds
         })
       );
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_updated', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -283,6 +305,7 @@ export class StuffStashInventoryRepository
       const asset = await this.mapAssetWithPrimaryPhoto(
         await this.client.updateAsset(tenantId, inventoryId, assetId, { parentAssetId })
       );
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_moved', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -295,6 +318,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.asset_archive_started');
     try {
       const asset = await this.mapAssetWithPrimaryPhoto(await this.client.archiveAsset(tenantId, inventoryId, assetId));
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_archived', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -307,6 +331,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.asset_restore_started');
     try {
       const asset = await this.mapAssetWithPrimaryPhoto(await this.client.restoreAsset(tenantId, inventoryId, assetId));
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_restored', { kind: asset.kind });
       return asset;
     } catch (error) {
@@ -319,6 +344,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.asset_delete_started');
     try {
       await this.client.deleteAsset(tenantId, inventoryId, assetId);
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_deleted');
     } catch (error) {
       this.observer.record('workspace.asset_delete_failed');
@@ -330,6 +356,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.asset_checkout_started');
     try {
       const checkout = mapAssetCheckout(await this.client.checkoutAsset(tenantId, inventoryId, assetId, draft));
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_checked_out');
       return checkout;
     } catch (error) {
@@ -342,6 +369,7 @@ export class StuffStashInventoryRepository
     this.observer.record('workspace.asset_return_started');
     try {
       const checkout = mapAssetCheckout(await this.client.returnAsset(tenantId, inventoryId, assetId, draft));
+      this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_returned');
       return checkout;
     } catch (error) {
@@ -369,10 +397,10 @@ export class StuffStashInventoryRepository
     }
   }
 
-  async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]> {
+  async listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<AssetCheckout[]> {
     this.observer.record('workspace.asset_checkout_history_load_started');
     try {
-      const page = await this.client.listAssetCheckoutHistory(tenantId, inventoryId, assetId, 50);
+      const page = await this.client.listAssetCheckoutHistory(tenantId, inventoryId, assetId, 50, undefined, signal);
       const items = page.items.map(mapAssetCheckout);
       this.observer.record('workspace.asset_checkout_history_loaded', { recordCount: items.length });
       return items;
@@ -395,17 +423,11 @@ export class StuffStashInventoryRepository
     }
   }
 
-  async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]> {
+  async listAssetAttachments(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<AssetAttachment[]> {
     this.observer.record('workspace.asset_attachments_load_started');
     try {
-      const page = await this.client.listAssetAttachments(tenantId, inventoryId, assetId, 50);
-      const attachments = await Promise.all(
-        page.items.map(async (attachment) => {
-          if (!attachment.contentType.startsWith('image/')) return mapAttachment(attachment);
-          const loaded = await this.loadThumbnailResource(tenantId, inventoryId, assetId, attachment.id, 'small');
-          return mapAttachment(attachment, loaded?.url, loaded?.headers);
-        })
-      );
+      const page = await this.client.listAssetAttachments(tenantId, inventoryId, assetId, 50, undefined, signal);
+      const attachments = page.items.map((attachment) => mapAttachment(attachment));
       this.observer.record('workspace.asset_attachments_loaded', { attachmentCount: attachments.length });
       return attachments;
     } catch (error) {
@@ -520,6 +542,15 @@ export class StuffStashInventoryRepository
   }
 
   async browseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
+    const cacheKey = JSON.stringify({ ...request, signal: undefined });
+    const cached = this.browseCache.get(cacheKey);
+    if (cached) return cached;
+    const loaded = await this.loadBrowseAssets(request);
+    this.storeBounded(this.browseCache, cacheKey, loaded);
+    return loaded;
+  }
+
+  private async loadBrowseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
     this.observer.record('workspace.browse_started', { scope: request.scope });
     try {
       const page = request.query.trim() || request.tagIds.length > 0
@@ -544,10 +575,19 @@ export class StuffStashInventoryRepository
     }
   }
 
-  async loadActiveContainmentMap(tenantId: string, inventoryId: string): Promise<Asset[]> {
+  async loadActiveContainmentMap(tenantId: string, inventoryId: string, signal?: AbortSignal): Promise<Asset[]> {
+    const cacheKey = `${tenantId}:${inventoryId}`;
+    const cached = this.containmentMapCache.get(cacheKey);
+    if (cached) return cached;
+    const loaded = await this.loadContainmentMap(tenantId, inventoryId, signal);
+    this.storeBounded(this.containmentMapCache, cacheKey, loaded);
+    return loaded;
+  }
+
+  private async loadContainmentMap(tenantId: string, inventoryId: string, signal?: AbortSignal): Promise<Asset[]> {
     this.observer.record('workspace.browse_started', { surface: 'map' });
     try {
-      const assets = await collectCursorPages((cursor) => this.client.listAssets(tenantId, inventoryId, workspacePageSize, cursor, 'active', 'id_asc'));
+      const assets = await collectCursorPages((cursor) => this.client.listAssets(tenantId, inventoryId, workspacePageSize, cursor, 'active', 'id_asc', signal));
       const mapped = assets.map(mapAsset);
       this.observer.record('workspace.browse_completed', { surface: 'map', resultCount: mapped.length });
       return mapped;
@@ -564,7 +604,7 @@ export class StuffStashInventoryRepository
     do {
       const page = await this.client.listAssets(
         request.tenantId, request.inventoryId, Math.max(1, request.limit - selected.length), cursor,
-        request.lifecycleState, request.sort
+        request.lifecycleState, request.sort, request.signal
       );
       selected.push(...page.items.map(mapAsset).filter((asset) => browseAssetMatches(asset, request)));
       cursor = page.pagination.nextCursor ?? undefined;
@@ -580,7 +620,8 @@ export class StuffStashInventoryRepository
     do {
       const page = await this.client.searchAssets(request.tenantId, request.query, {
         limit: Math.max(1, request.limit - selected.length), cursor, inventoryId: request.inventoryId,
-        tagIds: request.tagIds, lifecycleState: request.lifecycleState, mode: request.mode, checkoutState: request.checkoutState
+        tagIds: request.tagIds, lifecycleState: request.lifecycleState, mode: request.mode, checkoutState: request.checkoutState,
+        signal: request.signal
       });
       const mapped = await Promise.all(page.items.map(async (result) => {
         const searchResult = mapSearchResult(result);
@@ -596,7 +637,7 @@ export class StuffStashInventoryRepository
 
   private async checkedOutBrowseAssets(request: BrowseAssetsRequest): Promise<BrowseAssetsPage> {
     const checkedOut = await collectCursorPages((cursor) =>
-      this.client.listCheckedOutAssets(request.tenantId, request.inventoryId, workspacePageSize, cursor)
+      this.client.listCheckedOutAssets(request.tenantId, request.inventoryId, workspacePageSize, cursor, request.signal)
     );
     const assets = checkedOut
       .map(mapCheckedOutAsset)
@@ -996,28 +1037,24 @@ export class StuffStashInventoryRepository
     const selectedInventory = inventories.find((inventory) => inventory.id === inventoryId) ?? inventories[0] ?? null;
     this.selectedInventoryId = selectedInventory?.id ?? '';
     this.rememberSelection();
-    const customAssetTypes = selectedInventory
-      ? (await collectCursorPages((cursor) =>
+    const [customAssetTypes, customFieldDefinitions, assetTags, apiAssets, checkedOutAssets] = selectedInventory
+      ? await Promise.all([
+          optionalWorkspaceCollection(collectCursorPages((cursor) =>
           this.client.listInventoryCustomAssetTypes(tenantId, selectedInventory.id, workspacePageSize, cursor)
-        )).map(mapCustomAssetType)
-      : [];
-    const customFieldDefinitions = selectedInventory
-      ? (await collectCursorPages((cursor) =>
+          ).then((items) => items.map(mapCustomAssetType))),
+          optionalWorkspaceCollection(collectCursorPages((cursor) =>
           this.client.listInventoryCustomFieldDefinitions(tenantId, selectedInventory.id, workspacePageSize, cursor)
-        )).map(mapCustomFieldDefinition)
-      : [];
-    const assetTags = selectedInventory
-      ? (await collectCursorPages((cursor) =>
+          ).then((items) => items.map(mapCustomFieldDefinition))),
+          optionalWorkspaceCollection(collectCursorPages((cursor) =>
           this.client.listAssetTags(tenantId, selectedInventory.id, workspacePageSize, cursor)
-        )).map(mapAssetTag)
-      : [];
-    const apiAssets = selectedInventory
-      ? await collectCursorPages((cursor) =>
+          ).then((items) => items.map(mapAssetTag))),
+          collectCursorPages((cursor) =>
           this.client.listAssets(tenantId, selectedInventory.id, workspacePageSize, cursor, lifecycleState, 'updated_desc')
-        )
-      : [];
+          ),
+          optionalWorkspaceCollection(this.listCheckedOutAssets(tenantId, selectedInventory.id))
+        ])
+      : [[], [], [], [], []];
     const assets = apiAssets.map(mapAsset);
-    const checkedOutAssets = selectedInventory ? await this.listCheckedOutAssets(tenantId, selectedInventory.id) : [];
     this.observer.record('workspace.loaded', {
       tenantCount: tenants.length,
       inventoryCount: inventories.length,
@@ -1048,8 +1085,31 @@ export class StuffStashInventoryRepository
     writeSessionValue('stuffstash.selectedInventoryId', this.selectedInventoryId);
   }
 
-  private async loadTenants() {
-    return (await collectCursorPages((cursor) => this.client.listMyTenants(50, cursor))).map(mapTenant);
+  private invalidateInventoryReadCaches(): void {
+    this.browseCache.clear();
+    this.containmentMapCache.clear();
+  }
+
+  private storeBounded<T>(cache: Map<string, T>, key: string, value: T): void {
+    cache.delete(key);
+    cache.set(key, value);
+    if (cache.size > 50) cache.delete(cache.keys().next().value!);
+  }
+
+  private async sessionContext() {
+    const [principal, tenants] = await Promise.all([
+      this.principalCache ? Promise.resolve(this.principalCache) : this.client.me().then(mapPrincipal),
+      this.loadTenants()
+    ]);
+    this.principalCache = principal;
+    return { principal, tenants };
+  }
+
+  private async loadTenants(refresh = false) {
+    if (!refresh && this.tenantCache) return this.tenantCache;
+    const tenants = (await collectCursorPages((cursor) => this.client.listMyTenants(50, cursor))).map(mapTenant);
+    this.tenantCache = tenants;
+    return tenants;
   }
 
   private async loadInventories(tenantId: string) {
@@ -1273,6 +1333,16 @@ function safeError(error: unknown): Error {
     return error;
   }
   return new Error('Request failed.');
+}
+
+async function optionalWorkspaceCollection<T>(loading: Promise<T[]>): Promise<T[]> {
+  try {
+    return await loading;
+  } catch (caught) {
+    const error = safeError(caught);
+    if (error instanceof AuthenticationRequiredError) throw error;
+    return [];
+  }
 }
 
 class SafeAPIError extends Error {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-  import { tick, untrack } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import {
     canCreateImportJob,
     canViewImportJobs,
@@ -115,6 +115,9 @@
   let visibleJobLoadSequence = 0;
   let detailLoadSequence = 0;
   let actionSequence = 0;
+  let pollInFlight = false;
+  let pollFailureCount = 0;
+  let pollTick = 0;
   let importWorkspaceElement: HTMLElement | null = null;
 
   let activeJobs = $derived(jobs.filter((job) => ['running', 'cancel_requested'].includes(job.status)));
@@ -132,6 +135,17 @@
     Boolean(canCreateImports && (sourceChoice === 'homebox_csv' ? contentBase64 : baseUrl.trim() && username.trim() && password))
   );
   let availableWizardSteps = $derived(reachableWizardSteps());
+
+  onMount(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && activeJobs.length > 0 && !pollInFlight) {
+        pollInFlight = true;
+        void loadJobs({ quiet: true }).finally(() => { pollInFlight = false; });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  });
 
   $effect(() => {
     tenantId;
@@ -192,7 +206,11 @@
   $effect(() => {
     if (!inventory || !canViewImports || activeJobs.length === 0) return;
     const interval = window.setInterval(() => {
-      void loadJobs({ quiet: true });
+      if (document.visibilityState !== 'visible' || pollInFlight) return;
+      pollTick += 1;
+      if (pollTick % (2 ** Math.min(pollFailureCount, 4)) !== 0) return;
+      pollInFlight = true;
+      void loadJobs({ quiet: true }).finally(() => { pollInFlight = false; });
     }, 2500);
     return () => window.clearInterval(interval);
   });
@@ -225,10 +243,12 @@
         return;
       }
       jobs = nextJobs;
+      if (options.quiet) pollFailureCount = 0;
       reconcileStartedJob(nextJobs);
       reconcileSelectedJob(nextJobs);
       await refreshInventoryWhenImportJobsFinish(scope, previousJobs, nextJobs);
     } catch (loadError) {
+      if (options.quiet) pollFailureCount = Math.min(pollFailureCount + 1, 4);
       if (!options.quiet && isCurrentJobLoad(sequence, scope)) {
         error = errorMessage(loadError, 'Import history could not be loaded.');
       }
