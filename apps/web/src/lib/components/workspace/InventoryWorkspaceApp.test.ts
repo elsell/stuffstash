@@ -108,6 +108,19 @@ class PhotoUploadFailingRepository extends SeededInventoryRepository {
   }
 }
 
+class RejectingAttachmentThumbnailRepository extends SeededInventoryRepository {
+  override async listAssetAttachments(): Promise<AssetAttachment[]> {
+    return [{
+      id: 'photo-one', tenantId: 'tenant-home', inventoryId: 'inventory-household', assetId: 'asset-home',
+      fileName: 'passport.jpg', contentType: 'image/jpeg', sizeBytes: 10, lifecycleState: 'active'
+    }];
+  }
+
+  override async loadAttachmentThumbnail(): Promise<AssetAttachment> {
+    throw new Error('Thumbnail unavailable.');
+  }
+}
+
 class AttachmentArchiveFailingRepository extends SeededInventoryRepository {
   async archiveAssetAttachment(): Promise<AssetAttachment> {
     throw new Error('garage-s3 returned 503 while archiving object 7f8a');
@@ -563,6 +576,7 @@ function installMatchMedia(): void {
 async function waitFor(assertion: () => void): Promise<void> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 100; attempt += 1) {
+    await vi.dynamicImportSettled();
     await tick();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
     try {
@@ -718,6 +732,18 @@ describe('InventoryWorkspaceApp route application', () => {
       expect(document.body.textContent).toContain('Returned Passport.');
       expect(controlContaining('Undo')).toBeTruthy();
       expect(document.body.textContent).not.toContain('Refresh failed after confirmed return.');
+    });
+  });
+
+  it('keeps asset detail usable when background attachment thumbnails reject', async () => {
+    await mountWorkspace(
+      '/tenants/tenant-home/inventories/inventory-household/assets/asset-home',
+      new RejectingAttachmentThumbnailRepository(structuredClone(seed))
+    );
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Passport');
+      expect(document.body.textContent).toContain('Checkout history');
     });
   });
 

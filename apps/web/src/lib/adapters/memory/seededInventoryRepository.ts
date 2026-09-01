@@ -84,6 +84,10 @@ export class SeededInventoryRepository
     return asset.photo?.assetId === asset.id ? asset.photo : null;
   }
 
+  async loadAttachmentThumbnail(_asset: Asset, attachment: AssetAttachment): Promise<AssetAttachment> {
+    return attachment;
+  }
+
   async createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
     const tenant = {
       id: `tenant-${Date.now()}`,
@@ -120,6 +124,13 @@ export class SeededInventoryRepository
     });
     this.recordInventoryAudit(inventory, 'inventory.created');
     return this.workspace();
+  }
+
+  async provisionPersonalWorkspace(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData> {
+    if (this.seed.tenants.length > 0) {
+      return this.selectTenant(this.seed.tenants[0].id);
+    }
+    return this.createTenantWithInventory(input);
   }
 
   async createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData> {

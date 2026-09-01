@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import { SeededInventoryRepository } from '$lib/adapters/memory/seededInventoryRepository';
 import type {
@@ -311,6 +311,9 @@ describe('InventoryWorkspaceRouteContent', () => {
       })
     });
 
+    await vi.dynamicImportSettled();
+    await tick();
+
     expect(document.body.textContent).toContain('Imports');
     expect(document.body.textContent).toContain('No import runs yet');
 
@@ -322,6 +325,9 @@ describe('InventoryWorkspaceRouteContent', () => {
         route: { mode: 'settings', settingsSection: 'fields' }
       })
     });
+
+    await vi.dynamicImportSettled();
+    await tick();
 
     expect(document.body.textContent).toContain('Fields');
   });

@@ -177,6 +177,10 @@ func safeImportError(err error) string {
 		return "attachment content did not match its file type"
 	case errors.Is(err, ErrAttachmentContentEmpty):
 		return "attachment content was empty"
+	case errors.As(err, new(importAttachmentSessionStartError)):
+		return err.Error()
+	case errors.As(err, new(importAttachmentStorageError)):
+		return err.Error()
 	default:
 		return "import validation failed"
 	}

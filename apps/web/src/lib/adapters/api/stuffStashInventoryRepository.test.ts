@@ -44,6 +44,86 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
+  it('starts independent inventory context collections concurrently', async () => {
+    const base = fakeFetch();
+    const scopedSuffixes = ['/custom-asset-types', '/custom-field-definitions', '/tags', '/assets', '/checked-out-assets'];
+    const waiting: Array<() => void> = [];
+    let started = 0;
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const url = new URL(input instanceof Request ? input.url : input.toString());
+      if (scopedSuffixes.some((suffix) => url.pathname.endsWith(suffix))) {
+        started += 1;
+        await new Promise<void>((resolve) => {
+          waiting.push(resolve);
+          if (started === scopedSuffixes.length) waiting.splice(0).forEach((release) => release());
+        });
+      }
+      return base.fetch(input, init);
+    };
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetchImpl);
+
+    await repository.loadWorkspace();
+
+    expect(started).toBe(scopedSuffixes.length);
+  });
+
+  it('reuses principal and tenant discovery while switching inventory context', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    await repository.loadWorkspace();
+
+    await repository.selectInventory('tenant-cabin', 'inventory-cabin');
+
+    expect(requests.filter((request) => new URL(request.url).pathname === '/me')).toHaveLength(1);
+    expect(requests.filter((request) => new URL(request.url).pathname === '/me/tenants')).toHaveLength(1);
+  });
+
+  it('reuses an unchanged browse query within the repository session', async () => {
+    const { fetch, requests } = fakeFetch();
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
+    const request = {
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', tagIds: [],
+      lifecycleState: 'active' as const, checkoutState: 'any' as const, scope: 'all' as const,
+      sort: 'updated_desc' as const, mode: 'fuzzy' as const, limit: 20
+    };
+
+    await repository.browseAssets(request);
+    await repository.browseAssets(request);
+
+    expect(requests.filter((candidate) => new URL(candidate.url).pathname.endsWith('/assets'))).toHaveLength(1);
+  });
+
+  it('does not share an abortable in-flight Browse request with a re-entry', async () => {
+    const base = fakeFetch();
+    let attempts = 0;
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const request = new Request(input, init);
+      if (new URL(request.url).pathname.endsWith('/assets')) {
+        attempts += 1;
+        if (attempts === 1) {
+          return new Promise((_resolve, reject) => {
+            if (request.signal.aborted) reject(request.signal.reason);
+            else request.signal.addEventListener('abort', () => reject(request.signal.reason), { once: true });
+          });
+        }
+      }
+      return base.fetch(input, init);
+    };
+    const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetchImpl);
+    const controller = new AbortController();
+    const request = {
+      tenantId: 'tenant-home', inventoryId: 'inventory-household', query: '', tagIds: [],
+      lifecycleState: 'active' as const, checkoutState: 'any' as const, scope: 'all' as const,
+      sort: 'updated_desc' as const, mode: 'fuzzy' as const, limit: 20
+    };
+
+    const abandoned = repository.browseAssets({ ...request, signal: controller.signal });
+    controller.abort(new DOMException('Replaced', 'AbortError'));
+    await expect(abandoned).rejects.toThrow();
+    await expect(repository.browseAssets(request)).resolves.toMatchObject({ assets: expect.any(Array) });
+    expect(attempts).toBe(2);
+  });
+
   it('follows tenant pagination before selecting workspace context', async () => {
     const base = fakeFetch();
     const fetchImpl: typeof fetch = async (input, init) => {
@@ -145,7 +225,9 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     const asset = photographedAsset('attachment-one');
 
     const primaryLoading = repository.loadAssetThumbnail(asset);
-    const galleryLoading = repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-passport');
+    const galleryLoading = repository
+      .listAssetAttachments('tenant-home', 'inventory-household', 'asset-passport')
+      .then(async ([attachment]) => attachment ? [await repository.loadAttachmentThumbnail(asset, attachment)] : []);
     await started;
     finishThumbnail(new Response(new Blob(['thumbnail'], { type: 'image/jpeg' }), { status: 200 }));
     const [primary, attachments] = await Promise.all([primaryLoading, galleryLoading]);
@@ -416,21 +498,16 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
-  it('hydrates API primary photos into asset detail photos', async () => {
+  it('returns asset detail metadata without waiting for the primary thumbnail', async () => {
     const { fetch, requests } = fakeFetch({ primaryPhotoAssetIds: ['asset-passport'] });
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
 
     const asset = await repository.getAsset('tenant-home', 'inventory-household', 'asset-passport');
 
-    expect(asset.photo).toMatchObject({
-      id: 'attachment-one',
-      assetId: 'asset-passport',
-      url: expect.stringContaining('blob:'),
-      alt: 'Passport'
-    });
+    expect(asset).toMatchObject({ id: 'asset-passport', primaryPhotoId: 'attachment-one' });
+    expect(asset.photo).toBeUndefined();
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport',
-      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/attachment-one/thumbnail?variant=medium'
+      'GET http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport'
     ]);
   });
 
@@ -793,20 +870,24 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
     ]);
   });
 
-  it('lists attachments with authenticated thumbnail object URLs', async () => {
+  it('lists attachment metadata before hydrating authenticated thumbnail object URLs', async () => {
     const { fetch } = fakeFetch();
     const repository = new StuffStashInventoryRepository(config, () => 'id-token', new InMemoryWorkspaceObserver(), fetch);
 
     const attachments = await repository.listAssetAttachments('tenant-home', 'inventory-household', 'asset-passport');
 
-    expect(attachments).toMatchObject([
+    expect(attachments).toMatchObject([{ id: 'attachment-one', fileName: 'photo.jpg' }]);
+    expect(attachments[0]?.thumbnailUrl).toBeUndefined();
+
+    const hydrated = await repository.loadAttachmentThumbnail(photographedAsset('attachment-one'), attachments[0]!);
+    expect(hydrated).toMatchObject(
       {
         id: 'attachment-one',
         fileName: 'photo.jpg',
         thumbnailUrl: expect.stringContaining('blob:'),
         thumbnailHeaders: { Authorization: 'Bearer id-token' }
       }
-    ]);
+    );
   });
 
   it('searches with lifecycle and mode options through the generated client path', async () => {

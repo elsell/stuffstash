@@ -40,6 +40,7 @@ export interface BrowsePageLoadInput {
   currentAssets: Asset[];
   currentSearchResults: SearchResult[];
   currentInventoryEmpty: boolean;
+  signal?: AbortSignal;
 }
 
 export interface BrowsePageState {
@@ -140,7 +141,8 @@ export async function loadBrowsePage(
     scope: input.scope,
     sort: input.sort,
     mode: input.mode,
-    cursor: input.cursor
+    cursor: input.cursor,
+    signal: input.signal
   });
   const checksDefaultInventoryEmptiness = !input.append && !input.query.trim() && selectedTagIds.length === 0 &&
     input.scope === 'all' && input.lifecycleState === 'active' && input.checkoutState === 'any';

@@ -161,7 +161,7 @@ The first web user flow is:
 1. Start the web dev server.
 2. Sign in with local Dex.
 3. See the authenticated identity.
-4. If no usable tenant and inventory exists, complete a guided setup that asks for a tenant name and an inventory name.
+4. If no usable tenant and inventory exists on the ordinary workspace route, automatically enter a personal starter workspace using the naming policy in `web-inventory-workspace.spec.md`.
 5. If a tenant exists but has no inventory and the caller can create inventories there, complete a guided inventory setup that asks for the inventory name.
 6. Select or see the created inventory.
 7. Create an asset inside the inventory.
@@ -171,7 +171,7 @@ The first web user flow is:
 
 Inventory creation and asset creation are inseparable for this tracer bullet. If one is present, the other must be present enough for a user to prove the loop.
 
-The web app must not auto-create a tenant or inventory with hard-coded names such as `Home` or `Household`. New users must name the tenant and inventory before the app creates them. Empty names must be rejected in the client before the API call is attempted.
+The ordinary workspace may use the specified personal starter defaults. Invitation return routes must remain authoritative and must not trigger personal provisioning before explicit invitation acceptance.
 
 The current public API creates a tenant and then creates its first inventory as separate calls. Until an atomic tenant-with-first-inventory application command and REST endpoint are specified, the web adapter may keep that two-step workflow, but the UI must not present hard-coded fallback names or silently hide failures. A failed inventory creation after tenant creation may leave an empty tenant that can be completed through the same guided inventory setup flow.
 

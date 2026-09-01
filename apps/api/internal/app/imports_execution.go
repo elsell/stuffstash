@@ -127,12 +127,16 @@ func (a App) ExecuteImportJob(ctx context.Context, command ports.ImportJobComman
 	} else if applyErr != nil {
 		job.Status = importjob.StatusFailed
 		job.Progress.Message = "Import failed"
-		job.Messages = append(job.Messages, importJobMessageFromPlanMessage(importplan.Message{
-			Code:     "import-failed",
-			Severity: importplan.SeverityError,
-			Summary:  "Import failed",
-			Detail:   safeImportError(applyErr),
-		}))
+		var attachmentSessionErr importAttachmentSessionStartError
+		var attachmentStorageErr importAttachmentStorageError
+		if !errors.As(applyErr, &attachmentSessionErr) && !errors.As(applyErr, &attachmentStorageErr) {
+			job.Messages = append(job.Messages, importJobMessageFromPlanMessage(importplan.Message{
+				Code:     "import-failed",
+				Severity: importplan.SeverityError,
+				Summary:  "Import failed",
+				Detail:   safeImportError(applyErr),
+			}))
+		}
 	} else {
 		job.Status = importjob.StatusSucceeded
 		job.Progress.Message = "Import completed"
@@ -372,13 +376,15 @@ func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJob
 		if a.importAttachmentSources == nil {
 			return ErrInvalidInput
 		}
+		if err := a.updateImportProgress(ctx, command, importjob.PhaseAttachments, 0, total, "Importing attachments"); err != nil {
+			return err
+		}
 		var err error
 		attachmentSession, err = a.importAttachmentSources.OpenImportAttachmentSession(ctx, sourceRequest)
 		if err != nil {
-			return importSourceInputError(err)
-		}
-		if err := a.updateImportProgress(ctx, command, importjob.PhaseAttachments, 0, total, "Importing attachments"); err != nil {
-			return err
+			message := importAttachmentSessionFailureMessage(err)
+			result.Messages = append(result.Messages, message)
+			return importAttachmentSessionStartError{detail: message.Detail}
 		}
 	}
 	for index, attachment := range plan.Attachments {
@@ -446,6 +452,18 @@ func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJob
 		attachment.SizeBytes = len(content.Content)
 		created, err := a.createImportedAttachment(ctx, command, jobID, sourceIdentity, parsedAssetID, attachment)
 		if err != nil {
+			var storageErr importAttachmentStorageError
+			if errors.As(err, &storageErr) {
+				result.Messages = append(result.Messages, importplan.Message{
+					Code:       "attachment-storage-unavailable",
+					Severity:   importplan.SeverityError,
+					Summary:    "Image could not be saved",
+					Detail:     storageErr.Error(),
+					SourceID:   attachment.SourceID,
+					SourceName: attachment.FileName,
+				})
+				return err
+			}
 			if errors.Is(err, ports.ErrConflict) {
 				result.Counts.AttachmentsSkipped++
 				if err := a.updateImportProgress(ctx, command, importjob.PhaseAttachments, index+1, total, "Importing attachments"); err != nil {
@@ -485,32 +503,6 @@ func (a App) applyImportAttachments(ctx context.Context, command ports.ImportJob
 	return nil
 }
 
-func importAttachmentReadFailureMessage(err error, attachment importplan.Attachment) importplan.Message {
-	message := importplan.Message{
-		Code:       "attachment-unavailable",
-		Severity:   importplan.SeverityWarning,
-		Summary:    "Attachment could not be downloaded",
-		Detail:     "attachment could not be downloaded",
-		SourceID:   attachment.SourceID,
-		SourceName: attachment.FileName,
-	}
-	var readErr ports.ImportAttachmentReadError
-	if !errors.As(err, &readErr) {
-		return message
-	}
-	switch readErr.Reason {
-	case ports.ImportAttachmentTooLarge:
-		message.Code = "attachment-too-large"
-		message.Summary = "Attachment is too large"
-		message.Detail = "attachment exceeds the import size limit"
-	case ports.ImportAttachmentUnsupportedType:
-		message.Code = "attachment-unsupported-type"
-		message.Summary = "Attachment type is not supported"
-		message.Detail = "attachment content type is not supported"
-	}
-	return message
-}
-
 func (a App) createImportedAttachment(ctx context.Context, command ports.ImportJobCommand, jobID importjob.ID, sourceIdentity importSourceIdentity, assetID asset.ID, planned importplan.Attachment) (media.Attachment, error) {
 	if a.importAttachmentUnitOfWork == nil {
 		return media.Attachment{}, ErrInvalidInput
@@ -546,7 +538,7 @@ func (a App) createImportedAttachment(ctx context.Context, command ports.ImportJ
 	}
 	if err := a.blobs.PutBlob(ctx, prepared.StorageKey, prepared.ContentType, planned.Content); err != nil {
 		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
-		return media.Attachment{}, err
+		return media.Attachment{}, importAttachmentStorageError{}
 	}
 	if err := a.importAttachmentUnitOfWork.CreateImportedAttachment(ctx, prepared.Attachment, prepared.AuditRecord, link, record); err != nil {
 		if deleteErr := a.blobs.DeleteBlob(ctx, prepared.StorageKey); deleteErr != nil {

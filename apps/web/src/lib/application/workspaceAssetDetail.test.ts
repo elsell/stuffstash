@@ -63,6 +63,23 @@ describe('workspace asset detail helpers', () => {
     ]);
   });
 
+  it('loads attachments and checkout history concurrently after asset identity', async () => {
+    const started: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const loading = loadWorkspaceAssetDetail({
+      getAsset: async () => asset('asset-one'),
+      listAssetAttachments: async () => { started.push('attachments'); await gate; return []; },
+      listAssetCheckoutHistory: async () => { started.push('checkouts'); await gate; return []; }
+    }, 'tenant-home', 'inventory-household', 'asset-one');
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(started).toEqual(['attachments', 'checkouts']);
+    release();
+    await loading;
+  });
+
   it('replaces unsafe detail failures with calm product copy', async () => {
     const result = await loadWorkspaceAssetDetail(
       repository({ failure: Object.assign(new Error('private database diagnostic'), { safeForUser: false }) }),

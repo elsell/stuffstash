@@ -27,7 +27,6 @@
   import {
     applyLoadedWorkspaceAssetDetail,
     assetDetailFailureMessage,
-    loadWorkspaceAssetDetail,
     refreshWorkspaceAssetAttachments
   } from '$lib/application/workspaceAssetDetail';
   import { createAssetWorkflow, replaceWorkspaceAsset } from '$lib/application/workspaceAssetWorkflow';
@@ -113,7 +112,8 @@
   // svelte-ignore state_referenced_locally -- the repository is immutable for the mounted workspace session.
   const workspaceRepository = repository;
   setContext(assetThumbnailLoaderContext, {
-    loadAssetThumbnail: workspaceRepository.loadAssetThumbnail.bind(workspaceRepository)
+    loadAssetThumbnail: workspaceRepository.loadAssetThumbnail.bind(workspaceRepository),
+    loadAttachmentThumbnail: workspaceRepository.loadAttachmentThumbnail?.bind(workspaceRepository)
   });
 
   // svelte-ignore state_referenced_locally -- initial route data seeds local workspace state.
@@ -169,6 +169,7 @@
   let browseLoadingMore = $state(false);
   let browseBusy = $state(false);
   let browseRequestId = 0;
+  let browseAbortController: AbortController | null = null;
   let browseMapAssets = $state<Asset[]>([]);
   let browseInventoryEmpty = $state(false);
   let browseErrorPhase = $state<'initial' | 'replacement' | 'append' | 'map' | null>(null);
@@ -176,7 +177,11 @@
   let selectedAssetAttachments = $state<AssetAttachment[]>([]);
   let selectedAssetCheckoutHistory = $state<AssetCheckout[]>([]);
   let assetDetailRequestId = 0;
+  let assetDetailAbortController: AbortController | null = null;
   let assetDetailLoading = $state(false);
+  let assetDetailSupplementLoading = $state(false);
+  let assetDetailFilesLoading = $state(false);
+  let assetDetailHistoryLoading = $state(false);
   let applyingRoute = false;
   let activeRouteApplicationKey: string | null = null;
   let queuedRoute: { route: WorkspaceRouteState; href: string } | null = null;
@@ -477,6 +482,9 @@
     const inventoryId = data.context.selectedInventoryId;
     if (!tenantId || !inventoryId) return;
     const requestId = ++browseRequestId;
+    browseAbortController?.abort();
+    const controller = new AbortController();
+    browseAbortController = controller;
     if (append) browseLoadingMore = true;
     else browseBusy = true;
     searchError = '';
@@ -486,7 +494,8 @@
         tenantId, inventoryId, query: searchQuery, selectedTagIds: searchTagIds,
         lifecycleState: searchLifecycleState, checkoutState: searchCheckoutState, scope: browseScope,
         sort: browseSort, mode: searchMode, append, cursor: append ? browseNextCursor ?? undefined : undefined,
-        currentAssets: browseAssets, currentSearchResults: searchResults, currentInventoryEmpty: browseInventoryEmpty
+        currentAssets: browseAssets, currentSearchResults: searchResults, currentInventoryEmpty: browseInventoryEmpty,
+        signal: controller.signal
       });
       if (requestId !== browseRequestId) return;
       browseAssets = page.assets;
@@ -513,11 +522,14 @@
     const inventoryId = data.context.selectedInventoryId;
     if (!tenantId || !inventoryId) return;
     const requestId = ++browseRequestId;
+    browseAbortController?.abort();
+    const controller = new AbortController();
+    browseAbortController = controller;
     browseBusy = true;
     searchError = '';
     browseErrorPhase = null;
     try {
-      const assets = await repository.loadActiveContainmentMap(tenantId, inventoryId);
+      const assets = await repository.loadActiveContainmentMap(tenantId, inventoryId, controller.signal);
       if (requestId === browseRequestId) browseMapAssets = assets;
     } catch (caught) {
       if (requestId === browseRequestId && !handleSessionExpired(caught)) {
@@ -962,6 +974,7 @@
         settingsSection = route.settingsSection;
         assetDetailLoading = route.mode === 'asset';
         browseRequestId += 1;
+        browseAbortController?.abort();
         browseBusy = false;
         browseLoadingMore = false;
         queuedRoute = { route, href: currentWorkspaceHref() };
@@ -1100,9 +1113,9 @@
         const knownAsset = assets.find((candidate) => candidate.id === route.assetId);
         let loaded = false;
         if (knownAsset) {
-          loaded = await loadAssetDetail(knownAsset.tenantId, knownAsset.inventoryId, knownAsset.id);
+          loaded = await loadAssetDetail(knownAsset.tenantId, knownAsset.inventoryId, knownAsset.id, Boolean(route.attachmentId));
         } else if (data.context.selectedTenantId) {
-          loaded = await loadAssetDetail(data.context.selectedTenantId, data.context.selectedInventoryId, route.assetId);
+          loaded = await loadAssetDetail(data.context.selectedTenantId, data.context.selectedInventoryId, route.assetId, Boolean(route.attachmentId));
         }
         if (!loaded) {
           if (activeRouteApplicationKey !== routeKey || queuedRoute) return;
@@ -1611,8 +1624,11 @@
     }
   }
 
-  async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string): Promise<boolean> {
+  async function loadAssetDetail(tenantId: string, inventoryId: string, assetId: string, waitForSupplements = false): Promise<boolean> {
     const requestId = ++assetDetailRequestId;
+    assetDetailAbortController?.abort();
+    const controller = new AbortController();
+    assetDetailAbortController = controller;
     assetDetailLoading = true;
     busy = true;
     error = '';
@@ -1623,18 +1639,16 @@
     attachmentId = null;
     attachmentAction = null;
     try {
-      const result = await loadWorkspaceAssetDetail(repository, tenantId, inventoryId, assetId);
+      const asset = await repository.getAsset(tenantId, inventoryId, assetId, controller.signal);
       if (requestId !== assetDetailRequestId) {
         return false;
       }
-      if (!result.loaded || !result.asset) {
-        error = result.error;
-        return false;
-      }
       const detailState = applyLoadedWorkspaceAssetDetail(data, {
-        ...result,
         loaded: true,
-        asset: result.asset
+        asset,
+        attachments: [],
+        checkoutHistory: [],
+        error: ''
       });
       data = detailState.data;
       loadedAssetDetail = detailState.loadedAssetDetail;
@@ -1642,8 +1656,50 @@
       selectedAssetAttachments = detailState.selectedAssetAttachments;
       selectedAssetCheckoutHistory = detailState.selectedAssetCheckoutHistory;
       mode = detailState.mode;
+      assetDetailSupplementLoading = true;
+      assetDetailFilesLoading = true;
+      assetDetailHistoryLoading = true;
+      const filesLoading = repository.listAssetAttachments(tenantId, inventoryId, assetId, controller.signal)
+        .then((attachments) => {
+          if (requestId !== assetDetailRequestId || selectedAssetId !== assetId) return;
+          selectedAssetAttachments = attachments;
+          assetDetailFilesLoading = false;
+          const hydrateAttachment = repository.loadAttachmentThumbnail?.bind(repository);
+          if (!hydrateAttachment) return;
+          void Promise.all(attachments.map(async (attachment) => {
+            try {
+              return await hydrateAttachment(asset, attachment);
+            } catch {
+              return attachment;
+            }
+          }))
+            .then((hydrated) => {
+              if (requestId === assetDetailRequestId && selectedAssetId === assetId) selectedAssetAttachments = hydrated;
+            });
+        })
+        .catch((caught) => {
+          if (requestId !== assetDetailRequestId || caught instanceof DOMException && caught.name === 'AbortError') return;
+          assetDetailFilesLoading = false;
+          if (!handleSessionExpired(caught)) error = assetDetailFailureMessage(caught);
+        });
+      const historyLoading = repository.listAssetCheckoutHistory(tenantId, inventoryId, assetId, controller.signal)
+        .then((history) => {
+          if (requestId !== assetDetailRequestId || selectedAssetId !== assetId) return;
+          selectedAssetCheckoutHistory = history;
+          assetDetailHistoryLoading = false;
+        })
+        .catch((caught) => {
+          if (requestId !== assetDetailRequestId || caught instanceof DOMException && caught.name === 'AbortError') return;
+          assetDetailHistoryLoading = false;
+          if (!handleSessionExpired(caught)) error = assetDetailFailureMessage(caught);
+        });
+      const supplementsLoading = Promise.allSettled([filesLoading, historyLoading]).then(() => {
+        if (requestId === assetDetailRequestId) assetDetailSupplementLoading = false;
+      });
+      if (waitForSupplements) await supplementsLoading;
       return true;
     } catch (caught) {
+      if (requestId !== assetDetailRequestId || caught instanceof DOMException && caught.name === 'AbortError') return false;
       if (handleSessionExpired(caught)) {
         return false;
       }
@@ -1748,8 +1804,13 @@
   }
 
   function invalidateAssetDetailLoad(): void {
+    assetDetailAbortController?.abort();
+    assetDetailAbortController = null;
     assetDetailRequestId += 1;
     assetDetailLoading = false;
+    assetDetailSupplementLoading = false;
+    assetDetailFilesLoading = false;
+    assetDetailHistoryLoading = false;
   }
 
   function updateCustomizationContext(assetTypes: CustomAssetType[], fieldDefinitions: CustomFieldDefinition[]): void {
@@ -1822,7 +1883,7 @@
       selectedAssetAttachments,
       selectedAssetCheckoutHistory
     }}
-    status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed }}
+    status={{ busy, canCreateStarter, createAssetAllowed, editAssetAllowed, assetDetailSupplementLoading, assetDetailFilesLoading, assetDetailHistoryLoading }}
     route={{
       routeUnavailable,
       assetDetailLoading,

@@ -95,6 +95,12 @@
     if (message.code === 'attachment-unavailable') {
       return 'Could not download from the source';
     }
+    if (message.code === 'attachment-session-unavailable') {
+      return detail || 'Could not establish a source session for image downloads';
+    }
+    if (message.code === 'attachment-storage-unavailable') {
+      return detail || 'Could not save the image to configured media storage';
+    }
     if (detail.toLowerCase().includes('import validation failed')) {
       return 'File did not pass attachment validation';
     }

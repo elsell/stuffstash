@@ -1969,6 +1969,7 @@ export interface components {
             nextCursor: string | null;
         };
         PrincipalResponse: {
+            displayName?: string;
             email?: string;
             id: string;
         };

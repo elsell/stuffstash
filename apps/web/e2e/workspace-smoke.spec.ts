@@ -37,6 +37,24 @@ test('desktop shell loads the authenticated tenant and compact inventory switche
   await expect(page.getByRole('button', { name: /Cabin Gear/ })).toContainText('Cabin');
 });
 
+test('same-session navigation stays within workspace request budgets', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Request budgets run on the desktop project.');
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
+
+  await page.getByRole('link', { name: /Browse/ }).click();
+  await expect(page.getByRole('heading', { name: 'Browse' })).toBeVisible();
+  await page.getByRole('link', { name: /Home/ }).click();
+  await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
+  await page.getByRole('link', { name: /Browse/ }).click();
+  await expect(page.getByRole('heading', { name: 'Browse' })).toBeVisible();
+
+  const paths = apiRequestPaths(page);
+  expect(paths.filter((path) => path === 'GET /me')).toHaveLength(1);
+  expect(paths.filter((path) => path.startsWith('GET /me/tenants'))).toHaveLength(1);
+  expect(paths.filter((path) => path.includes('/assets?limit=20'))).toHaveLength(1);
+});
+
 test('mobile shell opens context and add flows without desktop-only controls', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile shell coverage runs on the mobile project.');
 

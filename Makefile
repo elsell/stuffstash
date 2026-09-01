@@ -147,6 +147,9 @@ compose-up-oidc:
 	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
 	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
 	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
+	STUFF_STASH_S3_ENDPOINT=garage:3900 \
+	STUFF_STASH_S3_PUBLIC_ENDPOINT=localhost:3900 \
+	STUFF_STASH_S3_SECURE=false \
 	STUFF_STASH_OIDC_ISSUER=http://dex:5556/dex \
 	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
 	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local \
@@ -170,6 +173,9 @@ compose-up-oidc-lan:
 	STUFF_STASH_SPICEDB_TLS_ENABLED=false \
 	STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true \
 	STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed \
+	STUFF_STASH_S3_ENDPOINT=garage:3900 \
+	STUFF_STASH_S3_PUBLIC_ENDPOINT=$(STUFF_STASH_LAN_HOST):3900 \
+	STUFF_STASH_S3_SECURE=false \
 	STUFF_STASH_OIDC_ISSUER=http://$(STUFF_STASH_LAN_HOST):5556/dex \
 	STUFF_STASH_OIDC_CLIENT_ID=stuff-stash-local \
 	STUFF_STASH_OIDC_CLIENT_IDS=stuff-stash-local,stuff-stash-web-local,stuff-stash-mobile-local \

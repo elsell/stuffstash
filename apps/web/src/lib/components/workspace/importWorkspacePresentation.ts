@@ -71,8 +71,15 @@ export function statusSentence(job: ImportJob): string {
       return 'Cancellation is waiting for a safe stopping point.';
     case 'succeeded':
       return job.counts.warnings > 0 ? 'Completed with warnings.' : 'Completed successfully.';
-    case 'failed':
-      return 'Import failed before it could finish.';
+    case 'failed': {
+      const created = job.counts.fieldsCreated + (job.counts.tagsCreated ?? 0) + job.counts.locationsCreated + job.counts.assetsCreated + job.counts.attachmentsCreated;
+      if (allJobMessages(job).some((message) => message.code === 'attachment-session-unavailable' || message.code === 'attachment-storage-unavailable')) {
+        return created > 0
+          ? `Image import did not start. ${created} earlier records were kept.`
+          : 'Image import did not start.';
+      }
+      return created > 0 ? `Import stopped. ${created} records were kept.` : 'Import failed before it could finish.';
+    }
     case 'cancelled_kept':
       return 'Cancelled. Partial progress was kept.';
     case 'cancelled_discarded':

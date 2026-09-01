@@ -22,8 +22,9 @@ type ListMyTenantsOutput struct {
 }
 
 type PrincipalResponse struct {
-	ID    string `json:"id"`
-	Email string `json:"email,omitempty"`
+	ID          string `json:"id"`
+	Email       string `json:"email,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
 }
 
 type MyTenantResponse struct {

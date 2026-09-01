@@ -27,12 +27,13 @@ import type {
 
 export interface InventoryRepository {
   loadWorkspace(): Promise<WorkspaceData>;
+  provisionPersonalWorkspace(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData>;
   createTenantWithInventory(input: { tenantName: string; inventoryName: string }): Promise<WorkspaceData>;
   createInventory(tenantId: string, inventoryName: string): Promise<WorkspaceData>;
   selectTenant(tenantId: string): Promise<WorkspaceData>;
   selectInventory(tenantId: string, inventoryId: string): Promise<WorkspaceData>;
   selectAssetLifecycle(tenantId: string, inventoryId: string, lifecycleState: AssetLifecycleFilter): Promise<WorkspaceData>;
-  getAsset(tenantId: string, inventoryId: string, assetId: string): Promise<Asset>;
+  getAsset(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<Asset>;
   updateAsset(tenantId: string, inventoryId: string, assetId: string, draft: UpdateAssetDraft): Promise<Asset>;
   moveAsset(tenantId: string, inventoryId: string, assetId: string, parentAssetId: string | null): Promise<Asset>;
   createAsset(tenantId: string, inventoryId: string, draft: AddAssetDraft): Promise<Asset>;
@@ -48,9 +49,9 @@ export interface InventoryRepository {
     operationId: string,
     direction: UndoableOperationDirection
   ): Promise<Asset>;
-  listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string): Promise<AssetCheckout[]>;
+  listAssetCheckoutHistory(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<AssetCheckout[]>;
   listCheckedOutAssets(tenantId: string, inventoryId: string): Promise<CheckedOutAsset[]>;
-  listAssetAttachments(tenantId: string, inventoryId: string, assetId: string): Promise<AssetAttachment[]>;
+  listAssetAttachments(tenantId: string, inventoryId: string, assetId: string, signal?: AbortSignal): Promise<AssetAttachment[]>;
   uploadAssetAttachment(
     tenantId: string,
     inventoryId: string,

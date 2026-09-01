@@ -54,6 +54,9 @@
     canCreateStarter: boolean;
     createAssetAllowed: boolean;
     editAssetAllowed: boolean;
+    assetDetailSupplementLoading?: boolean;
+    assetDetailFilesLoading?: boolean;
+    assetDetailHistoryLoading?: boolean;
   };
 
   export type RouteContentRouteState = {
@@ -181,8 +184,6 @@
   import AssetDetail from './AssetDetail.svelte';
   import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
-  import InventoryImportWorkspace from './InventoryImportWorkspace.svelte';
-  import SettingsWorkspace from './settings/SettingsWorkspace.svelte';
   import LocationView from './LocationView.svelte';
 
   let {
@@ -258,6 +259,9 @@
     saving={status.busy}
     attachments={workspace.selectedAssetAttachments}
     checkoutHistory={workspace.selectedAssetCheckoutHistory}
+    supplementsLoading={status.assetDetailSupplementLoading}
+    filesLoading={status.assetDetailFilesLoading}
+    historyLoading={status.assetDetailHistoryLoading}
     mediaPolicy={workspace.data.context.mediaUploadPolicy}
     action={route.assetAction}
     attachmentId={route.attachmentId}
@@ -316,6 +320,10 @@
     onOpenAdd={(kind, parentAssetId, opener) => handlers.onOpenAdd(kind, parentAssetId, opener)}
   />
 {:else if route.mode === 'import'}
+  {#await import('./InventoryImportWorkspace.svelte')}
+    <section class="workspace-main" aria-busy="true"><p role="status">Loading imports…</p></section>
+  {:then imported}
+  {@const InventoryImportWorkspace = imported.default}
   <InventoryImportWorkspace
     tenantId={workspace.data.context.selectedTenantId}
     inventory={workspace.selectedInventory}
@@ -331,7 +339,12 @@
     onOpenImportedAssetId={handlers.onOpenImportedAssetId}
     onOpenInventoryAuditHistory={handlers.onOpenInventoryAuditHistory}
   />
+  {/await}
 {:else if route.mode === 'settings'}
+  {#await import('./settings/SettingsWorkspace.svelte')}
+    <section class="workspace-main" aria-busy="true"><p role="status">Loading settings…</p></section>
+  {:then imported}
+  {@const SettingsWorkspace = imported.default}
   <SettingsWorkspace
     principal={workspace.data.context.principal}
     tenant={workspace.selectedTenant}
@@ -356,6 +369,7 @@
     onTagsChange={handlers.onSettingsTagsChange}
     onPermissionDenied={handlers.onSettingsPermissionDenied}
   />
+  {/await}
 {:else}
   <HomeWorkspace
     tenantId={workspace.data.context.selectedTenantId}

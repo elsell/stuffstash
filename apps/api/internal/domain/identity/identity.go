@@ -28,9 +28,27 @@ func (id PrincipalID) String() string {
 }
 
 type Principal struct {
-	ID    PrincipalID
-	Email Email
+	ID          PrincipalID
+	Email       Email
+	DisplayName DisplayName
 }
+
+type DisplayName string
+
+func NewDisplayName(value string) (DisplayName, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" || len([]rune(value)) > 120 {
+		return "", false
+	}
+	for _, r := range value {
+		if unicode.IsControl(r) {
+			return "", false
+		}
+	}
+	return DisplayName(value), true
+}
+
+func (name DisplayName) String() string { return string(name) }
 
 type User struct {
 	ID    PrincipalID

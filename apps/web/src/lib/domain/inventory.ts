@@ -26,6 +26,7 @@ export type CustomFieldApplicability = (typeof customFieldApplicabilities)[numbe
 export interface Principal {
   id: string;
   email?: string;
+  displayName?: string;
 }
 
 export interface AccessSummary {

@@ -17,6 +17,7 @@ type VerifiedToken struct {
 	Subject       string
 	Email         string
 	EmailVerified bool
+	Name          string
 }
 
 type TokenVerifier interface {
@@ -73,6 +74,9 @@ func (a OIDCAuthenticator) Authenticate(ctx context.Context, authorizationHeader
 			principal.Email = email
 		}
 	}
+	if displayName, ok := identity.NewDisplayName(token.Name); ok {
+		principal.DisplayName = displayName
+	}
 
 	return principal, nil
 }
@@ -103,12 +107,13 @@ func (v oidcTokenVerifier) Verify(ctx context.Context, rawToken string) (Verifie
 	claims := struct {
 		Email         string `json:"email"`
 		EmailVerified bool   `json:"email_verified"`
+		Name          string `json:"name"`
 	}{}
 	if err := token.Claims(&claims); err != nil {
 		return VerifiedToken{}, err
 	}
 
-	return VerifiedToken{Issuer: token.Issuer, Subject: token.Subject, Email: claims.Email, EmailVerified: claims.EmailVerified}, nil
+	return VerifiedToken{Issuer: token.Issuer, Subject: token.Subject, Email: claims.Email, EmailVerified: claims.EmailVerified, Name: claims.Name}, nil
 }
 
 func (v oidcTokenVerifier) allowsAudience(audiences []string) bool {
