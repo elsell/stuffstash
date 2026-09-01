@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ImportJob } from '$lib/domain/inventory';
-import { sourceDescription, sourceOptionsSummary, visiblePreviewMessages } from './importWorkspacePresentation';
+import { sourceDescription, sourceOptionsSummary, statusSentence, visiblePreviewMessages } from './importWorkspacePresentation';
 
 describe('importWorkspacePresentation', () => {
   it('deduplicates fallback job messages before limiting preview-visible messages', () => {
@@ -22,6 +22,20 @@ describe('importWorkspacePresentation', () => {
 
     expect(sourceDescription(job)).toBe('stuff.jsksell.com · v0.24.2');
     expect(sourceOptionsSummary(job)).toEqual(['Connected directly to Homebox']);
+  });
+
+  it('uses the durable diagnostic code rather than count heuristics for image-session failure copy', () => {
+    const earlierFailure = importJobWithMessages([]);
+    earlierFailure.status = 'failed';
+    earlierFailure.counts.attachments = 139;
+    earlierFailure.counts.assetsCreated = 2;
+    earlierFailure.progress = { phase: 'terminal', done: 0, total: 139 };
+    expect(statusSentence(earlierFailure)).toBe('Import stopped. 2 records were kept.');
+
+    earlierFailure.messages = [{
+      code: 'attachment-session-unavailable', severity: 'error', summary: 'Image import could not start', detail: 'Source session failed.'
+    }];
+    expect(statusSentence(earlierFailure)).toBe('Image import did not start. 2 earlier records were kept.');
   });
 });
 

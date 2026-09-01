@@ -12,6 +12,8 @@ It does not define Kubernetes production deployment, external Google OIDC rollou
 
 ## Decisions
 
+- Local OIDC Compose Make targets must explicitly configure API-to-Garage traffic with the Docker service endpoint `garage:3900`, browser direct-upload traffic with the local host or supplied LAN host on port `3900`, and plaintext S3 transport for the local Garage listener. The root `.env.example` remains the HTTPS self-host template and must not be used as the source of local Compose S3 settings.
+
 - Local development must be able to run the API, Postgres, SpiceDB, and a local OIDC provider.
 - Container images must be pinned by immutable digest.
 - Compose is the local orchestration tool.

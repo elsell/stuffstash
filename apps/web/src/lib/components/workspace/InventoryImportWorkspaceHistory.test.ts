@@ -844,6 +844,43 @@ describe('InventoryImportWorkspace import history and progress', () => {
     });
   });
 
+  it('explains a failed image-session start and retained partial progress', async () => {
+    class FailedImageSessionRepository extends TerminalImportJobRepository {
+      constructor(seedData: typeof seed) {
+        super(seedData);
+        this.job = {
+          ...this.job,
+          status: 'failed' as const,
+          counts: {
+          ...this.job.counts,
+          locationsCreated: 38,
+          assetsCreated: 125,
+          attachments: 139,
+          attachmentsCreated: 0
+        },
+        progress: { phase: 'terminal', done: 0, total: 139, message: 'Import failed', updatedAt: '2026-07-06T12:05:00Z' },
+          messages: [{
+          code: 'attachment-session-unavailable',
+          severity: 'error' as const,
+          summary: 'Image import could not start',
+          detail: 'Homebox returned 429 Too Many Requests. Check the Homebox connection, then preview and start a new import. Already imported records were kept.'
+          }]
+        };
+      }
+    }
+
+    await mountImportWorkspace(new FailedImageSessionRepository(structuredClone(seed)), {
+      importJobId: 'job-terminal'
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('38 locations saved · 125 assets saved');
+      expect(document.body.textContent).toContain('Image import could not start');
+      expect(document.body.textContent).toContain('Homebox returned 429 Too Many Requests');
+      expect(document.body.textContent).toContain('preview and start a new import');
+    });
+  });
+
   it('keeps long actor identifiers compact but distinguishable', async () => {
     await mountImportWorkspace(new LongActorImportJobRepository(structuredClone(seed)));
 
