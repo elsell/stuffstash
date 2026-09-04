@@ -52,6 +52,22 @@ grep -q '/Applications/Xcode_26.6.app/Contents/Developer' "$workflow"
 grep -q 'pod --version.*1.17.0' "$workflow"
 grep -q 'pod install --deployment' "$workflow"
 grep -q '^COCOAPODS: 1.17.0$' "$repo_root/apps/mobile/ios/Podfile.lock"
+publish_environment=$(awk '
+  $0 == "  publish:" { in_publish = 1 }
+  in_publish && $0 == "    env:" { in_environment = 1; next }
+  in_environment && $0 == "    steps:" { exit }
+  in_environment { print }
+' "$workflow")
+printf '%s\n' "$publish_environment" | grep -q 'NODE_ENV: production'
+printf '%s\n' "$publish_environment" | grep -q 'STUFF_STASH_MOBILE_RELEASE_TAG:.*inputs.release_tag'
+if grep -q '^[[:space:]]*MOBILE_RELEASE_TAG:' "$workflow"; then
+  echo 'TestFlight workflow uses the obsolete release-tag environment name' >&2
+  exit 1
+fi
+if grep -q '\$MOBILE_RELEASE_TAG' "$workflow"; then
+  echo 'TestFlight workflow references the obsolete release-tag environment name' >&2
+  exit 1
+fi
 grep -q 'GITHUB_RUN_NUMBER.*GITHUB_RUN_ATTEMPT' "$workflow"
 grep -q 'xcodebuild archive' "$workflow"
 grep -q 'xcodebuild -exportArchive' "$workflow"

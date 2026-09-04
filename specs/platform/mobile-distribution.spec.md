@@ -78,6 +78,9 @@ distribution, or automatic promotion from TestFlight to the public App Store.
 - The workflow must reject prereleases and tags that do not match the release
   version contract.
 - The workflow must pass the release tag explicitly to the build.
+- The production release tag and `NODE_ENV=production` must remain available to
+  native Xcode build phases because Expo evaluates the application configuration
+  again while generating its constants manifest.
 - The production build must disable developer diagnostics and local direct
   upload targets.
 - Xcode must archive and export-upload the exact archive created by that
