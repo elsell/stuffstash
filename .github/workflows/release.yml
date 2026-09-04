@@ -297,3 +297,15 @@ jobs:
           gh pr merge "$pr_number" --auto --squash --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}
+
+  testflight:
+    name: Publish iOS release to TestFlight
+    needs: [validate, publish]
+    if: needs.validate.outputs.release_required == 'true'
+    uses: ./.github/workflows/testflight.yml
+    with:
+      release_tag: ${{ needs.validate.outputs.next_tag }}
+    secrets:
+      APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}

@@ -1,0 +1,176 @@
+name: TestFlight
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: Exact stable tag created by the release workflow
+        required: true
+        type: string
+    secrets:
+      APP_STORE_CONNECT_API_KEY_BASE64:
+        required: true
+      APP_STORE_CONNECT_KEY_ID:
+        required: true
+      APP_STORE_CONNECT_ISSUER_ID:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24.17.0"
+  PNPM_VERSION: "11.0.7"
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+
+jobs:
+  publish:
+    name: Build and upload tagged iOS release
+    runs-on: macos-26
+    env:
+      MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
+      MOBILE_BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
+      STUFF_STASH_MOBILE_PRODUCTION_BUILD: "true"
+      STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: "true"
+      STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS: "false"
+      EX_DEV_CLIENT_NETWORK_INSPECTOR: "false"
+      EXPO_PUBLIC_STUFF_STASH_API_BASE_URL: ""
+      EXPO_PUBLIC_STUFF_STASH_TENANT_ID: ""
+      EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN: ""
+      EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP: "false"
+      EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED: "false"
+      EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED: "false"
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Validate release and signing inputs
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          [[ "$MOBILE_RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          test "$(git describe --tags --exact-match HEAD)" = "$MOBILE_RELEASE_TAG"
+          [[ "$MOBILE_BUILD_NUMBER" =~ ^[1-9][0-9]{0,3}\.[1-9][0-9]?$ ]]
+          test -n "$APP_STORE_CONNECT_API_KEY_BASE64"
+          [[ "$APP_STORE_CONNECT_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]
+          [[ "$APP_STORE_CONNECT_ISSUER_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]
+          test -z "$(git status --short)"
+
+      - name: Prepare tagged mobile version
+        run: |
+          node scripts/prepare-mobile-release.mjs \
+            --tag "$MOBILE_RELEASE_TAG" \
+            --build-number "$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify native toolchain
+        run: |
+          test "$(xcodebuild -version | sed -n '1p')" = "Xcode 26.6"
+          test "$(pod --version)" = "1.17.0"
+
+      - name: Install pinned iOS dependencies
+        working-directory: apps/mobile/ios
+        run: pod install --deployment
+
+      - name: Materialize App Store Connect key
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          KEY_PATH: ${{ runner.temp }}/private_keys/AuthKey.p8
+        run: |
+          mkdir -p "$(dirname "$KEY_PATH")"
+          python3 - <<'PY'
+          import base64
+          import os
+          encoded = os.environ["APP_STORE_CONNECT_API_KEY_BASE64"]
+          key = base64.b64decode(encoded, validate=True)
+          descriptor = os.open(os.environ["KEY_PATH"], os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(descriptor, "wb") as handle:
+              handle.write(key)
+          PY
+
+      - name: Archive production application
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          KEY_PATH: ${{ runner.temp }}/private_keys/AuthKey.p8
+          ARCHIVE_PATH: ${{ runner.temp }}/StuffStash.xcarchive
+        run: |
+          xcodebuild archive \
+            -workspace apps/mobile/ios/StuffStash.xcworkspace \
+            -scheme StuffStash \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
+            DEVELOPMENT_TEAM=7585W4AG8C \
+            CODE_SIGN_STYLE=Automatic
+
+      - name: Verify production archive
+        env:
+          ARCHIVE_PATH: ${{ runner.temp }}/StuffStash.xcarchive
+        run: |
+          app_path="$(find "$ARCHIVE_PATH/Products/Applications" -maxdepth 1 -type d -name '*.app' -print -quit)"
+          test -n "$app_path"
+          info_plist="$app_path/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")" = "org.stuffstash.mobile"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")" = "${MOBILE_RELEASE_TAG#v}"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist")" = "$MOBILE_BUILD_NUMBER"
+          test -z "$(find "$app_path" \( -iname '*EXDevLauncher*' -o -iname '*EXDevMenu*' \) -print -quit)"
+          codesign -d --entitlements :- "$app_path" > "$RUNNER_TEMP/StuffStash-entitlements.plist"
+          if /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.associated-domains' \
+            "$RUNNER_TEMP/StuffStash-entitlements.plist" >/dev/null 2>&1; then
+            echo 'General TestFlight archive unexpectedly contains associated domains.' >&2
+            exit 1
+          fi
+
+      - name: Upload archive to App Store Connect
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          KEY_PATH: ${{ runner.temp }}/private_keys/AuthKey.p8
+          ARCHIVE_PATH: ${{ runner.temp }}/StuffStash.xcarchive
+          EXPORT_PATH: ${{ runner.temp }}/StuffStash-export
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist apps/mobile/ios/ExportOptions-TestFlight.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: Report upload
+        run: |
+          printf 'Uploaded Stuff Stash `%s` (`%s`) to App Store Connect for TestFlight processing.\n' \
+            "$MOBILE_RELEASE_TAG" "$MOBILE_BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary signing key
+        if: always()
+        env:
+          KEY_PATH: ${{ runner.temp }}/private_keys/AuthKey.p8
+        run: rm -f "$KEY_PATH"
