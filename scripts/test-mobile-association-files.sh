@@ -6,7 +6,7 @@ tmp_directory=$(mktemp -d)
 trap 'rm -rf "$tmp_directory"' EXIT HUP INT TERM
 
 fingerprint='AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99'
-STUFF_STASH_MOBILE_IOS_APP_ID='7585W4AG8C.app.stuffstash.mobile' \
+STUFF_STASH_MOBILE_IOS_APP_ID='7585W4AG8C.org.stuffstash.mobile' \
 STUFF_STASH_MOBILE_ANDROID_PACKAGE='app.stuffstash.mobile' \
 STUFF_STASH_MOBILE_ANDROID_SHA256_CERT_FINGERPRINT="$fingerprint" \
   "$repo_root/deploy/web/write-mobile-association-files.sh" "$tmp_directory"
@@ -22,7 +22,7 @@ aasa = json.loads((directory / "apple-app-site-association").read_text())
 assert aasa == {
     "applinks": {
         "details": [{
-            "appIDs": ["7585W4AG8C.app.stuffstash.mobile"],
+            "appIDs": ["7585W4AG8C.org.stuffstash.mobile"],
             "components": [{"/": "/invitations/accept", "comment": "Stuff Stash inventory invitations"}],
         }]
     }

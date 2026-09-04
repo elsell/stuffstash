@@ -23,6 +23,12 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+The immediate mobile distribution focus is establishing the first auditable
+TestFlight path in `specs/platform/mobile-distribution.spec.md`: permanent Apple
+identity, release-tag-derived marketing versions, bounded workflow-derived
+build numbers, pinned native Xcode build and submission tooling, production runtime
+configuration, and a signed physical-device release check.
+
 The immediate mobile trust focus is replacing bounded raw asset audit rows with a production-shaped, change-first History journey. The slice must preserve the complete audit stream while adding typed cursor-paginated asset activity, atomic field/tag edits with coherent audit and undo behavior, explicit tenant/inventory/asset scope, safe structured changes, immediate saved/Undo feedback, and a native accessible History list/detail flow.
 
 The immediate cross-platform access focus is completing clickable inventory invitation links. The backend token and acceptance primitives already exist; the current slice must add a canonical environment-configured HTTPS link, authenticated safe preview, OIDC/deep-link return behavior, permission-gated creation and one-time copy/share UX on web and mobile, explicit acceptance, terminal failure states, and verified post-accept inventory entry with two identities.
@@ -129,25 +135,29 @@ The web audit and Browse parity work needs a production-shaped path through:
 - The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
 - Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
 - Inventory invitation token creation and API acceptance exist, but clients still expose a bare token instead of a clickable link and have no web/mobile preview-and-accept journey.
+- The general mobile build cannot safely receive arbitrary self-hosted browser invitations through the custom scheme yet. A future handoff must bind the source server and require an exact configured-server match or explicit switch before sending the token to any API.
 - The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
 - `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
 - API-key-backed speech synthesis adapters and the external MCP server are not yet complete. Checkout history is available to the internal agent tool catalog, but the public MCP transport still depends on the external MCP server work.
 
 ## Next Work
 
-1. Complete production-grade web and mobile settings customization parity.
+1. Complete the first TestFlight distribution path.
+   - Use `specs/platform/mobile-distribution.spec.md` as the source of truth.
+   - Prove one published GitHub Release builds the tagged commit, embeds the tag version, receives a unique build number, uploads the exact build to App Store Connect, and passes the physical-device release checklist.
+2. Complete production-grade web and mobile settings customization parity.
    - Use `specs/platform/client-settings-management.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, `specs/platform/mobile-app-tracer-bullet.spec.md`, and the custom field, custom asset type, tag, lifecycle, and identity/access specs as the source of truth.
    - Prove one account-based Settings entry, tenant and inventory drill-ins, inherited-versus-local presentation, permission-correct create/edit/lifecycle behavior, inventory tag management without invented restore behavior, equivalent failure and denied states, and screenshot-backed responsive/native verification.
-2. Complete the mobile asset History and atomic edit refactor.
+3. Complete the mobile asset History and atomic edit refactor.
    - Use `specs/audit-history/audit-and-undo.spec.md`, `specs/assets/asset-model.spec.md`, `specs/platform/rest-api-initial-slice.spec.md`, and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
    - Prove change-first activity after noisy reads, raw audit preservation, safe cursor scoping, one coherent edit/audit/operation, saved Undo feedback, and native accessibility behavior.
-3. Complete clickable web and mobile inventory invitations.
+4. Complete clickable web and mobile inventory invitations.
    - Use `specs/identity-access/tenant-inventory-access.spec.md`, `specs/identity-access/authentication-flow.spec.md`, `specs/identity-access/mobile-oidc-authentication.spec.md`, and the web/mobile platform specs as the source of truth.
    - Prove canonical link creation, token redaction, sign-in return, authenticated preview, explicit acceptance, terminal states, and post-accept inventory entry with two identities.
-4. Implement the external Stuff Stash MCP server.
+5. Implement the external Stuff Stash MCP server.
    - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
    - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-5. Complete unified Home/Browse web parity and the remaining screenshot-backed audit closure matrix.
+6. Complete unified Home/Browse web parity and the remaining screenshot-backed audit closure matrix.
    - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
    - Prioritize the shared transient-surface migration, containable workspaces, media attachment management, browser-level coverage, tenant-first switching, inventory settings, and sharing/access management.
 

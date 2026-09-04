@@ -1,0 +1,142 @@
+# Mobile Distribution Spec
+
+## Purpose
+
+Stuff Stash needs a repeatable, auditable path from an immutable repository
+release to an iOS build in TestFlight.
+
+## Scope
+
+This spec defines the first iOS production-distribution slice: application
+identity, release and build versions, native Xcode build and submission,
+GitHub Actions orchestration, production build configuration, cloud signing
+capabilities, and release verification.
+
+It does not define App Store product-page copy, screenshots, pricing,
+territories, production account creation, Sign in with Apple, Android store
+distribution, or automatic promotion from TestFlight to the public App Store.
+
+## Application Identity
+
+- The permanent iOS bundle identifier is `org.stuffstash.mobile`.
+- The Apple application identifier is the Apple Developer Team ID followed by
+  `.org.stuffstash.mobile`.
+- Expo application configuration, the checked-in Xcode project, App Store Connect, signing
+  settings, associated-domain files, tests, and release validation must agree
+  on the bundle identifier.
+- Production provisioning must use an explicit App ID with the Associated
+  Domains capability when invitation universal links are configured.
+- No signing certificate, provisioning profile, App Store Connect private key,
+  or other release credential may be committed.
+
+## Release Version
+
+- The GitHub Release tag is the sole source of the user-facing mobile release
+  version.
+- A TestFlight release tag must have the exact form `vMAJOR.MINOR.PATCH`.
+- The leading `v` is removed for the Expo application `version` and iOS
+  `CFBundleShortVersionString`. For example, `v0.15.0` produces `0.15.0`.
+- The release job must check out and build the commit referenced by that tag.
+- A missing, malformed, draft, or prerelease release must not publish a
+  TestFlight build.
+- Local and non-release development builds may use `0.0.0`; every production
+  build must fail before native compilation unless it receives a valid release
+  tag. Prepared metadata is not a substitute for that tag.
+- The version exposed in the mobile About and Diagnostics screens must match
+  the Git release version embedded in the binary.
+
+## Build Version
+
+- Apple's developer-facing `CFBundleVersion` is independent from the marketing
+  version and must be unique for every uploaded build of that marketing version.
+- The native workflow must derive the build number from the repository workflow
+  run number and attempt as `GITHUB_RUN_NUMBER.GITHUB_RUN_ATTEMPT`. The first
+  component must be at most four digits and the second at most two as a
+  conservative compatibility constraint; the workflow must fail rather than
+  truncate or wrap.
+- Rebuilding the same Git release may keep the same marketing version but must
+  receive a new build number.
+
+## Build And Submission
+
+- GitHub Actions must run the checked-in native iOS project on the pinned macOS,
+  Xcode, CocoaPods, Node, and pnpm versions recorded in
+  `specs/platform/tooling-versions.spec.md`.
+- The workflow must use Xcode's Release configuration and explicitly disable
+  the Expo development-client network inspector. The signed distribution
+  archive must not contain the Expo developer launcher or developer menu.
+- TestFlight publication must run only after the repository release workflow
+  has published the GitHub Release. The release workflow must invoke the
+  reusable TestFlight workflow explicitly because events created with the
+  repository `GITHUB_TOKEN` do not start downstream release-event workflows.
+- Only the trusted release workflow running from `main` may invoke the reusable
+  TestFlight workflow. Publishing an arbitrary tag must not expose the
+  account-wide App Store Connect key to tag-controlled build code.
+- The workflow must reject prereleases and tags that do not match the release
+  version contract.
+- The workflow must pass the release tag explicitly to the build.
+- The production build must disable developer diagnostics and local direct
+  upload targets.
+- Xcode must archive and export-upload the exact archive created by that
+  workflow, using automatic cloud signing without Fastlane or EAS.
+- The App Store Connect API private key, key ID, and issuer ID must be supplied
+  as GitHub Actions secrets and validated before compilation. The private key
+  may exist only in the runner's temporary directory and must be removed by an
+  always-run cleanup step.
+- The selected macOS runner must build with the exact reviewed Xcode version;
+  the workflow must fail closed if the runner image drifts.
+
+## Production Runtime Configuration
+
+- The general TestFlight build must not embed an API base URL, tenant hint, or
+  self-hosted invitation origin. The user selects their Stuff Stash server
+  during onboarding, and authenticated discovery supplies tenant context.
+- The general-distribution build mode must fail closed if an API URL, tenant
+  hint, invitation origin, private-LAN HTTP opt-in, developer diagnostics, or
+  local direct-upload target is enabled. The workflow must set every one of
+  these values explicitly to its empty or disabled state.
+- An operator may seed a deployment-specific build with an API URL, tenant
+  hint, or verified invitation origin, but those values must remain optional
+  public configuration rather than application identity or credentials.
+- Production builds must not enable private-LAN HTTP origins, developer voice
+  diagnostics, or local direct-upload targets.
+- Production iOS metadata must describe local-network access in product terms
+  and must not advertise dev-client Bonjour discovery services.
+- When a deployment-specific build enables universal links, its invitation
+  origin must serve an Apple app-site-association document for the exact Apple
+  application identifier without redirects.
+
+## Release Verification
+
+- Tests must prove valid release-tag parsing and rejection of malformed,
+  prerelease, or missing production versions.
+- Tests must prove Expo application and checked-in native configuration agree on
+  `org.stuffstash.mobile`.
+- Repository script tests must prove the TestFlight workflow is release-driven,
+  builds the release tag, passes production configuration, verifies the pinned
+  native toolchain, and uploads the explicit archive it created.
+- Before upload, the workflow must inspect the archive and verify the bundle
+  identifier, marketing version, build number, lack of associated domains in
+  the general build, and absence of Expo developer launcher and menu bundles.
+- Before enabling automatic publication, one production archive must be built,
+  signed, installed through TestFlight, and exercised on a physical iPhone.
+- The first physical TestFlight check must cover launch, server onboarding,
+  OIDC sign-in and return, tenant/inventory selection, photo permission and
+  upload, microphone permission and voice interaction, browser invitation
+  acceptance, sign-out, and the displayed application version. A
+  deployment-specific build that declares an invitation host must also prove
+  its universal link.
+- App Store Connect processing, export-compliance answers, privacy disclosures,
+  review credentials, and tester groups remain operator gates. The workflow may
+  upload a build but must not claim those external gates are complete.
+
+## Required Deployment Inputs
+
+- The reusable workflow must declare only the following secrets, and its caller
+  must pass them explicitly rather than inheriting every repository secret.
+- GitHub Actions secret `APP_STORE_CONNECT_API_KEY_BASE64`, containing the
+  base64-encoded App Store Connect `.p8` private key.
+- GitHub Actions secret `APP_STORE_CONNECT_KEY_ID`.
+- GitHub Actions secret `APP_STORE_CONNECT_ISSUER_ID`.
+- The API key must be authorized to upload builds and use Apple cloud-managed
+  distribution certificates for `org.stuffstash.mobile`.

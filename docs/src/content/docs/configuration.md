@@ -200,7 +200,8 @@ API remains authoritative.
 
 The mobile app asks for a Stuff Stash instance URL, reads the API's public
 mobile authentication metadata, and signs in with the configured OIDC provider.
-These Expo public variables are optional development defaults only.
+These Expo public variables are optional seeds and deployment-specific build
+settings; the general TestFlight build does not need them.
 
 Mobile booleans accept `1`, `true`, `yes`, `0`, `false`, and `no`.
 
@@ -209,9 +210,9 @@ Mobile booleans accept `1`, `true`, `yes`, `0`, `false`, and `no`.
 | `EXPO_PUBLIC_STUFF_STASH_API_BASE_URL` | no | Optional API base URL seed shown on first launch. |
 | `EXPO_PUBLIC_STUFF_STASH_TENANT_ID` | no | Optional initial tenant selection hint. |
 | `EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED` | no | Enables mobile voice developer diagnostics. |
-| `EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN` | production links | HTTPS web origin whose `/invitations/accept` links open in an installed mobile build. Production EAS builds require it; local builds may omit it and use the custom scheme. |
+| `EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN` | no | Optional HTTPS web origin whose `/invitations/accept` links open in a deployment-specific installed build. The general TestFlight build omits it because users select their server during onboarding. |
 | `EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP` | no | Explicitly permits a configured loopback or private RFC 1918 HTTP invitation origin in non-production builds for browser acceptance from local devices. |
-| `STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS` | no | Set to `true` in any non-EAS release pipeline that must include invitation universal/app links. The build fails if the invitation origin is missing. |
+| `STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS` | no | Set to `true` for a deployment-specific build that must include invitation universal/app links. The build fails if the invitation origin is missing. |
 
 The web server publishes the platform association documents at
 `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`.
