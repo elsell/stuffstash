@@ -6,6 +6,11 @@ runtime_node=${NODE_BINARY:-node}
 tmp_directory=$(mktemp -d)
 trap 'rm -rf "$tmp_directory"' EXIT HUP INT TERM
 
+if grep -q 'NODE_BINARY=.*CODEX_RUNTIME_NODE_BIN.*test-mobile-release' "$repo_root/Makefile"; then
+  echo 'mobile release tests must not force the Codex desktop Node path in CI' >&2
+  exit 1
+fi
+
 mkdir -p "$tmp_directory/apps/mobile/ios/StuffStash.xcodeproj"
 cat > "$tmp_directory/apps/mobile/ios/StuffStash.xcodeproj/project.pbxproj" <<'EOF'
 MARKETING_VERSION = 0.0.0;
