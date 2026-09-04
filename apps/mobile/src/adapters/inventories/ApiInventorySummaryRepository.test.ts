@@ -40,6 +40,8 @@ class FakeInventoryApiClient {
     name: 'Cabin Inventory',
     access: { relationship: 'viewer', permissions: ['view'] }
   };
+  additionalHomeInventory: Inventory | undefined;
+  listInventoryRequests: string[] = [];
   assets: Asset[] = [
     {
       id: 'asset-garage',
@@ -213,11 +215,15 @@ class FakeInventoryApiClient {
 
   async listInventories(tenantId: string): Promise<Page<Inventory>> {
     this.requestKinds.push('list_inventories');
+    this.listInventoryRequests.push(tenantId);
     if (tenantId === this.cabinTenant.id) {
       return page([this.cabinInventory]);
     }
 
-    return page([this.inventory]);
+    return page([
+      this.inventory,
+      ...(this.additionalHomeInventory ? [this.additionalHomeInventory] : [])
+    ]);
   }
 
   async listAssets(
@@ -937,6 +943,41 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
+  it('selects from the inventory directory without hydrating either inventory', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.selectInventory(inventoryId('inventory-cabin'));
+
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAssetTagRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+    await expect(repository.getCurrentInventoryScope()).resolves.toEqual({
+      tenantId: 'tenant-cabin',
+      inventoryId: 'inventory-cabin'
+    });
+  });
+
+  it('refreshes a cached inventory directory before selecting a newly accepted inventory', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    await repository.getCurrentInventoryScope();
+    client.additionalHomeInventory = {
+      ...client.inventory,
+      id: 'inventory-new',
+      name: 'Newly shared inventory'
+    };
+
+    await repository.selectInventory(inventoryId('inventory-new'));
+
+    await expect(repository.getCurrentInventoryScope()).resolves.toEqual({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-new'
+    });
+    expect(client.listInventoryRequests.filter((id) => id === 'tenant-home')).toHaveLength(2);
+    expect(client.listAssetRequests).toEqual([]);
+  });
+
   it('does not list attachments while loading dense inventory summaries', async () => {
     const client = new FakeInventoryApiClient();
     client.shouldFailAttachmentLookup = true;
@@ -1140,7 +1181,7 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
-  it('uses the full active tree to build parent trails for checked-out asset cards', async () => {
+  it('loads only required ancestors to build parent trails for checked-out asset cards', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
       {
@@ -1188,10 +1229,8 @@ describe('ApiInventorySummaryRepository', () => {
       ]
     });
     expect(client.listAssetRequests.filter((request) =>
-      request.inventoryId === 'inventory-home' &&
-      request.lifecycleState === 'active' &&
-      request.sort === 'id_asc'
-    )).toHaveLength(1);
+      request.lifecycleState === 'active' && request.sort === 'id_asc'
+    )).toEqual([]);
   });
 
   it('loads locations from the full active inventory tree instead of only the recent summary page', async () => {
@@ -1452,18 +1491,13 @@ describe('ApiInventorySummaryRepository', () => {
       tagIds: ['tag-workshop', 'tag-camping']
     });
 
-    expect(client.listAssetRequests).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        inventoryId: 'inventory-home',
-        lifecycleState: 'all',
-        sort: 'updated_desc'
-      }),
+    expect(client.listAssetRequests).toEqual([
       expect.objectContaining({
         inventoryId: 'inventory-home',
         lifecycleState: 'active',
         sort: 'id_asc'
       })
-    ]));
+    ]);
     expect(client.searchAssetRequests[0]).toMatchObject({
       tenantId: 'tenant-home',
       query: '',
@@ -2131,6 +2165,28 @@ describe('ApiInventorySummaryRepository', () => {
     expect(client.listAssetTagRequests).toEqual([]);
   });
 
+  it('emits scoped mutation impact after a successful return', async () => {
+    const client = new FakeInventoryApiClient();
+    const mutations: unknown[] = [];
+    const repository = new ApiInventorySummaryRepository(
+      client,
+      'tenant-home',
+      undefined,
+      'scope-one',
+      {},
+      { onInventoryMutation: (mutation) => mutations.push(mutation) }
+    );
+
+    await repository.returnAsset(assetId('asset-filters'));
+
+    expect(mutations).toEqual([{
+      kind: 'asset_checkout_changed',
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      assetId: 'asset-filters'
+    }]);
+  });
+
   it('loads checked-out Home summaries from the checked-out inventory endpoint', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
@@ -2167,6 +2223,111 @@ describe('ApiInventorySummaryRepository', () => {
       limit: 10,
       cursor: undefined
     });
+  });
+
+  it('does not hydrate unrelated inventories or tags for the Home dashboard', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.getHomeDashboardSnapshot();
+
+    expect(client.listAssetRequests.filter((request) => request.inventoryId === 'inventory-cabin')).toEqual([]);
+    expect(client.listAssetRequests.filter((request) =>
+      request.lifecycleState === 'active' && request.sort === 'id_asc'
+    )).toEqual([]);
+    expect(client.listAssetTagRequests).toEqual([]);
+    expect(client.listAssetRequests).toContainEqual({
+      inventoryId: 'inventory-home',
+      limit: 10,
+      cursor: undefined,
+      lifecycleState: 'active',
+      sort: 'updated_desc'
+    });
+  });
+
+  it('loads the Assets surface without hydrating tags or unrelated inventories', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getInventoryAssetsSnapshot()).resolves.toMatchObject({
+      inventoryName: 'Home Inventory',
+      assets: expect.arrayContaining([expect.objectContaining({ id: 'asset-filters' })])
+    });
+
+    expect(client.listAssetRequests.filter((request) => request.inventoryId === 'inventory-cabin')).toEqual([]);
+    expect(client.listAssetTagRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads the Add surface with only selected inventory identity and tag choices', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getAddAssetContext()).resolves.toMatchObject({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      canAdd: true,
+      assetTags: [expect.objectContaining({ id: 'tag-workshop' })]
+    });
+
+    expect(client.listAssetTagRequests).toEqual([expect.objectContaining({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home'
+    })]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+    expect(client.getAssetRequests).toEqual([]);
+  });
+
+  it('loads tag filters without hydrating the selected workspace', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getInventoryAssetTags()).resolves.toEqual([
+      expect.objectContaining({ id: 'tag-workshop' })
+    ]);
+
+    expect(client.listAssetTagRequests).toEqual([expect.objectContaining({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home'
+    })]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads the Locations surface from only the selected active tree', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getLocationsSnapshot()).resolves.toMatchObject({
+      tenantName: 'Home',
+      inventoryName: 'Home Inventory',
+      locations: [expect.objectContaining({ id: 'asset-garage' })]
+    });
+
+    expect(client.listAssetRequests).toEqual([expect.objectContaining({
+      inventoryId: 'inventory-home',
+      lifecycleState: 'active'
+    })]);
+    expect(client.listAssetTagRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads one location subtree without unrelated inventory or tag hydration', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await expect(repository.getLocationAssetsSnapshot('asset-garage')).resolves.toMatchObject({
+      locationId: 'asset-garage',
+      assets: [expect.objectContaining({ id: 'asset-filters' })]
+    });
+
+    expect(client.listAssetRequests).toEqual([expect.objectContaining({
+      inventoryId: 'inventory-home',
+      lifecycleState: 'active'
+    })]);
+    expect(client.listAssetTagRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
   });
 
   it('continues paged tenant search until selected-inventory asset results are found', async () => {

@@ -67,6 +67,10 @@ import {
   removeBrowseFilter
 } from './SearchScreenPresentation';
 import { createSearchScreenStyles } from './SearchScreen.styles';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileServerStateScope } from '../navigation/MobileServerStateProvider';
+import { fetchMobileInventoryServerQuery } from '../serverState/fetchMobileInventoryServerQuery';
 
 export { SearchHeader } from './BrowseHeader';
 
@@ -151,6 +155,13 @@ export function SearchScreen({
 }: SearchScreenProps) {
   const { fontScale, width } = useWindowDimensions();
   const palette = useAppearancePalette();
+  const queryClient = useQueryClient();
+  const serverState = useMobileServerStateScope();
+  const inventoryScope = useQuery({
+    queryKey: mobileQueryKeys.inventoryScope(serverState.scopeId),
+    queryFn: ({ signal }) => serverState.loadInventoryScope({ signal }),
+    staleTime: Infinity
+  });
   const styles = useMemo(() => createSearchScreenStyles(palette), [palette]);
   const normalizedInitialTags = useMemo(() => uniqueTagIds(initialTagIds), [initialTagIds.join('|')]);
   const [query, setQuery] = useState(initialQuery);
@@ -183,10 +194,44 @@ export function SearchScreen({
   const latestResults = useRef<BrowseResults>(emptyResults(initialScope));
   const locationCatalog = useRef<Promise<LocationsViewModel> | undefined>(undefined);
   const localRouteEffectKeys = useRef(new Set<string>());
+  const previousInventoryScope = useRef<string | undefined>(undefined);
 
   useEffect(() => () => {
     if (queryTimer.current) clearTimeout(queryTimer.current);
   }, []);
+
+  useEffect(() => {
+    if (!inventoryScope.data) {
+      return;
+    }
+    const nextScope = `${inventoryScope.data.tenantId}:${inventoryScope.data.inventoryId}`;
+    if (!previousInventoryScope.current) {
+      previousInventoryScope.current = nextScope;
+      return;
+    }
+    if (previousInventoryScope.current === nextScope) {
+      return;
+    }
+    previousInventoryScope.current = nextScope;
+    requestSequence.current += 1;
+    if (queryTimer.current) {
+      clearTimeout(queryTimer.current);
+    }
+    locationCatalog.current = undefined;
+    mapPathStore.current.clear();
+    const resetResults = emptyResults(scope, query.trim());
+    latestResults.current = resetResults;
+    setState({ status: 'loading', results: resetResults, isInitial: true });
+    setTagFilters([]);
+    setTagFilterStatus('loading');
+    setInventoryContext(undefined);
+    setInventoryContextStatus('loading');
+    setIsLoadingMore(false);
+    setIsRefreshing(false);
+    void loadFirstPage();
+    void loadTagFilters();
+    void loadLocationCatalog().catch(() => undefined);
+  }, [inventoryScope.data?.tenantId, inventoryScope.data?.inventoryId]);
 
   useEffect(() => {
     const nextQuery = initialQuery.trim();
@@ -241,7 +286,12 @@ export function SearchScreen({
   async function loadTagFilters(): Promise<void> {
     setTagFilterStatus('loading');
     try {
-      setTagFilters(await inventoryAssetTagsQuery.execute());
+      setTagFilters(await fetchMobileInventoryServerQuery({
+        client: queryClient,
+        serverState,
+        key: mobileQueryKeys.assetTags,
+        query: (signal) => inventoryAssetTagsQuery.execute({ signal })
+      }));
       setTagFilterStatus('ready');
     } catch {
       setTagFilterStatus('error');
@@ -251,7 +301,13 @@ export function SearchScreen({
   async function loadLocationCatalog(force = false): Promise<LocationsViewModel> {
     if (force || !locationCatalog.current) {
       setInventoryContextStatus('loading');
-      locationCatalog.current = locationsQuery.execute();
+      locationCatalog.current = fetchMobileInventoryServerQuery({
+        client: queryClient,
+        serverState,
+        key: mobileQueryKeys.locations,
+        query: (signal) => locationsQuery.execute({ signal }),
+        force
+      });
     }
     try {
       const catalog = await locationCatalog.current;
@@ -315,16 +371,29 @@ export function SearchScreen({
     readonly scope: BrowseScope;
     readonly sort: AssetBrowseSort;
     readonly tagIds: readonly string[];
-  }): Promise<BrowseResults> {
-    const results = await searchAssetsQuery.execute({
-      query: input.query,
-      cursor: input.cursor,
-      lifecycleState: input.lifecycleState,
-      checkoutState: input.checkoutState,
-      kind: browseScopeToKind(input.scope),
-      sort: input.sort,
-      limit: pageSize,
-      tagIds: input.tagIds
+  }, force = false): Promise<BrowseResults> {
+    const results = await fetchMobileInventoryServerQuery({
+      client: queryClient,
+      serverState,
+      key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.browse(
+        scopeId,
+        tenantId,
+        inventoryId,
+        input,
+        input.cursor
+      ),
+      query: (signal) => searchAssetsQuery.execute({
+        query: input.query,
+        cursor: input.cursor,
+        lifecycleState: input.lifecycleState,
+        checkoutState: input.checkoutState,
+        kind: browseScopeToKind(input.scope),
+        sort: input.sort,
+        limit: pageSize,
+        tagIds: input.tagIds,
+        signal
+      }),
+      force
     });
     if (input.scope !== 'places') {
       return {
@@ -362,7 +431,7 @@ export function SearchScreen({
     setIsRefreshing(loadingFlags.isRefreshing);
     try {
       if (scope === 'places') await loadLocationCatalog(true);
-      const results = await loadBrowseResults({ query: lastRequestedQuery.current, lifecycleState, checkoutState, scope, sort, tagIds: selectedTagIds });
+      const results = await loadBrowseResults({ query: lastRequestedQuery.current, lifecycleState, checkoutState, scope, sort, tagIds: selectedTagIds }, true);
       if (isCurrentRequest(requestSequence, requestId)) {
         latestResults.current = results;
         setState({ status: 'ready', results });

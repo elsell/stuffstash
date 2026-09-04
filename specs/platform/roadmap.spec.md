@@ -23,11 +23,13 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The immediate mobile distribution focus is establishing the first auditable
-TestFlight path in `specs/platform/mobile-distribution.spec.md`: permanent Apple
-identity, release-tag-derived marketing versions, bounded workflow-derived
-build numbers, pinned native Xcode build and submission tooling, production runtime
-configuration, and a signed physical-device release check.
+The immediate mobile focus is the complete server-state and latency audit in
+`specs/platform/mobile-server-state.spec.md`: focused ports, composition-scoped
+TanStack Query identity, request cancellation, mutation reconciliation, bounded
+surface request graphs, native progressive loading, and request-count evidence.
+The first native GitHub Actions TestFlight path is operational and has installed a
+working signed build on a physical device; distribution remains a release gate,
+not the current implementation bottleneck.
 
 The immediate mobile trust focus is replacing bounded raw asset audit rows with a production-shaped, change-first History journey. The slice must preserve the complete audit stream while adding typed cursor-paginated asset activity, atomic field/tag edits with coherent audit and undo behavior, explicit tenant/inventory/asset scope, safe structured changes, immediate saved/Undo feedback, and a native accessible History list/detail flow.
 
@@ -142,9 +144,9 @@ The web audit and Browse parity work needs a production-shaped path through:
 
 ## Next Work
 
-1. Complete the first TestFlight distribution path.
-   - Use `specs/platform/mobile-distribution.spec.md` as the source of truth.
-   - Prove one published GitHub Release builds the tagged commit, embeds the tag version, receives a unique build number, uploads the exact build to App Store Connect, and passes the physical-device release checklist.
+1. Complete the mobile server-state and latency audit.
+   - Use `specs/platform/mobile-server-state.spec.md` as the source of truth.
+   - Prove every surface has focused read/write ports, fully scoped query identity, correct invalidation or cache updates, cancellation, bounded requests, correct freshness, and native-feeling progressive feedback.
 2. Complete production-grade web and mobile settings customization parity.
    - Use `specs/platform/client-settings-management.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, `specs/platform/mobile-app-tracer-bullet.spec.md`, and the custom field, custom asset type, tag, lifecycle, and identity/access specs as the source of truth.
    - Prove one account-based Settings entry, tenant and inventory drill-ins, inherited-versus-local presentation, permission-correct create/edit/lifecycle behavior, inventory tag management without invented restore behavior, equivalent failure and denied states, and screenshot-backed responsive/native verification.

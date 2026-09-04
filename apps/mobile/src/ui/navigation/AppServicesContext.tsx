@@ -143,7 +143,11 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   };
 
   return (
-    <MobileServerStateProvider client={mobileComposition.queryClient}>
+    <MobileServerStateProvider
+      client={mobileComposition.queryClient}
+      loadInventoryScope={(request) => mobileComposition.currentInventoryScopeQuery.execute(request)}
+      scopeId={mobileComposition.serviceScopeId}
+    >
       <AppServicesContext.Provider value={mobileComposition}>
         <AppConnectionActionsContext.Provider
           value={{

@@ -28,7 +28,12 @@ export function shouldRetryMobileQuery(failureCount: number, error: unknown): bo
     return false;
   }
   const status = errorStatus(error);
-  return status === undefined || status >= 500;
+  if (status !== undefined) {
+    return status >= 500;
+  }
+  return error instanceof TypeError || (
+    error instanceof Error && error.message.startsWith('Network request timed out')
+  );
 }
 
 function errorStatus(error: unknown): number | undefined {
@@ -43,8 +48,25 @@ export async function disposeMobileQueryClient(client: QueryClient): Promise<voi
   client.clear();
 }
 
+export async function resetMobileInventorySelection(
+  client: QueryClient,
+  compositionScopeId: string
+): Promise<void> {
+  const queryKey = mobileQueryKeys.root(compositionScopeId);
+  await client.cancelQueries({ queryKey });
+  client.removeQueries({ queryKey });
+}
+
 export const mobileQueryKeys = {
   root: (compositionScopeId: string) => ['mobile', compositionScopeId] as const,
+  home: (compositionScopeId: string, tenantId: string, inventoryId: string) => [
+    ...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId),
+    'home'
+  ] as const,
+  inventoryScope: (compositionScopeId: string) => [
+    ...mobileQueryKeys.root(compositionScopeId),
+    'inventory-scope'
+  ] as const,
   inventory: (
     compositionScopeId: string,
     tenantId: string,
@@ -65,6 +87,49 @@ export const mobileQueryKeys = {
     ...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId),
     'asset',
     assetId
+  ] as const,
+  inventoryAssets: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string
+  ) => [...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId), 'assets'] as const,
+  assetTags: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string
+  ) => [...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId), 'asset-tags'] as const,
+  addContext: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string
+  ) => [...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId), 'add-context'] as const,
+  locations: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string
+  ) => [...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId), 'locations'] as const,
+  locationAssets: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string,
+    locationId: string
+  ) => [
+    ...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId),
+    'location',
+    locationId,
+    'assets'
+  ] as const,
+  browse: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string,
+    identity: BrowseQueryIdentityInput,
+    cursor?: string
+  ) => [
+    ...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId),
+    'browse',
+    normalizeBrowseQueryIdentity(identity),
+    cursor ?? 'first'
   ] as const
 };
 
@@ -91,7 +156,7 @@ export function normalizeBrowseQueryIdentity(input: BrowseQueryIdentityInput): B
     query: input.query?.trim() ?? '',
     tagIds: [...new Set(input.tagIds ?? [])].sort(),
     lifecycleState: input.lifecycleState ?? 'active',
-    checkoutState: input.checkoutState ?? 'all',
+    checkoutState: input.checkoutState ?? 'any',
     sort: input.sort ?? 'default',
     scope: input.scope ?? 'all'
   };

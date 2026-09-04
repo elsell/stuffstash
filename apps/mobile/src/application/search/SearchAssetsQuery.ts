@@ -13,6 +13,7 @@ import type {
 export type SearchAssetsMode = 'browse' | 'search';
 
 export type SearchAssetsQueryInput = {
+  readonly signal?: AbortSignal;
   readonly query: string;
   readonly cursor?: string;
   readonly lifecycleState: AssetBrowseLifecycleFilter;

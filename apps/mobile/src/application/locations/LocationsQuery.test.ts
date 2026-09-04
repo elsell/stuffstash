@@ -1,20 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import {
-  inventoryId,
-  tenantId,
-  type InventorySummary
-} from '../../domain/inventories/InventorySummary';
-import type { InventoryWorkspace } from '../home/InventorySummaryRepository';
-import { LocationsQuery } from './LocationsQuery';
+import { LocationsQuery, type LocationsRepository } from './LocationsQuery';
 
-class FakeInventoryWorkspaceRepository {
-  constructor(private readonly inventory: InventorySummary) {}
+class FakeLocationsRepository implements LocationsRepository {
+  constructor(private readonly canAdd: boolean) {}
 
-  async getInventoryWorkspace(): Promise<InventoryWorkspace> {
+  async getLocationsSnapshot() {
     return {
-      defaultInventoryId: this.inventory.id,
-      inventories: [this.inventory],
-      tenants: [{ id: this.inventory.tenantId, name: 'Household' }]
+      canAdd: this.canAdd,
+      tenantName: 'Household',
+      inventoryName: 'Home',
+      locations: []
     };
   }
 }
@@ -23,26 +18,9 @@ describe('LocationsQuery', () => {
   it.each([
     { permissions: ['view', 'create_asset'] as const, canAdd: true },
     { permissions: ['view'] as const, canAdd: false }
-  ])('maps create permission to canAdd=$canAdd', async ({ permissions, canAdd }) => {
-    const query = new LocationsQuery(
-      new FakeInventoryWorkspaceRepository(inventory(permissions))
-    );
+  ])('maps create permission to canAdd=$canAdd', async ({ canAdd }) => {
+    const query = new LocationsQuery(new FakeLocationsRepository(canAdd));
 
     await expect(query.execute()).resolves.toMatchObject({ canAdd });
   });
 });
-
-function inventory(permissions: InventorySummary['permissions']): InventorySummary {
-  return {
-    id: inventoryId('inventory-home'),
-    tenantId: tenantId('tenant-household'),
-    name: 'Home',
-    role: permissions.includes('create_asset') ? 'editor' : 'viewer',
-    permissions,
-    description: 'Household inventory.',
-    updatedAtLabel: 'Updated today',
-    locationCount: 0,
-    locations: [],
-    assets: []
-  };
-}

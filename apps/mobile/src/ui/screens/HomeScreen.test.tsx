@@ -8,7 +8,7 @@ const testState = vi.hoisted(() => ({
   stateSetters: [] as ReturnType<typeof vi.fn>[]
 }));
 const routerPush = vi.hoisted(() => vi.fn());
-const useFocusEffectMock = vi.hoisted(() => vi.fn());
+const serverQueryState = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 
 vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
@@ -28,8 +28,11 @@ vi.mock('expo-router', () => ({
   router: {
     navigate: vi.fn(),
     push: routerPush
-  },
-  useFocusEffect: useFocusEffectMock
+  }
+}));
+
+vi.mock('../serverState/useMobileInventoryServerQuery', () => ({
+  useMobileInventoryServerQuery: () => serverQueryState.current
 }));
 
 vi.mock('lucide-react-native', () => ({
@@ -125,17 +128,16 @@ const dashboard: HomeDashboardViewModel = {
   }],
   canAdd: true,
   recentAssets: [recentAsset],
-  checkedOutAssets: [checkedOutAsset],
-  assetTags: []
+  checkedOutAssets: [checkedOutAsset]
 };
 
 describe('HomeScreen asset cards', () => {
   beforeEach(() => {
     testState.stateIndex = 0;
     testState.stateSetters = [];
-    testState.stateValues = [{ status: 'ready', dashboard }, false, undefined, undefined];
+    testState.stateValues = [undefined, undefined];
+    serverQueryState.current = readyServerQuery(dashboard);
     routerPush.mockClear();
-    useFocusEffectMock.mockClear();
   });
 
   it('wires recent and checked-out entries through the shared compact card', () => {
@@ -248,7 +250,7 @@ describe('HomeScreen asset cards', () => {
     expect(execute).toHaveBeenCalledWith({ action: 'return', assetId: 'asset-checked-out' });
 
     testState.stateIndex = 0;
-    testState.stateValues = [{ status: 'ready', dashboard }, false, 'asset-checked-out', undefined];
+    testState.stateValues = ['asset-checked-out', undefined];
     const returningCard = renderHomeCards(execute).find((card) => card.props?.asset === checkedOutAsset);
 
     expect(returningCard?.props?.footerAction).toMatchObject({ disabled: true, label: 'Returning...' });
@@ -270,7 +272,7 @@ describe('HomeScreen asset cards', () => {
     await Promise.resolve();
 
     expect(dashboardExecute).toHaveBeenCalledTimes(1);
-    expect(testState.stateSetters[3]).toHaveBeenCalledWith(expect.objectContaining({
+    expect(testState.stateSetters[1]).toHaveBeenCalledWith(expect.objectContaining({
       checkoutId: 'checkout-one',
       asset: checkedOutAsset
     }));
@@ -292,7 +294,7 @@ describe('HomeScreen asset cards', () => {
     await Promise.resolve();
 
     expect(dashboardExecute).toHaveBeenCalledTimes(1);
-    expect(testState.stateSetters[3]).toHaveBeenCalledWith(expect.objectContaining({
+    expect(testState.stateSetters[1]).toHaveBeenCalledWith(expect.objectContaining({
       checkoutId: 'checkout-one',
       undoableOperationId: undefined
     }));
@@ -302,8 +304,14 @@ describe('HomeScreen asset cards', () => {
 describe('HomeScreen recovery', () => {
   it('offers an explicit Retry action after the initial load fails', async () => {
     testState.stateIndex = 0;
-    testState.stateValues = [{ status: 'error', message: 'Network unavailable' }, false];
     const execute = vi.fn().mockResolvedValue(dashboard);
+    serverQueryState.current = {
+      ...readyServerQuery(undefined),
+      error: new Error('Network unavailable'),
+      isError: true,
+      isPending: false,
+      refetch: execute
+    };
     const tree = renderHome(execute);
     const retry = findByAccessibilityLabel(tree, 'Retry loading Home');
 
@@ -312,12 +320,6 @@ describe('HomeScreen recovery', () => {
     await Promise.resolve();
 
     expect(execute).toHaveBeenCalledTimes(1);
-
-    const focusRefresh = useFocusEffectMock.mock.calls.at(-1)?.[0] as (() => void) | undefined;
-    focusRefresh?.();
-    await Promise.resolve();
-
-    expect(execute).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -333,11 +335,18 @@ function renderHomeCards(execute = vi.fn()): readonly ElementNode[] {
 
 function renderReadyHome(readyDashboard: HomeDashboardViewModel = dashboard): unknown {
   testState.stateIndex = 0;
-  testState.stateValues = [{ status: 'ready', dashboard: readyDashboard }, false, undefined, undefined];
+  testState.stateValues = [undefined, undefined];
+  serverQueryState.current = readyServerQuery(readyDashboard);
   return renderHome();
 }
 
 function renderHome(dashboardExecute?: ReturnType<typeof vi.fn>, checkoutExecute = vi.fn()): unknown {
+  if (dashboardExecute) {
+    serverQueryState.current = {
+      ...serverQueryState.current,
+      refetch: dashboardExecute
+    };
+  }
   return HomeScreen({
     assetCheckoutCommand: {
       execute: checkoutExecute,
@@ -346,6 +355,17 @@ function renderHome(dashboardExecute?: ReturnType<typeof vi.fn>, checkoutExecute
     } as never,
     dashboardQuery: { execute: dashboardExecute ?? vi.fn().mockResolvedValue(dashboard) } as never
   });
+}
+
+function readyServerQuery(data: HomeDashboardViewModel | undefined): Record<string, unknown> {
+  return {
+    data,
+    error: null,
+    isError: false,
+    isPending: data === undefined,
+    isRefetching: false,
+    refetch: vi.fn().mockResolvedValue({ data })
+  };
 }
 
 function findAllByType(node: unknown, type: unknown): readonly ElementNode[] {

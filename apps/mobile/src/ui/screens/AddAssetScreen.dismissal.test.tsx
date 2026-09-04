@@ -3,7 +3,7 @@ import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery } from '../../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
-import { HomeDashboardQuery } from '../../application/home/HomeDashboardQuery';
+import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
 import { AddAssetScreen } from './AddAssetScreen';
 
 const testState = vi.hoisted(() => ({ stateIndex: 0 }));
@@ -58,6 +58,15 @@ vi.mock('../feedback/AppFeedback', () => ({
   useAppFeedback: () => ({ showDialog: vi.fn(), showNotice: vi.fn() })
 }));
 
+vi.mock('../serverState/useMobileInventoryServerQuery', () => ({
+  useMobileInventoryServerQuery: () => ({
+    data: undefined,
+    error: undefined,
+    isError: false,
+    refetch: vi.fn()
+  })
+}));
+
 vi.mock('../components/FullScreenPhotoViewer', () => ({
   FullScreenPhotoViewer: 'FullScreenPhotoViewer'
 }));
@@ -91,7 +100,7 @@ describe('AddAssetScreen dismissal', () => {
       addAssetDraftStore: { load: vi.fn(), save: vi.fn() },
       addDraftScopeQuery: new AddDraftScopeQuery(undefined as never),
       createAssetCommand: new CreateAssetCommand(undefined as never),
-      dashboardQuery: new HomeDashboardQuery(undefined as never),
+      addAssetContextQuery: new AddAssetContextQuery(undefined as never),
       onDismiss,
       parentLookupQuery: new ParentLookupQuery(undefined as never),
       photoSelectionQuery: new PhotoSelectionQuery(undefined as never)

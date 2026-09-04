@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -19,70 +18,35 @@ import {
 import { IdentityLabel } from '../components/IdentityIcon';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type LocationsScreenProps = {
   readonly locationsQuery: LocationsQuery;
 };
 
-type ScreenState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly locations: LocationsViewModel }
-  | { readonly status: 'error'; readonly message: string };
-
 export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
   const styles = createStyles(useAppearanceAwarePalette());
-  const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    locationsQuery
-      .execute()
-      .then((locations) => {
-        if (isCurrent) {
-          setScreenState({ status: 'ready', locations });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setScreenState({
-            status: 'error',
-            message: readableError(error, 'Stuff Stash could not load locations.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [locationsQuery]);
+  const locations = useMobileInventoryServerQuery({
+    key: mobileQueryKeys.locations,
+    query: (signal) => locationsQuery.execute({ signal })
+  });
 
   async function refreshLocations(): Promise<void> {
-    setIsRefreshing(true);
-
-    try {
-      const locations = await locationsQuery.execute();
-      setScreenState({ status: 'ready', locations });
-    } catch (error) {
-      setScreenState({
-        status: 'error',
-        message: readableError(error, 'Stuff Stash could not refresh locations.')
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
+    await locations.refetch();
   }
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
-      {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
-      {screenState.status === 'ready' ? (
+      {locations.isPending && !locations.data ? <LoadingState /> : null}
+      {locations.isError && !locations.data ? (
+        <ErrorState message={readableError(locations.error, 'Stuff Stash could not load locations.')} />
+      ) : null}
+      {locations.data ? (
         <LocationsList
-          isRefreshing={isRefreshing}
-          locations={screenState.locations}
-          onRefresh={refreshLocations}
+          isRefreshing={locations.isRefetching}
+          locations={locations.data}
+          onRefresh={() => { void refreshLocations(); }}
         />
       ) : null}
     </SafeAreaView>

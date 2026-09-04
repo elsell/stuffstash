@@ -25,6 +25,7 @@ import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketReal
 import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
 import { CreateAssetCommand } from '../application/add/CreateAssetCommand';
 import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
+import { AddAssetContextQuery } from '../application/add/AddAssetContextQuery';
 import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
@@ -43,6 +44,7 @@ import { UndoAssetEditCommand } from '../application/assets/UndoAssetEditCommand
 import { RevertAssetChangeCommand } from '../application/assets/RevertAssetChangeCommand';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
 import { SelectInventoryCommand } from '../application/home/SelectInventoryCommand';
+import { CurrentInventoryScopeQuery } from '../application/home/CurrentInventoryScopeQuery';
 import { LocationAssetsQuery } from '../application/locations/LocationAssetsQuery';
 import { LocationsQuery } from '../application/locations/LocationsQuery';
 import {
@@ -80,11 +82,15 @@ import {
 import { loadMobileRuntimeConfigSeed } from '../config/mobileRuntimeConfig';
 import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
 import { createMobileQueryClient } from '../adapters/serverState/MobileQueryClient';
+import { QueryClientInventoryMutationObserver } from '../adapters/serverState/QueryClientInventoryMutationObserver';
+import { QueryClientInventorySelectionObserver } from '../adapters/serverState/QueryClientInventorySelectionObserver';
+import { createTimeoutFetch } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
   readonly serviceScopeId: string;
   readonly queryClient: QueryClient;
   readonly homeDashboardQuery: HomeDashboardQuery;
+  readonly currentInventoryScopeQuery: CurrentInventoryScopeQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
   readonly assetActivityQuery: AssetActivityQuery;
@@ -103,6 +109,7 @@ export type MobileComposition = {
   readonly inventoryMapQuery: InventoryMapQuery;
   readonly createAssetCommand: CreateAssetCommand;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
+  readonly addAssetContextQuery: AddAssetContextQuery;
   readonly addAssetDraftStore: InMemoryAddAssetDraftStore;
   readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
@@ -190,7 +197,8 @@ export function createMobileComposition(
     profile.tenantId ?? '',
     undefined,
     serviceScopeId,
-    directUploadPolicy
+    directUploadPolicy,
+    new QueryClientInventoryMutationObserver(queryClient, serviceScopeId)
   );
   const inventoryInvitations = new ApiInventoryInvitationRepository(client);
   const managedInvitations = new ApiInventoryInvitationManagementRepository(
@@ -218,7 +226,11 @@ export function createMobileComposition(
     serviceScopeId,
     queryClient,
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
-    selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
+    currentInventoryScopeQuery: new CurrentInventoryScopeQuery(inventorySummaries),
+    selectInventoryCommand: new SelectInventoryCommand(
+      inventorySummaries,
+      new QueryClientInventorySelectionObserver(queryClient, serviceScopeId)
+    ),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     assetActivityQuery: new AssetActivityQuery(assetActivity),
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
@@ -236,6 +248,7 @@ export function createMobileComposition(
     inventoryMapQuery: new InventoryMapQuery(inventorySummaries),
     createAssetCommand: new CreateAssetCommand(inventorySummaries),
     addDraftScopeQuery: new AddDraftScopeQuery(principals),
+    addAssetContextQuery: new AddAssetContextQuery(inventorySummaries),
     addAssetDraftStore,
     parentLookupQuery: new ParentLookupQuery(inventorySummaries),
     photoSelectionQuery: new PhotoSelectionQuery(new ExpoPhotoSelectionProvider()),
@@ -341,26 +354,4 @@ function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | unde
 
 function createServiceScopeId(): string {
   return `mobile-composition-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
-
-function createTimeoutFetch(timeoutMs: number): typeof fetch {
-  return async (input, init) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      return await fetch(input, {
-        ...init,
-        signal: init?.signal ?? controller.signal
-      });
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Network request timed out. Check that the API is reachable from this phone.');
-      }
-
-      throw error;
-    } finally {
-      clearTimeout(timeout);
-    }
-  };
 }

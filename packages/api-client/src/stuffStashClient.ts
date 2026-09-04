@@ -705,9 +705,10 @@ export class StuffStashClient {
     return mapTenant(envelope.data);
   }
 
-  async listMyTenants(limit = 50, cursor?: string): Promise<Page<Tenant>> {
+  async listMyTenants(limit = 50, cursor?: string, signal?: AbortSignal): Promise<Page<Tenant>> {
     const envelope = await this.unwrap(
       this.client.GET('/me/tenants', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           query: { limit, cursor }
@@ -727,9 +728,10 @@ export class StuffStashClient {
     return mapTenant(envelope.data);
   }
 
-  async listInventories(tenantId: string, limit = 50, cursor?: string): Promise<Page<Inventory>> {
+  async listInventories(tenantId: string, limit = 50, cursor?: string, signal?: AbortSignal): Promise<Page<Inventory>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId },
@@ -806,9 +808,10 @@ export class StuffStashClient {
     return mapAsset(envelope.data);
   }
 
-  async listAssetTags(tenantId: string, inventoryId: string, limit = 50, cursor?: string): Promise<Page<AssetTag>> {
+  async listAssetTags(tenantId: string, inventoryId: string, limit = 50, cursor?: string, signal?: AbortSignal): Promise<Page<AssetTag>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/tags', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId },

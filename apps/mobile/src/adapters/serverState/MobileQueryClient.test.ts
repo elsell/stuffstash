@@ -5,6 +5,7 @@ import {
   disposeMobileQueryClient,
   mobileQueryKeys,
   normalizeBrowseQueryIdentity,
+  resetMobileInventorySelection,
   shouldRetryMobileQuery
 } from './MobileQueryClient';
 
@@ -45,6 +46,14 @@ describe('mobile server-state coordination', () => {
   });
 
   it('isolates keys by composition and complete resource scope', () => {
+    expect(mobileQueryKeys.home('scope-a', 'tenant-a', 'inventory-a')).toEqual([
+      'mobile', 'scope-a', 'tenant', 'tenant-a', 'inventory', 'inventory-a', 'home'
+    ]);
+    expect(mobileQueryKeys.inventoryScope('scope-a')).toEqual([
+      'mobile',
+      'scope-a',
+      'inventory-scope'
+    ]);
     expect(mobileQueryKeys.asset('scope-a', 'tenant-a', 'inventory-a', 'asset-a')).toEqual([
       'mobile',
       'scope-a',
@@ -59,6 +68,35 @@ describe('mobile server-state coordination', () => {
       .not.toEqual(mobileQueryKeys.asset('scope-a', 'tenant-a', 'inventory-a', 'asset-a'));
   });
 
+  it('deduplicates simultaneous reads of the same scoped resource', async () => {
+    const client = createMobileQueryClient();
+    let requestCount = 0;
+    let resolveRequest: ((value: string) => void) | undefined;
+    const queryFn = () => {
+      requestCount += 1;
+      return new Promise<string>((resolve) => { resolveRequest = resolve; });
+    };
+
+    const first = client.fetchQuery({ queryKey: mobileQueryKeys.home('scope-a', 'tenant-a', 'inventory-a'), queryFn });
+    const second = client.fetchQuery({ queryKey: mobileQueryKeys.home('scope-a', 'tenant-a', 'inventory-a'), queryFn });
+    await Promise.resolve();
+    resolveRequest?.('ready');
+
+    await expect(Promise.all([first, second])).resolves.toEqual(['ready', 'ready']);
+    expect(requestCount).toBe(1);
+  });
+
+  it('clears only the active composition when inventory selection changes', async () => {
+    const client = createMobileQueryClient();
+    client.setQueryData(mobileQueryKeys.home('scope-a', 'tenant-a', 'inventory-a'), 'old home');
+    client.setQueryData(mobileQueryKeys.home('scope-b', 'tenant-a', 'inventory-a'), 'other composition');
+
+    await resetMobileInventorySelection(client, 'scope-a');
+
+    expect(client.getQueryData(mobileQueryKeys.home('scope-a', 'tenant-a', 'inventory-a'))).toBeUndefined();
+    expect(client.getQueryData(mobileQueryKeys.home('scope-b', 'tenant-a', 'inventory-a'))).toBe('other composition');
+  });
+
   it('normalizes equivalent Browse identities for request deduplication', () => {
     expect(normalizeBrowseQueryIdentity({
       query: '  drill  ',
@@ -71,10 +109,33 @@ describe('mobile server-state coordination', () => {
       query: 'drill',
       tagIds: ['tag-a', 'tag-b'],
       lifecycleState: 'active',
-      checkoutState: 'all',
+      checkoutState: 'any',
       sort: 'default',
       scope: 'all'
     });
+  });
+
+  it('keys Browse pages by normalized filters and cursor', () => {
+    expect(mobileQueryKeys.browse('scope-a', 'tenant-a', 'inventory-a', {
+      query: ' drill ',
+      tagIds: ['tag-b', 'tag-a', 'tag-b'],
+      lifecycleState: 'active',
+      checkoutState: 'any',
+      sort: 'updated_desc',
+      scope: 'items'
+    }, 'cursor-two')).toEqual([
+      'mobile', 'scope-a', 'tenant', 'tenant-a', 'inventory', 'inventory-a',
+      'browse',
+      {
+        query: 'drill',
+        tagIds: ['tag-a', 'tag-b'],
+        lifecycleState: 'active',
+        checkoutState: 'any',
+        sort: 'updated_desc',
+        scope: 'items'
+      },
+      'cursor-two'
+    ]);
   });
 
   it('retries only one transient read failure and never retries caller errors', () => {
@@ -83,6 +144,7 @@ describe('mobile server-state coordination', () => {
     expect(shouldRetryMobileQuery(0, Object.assign(new Error('sign in'), { status: 401 }))).toBe(false);
     expect(shouldRetryMobileQuery(0, Object.assign(new Error('not found'), { status: 404 }))).toBe(false);
     expect(shouldRetryMobileQuery(0, new MobileAuthenticationRequiredError())).toBe(false);
-    expect(shouldRetryMobileQuery(0, new Error('network disconnected'))).toBe(true);
+    expect(shouldRetryMobileQuery(0, new TypeError('Network request failed'))).toBe(true);
+    expect(shouldRetryMobileQuery(0, new Error('Invalid inventory selection'))).toBe(false);
   });
 });

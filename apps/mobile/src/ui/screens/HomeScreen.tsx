@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { router, useFocusEffect } from 'expo-router';
+import { useState } from 'react';
+import { router } from 'expo-router';
 import { ChevronDown, Plus, UserCircle } from 'lucide-react-native';
 import {
   ActivityIndicator,
@@ -23,123 +23,48 @@ import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { createHomeScreenStyles } from './HomeScreen.styles';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type HomeScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
 };
 
-type ScreenState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly dashboard: HomeDashboardViewModel }
-  | { readonly status: 'error'; readonly message: string };
-
 export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenProps) {
   const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   const feedback = useAppFeedback();
-  const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const didInitialLoadRef = useRef(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    dashboardQuery
-      .execute()
-      .then((dashboard) => {
-        if (isCurrent) {
-          didInitialLoadRef.current = true;
-          setScreenState({ status: 'ready', dashboard });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setScreenState({
-            status: 'error',
-            message: readableError(error, 'Stuff Stash could not load the mobile home screen.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [dashboardQuery]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!didInitialLoadRef.current) {
-        return;
-      }
-
-      let isCurrent = true;
-
-      dashboardQuery
-        .execute()
-        .then((dashboard) => {
-          if (isCurrent) {
-            setScreenState({ status: 'ready', dashboard });
-          }
-        })
-        .catch((error: unknown) => {
-          if (isCurrent) {
-            feedback.showNotice({
-              tone: 'error',
-              title: 'Could not refresh Home',
-              message: readableError(error, 'Stuff Stash could not refresh the mobile home screen.')
-            });
-          }
-        });
-
-      return () => {
-        isCurrent = false;
-      };
-    }, [dashboardQuery, feedback])
-  );
+  const dashboardState = useMobileInventoryServerQuery({
+    key: mobileQueryKeys.home,
+    query: (signal) => dashboardQuery.execute({ signal })
+  });
 
   async function refreshDashboard(): Promise<void> {
-    setIsRefreshing(true);
-
     try {
-      const dashboard = await dashboardQuery.execute();
-      setScreenState({ status: 'ready', dashboard });
+      await dashboardState.refetch({ throwOnError: true });
     } catch (error) {
       feedback.showNotice({
         tone: 'error',
         title: 'Could not refresh Home',
         message: readableError(error, 'Stuff Stash could not refresh the mobile home screen.')
       });
-    } finally {
-      setIsRefreshing(false);
     }
   }
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
-      {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? (
+      {dashboardState.isPending && !dashboardState.data ? <LoadingState /> : null}
+      {dashboardState.isError && !dashboardState.data ? (
         <ErrorState
-          message={screenState.message}
-          onRetry={async () => {
-            setScreenState({ status: 'loading' });
-            try {
-              const dashboard = await dashboardQuery.execute();
-              didInitialLoadRef.current = true;
-              setScreenState({ status: 'ready', dashboard });
-            } catch (error) {
-              setScreenState({
-                status: 'error',
-                message: readableError(error, 'Stuff Stash could not load the mobile home screen.')
-              });
-            }
-          }}
+          message={readableError(dashboardState.error, 'Stuff Stash could not load the mobile home screen.')}
+          onRetry={() => { void dashboardState.refetch(); }}
         />
       ) : null}
-      {screenState.status === 'ready' ? (
+      {dashboardState.data ? (
         <Dashboard
           assetCheckoutCommand={assetCheckoutCommand}
-          dashboard={screenState.dashboard}
-          isRefreshing={isRefreshing}
+          dashboard={dashboardState.data}
+          isRefreshing={dashboardState.isRefetching}
           onRefresh={refreshDashboard}
         />
       ) : null}

@@ -1,5 +1,5 @@
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type { ReadRequest } from '../shared/ReadRequest';
 
 export type LocationBrowserItemViewModel = {
   readonly id: string;
@@ -21,32 +21,28 @@ export type LocationsViewModel = {
   readonly locations: readonly LocationBrowserItemViewModel[];
 };
 
+export type LocationsSnapshot = {
+  readonly canAdd: boolean;
+  readonly tenantName: string;
+  readonly inventoryName: string;
+  readonly locations: readonly LocationSummary[];
+};
+
+export type LocationsRepository = {
+  getLocationsSnapshot(request?: ReadRequest): Promise<LocationsSnapshot>;
+};
+
 export class LocationsQuery {
-  constructor(
-    private readonly inventories: Pick<InventorySummaryRepository, 'getInventoryWorkspace'>
-  ) {}
+  constructor(private readonly locations: LocationsRepository) {}
 
-  async execute(): Promise<LocationsViewModel> {
-    const workspace = await this.inventories.getInventoryWorkspace();
-    const inventory =
-      workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
-      workspace.inventories[0];
-
-    if (!inventory) {
-      throw new Error('Inventory workspace must include at least one inventory.');
-    }
-
-    const tenant = workspace.tenants.find((item) => item.id === inventory.tenantId);
-
-    if (!tenant) {
-      throw new Error('Selected inventory must belong to a tenant.');
-    }
+  async execute(request: ReadRequest = {}): Promise<LocationsViewModel> {
+    const snapshot = await this.locations.getLocationsSnapshot(request);
 
     return {
-      canAdd: inventory.permissions.includes('create_asset'),
-      tenantName: tenant.name,
-      inventoryName: inventory.name,
-      locations: inventory.locations.map(toLocationViewModel)
+      canAdd: snapshot.canAdd,
+      tenantName: snapshot.tenantName,
+      inventoryName: snapshot.inventoryName,
+      locations: snapshot.locations.map(toLocationViewModel)
     };
   }
 }

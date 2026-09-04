@@ -24,6 +24,7 @@ import {
   UpdateInventoryAssetInput
 } from '../../application/home/InventorySummaryRepository';
 import type { InventoryMapAssetRepository } from '../../application/assets/InventoryMapQuery';
+import type { InventoryAssetsSnapshot } from '../../application/assets/InventoryAssetsQuery';
 import type {
   AssetDetailWorkspaceRepository,
   AssetDetailWorkspaceSnapshot
@@ -37,6 +38,15 @@ import {
   tenantId
 } from '../../domain/inventories/InventorySummary';
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
+import type { LocationsSnapshot } from '../../application/locations/LocationsQuery';
+import type { LocationAssetsSnapshot } from '../../application/locations/LocationAssetsQuery';
+import {
+  ignoreInventoryMutations,
+  type InventoryMutationKind,
+  type InventoryMutationObserver
+} from '../../application/home/InventoryMutationObserver';
+import type { ReadRequest } from '../../application/shared/ReadRequest';
+import type { AddAssetContext } from '../../application/add/AddAssetContextQuery';
 import {
   directUploadMethod,
   isDirectUploadHTTPTransportAllowed,
@@ -93,6 +103,14 @@ type LoadedInventoryWorkspace = {
 type MappedInventory = {
   readonly summary: InventorySummary;
   readonly placementAssets: readonly Asset[];
+};
+
+type InventoryDirectory = {
+  readonly tenants: readonly Tenant[];
+  readonly availableInventories: readonly {
+    readonly tenant: Tenant;
+    readonly inventory: Inventory;
+  }[];
 };
 
 type AssetDetailWorkspaceSelection = {
@@ -159,6 +177,7 @@ function selectAssetDetailWorkspace(
 export class ApiInventorySummaryRepository implements InventorySummaryRepository, InventoryMapAssetRepository, HomeDashboardSnapshotRepository, AssetDetailWorkspaceRepository {
   private selectedInventoryId: InventoryId | undefined;
   private selectedInventoryIdentity: { readonly tenant: Tenant; readonly inventory: Inventory } | undefined;
+  private inventoryDirectoryPromise: Promise<InventoryDirectory> | undefined;
   private readonly directUploadTransport: DirectUploadTransport;
 
   constructor(
@@ -166,7 +185,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     private readonly configuredTenantId: string,
     directUploadTransport?: DirectUploadTransport,
     private readonly sessionScopeId = 'mobile-composition',
-    private readonly directUploadPolicy: DirectUploadTargetPolicy = {}
+    private readonly directUploadPolicy: DirectUploadTargetPolicy = {},
+    private readonly mutationObserver: InventoryMutationObserver = ignoreInventoryMutations
   ) {
     this.directUploadTransport = directUploadTransport ?? new ExpoDirectUploadTransport(directUploadPolicy);
   }
@@ -177,6 +197,14 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   async getCurrentTenantId(): Promise<string> {
     return (await this.getSelectedInventoryIdentity()).tenant.id;
+  }
+
+  async getCurrentInventoryScope(request: ReadRequest = {}): Promise<{ readonly tenantId: string; readonly inventoryId: string }> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    return {
+      tenantId: selected.tenant.id,
+      inventoryId: selected.inventory.id
+    };
   }
 
   async getCurrentSettingsScope(): Promise<{
@@ -195,15 +223,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   private async loadInventoryWorkspace(): Promise<LoadedInventoryWorkspace> {
-    const tenantsPage = await this.client.listMyTenants(100);
-    const tenants = tenantsPage.items;
-    const inventoriesByTenant = await Promise.all(
-      tenants.map(async (tenant) => {
-        const inventoriesPage = await this.client.listInventories(tenant.id, 100);
-        return inventoriesPage.items.map((inventory) => ({ tenant, inventory }));
-      })
-    );
-    const availableInventories = inventoriesByTenant.flat();
+    const { tenants, availableInventories } = await this.loadInventoryDirectory();
     const preferredInventory =
       availableInventories.find((item) => item.tenant.id === this.configuredTenantId) ??
       availableInventories[0];
@@ -217,13 +237,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     this.selectedInventoryIdentity = defaultInventory;
 
     const mappedInventories = await Promise.all(
-      availableInventories.map((item) =>
-        this.mapInventoryWithAssets(
-          item.tenant,
-          item.inventory,
-          item.tenant.id === defaultInventory.tenant.id && item.inventory.id === defaultInventory.inventory.id
-        )
-      )
+      availableInventories.map((item) => {
+        const isSelected = item.tenant.id === defaultInventory.tenant.id &&
+          item.inventory.id === defaultInventory.inventory.id;
+        return isSelected
+          ? this.mapInventoryWithAssets(item.tenant, item.inventory, true)
+          : Promise.resolve({
+              summary: emptyInventorySummary(item.tenant, item.inventory),
+              placementAssets: []
+            });
+      })
     );
     const inventories = mappedInventories.map((item) => item.summary);
     const mappedDefaultInventory = mappedInventories.find(
@@ -268,30 +291,140 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     };
   }
 
-  async getHomeDashboardSnapshot(): Promise<HomeDashboardSnapshot> {
-    const loadedWorkspace = await this.loadInventoryWorkspace();
-    const { workspace } = loadedWorkspace;
-    const inventory =
-      workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
-      workspace.inventories[0];
-
-    if (!inventory) {
-      throw new Error('API workspace did not include an inventory.');
-    }
-
-    const checkedOutAssets = await this.listCheckedOutInventoryAssets(inventory.tenantId, inventory.id);
-    const assets = checkedOutAssets.map((item) => item.asset);
+  async getHomeDashboardSnapshot(request: ReadRequest = {}): Promise<HomeDashboardSnapshot> {
+    const { tenants, availableInventories } = await this.loadInventoryDirectory(request.signal);
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const [recentAssets, checkedOutAssets] = await Promise.all([
+      this.listHomeRecentAssets(selected.tenant.id, selected.inventory.id, request.signal),
+      this.listCheckedOutInventoryAssets(selected.tenant.id, selected.inventory.id, request.signal)
+    ]);
+    const checkedOutSourceAssets = checkedOutAssets.map((item) => item.asset);
+    const visibleAssets = [...recentAssets, ...checkedOutSourceAssets];
+    const ancestorAssets = await this.loadAncestorsForAssets(visibleAssets, request.signal);
     const ancestryAssets = placementAssetsFromFullTree(
-      loadedWorkspace.defaultPlacementAssets,
-      assets
+      [...ancestorAssets, ...visibleAssets],
+      visibleAssets
     );
+    const mappedCheckedOutAssets = await Promise.all(
+      checkedOutAssets.map((item) => this.mapAssetWithPhoto(selected.inventory.name, item.asset, ancestryAssets))
+    );
+    const checkedOutByAssetId = new Map(mappedCheckedOutAssets.map((asset) => [asset.id, asset]));
+    const mappedRecentAssets = await Promise.all(
+      recentAssets.map((asset) => checkedOutByAssetId.get(assetId(asset.id)) ??
+        this.mapAssetWithPrimaryPhoto(selected.inventory.name, asset, ancestryAssets))
+    );
+    const inventories = availableInventories.map(({ tenant, inventory }) => ({
+      id: inventoryId(inventory.id),
+      tenantId: tenantId(tenant.id),
+      name: inventory.name,
+      role: mapAccessRole(inventory.access.relationship),
+      permissions: [...inventory.access.permissions],
+      description: '',
+      updatedAtLabel: 'Loaded from API',
+      locationCount: 0,
+      locations: [],
+      assets: inventory.id === selected.inventory.id ? mappedRecentAssets : [],
+      assetTags: []
+    } satisfies InventorySummary));
+    const workspace: InventoryWorkspace = {
+      tenants: tenants.map(mapTenant),
+      inventories,
+      defaultInventoryId: inventoryId(selected.inventory.id)
+    };
 
     return {
       workspace,
-      checkedOutAssets: await Promise.all(
-        checkedOutAssets.map((item) => this.mapAssetWithPhoto(inventory.name, item.asset, ancestryAssets))
+      checkedOutAssets: mappedCheckedOutAssets
+    };
+  }
+
+  async getInventoryAssetsSnapshot(request: ReadRequest = {}): Promise<InventoryAssetsSnapshot> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const [recentAssets, activeAssets] = await Promise.all([
+      this.listRecentInventoryAssets(selected.tenant.id, selected.inventory.id, request.signal),
+      this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id, request.signal)
+    ]);
+    const ancestryAssets = placementAssetsFromFullTree(activeAssets, recentAssets);
+    return {
+      inventoryName: selected.inventory.name,
+      assets: await Promise.all(
+        recentAssets.map((asset) => this.mapAssetWithPrimaryPhoto(
+          selected.inventory.name,
+          asset,
+          ancestryAssets
+        ))
       )
     };
+  }
+
+  async getLocationsSnapshot(request: ReadRequest = {}): Promise<LocationsSnapshot> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const assets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id, request.signal);
+    const locations = await Promise.all(
+      assets
+        .filter((asset) => asset.kind === 'location')
+        .map(async (location) => mapLocation(
+          location,
+          assets,
+          await this.primaryPhotoForAsset(location)
+        ))
+    );
+    return {
+      canAdd: selected.inventory.access.permissions.includes('create_asset'),
+      tenantName: selected.tenant.name,
+      inventoryName: selected.inventory.name,
+      locations
+    };
+  }
+
+  async getLocationAssetsSnapshot(locationIdValue: string, request: ReadRequest = {}): Promise<LocationAssetsSnapshot> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const assets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id, request.signal);
+    const location = assets.find((candidate) =>
+      candidate.id === locationIdValue && candidate.kind === 'location'
+    );
+    if (!location) {
+      throw new Error('Location is not available in the selected inventory.');
+    }
+    const containedAssets = assets.filter((candidate) =>
+      candidate.id !== location.id &&
+      ancestorTrail(candidate, assets).some((ancestor) => ancestor.id === location.id)
+    );
+    return {
+      locationId: location.id,
+      locationTitle: location.title,
+      inventoryName: selected.inventory.name,
+      assets: await Promise.all(containedAssets.map((asset) =>
+        this.mapAssetWithPrimaryPhoto(selected.inventory.name, asset, assets)
+      ))
+    };
+  }
+
+  async getAddAssetContext(request: ReadRequest = {}): Promise<AddAssetContext> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const tags = await this.listAllInventoryTags(
+      selected.tenant.id,
+      selected.inventory.id,
+      request.signal
+    );
+    return {
+      tenantId: selected.tenant.id,
+      tenantName: selected.tenant.name,
+      inventoryId: selected.inventory.id,
+      inventoryName: selected.inventory.name,
+      canAdd: selected.inventory.access.permissions.includes('create_asset'),
+      assetTags: tags.map(mapAssetTag)
+    };
+  }
+
+  async getInventoryAssetTags(request: ReadRequest = {}): Promise<readonly AssetTagSummary[]> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const tags = await this.listAllInventoryTags(
+      selected.tenant.id,
+      selected.inventory.id,
+      request.signal
+    );
+    return tags.map(mapAssetTag);
   }
 
   async getAssetDetail(input: GetInventoryAssetDetailInput): Promise<AssetSummary> {
@@ -307,19 +440,30 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async selectInventory(selectedInventoryId: InventoryId): Promise<void> {
-    const workspace = await this.getInventoryWorkspace();
-    const inventory = workspace.inventories.find((item) => item.id === selectedInventoryId);
+    let directory = await this.loadInventoryDirectory();
+    let selection = directory.availableInventories.find((item) =>
+      inventoryId(item.inventory.id) === selectedInventoryId
+    );
 
-    if (!inventory) {
+    if (!selection) {
+      directory = await this.refreshInventoryDirectory();
+      selection = directory.availableInventories.find((item) =>
+        inventoryId(item.inventory.id) === selectedInventoryId
+      );
+    }
+
+    if (!selection) {
       throw new Error('Selected inventory is not available in the configured tenant.');
     }
 
-    this.selectedInventoryId = inventory.id;
-    this.selectedInventoryIdentity = undefined;
+    this.selectedInventoryId = selectedInventoryId;
+    this.selectedInventoryIdentity = selection;
   }
 
   async createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary> {
-    const { inventory, placementAssets: currentPlacementAssets } = await this.getDefaultInventoryContext();
+    const selected = await this.getSelectedInventoryIdentity();
+    const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
+    const currentPlacementAssets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id);
     const asset = await this.client.createAsset(inventory.tenantId, inventory.id, {
       kind: input.kind,
       title: input.title,
@@ -327,6 +471,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       parentAssetId: input.parentAssetId,
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
+    this.observeMutation('asset_created', inventory.tenantId, inventory.id, asset.id);
 
     const placementAssets = placementAssetsWithSelectedOverrides(
       currentPlacementAssets,
@@ -341,17 +486,21 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       displayName: input.displayName,
       ...(input.color !== undefined ? { color: input.color } : {})
     });
+    this.observeMutation('asset_tag_created', selected.tenant.id, selected.inventory.id);
     return mapAssetTag(tag);
   }
 
   async updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary> {
-    const { inventory, placementAssets } = await this.getDefaultInventoryContext();
+    const selected = await this.getSelectedInventoryIdentity();
+    const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
+    const placementAssets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id);
     const asset = await this.client.updateAsset(inventory.tenantId, inventory.id, input.assetId, {
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {}),
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
+    this.observeMutation('asset_updated', inventory.tenantId, inventory.id, asset.id);
 
     const knownAssets = placementAssetsWithSelectedOverrides(
       placementAssets,
@@ -391,6 +540,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       });
       if (uploaded) {
         await this.client.completeAssetAttachmentDirectUpload(input.tenantId, input.inventoryId, input.assetId, directUpload.uploadId);
+        this.observeMutation('asset_photo_changed', input.tenantId, input.inventoryId, input.assetId);
         return;
       }
     }
@@ -400,31 +550,37 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       contentType: input.contentType,
       contentBase64: await attachmentContentBase64(input)
     });
+    this.observeMutation('asset_photo_changed', input.tenantId, input.inventoryId, input.assetId);
   }
 
   async deleteAssetPhoto(assetIdValue: AssetSummary['id'], photoId: string): Promise<void> {
     const selected = await this.getSelectedInventoryIdentity();
     await this.client.deleteAssetAttachment(selected.tenant.id, selected.inventory.id, assetIdValue, photoId);
+    this.observeMutation('asset_photo_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async archiveAsset(assetIdValue: AssetSummary['id']): Promise<void> {
     const selected = await this.getSelectedInventoryIdentity();
     await this.client.archiveAsset(selected.tenant.id, selected.inventory.id, assetIdValue);
+    this.observeMutation('asset_lifecycle_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async restoreAsset(assetIdValue: AssetSummary['id']): Promise<void> {
     const selected = await this.getSelectedInventoryIdentity();
     await this.client.restoreAsset(selected.tenant.id, selected.inventory.id, assetIdValue);
+    this.observeMutation('asset_lifecycle_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async deleteAsset(assetIdValue: AssetSummary['id']): Promise<void> {
     const selected = await this.getSelectedInventoryIdentity();
     await this.client.deleteAsset(selected.tenant.id, selected.inventory.id, assetIdValue);
+    this.observeMutation('asset_lifecycle_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async checkoutAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}) {
     const selected = await this.getSelectedInventoryIdentity();
     const checkout = await this.client.checkoutAsset(selected.tenant.id, selected.inventory.id, assetIdValue, input);
+    this.observeMutation('asset_checkout_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
     return {
       id: checkout.id,
       assetId: assetId(checkout.assetId),
@@ -435,6 +591,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async returnAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}) {
     const selected = await this.getSelectedInventoryIdentity();
     const checkout = await this.client.returnAsset(selected.tenant.id, selected.inventory.id, assetIdValue, input);
+    this.observeMutation('asset_checkout_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
     return {
       id: checkout.id,
       assetId: assetId(checkout.assetId),
@@ -445,6 +602,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async updateReturnedCheckoutDetails(assetIdValue: AssetSummary['id'], checkoutId: string, input: { readonly details?: string } = {}) {
     const selected = await this.getSelectedInventoryIdentity();
     const checkout = await this.client.updateReturnedCheckoutDetails(selected.tenant.id, selected.inventory.id, assetIdValue, checkoutId, input);
+    this.observeMutation('asset_checkout_changed', selected.tenant.id, selected.inventory.id, assetIdValue);
     return {
       id: checkout.id,
       assetId: assetId(checkout.assetId),
@@ -455,15 +613,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async undoInventoryOperation(operationId: string): Promise<void> {
     const selected = await this.getSelectedInventoryIdentity();
     await this.client.applyUndoableOperation(selected.tenant.id, selected.inventory.id, operationId, 'undo');
+    this.observeMutation('operation_reversed', selected.tenant.id, selected.inventory.id);
   }
 
   async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
-    const { inventory, placementAssets } = await this.getDefaultInventoryContext();
-    const knownAssets = placementAssetsFromFullTree(
-      placementAssets,
-      inventory.assets.map((item) =>
-        summaryToApiAsset(inventory.tenantId, inventory.id, item)
-      )
+    const selected = await this.getSelectedInventoryIdentity(input.signal);
+    const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
+    const knownAssets = await this.listAllActiveInventoryAssets(
+      selected.tenant.id,
+      selected.inventory.id,
+      input.signal
     );
     const hasTagFilters = (input.tagIds?.length ?? 0) > 0;
     if (!hasTagFilters && input.query.trim().length === 0 && input.checkoutState === 'checked_out') {
@@ -561,6 +720,38 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return ancestors;
   }
 
+  private async loadAncestorsForAssets(
+    assets: readonly Asset[],
+    signal?: AbortSignal
+  ): Promise<readonly Asset[]> {
+    const knownAssets = new Map(assets.map((asset) => [asset.id, asset]));
+    const pendingAssets = new Map<string, Promise<Asset>>();
+    const loadParent = async (source: Asset, visited = new Set<string>()): Promise<void> => {
+      if (visited.has(source.id)) {
+        return;
+      }
+      const nextVisited = new Set(visited).add(source.id);
+      const parentId = source.parentAssetId ?? undefined;
+      if (!parentId || parentId === source.id) {
+        return;
+      }
+      let parent = knownAssets.get(parentId);
+      if (!parent) {
+        let pending = pendingAssets.get(parentId);
+        if (!pending) {
+          pending = this.client.getAsset(source.tenantId, source.inventoryId, parentId, signal);
+          pendingAssets.set(parentId, pending);
+        }
+        parent = await pending;
+        knownAssets.set(parent.id, parent);
+      }
+      await loadParent(parent, nextVisited);
+    };
+    await Promise.all(assets.map((asset) => loadParent(asset)));
+    const visibleIds = new Set(assets.map((asset) => asset.id));
+    return [...knownAssets.values()].filter((asset) => !visibleIds.has(asset.id));
+  }
+
   async searchAssets(query: string): Promise<readonly AssetSummary[]> {
     const { inventory, placementAssets } = await this.getDefaultInventoryContext();
 
@@ -584,18 +775,15 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async searchLocations(query: string): Promise<readonly LocationSummary[]> {
-    const { inventory, placementAssets } = await this.getDefaultInventoryContext();
+    const selected = await this.getSelectedInventoryIdentity();
+    const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
+    const placementAssets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id);
 
     const page = await this.client.searchAssets(inventory.tenantId, query, { limit: 50 });
     const locationAssets = page.items
       .filter((item) => item.inventory.id === inventory.id && item.asset.kind === 'location')
       .map((item) => item.asset);
-    const knownAssets = placementAssetsFromFullTree(
-      placementAssets,
-      inventory.assets.map((item) =>
-        summaryToApiAsset(inventory.tenantId, inventory.id, item)
-      )
-    );
+    const knownAssets = placementAssets;
 
     return Promise.all(
       locationAssets.map(async (location) =>
@@ -645,7 +833,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async listRecentInventoryAssets(
     tenantID: string,
-    inventoryID: string
+    inventoryID: string,
+    signal?: AbortSignal
   ): Promise<readonly Asset[]> {
     const page = await this.client.listAssets(
       tenantID,
@@ -653,20 +842,39 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       inventoryAssetPageSize,
       undefined,
       'all',
-      'updated_desc'
+      'updated_desc',
+      signal
+    );
+    return page.items;
+  }
+
+  private async listHomeRecentAssets(
+    tenantID: string,
+    inventoryID: string,
+    signal?: AbortSignal
+  ): Promise<readonly Asset[]> {
+    const page = await this.client.listAssets(
+      tenantID,
+      inventoryID,
+      10,
+      undefined,
+      'active',
+      'updated_desc',
+      signal
     );
     return page.items;
   }
 
   private async listCheckedOutInventoryAssets(
     tenantID: string,
-    inventoryID: string
+    inventoryID: string,
+    signal?: AbortSignal
   ): Promise<readonly CheckedOutAsset[]> {
     const checkedOutAssets: CheckedOutAsset[] = [];
     let cursor: string | undefined;
 
     do {
-      const page = await this.client.listCheckedOutAssets(tenantID, inventoryID, 10, cursor);
+      const page = await this.client.listCheckedOutAssets(tenantID, inventoryID, 10, cursor, signal);
       checkedOutAssets.push(...page.items);
       cursor = page.pagination.nextCursor ?? undefined;
     } while (cursor && checkedOutAssets.length < 10);
@@ -676,13 +884,14 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async listAllInventoryTags(
     tenantID: string,
-    inventoryID: string
+    inventoryID: string,
+    signal?: AbortSignal
   ): Promise<readonly AssetTag[]> {
     const tags: AssetTag[] = [];
     let cursor: string | undefined;
 
     do {
-      const page = await this.client.listAssetTags(tenantID, inventoryID, 100, cursor);
+      const page = await this.client.listAssetTags(tenantID, inventoryID, 100, cursor, signal);
       tags.push(...page.items);
       cursor = page.pagination.nextCursor ?? undefined;
     } while (cursor);
@@ -690,22 +899,14 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return tags;
   }
 
-  private async getSelectedInventoryIdentity(): Promise<{
+  private async getSelectedInventoryIdentity(signal?: AbortSignal): Promise<{
     readonly tenant: Tenant;
     readonly inventory: Inventory;
   }> {
     if (this.selectedInventoryIdentity) {
       return this.selectedInventoryIdentity;
     }
-    const tenantsPage = await this.client.listMyTenants(100);
-    const tenants = tenantsPage.items;
-    const inventoriesByTenant = await Promise.all(
-      tenants.map(async (tenant) => {
-        const inventoriesPage = await this.client.listInventories(tenant.id, 100);
-        return inventoriesPage.items.map((inventory) => ({ tenant, inventory }));
-      })
-    );
-    const inventories = inventoriesByTenant.flat();
+    const { availableInventories: inventories } = await this.loadInventoryDirectory(signal);
     const preferredInventory =
       inventories.find((item) => item.tenant.id === this.configuredTenantId) ??
       inventories[0];
@@ -721,9 +922,57 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return defaultInventory;
   }
 
+  private observeMutation(
+    kind: InventoryMutationKind,
+    tenantID: string,
+    inventoryID: string,
+    assetID?: string
+  ): void {
+    this.mutationObserver.onInventoryMutation({
+      kind,
+      tenantId: tenantID,
+      inventoryId: inventoryID,
+      ...(assetID ? { assetId: assetID } : {})
+    });
+  }
+
+  private async loadInventoryDirectory(signal?: AbortSignal): Promise<InventoryDirectory> {
+    if (!this.inventoryDirectoryPromise) {
+      this.inventoryDirectoryPromise = this.fetchInventoryDirectory(signal).catch((error: unknown) => {
+        this.inventoryDirectoryPromise = undefined;
+        throw error;
+      });
+    }
+    return this.inventoryDirectoryPromise;
+  }
+
+  private async refreshInventoryDirectory(signal?: AbortSignal): Promise<InventoryDirectory> {
+    const pending = this.fetchInventoryDirectory(signal).catch((error: unknown) => {
+      if (this.inventoryDirectoryPromise === pending) {
+        this.inventoryDirectoryPromise = undefined;
+      }
+      throw error;
+    });
+    this.inventoryDirectoryPromise = pending;
+    return pending;
+  }
+
+  private async fetchInventoryDirectory(signal?: AbortSignal): Promise<InventoryDirectory> {
+    const tenantsPage = await this.client.listMyTenants(100, undefined, signal);
+    const tenants = tenantsPage.items;
+    const inventoriesByTenant = await Promise.all(
+      tenants.map(async (tenant) => {
+        const inventoriesPage = await this.client.listInventories(tenant.id, 100, undefined, signal);
+        return inventoriesPage.items.map((inventory) => ({ tenant, inventory }));
+      })
+    );
+    return { tenants, availableInventories: inventoriesByTenant.flat() };
+  }
+
   private async listAllActiveInventoryAssets(
     tenantID: string,
-    inventoryID: string
+    inventoryID: string,
+    signal?: AbortSignal
   ): Promise<readonly Asset[]> {
     const assets: Asset[] = [];
     let cursor: string | undefined;
@@ -735,7 +984,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         inventoryAssetPageSize,
         cursor,
         'active',
-        'id_asc'
+        'id_asc',
+        signal
       );
       assets.push(...page.items);
       cursor = page.pagination.nextCursor ?? undefined;
@@ -950,7 +1200,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         pageSize,
         cursor,
         input.lifecycleState,
-        input.sort
+        input.sort,
+        input.signal
       );
       selectedAssets.push(...filterAssetsByCheckoutState(
         filterAssetsByKind(page.items, input.kind),
@@ -993,7 +1244,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         inventoryId: inventory.id,
         tagIds: input.tagIds,
         lifecycleState: input.lifecycleState,
-        checkoutState: input.checkoutState
+        checkoutState: input.checkoutState,
+        signal: input.signal
       });
       selectedResults.push(
         ...page.items
@@ -1040,7 +1292,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       inventory.tenantId,
       inventory.id,
       input.limit ?? 20,
-      input.cursor
+      input.cursor,
+      input.signal
     );
     const selectedAssets = page.items
       .map((item) => item.asset)
@@ -1057,6 +1310,22 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       hasMore: page.pagination.hasMore
     };
   }
+}
+
+function emptyInventorySummary(tenant: Tenant, inventory: Inventory): InventorySummary {
+  return {
+    id: inventoryId(inventory.id),
+    tenantId: tenantId(tenant.id),
+    name: inventory.name,
+    role: mapAccessRole(inventory.access.relationship),
+    permissions: [...inventory.access.permissions],
+    description: '',
+    updatedAtLabel: 'Loaded from API',
+    locationCount: 0,
+    locations: [],
+    assets: [],
+    assetTags: []
+  };
 }
 
 class ExpoDirectUploadTransport implements DirectUploadTransport {

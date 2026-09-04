@@ -30,9 +30,11 @@ Device-local preferences, secure credentials, in-progress Add drafts, native pic
 - Each application read port and command port must express one cohesive product responsibility. A screen-specific read must not obtain its identity by hydrating unrelated tenants, inventories, assets, locations, tags, attachments, or thumbnails.
 - The broad `ApiInventorySummaryRepository` must be decomposed behind focused application ports. Compatibility facades may exist during migration, but migrated operations must not route back through broad workspace hydration.
 - Selected tenant and inventory identity is session scope. API adapters may reuse an already-resolved selected scope, but the source of that identity must remain replaceable and must reset when the principal, connection profile, tenant, inventory, or mobile composition changes.
+- Every inventory-selection path, including invitation acceptance, must use one application command that refreshes stale inventory discovery when necessary and resets the composition-scoped query cache only after selection succeeds.
 - TanStack React Query is a UI-side server-state adapter. Query functions call application queries and commands; they do not call generated clients or API repositories directly.
 - The mobile composition owns one Query Client for one authenticated service-scope identity. Sign-out, session expiry, profile replacement, or composition replacement must cancel active work and clear state so data cannot cross principals or Stuff Stash instances.
 - Query cancellation must reach cancellable API work. A superseded route, search, scope, or composition must not populate a cache entry after it is no longer authoritative.
+- Caller cancellation and the mobile network timeout must remain independently effective. A caller cancellation must remain distinguishable from a timeout, and supplying a query cancellation signal must never disable the timeout.
 
 ### Query Identity And Freshness
 

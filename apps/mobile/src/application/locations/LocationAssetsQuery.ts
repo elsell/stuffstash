@@ -1,4 +1,5 @@
-import { assetId } from '../../domain/assets/AssetSummary';
+import type { AssetSummary } from '../../domain/assets/AssetSummary';
+import type { ReadRequest } from '../shared/ReadRequest';
 import type {
   AssetCardViewModel,
   AssetDetailViewModel
@@ -7,7 +8,6 @@ import {
   toAssetCardViewModel,
   toAssetDetailViewModel
 } from '../assets/AssetViewModels';
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
 
 export type LocationAssetsViewModel = {
   readonly locationId: string;
@@ -17,32 +17,29 @@ export type LocationAssetsViewModel = {
   readonly assetDetails: readonly AssetDetailViewModel[];
 };
 
+export type LocationAssetsSnapshot = {
+  readonly locationId: string;
+  readonly locationTitle: string;
+  readonly inventoryName: string;
+  readonly assets: readonly AssetSummary[];
+};
+
+export type LocationAssetsRepository = {
+  getLocationAssetsSnapshot(locationId: string, request?: ReadRequest): Promise<LocationAssetsSnapshot>;
+};
+
 export class LocationAssetsQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly locations: LocationAssetsRepository) {}
 
-  async execute(locationIdValue: string): Promise<LocationAssetsViewModel> {
-    const selectedLocationId = assetId(locationIdValue);
-    const inventory = await this.inventories.getDefaultInventorySummary();
-    const location = inventory.locations.find((candidate) => candidate.id === selectedLocationId);
-
-    if (!location) {
-      throw new Error('Location is not available in the selected inventory.');
-    }
-
-    const assets = inventory.assets.filter((asset) => {
-      if (asset.id === selectedLocationId) {
-        return false;
-      }
-
-      return asset.locationTrail.includes(location.title) || asset.locationLabel === location.title;
-    });
+  async execute(locationIdValue: string, request: ReadRequest = {}): Promise<LocationAssetsViewModel> {
+    const snapshot = await this.locations.getLocationAssetsSnapshot(locationIdValue, request);
 
     return {
-      locationId: location.id,
-      locationTitle: location.title,
-      inventoryName: inventory.name,
-      assets: assets.map(toAssetCardViewModel),
-      assetDetails: assets.map((asset) => toAssetDetailViewModel(asset))
+      locationId: snapshot.locationId,
+      locationTitle: snapshot.locationTitle,
+      inventoryName: snapshot.inventoryName,
+      assets: snapshot.assets.map(toAssetCardViewModel),
+      assetDetails: snapshot.assets.map((asset) => toAssetDetailViewModel(asset))
     };
   }
 }

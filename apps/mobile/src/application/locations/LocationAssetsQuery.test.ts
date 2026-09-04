@@ -13,6 +13,21 @@ import type {
 import { LocationAssetsQuery } from './LocationAssetsQuery';
 
 class FakeInventorySummaryRepository implements InventorySummaryRepository {
+  async getLocationAssetsSnapshot(locationIdValue: string) {
+    const location = this.inventory.locations.find((candidate) => candidate.id === locationIdValue);
+    if (!location) {
+      throw new Error('Location is not available in the selected inventory.');
+    }
+    return {
+      locationId: location.id,
+      locationTitle: location.title,
+      inventoryName: this.inventory.name,
+      assets: this.inventory.assets.filter((asset) =>
+        asset.id !== location.id &&
+        (asset.locationTrail.includes(location.title) || asset.locationLabel === location.title)
+      )
+    };
+  }
   async getInventoryWorkspace(): Promise<InventoryWorkspace> {
     return {
       tenants: [{ id: tenantId('tenant-home'), name: 'Home tenant' }],
