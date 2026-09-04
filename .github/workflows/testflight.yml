@@ -32,7 +32,8 @@ jobs:
     name: Build and upload tagged iOS release
     runs-on: macos-26
     env:
-      MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
+      NODE_ENV: production
+      STUFF_STASH_MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
       MOBILE_BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
       STUFF_STASH_MOBILE_PRODUCTION_BUILD: "true"
       STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: "true"
@@ -67,8 +68,8 @@ jobs:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          [[ "$MOBILE_RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
-          test "$(git describe --tags --exact-match HEAD)" = "$MOBILE_RELEASE_TAG"
+          [[ "$STUFF_STASH_MOBILE_RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          test "$(git describe --tags --exact-match HEAD)" = "$STUFF_STASH_MOBILE_RELEASE_TAG"
           [[ "$MOBILE_BUILD_NUMBER" =~ ^[1-9][0-9]{0,3}\.[1-9][0-9]?$ ]]
           test -n "$APP_STORE_CONNECT_API_KEY_BASE64"
           [[ "$APP_STORE_CONNECT_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]
@@ -78,7 +79,7 @@ jobs:
       - name: Prepare tagged mobile version
         run: |
           node scripts/prepare-mobile-release.mjs \
-            --tag "$MOBILE_RELEASE_TAG" \
+            --tag "$STUFF_STASH_MOBILE_RELEASE_TAG" \
             --build-number "$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"
 
       - name: Install workspace dependencies
@@ -137,7 +138,7 @@ jobs:
           test -n "$app_path"
           info_plist="$app_path/Info.plist"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")" = "org.stuffstash.mobile"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")" = "${MOBILE_RELEASE_TAG#v}"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")" = "${STUFF_STASH_MOBILE_RELEASE_TAG#v}"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist")" = "$MOBILE_BUILD_NUMBER"
           test -z "$(find "$app_path" \( -iname '*EXDevLauncher*' -o -iname '*EXDevMenu*' \) -print -quit)"
           codesign -d --entitlements :- "$app_path" > "$RUNNER_TEMP/StuffStash-entitlements.plist"
@@ -167,7 +168,7 @@ jobs:
       - name: Report upload
         run: |
           printf 'Uploaded Stuff Stash `%s` (`%s`) to App Store Connect for TestFlight processing.\n' \
-            "$MOBILE_RELEASE_TAG" "$MOBILE_BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+            "$STUFF_STASH_MOBILE_RELEASE_TAG" "$MOBILE_BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove temporary signing key
         if: always()
