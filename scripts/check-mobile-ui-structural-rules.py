@@ -18,6 +18,13 @@ REQUIRE_PATTERN = re.compile(
 NAMESPACE_REQUIRE_PATTERN = re.compile(
     r"\b(?:const|let|var)\s+(?P<name>[A-Za-z_$][\w$]*)\s*=\s*require\(['\"]react-native['\"]\)",
 )
+FRAMEWORK_IMPORT_PATTERN = re.compile(
+    r"^[ \t]*import(?:\s+type)?\s+.*?\s+from\s+['\"](?P<module>react|@tanstack/react-query)['\"]\s*;",
+    re.DOTALL | re.MULTILINE,
+)
+FRAMEWORK_REQUIRE_PATTERN = re.compile(
+    r"\brequire\(['\"](?P<module>react|@tanstack/react-query)['\"]\)",
+)
 
 
 def source_files(root: Path):
@@ -38,6 +45,22 @@ def line_number(source: str, offset: int) -> int:
 def violations(path: Path) -> list[tuple[int, str]]:
     source = path.read_text(encoding="utf-8")
     findings: list[tuple[int, str]] = []
+
+    if "application" in path.parts or "domain" in path.parts:
+        for match in FRAMEWORK_IMPORT_PATTERN.finditer(source):
+            module = match.group("module")
+            if module == "@tanstack/react-query":
+                reason = "imports TanStack Query outside a UI-side server-state adapter"
+            else:
+                reason = "imports React or TanStack Query inside domain/application code"
+            findings.append((line_number(source, match.start()), reason))
+        for match in FRAMEWORK_REQUIRE_PATTERN.finditer(source):
+            module = match.group("module")
+            if module == "@tanstack/react-query":
+                reason = "requires TanStack Query outside a UI-side server-state adapter"
+            else:
+                reason = "requires React or TanStack Query inside domain/application code"
+            findings.append((line_number(source, match.start()), reason))
 
     for match in IMPORT_PATTERN.finditer(source):
         clause = match.group("clause").strip()

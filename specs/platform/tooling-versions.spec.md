@@ -35,6 +35,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - React 19 test renderer used by React Native Testing Library: `test-renderer 1.2.0`. This is the modern custom renderer required by React Native Testing Library 14, not the deprecated `react-test-renderer`; its React `^19.0.0` peer range is compatible with the pinned React `19.2.0` and React Native `0.83.6` stack.
 - Reviewed `@jest/schemas 30.4.1` transitive schema dependency: `@sinclair/typebox 0.34.49`. The workspace override prevents the test renderer stack from floating to a release newer than the dependency-review cutoff while preserving the older React Native/Jest 29 dependency line independently.
 - Mobile generated API client workspace dependency: `@stuff-stash/api-client workspace:*`.
+- TanStack React Query for React Native server-state coordination: `@tanstack/react-query 5.101.4`. This reviewed release predates the dependency-age cutoff and remains a UI-side adapter; domain and application packages must not import it.
 - Expo Router for native mobile navigation: `expo-router 55.0.16`.
 - Expo development client for local physical-device SDK 55 testing: `expo-dev-client 55.0.35`.
 - Expo Metro runtime for Expo Router: `@expo/metro-runtime 55.0.11`.

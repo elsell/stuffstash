@@ -1,4 +1,5 @@
 import { StuffStashClient } from '@stuff-stash/api-client';
+import type { QueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { ApiMobileAuthMetadataGateway } from '../adapters/auth/ApiMobileAuthMetadataGateway';
 import { ExpoOidcNativeClient } from '../adapters/auth/ExpoOidcNativeClient';
@@ -78,8 +79,11 @@ import {
 } from '../application/auth/MobileAuthSession';
 import { loadMobileRuntimeConfigSeed } from '../config/mobileRuntimeConfig';
 import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
+import { createMobileQueryClient } from '../adapters/serverState/MobileQueryClient';
 
 export type MobileComposition = {
+  readonly serviceScopeId: string;
+  readonly queryClient: QueryClient;
   readonly homeDashboardQuery: HomeDashboardQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
@@ -176,6 +180,7 @@ export function createMobileComposition(
 ): MobileComposition {
   const client = createStuffStashClient(profile, options);
   const serviceScopeId = createServiceScopeId();
+  const queryClient = createMobileQueryClient();
   const config = toRuntimeConfig(profile);
   const directUploadPolicy = {
     allowLocalDevelopmentTargets: runtimeSeed.directUploadLocalDevelopmentTargetsEnabled
@@ -210,6 +215,8 @@ export function createMobileComposition(
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
+    serviceScopeId,
+    queryClient,
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),

@@ -22,6 +22,7 @@ import {
 } from './AppServicesGate';
 import { VoiceInteractionStateProvider } from './VoiceInteractionStateContext';
 import { useInventoryInvitationLink } from './InventoryInvitationLinkContext';
+import { MobileServerStateProvider } from './MobileServerStateProvider';
 
 const AppServicesContext = createContext<MobileComposition | null>(null);
 
@@ -142,22 +143,24 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   };
 
   return (
-    <AppServicesContext.Provider value={mobileComposition}>
-      <AppConnectionActionsContext.Provider
-        value={{
-          signOut,
-          changeServer
-        }}
-      >
-        <VoiceInteractionStateProvider
-          diagnosticsEnabled={mobileComposition.voiceDeveloperDiagnosticsEnabled}
-          previewQuery={mobileComposition.voiceInteractionPreviewQuery}
-          realtimeController={mobileComposition.realtimeVoiceSessionController}
+    <MobileServerStateProvider client={mobileComposition.queryClient}>
+      <AppServicesContext.Provider value={mobileComposition}>
+        <AppConnectionActionsContext.Provider
+          value={{
+            signOut,
+            changeServer
+          }}
         >
-          {children}
-        </VoiceInteractionStateProvider>
-      </AppConnectionActionsContext.Provider>
-    </AppServicesContext.Provider>
+          <VoiceInteractionStateProvider
+            diagnosticsEnabled={mobileComposition.voiceDeveloperDiagnosticsEnabled}
+            previewQuery={mobileComposition.voiceInteractionPreviewQuery}
+            realtimeController={mobileComposition.realtimeVoiceSessionController}
+          >
+            {children}
+          </VoiceInteractionStateProvider>
+        </AppConnectionActionsContext.Provider>
+      </AppServicesContext.Provider>
+    </MobileServerStateProvider>
   );
 }
 

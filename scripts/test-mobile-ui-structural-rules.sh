@@ -8,6 +8,7 @@ workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir"' EXIT
 
 mkdir -p "$workdir/apps/mobile/src/ui/components" "$workdir/apps/mobile/src/ui/screens"
+mkdir -p "$workdir/apps/mobile/src/application" "$workdir/apps/mobile/src/domain"
 
 cat > "$workdir/apps/mobile/src/ui/components/AppTextInput.tsx" <<'EOF'
 import { TextInput } from 'react-native';
@@ -74,5 +75,33 @@ if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
 fi
 
 grep -F "RequiredNamespace.tsx" "$workdir/output" >/dev/null
+
+rm "$workdir/apps/mobile/src/ui/screens/RequiredNamespace.tsx"
+cat > "$workdir/apps/mobile/src/application/LeakyQuery.ts" <<'EOF'
+import { useQuery } from '@tanstack/react-query';
+export const query = useQuery;
+EOF
+
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected TanStack Query imports in application code to fail the mobile structural check" >&2
+  exit 1
+fi
+
+grep -F "LeakyQuery.ts" "$workdir/output" >/dev/null
+grep -F "TanStack Query" "$workdir/output" >/dev/null
+
+rm "$workdir/apps/mobile/src/application/LeakyQuery.ts"
+cat > "$workdir/apps/mobile/src/domain/LeakyReact.ts" <<'EOF'
+import { useEffect } from 'react';
+export const effect = useEffect;
+EOF
+
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected React imports in domain code to fail the mobile structural check" >&2
+  exit 1
+fi
+
+grep -F "LeakyReact.ts" "$workdir/output" >/dev/null
+grep -F "React or TanStack Query" "$workdir/output" >/dev/null
 
 echo "mobile UI structural rule tests passed"

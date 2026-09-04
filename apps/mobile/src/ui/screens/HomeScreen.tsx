@@ -219,7 +219,7 @@ function Dashboard({
 type PendingReturnState = {
   readonly asset: AssetCardViewModel;
   readonly checkoutId: string;
-  readonly undoableOperationId: string;
+  readonly undoableOperationId: string | undefined;
   readonly details: string;
   readonly isSaving: boolean;
 };
@@ -245,9 +245,12 @@ function DashboardHeader({
     try {
       const checkout = await assetCheckoutCommand.execute({ action: 'return', assetId: asset.id });
       if (!checkout.undoableOperationId) {
-        throw new Error('Return could not be undone because the API did not provide an undo operation.');
+        feedback.showNotice({
+          tone: 'warning',
+          title: 'Return completed without undo',
+          message: 'The asset was returned, but this return cannot be canceled.'
+        });
       }
-      await onDashboardChanged();
       setPendingReturn({
         asset,
         checkoutId: checkout.id,
@@ -255,6 +258,7 @@ function DashboardHeader({
         details: '',
         isSaving: false
       });
+      void onDashboardChanged();
     } catch (error) {
       feedback.showNotice({
         tone: 'error',
@@ -292,6 +296,10 @@ function DashboardHeader({
 
   async function cancelReturn(): Promise<void> {
     if (!pendingReturn) {
+      return;
+    }
+    if (!pendingReturn.undoableOperationId) {
+      setPendingReturn(undefined);
       return;
     }
     setPendingReturn({ ...pendingReturn, isSaving: true });
@@ -470,7 +478,9 @@ function ReturnDetailsSheet({
             onPress={onCancel}
             style={[styles.returnSheetButton, styles.returnSheetCancelButton]}
           >
-            <Text style={styles.returnSheetCancelText}>Cancel return</Text>
+            <Text style={styles.returnSheetCancelText}>
+              {pendingReturn?.undoableOperationId ? 'Cancel return' : 'Close'}
+            </Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"

@@ -158,6 +158,7 @@ function selectAssetDetailWorkspace(
 
 export class ApiInventorySummaryRepository implements InventorySummaryRepository, InventoryMapAssetRepository, HomeDashboardSnapshotRepository, AssetDetailWorkspaceRepository {
   private selectedInventoryId: InventoryId | undefined;
+  private selectedInventoryIdentity: { readonly tenant: Tenant; readonly inventory: Inventory } | undefined;
   private readonly directUploadTransport: DirectUploadTransport;
 
   constructor(
@@ -213,6 +214,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     if (!defaultInventory) {
       throw new Error('API principal did not include any inventories.');
     }
+    this.selectedInventoryIdentity = defaultInventory;
 
     const mappedInventories = await Promise.all(
       availableInventories.map((item) =>
@@ -313,6 +315,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     }
 
     this.selectedInventoryId = inventory.id;
+    this.selectedInventoryIdentity = undefined;
   }
 
   async createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary> {
@@ -333,8 +336,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async createAssetTag(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary> {
-    const inventory = await this.getDefaultInventorySummary();
-    const tag = await this.client.createAssetTag(inventory.tenantId, inventory.id, {
+    const selected = await this.getSelectedInventoryIdentity();
+    const tag = await this.client.createAssetTag(selected.tenant.id, selected.inventory.id, {
       displayName: input.displayName,
       ...(input.color !== undefined ? { color: input.color } : {})
     });
@@ -361,10 +364,10 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     assetIdValue: AssetSummary['id'],
     input: CreateInventoryAssetPhotoInput
   ): Promise<void> {
-    const inventory = await this.getDefaultInventorySummary();
+    const selected = await this.getSelectedInventoryIdentity();
     await this.addInventoryAssetPhoto({
-      tenantId: inventory.tenantId,
-      inventoryId: inventory.id,
+      tenantId: tenantId(selected.tenant.id),
+      inventoryId: inventoryId(selected.inventory.id),
       assetId: assetIdValue,
       ...input
     });
@@ -400,28 +403,28 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async deleteAssetPhoto(assetIdValue: AssetSummary['id'], photoId: string): Promise<void> {
-    const inventory = await this.getDefaultInventorySummary();
-    await this.client.deleteAssetAttachment(inventory.tenantId, inventory.id, assetIdValue, photoId);
+    const selected = await this.getSelectedInventoryIdentity();
+    await this.client.deleteAssetAttachment(selected.tenant.id, selected.inventory.id, assetIdValue, photoId);
   }
 
   async archiveAsset(assetIdValue: AssetSummary['id']): Promise<void> {
-    const inventory = await this.getDefaultInventorySummary();
-    await this.client.archiveAsset(inventory.tenantId, inventory.id, assetIdValue);
+    const selected = await this.getSelectedInventoryIdentity();
+    await this.client.archiveAsset(selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async restoreAsset(assetIdValue: AssetSummary['id']): Promise<void> {
-    const inventory = await this.getDefaultInventorySummary();
-    await this.client.restoreAsset(inventory.tenantId, inventory.id, assetIdValue);
+    const selected = await this.getSelectedInventoryIdentity();
+    await this.client.restoreAsset(selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async deleteAsset(assetIdValue: AssetSummary['id']): Promise<void> {
-    const inventory = await this.getDefaultInventorySummary();
-    await this.client.deleteAsset(inventory.tenantId, inventory.id, assetIdValue);
+    const selected = await this.getSelectedInventoryIdentity();
+    await this.client.deleteAsset(selected.tenant.id, selected.inventory.id, assetIdValue);
   }
 
   async checkoutAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}) {
-    const inventory = await this.getDefaultInventorySummary();
-    const checkout = await this.client.checkoutAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+    const selected = await this.getSelectedInventoryIdentity();
+    const checkout = await this.client.checkoutAsset(selected.tenant.id, selected.inventory.id, assetIdValue, input);
     return {
       id: checkout.id,
       assetId: assetId(checkout.assetId),
@@ -430,8 +433,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async returnAsset(assetIdValue: AssetSummary['id'], input: { readonly details?: string } = {}) {
-    const inventory = await this.getDefaultInventorySummary();
-    const checkout = await this.client.returnAsset(inventory.tenantId, inventory.id, assetIdValue, input);
+    const selected = await this.getSelectedInventoryIdentity();
+    const checkout = await this.client.returnAsset(selected.tenant.id, selected.inventory.id, assetIdValue, input);
     return {
       id: checkout.id,
       assetId: assetId(checkout.assetId),
@@ -440,8 +443,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async updateReturnedCheckoutDetails(assetIdValue: AssetSummary['id'], checkoutId: string, input: { readonly details?: string } = {}) {
-    const inventory = await this.getDefaultInventorySummary();
-    const checkout = await this.client.updateReturnedCheckoutDetails(inventory.tenantId, inventory.id, assetIdValue, checkoutId, input);
+    const selected = await this.getSelectedInventoryIdentity();
+    const checkout = await this.client.updateReturnedCheckoutDetails(selected.tenant.id, selected.inventory.id, assetIdValue, checkoutId, input);
     return {
       id: checkout.id,
       assetId: assetId(checkout.assetId),
@@ -450,8 +453,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async undoInventoryOperation(operationId: string): Promise<void> {
-    const inventory = await this.getDefaultInventorySummary();
-    await this.client.applyUndoableOperation(inventory.tenantId, inventory.id, operationId, 'undo');
+    const selected = await this.getSelectedInventoryIdentity();
+    await this.client.applyUndoableOperation(selected.tenant.id, selected.inventory.id, operationId, 'undo');
   }
 
   async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
@@ -691,6 +694,9 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     readonly tenant: Tenant;
     readonly inventory: Inventory;
   }> {
+    if (this.selectedInventoryIdentity) {
+      return this.selectedInventoryIdentity;
+    }
     const tenantsPage = await this.client.listMyTenants(100);
     const tenants = tenantsPage.items;
     const inventoriesByTenant = await Promise.all(
@@ -711,6 +717,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       throw new Error('API principal did not include any inventories.');
     }
 
+    this.selectedInventoryIdentity = defaultInventory;
     return defaultInventory;
   }
 

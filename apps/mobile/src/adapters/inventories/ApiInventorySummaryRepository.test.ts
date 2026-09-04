@@ -17,6 +17,7 @@ import { inventoryId, tenantId } from '../../domain/inventories/InventorySummary
 import { ApiInventorySummaryRepository } from './ApiInventorySummaryRepository';
 
 class FakeInventoryApiClient {
+  readonly requestKinds: string[] = [];
   readonly tenant: Tenant = {
     id: 'tenant-home',
     name: 'Home',
@@ -206,10 +207,12 @@ class FakeInventoryApiClient {
   searchResultAssetOverrides = new Map<string, Partial<Asset>>();
 
   async listMyTenants(): Promise<Page<Tenant>> {
+    this.requestKinds.push('list_tenants');
     return page([this.tenant, this.cabinTenant]);
   }
 
   async listInventories(tenantId: string): Promise<Page<Inventory>> {
+    this.requestKinds.push('list_inventories');
     if (tenantId === this.cabinTenant.id) {
       return page([this.cabinInventory]);
     }
@@ -604,6 +607,7 @@ class FakeInventoryApiClient {
     assetIdValue: string,
     input: { readonly details?: string } = {}
   ): Promise<AssetCheckout> {
+    this.requestKinds.push('return_asset');
     this.checkoutInputs.push({
       action: 'return',
       tenantId,
@@ -2107,6 +2111,24 @@ describe('ApiInventorySummaryRepository', () => {
         direction: 'undo'
       }
     ]);
+  });
+
+  it('returns an asset without reloading the selected inventory workspace', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    await repository.getCurrentTenantId();
+    client.requestKinds.length = 0;
+    client.listAssetRequests.length = 0;
+    client.listAttachmentRequests.length = 0;
+    client.listAssetTagRequests.length = 0;
+
+    await repository.returnAsset(assetId('asset-filters'));
+
+    expect(client.requestKinds).toEqual(['return_asset']);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+    expect(client.listAssetTagRequests).toEqual([]);
   });
 
   it('loads checked-out Home summaries from the checked-out inventory endpoint', async () => {

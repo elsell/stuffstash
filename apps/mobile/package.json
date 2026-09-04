@@ -14,6 +14,7 @@
     "@expo/ui": "55.0.17",
     "@react-navigation/native": "7.2.6",
     "@stuff-stash/api-client": "workspace:*",
+    "@tanstack/react-query": "5.101.4",
     "expo": "55.0.26",
     "expo-audio": "55.0.14",
     "expo-auth-session": "55.0.17",

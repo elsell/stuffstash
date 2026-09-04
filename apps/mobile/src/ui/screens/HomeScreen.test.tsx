@@ -4,7 +4,8 @@ import { HomeScreen } from './HomeScreen';
 
 const testState = vi.hoisted(() => ({
   stateValues: [] as unknown[],
-  stateIndex: 0
+  stateIndex: 0,
+  stateSetters: [] as ReturnType<typeof vi.fn>[]
 }));
 const routerPush = vi.hoisted(() => vi.fn());
 const useFocusEffectMock = vi.hoisted(() => vi.fn());
@@ -17,7 +18,9 @@ vi.mock('react', async (importOriginal) => ({
   useState: <T,>(initialValue?: T) => {
     const index = testState.stateIndex++;
     const value = index < testState.stateValues.length ? testState.stateValues[index] : initialValue;
-    return [value, vi.fn()];
+    const setter = vi.fn();
+    testState.stateSetters[index] = setter;
+    return [value, setter];
   }
 }));
 
@@ -129,6 +132,7 @@ const dashboard: HomeDashboardViewModel = {
 describe('HomeScreen asset cards', () => {
   beforeEach(() => {
     testState.stateIndex = 0;
+    testState.stateSetters = [];
     testState.stateValues = [{ status: 'ready', dashboard }, false, undefined, undefined];
     routerPush.mockClear();
     useFocusEffectMock.mockClear();
@@ -248,6 +252,50 @@ describe('HomeScreen asset cards', () => {
     const returningCard = renderHomeCards(execute).find((card) => card.props?.asset === checkedOutAsset);
 
     expect(returningCard?.props?.footerAction).toMatchObject({ disabled: true, label: 'Returning...' });
+  });
+
+  it('shows return details before the dashboard refresh completes', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      id: 'checkout-one',
+      assetId: 'asset-checked-out',
+      undoableOperationId: 'operation-one'
+    });
+    const dashboardExecute = vi.fn(() => new Promise<HomeDashboardViewModel>(() => undefined));
+    const tree = renderHome(dashboardExecute, execute);
+    const checkedOut = findAllByType(tree, 'AssetCard')
+      .find((card) => card.props?.asset === checkedOutAsset);
+
+    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(dashboardExecute).toHaveBeenCalledTimes(1);
+    expect(testState.stateSetters[3]).toHaveBeenCalledWith(expect.objectContaining({
+      checkoutId: 'checkout-one',
+      asset: checkedOutAsset
+    }));
+  });
+
+  it('reconciles a successful return even when undo is unavailable', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      id: 'checkout-one',
+      assetId: 'asset-checked-out',
+      undoableOperationId: undefined
+    });
+    const dashboardExecute = vi.fn().mockResolvedValue(dashboard);
+    const tree = renderHome(dashboardExecute, execute);
+    const checkedOut = findAllByType(tree, 'AssetCard')
+      .find((card) => card.props?.asset === checkedOutAsset);
+
+    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(dashboardExecute).toHaveBeenCalledTimes(1);
+    expect(testState.stateSetters[3]).toHaveBeenCalledWith(expect.objectContaining({
+      checkoutId: 'checkout-one',
+      undoableOperationId: undefined
+    }));
   });
 });
 
