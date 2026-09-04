@@ -34,13 +34,9 @@ case "${allow_insecure_local_http}" in
   0|false|FALSE|no|NO|'') allow_insecure_local_http=false ;;
   *) echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP must be a boolean.' >&2; exit 1 ;;
 esac
-if [ "${EAS_BUILD_PROFILE:-}" = production ]; then
-  required=true
-fi
-
 if [ -z "$origin" ]; then
   if [ "$required" = true ]; then
-    echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required for production mobile builds.' >&2
+    echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required when invitation links are enabled.' >&2
     exit 1
   fi
   domain=''
@@ -62,7 +58,7 @@ else
       esac
       ;;
     http://*)
-      if [ "$required" = true ] || [ "$allow_insecure_local_http" != true ]; then
+      if [ "$required" = true ] || [ "${EAS_BUILD_PROFILE:-}" = production ] || [ "$allow_insecure_local_http" != true ]; then
         echo 'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must be a standard-port HTTPS origin.' >&2
         exit 1
       fi

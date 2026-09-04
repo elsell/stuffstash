@@ -6,24 +6,59 @@ const invitationOrigin = configuredInvitationOrigin(
   process.env.EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN,
   invitationAllowInsecureLocalHTTP
 );
-const invitationLinksRequired =
-  process.env.EAS_BUILD_PROFILE === 'production' ||
-  configuredBoolean('STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS', process.env.STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS);
+const productionBuild = configuredBoolean(
+  'STUFF_STASH_MOBILE_PRODUCTION_BUILD',
+  process.env.STUFF_STASH_MOBILE_PRODUCTION_BUILD
+);
+const generalDistributionBuild = configuredBoolean(
+  'STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD',
+  process.env.STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD
+);
+const invitationLinksRequired = configuredBoolean(
+  'STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS',
+  process.env.STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS
+);
 if (invitationLinksRequired && !invitationOrigin) {
-  throw new Error('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required for production mobile builds.');
+  throw new Error('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required when invitation links are enabled.');
 }
-if (invitationLinksRequired && invitationOrigin && new URL(invitationOrigin).protocol !== 'https:') {
+if ((productionBuild || invitationLinksRequired) && invitationOrigin && new URL(invitationOrigin).protocol !== 'https:') {
   throw new Error('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN must use HTTPS for production mobile builds.');
 }
 const invitationURL = invitationOrigin ? new URL(invitationOrigin) : undefined;
 const invitationHost = invitationURL?.protocol === 'https:' ? invitationURL.hostname : undefined;
+const { resolveMobileReleaseVersion } = require('./scripts/release-version.js');
+const releaseVersion = resolveMobileReleaseVersion({
+  tag: process.env.STUFF_STASH_MOBILE_RELEASE_TAG,
+  production: productionBuild
+});
+const apiBaseUrl = process.env.EXPO_PUBLIC_STUFF_STASH_API_BASE_URL?.trim() ?? '';
+const tenantId = process.env.EXPO_PUBLIC_STUFF_STASH_TENANT_ID?.trim() ?? '';
+const voiceDeveloperDiagnosticsEnabled = configuredBoolean(
+  'EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED',
+  process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED
+);
+const directUploadLocalDevelopmentTargetsEnabled = configuredBoolean(
+  'EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED',
+  process.env.EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED
+);
+if (
+  generalDistributionBuild &&
+  (apiBaseUrl ||
+    tenantId ||
+    invitationOrigin ||
+    invitationAllowInsecureLocalHTTP ||
+    voiceDeveloperDiagnosticsEnabled ||
+    directUploadLocalDevelopmentTargetsEnabled)
+) {
+  throw new Error('General mobile distribution builds cannot embed deployment or developer configuration.');
+}
 
 module.exports = {
   expo: {
     name: 'Stuff Stash',
     slug: 'stuff-stash',
     scheme: 'stuffstash',
-    version: '0.0.0',
+    version: releaseVersion,
     orientation: 'portrait',
     icon: './assets/brand/stuff-stash-glyph.png',
     userInterfaceStyle: 'automatic',
@@ -42,7 +77,8 @@ module.exports = {
     ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'app.stuffstash.mobile',
+      bundleIdentifier: 'org.stuffstash.mobile',
+      icon: './ios/StuffStash/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png',
       associatedDomains: invitationHost ? [`applinks:${invitationHost}`] : [],
       splash: {
         image: './assets/brand/stuff-stash-glyph.png',
@@ -96,8 +132,8 @@ module.exports = {
     },
     extra: {
       stuffStash: {
-        apiBaseUrl: process.env.EXPO_PUBLIC_STUFF_STASH_API_BASE_URL ?? '',
-        tenantId: process.env.EXPO_PUBLIC_STUFF_STASH_TENANT_ID ?? '',
+        apiBaseUrl,
+        tenantId,
         voiceDeveloperDiagnosticsEnabled:
           process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED ?? '',
         directUploadLocalDevelopmentTargetsEnabled:

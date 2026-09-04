@@ -16,7 +16,7 @@ This spec covers the first mobile application foundation and the first mobile pa
 - A mobile API adapter that consumes the generated `@stuff-stash/api-client` package behind application ports.
 - Local development commands for Expo Go.
 
-This spec defines camera behavior only for attaching still photos during the Add flow. The first functional realtime voice query slice is specified in `specs/agent-model/mobile-realtime-voice-query.spec.md`. This spec does not define video capture, release signing, TestFlight, EAS builds, or production mobile distribution. Those behaviors must be introduced through their own specs before implementation.
+This spec defines camera behavior only for attaching still photos during the Add flow. The first functional realtime voice query slice is specified in `specs/agent-model/mobile-realtime-voice-query.spec.md`. This spec does not define video capture, release signing, TestFlight, native release builds, or production mobile distribution. Those behaviors must be introduced through their own specs before implementation.
 
 ## Decisions
 
@@ -26,7 +26,7 @@ This spec defines camera behavior only for attaching still photos during the Add
 - The first screen must be driven by application-layer state loaded through a mobile API adapter.
 - The app must not require an Expo account for the first local validation path.
 - Physical iPhone validation for Expo SDK 55 may use a local Expo development build when the App Store Expo Go client does not yet support the required SDK version.
-- The local development build must use `expo-dev-client` and must be installable from a connected Mac/iPhone through local Xcode signing before relying on EAS or TestFlight.
+- The local development build must use `expo-dev-client` and must be installable from a connected Mac/iPhone through local Xcode signing independently of TestFlight.
 - The app must not add native modules beyond Expo-compatible navigation, development-client dependencies, Expo FileSystem for durable non-secret onboarding profile storage, Expo Auth Session/Web Browser/Secure Store for mobile OIDC authentication, Expo Clipboard for explicit one-time invitation-link copy actions, and Expo Audio for the specified realtime voice query slice in the first local validation path.
 - The mobile API adapter must use the generated `@stuff-stash/api-client` package rather than hand-written endpoint fetches.
 - Expo local development may seed mobile runtime configuration through Expo public environment variables:

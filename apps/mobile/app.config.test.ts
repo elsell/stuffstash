@@ -30,6 +30,7 @@ describe('app config', () => {
     });
     expect(config.expo.plugins).toContain('expo-secure-store');
     expect(config.expo.plugins).toContain('expo-web-browser');
+    expect(config.expo.ios.bundleIdentifier).toBe('org.stuffstash.mobile');
     expect(config.expo.ios.associatedDomains).toEqual(['applinks:stash.example.test']);
     expect(config.expo.android.intentFilters).toEqual([
       expect.objectContaining({
@@ -64,18 +65,43 @@ describe('app config', () => {
     expect(() => require('./app.config.js')).toThrow('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN');
   });
 
-  it('fails a production build when the invitation origin is missing', () => {
-    vi.stubEnv('EAS_BUILD_PROFILE', 'production');
+  it('allows the general production build to derive its server during onboarding', () => {
+    vi.stubEnv('STUFF_STASH_MOBILE_PRODUCTION_BUILD', 'true');
+    vi.stubEnv('STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD', 'true');
+    vi.stubEnv('STUFF_STASH_MOBILE_RELEASE_TAG', 'v1.2.3');
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN', '');
     delete require.cache[require.resolve('./app.config.js')];
 
+    const config = require('./app.config.js');
+
+    expect(config.expo.version).toBe('1.2.3');
+    expect(config.expo.ios.associatedDomains).toEqual([]);
+    expect(config.expo.extra.stuffStash.apiBaseUrl).toBe('');
+    expect(config.expo.extra.stuffStash.tenantId).toBe('');
+  });
+
+  it.each([
+    ['EXPO_PUBLIC_STUFF_STASH_API_BASE_URL', 'https://stash.example.test'],
+    ['EXPO_PUBLIC_STUFF_STASH_TENANT_ID', 'tenant-home'],
+    ['EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN', 'https://stash.example.test'],
+    ['EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP', 'true'],
+    ['EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED', 'true'],
+    ['EXPO_PUBLIC_STUFF_STASH_DIRECT_UPLOAD_LOCAL_TARGETS_ENABLED', 'true']
+  ])('rejects %s in the general distribution build', (name, value) => {
+    vi.stubEnv('STUFF_STASH_MOBILE_PRODUCTION_BUILD', 'true');
+    vi.stubEnv('STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD', 'true');
+    vi.stubEnv('STUFF_STASH_MOBILE_RELEASE_TAG', 'v1.2.3');
+    vi.stubEnv(name, value);
+    delete require.cache[require.resolve('./app.config.js')];
+
     expect(() => require('./app.config.js')).toThrow(
-      'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required for production mobile builds.'
+      'General mobile distribution builds cannot embed deployment or developer configuration.'
     );
   });
 
   it('rejects private HTTP origins in production even when local HTTP is enabled', () => {
-    vi.stubEnv('EAS_BUILD_PROFILE', 'production');
+    vi.stubEnv('STUFF_STASH_MOBILE_PRODUCTION_BUILD', 'true');
+    vi.stubEnv('STUFF_STASH_MOBILE_RELEASE_TAG', 'v1.2.3');
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN', 'http://192.168.1.117:5173');
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP', 'true');
     delete require.cache[require.resolve('./app.config.js')];
@@ -83,14 +109,22 @@ describe('app config', () => {
     expect(() => require('./app.config.js')).toThrow('must use HTTPS for production');
   });
 
-  it('lets an explicit release-build guard require invitation links outside EAS', () => {
+  it('lets an explicit release-build guard require invitation links', () => {
     vi.stubEnv('STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS', 'true');
     vi.stubEnv('EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN', '');
     delete require.cache[require.resolve('./app.config.js')];
 
     expect(() => require('./app.config.js')).toThrow(
-      'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required for production mobile builds.'
+      'EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN is required when invitation links are enabled.'
     );
+  });
+
+  it('requires an exact SemVer release tag for production', () => {
+    vi.stubEnv('STUFF_STASH_MOBILE_PRODUCTION_BUILD', 'true');
+    vi.stubEnv('STUFF_STASH_MOBILE_RELEASE_TAG', 'release-1.2.3');
+    delete require.cache[require.resolve('./app.config.js')];
+
+    expect(() => require('./app.config.js')).toThrow('STUFF_STASH_MOBILE_RELEASE_TAG');
   });
 
   it.each([

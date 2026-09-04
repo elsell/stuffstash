@@ -20,6 +20,9 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 ## Pinned Web And Client Tooling
 
 - pnpm for web/client workspaces: `11.0.7`.
+- GitHub-hosted native iOS runner label: `macos-26`.
+- Xcode for mobile production build and App Store Connect submission: `26.6`.
+- CocoaPods for mobile native dependency resolution: `1.17.0`.
 - Expo: `expo 55.0.26`.
 - Expo status bar: `expo-status-bar 55.0.6`.
 - React Native: `react-native 0.83.6`.
@@ -140,6 +143,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Release tag and GitHub release creation must happen after image signing, signature verification, and attestations succeed. Self-host image digest update pull requests are follow-up deployment-state automation and must not block release tag or GitHub release creation.
 - Release automation that opens a self-host image digest update pull request may request auto-merge, but it must not treat digest PR check completion or merge completion as part of release success.
 - Release validation must build the API release binary from the `apps/api` module with workspace mode disabled before any image publication job runs.
+- TestFlight publication must use the published GitHub Release tag as the mobile marketing version, use the bounded `GITHUB_RUN_NUMBER.GITHUB_RUN_ATTEMPT` iOS build number, and submit the exact archive produced by the workflow.
 - Pull requests targeting `main` must run a blocking CI gate before merge. The gate must include dependency age checking, repository script tests, Go formatting and structural boundary checks for changed Go files, API tests, API release build validation, web tests, web static checks, web build validation, mobile tests, mobile static checks, generated API client tests, generated API client static checks, generated API client drift checks, documentation dependency installation, and documentation build validation.
 - Repository script tests run by the blocking CI gate must be portable to the pinned Linux runner without assuming developer-machine utilities such as Ripgrep or Apple's `plutil`. Structural text checks must use runner-standard tools, and Apple property-list fixtures must be validated with Python's standard-library `plistlib`.
 - Web browser E2E smoke tests may remain outside the blocking gate until the suite is made deterministic and green enough for routine pull request use.

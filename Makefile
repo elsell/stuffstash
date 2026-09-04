@@ -212,6 +212,7 @@ scripts-test: release-plan-test release-image-signing-test selfhost-happy-path-c
 	scripts/test-mobile-ui-structural-rules.sh
 	scripts/test-mobile-association-files.sh
 	scripts/test-ios-associated-domains.sh
+	NODE_BINARY="$(CODEX_RUNTIME_NODE_BIN)/node" scripts/test-mobile-release.sh
 	python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("scripts/check-dependency-age.py").read_text(encoding="utf-8"))'
 	python3 scripts/test-dependency-age.py
 	PATH="$(DOCS_PATH)" node --check scripts/render-local-dex-config.mjs

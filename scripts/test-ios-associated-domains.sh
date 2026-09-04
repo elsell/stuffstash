@@ -18,8 +18,17 @@ if grep -q 'com.apple.developer.associated-domains' "$output"; then
   exit 1
 fi
 
-if EAS_BUILD_PROFILE=production EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='' "$writer" "$output" >/dev/null 2>&1; then
-  echo 'a production iOS build accepted a missing invitation origin' >&2
+EAS_BUILD_PROFILE=production EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='' "$writer" "$output"
+python3 -c 'import plistlib, sys; plistlib.load(open(sys.argv[1], "rb"))' "$output"
+if grep -q 'com.apple.developer.associated-domains' "$output"; then
+  echo 'the general production build received a fixed associated domain' >&2
+  exit 1
+fi
+
+if STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS=true \
+  EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN='' \
+  "$writer" "$output" >/dev/null 2>&1; then
+  echo 'a deployment-specific build accepted a missing invitation origin' >&2
   exit 1
 fi
 
