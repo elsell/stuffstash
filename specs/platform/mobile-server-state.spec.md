@@ -171,3 +171,15 @@ Cached resource values may remain visible through transient refresh failure, but
 The query-cache adapter discards resource data on authoritative access failure. Later unsuccessful retries cannot restore the discarded value; dependent surfaces remain unavailable while their required scope/context has an error and no verified data. A successful response is required to repopulate it.
 
 Appearance, About and Connection settings render from local preferences/runtime diagnostics without principal or inventory reads. Diagnostics may reuse shared principal/scope queries to display identity IDs. A shared resource retry must recover failed inventory discovery before reading the resource.
+
+## Native Cancellation Compatibility
+
+Cancellation checks must work with React Native's bundled AbortController, which
+provides `aborted` and abort events but not `AbortSignal.throwIfAborted`. Shared
+read support checks `aborted` directly and throws the original reason when
+available, or a named AbortError when the runtime omits a reason. Production
+mobile source must not call unsupported AbortSignal convenience methods.
+The mobile test suite and mounted query/discovery regressions must use the actual
+AbortController package resolved by the pinned React Native runtime, not Node's
+richer API.
+The structural hook rejects direct `throwIfAborted` method calls.

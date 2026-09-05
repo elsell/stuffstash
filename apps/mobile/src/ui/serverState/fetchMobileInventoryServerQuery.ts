@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { CurrentInventoryScope } from '../../application/home/CurrentInventoryScopeQuery';
 import { CancelledError, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -37,7 +38,7 @@ export async function fetchMobileInventoryServerQuery<TData>(input: {
 /** Prevent implicit-selected-scope ports from publishing under a departed query key. */
 export async function readScopedMobileResource<T>(client: QueryClient, scopeId: string, expected: CurrentInventoryScope, signal: AbortSignal, read: (signal?: AbortSignal) => Promise<T>): Promise<T> {
   const assertCurrent = () => {
-    signal.throwIfAborted();
+    assertReadActive(signal);
     const current = client.getQueryData<CurrentInventoryScope>(mobileQueryKeys.inventoryScope(scopeId));
     if (!current || current.tenantId !== expected.tenantId || current.inventoryId !== expected.inventoryId) throw new CancelledError();
   };

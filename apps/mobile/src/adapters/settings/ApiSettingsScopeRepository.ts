@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import { SettingsScopeUnavailableError } from '../../application/settings/SettingsQuery';
 import type { ReadRequest } from '../../application/shared/ReadRequest';
 import type { StuffStashClient } from '@stuff-stash/api-client';
@@ -38,7 +39,7 @@ export class ApiSettingsScopeRepository implements SettingsScopeRepository {
     let cursor: string | undefined;
     const visited = new Set<string>();
     do {
-      request.signal?.throwIfAborted();
+      assertReadActive(request.signal);
       const page = await this.client.listInventories(tenantId, 100, cursor, request.signal);
       const inventory = page.items.find((candidate) => candidate.id === inventoryId);
       if (inventory) return inventory;

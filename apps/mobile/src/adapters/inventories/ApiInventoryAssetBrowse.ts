@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import type {
   Asset,
   AssetSearchResult
@@ -45,7 +46,7 @@ export class ApiInventoryAssetBrowse {
     const seenCursors = new Set<string>(input.cursor ? [input.cursor] : []);
 
     do {
-      input.signal?.throwIfAborted();
+      assertReadActive(input.signal);
       scannedPages++;
       const pageSize = desiredMatches - selectedAssets.length;
       const page = await this.client.listAssets(
@@ -61,7 +62,7 @@ export class ApiInventoryAssetBrowse {
         filterAssetsByKind(page.items, input.kind),
         input.checkoutState
       ));
-      input.signal?.throwIfAborted();
+      assertReadActive(input.signal);
       nextCursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
       if (hasMore && (!nextCursor || seenCursors.has(nextCursor))) throw new Error('Invalid Browse continuation cursor.');
@@ -96,7 +97,7 @@ export class ApiInventoryAssetBrowse {
     const seenCursors = new Set<string>(input.cursor ? [input.cursor] : []);
 
     do {
-      input.signal?.throwIfAborted();
+      assertReadActive(input.signal);
       scannedPages++;
       const pageSize = desiredMatches - selectedResults.length;
       const page = await this.client.searchAssets(inventory.tenantId, input.query, {
@@ -113,7 +114,7 @@ export class ApiInventoryAssetBrowse {
           .filter((item) => item.inventory.id === inventory.id)
           .filter((item) => assetMatchesKind(item.asset, input.kind))
       );
-      input.signal?.throwIfAborted();
+      assertReadActive(input.signal);
       nextCursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
       if (hasMore && (!nextCursor || seenCursors.has(nextCursor))) throw new Error('Invalid Browse continuation cursor.');

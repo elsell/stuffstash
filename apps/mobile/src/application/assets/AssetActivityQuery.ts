@@ -1,3 +1,4 @@
+import { assertReadActive } from '../shared/ReadRequest';
 export type AssetActivityView = 'changes' | 'all';
 export type AssetActivityCategory = 'change' | 'read';
 export type AssetActivityField = 'title' | 'description' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
@@ -97,7 +98,7 @@ export class AssetActivityQuery {
     let cursor: string | undefined;
     const visited = new Set<string>();
     do {
-      input.signal?.throwIfAborted();
+      assertReadActive(input.signal);
       const page = await this.execute({ ...input, view: 'all', limit: 100, cursor });
       const entry = page.entries.find((entry) => entry.id === input.activityId);
       if (entry) return entry;

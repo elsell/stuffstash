@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config';
 const support = (file: string) => fileURLToPath(new URL(`./src/test-support/${file}`, import.meta.url));
 
 export default defineConfig({
+  test: { setupFiles: ['./native-runtime.setup.ts'] },
   resolve: {
     alias: [
       { find: /^expo-network$/, replacement: support('expo-network.ts') },

@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import { ReadPageGuard } from '../shared/ReadPageGuard';
 import type {
   Asset,
@@ -547,9 +548,9 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const guard = new ReadPageGuard();
 
     do {
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       const page = await this.client.listCheckedOutAssets(tenantID, inventoryID, 10, cursor, signal);
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       checkedOutAssets.push(...page.items);
       cursor = guard.accept(page.pagination.nextCursor, page.pagination.hasMore);
     } while (cursor && checkedOutAssets.length < 10);
@@ -567,9 +568,9 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const guard = new ReadPageGuard();
 
     do {
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       const page = await this.client.listAssetTags(tenantID, inventoryID, 100, cursor, signal);
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       tags.push(...page.items);
       cursor = guard.accept(page.pagination.nextCursor, page.pagination.hasMore);
     } while (cursor);

@@ -27,7 +27,7 @@ This matrix tracks implementation against `mobile-server-state.spec.md`. A migra
 
 ## Verified Source Checks
 
-- Final source pass: mobile/API-client TypeScript checks, 159 mobile test files / 1052 tests and 34 API-client tests pass; mobile structural, script and dependency-age checks pass. This is source evidence, not a native build or end-to-end device check.
+- Final source pass: mobile/API-client TypeScript checks, 160 mobile test files / 1055 tests and 34 API-client tests pass; mobile structural, script and dependency-age checks pass. This is source evidence, not a native build or end-to-end device check.
 - `AssetCoreQuery.test.ts`, `AssetContentsQuery.test.ts`, `AssetPhotosQuery.test.ts`, and `ApiInventoryDetail.test.ts` cover the focused detail graph.
 - `fetchMobileInventoryServerQuery.test.ts` uses a real QueryObserver to prove one post-mutation request, joining active work and reusing completed fresh work.
 - `QueryClientInventoryMutationObserver.test.ts` covers parent reconciliation without cached child core and unaffected inventory/composition caches.
@@ -40,3 +40,13 @@ PR #44 owns build validation; no local application or native builds are permitte
 Map still needs the complete active containment tree. Uncached direct activity links still scan cursor pages because the current API has no direct event lookup. Cross-page Browse breadcrumbs can repeat ancestor GETs; filtering and traversal have scan/cycle/cancellation guards, not an invented server contract. Legacy workspace compatibility methods remain outside the live focused screen graph.
 
 Authoritative access failures discard the failed query's data; later failed retries cannot reveal it again. Mounted tests cover shared resources, Browse and History, recovery of failed scope discovery, and explicit context retry. Secrets and unsaved drafts remain owned by their workflows.
+
+## Native Runtime Follow-up
+
+The 0.16.3 device run exposed an unsupported `AbortSignal.throwIfAborted` call
+that Node-based source tests had accepted. This blocked shared scope discovery,
+Home and voice context. The fix uses a portable cancellation helper, runs the
+mobile suite with React Native's actual bundled AbortController, and adds a
+mounted native discovery/read regression plus a structural prohibition on the
+unsupported method. All 1055 mobile tests pass; replacement native release
+validation remains in CI.

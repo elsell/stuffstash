@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { Inventory, Page, StuffStashClient, Tenant } from '@stuff-stash/api-client';
 import { SelectedInventoryUnavailableError } from '../../application/shared/SelectedInventoryUnavailableError';
 
@@ -18,7 +19,7 @@ export class ApiInventoryDirectory {
 
   async selected(signal?: AbortSignal): Promise<SelectedInventory> {
     const directory = await this.load(signal);
-    signal?.throwIfAborted();
+    assertReadActive(signal);
     const selected = this.selectedId
       ? directory.availableInventories.find(item => item.inventory.id === this.selectedId)
       : directory.availableInventories.find(item => item.tenant.id === this.configuredTenantId) ?? directory.availableInventories[0];
@@ -39,13 +40,13 @@ export class ApiInventoryDirectory {
   }
 
   load(signal?: AbortSignal, refresh = false): Promise<InventoryDirectory> {
-    signal?.throwIfAborted();
+    assertReadActive(signal);
     if (refresh) this.cached = undefined;
     if (this.cached && this.cached.expiresAt > this.now()) return Promise.resolve(this.cached.value);
     if (!this.pending) {
       const controller = new AbortController();
       const pending: PendingDirectory = { controller, consumers: 0, promise: this.fetch(controller.signal).then(value => {
-        controller.signal.throwIfAborted();
+        assertReadActive(controller.signal);
         if (this.pending === pending) this.cached = { value, expiresAt: this.now() + directoryRetentionMs };
         return value;
       }).finally(() => { if (this.pending === pending) this.pending = undefined; }) };
@@ -85,9 +86,9 @@ export class ApiInventoryDirectory {
 async function collectPages<T>(read: (cursor?: string) => Promise<Page<T>>, signal: AbortSignal): Promise<T[]> {
   const rows: T[] = []; const cursors = new Set<string>(); let cursor: string | undefined;
   for (let count = 0; count < maxDirectoryPages; count++) {
-    signal.throwIfAborted();
+    assertReadActive(signal);
     const page = await read(cursor);
-    signal.throwIfAborted();
+    assertReadActive(signal);
     rows.push(...page.items);
     cursor = page.pagination.nextCursor ?? undefined;
     if (!cursor) return rows;
