@@ -32,16 +32,11 @@ ancestor hydration. These are investigation findings, not measured production
 attribution. See `specs/search/search.spec.md`. Keep all builds in CI on this
 disk-constrained host. Resume the authenticated detail-photo benchmark afterward.
 
-The immediate mobile follow-up is shipping the native cancellation compatibility
-fix exposed by the 0.16.3 device run, together with the export-compliance declaration.
-All 1055 source tests now use React Native’s actual AbortController. PR CI and
-replacement TestFlight validation are the next gates for
-`specs/platform/mobile-server-state.spec.md`: focused ports, composition-scoped
-TanStack Query identity, request cancellation, mutation reconciliation, bounded
-surface request graphs, native progressive loading, and request-count evidence.
-Track route coverage and remaining verification in
-`specs/platform/mobile-server-state-audit.spec.md`. Run build checks in PR CI;
-the local host is disk constrained and must not run builds.
+The native cancellation and export-compliance fixes shipped in 0.16.4. The current
+search work uses compact authorized API paths to remove mobile ancestor HTTP
+waterfalls and bounds candidate hydration behind the search repository. Baseline
+and follow-up measurements live in `specs/search/search-latency.spec.md`; final
+CI evidence is pending. Keep all builds in CI on this disk-constrained host.
 The first native GitHub Actions TestFlight path is operational and has installed a
 working signed build on a physical device; distribution remains a release gate,
 not the current implementation bottleneck.

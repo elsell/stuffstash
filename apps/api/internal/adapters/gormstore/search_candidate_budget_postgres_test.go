@@ -110,4 +110,41 @@ func TestPostgresSearchBoundsCandidateHydration(t *testing.T) {
 		t.Fatalf("inventory candidate scope escaped: %+v, %v", items, err)
 	}
 
+	// Type and tag subqueries must discover metadata-only matches as well.
+	typeID, tagID := searchBenchmarkID(10000, 70000), searchBenchmarkID(10000, 70001)
+	if err := db.Create(&customAssetTypeModel{ID: typeID, TenantID: tenantID.String(), Scope: "tenant", CursorKey: typeID, TypeKey: "calibration", DisplayName: "Calibration equipment", Description: "Metrology reference", LifecycleState: "active"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	targetID := searchBenchmarkID(10000, 6)
+	if err := db.Model(&assetModel{}).Where(&assetModel{ID: targetID, TenantID: tenantID.String()}).Update("custom_asset_type_id", typeID).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&assetTagModel{ID: tagID, TenantID: tenantID.String(), InventoryID: inventoryID.String(), Key: "inspected", DisplayName: "Inspection completed", LifecycleState: "active"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&assetTagAssignmentModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: targetID, TagID: tagID}).Error; err != nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{"calibration", "Calibration equipment", "Metrology reference", "inspected", "Inspection completed", "INDIGO"} {
+		query, _ := search.NewQuery(text)
+		items, err := store.SearchAssets(context.Background(), tenantID, []inventory.InventoryID{inventoryID}, ports.AssetSearchPageRequest{Query: query, Mode: search.ModeExact, Limit: 20})
+		expectedID := targetID
+		if text == "INDIGO" {
+			expectedID = searchBenchmarkID(10000, 4)
+		}
+		if err != nil || len(items) != 1 || items[0].Asset.ID.String() != expectedID {
+			t.Fatalf("exact metadata query %q lost match: %+v, %v", text, items, err)
+		}
+	}
+	if err := db.Model(&assetTagModel{}).Where(&assetTagModel{ID: tagID, TenantID: tenantID.String()}).Update("lifecycle_state", "archived").Error; err != nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{"inspected", "Inventory"} {
+		query, _ := search.NewQuery(text)
+		items, err := store.SearchAssets(context.Background(), tenantID, []inventory.InventoryID{inventoryID}, ports.AssetSearchPageRequest{Query: query, Mode: search.ModeExact, Limit: 20})
+		if err != nil || len(items) != 0 {
+			t.Fatalf("query %q accepted a non-match or archived tag: %+v, %v", text, items, err)
+		}
+	}
+
 }

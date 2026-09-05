@@ -94,7 +94,7 @@ func seedSearchBenchmark(b testing.TB, db *gorm.DB, volume int) (tenant.ID, inve
 		b.Fatal(err)
 	}
 	b.Cleanup(func() {
-		for _, model := range []any{&attachmentModel{}, &assetModel{}, &inventoryModel{}} {
+		for _, model := range []any{&assetTagAssignmentModel{}, &assetTagModel{}, &attachmentModel{}, &assetModel{}, &customAssetTypeModel{}, &inventoryModel{}} {
 			if err := db.Where(map[string]any{"tenant_id": tenantID.String()}).Delete(model).Error; err != nil {
 				b.Error(err)
 			}

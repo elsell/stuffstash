@@ -109,3 +109,15 @@ justify retaining bounded hydration, but selective/empty cost remains high.
 The next measurement separates indexed and conservative candidate branches with
 UNION ALL. The earlier query-event counter included dry-run subquery compilation;
 subsequent measurements exclude it to report executed queries accurately.
+
+## Benchmark execution bounds
+
+Go stops its test alarm before benchmarking, so CI must enforce a separate
+diagnostic QUIT signal at eight minutes, forced termination after another 30
+seconds, and a 12-minute job limit. Standard error is included in the retained
+benchmark output. PostgreSQL benchmark sessions
+have a 10-second statement timeout, tests have a 4-minute timeout, and verbose
+output identifies the test/benchmark phase. Always retain completed output.
+The Go cache uses the actual `apps/api/go.sum` rather than a nonexistent root
+manifest. Run 33944443098 was stopped after over ten minutes without measurement
+output; its ordinary checks passed, but no performance result is claimed from it.

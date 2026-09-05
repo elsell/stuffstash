@@ -26,6 +26,7 @@ env:
 jobs:
   search-benchmark:
     name: Search PostgreSQL benchmark
+    timeout-minutes: 12
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -46,12 +47,13 @@ jobs:
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: apps/api/go.sum
       - name: Measure search repository
         env:
-          STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable
+          STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000
         run: |
           set -o pipefail
-          go test ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search)' -bench '^BenchmarkPostgresSearch' -benchtime=5x -count=3 -benchmem | tee search-benchmark.txt
+          timeout --signal=QUIT --kill-after=30s 8m go test -v -timeout=4m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search)' -bench '^BenchmarkPostgresSearch' -benchtime=5x -count=3 -benchmem 2>&1 | tee search-benchmark.txt
       - name: Retain search measurements
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -87,6 +89,7 @@ jobs:
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: apps/api/go.sum
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
