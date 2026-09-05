@@ -15,6 +15,11 @@ func TestVoiceProviderConfigurationRepositorySavesReadsAndScopesByTenant(t *test
 
 	ctx := context.Background()
 	store := newTestStore(t, ctx)
+	verifyVoiceConfigurationRoundTrip(t, ctx, store)
+}
+
+func verifyVoiceConfigurationRoundTrip(t *testing.T, ctx context.Context, store Store) {
+	t.Helper()
 	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
 	saveTenant(t, ctx, store, tenant.ID("tenant-other"), "Other")
 
@@ -61,6 +66,11 @@ func TestVoiceProviderConfigurationRepositoryRollsBackOnAuditFailure(t *testing.
 
 	ctx := context.Background()
 	store := newTestStore(t, ctx)
+	verifyVoiceConfigurationAuditRollback(t, ctx, store)
+}
+
+func verifyVoiceConfigurationAuditRollback(t *testing.T, ctx context.Context, store Store) {
+	t.Helper()
 	saveTenant(t, ctx, store, tenant.ID("tenant-home"), "Home")
 
 	auditID := "audit-voice-config"
