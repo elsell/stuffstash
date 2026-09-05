@@ -111,6 +111,14 @@ jobs:
         if: always()
         run: make api-client-generate
 
+      - name: Retain compiled web preview
+        if: ${{ !cancelled() && hashFiles('apps/web/build/index.html') != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: compiled-web-preview
+          path: apps/web/build
+          retention-days: 7
+
       - name: Upload generated API contract
         if: ${{ always() && steps.contract.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -148,6 +156,35 @@ jobs:
           tar -xzf selfhost-runtime-dist/stuffstash-selfhost.tar.gz -C selfhost-runtime-dist/extracted
           SELFHOST_RUNTIME_ROOT="$PWD/selfhost-runtime-dist/extracted/stuffstash-selfhost" \
             scripts/verify-selfhost-runtime.sh
+
+  conversation-browser:
+    name: Conversation browser journey
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install pinned browser
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - name: Exercise conversation settings
+        run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts
+      - name: Retain browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: conversation-browser-evidence
+          path: apps/web/test-results
+          retention-days: 7
 
   ios-dependency-lock:
     name: iOS dependency lock
