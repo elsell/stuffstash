@@ -1,5 +1,9 @@
 # Mobile Realtime Voice Query Spec
 
+## Conversation quality revision
+
+`voice-conversation-quality.spec.md` defines the current acceptance requirements for semantic discovery, grounded response fallback, recovery and ordinary conversation continuity. It supersedes conflicting earlier slice restrictions below.
+
 ## Purpose
 
 Stuff Stash needs a first production-shaped mobile voice slice that proves the core conversational loop with real audio input, speech-to-text, language inference, typed inventory reads, structured terminal outcomes, text-to-speech, and streamed audio playback.

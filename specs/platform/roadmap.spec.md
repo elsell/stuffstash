@@ -23,14 +23,7 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-Prioritize measured search latency improvements across mobile and the API following
-the 0.16.4 device test. Establish separate API and mobile hydration baselines,
-then remove confirmed bottlenecks while preserving matching, authorization,
-pagination, and TanStack cache ownership. The current persistence adapter scans
-candidate assets and related metadata per request; mobile search also waits for
-ancestor hydration. These are investigation findings, not measured production
-attribution. See `specs/search/search.spec.md`. Keep all builds in CI on this
-disk-constrained host. Resume the authenticated detail-photo benchmark afterward.
+Prioritize voice conversation quality after the 0.16.6 provider deployment: semantic/tag discovery, correct existing-item intent, grounded fallback, useful recovery, follow-up continuity and measured responsiveness. Follow `specs/agent-model/voice-conversation-quality.spec.md` through failing regression tests, live ADC-backed evaluation, code review, TestFlight publication and infra GitOps rollout. Search optimization shipped; retain its bounded candidate-loading and TanStack behavior. All builds remain in CI. The detail-photo benchmark remains follow-up work.
 
 The native cancellation and export-compliance fixes shipped in 0.16.4. The current
 search work uses compact authorized API paths to remove mobile ancestor HTTP
