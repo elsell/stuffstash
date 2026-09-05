@@ -177,6 +177,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/conversation-evaluation-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation runs */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-runs"];
+        put?: never;
+        /** Post tenants by tenant ID conversation evaluation runs */
+        post: operations["post-tenants-by-tenant-id-conversation-evaluation-runs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation runs by run ID */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-runs/{runId}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID conversation evaluation runs by run ID cancellation */
+        post: operations["post-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id-cancellation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/conversation-workflows": {
         parameters: {
             query?: never;
@@ -1890,6 +1942,115 @@ export interface components {
             /** Format: int64 */
             number: number;
         };
+        EvaluationRun: {
+            authorId: string;
+            cases: components["schemas"]["EvaluationRunPinnedCase"][] | null;
+            /** Format: int64 */
+            completedCases: number;
+            /** @enum {string} */
+            coverage: "text_only";
+            /** Format: date-time */
+            createdAt: string;
+            failureCode?: string;
+            /** Format: date-time */
+            finishedAt: string | null;
+            id: string;
+            /** Format: int64 */
+            passedCases: number;
+            providers: components["schemas"]["EvaluationRunProvider"][] | null;
+            results: components["schemas"]["EvaluationRunResult"][] | null;
+            revisionId: string;
+            /** Format: date-time */
+            startedAt: string | null;
+            state: string;
+            /** Format: int64 */
+            totalCases: number;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+            workflowId: string;
+        };
+        EvaluationRunCancellationBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EvaluationRunCancellationBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            expectedVersion: number;
+        };
+        EvaluationRunCaseReference: {
+            caseId: string;
+            revisionId: string;
+        };
+        EvaluationRunFailure: {
+            code: string;
+            fixtureId?: string;
+            operation?: string;
+        };
+        EvaluationRunHead: {
+            /** Format: int64 */
+            completedCases: number;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** Format: int64 */
+            passedCases: number;
+            revisionId: string;
+            state: string;
+            /** Format: int64 */
+            totalCases: number;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+            workflowId: string;
+        };
+        EvaluationRunObservation: {
+            executedOperations: string[] | null;
+            kind: string;
+            locations: components["schemas"]["EvaluationCaseLocation"][] | null;
+            proposals: components["schemas"]["EvaluationCaseProposal"][] | null;
+            referencedAssets: string[] | null;
+        };
+        EvaluationRunPinnedCase: {
+            caseId: string;
+            revisionId: string;
+            title: string;
+        };
+        EvaluationRunProvider: {
+            configurationId: string;
+            profileId: string;
+            step: string;
+        };
+        EvaluationRunQueueBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EvaluationRunQueueBody.json
+             */
+            readonly $schema?: string;
+            cases: components["schemas"]["EvaluationRunCaseReference"][] | null;
+            revisionId: string;
+            workflowId: string;
+        };
+        EvaluationRunResult: {
+            caseRevisionId: string;
+            /** Format: date-time */
+            completedAt: string;
+            /** Format: double */
+            durationMilliseconds: number;
+            /** Format: int64 */
+            modelCalls: number;
+            observation: components["schemas"]["EvaluationRunObservation"];
+            verdict: components["schemas"]["EvaluationRunVerdict"];
+        };
+        EvaluationRunVerdict: {
+            failures: components["schemas"]["EvaluationRunFailure"][] | null;
+            passed: boolean;
+        };
         GrantBody: {
             /**
              * Format: uri
@@ -2385,6 +2546,16 @@ export interface components {
             data: components["schemas"]["EvaluationCaseRevision"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeEvaluationRun: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeEvaluationRun.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationRun"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeGrantResponse: {
             /**
              * Format: uri
@@ -2553,6 +2724,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["EvaluationCaseHead"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListEvaluationRunHead: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListEvaluationRunHead.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationRunHead"][] | null;
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListGrantResponse: {
@@ -3344,6 +3525,155 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-runs": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListEvaluationRunHead"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-evaluation-runs": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRunQueueBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationRun"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationRun"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id-cancellation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRunCancellationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationRun"];
                 };
             };
             /** @description Error */
