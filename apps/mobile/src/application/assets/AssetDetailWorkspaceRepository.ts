@@ -1,5 +1,6 @@
 import type { AssetSummary } from '../../domain/assets/AssetSummary';
 import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
+import type { ReadRequest } from '../shared/ReadRequest';
 
 export type AssetDetailWorkspaceSnapshot = {
   readonly tenantId: TenantId;
@@ -11,6 +12,7 @@ export type AssetDetailWorkspaceSnapshot = {
 
 export interface AssetDetailWorkspaceRepository {
   getAssetDetailWorkspace(
-    assetId: AssetSummary['id']
+    assetId: AssetSummary['id'],
+    request?: ReadRequest
   ): Promise<AssetDetailWorkspaceSnapshot | undefined>;
 }

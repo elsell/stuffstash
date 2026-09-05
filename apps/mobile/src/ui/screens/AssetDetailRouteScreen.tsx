@@ -19,7 +19,9 @@ import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCo
 import { UndoAssetEditCommand } from '../../application/assets/UndoAssetEditCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
-import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
+import { AssetCoreQuery, assetContentsIdentity } from '../../application/assets/AssetCoreQuery';
+import { AssetContentsQuery } from '../../application/assets/AssetContentsQuery';
+import { AssetPhotosQuery } from '../../application/assets/AssetPhotosQuery';
 import {
   PhotoSelectionQuery,
   SelectedAssetPhoto
@@ -64,14 +66,19 @@ import {
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { mergeProgressiveAssetDetail } from './AssetDetailProgressivePresentation';
 
 type AssetDetailRouteScreenProps = {
-  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetCheckoutCommand: AssetCheckoutCommand;
-  readonly assetLifecycleCommand: AssetLifecycleCommand;
-  readonly undoAssetEditCommand: UndoAssetEditCommand;
-  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
+  readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
+  readonly assetCoreQuery: Pick<AssetCoreQuery, 'execute'>;
+  readonly assetContentsQuery: Pick<AssetContentsQuery, 'execute'>;
+  readonly assetPhotosQuery: Pick<AssetPhotosQuery, 'execute'>;
+  readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
+  readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
+  readonly undoAssetEditCommand: Pick<UndoAssetEditCommand, 'execute'>;
+  readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly assetId: string;
 };
@@ -88,7 +95,9 @@ type PhotoUploadRow = AssetPhotoUploadProgressViewModel;
 export function AssetDetailRouteScreen({
   addAssetPhotosCommand,
   assetCheckoutCommand,
-  assetDetailQuery,
+  assetContentsQuery,
+  assetCoreQuery,
+  assetPhotosQuery,
   assetLifecycleCommand,
   undoAssetEditCommand,
   assetId,
@@ -98,7 +107,44 @@ export function AssetDetailRouteScreen({
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
   const feedback = useAppFeedback();
-  const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
+  const coreAsset = useMobileInventoryServerQuery({
+    key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.assetCore(
+      scopeId,
+      tenantId,
+      inventoryId,
+      assetId
+    ),
+    query: (signal) => assetCoreQuery.execute(assetId, { signal })
+  });
+  const assetContents = useMobileInventoryServerQuery({
+    key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.assetContents(
+      scopeId,
+      tenantId,
+      inventoryId,
+      assetId,
+      coreAsset.data ? assetContentsIdentity(coreAsset.data.snapshot) : 'pending'
+    ),
+    query: (signal) => assetContentsQuery.execute(coreAsset.data!.snapshot, { signal }),
+    enabled: coreAsset.isSuccess && Boolean(coreAsset.data)
+  });
+  const assetPhotos = useMobileInventoryServerQuery({
+    key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.assetPhotos(
+      scopeId,
+      tenantId,
+      inventoryId,
+      assetId
+    ),
+    query: (signal) => assetPhotosQuery.execute(coreAsset.data!.snapshot, { signal }),
+    enabled: coreAsset.isSuccess && Boolean(coreAsset.data)
+  });
+  const screenState: ScreenState = coreAsset.data
+    ? {
+        status: 'ready',
+        asset: mergeProgressiveAssetDetail(coreAsset.data.view, assetContents.data, assetPhotos.data)
+      }
+    : coreAsset.isError
+      ? { status: 'error', ...assetDetailLoadErrorPresentation(coreAsset.error) }
+      : { status: 'loading' };
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
@@ -108,61 +154,65 @@ export function AssetDetailRouteScreen({
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
 
   useEffect(() => {
-    setSelectedPhotoId(undefined);
-  }, [assetId]);
-
-  useFocusEffect(useCallback(() => {
-    let isCurrent = true;
     setPhotoUploads([]);
     setPhotoStatus(undefined);
     setWorkspaceStatus(undefined);
     setSelectedPhotoId(undefined);
+  }, [assetId]);
 
-    assetDetailQuery
-      .execute(assetId)
-      .then((asset) => {
-        if (isCurrent) {
-          setScreenState({ status: 'ready', asset });
-          const completion = consumeAssetActionCompletion(assetId);
-          if (completion) {
-            if (completion.action === 'edit') {
-              feedback.showNotice({
-                tone: 'success',
-                title: `Saved "${asset.title}"`,
-                message: 'The change is now in History.',
-                ...(completion.undoableOperationId ? {
-                  action: {
-                    label: 'Undo',
-                    onPress: () => void undoSavedEdit({
-                      operationId: completion.undoableOperationId!,
-                      tenantId: asset.tenantId ?? '',
-                      inventoryId: asset.inventoryId ?? '',
-                      title: asset.title
-                    })
-                  }
-                } : {})
-              });
-            } else {
-              setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
-            }
+  useFocusEffect(useCallback(() => {
+    const asset = screenState.status === 'ready'
+      ? screenState.asset
+      : coreAsset.data?.view;
+    if (!asset) return;
+    const completion = consumeAssetActionCompletion(assetId);
+    if (!completion) return;
+    if (completion.action === 'edit') {
+      feedback.showNotice({
+        tone: 'success',
+        title: `Saved "${asset.title}"`,
+        message: 'The change is now in History.',
+        ...(completion.undoableOperationId ? {
+          action: {
+            label: 'Undo',
+            onPress: () => void undoSavedEdit({
+              operationId: completion.undoableOperationId!,
+              tenantId: asset.tenantId ?? '',
+              inventoryId: asset.inventoryId ?? '',
+              title: asset.title
+            })
           }
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setScreenState({ status: 'error', ...assetDetailLoadErrorPresentation(error) });
-        }
+        } : {})
       });
+      return;
+    }
+    setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
+  }, [assetId, coreAsset.data, feedback, screenState, undoAssetEditCommand]));
 
-    return () => {
-      isCurrent = false;
-    };
-  }, [assetDetailQuery, assetId, feedback, undoAssetEditCommand]));
+  useEffect(() => {
+    if (coreAsset.data && assetContents.isError) {
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Asset contents could not load',
+        message: 'The asset is available, but its location or contents may be incomplete. Pull to refresh.'
+      });
+    }
+  }, [assetContents.data, assetContents.error, assetContents.isError, coreAsset.data, feedback]);
+
+  useEffect(() => {
+    if (coreAsset.data && assetPhotos.isError) {
+      feedback.showNotice({
+        tone: 'error',
+        title: 'Asset photos could not load',
+        message: 'The asset and its contents are still available. Pull to refresh photos.'
+      });
+    }
+  }, [assetPhotos.data, assetPhotos.error, assetPhotos.isError, coreAsset.data, feedback]);
 
   async function undoSavedEdit(input: { readonly tenantId: string; readonly inventoryId: string; readonly operationId: string; readonly title: string }): Promise<void> {
     try {
       await undoAssetEditCommand.execute(input);
-      await reloadAsset();
+      await coreAsset.reconcile();
       feedback.showNotice({ tone: 'success', title: 'Edit undone', message: 'The previous values were reapplied.' });
     } catch (error) {
       feedback.showNotice({ tone: 'error', title: 'Could not undo edit', message: readableError(error, 'Undo failed.') });
@@ -197,19 +247,25 @@ export function AssetDetailRouteScreen({
     }
   }
 
-  async function reloadAsset(): Promise<AssetDetailViewModel> {
-    const asset = await assetDetailQuery.execute(assetId);
-    setScreenState({ status: 'ready', asset });
-    return asset;
+  async function reloadAsset(): Promise<void> {
+    const previousContentsIdentity = coreAsset.data
+      ? assetContentsIdentity(coreAsset.data.snapshot)
+      : undefined;
+    const coreResult = await coreAsset.refetch({ throwOnError: true, cancelRefetch: false });
+    if (!coreResult.data) {
+      throw new Error('Asset could not be loaded.');
+    }
+    await Promise.all([
+      assetPhotos.refetch({ cancelRefetch: false, throwOnError: true }),
+      ...(assetContentsIdentity(coreResult.data.snapshot) === previousContentsIdentity
+        ? [assetContents.refetch({ cancelRefetch: false, throwOnError: true })]
+        : [])
+    ]);
   }
 
   async function retryLoad(): Promise<void> {
-    setScreenState({ status: 'loading' });
-    try {
-      await reloadAsset();
-    } catch (error) {
-      setScreenState({ status: 'error', ...assetDetailLoadErrorPresentation(error) });
-    }
+    // Query state owns initial error and retry presentation.
+    await coreAsset.refetch({ cancelRefetch: false });
   }
 
   function choosePhotos(currentPhotoCount: number): void {
@@ -241,7 +297,7 @@ export function AssetDetailRouteScreen({
       });
       setPhotoStatus(result);
       setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
-      await reloadAsset();
+      await assetPhotos.reconcile();
       if (result.failedCount === 0) {
         setPhotoUploads([]);
       }
@@ -272,7 +328,7 @@ export function AssetDetailRouteScreen({
       });
       setPhotoStatus(result);
       setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
-      await reloadAsset();
+      await assetPhotos.reconcile();
       if (result.failedCount === 0) {
         setPhotoUploads([]);
       }
@@ -301,7 +357,7 @@ export function AssetDetailRouteScreen({
       setFailedPhotoDrafts([]);
       setSelectedPhotoId(undefined);
       setPhotoUploads([]);
-      await reloadAsset();
+      await assetPhotos.reconcile();
     } catch (error) {
       feedback.showNotice({
         tone: 'error',
@@ -359,8 +415,16 @@ export function AssetDetailRouteScreen({
         return;
       }
 
-      await reloadAsset();
       setWorkspaceStatus(assetWorkspaceSuccessStatus(action, asset));
+      try {
+        await coreAsset.reconcile();
+      } catch {
+        feedback.showNotice({
+          tone: 'error',
+          title: `${action === 'archive' ? 'Archive' : 'Restore'} succeeded`,
+          message: 'The latest asset state could not be refreshed yet. Pull to refresh.'
+        });
+      }
     } catch (error) {
       const failure = assetLifecycleFailurePresentation(
         action,
@@ -383,8 +447,16 @@ export function AssetDetailRouteScreen({
 
     try {
       await assetCheckoutCommand.execute({ action, assetId });
-      await reloadAsset();
       setWorkspaceStatus(assetWorkspaceSuccessStatus(action, asset));
+      try {
+        await coreAsset.reconcile();
+      } catch {
+        feedback.showNotice({
+          tone: 'error',
+          title: action === 'checkout' ? 'Checkout succeeded' : 'Return succeeded',
+          message: 'The latest availability could not be refreshed yet. Pull to refresh.'
+        });
+      }
     } catch (error) {
       feedback.showNotice({
         tone: 'error',
@@ -438,6 +510,8 @@ export function AssetDetailRouteScreen({
             asset={screenState.asset}
             canRetryPhotos={photoStatus?.canRetry}
             isActionPending={pendingAction !== undefined}
+            isContentsLoading={!assetContents.data && assetContents.isPending}
+            isPhotosLoading={!assetPhotos.data && assetPhotos.isPending}
             onAddHere={screenState.asset.canAddContainedAssets ? () => router.push({
               pathname: '/add',
               params: addHereParams(screenState.asset)

@@ -24,6 +24,8 @@ import {
   UpdateInventoryAssetInput
 } from '../../application/home/InventorySummaryRepository';
 import type { InventoryMapAssetRepository } from '../../application/assets/InventoryMapQuery';
+import type { AssetCoreSnapshot } from '../../application/assets/AssetCoreQuery';
+import type { AssetContentsSnapshot } from '../../application/assets/AssetContentsQuery';
 import type { InventoryAssetsSnapshot } from '../../application/assets/InventoryAssetsQuery';
 import type {
   AssetDetailWorkspaceRepository,
@@ -427,9 +429,92 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return tags.map(mapAssetTag);
   }
 
-  async getAssetDetail(input: GetInventoryAssetDetailInput): Promise<AssetSummary> {
+  async getAssetCore(
+    selectedAssetId: AssetSummary['id'],
+    request: ReadRequest = {}
+  ): Promise<AssetCoreSnapshot> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    const asset = await this.client.getAsset(
+      selected.tenant.id,
+      selected.inventory.id,
+      selectedAssetId,
+      request.signal
+    );
+    return {
+      tenantId: tenantId(selected.tenant.id),
+      inventoryId: inventoryId(selected.inventory.id),
+      permissions: selected.inventory.access.permissions,
+      revision: asset.updatedAt,
+      asset: mapAsset(selected.inventory.name, asset, [asset])
+    };
+  }
+
+  async getAssetContents(
+    core: AssetCoreSnapshot,
+    request: ReadRequest = {}
+  ): Promise<AssetContentsSnapshot> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    if (
+      tenantId(selected.tenant.id) !== core.tenantId
+      || inventoryId(selected.inventory.id) !== core.inventoryId
+    ) {
+      throw new Error('Asset scope no longer matches the selected inventory.');
+    }
+    const sourceAsset = summaryToApiAsset(core.tenantId, core.inventoryId, core.asset);
+    const isActiveContainableAsset = sourceAsset.lifecycleState === 'active'
+      && (sourceAsset.kind === 'location' || sourceAsset.kind === 'container');
+    if (!isActiveContainableAsset) {
+      const ancestors = await this.loadAssetAncestors(sourceAsset, request.signal);
+      return {
+        asset: mapAsset(selected.inventory.name, sourceAsset, [...ancestors, sourceAsset]),
+        allAssets: []
+      };
+    }
+
+    const activeAssets = await this.listAllActiveInventoryAssets(
+      selected.tenant.id,
+      selected.inventory.id,
+      request.signal
+    );
+    const selectedFromTraversal = activeAssets.find((asset) => asset.id === sourceAsset.id) ?? sourceAsset;
+    const workspace = selectAssetDetailWorkspace(selectedFromTraversal, activeAssets);
+    const assets = await this.mapAssetsWithMapPhotos(
+      selected.inventory.name,
+      workspace.assets,
+      activeAssets,
+      new Set(workspace.assets.filter((asset) => asset.id !== core.asset.id).map((asset) => asset.id))
+    );
+    const asset = assets.find((candidate) => candidate.id === core.asset.id);
+    if (!asset) {
+      throw new Error('Asset is not available in the selected inventory.');
+    }
+    return { asset, allAssets: assets };
+  }
+
+  async getAssetPhotos(
+    core: AssetCoreSnapshot,
+    request: ReadRequest = {}
+  ): Promise<AssetSummary['photos']> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    if (
+      tenantId(selected.tenant.id) !== core.tenantId
+      || inventoryId(selected.inventory.id) !== core.inventoryId
+    ) {
+      throw new Error('Asset scope no longer matches the selected inventory.');
+    }
+    const asset = summaryToApiAsset(core.tenantId, core.inventoryId, core.asset);
+    return this.photosForAsset(asset, {
+      allowAttachmentListFailure: false,
+      signal: request.signal
+    });
+  }
+
+  async getAssetDetail(input: GetInventoryAssetDetailInput, request: ReadRequest = {}): Promise<AssetSummary> {
     const asset = summaryToApiAsset(input.tenantId, input.inventoryId, input.asset);
-    const photos = await this.photosForAsset(asset, { allowAttachmentListFailure: false });
+    const photos = await this.photosForAsset(asset, {
+      allowAttachmentListFailure: false,
+      signal: request.signal
+    });
 
     return {
       ...input.asset,
@@ -471,7 +556,13 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       parentAssetId: input.parentAssetId,
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
-    this.observeMutation('asset_created', inventory.tenantId, inventory.id, asset.id);
+    this.observeMutation(
+      'asset_created',
+      inventory.tenantId,
+      inventory.id,
+      asset.id,
+      ancestorTrail(asset, currentPlacementAssets).map((ancestor) => ancestor.id)
+    );
 
     const placementAssets = placementAssetsWithSelectedOverrides(
       currentPlacementAssets,
@@ -500,7 +591,17 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {}),
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
-    this.observeMutation('asset_updated', inventory.tenantId, inventory.id, asset.id);
+    const previous = placementAssets.find((candidate) => candidate.id === asset.id);
+    this.observeMutation(
+      'asset_updated',
+      inventory.tenantId,
+      inventory.id,
+      asset.id,
+      [
+        ...(previous ? ancestorTrail(previous, placementAssets) : []),
+        ...ancestorTrail(asset, placementAssets)
+      ].map((ancestor) => ancestor.id)
+    );
 
     const knownAssets = placementAssetsWithSelectedOverrides(
       placementAssets,
@@ -656,18 +757,20 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   }
 
   async getAssetDetailWorkspace(
-    selectedAssetId: AssetSummary['id']
+    selectedAssetId: AssetSummary['id'],
+    request: ReadRequest = {}
   ): Promise<AssetDetailWorkspaceSnapshot | undefined> {
-    const inventory = await this.getSelectedInventoryIdentity();
+    const inventory = await this.getSelectedInventoryIdentity(request.signal);
     const selectedAsset = await this.client.getAsset(
       inventory.tenant.id,
       inventory.inventory.id,
-      selectedAssetId
+      selectedAssetId,
+      request.signal
     );
     const isActiveContainableAsset = selectedAsset.lifecycleState === 'active'
       && (selectedAsset.kind === 'location' || selectedAsset.kind === 'container');
     if (!isActiveContainableAsset) {
-      const ancestors = await this.loadAssetAncestors(selectedAsset);
+      const ancestors = await this.loadAssetAncestors(selectedAsset, request.signal);
       const mapped = await this.mapAssetsWithMapPhotos(
         inventory.inventory.name,
         [selectedAsset],
@@ -684,7 +787,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     }
     const activeAssets = await this.listAllActiveInventoryAssets(
       tenantId(inventory.tenant.id),
-      inventory.inventory.id
+      inventory.inventory.id,
+      request.signal
     );
     const selectedFromTraversal = activeAssets.find((asset) => asset.id === selectedAssetId) ?? selectedAsset;
     const workspace = selectAssetDetailWorkspace(selectedFromTraversal, activeAssets);
@@ -707,13 +811,13 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     };
   }
 
-  private async loadAssetAncestors(asset: Asset): Promise<readonly Asset[]> {
+  private async loadAssetAncestors(asset: Asset, signal?: AbortSignal): Promise<readonly Asset[]> {
     const ancestors: Asset[] = [];
     const visited = new Set<string>([asset.id]);
     let parentId = asset.parentAssetId ?? undefined;
     while (parentId && !visited.has(parentId)) {
       visited.add(parentId);
-      const parent = await this.client.getAsset(asset.tenantId, asset.inventoryId, parentId);
+      const parent = await this.client.getAsset(asset.tenantId, asset.inventoryId, parentId, signal);
       ancestors.unshift(parent);
       parentId = parent.parentAssetId ?? undefined;
     }
@@ -926,13 +1030,15 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     kind: InventoryMutationKind,
     tenantID: string,
     inventoryID: string,
-    assetID?: string
+    assetID?: string,
+    relatedAssetIDs: readonly string[] = []
   ): void {
     this.mutationObserver.onInventoryMutation({
       kind,
       tenantId: tenantID,
       inventoryId: inventoryID,
-      ...(assetID ? { assetId: assetID } : {})
+      ...(assetID ? { assetId: assetID } : {}),
+      ...(relatedAssetIDs.length > 0 ? { relatedAssetIds: [...new Set(relatedAssetIDs)] } : {})
     });
   }
 
@@ -1095,7 +1201,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async photosForAsset(
     asset: Asset,
-    options: { readonly allowAttachmentListFailure?: boolean } = {}
+    options: { readonly allowAttachmentListFailure?: boolean; readonly signal?: AbortSignal } = {}
   ): Promise<readonly NonNullable<AssetSummary['photo']>[]> {
     const attachments = [];
     let cursor: string | undefined;
@@ -1107,12 +1213,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
           asset.inventoryId,
           asset.id,
           50,
-          cursor
+          cursor,
+          options.signal
         );
         attachments.push(...page.items);
         cursor = page.pagination.nextCursor ?? undefined;
       } while (cursor);
-    } catch {
+    } catch (error) {
+      if (options.signal?.aborted) {
+        throw error;
+      }
       if (options.allowAttachmentListFailure === false) {
         throw new Error('Asset attachments could not be loaded.');
       }

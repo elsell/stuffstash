@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -43,6 +44,8 @@ export type AssetPhotoUploadProgressViewModel = {
 type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending?: boolean;
+  readonly isPhotosLoading?: boolean;
+  readonly isContentsLoading?: boolean;
   readonly photoUploads?: readonly AssetPhotoUploadProgressViewModel[];
   readonly photoStatusMessage?: string;
   readonly workspaceStatusMessage?: string;
@@ -73,6 +76,8 @@ export function AssetDetailView({
   asset,
   canRetryPhotos = false,
   isActionPending = false,
+  isPhotosLoading = false,
+  isContentsLoading = false,
   onAddHere,
   onAddPhotos,
   onBack,
@@ -131,7 +136,7 @@ export function AssetDetailView({
           ) : null}
 
           <AssetDetailPhotoGallery
-            canAddPhotos={!isActionPending && asset.canAddPhotos}
+            canAddPhotos={!isActionPending && !isPhotosLoading && asset.canAddPhotos}
             contentHorizontalPadding={spacing.md}
             imagePlaceholderLabel={asset.imagePlaceholderLabel}
             onAddPhotos={onAddPhotos}
@@ -139,6 +144,8 @@ export function AssetDetailView({
             photos={asset.photos}
             palette={palette}
           />
+
+          {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}
 
           <AssetDetailIdentitySection
             asset={asset}
@@ -152,6 +159,8 @@ export function AssetDetailView({
             showAvailability={!asset.canContainAssets}
             showMaintenance={!asset.canContainAssets}
           />
+
+          {isContentsLoading ? <WorkspaceLoadingState label="Loading location and contents" /> : null}
 
           <StatusAndProgressSection
             canRetryPhotos={canRetryPhotos}
@@ -194,6 +203,23 @@ export function AssetDetailView({
         </View>
       )}
     />
+  );
+}
+
+function WorkspaceLoadingState({ label }: { readonly label: string }) {
+  const palette = useAppearanceAwarePalette();
+  const styles = createStyles(palette);
+  return (
+    <View
+      accessible
+      accessibilityLabel={label}
+      accessibilityLiveRegion="polite"
+      accessibilityRole="progressbar"
+      style={styles.workspaceLoading}
+    >
+      <ActivityIndicator color={palette.accent} size="small" />
+      <Text style={styles.workspaceLoadingText}>{label}…</Text>
+    </View>
   );
 }
 
@@ -313,6 +339,15 @@ function createStyles(palette: MobileColorPalette) {
   },
   statusSection: {
     gap: spacing.sm
+  },
+  workspaceLoading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm
+  },
+  workspaceLoadingText: {
+    color: palette.textMuted,
+    fontSize: 14
   },
   statusPanel: {
     backgroundColor: palette.brandDustyBlueSoft,

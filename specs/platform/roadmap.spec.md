@@ -27,6 +27,9 @@ The immediate mobile focus is the complete server-state and latency audit in
 `specs/platform/mobile-server-state.spec.md`: focused ports, composition-scoped
 TanStack Query identity, request cancellation, mutation reconciliation, bounded
 surface request graphs, native progressive loading, and request-count evidence.
+Track route coverage and remaining verification in
+`specs/platform/mobile-server-state-audit.spec.md`. Run build checks in PR CI;
+the local host is disk constrained and must not run builds.
 The first native GitHub Actions TestFlight path is operational and has installed a
 working signed build on a physical device; distribution remains a release gate,
 not the current implementation bottleneck.

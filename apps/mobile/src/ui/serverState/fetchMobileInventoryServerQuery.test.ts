@@ -1,8 +1,44 @@
 import { describe, expect, it } from 'vitest';
+import { QueryObserver } from '@tanstack/react-query';
+import { QueryClientInventoryMutationObserver } from '../../adapters/serverState/QueryClientInventoryMutationObserver';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { fetchMobileInventoryServerQuery } from './fetchMobileInventoryServerQuery';
 
 describe('fetchMobileInventoryServerQuery', () => {
+  it('joins active mutation reconciliation and reuses it after completion', async () => {
+    const client = createMobileQueryClient();
+    const serverState = {
+      scopeId: 'scope-one',
+      loadInventoryScope: async () => ({ tenantId: 'tenant-home', inventoryId: 'inventory-home' })
+    };
+    const key = (scope: string, tenant: string, inventory: string) =>
+      mobileQueryKeys.assetCore(scope, tenant, inventory, 'asset-one');
+    const queryKey = key('scope-one', 'tenant-home', 'inventory-home');
+    client.setQueryData(queryKey, 'available');
+    let requests = 0;
+    let aborted = false;
+    let finish!: (value: string) => void;
+    const query = (signal?: AbortSignal) => {
+      requests += 1;
+      signal?.addEventListener('abort', () => { aborted = true; });
+      return new Promise<string>((resolve) => { finish = resolve; });
+    };
+    const active = new QueryObserver(client, { queryKey, queryFn: ({ signal }) => query(signal) });
+    const unsubscribe = active.subscribe(() => undefined);
+    new QueryClientInventoryMutationObserver(client, 'scope-one').onInventoryMutation({
+      kind: 'asset_checkout_changed', tenantId: 'tenant-home', inventoryId: 'inventory-home', assetId: 'asset-one'
+    });
+    const reconcile = () => fetchMobileInventoryServerQuery({ client, serverState, key, query });
+    const pending = reconcile();
+    await Promise.resolve();
+    finish('checked out');
+    await expect(pending).resolves.toBe('checked out');
+    await expect(reconcile()).resolves.toBe('checked out');
+    expect(requests).toBe(1);
+    expect(aborted).toBe(false);
+    unsubscribe();
+    client.clear();
+  });
   it('shares selected scope and fresh resource results across imperative consumers', async () => {
     const client = createMobileQueryClient();
     let scopeRequests = 0;

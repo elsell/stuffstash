@@ -88,6 +88,29 @@ export const mobileQueryKeys = {
     'asset',
     assetId
   ] as const,
+  assetCore: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string,
+    assetId: string
+  ) => [...mobileQueryKeys.asset(compositionScopeId, tenantId, inventoryId, assetId), 'core'] as const,
+  assetContents: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string,
+    assetId: string,
+    containmentIdentity: string
+  ) => [
+    ...mobileQueryKeys.asset(compositionScopeId, tenantId, inventoryId, assetId),
+    'contents',
+    containmentIdentity
+  ] as const,
+  assetPhotos: (
+    compositionScopeId: string,
+    tenantId: string,
+    inventoryId: string,
+    assetId: string
+  ) => [...mobileQueryKeys.asset(compositionScopeId, tenantId, inventoryId, assetId), 'photos'] as const,
   inventoryAssets: (
     compositionScopeId: string,
     tenantId: string,

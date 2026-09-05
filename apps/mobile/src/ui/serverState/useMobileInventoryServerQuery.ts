@@ -1,4 +1,5 @@
-import { useQuery, type QueryKey, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryKey, type UseQueryResult } from '@tanstack/react-query';
+import { fetchMobileInventoryServerQuery } from './fetchMobileInventoryServerQuery';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScope } from '../navigation/MobileServerStateProvider';
 
@@ -12,7 +13,8 @@ export function useMobileInventoryServerQuery<TData>({
   key,
   query,
   enabled = true
-}: MobileInventoryServerQueryOptions<TData>): UseQueryResult<TData, Error> {
+}: MobileInventoryServerQueryOptions<TData>): UseQueryResult<TData, Error> & { reconcile: () => Promise<TData> } {
+  const client = useQueryClient();
   const serverState = useMobileServerStateScope();
   const inventoryScope = useQuery({
     queryKey: mobileQueryKeys.inventoryScope(serverState.scopeId),
@@ -28,15 +30,17 @@ export function useMobileInventoryServerQuery<TData>({
     queryFn: ({ signal }) => query(signal),
     enabled: enabled && inventoryScope.isSuccess
   });
+  const reconcile = () => fetchMobileInventoryServerQuery({ client, serverState, key, query });
   if (!inventoryScope.isError) {
-    return resourceQuery;
+    return { ...resourceQuery, reconcile };
   }
   return {
     ...resourceQuery,
+    reconcile,
     error: inventoryScope.error,
     isError: true,
     isLoading: false,
     isPending: false,
     status: 'error'
-  } as UseQueryResult<TData, Error>;
+  } as UseQueryResult<TData, Error> & { reconcile: () => Promise<TData> };
 }

@@ -44,6 +44,7 @@ Device-local preferences, secure credentials, in-progress Add drafts, native pic
 - Pull-to-refresh explicitly refetches the active surface and exposes native refresh state without blanking its last successful content.
 - App foreground and network-reconnect behavior may refetch active stale queries. It must not refetch every inactive query or create duplicate focus requests.
 - Concurrent consumers of the same key share one request. Route focus effects must not independently duplicate a query already owned by the server-state coordinator.
+- Foreground mutation reconciliation joins an active invalidation request or reuses its fresh result if it already finished. Explicit user refresh may force a read; mutation completion must not force a second read.
 - Pagination caches preserve page identity and merge only compatible scopes. A result from an obsolete search, filter, tenant, inventory, or cursor must never overwrite the current surface.
 - Thumbnail and attachment-resource caching remains identity-specific and bounded. Metadata may render before media materialization; invisible media must not block core content.
 
@@ -64,6 +65,9 @@ Device-local preferences, secure credentials, in-progress Add drafts, native pic
 - Skeletons are appropriate for stable content geometry such as Home rows, Browse cards, asset identity, Settings rows, and editor field groups. Skeletons must be accessible as one polite busy status, must not expose decorative elements to assistive technology, and must honor reduced-motion settings.
 - Native activity indicators remain appropriate for indeterminate commands, compact modal work, authentication handoff, pagination footers, and layouts whose final geometry is not predictable.
 - Independent secondary regions load independently. Asset identity must not wait for attachments or checkout history; Settings navigation must not wait for voice readiness; attachment metadata must not wait for thumbnails.
+- Asset contents and photos consume the selected core snapshot without repeating its GET. Contents identity includes kind, lifecycle, and parent; unrelated core changes do not discard usable secondary data. Photo loading gates photo additions independently of placement/contents loading.
+- Contained rows retain primary-photo references from containment metadata; constructing a thumbnail URL is not a media download. Native visible rows load those images without attachment-list requests. Explicit refresh retries photos even if placement changed.
+- Containment reconciliation follows cached ancestor trails and old/new parent dependencies, including ancestor recursive contents and descendant breadcrumbs. A newly created child must reconcile cached ancestor contents even before that child's core is cached.
 - Every action provides visible pressed or pending feedback immediately. Network completion must not be the first visible acknowledgement of a tap.
 - Errors shown while cached content remains usable are non-blocking and use the shared feedback surface. Initial-load errors retain a direct retry path and safe, curated copy.
 

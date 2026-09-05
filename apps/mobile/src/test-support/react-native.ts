@@ -12,6 +12,29 @@ let highTextContrastEnabled = false;
 let systemColorScheme: 'light' | 'dark' = 'light';
 
 export const View = 'View';
+export const Image = 'Image';
+export function FlatList(props: Record<string, unknown>) {
+  const rows = (props.data ?? []) as readonly unknown[];
+  const render = props.renderItem as ((input: { item: unknown; index: number }) => ReactNode) | undefined;
+  return createElement('FlatList', props,
+    props.ListHeaderComponent as ReactNode,
+    props.refreshControl as ReactNode,
+    rows.length ? rows.map((item, index) => createElement('Row', { key: index }, render?.({ item, index }))) : props.ListEmptyComponent as ReactNode,
+    props.ListFooterComponent as ReactNode);
+}
+const appStateListeners = new Set<(state: string) => void>();
+export const AppState = {
+  currentState: 'active',
+  addEventListener(_event: string, callback: (state: string) => void) {
+    appStateListeners.add(callback);
+    return { remove: () => appStateListeners.delete(callback) };
+  }
+};
+export function setAppStateForTest(state: string) {
+  AppState.currentState = state;
+  for (const listener of appStateListeners) listener(state);
+}
+export const ActionSheetIOS = { showActionSheetWithOptions() {} };
 export const Text = 'Text';
 export const Pressable = 'Pressable';
 export const ScrollView = 'ScrollView';
@@ -91,4 +114,4 @@ export function setHighTextContrastEnabledForTest(enabled: boolean) {
 export function setSystemColorSchemeForTest(colorScheme: 'light' | 'dark') {
   systemColorScheme = colorScheme;
 }
-import { createElement, forwardRef, useImperativeHandle } from 'react';
+import { createElement, forwardRef, useImperativeHandle, type ReactNode } from 'react';

@@ -12,6 +12,7 @@ export type InventoryMutation = {
   readonly tenantId: string;
   readonly inventoryId: string;
   readonly assetId?: string;
+  readonly relatedAssetIds?: readonly string[];
 };
 
 export interface InventoryMutationObserver {

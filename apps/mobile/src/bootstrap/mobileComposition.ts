@@ -33,6 +33,9 @@ import { AssetActivityQuery } from '../application/assets/AssetActivityQuery';
 import { AssetCheckoutCommand } from '../application/assets/AssetCheckoutCommand';
 import { AssetCheckoutHistoryQuery } from '../application/assets/AssetCheckoutHistoryQuery';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
+import { AssetCoreQuery } from '../application/assets/AssetCoreQuery';
+import { AssetContentsQuery } from '../application/assets/AssetContentsQuery';
+import { AssetPhotosQuery } from '../application/assets/AssetPhotosQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
@@ -96,6 +99,9 @@ export type MobileComposition = {
   readonly assetActivityQuery: AssetActivityQuery;
   readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetCoreQuery: AssetCoreQuery;
+  readonly assetContentsQuery: AssetContentsQuery;
+  readonly assetPhotosQuery: AssetPhotosQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
@@ -235,6 +241,9 @@ export function createMobileComposition(
     assetActivityQuery: new AssetActivityQuery(assetActivity),
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries, inventorySummaries),
+    assetCoreQuery: new AssetCoreQuery(inventorySummaries),
+    assetContentsQuery: new AssetContentsQuery(inventorySummaries),
+    assetPhotosQuery: new AssetPhotosQuery(inventorySummaries),
     assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),

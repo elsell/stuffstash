@@ -17,6 +17,7 @@ type AssetDetailSource = {
 
 export type AssetDetailQueryOptions = {
   readonly source?: 'default' | 'map';
+  readonly signal?: AbortSignal;
 };
 
 export class AssetDetailQuery {
@@ -30,9 +31,11 @@ export class AssetDetailQuery {
     const selectedAssetId = assetId(assetIdValue);
 
     if (options.source !== 'map' && this.detailWorkspaces) {
-      const workspace = await this.detailWorkspaces.getAssetDetailWorkspace(selectedAssetId);
+      const workspace = await this.detailWorkspaces.getAssetDetailWorkspace(selectedAssetId, {
+        signal: options.signal
+      });
       if (workspace) {
-        return this.buildDetailView(workspace);
+        return this.buildDetailView(workspace, options.signal);
       }
     }
 
@@ -41,7 +44,7 @@ export class AssetDetailQuery {
     if (options.source === 'map') {
       const mapSource = await this.mapDetailSource(selectedAssetId, inventory.tenantId, inventory.id);
       if (mapSource) {
-        return this.buildDetailView(mapSource);
+        return this.buildDetailView(mapSource, options.signal);
       }
       throw new Error('Asset is not available in the selected inventory.');
     }
@@ -51,7 +54,7 @@ export class AssetDetailQuery {
       if (summaryAsset.kind === 'location') {
         const mapSource = await this.mapDetailSource(selectedAssetId, inventory.tenantId, inventory.id);
         if (mapSource) {
-          return this.buildDetailView(mapSource);
+          return this.buildDetailView(mapSource, options.signal);
         }
       }
       return this.buildDetailView({
@@ -60,12 +63,12 @@ export class AssetDetailQuery {
         permissions: inventory.permissions,
         asset: summaryAsset,
         allAssets: inventory.assets
-      });
+      }, options.signal);
     }
 
     const mapSource = await this.mapDetailSource(selectedAssetId, inventory.tenantId, inventory.id);
     if (mapSource) {
-      return this.buildDetailView(mapSource);
+      return this.buildDetailView(mapSource, options.signal);
     }
 
     throw new Error('Asset is not available in the selected inventory.');
@@ -102,13 +105,16 @@ export class AssetDetailQuery {
     };
   }
 
-  private async buildDetailView(source: AssetDetailSource): Promise<AssetDetailViewModel> {
+  private async buildDetailView(
+    source: AssetDetailSource,
+    signal?: AbortSignal
+  ): Promise<AssetDetailViewModel> {
     const detailAsset = this.inventories.getAssetDetail
       ? await this.inventories.getAssetDetail({
         tenantId: source.tenantId,
         inventoryId: source.inventoryId,
         asset: source.asset
-      })
+      }, { signal })
       : source.asset;
 
     return toAssetDetailViewModel(detailAsset, {

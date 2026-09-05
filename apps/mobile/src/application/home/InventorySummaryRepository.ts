@@ -31,7 +31,7 @@ export interface HomeDashboardSnapshotRepository {
 export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
-  getAssetDetail?(input: GetInventoryAssetDetailInput): Promise<AssetSummary>;
+  getAssetDetail?(input: GetInventoryAssetDetailInput, request?: ReadRequest): Promise<AssetSummary>;
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   createAssetTag?(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary>;

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { createMobileQueryClient, mobileQueryKeys } from '../serverState/MobileQueryClient';
+import { QueryClientInventoryMutationObserver } from '../serverState/QueryClientInventoryMutationObserver';
 import type {
   Asset,
   AssetTag,
@@ -2187,6 +2189,23 @@ describe('ApiInventorySummaryRepository', () => {
     }]);
   });
 
+  it('invalidates ancestor contents when creating inside an unvisited empty nested container', async () => {
+    const client = new FakeInventoryApiClient();
+    const garage = client.assets[0]!;
+    client.assets = [garage,
+      { ...garage, id: 'outer', kind: 'container', parentAssetId: garage.id },
+      { ...garage, id: 'inner', kind: 'container', parentAssetId: 'outer' }
+    ];
+    const cache = createMobileQueryClient();
+    const key = mobileQueryKeys.assetContents('scope', 'tenant-home', 'inventory-home', garage.id, 'location:active:root');
+    cache.setQueryData(key, { containedSpaces: [{ id: 'outer' }], containedItems: [] });
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', undefined, 'scope', {},
+      new QueryClientInventoryMutationObserver(cache, 'scope'));
+    await repository.createAsset({ kind: 'item', title: 'New item', description: '', parentAssetId: assetId('inner') });
+    expect(cache.getQueryState(key)?.isInvalidated).toBe(true);
+    cache.clear();
+  });
+
   it('loads checked-out Home summaries from the checked-out inventory endpoint', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
@@ -2293,6 +2312,96 @@ describe('ApiInventorySummaryRepository', () => {
     })]);
     expect(client.listAssetRequests).toEqual([]);
     expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads asset core through one detail request without attachment or containment hydration', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    await repository.getCurrentInventoryScope();
+    client.getAssetRequests.length = 0;
+
+    await expect(repository.getAssetCore(assetId('asset-filters'))).resolves.toMatchObject({
+      tenantId: 'tenant-home',
+      inventoryId: 'inventory-home',
+      asset: { id: 'asset-filters', title: 'Furnace filters', photos: [] }
+    });
+
+    expect(client.getAssetRequests).toEqual([{
+      inventoryId: 'inventory-home',
+      assetId: 'asset-filters'
+    }]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+    expect(client.thumbnailRequests).toEqual([]);
+  });
+
+  it('loads placement independently without repeating the selected asset or loading photos', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    const core = await repository.getAssetCore(assetId('asset-filters'));
+    client.getAssetRequests.length = 0;
+
+    await expect(repository.getAssetContents(core)).resolves.toMatchObject({
+      asset: {
+        id: 'asset-filters',
+        parentLocationTrail: [{ id: 'asset-garage', title: 'Garage' }]
+      },
+      allAssets: []
+    });
+
+    expect(client.getAssetRequests).toEqual([{
+      inventoryId: 'inventory-home',
+      assetId: 'asset-garage'
+    }]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+    expect(client.thumbnailRequests).toEqual([]);
+  });
+
+  it('loads photos independently without repeating asset or containment requests', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    const core = await repository.getAssetCore(assetId('asset-filters'));
+    client.getAssetRequests.length = 0;
+
+    await repository.getAssetPhotos(core);
+
+    expect(client.getAssetRequests).toEqual([]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([{
+      assetId: 'asset-filters',
+      limit: 50,
+      cursor: undefined
+    }]);
+  });
+
+  it('preserves contained child photo references without attachment-list hydration', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    const core = await repository.getAssetCore(assetId('asset-garage'));
+    const contents = await repository.getAssetContents(core);
+    expect(contents.allAssets.find((asset) => asset.id === 'asset-filters')).toMatchObject({
+      hasPhoto: true,
+      photo: { uri: expect.any(String) }
+    });
+    expect(client.listAttachmentRequests).toEqual([]);
+    expect(client.getAssetRequests.filter((request) => request.assetId === 'asset-garage')).toHaveLength(1);
+  });
+
+  it('uses one selected-asset request across the complete progressive detail graph', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+
+    const core = await repository.getAssetCore(assetId('asset-filters'));
+    await Promise.all([
+      repository.getAssetContents(core),
+      repository.getAssetPhotos(core)
+    ]);
+
+    expect(client.getAssetRequests.filter((request) => request.assetId === 'asset-filters'))
+      .toHaveLength(1);
+    expect(client.listAttachmentRequests).toHaveLength(1);
+    expect(client.listAssetRequests).toEqual([]);
   });
 
   it('loads the Locations surface from only the selected active tree', async () => {
