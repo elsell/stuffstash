@@ -7,7 +7,9 @@ export default function SearchRoute() {
   const {
     addAssetPhotosCommand,
     assetCheckoutCommand,
-    assetDetailQuery,
+    assetCoreQuery,
+    assetContentsQuery,
+    assetPhotosQuery,
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
     inventoryMapQuery,
@@ -25,7 +27,9 @@ export default function SearchRoute() {
       {...initialBrowseState}
       addAssetPhotosCommand={addAssetPhotosCommand}
       assetCheckoutCommand={assetCheckoutCommand}
-      assetDetailQuery={assetDetailQuery}
+      assetCoreQuery={assetCoreQuery}
+      assetContentsQuery={assetContentsQuery}
+      assetPhotosQuery={assetPhotosQuery}
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}
       inventoryMapQuery={inventoryMapQuery}

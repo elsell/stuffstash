@@ -75,12 +75,12 @@ function isAffectedInventoryQuery(
     return isAffectedAssetQuery(queryKey, inventoryKey, mutation, relatedAssetIds);
   }
   if (kind === 'asset_checkout_changed') {
-    return resource === 'home'
+    return resource === 'map' || resource === 'home'
       || resource === 'assets'
       || resource === 'location'
       || resource === 'browse';
   }
-  return resource === 'home'
+  return resource === 'map' || resource === 'home'
     || resource === 'assets'
     || resource === 'locations'
     || resource === 'location'

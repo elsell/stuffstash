@@ -19,7 +19,7 @@ import { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCo
 import { UndoAssetEditCommand } from '../../application/assets/UndoAssetEditCommand';
 import { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
-import { AssetCoreQuery, assetContentsIdentity } from '../../application/assets/AssetCoreQuery';
+import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { AssetContentsQuery } from '../../application/assets/AssetContentsQuery';
 import { AssetPhotosQuery } from '../../application/assets/AssetPhotosQuery';
 import {
@@ -66,8 +66,7 @@ import {
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
-import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
-import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { useProgressiveAssetDetail } from '../serverState/useProgressiveAssetDetail';
 import { mergeProgressiveAssetDetail } from './AssetDetailProgressivePresentation';
 
 type AssetDetailRouteScreenProps = {
@@ -107,36 +106,8 @@ export function AssetDetailRouteScreen({
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
   const feedback = useAppFeedback();
-  const coreAsset = useMobileInventoryServerQuery({
-    key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.assetCore(
-      scopeId,
-      tenantId,
-      inventoryId,
-      assetId
-    ),
-    query: (signal) => assetCoreQuery.execute(assetId, { signal })
-  });
-  const assetContents = useMobileInventoryServerQuery({
-    key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.assetContents(
-      scopeId,
-      tenantId,
-      inventoryId,
-      assetId,
-      coreAsset.data ? assetContentsIdentity(coreAsset.data.snapshot) : 'pending'
-    ),
-    query: (signal) => assetContentsQuery.execute(coreAsset.data!.snapshot, { signal }),
-    enabled: coreAsset.isSuccess && Boolean(coreAsset.data)
-  });
-  const assetPhotos = useMobileInventoryServerQuery({
-    key: (scopeId, tenantId, inventoryId) => mobileQueryKeys.assetPhotos(
-      scopeId,
-      tenantId,
-      inventoryId,
-      assetId
-    ),
-    query: (signal) => assetPhotosQuery.execute(coreAsset.data!.snapshot, { signal }),
-    enabled: coreAsset.isSuccess && Boolean(coreAsset.data)
-  });
+  const progressive = useProgressiveAssetDetail(assetId, { assetCoreQuery, assetContentsQuery, assetPhotosQuery });
+  const { coreAsset, assetContents, assetPhotos } = progressive;
   const screenState: ScreenState = coreAsset.data
     ? {
         status: 'ready',
@@ -248,19 +219,7 @@ export function AssetDetailRouteScreen({
   }
 
   async function reloadAsset(): Promise<void> {
-    const previousContentsIdentity = coreAsset.data
-      ? assetContentsIdentity(coreAsset.data.snapshot)
-      : undefined;
-    const coreResult = await coreAsset.refetch({ throwOnError: true, cancelRefetch: false });
-    if (!coreResult.data) {
-      throw new Error('Asset could not be loaded.');
-    }
-    await Promise.all([
-      assetPhotos.refetch({ cancelRefetch: false, throwOnError: true }),
-      ...(assetContentsIdentity(coreResult.data.snapshot) === previousContentsIdentity
-        ? [assetContents.refetch({ cancelRefetch: false, throwOnError: true })]
-        : [])
-    ]);
+    await progressive.refresh();
   }
 
   async function retryLoad(): Promise<void> {

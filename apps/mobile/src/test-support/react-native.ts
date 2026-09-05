@@ -48,6 +48,7 @@ export const TextInput = forwardRef<{ focus(): void }, Record<string, unknown>>(
 });
 export const Alert = { alert(title: string, message?: string, buttons: readonly AlertButton[] = [], options?: AlertRecord['options']) { alerts.push({ title, message, buttons, options }); } };
 export const AccessibilityInfo = {
+  isReduceMotionEnabled: async () => false,
   addEventListener(event: string, listener: (enabled: boolean) => void) {
     const listeners = accessibilityListeners.get(event) ?? new Set<(enabled: boolean) => void>();
     listeners.add(listener);
@@ -75,9 +76,20 @@ export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 }
 export const findNodeHandle = () => 1;
 export const useWindowDimensions = () => ({ fontScale: 1, height: 844, width: 390 });
 export const useColorScheme = () => systemColorScheme;
-class AnimatedValue { constructor(readonly initial: number) {} setValue() {} }
-const animation = () => ({ start(callback?: () => void) { callback?.(); } });
-export const Animated = { Value: AnimatedValue, View: 'AnimatedView', parallel: animation, spring: animation, timing: animation };
+class AnimatedValue {
+  private value: number;
+  private listeners = new Map<string, (event: { value: number }) => void>();
+  constructor(readonly initial: number) { this.value = initial; }
+  setValue(value: number) { this.value = value; for (const listener of this.listeners.values()) listener({ value }); }
+  addListener(listener: (event: { value: number }) => void) { const id = String(this.listeners.size); this.listeners.set(id, listener); return id; }
+  removeListener(id: string) { this.listeners.delete(id); }
+  stopAnimation() {}
+  interpolate() { return this.value; }
+}
+const animation = (value?: AnimatedValue, options?: { toValue: number }) => ({
+  start(callback?: (result: { finished: boolean }) => void) { if (value && options) value.setValue(options.toValue); callback?.({ finished: true }); }
+});
+export const Animated = { Value: AnimatedValue, View: 'AnimatedView', multiply: (value: AnimatedValue, factor: number) => ({ value, factor }), parallel: animation, spring: animation, timing: animation };
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {

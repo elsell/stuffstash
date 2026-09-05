@@ -50,6 +50,7 @@ Device-local preferences, secure credentials, in-progress Add drafts, native pic
 - Browse header identity and create permission come from a focused selected-inventory context read; List and Map entry must not fetch the Places catalog for header metadata. Places summaries may load independently of paginated location results.
 - Browse/search breadcrumb resolution loads only missing ancestors of the returned page, deduplicating shared ancestors. It must not traverse the complete inventory. A current result's null parent is authoritative inventory-root placement and must not be replaced by linkage from an unrelated or older tree projection.
 - Inactive Browse surfaces unsubscribe from their queries, cancelling in-flight work only when no other consumer needs it. Secondary Places summary failures keep result rows available with a non-blocking error and targeted retry.
+- Map owns one selected-inventory containment query, forwards cancellation through its traversal, and preserves usable columns during stale refresh. Initial mounting and route focus must not create consecutive duplicate traversals. Map overlays share the same progressive asset core/contents/photos keys as ordinary details; changing an overlay selection cancels obsolete secondary work. Touch and voice mutations reconcile the Map query alongside affected detail regions.
 - Thumbnail and attachment-resource caching remains identity-specific and bounded. Metadata may render before media materialization; invisible media must not block core content.
 
 ### Mutations And Visible Feedback

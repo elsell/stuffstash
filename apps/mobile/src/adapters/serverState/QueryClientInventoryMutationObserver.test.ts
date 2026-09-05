@@ -76,6 +76,7 @@ describe('QueryClientInventoryMutationObserver', () => {
     const client = createMobileQueryClient();
     const observer = new QueryClientInventoryMutationObserver(client, 'scope-a');
     const affected = [
+      mobileQueryKeys.inventoryMap('scope-a', 'tenant-a', 'inventory-a'),
       mobileQueryKeys.home('scope-a', 'tenant-a', 'inventory-a'),
       mobileQueryKeys.inventoryAssets('scope-a', 'tenant-a', 'inventory-a'),
       mobileQueryKeys.locationAssets('scope-a', 'tenant-a', 'inventory-a', 'location-a'),

@@ -15,3 +15,5 @@ export const CheckCircle2 = 'CheckCircle2Icon';
 export const MoveRight = 'MoveRightIcon';
 export const Pencil = 'PencilIcon';
 export const Trash2 = 'Trash2Icon';
+export const Info = 'InfoIcon';
+export const Package = 'PackageIcon';

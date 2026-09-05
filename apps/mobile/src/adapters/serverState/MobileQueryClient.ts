@@ -111,6 +111,9 @@ export const mobileQueryKeys = {
     inventoryId: string,
     assetId: string
   ) => [...mobileQueryKeys.asset(compositionScopeId, tenantId, inventoryId, assetId), 'photos'] as const,
+  inventoryMap: (scopeId: string, tenantId: string, inventoryId: string) => [
+    ...mobileQueryKeys.inventory(scopeId, tenantId, inventoryId), 'map'
+  ] as const,
   inventoryContext: (scopeId: string, tenantId: string, inventoryId: string) => [
     ...mobileQueryKeys.inventory(scopeId, tenantId, inventoryId), 'context'
   ] as const,

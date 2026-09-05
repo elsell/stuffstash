@@ -12,7 +12,7 @@ import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPho
 import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
 import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
-import type { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
+import type { ProgressiveAssetDetailQueries } from '../serverState/useProgressiveAssetDetail';
 import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
@@ -81,7 +81,9 @@ type SearchScreenProps = {
   readonly initialSort?: AssetBrowseSort;
   readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
   readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
-  readonly assetDetailQuery: Pick<AssetDetailQuery, 'execute'>;
+  readonly assetCoreQuery: ProgressiveAssetDetailQueries['assetCoreQuery'];
+  readonly assetContentsQuery: ProgressiveAssetDetailQueries['assetContentsQuery'];
+  readonly assetPhotosQuery: ProgressiveAssetDetailQueries['assetPhotosQuery'];
   readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
   readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
   readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
@@ -126,7 +128,9 @@ export function SearchScreen({
   initialSort = 'updated_desc',
   addAssetPhotosCommand,
   assetCheckoutCommand,
-  assetDetailQuery,
+  assetCoreQuery,
+  assetContentsQuery,
+  assetPhotosQuery,
   assetLifecycleCommand,
   deleteAssetPhotoCommand,
   inventoryMapQuery,
@@ -395,7 +399,10 @@ export function SearchScreen({
         <InventoryMapScreen
           addAssetPhotosCommand={addAssetPhotosCommand}
           assetCheckoutCommand={assetCheckoutCommand}
-          assetDetailQuery={assetDetailQuery}
+          key={scopeIdentity}
+          assetCoreQuery={assetCoreQuery}
+          assetContentsQuery={assetContentsQuery}
+          assetPhotosQuery={assetPhotosQuery}
           assetLifecycleCommand={assetLifecycleCommand}
           canAdd={inventoryContext?.canAdd ?? false}
           deleteAssetPhotoCommand={deleteAssetPhotoCommand}

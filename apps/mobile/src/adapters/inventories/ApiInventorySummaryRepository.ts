@@ -729,7 +729,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       : await this.listInventoryAssetPage(inventory, input);
   }
 
-  async listActiveInventoryMapAssets(): Promise<{
+  async listActiveInventoryMapAssets(request: ReadRequest = {}): Promise<{
     readonly sessionScopeId: string;
     readonly tenantId: InventorySummary['tenantId'];
     readonly inventoryId: InventorySummary['id'];
@@ -737,8 +737,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     readonly permissions: readonly string[];
     readonly assets: readonly AssetSummary[];
   }> {
-    const inventory = await this.getSelectedInventoryIdentity();
-    const activeAssets = await this.listAllActiveInventoryAssets(tenantId(inventory.tenant.id), inventory.inventory.id);
+    const inventory = await this.getSelectedInventoryIdentity(request.signal);
+    const activeAssets = await this.listAllActiveInventoryAssets(tenantId(inventory.tenant.id), inventory.inventory.id, request.signal);
     const assets = await this.mapAssetsWithMapPhotos(inventory.inventory.name, activeAssets);
 
     return {

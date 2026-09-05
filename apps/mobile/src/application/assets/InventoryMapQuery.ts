@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../shared/ReadRequest';
 import type { AssetId, AssetKind, AssetSummary } from '../../domain/assets/AssetSummary';
 import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
 import { toAssetCardViewModel } from './AssetViewModels';
@@ -36,7 +37,7 @@ export type InventoryMapViewModel = {
 };
 
 export interface InventoryMapAssetRepository {
-  listActiveInventoryMapAssets(): Promise<{
+  listActiveInventoryMapAssets(request?: ReadRequest): Promise<{
     readonly sessionScopeId: string;
     readonly tenantId: TenantId;
     readonly inventoryId: InventoryId;
@@ -49,8 +50,8 @@ export interface InventoryMapAssetRepository {
 export class InventoryMapQuery {
   constructor(private readonly inventoryMapAssets: InventoryMapAssetRepository) {}
 
-  async execute(): Promise<InventoryMapViewModel> {
-    const inventory = await this.inventoryMapAssets.listActiveInventoryMapAssets();
+  async execute(request: ReadRequest = {}): Promise<InventoryMapViewModel> {
+    const inventory = await this.inventoryMapAssets.listActiveInventoryMapAssets(request);
     const activeAssets = inventory.assets;
     const childCounts = countChildrenByParent(activeAssets);
     const canCreateAsset = inventory.permissions.includes('create_asset');
