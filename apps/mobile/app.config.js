@@ -91,6 +91,7 @@ module.exports = {
         }
       },
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         NSPhotoLibraryUsageDescription:
           'Stuff Stash uses your photo library so you can attach household item photos.',
         NSCameraUsageDescription: 'Stuff Stash uses your camera so you can attach household item photos.',

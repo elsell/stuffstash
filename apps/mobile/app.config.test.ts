@@ -4,6 +4,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const require = createRequire(import.meta.url);
 
 describe('app config', () => {
+  it('declares the current app uses no non-exempt encryption in generated iOS metadata', () => {
+    const config = require('./app.config.js');
+    expect(config.expo.ios.infoPlist.ITSAppUsesNonExemptEncryption).toBe(false);
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
     delete require.cache[require.resolve('./app.config.js')];
