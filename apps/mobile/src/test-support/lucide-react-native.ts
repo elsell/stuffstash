@@ -23,3 +23,6 @@ export const House = 'HouseIcon';
 export const Server = 'ServerIcon';
 export const SunMedium = 'SunMediumIcon';
 export const UserRound = 'UserRoundIcon';
+
+export const Copy = "CopyIcon";
+export const Send = "SendIcon";

@@ -20,14 +20,14 @@ class FakeInvitationRepository implements InventoryInvitationManagementRepositor
 
   async list(scope: InventorySharingScope) {
     this.calls.push(`list:${scope.inventoryId}`);
-    return [{
+    return { items: [{
       id: 'invite-one',
       email: 'friend@example.com',
       relationship: 'viewer' as const,
       status: 'pending' as const,
       isExpired: false,
       expiresAt: '2026-07-21T12:00:00Z'
-    }];
+    }] };
   }
 
   async create(scope: InventorySharingScope, input: { email: string; relationship: 'viewer' | 'editor' }) {
@@ -52,7 +52,7 @@ describe('mobile inventory sharing actions', () => {
   it('lists, creates, and cancels invitations through the mobile-owned port', async () => {
     const repository = new FakeInvitationRepository();
     await expect(new ListInventoryInvitationsQuery(repository).execute(ownerScope))
-      .resolves.toHaveLength(1);
+      .resolves.toMatchObject({ items: [{ id: 'invite-one' }] });
     await expect(new CreateInventoryInvitationCommand(repository).execute(ownerScope, {
       email: ' friend@example.com ',
       relationship: 'editor'
@@ -87,4 +87,17 @@ describe('mobile inventory sharing actions', () => {
       .rejects.toThrow('Invitation ID must not be empty.');
     expect(repository.calls).toEqual([]);
   });
+});
+
+it('announces successful invitation mutations without exposing the one-time link', async () => {
+  const repository = new FakeInvitationRepository();
+  const changes: InventorySharingScope[] = [];
+  const observer = { onInvitationsChanged: (scope: InventorySharingScope) => { changes.push(scope); } };
+  await new CreateInventoryInvitationCommand(repository, observer).execute(ownerScope, { email: 'friend@example.test', relationship: 'viewer' });
+  await new CancelInventoryInvitationCommand(repository, observer).execute(ownerScope, 'invite-one');
+  expect(changes).toEqual([ownerScope, ownerScope]);
+  expect(JSON.stringify(changes)).not.toContain('secret');
+  repository.cancel = async () => { throw new Error('denied'); };
+  await expect(new CancelInventoryInvitationCommand(repository, observer).execute(ownerScope, 'invite-one')).rejects.toThrow('denied');
+  expect(changes).toHaveLength(2);
 });

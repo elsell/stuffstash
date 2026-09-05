@@ -17,7 +17,7 @@ const invitation: InventoryAccessInvitation = {
 };
 
 describe('ApiInventoryInvitationManagementRepository', () => {
-  it('paginates safe invitation metadata and never invents listed invite links', async () => {
+  it('loads one cancellable page of safe invitation metadata without one-time links', async () => {
     const calls: Array<string | undefined> = [];
     const repository = new ApiInventoryInvitationManagementRepository({
       listInventoryAccessInvitations: async (_tenant, _inventory, options): Promise<Page<InventoryAccessInvitation>> => {
@@ -30,12 +30,14 @@ describe('ApiInventoryInvitationManagementRepository', () => {
       cancelInventoryAccessInvitation: async () => undefined
     }, trustedInvitationOrigin);
 
-    await expect(repository.list(scope)).resolves.toEqual([
-      expect.objectContaining({ id: 'invite-one' }),
-      expect.objectContaining({ id: 'invite-two' })
-    ]);
-    expect(JSON.stringify(await repository.list(scope))).not.toContain('inviteUrl');
-    expect(calls).toEqual([undefined, 'next', undefined, 'next']);
+    const controller = new AbortController();
+    const first = await repository.list(scope, { signal: controller.signal });
+    expect(first).toMatchObject({ items: [{ id: 'invite-one' }], nextCursor: 'next' });
+    expect(calls).toEqual([undefined]);
+    expect(JSON.stringify(first)).not.toContain('inviteUrl');
+    const second = await repository.list(scope, { cursor: first.nextCursor });
+    expect(second.items[0]?.id).toBe('invite-two');
+    expect(second.nextCursor).toBeUndefined();
   });
 
   it('requires the one-time complete URL in creation responses', async () => {
@@ -103,7 +105,7 @@ describe('ApiInventoryInvitationManagementRepository', () => {
       createInventoryAccessInvitation: async () => ({ ...invitation, inviteUrl }),
       cancelInventoryAccessInvitation: async () => undefined
     }, trustedInvitationOrigin);
-    await expect(repository.list(scope)).rejects.toThrow('invalid invitation page');
+    await expect(repository.list(scope, { cursor: 'repeat' })).rejects.toThrow('invalid invitation page');
   });
 
   it('rejects listed invitation metadata outside the selected inventory scope', async () => {

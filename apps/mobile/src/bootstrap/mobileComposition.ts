@@ -1,3 +1,4 @@
+import { QueryClientInvitationMutationObserver } from '../adapters/serverState/QueryClientInvitationMutationObserver';
 import { ObservedCustomizationRepository } from '../adapters/customization/ObservedCustomizationRepository';
 import { QueryClientCustomizationMutationObserver } from '../adapters/serverState/QueryClientCustomizationMutationObserver';
 import { QueryClientProviderProfileMutationObserver } from '../adapters/serverState/QueryClientProviderProfileMutationObserver';
@@ -283,8 +284,8 @@ export function createMobileComposition(
     customizationAccessPolicy,
     customizationObservability,
     listInventoryInvitationsQuery: new ListInventoryInvitationsQuery(managedInvitations),
-    createInventoryInvitationCommand: new CreateInventoryInvitationCommand(managedInvitations),
-    cancelInventoryInvitationCommand: new CancelInventoryInvitationCommand(managedInvitations),
+    createInventoryInvitationCommand: new CreateInventoryInvitationCommand(managedInvitations, new QueryClientInvitationMutationObserver(queryClient, serviceScopeId)),
+    cancelInventoryInvitationCommand: new CancelInventoryInvitationCommand(managedInvitations, new QueryClientInvitationMutationObserver(queryClient, serviceScopeId)),
     invitationLinkActions: new ExpoInvitationLinkActions(),
     providerProfileSettingsQuery,
     manageProviderProfileCommand: new ManageProviderProfileCommand(providerProfiles),

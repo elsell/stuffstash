@@ -3,6 +3,8 @@ import type {
   CreatedInventoryInvitation,
   InventoryInvitationManagementRepository,
   InventoryInvitationSummary,
+  InventoryInvitationRead,
+  InventoryInvitationPage,
   InventorySharingScope
 } from '../../application/sharing/InventorySharing';
 import { parseCreatedInventoryInvitationLink } from '../../application/invitations/InvitationLinkParser';
@@ -19,25 +21,15 @@ export class ApiInventoryInvitationManagementRepository implements InventoryInvi
     private readonly allowInsecureLocalHTTP = false
   ) {}
 
-  async list(scope: InventorySharingScope): Promise<readonly InventoryInvitationSummary[]> {
-    const invitations: InventoryInvitationSummary[] = [];
-    const seenCursors = new Set<string>();
-    let cursor: string | undefined;
-    for (let pageNumber = 0; pageNumber < 100; pageNumber += 1) {
-      const page = await this.client.listInventoryAccessInvitations(
-        scope.tenantId,
-        scope.inventoryId,
-        { limit: 50, cursor, status: 'all' }
-      );
-      invitations.push(...page.items.map((invitation) => mapSafeInvitation(invitation, scope)));
-      cursor = page.pagination.nextCursor ?? undefined;
-      if (!cursor) return invitations;
-      if (seenCursors.has(cursor)) {
-        throw new Error('Stuff Stash returned an invalid invitation page.');
-      }
-      seenCursors.add(cursor);
-    }
-    throw new Error('Stuff Stash returned too many invitation pages.');
+  async list(scope: InventorySharingScope, request: InventoryInvitationRead = {}): Promise<InventoryInvitationPage> {
+    request.signal?.throwIfAborted();
+    const page = await this.client.listInventoryAccessInvitations(
+      scope.tenantId, scope.inventoryId, { limit: 50, cursor: request.cursor, status: 'all' }, request.signal
+    );
+    request.signal?.throwIfAborted();
+    const nextCursor = page.pagination.nextCursor ?? undefined;
+    if (nextCursor && nextCursor === request.cursor) throw new Error('Stuff Stash returned an invalid invitation page.');
+    return { items: page.items.map((invitation) => mapSafeInvitation(invitation, scope)), nextCursor };
   }
 
   async create(

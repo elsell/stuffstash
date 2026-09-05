@@ -1414,10 +1414,12 @@ export class StuffStashClient {
   async listInventoryAccessInvitations(
     tenantId: string,
     inventoryId: string,
-    options: { limit?: number; cursor?: string; status?: InvitationStatusFilter } = {}
+    options: { limit?: number; cursor?: string; status?: InvitationStatusFilter } = {},
+    signal?: AbortSignal
   ): Promise<Page<InventoryAccessInvitation>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/access-invitations', {
+        signal,
         headers: await this.authHeaders(),
         params: {
           path: { tenantId, inventoryId },
