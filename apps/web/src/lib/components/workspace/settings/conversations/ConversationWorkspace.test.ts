@@ -34,3 +34,27 @@ it('removes every section when case access is revoked', async () => {
   await expect.poll(() => document.body.textContent).toContain('Your account no longer has access');
   expect(button('Workflows')).toBeUndefined(); expect(document.body.textContent).not.toContain('Household');
 });
+it('refreshes run setup after saving a revision in the workflow section', async () => {
+  const ports = repositories();
+  let revision: WorkflowRevision = { id: 'revision-1', workflowId: 'workflow', number: 1, authorId: 'owner', createdAt: '', definition: {
+    name: 'Household', retrieval: 'precise_first', response: 'grounded', budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 }, steps: [
+      { kind: 'interpret', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }] } };
+  ports.workflows.list = async () => ({ ...page, items: [{ id: 'workflow', name: 'Household', latestRevision: revision.number, latestRevisionId: revision.id, activeRevisionId: null, createdAt: '', updatedAt: '' }] });
+  ports.workflows.get = async () => structuredClone(revision);
+  ports.workflows.append = async (_tenant, _workflow, _expected, definition) => { revision = { ...revision, number: 2, id: 'revision-2', definition }; return revision; };
+  component = mount(ConversationWorkspace, { target: document.body, props: { scope, repositories: ports } });
+  await expect.poll(() => button('Runs')).toBeDefined(); button('Runs')!.click();
+  await expect.poll(() => button('New run')).toBeDefined(); button('New run')!.click();
+  await expect.poll(() => document.querySelector('[aria-label="Choose workflow"]')?.textContent).toContain('Revision 1');
+  button('Discard run setup')!.click();
+  await expect.poll(() => button('Workflows')?.disabled).toBe(false); button('Workflows')!.click();
+  const select = () => Array.from(document.querySelectorAll('button')).find(value => value.textContent?.includes('Household'));
+  await expect.poll(select).toBeDefined(); select()!.click();
+  await expect.poll(() => document.querySelector('form')).not.toBeNull();
+  document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await expect.poll(() => revision.number).toBe(2);
+  const close = () => Array.from(document.querySelectorAll('button')).find(value => value.textContent?.includes('Close editor'));
+  await expect.poll(() => close()?.disabled).toBe(false); close()!.click();
+  await expect.poll(() => button('Runs')?.disabled).toBe(false); button('Runs')!.click(); button('New run')!.click();
+  await expect.poll(() => document.querySelector('[aria-label="Choose workflow"]')?.textContent).toContain('Revision 2');
+});
