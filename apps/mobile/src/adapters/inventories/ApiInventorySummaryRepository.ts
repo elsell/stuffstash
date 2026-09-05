@@ -308,7 +308,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       visibleAssets
     );
     const mappedCheckedOutAssets = await Promise.all(
-      checkedOutAssets.map((item) => this.mapAssetWithPhoto(selected.inventory.name, item.asset, ancestryAssets))
+      checkedOutAssets.map((item) => this.mapAssetWithPrimaryPhoto(selected.inventory.name, item.asset, ancestryAssets))
     );
     const checkedOutByAssetId = new Map(mappedCheckedOutAssets.map((asset) => [asset.id, asset]));
     const mappedRecentAssets = await Promise.all(
@@ -558,7 +558,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary> {
     const selected = await this.getSelectedInventoryIdentity();
     const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
-    const currentPlacementAssets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id);
+    const parent = input.parentAssetId ? await this.client.getAsset(selected.tenant.id, selected.inventory.id, input.parentAssetId) : undefined;
+    const currentPlacementAssets = parent ? [parent, ...await this.loadAssetAncestors(parent)] : [];
     const asset = await this.client.createAsset(inventory.tenantId, inventory.id, {
       kind: input.kind,
       title: input.title,
@@ -571,14 +572,15 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       inventory.tenantId,
       inventory.id,
       asset.id,
-      ancestorTrail(asset, currentPlacementAssets).map((ancestor) => ancestor.id)
+      ancestorTrail(asset, currentPlacementAssets).map((ancestor) => ancestor.id),
+      parent?.kind === 'item' ? parent.id : undefined
     );
 
     const placementAssets = placementAssetsWithSelectedOverrides(
       currentPlacementAssets,
       [asset]
     );
-    return this.mapAssetWithPhoto(inventory.name, asset, placementAssets);
+    return mapAsset(inventory.name, asset, placementAssets);
   }
 
   async createAssetTag(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary> {
@@ -594,21 +596,22 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async updateAsset(input: UpdateInventoryAssetInput): Promise<AssetSummary> {
     const selected = await this.getSelectedInventoryIdentity();
     const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
-    const placementAssets = await this.listAllActiveInventoryAssets(selected.tenant.id, selected.inventory.id);
+    const previous = await this.client.getAsset(selected.tenant.id, selected.inventory.id, input.assetId);
+    const destination = { ...previous, parentAssetId: input.parentAssetId !== undefined ? input.parentAssetId : previous.parentAssetId };
+    const placementAssets = [previous, ...await this.loadAncestorsForAssets([previous, destination])];
     const asset = await this.client.updateAsset(inventory.tenantId, inventory.id, input.assetId, {
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {}),
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
     });
-    const previous = placementAssets.find((candidate) => candidate.id === asset.id);
     this.observeMutation(
       'asset_updated',
       inventory.tenantId,
       inventory.id,
       asset.id,
       [
-        ...(previous ? ancestorTrail(previous, placementAssets) : []),
+        ...ancestorTrail(previous, placementAssets),
         ...ancestorTrail(asset, placementAssets)
       ].map((ancestor) => ancestor.id)
     );
@@ -617,7 +620,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       placementAssets,
       [asset]
     );
-    return this.mapAssetWithPhoto(inventory.name, asset, knownAssets);
+    return mapAsset(inventory.name, asset, knownAssets);
   }
 
   async addAssetPhoto(
@@ -723,8 +726,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   async undoInventoryOperation(operationId: string): Promise<void> {
     const selected = await this.getSelectedInventoryIdentity();
-    await this.client.applyUndoableOperation(selected.tenant.id, selected.inventory.id, operationId, 'undo');
-    this.observeMutation('operation_reversed', selected.tenant.id, selected.inventory.id);
+    const asset = await this.client.applyUndoableOperation(selected.tenant.id, selected.inventory.id, operationId, 'undo');
+    this.observeMutation('operation_reversed', selected.tenant.id, selected.inventory.id, asset.id, asset.parentAssetId ? [asset.parentAssetId] : []);
   }
 
   async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
@@ -1041,13 +1044,15 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     tenantID: string,
     inventoryID: string,
     assetID?: string,
-    relatedAssetIDs: readonly string[] = []
+    relatedAssetIDs: readonly string[] = [],
+    promotedParentId?: string
   ): void {
     this.mutationObserver.onInventoryMutation({
       kind,
       tenantId: tenantID,
       inventoryId: inventoryID,
       ...(assetID ? { assetId: assetID } : {}),
+      ...(promotedParentId ? { promotedParentId } : {}),
       ...(relatedAssetIDs.length > 0 ? { relatedAssetIds: [...new Set(relatedAssetIDs)] } : {})
     });
   }

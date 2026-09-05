@@ -97,6 +97,7 @@ function isAffectedAssetQuery(
   if (!mutation.assetId) return true;
   const queryAssetId = queryKey[inventoryKey.length + 1];
   const region = queryKey[inventoryKey.length + 2];
+  if (queryAssetId === mutation.promotedParentId) return region !== 'photos' && region !== 'checkouts';
   if (mutation.kind === 'operation_reversed' && (region === 'contents' || region === 'placement')) return true;
   if (queryAssetId === mutation.assetId) {
     if (region === 'history' || region === 'activity') return true;

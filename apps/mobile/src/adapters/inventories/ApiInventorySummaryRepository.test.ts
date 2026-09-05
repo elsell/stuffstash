@@ -1504,6 +1504,20 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
+  it('creates and updates without scanning inventory or loading response attachments', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    await repository.createAsset({ kind: 'item', title: 'Root item', description: '' });
+    expect(client.getAssetRequests).toEqual([]);
+    await repository.updateAsset({ assetId: assetId('asset-filters'), title: 'Updated' });
+    expect(client.getAssetRequests).toEqual([
+      { inventoryId: 'inventory-home', assetId: 'asset-filters' },
+      { inventoryId: 'inventory-home', assetId: 'asset-garage' }
+    ]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
   it('creates and searches assets through the generated client wrapper', async () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
@@ -2194,6 +2208,17 @@ describe('ApiInventorySummaryRepository', () => {
     }]);
   });
 
+  it('invalidates the promoted item parent core when creating its first child', async () => {
+    const client = new FakeInventoryApiClient();
+    const cache = createMobileQueryClient();
+    const parentKey = mobileQueryKeys.assetCore('scope', 'tenant-home', 'inventory-home', 'asset-filters');
+    cache.setQueryData(parentKey, { snapshot: { asset: { id: 'asset-filters', kind: 'item' } } });
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home', undefined, 'scope', {}, new QueryClientInventoryMutationObserver(cache, 'scope'));
+    await repository.createAsset({ kind: 'item', title: 'New child', description: '', parentAssetId: assetId('asset-filters') });
+    expect(cache.getQueryState(parentKey)?.isInvalidated).toBe(true);
+    cache.clear();
+  });
+
   it('invalidates ancestor contents when creating inside an unvisited empty nested container', async () => {
     const client = new FakeInventoryApiClient();
     const garage = client.assets[0]!;
@@ -2211,13 +2236,13 @@ describe('ApiInventorySummaryRepository', () => {
     cache.clear();
   });
 
-  it('loads checked-out Home summaries from the checked-out inventory endpoint', async () => {
+  it('loads checked-out Home summaries from the checked-out endpoint without attachment enumeration', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
       client.assets[0]!,
       {
         ...client.assets[1]!,
-        primaryPhoto: undefined,
+        primaryPhoto: client.assets[1]!.primaryPhoto,
         currentCheckout: {
           id: 'checkout-filters',
           state: 'open',
@@ -2242,6 +2267,7 @@ describe('ApiInventorySummaryRepository', () => {
         }
       ]
     });
+    expect(client.listAttachmentRequests).toEqual([]);
     expect(client.listCheckedOutAssetRequests).toContainEqual({
       inventoryId: 'inventory-home',
       limit: 10,
