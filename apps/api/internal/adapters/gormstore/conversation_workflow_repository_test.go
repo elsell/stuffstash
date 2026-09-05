@@ -54,6 +54,14 @@ func verifyConversationWorkflowRepository(t *testing.T, ctx context.Context, sto
 	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-one", "revision-one", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-active-one", home, "", audit.ActionConversationWorkflowActivated)); err != nil {
 		t.Fatal(err)
 	}
+	selection, found, err := store.SelectedWorkflowRevision(ctx, home)
+	if err != nil || !found || selection.WorkflowID != "workflow-one" || selection.RevisionID != "revision-one" {
+		t.Fatalf("tenant selection missing: %+v %v %v", selection, found, err)
+	}
+	if _, found, err := store.SelectedWorkflowRevision(ctx, other); err != nil || found {
+		t.Fatalf("tenant selection leaked: %v %v", found, err)
+	}
+
 	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-one", "revision-two", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-active-stale", home, "", audit.ActionConversationWorkflowActivated)); !errors.Is(err, ports.ErrWorkflowConflict) {
 		t.Fatalf("stale activation must conflict: %v", err)
 	}
