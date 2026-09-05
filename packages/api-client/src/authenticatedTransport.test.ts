@@ -34,8 +34,10 @@ describe('authenticated generated transport', () => {
     const pending = client.GET('/tenants/{tenantId}/conversation-workflow-selection', {
       signal: controller.signal, params: { path: { tenantId: 'home' } }
     });
-    controller.abort(); resolveToken('session');
+    controller.abort();
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+    resolveToken('session');
+    await Promise.resolve();
     expect(dispatched).toBe(false);
   });
 
