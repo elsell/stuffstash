@@ -35,3 +35,9 @@ The web workspace offers a default workflow summary, draft editor with step cont
 ## Evidence gates
 
 Domain validation and immutability tests precede implementation. Persistence/migration, application command/query, adversarial REST, worker cancellation/recovery, web adapter/UI and shared executor tests follow their responsibilities. Live ADC-backed cases exercise real audio, schema requests and speech alongside controlled fixture data. Run the same cases against a compatible local model where available; unavailable credentials/models are reported as verification limits rather than passed support. Release and device gates remain defined in voice-conversation-quality.spec.md.
+
+## Persistence contract
+
+Store workflow identity separately from revision snapshots. Every lookup requires tenant ID; revision lookups additionally require workflow and revision IDs. Workflow IDs, revision IDs and author IDs are nonempty bounded opaque identifiers using ASCII letters, digits, underscore or hyphen. A revision has a positive sequence number, immutable validated definition, author and nonzero creation timestamp supplied by the injected application clock. Rehydration must validate definitions against the recorded revision limits rather than reinterpret old revisions using changed defaults; activation separately checks current operator limits.
+
+Appending a revision compares the expected latest sequence and atomically stores the revision, updates the workflow head and records audit. Concurrent saves must produce one winner and a conflict, never overwrite immutable history. Activating compares expected active revision and atomically updates the active pointer with audit. An active revision must belong to the same tenant and workflow. Persistence adapters must implement these operations transactionally, with production PostgreSQL migrations and SQLite parity tests. No direct application SQL is permitted.
