@@ -9,6 +9,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 )
 
+var realtimeVoiceNarrativeForbiddenPhrases = [...]string{"visible match", "candidate", "resolution", "tool result", "tool call", "asset id", "inventory id", "tenant id"}
+
 // Remove complete grounded labels only for presentation-style checks. All
 // factual, provenance and final-response safety checks see the original text.
 func realtimeVoiceResponseNarrative(brief agentmodel.GroundedVoiceResponseBrief, text string) string {
@@ -37,6 +39,9 @@ func realtimeVoiceResponseNarrative(brief agentmodel.GroundedVoiceResponseBrief,
 			if unicode.IsLetter(before) || unicode.IsNumber(before) || unicode.IsLetter(after) || unicode.IsNumber(after) {
 				continue
 			}
+			if realtimeVoiceLabelSplitsDiagnostic(text, offset, offset+len(label)) {
+				continue
+			}
 			matched = label
 			break
 		}
@@ -50,4 +55,23 @@ func realtimeVoiceResponseNarrative(brief agentmodel.GroundedVoiceResponseBrief,
 		offset += size
 	}
 	return result.String()
+}
+
+// A short title cannot hide part of a multiword diagnostic phrase.
+func realtimeVoiceLabelSplitsDiagnostic(text string, start, end int) bool {
+	for _, phrase := range realtimeVoiceNarrativeForbiddenPhrases {
+		for offset := 0; offset < len(text); {
+			index := strings.Index(text[offset:], phrase)
+			if index < 0 {
+				break
+			}
+			left := offset + index
+			right := left + len(phrase)
+			if left < end && right > start && (left < start || right > end) {
+				return true
+			}
+			offset = right
+		}
+	}
+	return false
 }

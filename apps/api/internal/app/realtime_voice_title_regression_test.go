@@ -11,7 +11,7 @@ import (
 // grounded answers must survive words and punctuation in those titles.
 func TestRealtimeVoiceGroundedAnswerAcceptsOrdinaryAssetTitles(t *testing.T) {
 	t.Parallel()
-	for _, title := range []string{"High-resolution camera", "Candidate board game", "Where's Wally?"} {
+	for _, title := range []string{"High-resolution camera", "Candidate board game", "Where's Wally?", "Tool Call Board Game"} {
 		t.Run(title, func(t *testing.T) {
 			t.Parallel()
 			brief := agentmodel.GroundedVoiceResponseBrief{
@@ -33,13 +33,13 @@ func TestRealtimeVoiceGroundedAnswerAcceptsOrdinaryAssetTitles(t *testing.T) {
 
 func TestRealtimeVoiceLabelsDoNotHideNarrativeDiagnostics(t *testing.T) {
 	t.Parallel()
-	for _, title := range []string{"Can", "?"} {
+	for _, title := range []string{"Can", "?", "Tool"} {
 		brief := agentmodel.GroundedVoiceResponseBrief{
 			Kind: agentmodel.ResponseBriefKindAnswer, Mode: agentmodel.ResponseAnswerModeLocate,
 			Operation: agentmodel.OperationLocate, Subject: title, Confidence: agentmodel.ResponseConfidenceStrong,
 			Findings: []agentmodel.ResponseFinding{{FactKey: "finding.0", Title: title, Kind: "item", ContainmentPath: []string{"Office", title}}},
 		}
-		for _, suffix := range []string{" This candidate matches.", " Is that okay?"} {
+		for _, suffix := range []string{" This candidate matches.", " Is that okay?", " The tool call completed."} {
 			text := title + " is in the Office." + suffix
 			if err := validateRealtimeVoiceGeneratedResponse(brief, ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}); err == nil {
 				t.Fatalf("grounded label %q hid narrative %q", title, suffix)

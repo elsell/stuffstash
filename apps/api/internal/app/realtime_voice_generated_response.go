@@ -78,7 +78,7 @@ func realtimeVoiceRequiredDisplayEntityTitles(brief agentmodel.GroundedVoiceResp
 func validateRealtimeVoiceGeneratedChannel(brief agentmodel.GroundedVoiceResponseBrief, value string) error {
 	text := strings.ToLower(strings.TrimSpace(value))
 	narrative := realtimeVoiceResponseNarrative(brief, text)
-	for _, forbidden := range []string{"visible match", "candidate", "resolution", "tool result", "tool call", "asset id", "inventory id", "tenant id"} {
+	for _, forbidden := range realtimeVoiceNarrativeForbiddenPhrases {
 		if strings.Contains(narrative, forbidden) {
 			return ports.ErrInvalidProviderInput
 		}
