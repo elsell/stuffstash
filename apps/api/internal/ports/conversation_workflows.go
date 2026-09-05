@@ -14,6 +14,8 @@ var ErrWorkflowConflict = errors.New("conversation workflow changed")
 var ErrWorkflowNotFound = errors.New("conversation workflow not found")
 
 type WorkflowHeadRecord struct {
+	Name             string
+	LatestRevisionID agentmodel.WorkflowRevisionID
 	TenantID         tenant.ID
 	ID               agentmodel.WorkflowID
 	LatestRevision   int

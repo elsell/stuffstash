@@ -22,7 +22,7 @@ func (s Store) WorkflowHead(ctx context.Context, tenantID tenant.ID, id agentmod
 	if err != nil {
 		return ports.WorkflowHeadRecord{}, false, err
 	}
-	return ports.WorkflowHeadRecord{TenantID: tenantID, ID: id, LatestRevision: model.LatestRevision, ActiveRevisionID: agentmodel.WorkflowRevisionID(model.ActiveRevisionID), CreatedAt: model.CreatedAt, UpdatedAt: model.UpdatedAt}, true, nil
+	return ports.WorkflowHeadRecord{TenantID: tenantID, ID: id, Name: model.Name, LatestRevisionID: agentmodel.WorkflowRevisionID(model.LatestRevisionID), LatestRevision: model.LatestRevision, ActiveRevisionID: agentmodel.WorkflowRevisionID(model.ActiveRevisionID), CreatedAt: model.CreatedAt, UpdatedAt: model.UpdatedAt}, true, nil
 }
 
 func (s Store) WorkflowRevision(ctx context.Context, tenantID tenant.ID, workflowID agentmodel.WorkflowID, id agentmodel.WorkflowRevisionID) (agentmodel.WorkflowRevision, bool, error) {
@@ -51,7 +51,7 @@ func (s Store) AppendWorkflowRevision(ctx context.Context, revision agentmodel.W
 	}
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if expected == 0 {
-			head := conversationWorkflowModel{TenantID: model.TenantID, ID: model.WorkflowID, LatestRevision: model.Number, CreatedAt: model.CreatedAt, UpdatedAt: model.CreatedAt}
+			head := conversationWorkflowModel{Name: revision.Snapshot().Definition.Settings().Name, LatestRevisionID: model.ID, TenantID: model.TenantID, ID: model.WorkflowID, LatestRevision: model.Number, CreatedAt: model.CreatedAt, UpdatedAt: model.CreatedAt}
 			result := tx.Omit(clause.Associations).Clauses(clause.OnConflict{DoNothing: true}).Create(&head)
 			if result.Error != nil {
 				return result.Error
@@ -60,7 +60,7 @@ func (s Store) AppendWorkflowRevision(ctx context.Context, revision agentmodel.W
 				return ports.ErrWorkflowConflict
 			}
 		} else {
-			result := tx.Model(&conversationWorkflowModel{}).Where(map[string]any{"tenant_id": model.TenantID, "id": model.WorkflowID, "latest_revision": expected}).Updates(map[string]any{"latest_revision": model.Number, "updated_at": model.CreatedAt})
+			result := tx.Model(&conversationWorkflowModel{}).Where(map[string]any{"tenant_id": model.TenantID, "id": model.WorkflowID, "latest_revision": expected}).Updates(map[string]any{"latest_revision": model.Number, "updated_at": model.CreatedAt, "name": revision.Snapshot().Definition.Settings().Name, "latest_revision_id": model.ID})
 			if result.Error != nil {
 				return result.Error
 			}

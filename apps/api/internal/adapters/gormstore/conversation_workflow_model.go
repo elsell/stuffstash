@@ -8,6 +8,8 @@ import (
 )
 
 type conversationWorkflowModel struct {
+	Name             string      `gorm:"not null;type:text"`
+	LatestRevisionID string      `gorm:"not null;size:64"`
 	TenantID         string      `gorm:"primaryKey;size:64"`
 	ID               string      `gorm:"primaryKey;size:64"`
 	Tenant           tenantModel `gorm:"foreignKey:TenantID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`

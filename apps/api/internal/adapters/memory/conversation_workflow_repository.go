@@ -68,6 +68,8 @@ func (s *Store) AppendWorkflowRevision(ctx context.Context, revision agentmodel.
 	if !found {
 		head = ports.WorkflowHeadRecord{TenantID: key.tenant, ID: key.workflow, CreatedAt: snapshot.CreatedAt}
 	}
+	head.Name = snapshot.Definition.Settings().Name
+	head.LatestRevisionID = snapshot.ID
 	head.LatestRevision = snapshot.Number
 	head.UpdatedAt = snapshot.CreatedAt
 	if s.workflowHeads == nil {

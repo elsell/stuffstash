@@ -74,6 +74,18 @@ func Verify(t *testing.T, repo interface {
 			t.Fatalf("revision cursor: %v", err)
 		}
 	}
+
+	empty, err := repo.ListWorkflowRevisions(ctx, "discovery-home", "missing", ports.WorkflowRevisionPageRequest{Limit: 1})
+	if err != nil || len(empty) != 0 {
+		t.Fatal("unknown workflow returned history")
+	}
+	if _, err := repo.ListWorkflowRevisions(ctx, "discovery-home", "a", ports.WorkflowRevisionPageRequest{Limit: 1, AfterNumber: -1}); err == nil {
+		t.Fatal("negative revision cursor accepted")
+	}
+	exhausted, err := repo.ListWorkflowHeads(ctx, "discovery-home", ports.WorkflowHeadPageRequest{Limit: 1, AfterID: "b"})
+	if err != nil || len(exhausted) != 0 {
+		t.Fatal("exhausted page returned rows")
+	}
 	foreign, err := repo.ListWorkflowHeads(ctx, "other", ports.WorkflowHeadPageRequest{Limit: 100})
 	if err != nil || len(foreign) != 0 {
 		t.Fatal("cross-tenant heads exposed")

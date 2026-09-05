@@ -395,20 +395,28 @@ func cleanupAuditActionTestRows(t *testing.T, ctx context.Context, store Store, 
 	}
 }
 
-func runEmbeddedPostgresMigrations(db *gorm.DB) error {
+func postgresMigrationInstance(db *gorm.DB) (*migrate.Migrate, error) {
 	sqlDB, err := db.DB()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	databaseDriver, err := migratepostgres.WithInstance(sqlDB, &migratepostgres.Config{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	sourceDriver, err := iofs.New(migrations.Files, ".")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	instance, err := migrate.NewWithInstance("iofs", sourceDriver, "postgres", databaseDriver)
+	if err != nil {
+		return nil, err
+	}
+	return instance, nil
+}
+
+func runEmbeddedPostgresMigrations(db *gorm.DB) error {
+	instance, err := postgresMigrationInstance(db)
 	if err != nil {
 		return err
 	}
