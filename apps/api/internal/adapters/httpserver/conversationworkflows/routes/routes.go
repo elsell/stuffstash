@@ -14,6 +14,7 @@ import (
 
 func Register(api huma.API, application app.App) {
 	registerActivation(api, application)
+	registerQueries(api, application)
 	huma.Post(api, "/tenants/{tenantId}/conversation-workflows", func(ctx context.Context, input *dto.CreateInput) (*dto.RevisionOutput, error) {
 		principal, err := shared.Authenticate(ctx, application, input.Authorization)
 		if err != nil {

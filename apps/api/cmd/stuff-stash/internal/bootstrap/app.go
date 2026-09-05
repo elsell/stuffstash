@@ -77,6 +77,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Outbox:                           repositories.outbox,
 		Users:                            repositories.users,
 		ConversationWorkflowLimits:       workflowLimits,
+		WorkflowDiscovery:                repositories.workflowDiscovery,
 		ConversationWorkflows:            repositories.conversationWorkflows,
 		EvaluationCases:                  repositories.evaluationCases,
 		ProviderProfiles:                 repositories.providerProfiles,

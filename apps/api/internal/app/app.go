@@ -83,6 +83,7 @@ type App struct {
 	providerProfileService       agentmodelapp.Service
 	conversationWorkflowService  agentmodelapp.ConversationWorkflowService
 	evaluationCaseService        agentmodelapp.EvaluationCaseService
+	workflowQueries              agentmodelapp.WorkflowQueryService
 	workflowActivation           agentmodelapp.WorkflowActivationService
 	evaluationRunCommands        agentmodelapp.EvaluationRunCommandService
 	evaluationRunQueries         agentmodelapp.EvaluationRunQueryService
@@ -127,6 +128,7 @@ type Dependencies struct {
 	BlobDeletionOutbox               ports.BlobDeletionOutbox
 	Audit                            ports.AuditRepository
 	Outbox                           ports.AuthorizationOutbox
+	WorkflowDiscovery                ports.WorkflowDiscoveryRepository
 	ConversationWorkflows            ports.ConversationWorkflowRepository
 	EvaluationCases                  ports.EvaluationCaseRepository
 	WorkflowActivation               agentmodelapp.WorkflowActivationService
@@ -315,6 +317,7 @@ func New(deps Dependencies) App {
 		IDs: app.ids, Clock: app.clock, Observer: app.observer, Limits: deps.ConversationWorkflowLimits,
 	})
 	app.evaluationCaseService = agentmodelapp.NewEvaluationCaseService(agentmodelapp.EvaluationCaseDependencies{Authorizer: app.authorizer, Repository: deps.EvaluationCases, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
+	app.workflowQueries = agentmodelapp.NewWorkflowQueryService(agentmodelapp.WorkflowQueryDependencies{Authorizer: app.authorizer, Repository: deps.ConversationWorkflows, Discovery: deps.WorkflowDiscovery, Audit: app.audit, IDs: app.ids, Clock: app.clock, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
 	app.workflowActivation = deps.WorkflowActivation
 	app.evaluationRunCommands = deps.EvaluationRunCommands
 	app.evaluationRunQueries = deps.EvaluationRunQueries
