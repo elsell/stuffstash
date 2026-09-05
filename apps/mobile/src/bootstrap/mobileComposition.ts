@@ -1,3 +1,6 @@
+import * as Network from 'expo-network';
+import type { ConnectivitySource } from '../application/shared/ConnectivitySource';
+import { ExpoConnectivitySource } from '../adapters/serverState/ExpoConnectivitySource';
 import { QueryClientVoiceMutationObserver } from '../adapters/serverState/QueryClientVoiceMutationObserver';
 import { QueryClientInvitationMutationObserver } from '../adapters/serverState/QueryClientInvitationMutationObserver';
 import { ObservedCustomizationRepository } from '../adapters/customization/ObservedCustomizationRepository';
@@ -99,6 +102,7 @@ import { createTimeoutFetch } from '../adapters/network/TimeoutFetch';
 export type MobileComposition = {
   readonly serviceScopeId: string;
   readonly queryClient: QueryClient;
+  readonly connectivitySource: ConnectivitySource;
   readonly homeDashboardQuery: HomeDashboardQuery;
   readonly currentInventoryScopeQuery: CurrentInventoryScopeQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
@@ -240,6 +244,7 @@ export function createMobileComposition(
   return {
     serviceScopeId,
     queryClient,
+    connectivitySource: new ExpoConnectivitySource(Network),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     currentInventoryScopeQuery: new CurrentInventoryScopeQuery(inventorySummaries),
     selectInventoryCommand: new SelectInventoryCommand(

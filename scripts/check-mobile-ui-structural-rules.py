@@ -19,11 +19,11 @@ NAMESPACE_REQUIRE_PATTERN = re.compile(
     r"\b(?:const|let|var)\s+(?P<name>[A-Za-z_$][\w$]*)\s*=\s*require\(['\"]react-native['\"]\)",
 )
 FRAMEWORK_IMPORT_PATTERN = re.compile(
-    r"^[ \t]*import(?:\s+type)?\s+.*?\s+from\s+['\"](?P<module>react|@tanstack/react-query)['\"]\s*;",
+    r"^[ \t]*import(?:\s+type)?\s+.*?\s+from\s+['\"](?P<module>[^'\"]+)['\"]\s*;",
     re.DOTALL | re.MULTILINE,
 )
 FRAMEWORK_REQUIRE_PATTERN = re.compile(
-    r"\brequire\(['\"](?P<module>react|@tanstack/react-query)['\"]\)",
+    r"\brequire\(['\"](?P<module>[^'\"]+)['\"]\)",
 )
 
 
@@ -31,7 +31,7 @@ def source_files(root: Path):
     for path in sorted(root.rglob("*")):
         if path.suffix not in {".ts", ".tsx"} or not path.is_file():
             continue
-        if ".test." in path.name or "test-support" in path.parts:
+        if ".test." in path.name or "test-support" in path.parts or "testing" in path.parts:
             continue
         if path.as_posix().endswith("/ui/components/AppTextInput.tsx"):
             continue
@@ -49,18 +49,33 @@ def violations(path: Path) -> list[tuple[int, str]]:
     if "application" in path.parts or "domain" in path.parts:
         for match in FRAMEWORK_IMPORT_PATTERN.finditer(source):
             module = match.group("module")
-            if module == "@tanstack/react-query":
+            if module not in {"react", "@tanstack/react-query", "@stuff-stash/api-client"} and "/adapters/" not in module:
+                continue
+            if module == "@stuff-stash/api-client" or "/adapters/" in module:
+                reason = "imports transport infrastructure inside domain/application code"
+            elif module == "@tanstack/react-query":
                 reason = "imports TanStack Query outside a UI-side server-state adapter"
             else:
                 reason = "imports React or TanStack Query inside domain/application code"
             findings.append((line_number(source, match.start()), reason))
         for match in FRAMEWORK_REQUIRE_PATTERN.finditer(source):
             module = match.group("module")
-            if module == "@tanstack/react-query":
+            if module not in {"react", "@tanstack/react-query", "@stuff-stash/api-client"} and "/adapters/" not in module:
+                continue
+            if module == "@stuff-stash/api-client" or "/adapters/" in module:
+                reason = "imports transport infrastructure inside domain/application code"
+            elif module == "@tanstack/react-query":
                 reason = "requires TanStack Query outside a UI-side server-state adapter"
             else:
                 reason = "requires React or TanStack Query inside domain/application code"
             findings.append((line_number(source, match.start()), reason))
+
+    if "adapters" in path.parts and "inventories" in path.parts and len(source.splitlines()) > 800:
+        findings.append((1, "inventory adapter exceeds 800 lines; split by responsibility"))
+    if path.name == "ApiInventorySummaryRepository.ts":
+        forbidden = re.search(r"\bclass\s+ExpoDirectUpload|\buploadAsync\b|\b(?:useQuery|QueryClient)\b", source)
+        if forbidden:
+            findings.append((line_number(source, forbidden.start()), "inventory facade owns transport or query-cache implementation"))
 
     for match in IMPORT_PATTERN.finditer(source):
         clause = match.group("clause").strip()
@@ -97,8 +112,9 @@ def main() -> int:
     for path in source_files(root):
         for line, reason in violations(path):
             failed = True
+            remedy = "use the project-owned AppTextInput adapter" if "TextInput" in reason else "respect the mobile adapter boundary"
             print(
-                f"{path}:{line}: {reason}; use the project-owned AppTextInput adapter",
+                f"{path}:{line}: {reason}; {remedy}",
                 file=sys.stderr,
             )
     return 1 if failed else 0

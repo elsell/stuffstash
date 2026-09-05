@@ -1,7 +1,5 @@
 import type { ReadRequest } from '../shared/ReadRequest';
-export class SettingsScopeUnavailableError extends Error {
-  constructor() { super('The selected Stuff Stash inventory is no longer available.'); }
-}
+export { SelectedInventoryUnavailableError as SettingsScopeUnavailableError } from '../shared/SelectedInventoryUnavailableError';
 
 export type SettingsPrincipal = {
   readonly id: string;

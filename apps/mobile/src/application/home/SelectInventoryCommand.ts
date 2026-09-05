@@ -15,7 +15,7 @@ const noOpInventorySelectionObserver: InventorySelectionObserver = {
 
 export class SelectInventoryCommand {
   constructor(
-    private readonly inventories: InventorySummaryRepository,
+    private readonly inventories: Pick<InventorySummaryRepository, 'selectInventory'>,
     private readonly observer: InventorySelectionObserver = noOpInventorySelectionObserver
   ) {}
 

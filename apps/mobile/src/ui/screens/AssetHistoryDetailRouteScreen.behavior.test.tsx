@@ -17,8 +17,12 @@ describe('History detail cache', () => {
     const harness = new MobileRenderHarness();
     const requests: string[] = [];
     let aborted = false;
+    let denied = false;
+    let retryFailure = false;
     const query = new AssetActivityQuery({ listAssetActivity: ({ assetId, signal }) => {
       requests.push(assetId);
+      if (retryFailure) throw Object.assign(new Error('unavailable'), { status: 500 });
+      if (denied) return Promise.reject(Object.assign(new Error('denied'), { status: 403 }));
       signal?.addEventListener('abort', () => { aborted = true; });
       return new Promise(() => undefined);
     } });
@@ -32,6 +36,15 @@ describe('History detail cache', () => {
       await harness.render(render('one')); await settle(harness);
       expect(harness.allText().join(' ')).toContain('Cached name');
       expect(requests).toEqual([]);
+      denied = true;
+      await harness.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetActivity('scope', 'tenant', 'inventory', 'one', 'activity') })); await settle(harness);
+      expect(harness.allText().join(' ')).not.toContain('Cached name');
+      denied = false; retryFailure = true;
+      await harness.run(() => client.invalidateQueries({ predicate: (query) => query.queryKey.includes('activity') })); await settle(harness);
+      expect(harness.allText().join(' ')).not.toContain('Cached name');
+      retryFailure = false;
+      denied = false;
+      requests.length = 0;
       await harness.render(render('two')); await settle(harness);
       expect(harness.allText().join(' ')).not.toContain('Cached name');
       expect(requests).toEqual(['two']);

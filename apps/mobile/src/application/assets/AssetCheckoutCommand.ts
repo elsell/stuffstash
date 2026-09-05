@@ -24,7 +24,7 @@ export type UndoCheckoutOperationCommandInput = {
 };
 
 export class AssetCheckoutCommand {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: Pick<InventorySummaryRepository, 'checkoutAsset' | 'returnAsset' | 'updateReturnedCheckoutDetails' | 'undoInventoryOperation'>) {}
 
   async execute(input: AssetCheckoutCommandInput): Promise<AssetCheckoutResult> {
     const selectedAssetId = assetId(input.assetId);

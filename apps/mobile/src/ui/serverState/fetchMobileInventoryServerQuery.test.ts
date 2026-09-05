@@ -95,3 +95,12 @@ describe('fetchMobileInventoryServerQuery', () => {
     expect(aborted).toBe(true);
   });
 });
+
+it('does not start a resource read after its cached scope was reset during reconciliation', async () => {
+  const client = createMobileQueryClient(); let reads = 0;
+  client.setQueryData(mobileQueryKeys.inventoryScope('scope'), { tenantId: 'old', inventoryId: 'old' });
+  const pending = fetchMobileInventoryServerQuery({ client, serverState: { scopeId: 'scope', loadInventoryScope: async () => ({ tenantId: 'next', inventoryId: 'next' }) }, key: mobileQueryKeys.home, query: async () => { reads++; return 'new data'; } });
+  client.removeQueries({ queryKey: mobileQueryKeys.inventoryScope('scope') });
+  await expect(pending).rejects.toThrow(); expect(reads).toBe(0);
+  expect(client.getQueryData(mobileQueryKeys.home('scope', 'old', 'old'))).toBeUndefined();
+});

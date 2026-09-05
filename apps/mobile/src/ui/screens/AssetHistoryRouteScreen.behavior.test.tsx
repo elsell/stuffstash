@@ -14,8 +14,12 @@ describe('History query pages', () => {
     const harness = new MobileRenderHarness();
     const cursors: (string | undefined)[] = [];
     let fail = false;
+    let denied = false;
+    let retryFailure = false;
     const query = new AssetActivityQuery({ listAssetActivity: async ({ cursor }) => {
       cursors.push(cursor);
+      if (retryFailure) throw Object.assign(new Error('unavailable'), { status: 500 });
+      if (denied) throw Object.assign(new Error('denied'), { status: 403 });
       if (fail) throw new Error('unavailable');
       return { entries: [{ id: cursor ?? 'one', principalId: 'person', action: 'asset.updated', category: 'change', source: 'api', occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title', currentValue: cursor ?? 'first' }], technical: {} }], hasMore: !cursor, nextCursor: cursor ? undefined : 'second' };
     } });
@@ -32,6 +36,14 @@ describe('History query pages', () => {
       await harness.run(() => harness.byType('RefreshControl')!.props.onRefresh()); await settle(harness);
       expect(harness.allText().join(' ')).toContain('first');
       expect(harness.allText().join(' ')).toContain('second');
+      denied = true;
+      await harness.run(() => client.invalidateQueries()); await settle(harness);
+      expect(harness.allText().join(' ')).not.toContain('first');
+      denied = false; retryFailure = true;
+      await harness.run(() => client.invalidateQueries({ predicate: (query) => query.queryKey.includes('history') })); await settle(harness);
+      expect(harness.allText().join(' ')).not.toContain('first');
+      retryFailure = false;
+      expect(harness.allText().join(' ')).not.toContain('second');
     } finally { await harness.unmount(); }
   });
 });

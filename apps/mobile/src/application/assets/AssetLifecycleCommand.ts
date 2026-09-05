@@ -9,7 +9,7 @@ export type AssetLifecycleCommandInput = {
 };
 
 export class AssetLifecycleCommand {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: Pick<InventorySummaryRepository, 'archiveAsset' | 'restoreAsset' | 'deleteAsset'>) {}
 
   async execute(input: AssetLifecycleCommandInput): Promise<void> {
     const selectedAssetId = assetId(input.assetId);

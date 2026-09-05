@@ -1,3 +1,4 @@
+import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
@@ -35,7 +36,7 @@ export function AssetHistoryDetailRouteScreen({
   const queryKey = mobileQueryKeys.assetActivity(scopeId, tenantId, inventoryId, assetId, activityId);
   const pages = queryClient.getQueryCache().findAll({
     queryKey: [...mobileQueryKeys.asset(scopeId, tenantId, inventoryId, assetId), 'history']
-  }).filter((query) => !query.state.isInvalidated).sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
+  }).filter((query) => !query.state.isInvalidated && !isAccessFailure(query.state.error)).sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
   const cached = pages.map((query) => ({
     entry: (query.state.data as InfiniteData<AssetActivityViewModel> | undefined)?.pages.flatMap((page) => page.entries).find((entry) => entry.id === activityId),
     updatedAt: query.state.dataUpdatedAt
@@ -43,10 +44,10 @@ export function AssetHistoryDetailRouteScreen({
   const detail = useQuery({
     queryKey,
     queryFn: async ({ signal }) => await assetActivityQuery.loadEntry({ tenantId, inventoryId, assetId, activityId, signal }) ?? null,
-    initialData: cached?.entry,
+    initialData: queryClient.getQueryState(queryKey) ? undefined : cached?.entry,
     initialDataUpdatedAt: cached?.updatedAt
   });
-  const entry = detail.data;
+  const entry = isAccessFailure(detail.error) ? undefined : detail.data;
   const isLoading = detail.isPending;
   const loadFailure = detail.isError && !entry ? historyLoadError(detail.error) : undefined;
   const palette = useAppearancePalette();

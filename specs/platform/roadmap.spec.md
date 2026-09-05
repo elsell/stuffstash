@@ -23,7 +23,7 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The immediate mobile focus is the complete server-state and latency audit in
+The mobile server-state implementation audit is complete; PR CI and device validation are the next gates for
 `specs/platform/mobile-server-state.spec.md`: focused ports, composition-scoped
 TanStack Query identity, request cancellation, mutation reconciliation, bounded
 surface request graphs, native progressive loading, and request-count evidence.
@@ -147,9 +147,10 @@ The web audit and Browse parity work needs a production-shaped path through:
 
 ## Next Work
 
-1. Complete the mobile server-state and latency audit.
+1. Validate the mobile server-state refactor in PR CI and on a device.
    - Use `specs/platform/mobile-server-state.spec.md` as the source of truth.
-   - Prove every surface has focused read/write ports, fully scoped query identity, correct invalidation or cache updates, cancellation, bounded requests, correct freshness, and native-feeling progressive feedback.
+   - Source tests cover focused ports, scoped query identity, mutation reconciliation, cancellation, bounded Browse scans, denial recovery and progressive feedback; the route evidence matrix records deliberate API limits.
+   - Verify the added Expo connectivity module in a native CI build/device run, measure latency, and check Map gestures and recording. Do not run local builds on the disk-constrained host.
 2. Complete production-grade web and mobile settings customization parity.
    - Use `specs/platform/client-settings-management.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, `specs/platform/mobile-app-tracer-bullet.spec.md`, and the custom field, custom asset type, tag, lifecycle, and identity/access specs as the source of truth.
    - Prove one account-based Settings entry, tenant and inventory drill-ins, inherited-versus-local presentation, permission-correct create/edit/lifecycle behavior, inventory tag management without invented restore behavior, equivalent failure and denied states, and screenshot-backed responsive/native verification.

@@ -14,8 +14,12 @@ describe('checkout History server state', () => {
     const harness = new MobileRenderHarness();
     const cursors: (string | undefined)[] = [];
     let fail = true;
+    let denied = false;
+    let retryFailure = false;
     const query = new AssetCheckoutHistoryQuery({ listAssetCheckoutHistory: async ({ cursor }) => {
       cursors.push(cursor);
+      if (retryFailure) throw Object.assign(new Error('unavailable'), { status: 500 });
+      if (denied) throw Object.assign(new Error('denied'), { status: 403 });
       if (cursor && fail) throw new Error('failed');
       return { records: [{ id: cursor ?? 'one', state: 'open', checkedOutAt: '2026-07-14T12:00:00Z', checkedOutByPrincipalId: cursor ?? 'first' }], hasMore: !cursor, nextCursor: cursor ? undefined : 'two' };
     } });
@@ -32,6 +36,14 @@ describe('checkout History server state', () => {
       await harness.press(harness.byLabel('Load older checkouts')); await settle(harness);
       expect(harness.allText().join(' ')).toContain('Principal two');
       expect(cursors).toEqual([undefined, 'two', 'two']);
+      denied = true;
+      await harness.run(() => client.invalidateQueries({ predicate: (query) => query.queryKey.includes('checkouts') })); await settle(harness);
+      expect(harness.allText().join(' ')).not.toContain('Principal first');
+      denied = false; retryFailure = true;
+      await harness.run(() => client.invalidateQueries({ predicate: (query) => query.queryKey.includes('checkouts') })); await settle(harness);
+      expect(harness.allText().join(' ')).not.toContain('Principal first');
+      retryFailure = false;
+      expect(harness.allText().join(' ')).not.toContain('Principal two');
     } finally { await harness.unmount(); }
   });
 });

@@ -122,6 +122,8 @@ export function ConnectionSettingsScreen({
   readonly onChangeServer: () => Promise<void>;
   readonly settingsQuery: SettingsQuery;
 }) {
+  const { styles } = useSettingsListStyles();
+  const diagnostics = settingsQuery.getDiagnostics();
   const feedback = useAppFeedback();
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
@@ -144,28 +146,24 @@ export function ConnectionSettingsScreen({
   }
 
   return (
-    <SettingsModelScreen query={settingsQuery}>
-      {(settings) => (
-        <>
-          <SettingsSection
-            footer="This server determines where the app signs in and stores your Stuff Stash data."
-            title="Current Server"
-          >
-            <SettingsValueRow label="Server" value={serverHostname(settings.serverUrl)} />
-            <SettingsSeparator />
-            <SettingsValueRow label="Address" value={settings.serverUrl} />
-          </SettingsSection>
-          <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
-            <SettingsActionRow
-              accessibilityLabel={`Change Stuff Stash server from ${serverHostname(settings.serverUrl)}`}
-              disabled={working}
-              label={working ? 'Changing Server…' : 'Change Server'}
-              onPress={() => confirmChangeServer(settings.serverUrl, changeServer)}
-            />
-          </SettingsSection>
-        </>
-      )}
-    </SettingsModelScreen>
+    <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsSection
+        footer="This server determines where the app signs in and stores your Stuff Stash data."
+        title="Current Server"
+      >
+        <SettingsValueRow label="Server" value={serverHostname(diagnostics.apiBaseUrl)} />
+        <SettingsSeparator />
+        <SettingsValueRow label="Address" value={diagnostics.apiBaseUrl} />
+      </SettingsSection>
+      <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
+        <SettingsActionRow
+          accessibilityLabel={`Change Stuff Stash server from ${serverHostname(diagnostics.apiBaseUrl)}`}
+          disabled={working}
+          label={working ? 'Changing Server…' : 'Change Server'}
+          onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, changeServer)}
+        />
+      </SettingsSection>
+    </ScrollView>
   );
 }
 
@@ -195,20 +193,17 @@ export function DiagnosticsSettingsScreen({ settingsQuery }: { readonly settings
 
 export function AboutSettingsScreen({ settingsQuery }: { readonly settingsQuery: SettingsQuery }) {
   const { styles } = useSettingsListStyles();
+  const diagnostics = settingsQuery.getDiagnostics();
   return (
-    <SettingsModelScreen query={settingsQuery}>
-      {(settings) => (
-        <>
-          <View style={styles.detailHeader}>
-            <Text accessibilityRole="header" style={styles.detailTitle}>Stuff Stash</Text>
-            <Text style={styles.detailSubtitle}>A calm, flexible home inventory for knowing what you have and where it lives.</Text>
-          </View>
-          <SettingsSection>
-            <SettingsValueRow label="Version" value={settings.appVersion} />
-          </SettingsSection>
-        </>
-      )}
-    </SettingsModelScreen>
+    <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <View style={styles.detailHeader}>
+        <Text accessibilityRole="header" style={styles.detailTitle}>Stuff Stash</Text>
+        <Text style={styles.detailSubtitle}>A calm, flexible home inventory for knowing what you have and where it lives.</Text>
+      </View>
+      <SettingsSection>
+        <SettingsValueRow label="Version" value={diagnostics.appVersion} />
+      </SettingsSection>
+    </ScrollView>
   );
 }
 

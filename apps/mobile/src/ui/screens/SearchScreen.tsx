@@ -1,8 +1,11 @@
+import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
+  Text,
   useWindowDimensions,
   View
 } from 'react-native';
@@ -195,8 +198,10 @@ export function SearchScreen({
     enabled: surface === 'list' && scope === 'places'
   });
   const previous = useRef<{ scope: string; data: NonNullable<typeof browse.data> } | undefined>(undefined);
-  if (scopeIdentity && browse.data) previous.current = { scope: scopeIdentity, data: browse.data };
-  const data = browse.data ?? (scopeIdentity && previous.current?.scope === scopeIdentity ? previous.current.data : undefined);
+  const accessDenied = isAccessFailure(browse.error) || isAccessFailure(inventoryScope.error) || (context.isError && !context.data);
+  if (accessDenied) previous.current = undefined;
+  if (!accessDenied && scopeIdentity && browse.data) previous.current = { scope: scopeIdentity, data: browse.data };
+  const data = accessDenied ? undefined : browse.data ?? (scopeIdentity && previous.current?.scope === scopeIdentity ? previous.current.data : undefined);
   const firstPage = data?.pages[0];
   const loadedCriteria = firstPage?.criteria;
   const cards = data?.pages.flatMap((page) => page.assets) ?? [];
@@ -204,10 +209,10 @@ export function SearchScreen({
     ...(loadedCriteria ?? { query: submittedQuery, scope, lifecycleState, checkoutState, sort, tagIds: selectedTagIds }),
     assets: loadedCriteria?.scope === 'places' ? [] : cards,
     locations: loadedCriteria?.scope === 'places' ? locationRowsFromAssetCards(cards, places.data?.locations ?? []) : [],
-    hasMore: Boolean(browse.hasNextPage),
+    hasMore: !accessDenied && Boolean(browse.hasNextPage),
     nextCursor: data?.pages.at(-1)?.nextCursor
   };
-  const error = inventoryScope.error ?? browse.error;
+  const error = inventoryScope.error ?? browse.error ?? (accessDenied ? context.error : null);
   const state: BrowseState = error
     ? { status: 'error', results, phase: browse.isFetchNextPageError ? 'pagination' : data ? 'replacement' : 'initial', message: 'This inventory could not be loaded.' }
     : browse.isPending || !identity
@@ -382,7 +387,7 @@ export function SearchScreen({
       void places.refetch({ cancelRefetch: false });
       return;
     }
-    void (inventoryScope.isError ? inventoryScope.refetch() : browse.refetch({ cancelRefetch: false }));
+    void (inventoryScope.isError ? inventoryScope.refetch() : context.isError && !context.data ? context.refetch({ cancelRefetch: false }) : browse.refetch({ cancelRefetch: false }));
   }
 
   const listItems = toBrowseListItems(state.results);
@@ -429,7 +434,7 @@ export function SearchScreen({
         keyboardShouldPersistTaps="handled"
         numColumns={numColumns}
         refreshing={isRefreshing}
-        onEndReached={() => void loadNextPage()}
+        onEndReached={() => { if (listItems.length > 0) void loadNextPage(); }}
         onEndReachedThreshold={0.55}
         onRefresh={() => void refreshResults()}
         ListHeaderComponent={
@@ -481,6 +486,8 @@ export function SearchScreen({
         ListEmptyComponent={
           state.status === 'loading' ? null : isInitialError ? (
             <BrowseLoadError message={state.message} palette={palette} onRetry={retryResults} />
+          ) : state.results.hasMore ? (
+            <View style={styles.footer}><Text style={{ color: palette.textMuted }}>No matching items in the pages loaded so far.</Text></View>
           ) : state.results.query.trim() ? (
             <BrowseEmptyState kind="search" palette={palette} query={state.results.query} onClearSearch={clearSearch} />
           ) : hasActiveFilters ? (
@@ -499,6 +506,8 @@ export function SearchScreen({
             <BrowsePaginationRetry message={state.message} palette={palette} onRetry={retryResults} />
           ) : isLoadingMore ? (
             <View style={styles.footer}><ActivityIndicator color={palette.accent} /></View>
+          ) : state.results.hasMore ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Continue loading results" onPress={() => void loadNextPage()} style={styles.footer}><Text style={{ color: palette.action }}>Continue loading results</Text></Pressable>
           ) : null
         }
         renderItem={({ item }) => item.type === 'place' ? (

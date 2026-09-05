@@ -1,4 +1,5 @@
-import { QueryClient } from '@tanstack/react-query';
+import { isAccessFailure } from '../../application/shared/isAccessFailure';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { MobileAuthenticationRequiredError } from '../../application/auth/MobileAuthSession';
 
 export const mobileServerStateDefaults = {
@@ -8,6 +9,11 @@ export const mobileServerStateDefaults = {
 
 export function createMobileQueryClient(): QueryClient {
   return new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        if (isAccessFailure(error)) query.setState({ data: undefined, dataUpdatedAt: 0 });
+      }
+    }),
     defaultOptions: {
       queries: {
         staleTime: mobileServerStateDefaults.staleTime,
@@ -44,8 +50,9 @@ function errorStatus(error: unknown): number | undefined {
 }
 
 export async function disposeMobileQueryClient(client: QueryClient): Promise<void> {
-  await client.cancelQueries();
+  const cancelled = client.cancelQueries();
   client.clear();
+  await cancelled;
 }
 
 export async function resetMobileInventorySelection(
@@ -53,8 +60,10 @@ export async function resetMobileInventorySelection(
   compositionScopeId: string
 ): Promise<void> {
   const queryKey = mobileQueryKeys.root(compositionScopeId);
-  await client.cancelQueries({ queryKey });
-  client.removeQueries({ queryKey });
+  const cancelled = client.cancelQueries({ queryKey });
+  client.removeQueries({ predicate: query => queryKey.every((value, index) => query.queryKey[index] === value) && query.queryKey[queryKey.length] !== 'inventory-scope' && query.queryKey[queryKey.length] !== 'principal' });
+  await cancelled;
+  await client.resetQueries({ queryKey: mobileQueryKeys.inventoryScope(compositionScopeId), exact: true });
 }
 
 export const mobileQueryKeys = {

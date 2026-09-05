@@ -155,3 +155,38 @@ describe('mounted Browse server state', () => {
   });
 
 });
+
+it('offers continuation rather than a false empty state for sparse filtered pages', async () => {
+  const client = createMobileQueryClient(); const h = new MobileRenderHarness(); let reads = 0;
+  const props = propsFor({ searchAssetsQuery: new SearchAssetsQuery({ browseAssets: async input => { reads++; return input.cursor ? { assets: [asset('Matching item')], hasMore: false } : { assets: [], hasMore: true, nextCursor: 'next' }; } }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>); await settle(h); await settle(h);
+    expect(h.allText()).toContain('No matching items in the pages loaded so far.'); expect(reads).toBe(1);
+    await h.press(h.byLabel('Continue loading results')); await settle(h); expect(h.allText()).toContain('Matching item'); expect(reads).toBe(2);
+  } finally { await h.unmount(); }
+});
+
+it('does not reuse previous filter rows after an authorization denial', async () => {
+  const client = createMobileQueryClient(); const h = new MobileRenderHarness(); let status = 0;
+  const props = propsFor({ searchAssetsQuery: new SearchAssetsQuery({ browseAssets: async () => { if (status) throw Object.assign(new Error('unavailable'), { status }); return { assets: [asset('Private row')], hasMore: false }; } }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>); await settle(h); await settle(h); expect(h.allText()).toContain('Private row');
+    status = 403; await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.inventory('scope', 'tenant', 'inventory') })); await settle(h); expect(h.allText()).not.toContain('Private row');
+    status = 500; await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.inventory('scope', 'tenant', 'inventory') })); await settle(h); expect(h.allText()).not.toContain('Private row');
+    status = 0; await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.inventory('scope', 'tenant', 'inventory') })); await settle(h); expect(h.allText()).toContain('Private row');
+  } finally { await h.unmount(); }
+});
+
+it('retries unavailable context before showing cached Browse results again', async () => {
+  const client = createMobileQueryClient(); const h = new MobileRenderHarness(); let status = 0;
+  const props = propsFor({ inventoryContextQuery: { execute: async () => { if (status) throw Object.assign(new Error('unavailable'), { status }); return { inventoryName: 'Home', canAdd: true }; } }, searchAssetsQuery: new SearchAssetsQuery({ browseAssets: async () => ({ assets: [asset('Verified row')], hasMore: false }) }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>); await settle(h); await settle(h);
+    expect(h.allText()).toContain('Verified row'); status = 403;
+    await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.inventoryContext('scope', 'tenant', 'inventory') })); await settle(h); expect(h.allText()).not.toContain('Verified row');
+    status = 500; await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.inventoryContext('scope', 'tenant', 'inventory') })); await settle(h); expect(h.allText()).not.toContain('Verified row');
+    status = 0;
+    const retry = h.allByType('Pressable').find(node => node.queryAll(child => child.type === 'Text' && child.children.includes('Retry')).length > 0);
+    await h.press(retry!); await settle(h); expect(h.allText()).toContain('Verified row');
+  } finally { await h.unmount(); }
+});

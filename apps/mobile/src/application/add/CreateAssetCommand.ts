@@ -26,7 +26,7 @@ export type CreateAssetCommandResult = {
 };
 
 export class CreateAssetCommand {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: Pick<InventorySummaryRepository, 'createAsset' | 'createAssetTag' | 'addAssetPhoto'>) {}
 
   async execute(input: CreateAssetCommandInput): Promise<CreateAssetCommandResult> {
     const title = input.title.trim();

@@ -151,3 +151,23 @@ Only an executed plan matching the active reviewed plan reports an injected voic
 ## Add Draft Ownership
 
 The Add form owns its draft per composition, tenant and inventory. Context/tag refreshes update available metadata and permissions without restoring a saved draft, reapplying the route parent, or rereading principal identity. Initial draft restoration occurs once per form scope. Scope replacement creates a new form owner. Local draft persistence remains separate from query data.
+
+## Discovery and Adapter Boundaries
+
+Inventory discovery belongs to a focused adapter, separate from asset mapping, media transfer, asset commands and list queries. The compatibility inventory facade delegates these responsibilities instead of accumulating implementations. Shared directory reads deduplicate concurrent consumers while cancellation belongs to each consumer; only the final departing consumer aborts the shared transport. Aborted or obsolete responses cannot populate cache. Completed directory results expire after five minutes (adapter clock injectable for tests), and explicit discovery refresh remains available when opening newly accepted inventories. Command identity is retained independently so a warmed mutation never waits on expired directory discovery; discovery refresh belongs to read paths, and the API remains authoritative for authorization. All tenant and inventory pages are followed with cycle/maximum-page guards. A previously selected inventory disappearing must fail rather than silently retarget a query to another inventory.
+
+Shared resource reads must reject cancellation before publishing results. A composition or selection reset cancels old work and removes old scoped data before replacement reads can begin. Mounted provider tests cover composition disposal, foreground refresh and online-manager reconnect. No offline command queue is introduced.
+
+Native connectivity uses pinned `expo-network` 55.0.14 (the installed Expo 55 compatibility manifest) behind an injected connectivity port. The adapter subscribes to connectivity changes and reads the initial state without polling or third-party reachability probes. Unknown state remains online; a known disconnected state pauses queries, and reconnection revalidates stale active data through TanStack's online manager. Subscription cleanup and late initial-read ordering are tested. Native build validation remains CI-only.
+
+Browse reads scan at most five transport pages per requested UI page when client-side kind filtering is required. A partial empty page retains its continuation cursor and offers an explicit continuation control; it must not claim the inventory/search is empty before exhaustion. Traversal and attachment pagination must check cancellation between pages and reject repeated cursors. Remaining repeated breadcrumb ancestor reads across separate pages are bounded by returned page rows and ancestry depth; a server-side breadcrumb/kind contract is deferred rather than introducing a second hidden entity cache.
+
+The mobile structural check rejects API-client or adapter imports in application/domain source and inventory production adapter files over 800 lines (test fixtures excluded). It keeps the inventory facade free of upload transport implementations and query-key/cache implementations. These checks run in pre-commit and CI.
+
+Application command consumers require only their operation-specific repository capabilities (creation/tag/photo attachment, lifecycle, checkout/reversal, or selection). The compatibility inventory interface may aggregate these capabilities for legacy consumers, but commands must not depend on its unrelated read/search surface.
+
+Cached resource values may remain visible through transient refresh failure, but authentication/authorization failure or authoritative disappearance must hide those values and associated controls until a successful retry. This applies to shared inventory reads, paginated Browse, and activity/checkout history as well as Settings. Cached data from a failed filter replacement must not override an access denial.
+
+The query-cache adapter discards resource data on authoritative access failure. Later unsuccessful retries cannot restore the discarded value; dependent surfaces remain unavailable while their required scope/context has an error and no verified data. A successful response is required to repopulate it.
+
+Appearance, About and Connection settings render from local preferences/runtime diagnostics without principal or inventory reads. Diagnostics may reuse shared principal/scope queries to display identity IDs. A shared resource retry must recover failed inventory discovery before reading the resource.

@@ -1,3 +1,4 @@
+import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
@@ -59,7 +60,7 @@ export function AssetHistoryRouteScreen({
     queryFn: ({ signal, pageParam }) => assetActivityQuery.execute({ tenantId, inventoryId, assetId, view, limit: 20, cursor: pageParam, signal }),
     getNextPageParam: (page) => page.hasMore ? page.nextCursor : undefined
   });
-  const firstPage = history.data?.pages[0];
+  const firstPage = isAccessFailure(history.error) ? undefined : history.data?.pages[0];
   const state: HistoryState = firstPage
     ? { ...firstPage, status: 'ready', records: history.data!.pages.flatMap((page) => page.records), hasMore: history.hasNextPage }
     : history.isError ? { status: 'error', ...historyLoadError(history.error) } : { status: 'loading' };
@@ -72,7 +73,7 @@ export function AssetHistoryRouteScreen({
     try {
       await history.refetch({ throwOnError: true });
     } catch {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh History', message: 'Your existing History is still shown.' });
+      feedback.showNotice({ tone: 'error', title: 'Could not refresh History', message: 'Please try again when access and connectivity are available.' });
     } finally {
       setIsRefreshing(false);
     }
