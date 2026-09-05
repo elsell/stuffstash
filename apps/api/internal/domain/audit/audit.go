@@ -116,6 +116,8 @@ const (
 	ActionProviderProfileCredentialReplaced         Action = "provider_profile.credential_replaced"
 	ActionProviderProfileTested                     Action = "provider_profile.tested"
 	ActionConversationWorkflowRevisionCreated       Action = "conversation_workflow.revision_created"
+	ActionConversationWorkflowViewed                Action = "conversation_workflow.viewed"
+	ActionConversationWorkflowListed                Action = "conversation_workflow.listed"
 	ActionConversationWorkflowActivated             Action = "conversation_workflow.activated"
 	ActionConversationEvaluationCaseRevisionCreated Action = "conversation_evaluation_case.revision_created"
 	ActionConversationEvaluationCaseViewed          Action = "conversation_evaluation_case.viewed"
@@ -217,6 +219,8 @@ func NewAction(value string) (Action, bool) {
 		ActionVoiceProviderConfigurationUpdated,
 		ActionConversationWorkflowRevisionCreated,
 		ActionConversationWorkflowActivated,
+		ActionConversationWorkflowViewed,
+		ActionConversationWorkflowListed,
 		ActionConversationEvaluationCaseRevisionCreated,
 		ActionConversationEvaluationCaseViewed,
 		ActionConversationEvaluationCaseListed,

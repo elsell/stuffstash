@@ -13,6 +13,7 @@ import (
 func Verify(t *testing.T, repo interface {
 	ports.ConversationWorkflowRepository
 	ports.WorkflowDiscoveryRepository
+	ports.AuditRepository
 }) {
 	t.Helper()
 	ctx := context.Background()
@@ -97,6 +98,24 @@ func Verify(t *testing.T, repo interface {
 		if _, err := repo.ListWorkflowRevisions(ctx, "discovery-home", "a", ports.WorkflowRevisionPageRequest{Limit: limit}); err == nil {
 			t.Fatal("invalid revision limit")
 		}
+	}
+
+	for index, action := range []audit.Action{audit.ActionConversationWorkflowViewed, audit.ActionConversationWorkflowListed} {
+		id := audit.ID("discovery-read-view")
+		if index == 1 {
+			id = "discovery-read-list"
+		}
+		record, ok := audit.NewRecord(id, "discovery-home", "", "owner", action, audit.SourceAPI, audit.TargetConversationWorkflow, "a", fixture.Now, "", nil)
+		if !ok {
+			t.Fatal("read audit invalid")
+		}
+		if err := repo.SaveAuditRecord(ctx, record); err != nil {
+			t.Fatal(err)
+		}
+	}
+	records, err := repo.ListTenantAuditRecords(ctx, "discovery-home", ports.AuditRecordPageRequest{Limit: 100})
+	if err != nil || len(records) != 6 {
+		t.Fatalf("read audit round trip: %d %v", len(records), err)
 	}
 	cancelled, cancel := context.WithCancel(ctx)
 	cancel()

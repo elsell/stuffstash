@@ -3,6 +3,7 @@ package agentmodel
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	model "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -128,4 +129,57 @@ type workflowQueryFailingAudit struct{ ports.AuditRepository }
 
 func (workflowQueryFailingAudit) SaveAuditRecord(context.Context, audit.Record) error {
 	return errors.New("audit unavailable")
+}
+
+func TestWorkflowQueryFullPages(t *testing.T) {
+	deps, input, store := evaluationCommandSetup(t)
+	ctx := context.Background()
+	service := NewWorkflowQueryService(WorkflowQueryDependencies{Authorizer: deps.Authorizer, Repository: store, Discovery: store, Audit: store, IDs: deps.IDs, Clock: deps.Clock})
+	original, _, err := store.WorkflowRevision(ctx, input.TenantID, input.WorkflowID, input.RevisionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	appendRevision := func(workflow model.WorkflowID, number int) {
+		value := original.Snapshot()
+		value.WorkflowID = workflow
+		value.Number = number
+		value.ID = model.WorkflowRevisionID(fmt.Sprintf("%s-%03d", workflow, number))
+		revision, err := model.NewWorkflowRevision(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		record, ok := audit.NewRecord(audit.ID(value.ID), audit.TenantID(input.TenantID), "", "owner", audit.ActionConversationWorkflowRevisionCreated, audit.SourceAPI, audit.TargetConversationWorkflow, string(workflow), value.CreatedAt, "", nil)
+		if !ok {
+			t.Fatal("fixture audit invalid")
+		}
+		if err := store.AppendWorkflowRevision(ctx, revision, number-1, record); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 1; i <= 99; i++ {
+		appendRevision(model.WorkflowID(fmt.Sprintf("w%03d", i)), 1)
+		appendRevision(input.WorkflowID, i+1)
+	}
+	heads, err := service.List(ctx, ListWorkflowsInput{EvaluationRunAccess: input.EvaluationRunAccess, Limit: 100})
+	if err != nil || len(heads.Items) != 100 || heads.NextCursor != nil {
+		t.Fatal("exactly full head page")
+	}
+	history, err := service.History(ctx, ListWorkflowRevisionsInput{EvaluationRunAccess: input.EvaluationRunAccess, WorkflowID: input.WorkflowID, Limit: 100})
+	if err != nil || len(history.Items) != 100 || history.NextCursor != nil {
+		t.Fatal("exactly full history page")
+	}
+	appendRevision("w100", 1)
+	appendRevision(input.WorkflowID, 101)
+	heads, err = service.List(ctx, ListWorkflowsInput{EvaluationRunAccess: input.EvaluationRunAccess, Limit: 100})
+	if err != nil || len(heads.Items) != 100 || heads.NextCursor == nil {
+		t.Fatal("missing head continuation")
+	}
+	history, err = service.History(ctx, ListWorkflowRevisionsInput{EvaluationRunAccess: input.EvaluationRunAccess, WorkflowID: input.WorkflowID, Limit: 100})
+	if err != nil || len(history.Items) != 100 || history.NextCursor == nil {
+		t.Fatal("missing history continuation")
+	}
+	tail, err := service.History(ctx, ListWorkflowRevisionsInput{EvaluationRunAccess: input.EvaluationRunAccess, WorkflowID: input.WorkflowID, Limit: 100, Cursor: *history.NextCursor})
+	if err != nil || len(tail.Items) != 1 || tail.Items[0].Snapshot().Number != 101 || tail.NextCursor != nil {
+		t.Fatal("history continuation lost revision")
+	}
 }
