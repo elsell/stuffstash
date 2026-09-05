@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -27,8 +28,8 @@ func Verify(t *testing.T, repository interface {
 	if auditErr != nil || len(records) != 1 || records[0].TargetType != "conversation_evaluation_run" || records[0].TargetID != "primary" {
 		t.Fatalf("run audit round trip: records=%v error=%v", records, auditErr)
 	}
-	for _, action := range []audit.Action{"conversation_evaluation_run.viewed", "conversation_evaluation_run.listed"} {
-		if err := repository.SaveAuditRecord(ctx, Record(t, string(action), "primary", action)); err != nil {
+	for index, action := range []audit.Action{audit.ActionConversationEvaluationRunViewed, audit.ActionConversationEvaluationRunListed} {
+		if err := repository.SaveAuditRecord(ctx, Record(t, "read-"+strconv.Itoa(index), "primary", action)); err != nil {
 			t.Fatal(err)
 		}
 	}
