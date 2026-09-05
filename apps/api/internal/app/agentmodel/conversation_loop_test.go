@@ -68,3 +68,55 @@ func TestConversationLoopRetainsToolResultsInHistory(t *testing.T) {
 		t.Fatal("follow-up history lost the executed search result")
 	}
 }
+
+type conversationProposalModel struct{ calls int }
+
+func (m *conversationProposalModel) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	m.calls++
+	return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{
+		{ID: "proposal-1", Name: "propose_change", Arguments: map[string]any{"assetId": "existing-drill"}},
+		{ID: "later-read", Name: "search", Arguments: map[string]any{"query": "garage"}},
+	}}, nil
+}
+
+type conversationProposalTools struct{ calls int }
+
+func (e *conversationProposalTools) ExecuteConversationTool(_ context.Context, call ports.AgentToolCall) (ports.ConversationToolOutcome, error) {
+	e.calls++
+	return ports.ConversationToolOutcome{Result: ports.AgentToolResult{CallID: call.ID, Name: call.Name, Content: "Change proposed for review."}, ApprovalPlanID: "review-plan"}, nil
+}
+func TestConversationLoopPausesImmediatelyForApproval(t *testing.T) {
+	model, executor := &conversationProposalModel{}, &conversationProposalTools{}
+	result, err := RunConversation(context.Background(), model, executor, ports.ConversationModelInput{
+		Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Move my drill into the garage."}},
+	}, ConversationLimits{ModelCalls: 4, ToolCalls: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ApprovalPlanID != "review-plan" || result.Answer != nil || model.calls != 1 || executor.calls != 1 {
+		t.Fatalf("continued beyond approval boundary: result=%+v model=%d tools=%d", result, model.calls, executor.calls)
+	}
+}
+func TestConversationLoopCancellationDoesNotCallProviders(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	model, executor := &conversationInventoryModel{}, &conversationInventoryTools{}
+	_, err := RunConversation(ctx, model, executor, ports.ConversationModelInput{
+		Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Do I have chemicals?"}},
+	}, ConversationLimits{ModelCalls: 3, ToolCalls: 3})
+	if err != context.Canceled || model.calls != 0 || executor.calls != 0 {
+		t.Fatalf("cancelled conversation ran work: error=%v model=%d tools=%d", err, model.calls, executor.calls)
+	}
+}
+func TestConversationLoopModelBudgetRetainsExecutedEvidence(t *testing.T) {
+	model, executor := &conversationInventoryModel{}, &conversationInventoryTools{}
+	result, err := RunConversation(context.Background(), model, executor, ports.ConversationModelInput{
+		Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Do I have chemicals?"}},
+	}, ConversationLimits{ModelCalls: 1, ToolCalls: 3})
+	if err == nil || model.calls != 1 || executor.calls != 1 {
+		t.Fatalf("budget not enforced: %v %d %d", err, model.calls, executor.calls)
+	}
+	if len(result.Messages) == 0 || len(result.Messages[len(result.Messages)-1].ToolResults) != 1 {
+		t.Fatal("budget exhaustion discarded useful evidence")
+	}
+}
