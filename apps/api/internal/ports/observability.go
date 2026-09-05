@@ -93,6 +93,8 @@ const (
 	EventHTTPRateLimited                           EventName = "http.rate_limited"
 	EventConversationWorkflowRevisionCreated       EventName = "conversation_workflow.revision_created"
 	EventConversationEvaluationCaseRevisionCreated EventName = "conversation_evaluation_case.revision_created"
+	EventConversationEvaluationRunCreated          EventName = "conversation_evaluation_run.created"
+	EventConversationEvaluationRunCancelled        EventName = "conversation_evaluation_run.cancelled"
 	EventProviderProfileCreated                    EventName = "provider_profile.created"
 	EventProviderProfileViewed                     EventName = "provider_profile.viewed"
 	EventProviderProfilesListed                    EventName = "provider_profile.listed"

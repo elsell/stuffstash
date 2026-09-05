@@ -31,6 +31,8 @@ The current pass adds audited tenant-configure case APIs and pinned run lifecycl
 
 Durable run storage now has shared memory, SQLite and PostgreSQL conformance coverage for immutable snapshots, audited CAS transitions, concurrent claims, cancellation and timestamp precision. CI caught a PostgreSQL audit-target constraint omission affecting workflows, cases and runs; real-target fixtures and audit readback now guard the fix. The storage pass is awaiting corrected CI evidence before worker wiring. Code review found no blockers; the shared legacy audit fixture retains its asset default for unrelated tests, while conversation tests explicitly supply their target.
 
+Authorized queue/cancel application commands now pin explicit workflow/case revisions through scoped repositories and provider snapshots through a dedicated port. Tests cover access checks, invalid pins/configuration, audit rollback, idempotent cancellation and cancellation racing a worker claim. Code review found no blockers; command CI is pending. Production snapshot resolution, worker wiring and adversarial HTTP boundary coverage remain required before exposure.
+
 The web interaction design is specified in `specs/agent-model/conversation-workspace.spec.md`; no new web surface has been implemented yet. Next connect durable run persistence and authorized workers, workflow list/read/activation gates and the web editing/evaluation workspace. Preserve user-defined suites and configured providers without granting approval in fixture evaluations. Follow with real ADC audio cases, supported local-provider comparison where available, TestFlight publication and infra GitOps rollout. No local builds.
 
 The native cancellation and export-compliance fixes shipped in 0.16.4. The current

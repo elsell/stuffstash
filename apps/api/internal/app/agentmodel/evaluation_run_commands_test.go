@@ -152,3 +152,51 @@ func TestEvaluationRunCommandsAuthorizeBeforeDependencies(t *testing.T) {
 		}
 	}
 }
+
+// The read view can lag a worker's commit; the real repository still fences writes.
+type evaluationStaleRunView struct {
+	ports.EvaluationRunRepository
+	previous domain.EvaluationRun
+}
+
+func (v evaluationStaleRunView) EvaluationRun(context.Context, tenant.ID, domain.EvaluationRunID) (domain.EvaluationRun, bool, error) {
+	return v.previous, true, nil
+}
+
+type evaluationDuplicateAuditIDs struct{}
+
+func (evaluationDuplicateAuditIDs) NewID() string { return "workflow-audit" }
+
+func TestEvaluationRunCommandsPreserveAtomicAuditAndConcurrentProgress(t *testing.T) {
+	deps, input, store := evaluationCommandSetup(t)
+	ctx := context.Background()
+	failed := deps
+	failed.IDs = evaluationDuplicateAuditIDs{}
+	if _, err := NewEvaluationRunCommandService(failed).Queue(ctx, input); err == nil {
+		t.Fatal("duplicate audit accepted")
+	}
+	rows, err := store.ListEvaluationRuns(ctx, input.TenantID, ports.EvaluationRunPageRequest{Limit: 100})
+	if err != nil || len(rows) != 0 {
+		t.Fatal("audit failure persisted a run")
+	}
+	queued, err := NewEvaluationRunCommandService(deps).Queue(ctx, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claimed, err := queued.Claim("worker", evaluationCommandClock{}.Now(), time.Minute)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveEvaluationRun(ctx, claimed, 1, fixture.Record(t, "worker-claim", string(queued.Snapshot().Input.ID), audit.ActionConversationEvaluationRunProgressed)); err != nil {
+		t.Fatal(err)
+	}
+	deps.Runs = evaluationStaleRunView{EvaluationRunRepository: store, previous: queued}
+	_, err = NewEvaluationRunCommandService(deps).Cancel(ctx, CancelEvaluationRunInput{EvaluationRunAccess: input.EvaluationRunAccess, RunID: queued.Snapshot().Input.ID, ExpectedVersion: 1})
+	if !errors.Is(err, apperrors.ErrConflict) {
+		t.Fatalf("concurrent claim not fenced: %v", err)
+	}
+	stored, found, err := store.EvaluationRun(ctx, input.TenantID, queued.Snapshot().Input.ID)
+	if err != nil || !found || stored.Snapshot().State != domain.EvaluationRunRunning {
+		t.Fatal("cancellation overwrote worker progress")
+	}
+}
