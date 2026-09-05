@@ -291,3 +291,9 @@ Tests must cover:
 - Which exact REST paths should manage tenant provider profiles?
 - What key rotation workflow should be required before production deployments store tenant provider credentials?
 - Which provider profile fields should be editable after a profile has been used by completed realtime sessions?
+
+## Versioned credential resolution for evaluations
+
+Evaluation provider configuration identities include the immutable credential record ID selected for that exact provider construction. A versioned credential-vault port returns the active record ID and its unsealed material from one repository read. Separate reads of metadata and secret material are forbidden because replacement could pair an old version with a new credential. Replacement continues to create a new record ID. Returned material is an owned copy, is never serialized into runs or audits, and never contributes secret bytes to configuration fingerprints.
+
+The database vault rejects records outside the requested full credential scope, records already superseded, and blank record IDs before unsealing. Both legacy material-only reads and versioned reads share this validation. Missing active credentials return absence; invalid or unreadable records return no material or version. This port does not identify the underlying external account behind a server-ADC marker; the evaluation configuration adapter must additionally include the operator's effective ADC configuration/version before claiming reproducibility.
