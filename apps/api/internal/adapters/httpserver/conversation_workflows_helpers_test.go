@@ -4,11 +4,14 @@ import (
 	"context"
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/gormstore"
+	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	modelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"net/http"
 	"path/filepath"
 	"testing"
@@ -40,7 +43,11 @@ func newWorkflowHTTPTestApp(t *testing.T) app.App {
 	if err := authorizer.GrantInventoryViewer(ctx, principal("viewer"), tenant.ID("home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatal(err)
 	}
-	return app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, ProviderProfiles: store, ConversationWorkflows: repository, EvaluationCases: repository, Audit: repository, ConversationWorkflowLimits: agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}})
+	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}
+	ids := idgen.NewULIDGenerator()
+	commands := modelapp.NewEvaluationRunCommandService(modelapp.EvaluationRunCommandDependencies{Authorizer: authorizer, Runs: repository, Workflows: repository, Cases: repository, Providers: evaluationHTTPSnapshotResolver{}, IDs: ids, Clock: ports.SystemClock{}, Limits: limits, MaxAttempts: 2})
+	queries := modelapp.NewEvaluationRunQueryService(modelapp.EvaluationRunQueryDependencies{Authorizer: authorizer, Runs: repository, Audit: repository, IDs: ids, Clock: ports.SystemClock{}})
+	return app.New(app.Dependencies{EvaluationRunCommands: commands, EvaluationRunQueries: queries, Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, ProviderProfiles: store, ConversationWorkflows: repository, EvaluationCases: repository, Audit: repository, ConversationWorkflowLimits: agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}})
 }
 
 func workflowDraftRequest() map[string]any {
