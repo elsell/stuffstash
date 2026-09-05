@@ -49,11 +49,10 @@ func (e *evaluationWorkerExecutor) Execute(ctx context.Context, input ports.Conv
 func evaluationWorkerSetup(t *testing.T) (EvaluationWorkerDependencies, *memory.Store, *evaluationWorkerExecutor, *evaluationWorkerClock) {
 	t.Helper()
 	deps, input, store := evaluationCommandSetup(t)
-	run, err := NewEvaluationRunCommandService(deps).Queue(context.Background(), input)
+	_, err := NewEvaluationRunCommandService(deps).Queue(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = run
 	executor := &evaluationWorkerExecutor{outcomes: []model.EvaluationObservedOutcome{
 		{Kind: model.EvaluationOutcomeAnswer, ReferencedAssets: []string{"clothes"}, Locations: []model.EvaluationLocationExpectation{{AssetID: "clothes", AncestorID: "box"}}},
 		{Kind: model.EvaluationOutcomeProposal, ReferencedAssets: []string{"clothes"}, Locations: []model.EvaluationLocationExpectation{{AssetID: "clothes", AncestorID: "box"}}, Proposals: []model.EvaluationProposal{{Operation: model.OperationCheckout, TargetID: "clothes", Details: "For Sam"}}},
@@ -130,5 +129,97 @@ func TestEvaluationWorkerCannotOverwriteCancellation(t *testing.T) {
 	run, _, _ := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
 	if run.Snapshot().State != model.EvaluationRunCancelled || len(run.Snapshot().Results) != 0 || executor.calls != 1 {
 		t.Fatal("late result overwrote cancellation")
+	}
+}
+
+func TestEvaluationWorkerResumesOnlyUnfinishedCases(t *testing.T) {
+	deps, store, executor, clock := evaluationWorkerSetup(t)
+	ref := workerReference(t, store)
+	run, _, err := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claimed, err := run.Claim("old-worker", clock.Now(), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveEvaluationRun(context.Background(), claimed, run.Snapshot().Version, fixture.Record(t, "old-claim", string(ref.ID), "conversation_evaluation_run.progressed")); err != nil {
+		t.Fatal(err)
+	}
+	partial, err := claimed.RecordCase("old-worker", 0, executor.outcomes[0], 1, time.Second, clock.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveEvaluationRun(context.Background(), partial, claimed.Snapshot().Version, fixture.Record(t, "old-result", string(ref.ID), "conversation_evaluation_run.progressed")); err != nil {
+		t.Fatal(err)
+	}
+	clock.now = clock.now.Add(2 * time.Second)
+	executor.outcomes = executor.outcomes[1:]
+	if err := NewEvaluationWorker(deps).Process(context.Background(), ref); err != nil {
+		t.Fatal(err)
+	}
+	final, _, _ := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
+	if final.Snapshot().State != model.EvaluationRunSucceeded || final.Snapshot().Attempts != 2 || executor.calls != 1 {
+		t.Fatal("completed prefix replayed or recovery failed")
+	}
+}
+func TestEvaluationWorkerExhaustedLeaseFailsWithoutExecuting(t *testing.T) {
+	deps, store, executor, clock := evaluationWorkerSetup(t)
+	ref := workerReference(t, store)
+	run, _, err := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, token := range []string{"lost-one", "lost-two"} {
+		claimed, err := run.Claim(token, clock.Now(), time.Second)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := store.SaveEvaluationRun(context.Background(), claimed, run.Snapshot().Version, fixture.Record(t, token, string(ref.ID), "conversation_evaluation_run.progressed")); err != nil {
+			t.Fatal(err)
+		}
+		run = claimed
+		clock.now = clock.now.Add(2 * time.Second)
+	}
+	if err := NewEvaluationWorker(deps).Process(context.Background(), ref); err != nil {
+		t.Fatal(err)
+	}
+	final, _, _ := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
+	if final.Snapshot().FailureCode != model.EvaluationRunFailureWorkerLost || executor.calls != 0 {
+		t.Fatal("exhausted run executed or remained live")
+	}
+}
+
+func TestEvaluationWorkerRejectsPositiveDurationOverflowBeforeClaim(t *testing.T) {
+	deps, store, _, _ := evaluationWorkerSetup(t)
+	input := fixture.Run(t, "overflow").Snapshot().Input
+	revision := input.Workflow.Snapshot()
+	settings := revision.Definition.Settings()
+	settings.Budget.ElapsedSeconds = 18446744074
+	revision.Limits.Budget.ElapsedSeconds = settings.Budget.ElapsedSeconds
+	input.Limits = revision.Limits
+	definition, err := model.NewWorkflowDefinition(settings, revision.Limits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	revision.Definition = definition
+	input.Workflow, err = model.NewWorkflowRevision(revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, err := model.NewEvaluationRun(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveEvaluationRun(context.Background(), run, 0, fixture.Record(t, "overflow-created", "overflow", "conversation_evaluation_run.created")); err != nil {
+		t.Fatal(err)
+	}
+	ref := ports.EvaluationRunReference{TenantID: fixture.TenantID, ID: "overflow"}
+	if err := NewEvaluationWorker(deps).Process(context.Background(), ref); err == nil {
+		t.Fatal("positive overflow accepted")
+	}
+	saved, _, err := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
+	if err != nil || saved.Snapshot().Version != 1 || deps.Providers.(*evaluationWorkerProviders).calls != 0 {
+		t.Fatal("overflow run claimed or providers accessed")
 	}
 }
