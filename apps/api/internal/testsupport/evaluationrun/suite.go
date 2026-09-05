@@ -164,3 +164,32 @@ func VerifyConcurrentClaims(t *testing.T, repository ports.EvaluationRunReposito
 		t.Fatal("expired lease not recoverable")
 	}
 }
+
+func VerifyQueueTimestampPrecision(t *testing.T, repository ports.EvaluationRunRepository) {
+	t.Helper()
+	ctx := context.Background()
+	for i, id := range []string{"precision-z", "precision-a"} {
+		input := Run(t, id).Snapshot().Input
+		input.CreatedAt = input.CreatedAt.Add(time.Duration(i+1) * 123 * time.Nanosecond)
+		run, err := model.NewEvaluationRun(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := repository.SaveEvaluationRun(ctx, run, 0, Record(t, id, id, audit.ActionConversationEvaluationRunCreated)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ready, err := repository.RunnableEvaluationRuns(ctx, Now.Add(time.Second), 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ordered []model.EvaluationRunID
+	for _, ref := range ready {
+		if ref.ID == "precision-a" || ref.ID == "precision-z" {
+			ordered = append(ordered, ref.ID)
+		}
+	}
+	if len(ordered) != 2 || ordered[0] != "precision-a" || ordered[1] != "precision-z" {
+		t.Fatalf("queue timestamp precision differs from SQL: %v", ordered)
+	}
+}

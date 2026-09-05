@@ -16,6 +16,7 @@ func TestEvaluationRunRepository(t *testing.T) {
 	store := newTestStore(t, ctx)
 	saveTenant(t, ctx, store, evaluationrun.TenantID, "Home")
 	evaluationrun.Verify(t, store)
+	evaluationrun.VerifyQueueTimestampPrecision(t, store)
 }
 
 func TestEvaluationRunTimestampPrecision(t *testing.T) {

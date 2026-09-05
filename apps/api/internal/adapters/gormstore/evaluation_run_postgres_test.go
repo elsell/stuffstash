@@ -43,6 +43,7 @@ func TestPostgresEvaluationRunMigrationsAndClaims(t *testing.T) {
 	store := NewStore(db)
 	saveTenant(t, ctx, store, evaluationrun.TenantID, "Home")
 	evaluationrun.Verify(t, store)
+	evaluationrun.VerifyQueueTimestampPrecision(t, store)
 	evaluationrun.VerifyConcurrentClaims(t, store)
 	verifyEvaluationRunTimestampPrecision(t, store)
 }
