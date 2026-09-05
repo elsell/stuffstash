@@ -246,6 +246,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID conversation workflows by workflow ID activation */
+        post: operations["post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-activation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions": {
         parameters: {
             query?: never;
@@ -3045,6 +3062,22 @@ export interface components {
             /** @enum {string} */
             selectionSource: "explicit" | "implicit" | "missing";
         };
+        WorkflowActivationBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/WorkflowActivationBody.json
+             */
+            readonly $schema?: string;
+            cases: components["schemas"]["EvaluationRunCaseReference"][] | null;
+            expected?: components["schemas"]["WorkflowSelection"];
+            revisionId: string;
+            runId: string;
+        };
+        WorkflowSelection: {
+            revisionId: string;
+            workflowId: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -3707,6 +3740,45 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-activation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowActivationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
