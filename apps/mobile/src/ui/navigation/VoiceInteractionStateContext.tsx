@@ -93,14 +93,14 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
   useEffect(() => {
     if (
       stage !== 'completed' ||
-      realtime?.responseKind !== 'clarification' ||
-      realtime.clarificationFollowUpAvailable !== true
+      (realtime?.responseKind !== 'clarification' && realtime?.responseKind !== 'answer') ||
+      realtime.followUpAvailable !== true
     ) {
       return;
     }
 
     const interval = setInterval(() => {
-      setRealtime((current) => refreshClarificationFollowUpAvailability(
+      setRealtime((current) => refreshVoiceFollowUpAvailability(
         current,
         realtimeController.canSendFollowUpAudio()
       ));
@@ -109,7 +109,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
     return () => {
       clearInterval(interval);
     };
-  }, [realtime?.clarificationFollowUpAvailable, realtime?.responseKind, realtimeController, stage]);
+  }, [realtime?.followUpAvailable, realtime?.responseKind, realtimeController, stage]);
 
   const value = useMemo<VoiceInteractionStateContextValue>(() => {
     const state: VoiceInteractionState =
@@ -128,8 +128,8 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         sessionGeneration.current = generation;
         try {
           const next = realtime?.status === 'completed' &&
-            realtime.responseKind === 'clarification' &&
-            realtime.clarificationFollowUpAvailable === true &&
+            (realtime.responseKind === 'clarification' || realtime.responseKind === 'answer') &&
+            realtime.followUpAvailable === true &&
             realtimeController.canSendFollowUpAudio()
             ? await realtimeController.startFollowUp()
             : await realtimeController.start();
@@ -150,8 +150,8 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         const generation = sessionGeneration.current;
         setStage('processing');
         try {
-          const shouldSendFollowUp = realtime?.responseKind === 'clarification' &&
-            realtime.clarificationFollowUpAvailable === true &&
+          const shouldSendFollowUp = (realtime?.responseKind === 'clarification' || realtime?.responseKind === 'answer') &&
+            realtime.followUpAvailable === true &&
             realtimeController.canSendFollowUpAudio();
           const states = await (shouldSendFollowUp ? realtimeController.stopFollowUp : realtimeController.stop).call(realtimeController, (nextState: VoiceRealtimeState) => {
             if (sessionGeneration.current !== generation) {
@@ -298,14 +298,14 @@ export function applyRecordingLevelToRealtime(
     : current;
 }
 
-export function refreshClarificationFollowUpAvailability(
+export function refreshVoiceFollowUpAvailability(
   current: VoiceRealtimeState | null,
   canSendFollowUpAudio: boolean
 ): VoiceRealtimeState | null {
   if (
     current?.status !== 'completed' ||
-    current.responseKind !== 'clarification' ||
-    current.clarificationFollowUpAvailable !== true ||
+    (current.responseKind !== 'clarification' && current.responseKind !== 'answer') ||
+    current.followUpAvailable !== true ||
     canSendFollowUpAudio
   ) {
     return current;
@@ -313,7 +313,7 @@ export function refreshClarificationFollowUpAvailability(
 
   return {
     ...current,
-    clarificationFollowUpAvailable: false
+    followUpAvailable: false
   };
 }
 

@@ -1,6 +1,7 @@
 package app
 
 import (
+	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -52,13 +53,14 @@ const (
 )
 
 type RealtimeVoiceSessionInput struct {
-	Principal            identity.Principal
-	TenantID             tenant.ID
-	InventoryID          inventory.InventoryID
-	Source               string
-	InputAudio           ports.RealtimeAudioFormat
-	OutputAudio          RealtimeVoiceOutputAudio
-	DeveloperDiagnostics bool
+	ConversationContinuity bool
+	Principal              identity.Principal
+	TenantID               tenant.ID
+	InventoryID            inventory.InventoryID
+	Source                 string
+	InputAudio             ports.RealtimeAudioFormat
+	OutputAudio            RealtimeVoiceOutputAudio
+	DeveloperDiagnostics   bool
 }
 
 type RealtimeVoiceOutputAudio struct {
@@ -66,6 +68,7 @@ type RealtimeVoiceOutputAudio struct {
 }
 
 type RealtimeVoiceSession struct {
+	ConversationContinuity     bool
 	ID                         string
 	TenantID                   tenant.ID
 	InventoryID                inventory.InventoryID
@@ -76,8 +79,10 @@ type RealtimeVoiceSession struct {
 	SpeechToTextProfileID      string
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
+	WorkflowRevisionID         string
 	LanguagePromptTemplate     string
 	DeveloperDiagnostics       bool
+	workflow                   *agentmodelapp.PreparedWorkflow
 	speechToText               ports.SpeechToTextProvider
 	languageInference          ports.LanguageInferenceProvider
 	responseGenerator          ports.VoiceResponseGenerator

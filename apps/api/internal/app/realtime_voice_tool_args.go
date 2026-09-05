@@ -216,6 +216,7 @@ type realtimeVoiceAssetToolOutput struct {
 }
 
 type realtimeVoiceAssetToolItem struct {
+	TagNames        []string                           `json:"tagNames"`
 	AssetID         string                             `json:"assetId,omitempty"`
 	Title           string                             `json:"title"`
 	Kind            string                             `json:"kind"`

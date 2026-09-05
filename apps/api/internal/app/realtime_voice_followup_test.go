@@ -217,3 +217,22 @@ func realtimeVoiceUnsupportedScript() *scriptedRealtimeLanguageInference {
 	}
 	return &scriptedRealtimeLanguageInference{turns: []ports.LanguageInferenceTurn{{Investigation: &step}}}
 }
+
+func TestRealtimeVoiceNewQuestionDoesNotInheritOldClarificationIntent(t *testing.T) {
+	turns := []ports.AgentConversationTurn{{Role: ports.AgentConversationRoleUser, Text: "Move my water bottle."}, {Role: ports.AgentConversationRoleAssistant, Kind: string(ports.StructuredAgentResponseKindClarification), Text: "Where should it go?"}}
+	if got := realtimeVoiceEffectiveTranscript("Where are my baby clothes?", turns); got != "Where are my baby clothes?" {
+		t.Fatalf("new request inherited stale intent: %s", got)
+	}
+}
+
+func TestRealtimeVoiceResolvedClarificationCannotContaminateLaterFollowUp(t *testing.T) {
+	turns := []ports.AgentConversationTurn{
+		{Role: ports.AgentConversationRoleUser, Text: "Move my water bottle."},
+		{Role: ports.AgentConversationRoleAssistant, Kind: "clarification", Text: "Where should it go?"},
+		{Role: ports.AgentConversationRoleUser, Text: "Where are my baby clothes?"},
+		{Role: ports.AgentConversationRoleAssistant, Kind: "answer", Text: "The clothes are in the attic."},
+	}
+	if got := realtimeVoiceEffectiveTranscript("Move them to the cupboard.", turns); got != "Move them to the cupboard." {
+		t.Fatalf("resolved clarification contaminated new follow-up: %s", got)
+	}
+}

@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	MaxEvidenceRounds             = 2
+	DefaultEvidenceRounds         = 2
+	MaxEvidenceRounds             = 8
 	MaxDestinationSegments        = 6
 	MaxSearchProbesPerRequest     = 5
 	MaxSearchRequestsPerStep      = 24
@@ -124,6 +125,8 @@ func CanonicalizeIntent(intent Intent) Intent {
 	}
 	if intent.Operation != OperationCreate {
 		intent.NewAssetKind = ""
+		intent.CreationMode = ""
+		intent.CreationEvidence = ""
 	}
 	if intent.Operation != OperationCreate && intent.Operation != OperationMove {
 		intent.DestinationPath = nil
@@ -268,6 +271,8 @@ func (kind DestinationKind) Valid() bool {
 }
 
 type Intent struct {
+	CreationMode     CreationMode      `json:"creationMode"`
+	CreationEvidence string            `json:"creationEvidence"`
 	RequestShape     RequestShape      `json:"requestShape"`
 	Kind             IntentKind        `json:"kind"`
 	Operation        Operation         `json:"operation"`
@@ -279,7 +284,7 @@ type Intent struct {
 }
 
 func (intent Intent) Validate() error {
-	if !intent.RequestShape.Valid() || !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
+	if !intent.validCreationIntent() || !intent.RequestShape.Valid() || !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
 		!bounded(intent.Details, MaxInvestigationDetailRunes, true) || len(intent.DestinationPath) > MaxDestinationSegments ||
 		len(intent.DestinationKinds) != len(intent.DestinationPath) {
 		return ErrInvalidVoiceInvestigation
@@ -370,6 +375,7 @@ func (request SearchRequest) Validate() error {
 }
 
 type CandidateObservation struct {
+	TagNames        []string             `json:"tagNames"`
 	EvidenceRound   int                  `json:"evidenceRound"`
 	ReferenceKey    SemanticReferenceKey `json:"referenceKey"`
 	CandidateID     string               `json:"candidateId"`
@@ -387,7 +393,7 @@ type CandidateObservation struct {
 }
 
 func (observation CandidateObservation) Validate() error {
-	if observation.EvidenceRound < 1 || observation.EvidenceRound > MaxEvidenceRounds || !observation.ReferenceKey.Valid() ||
+	if !validObservationTagNames(observation.TagNames) || observation.EvidenceRound < 1 || observation.EvidenceRound > MaxEvidenceRounds || !observation.ReferenceKey.Valid() ||
 		!bounded(observation.CandidateID, 200, false) || !bounded(observation.Title, 500, false) ||
 		!bounded(observation.Description, maxInvestigationTextRunes, true) || !bounded(observation.ParentAssetID, 200, true) ||
 		!bounded(observation.ParentTitle, 500, true) || !validCandidateObservationKind(observation.ParentKind, true) || len(observation.ContainmentPath) > 32 ||

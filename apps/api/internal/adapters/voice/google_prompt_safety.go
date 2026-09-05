@@ -6,6 +6,19 @@ import (
 )
 
 func safeGoogleConversationPromptText(value string, maxLength int) string {
+	value = sanitizeGoogleConversationPromptText(value)
+	if len(value) <= maxLength {
+		return value
+	}
+	return strings.TrimSpace(value[:maxLength]) + " ..."
+}
+
+var googleConversationAssignmentPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|providerSessionId|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+`)
+var googleConversationBearerPattern = regexp.MustCompile(`(?i)\bbearer\s+[a-z0-9._~+/=-]+`)
+var googleConversationRawResponseTailPattern = regexp.MustCompile(`(?is)\b(raw[-_ ]?(model[-_ ]?response|provider[-_ ]?response)|raw\s+(model|provider)\s+response)\b.*`)
+var googleConversationURLPattern = regexp.MustCompile(`(?i)\b(?:https?|wss?)://[^\s"',\]}]+`)
+
+func sanitizeGoogleConversationPromptText(value string) string {
 	value = strings.TrimSpace(value)
 	if value == "" {
 		return ""
@@ -36,13 +49,5 @@ func safeGoogleConversationPromptText(value string, maxLength int) string {
 		"apikey", "[redacted]",
 	)
 	value = replacer.Replace(value)
-	if len(value) <= maxLength {
-		return value
-	}
-	return strings.TrimSpace(value[:maxLength]) + " ..."
+	return value
 }
-
-var googleConversationAssignmentPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|providerSessionId|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+`)
-var googleConversationBearerPattern = regexp.MustCompile(`(?i)\bbearer\s+[a-z0-9._~+/=-]+`)
-var googleConversationRawResponseTailPattern = regexp.MustCompile(`(?is)\b(raw[-_ ]?(model[-_ ]?response|provider[-_ ]?response)|raw\s+(model|provider)\s+response)\b.*`)
-var googleConversationURLPattern = regexp.MustCompile(`(?i)\b(?:https?|wss?)://[^\s"',\]}]+`)

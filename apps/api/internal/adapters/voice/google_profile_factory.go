@@ -13,10 +13,11 @@ import (
 )
 
 type GoogleProviderProfileFactory struct {
-	DefaultTokenSource    func(context.Context) (oauth2.TokenSource, error)
-	ServerADCProjectID    string
-	ServerADCLocation     string
-	ServerADCQuotaProject string
+	DefaultTokenSource         func(context.Context) (oauth2.TokenSource, error)
+	ServerADCProjectID         string
+	ServerADCCredentialVersion string
+	ServerADCLocation          string
+	ServerADCQuotaProject      string
 }
 
 func (f GoogleProviderProfileFactory) SpeechToTextProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.SpeechToTextProvider, error) {

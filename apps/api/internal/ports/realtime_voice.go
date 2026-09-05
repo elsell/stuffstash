@@ -52,14 +52,15 @@ type LanguageInferenceProviderProbe interface {
 }
 
 type LanguageInferenceInput struct {
-	TenantID          tenant.ID
-	InventoryID       inventory.InventoryID
-	Principal         identity.Principal
-	Transcript        string
-	ConversationTurns []AgentConversationTurn
-	PromptTemplate    string
-	PreviousTurns     int
-	Investigation     *agentmodel.InvestigationInput
+	WorkflowInstructions string
+	TenantID             tenant.ID
+	InventoryID          inventory.InventoryID
+	Principal            identity.Principal
+	Transcript           string
+	ConversationTurns    []AgentConversationTurn
+	PromptTemplate       string
+	PreviousTurns        int
+	Investigation        *agentmodel.InvestigationInput
 }
 
 type AgentConversationRole string
@@ -80,10 +81,12 @@ type LanguageInferenceTurn struct {
 }
 
 type VoiceResponseGenerationInput struct {
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Principal   identity.Principal
-	Brief       agentmodel.GroundedVoiceResponseBrief
+	WorkflowInstructions string
+	PromptTemplate       string
+	TenantID             tenant.ID
+	InventoryID          inventory.InventoryID
+	Principal            identity.Principal
+	Brief                agentmodel.GroundedVoiceResponseBrief
 }
 
 type VoiceResponseGenerationResult struct {
@@ -166,9 +169,11 @@ type RealtimeAudioFormat struct {
 }
 
 type RealtimeVoiceProviderResolutionInput struct {
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Principal   identity.Principal
+	// Set only when a pinned workflow explicitly supplies every model-using step.
+	SkipDefaultLanguage bool
+	TenantID            tenant.ID
+	InventoryID         inventory.InventoryID
+	Principal           identity.Principal
 }
 
 type RealtimeVoiceProviderSet struct {

@@ -29,6 +29,11 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	t.Helper()
 
 	coverage := newExecutedScenarioCoverage("real use")
+	coverWorkflowDraftScenarios(t, coverage, false)
+	coverWorkflowReadScenarios(t, coverage, false)
+	coverWorkflowActivationScenarios(t, coverage, false)
+	coverEvaluationCaseScenarios(t, coverage, false)
+	coverEvaluationRunScenarios(t, coverage, false)
 	directUploads := &httpFakeDirectAttachmentUploader{}
 	imageProcessor := &httpFakeImageProcessor{thumbnailContent: []byte("thumbnail")}
 	server := NewServer(":0", newSeededMediaTestApp(t, seededState{}, directUploads, imageProcessor))
@@ -227,6 +232,11 @@ func adversarialScenarioOperations(t *testing.T) executedScenarioCoverage {
 
 	setup := realUseAdversarialFixture(t)
 	coverage := newExecutedScenarioCoverage("adversarial")
+	coverWorkflowDraftScenarios(t, coverage, true)
+	coverWorkflowReadScenarios(t, coverage, true)
+	coverWorkflowActivationScenarios(t, coverage, true)
+	coverEvaluationCaseScenarios(t, coverage, true)
+	coverEvaluationRunScenarios(t, coverage, true)
 	for _, request := range setup.requests {
 		coverage.request(t, setup.server, request.method, request.template, request.path, "", request.body, http.StatusUnauthorized)
 	}

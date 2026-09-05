@@ -1,0 +1,1 @@
+-- Preserve historical evaluation-case read audit events on downgrade.

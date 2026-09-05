@@ -14,6 +14,14 @@ import (
 )
 
 func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+	evaluationSettings, err := cfg.ConversationEvaluations.Settings()
+	if err != nil {
+		return app.App{}, err
+	}
+	workflowLimits, err := cfg.ConversationWorkflows.Limits()
+	if err != nil {
+		return app.App{}, err
+	}
 	if err := validateInvitationPublicBaseURL(cfg); err != nil {
 		return app.App{}, err
 	}
@@ -32,7 +40,12 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	}
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
 	importer := homebox.NewLegacyImporter(nil)
+	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
+		WorkflowActivation:               evaluations.activation,
+		EvaluationRunCommands:            evaluations.commands,
+		EvaluationRunQueries:             evaluations.queries,
+		EvaluationWorker:                 evaluations.worker,
 		Observer:                         observer,
 		Auth:                             authenticator,
 		Authorizer:                       authorizer,
@@ -63,6 +76,10 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Audit:                            repositories.audit,
 		Outbox:                           repositories.outbox,
 		Users:                            repositories.users,
+		ConversationWorkflowLimits:       workflowLimits,
+		WorkflowDiscovery:                repositories.workflowDiscovery,
+		ConversationWorkflows:            repositories.conversationWorkflows,
+		EvaluationCases:                  repositories.evaluationCases,
 		ProviderProfiles:                 repositories.providerProfiles,
 		ProviderProfileUnitOfWork:        repositories.providerProfileUnitOfWork,
 		VoiceProviderConfigs:             repositories.voiceProviderConfigs,

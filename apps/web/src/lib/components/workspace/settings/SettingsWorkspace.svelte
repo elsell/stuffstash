@@ -1,5 +1,9 @@
 <script lang="ts">
   import './settings-management.css';
+  import { getContext } from 'svelte';
+  import { conversationWorkspaceContext, type ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
+  import ConversationWorkspace from './conversations/ConversationWorkspace.svelte';
+  const conversations = getContext<ConversationWorkspaceRepositories | undefined>(conversationWorkspaceContext);
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import { settingsOverviewDestinations, tenantSettingsDestinations, inventorySettingsDestinations, settingsResourceHref } from '$lib/application/settingsManagementNavigation';
   import type { WorkspaceRouteState } from '$lib/application/workspaceRoute';
@@ -62,7 +66,11 @@
 {:else}
   <div class="workspace-main settings-management settings-management-resource">
     <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
-    {#if route.settingsCollection === 'tags' && inventory}
+    {#if route.settingsCollection === 'conversations' && route.settingsLevel === 'tenant' && conversations}
+      {#key JSON.stringify([conversations.apiIdentity, principal.id, tenant.id])}
+        <ConversationWorkspace scope={{ apiIdentity: conversations.apiIdentity, principalId: principal.id, tenantId: tenant.id }} repositories={conversations} />
+      {/key}
+    {:else if route.settingsCollection === 'tags' && inventory}
       <TagSettingsManager {inventory} {repository} {observer} resourceId={route.settingsResourceId} action={route.settingsResourceAction} {onNavigate} {onTagsChange} {onPermissionDenied} />
     {:else if route.settingsCollection === 'asset-types'}
       <AssetTypeSettingsManager level={route.settingsLevel as 'tenant' | 'inventory'} {tenant} {inventory} {repository} {observer} canonicalItems={currentAssetTypes} lifecycle={route.settingsLifecycle} resourceId={route.settingsResourceId} action={route.settingsResourceAction} {onNavigate} onSchemaChange={updateTypes} {onPermissionDenied} />

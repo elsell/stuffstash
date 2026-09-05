@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { conversationWorkspaceContext, type ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { operationRefreshWarning, safeOperationFailureDescription } from '$lib/application/workspaceOperationNotifications';
@@ -97,17 +98,22 @@
 
   let {
     repository,
+    conversations,
     observer = { record: () => {} },
     initialData,
     onSignOut,
     onSessionExpired = onSignOut
   }: {
     repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
+    conversations?: ConversationWorkspaceRepositories;
     observer?: WorkspaceObserver;
     initialData: WorkspaceData;
     onSignOut: () => void;
     onSessionExpired?: () => void;
   } = $props();
+
+  // svelte-ignore state_referenced_locally -- dependencies are fixed for the mounted authenticated workspace.
+  setContext(conversationWorkspaceContext, conversations);
 
   // svelte-ignore state_referenced_locally -- the repository is immutable for the mounted workspace session.
   const workspaceRepository = repository;

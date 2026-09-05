@@ -9,9 +9,10 @@ import (
 )
 
 type ProviderProfileProviderConfig struct {
-	Profile           agentmodel.ProviderProfile
-	CredentialPurpose ports.ProviderCredentialPurpose
-	Credential        []byte
+	Profile             agentmodel.ProviderProfile
+	CredentialPurpose   ports.ProviderCredentialPurpose
+	CredentialVersionID string
+	Credential          []byte
 }
 
 type ProviderProfileProviderFactory interface {
@@ -58,9 +59,12 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if !ok {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
-	languageProfile, ok := r.selectConfiguredProviderProfile(profiles, config.LanguageInferenceProfileID, hasExplicitConfig, agentmodel.ProviderCapabilityLanguageInference)
-	if !ok {
-		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
+	var languageProfile agentmodel.ProviderProfile
+	if !input.SkipDefaultLanguage {
+		languageProfile, ok = r.selectConfiguredProviderProfile(profiles, config.LanguageInferenceProfileID, hasExplicitConfig, agentmodel.ProviderCapabilityLanguageInference)
+		if !ok {
+			return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
+		}
 	}
 	ttsProfile, ok := r.selectConfiguredProviderProfile(profiles, config.TextToSpeechProfileID, hasExplicitConfig, agentmodel.ProviderCapabilityTextToSpeech)
 	if !ok {
@@ -71,9 +75,12 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
-	languageConfig, err := r.providerConfig(ctx, input.TenantID, languageProfile)
-	if err != nil {
-		return ports.RealtimeVoiceProviderSet{}, err
+	var languageConfig ProviderProfileProviderConfig
+	if !input.SkipDefaultLanguage {
+		languageConfig, err = r.providerConfig(ctx, input.TenantID, languageProfile)
+		if err != nil {
+			return ports.RealtimeVoiceProviderSet{}, err
+		}
 	}
 	ttsConfig, err := r.providerConfig(ctx, input.TenantID, ttsProfile)
 	if err != nil {
@@ -84,15 +91,18 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
-	language, err := r.factory.RealtimeLanguageProvider(ctx, languageConfig)
-	if err != nil {
-		return ports.RealtimeVoiceProviderSet{}, err
+	var language ports.RealtimeLanguageProvider
+	if !input.SkipDefaultLanguage {
+		language, err = r.factory.RealtimeLanguageProvider(ctx, languageConfig)
+		if err != nil {
+			return ports.RealtimeVoiceProviderSet{}, err
+		}
 	}
 	tts, err := r.factory.TextToSpeechProvider(ctx, ttsConfig)
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
-	if stt == nil || language == nil || tts == nil {
+	if stt == nil || (!input.SkipDefaultLanguage && language == nil) || tts == nil {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
 	return ports.RealtimeVoiceProviderSet{
@@ -142,7 +152,16 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
 			Purpose:           purpose,
 		}
-		raw, found, err := r.vault.ActiveProviderCredentialMaterial(ctx, scope)
+		var raw []byte
+		var found bool
+		var err error
+		var credentialVersion string
+		if versioned, ok := r.vault.(ports.VersionedProviderCredentialVault); ok {
+			material, present, resolveErr := versioned.ActiveVersionedProviderCredential(ctx, scope)
+			raw, found, err, credentialVersion = material.Raw, present, resolveErr, material.VersionID
+		} else {
+			raw, found, err = r.vault.ActiveProviderCredentialMaterial(ctx, scope)
+		}
 		if err != nil {
 			return ProviderProfileProviderConfig{}, err
 		}
@@ -152,7 +171,7 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 		if len(raw) == 0 {
 			return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput
 		}
-		return ProviderProfileProviderConfig{Profile: profile, CredentialPurpose: purpose, Credential: raw}, nil
+		return ProviderProfileProviderConfig{Profile: profile, CredentialPurpose: purpose, CredentialVersionID: credentialVersion, Credential: raw}, nil
 	}
 	return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput
 }

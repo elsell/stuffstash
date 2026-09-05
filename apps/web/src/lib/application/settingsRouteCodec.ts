@@ -1,7 +1,7 @@
 import type { AuditScope, CustomDefinitionLifecycleState, InvitationStatusFilter } from '$lib/domain/inventory';
 
 export type SettingsLevel = 'overview' | 'account' | 'tenant' | 'inventory';
-export type SettingsCollection = 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | null;
+export type SettingsCollection = 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | 'conversations' | null;
 export type SettingsResourceAction = 'new' | 'edit' | 'archive' | 'restore' | 'delete' | null;
 
 export interface SettingsRouteState {
@@ -24,8 +24,9 @@ export function formatSettingsRouteHref(state: SettingsRouteState): string {
   if ((state.settingsLevel === 'tenant' || state.settingsLevel === 'inventory') && state.tenantId) {
     path += `/tenants/${encodeURIComponent(state.tenantId)}`;
     if (state.settingsLevel === 'inventory' && state.inventoryId) path += `/inventories/${encodeURIComponent(state.inventoryId)}`;
-    if (state.settingsCollection) {
+    if (state.settingsCollection && (state.settingsCollection !== 'conversations' || state.settingsLevel === 'tenant')) {
       path += `/${state.settingsCollection}`;
+      if (state.settingsCollection === 'conversations') return path;
       if (state.settingsCollection === 'access' && state.accessInvitationAction && state.accessInvitationId) {
         path += `/invitations/${encodeURIComponent(state.accessInvitationId)}/${state.accessInvitationAction}`;
       } else if (state.settingsResourceAction === 'new') path += '/new';

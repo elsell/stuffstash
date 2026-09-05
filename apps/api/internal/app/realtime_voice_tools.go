@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"math"
 	"strings"
 	"time"
@@ -59,18 +60,19 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}
-	results, err := a.SearchAssets(ctx, SearchAssetsInput{
-		Principal:      session.Principal,
-		TenantID:       session.TenantID,
-		InventoryIDs:   []inventory.InventoryID{session.InventoryID},
-		Source:         audit.SourceConversation,
-		Query:          args.Query,
-		Mode:           "fuzzy",
-		LifecycleState: args.LifecycleState,
-		Limit:          args.Limit,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, err
+	input := SearchAssetsInput{
+		Principal: session.Principal, TenantID: session.TenantID, InventoryIDs: []inventory.InventoryID{session.InventoryID}, Source: audit.SourceConversation, Query: args.Query, LifecycleState: args.LifecycleState, Limit: args.Limit,
+	}
+	var results SearchAssetsResult
+	for _, mode := range realtimeVoiceSearchModes(session) {
+		input.Mode = mode.String()
+		results, err = a.SearchAssets(ctx, input)
+		if err != nil {
+			return ports.AgentToolResult{}, err
+		}
+		if len(results.Items) > 0 {
+			break
+		}
 	}
 
 	items := make([]realtimeVoiceAssetToolItem, 0, len(results.Items))
@@ -79,6 +81,11 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 		if err != nil {
 			return ports.AgentToolResult{}, err
 		}
+		names := make([]string, 0, len(result.AssignedTags))
+		for _, tag := range result.AssignedTags {
+			names = append(names, tag.DisplayName.String())
+		}
+		item.TagNames = agentmodel.BoundedObservationTagNames(names)
 		items = append(items, item)
 	}
 	return realtimeVoiceToolResult(call, realtimeVoiceAssetToolOutput{

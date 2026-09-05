@@ -3,12 +3,15 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"slices"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+var errRealtimeVoiceCandidateCapacity = errors.New("voice investigation candidate capacity reached")
 
 type realtimeVoiceInvestigationReadState struct {
 	seenQueries  map[agentmodel.SemanticReferenceKey]map[string]struct{}
@@ -73,7 +76,7 @@ func (state *realtimeVoiceInvestigationReadState) resetDestinationScope() {
 }
 
 func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session RealtimeVoiceSession, evidenceRound int, requests []agentmodel.SearchRequest, state *realtimeVoiceInvestigationReadState, emit RealtimeVoiceEventSink) (realtimeVoiceInvestigationReadResult, error) {
-	if state == nil || evidenceRound < 1 || evidenceRound > agentmodel.MaxEvidenceRounds || len(requests) == 0 || len(requests) > agentmodel.MaxSearchRequestsPerStep {
+	if state == nil || evidenceRound < 1 || evidenceRound > realtimeVoiceEvidenceRoundLimit(session) || len(requests) == 0 || len(requests) > agentmodel.MaxSearchRequestsPerStep {
 		return realtimeVoiceInvestigationReadResult{}, ports.ErrInvalidProviderInput
 	}
 	newObservations := map[string]agentmodel.CandidateObservation{}
@@ -142,6 +145,10 @@ func (a App) executeRealtimeVoiceInvestigationReads(ctx context.Context, session
 			if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallCompleted, SessionID: session.ID, ToolCallID: call.ID, ToolLabel: label, Status: realtimeVoiceToolCompletionStatus(result)}); err != nil {
 				return realtimeVoiceInvestigationReadResult{}, err
 			}
+			if state.candidateCount() > agentmodel.MaxCandidateObservations {
+				return realtimeVoiceInvestigationReadResult{}, errRealtimeVoiceCandidateCapacity
+			}
+
 		}
 	}
 	if executedCalls == 0 {
@@ -270,8 +277,13 @@ func realtimeVoiceInvestigationObservationFromItem(round int, reference agentmod
 	if strings.TrimSpace(probe) != "" {
 		matched = append(matched, strings.TrimSpace(probe))
 	}
+	var tagNames []string
+	if item.TagNames != nil {
+		tagNames = agentmodel.BoundedObservationTagNames(item.TagNames)
+	}
 	return agentmodel.CandidateObservation{
 		EvidenceRound: round, ReferenceKey: reference, CandidateID: item.AssetID, Title: item.Title, Kind: item.Kind,
+		TagNames:    tagNames,
 		Description: item.Description, ParentAssetID: item.ParentAssetID, ParentTitle: item.ParentTitle, ParentKind: item.ParentKind, LifecycleState: item.LifecycleState,
 		CheckoutState: checkoutState, ContainmentPath: append([]string{}, item.ContainmentPath...), MatchedProbes: matched, Facts: facts,
 	}
@@ -279,6 +291,11 @@ func realtimeVoiceInvestigationObservationFromItem(round int, reference agentmod
 
 func mergeRealtimeVoiceInvestigationObservation(left, right agentmodel.CandidateObservation) agentmodel.CandidateObservation {
 	merged := right
+	if right.TagNames == nil {
+		merged.TagNames = append([]string{}, left.TagNames...)
+	} else {
+		merged.TagNames = append([]string{}, right.TagNames...)
+	}
 	merged.MatchedProbes = appendUniqueRealtimeVoiceInvestigation(append([]string{}, left.MatchedProbes...), right.MatchedProbes...)
 	merged.Facts = appendUniqueRealtimeVoiceInvestigation(append([]string{}, left.Facts...), right.Facts...)
 	if merged.Description == "" {
@@ -344,4 +361,12 @@ func appendUniqueRealtimeVoiceInvestigation(values []string, additions ...string
 		}
 	}
 	return values
+}
+
+func (state *realtimeVoiceInvestigationReadState) candidateCount() int {
+	count := 0
+	for _, candidates := range state.visible {
+		count += len(candidates)
+	}
+	return count
 }

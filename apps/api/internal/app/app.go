@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"crypto/rand"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"time"
 
 	"github.com/oklog/ulid/v2"
@@ -80,6 +81,13 @@ type App struct {
 	assetService                 assetapp.Service
 	customFieldService           customfieldapp.Service
 	providerProfileService       agentmodelapp.Service
+	conversationWorkflowService  agentmodelapp.ConversationWorkflowService
+	evaluationCaseService        agentmodelapp.EvaluationCaseService
+	workflowQueries              agentmodelapp.WorkflowQueryService
+	workflowActivation           agentmodelapp.WorkflowActivationService
+	evaluationRunCommands        agentmodelapp.EvaluationRunCommandService
+	evaluationRunQueries         agentmodelapp.EvaluationRunQueryService
+	evaluationWorker             agentmodelapp.EvaluationWorker
 	speechToText                 ports.SpeechToTextProvider
 	languageInference            ports.LanguageInferenceProvider
 	voiceResponseGenerator       ports.VoiceResponseGenerator
@@ -120,6 +128,14 @@ type Dependencies struct {
 	BlobDeletionOutbox               ports.BlobDeletionOutbox
 	Audit                            ports.AuditRepository
 	Outbox                           ports.AuthorizationOutbox
+	WorkflowDiscovery                ports.WorkflowDiscoveryRepository
+	ConversationWorkflows            ports.ConversationWorkflowRepository
+	EvaluationCases                  ports.EvaluationCaseRepository
+	WorkflowActivation               agentmodelapp.WorkflowActivationService
+	EvaluationRunCommands            agentmodelapp.EvaluationRunCommandService
+	EvaluationRunQueries             agentmodelapp.EvaluationRunQueryService
+	EvaluationWorker                 agentmodelapp.EvaluationWorker
+	ConversationWorkflowLimits       agentmodel.WorkflowLimits
 	ProviderProfiles                 ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork        ports.ProviderProfileUnitOfWork
 	VoiceProviderConfigs             ports.VoiceProviderConfigurationRepository
@@ -296,6 +312,16 @@ func New(deps Dependencies) App {
 		DefaultPageLimit:          app.defaultPageLimit,
 		MaxPageLimit:              app.maxPageLimit,
 	})
+	app.conversationWorkflowService = agentmodelapp.NewConversationWorkflowService(agentmodelapp.ConversationWorkflowDependencies{
+		Authorizer: app.authorizer, Repository: deps.ConversationWorkflows, Profiles: deps.ProviderProfiles,
+		IDs: app.ids, Clock: app.clock, Observer: app.observer, Limits: deps.ConversationWorkflowLimits,
+	})
+	app.evaluationCaseService = agentmodelapp.NewEvaluationCaseService(agentmodelapp.EvaluationCaseDependencies{Authorizer: app.authorizer, Repository: deps.EvaluationCases, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
+	app.workflowQueries = agentmodelapp.NewWorkflowQueryService(agentmodelapp.WorkflowQueryDependencies{Authorizer: app.authorizer, Repository: deps.ConversationWorkflows, Discovery: deps.WorkflowDiscovery, Audit: app.audit, IDs: app.ids, Clock: app.clock, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
+	app.workflowActivation = deps.WorkflowActivation
+	app.evaluationRunCommands = deps.EvaluationRunCommands
+	app.evaluationRunQueries = deps.EvaluationRunQueries
+	app.evaluationWorker = deps.EvaluationWorker
 	app.providerProfileService = agentmodelapp.New(agentmodelapp.Dependencies{
 		Observer:                  app.observer,
 		Authorizer:                app.authorizer,

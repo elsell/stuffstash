@@ -192,3 +192,7 @@ mobile OIDC support must align with the already-pinned Expo SDK 55 runtime:
 - `sigstore/cosign-installer` `v4.1.0`: `ba7bc0a3fef59531c69a25acd34668d6d3fe6f22`.
 - `actions/upload-artifact` `v4.6.2`: `ea165f8d65b6e75b540449e92b4886f43607fa02`.
 - `actions/download-artifact` `v5.0.0`: `634f93cb2916e3fdff6788551b99b062d0335ce0`.
+
+## Conversation workspace query adapter
+
+Pin `@tanstack/svelte-query` to `6.1.38`. The npm release dated 2026-07-21 supports Svelte `^5.25.0` and uses the existing exact `@tanstack/query-core 5.101.4`. Keep TanStack in frontend adapters, with independent domain models and ports. Update the lockfile using pinned pnpm without lifecycle scripts or local builds. Reference: https://tanstack.com/query/latest/docs/framework/svelte/overview and npm registry metadata for `@tanstack/svelte-query/6.1.38`.

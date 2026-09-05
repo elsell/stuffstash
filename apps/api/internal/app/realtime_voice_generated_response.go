@@ -10,17 +10,23 @@ import (
 )
 
 func (a App) generateRealtimeVoiceResponse(ctx context.Context, session RealtimeVoiceSession, brief agentmodel.GroundedVoiceResponseBrief, bindings []ports.StructuredAgentResponseArtifact) (ports.StructuredAgentResponse, error) {
-	if brief.Validate() != nil || session.responseGenerator == nil {
+	if brief.Validate() != nil {
 		return ports.StructuredAgentResponse{}, ports.ErrInvalidProviderInput
+	}
+	if err := ctx.Err(); err != nil {
+		return ports.StructuredAgentResponse{}, err
+	}
+	if session.responseGenerator == nil {
+		return a.recoverGroundedVoiceResponse(ctx, brief, bindings, groundedResponseGenerationFailed)
 	}
 	result, err := session.responseGenerator.GenerateResponse(ctx, ports.VoiceResponseGenerationInput{
 		TenantID: session.TenantID, InventoryID: session.InventoryID, Principal: session.Principal, Brief: brief,
 	})
 	if err != nil {
-		return ports.StructuredAgentResponse{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
+		return a.recoverGroundedVoiceResponse(ctx, brief, bindings, groundedResponseGenerationFailed)
 	}
 	if err := validateRealtimeVoiceGeneratedResponse(brief, result); err != nil {
-		return ports.StructuredAgentResponse{}, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
+		return a.recoverGroundedVoiceResponse(ctx, brief, bindings, groundedResponseInvalidWording)
 	}
 	response := ports.StructuredAgentResponse{
 		Kind:            realtimeVoiceStructuredResponseKind(brief.Kind),
@@ -77,16 +83,17 @@ func realtimeVoiceRequiredDisplayEntityTitles(brief agentmodel.GroundedVoiceResp
 
 func validateRealtimeVoiceGeneratedChannel(brief agentmodel.GroundedVoiceResponseBrief, value string) error {
 	text := strings.ToLower(strings.TrimSpace(value))
-	for _, forbidden := range []string{"visible match", "candidate", "resolution", "tool result", "tool call", "asset id", "inventory id", "tenant id"} {
-		if strings.Contains(text, forbidden) {
+	narrative := realtimeVoiceResponseNarrative(brief, text)
+	for _, forbidden := range realtimeVoiceNarrativeForbiddenPhrases {
+		if strings.Contains(narrative, forbidden) {
 			return ports.ErrInvalidProviderInput
 		}
 	}
 	if brief.Kind == agentmodel.ResponseBriefKindClarification {
-		if !strings.Contains(text, "?") {
+		if !strings.Contains(narrative, "?") {
 			return ports.ErrInvalidProviderInput
 		}
-	} else if strings.Contains(text, "?") {
+	} else if strings.Contains(narrative, "?") {
 		return ports.ErrInvalidProviderInput
 	}
 	if brief.Confidence == agentmodel.ResponseConfidencePlausible && !containsRealtimeVoiceUncertainty(text) {

@@ -53,7 +53,7 @@ jobs:
           STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000
         run: |
           set -o pipefail
-          timeout --signal=QUIT --kill-after=30s 8m go test -v -timeout=4m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search|VoiceConfiguration)' -bench '^BenchmarkPostgresSearch' -benchtime=5x -count=3 -benchmem 2>&1 | tee search-benchmark.txt
+          timeout --signal=QUIT --kill-after=30s 8m go test -v -timeout=4m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search|VoiceConfiguration|ConversationWorkflow|EvaluationCase|EvaluationRun)' -bench '^BenchmarkPostgresSearch' -benchtime=5x -count=3 -benchmem 2>&1 | tee search-benchmark.txt
       - name: Retain search measurements
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -101,10 +101,49 @@ jobs:
           corepack enable
           corepack prepare pnpm@${PNPM_VERSION} --activate
 
+      - name: Compile live voice regression executable
+        if: github.event_name == 'workflow_dispatch'
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test -c -o /tmp/voice-http.test ./apps/api/internal/adapters/httpserver
+
+      - name: Retain live voice regression executable
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: live-voice-http-test
+          path: /tmp/voice-http.test
+          retention-days: 3
+
       - name: Run required checks
         run: make required-checks
         env:
           STUFF_STASH_STRUCTURAL_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || github.event_name == 'workflow_dispatch' && 'origin/main' || '' }}
+
+      - name: Generate current API contract
+        id: contract
+        if: always()
+        run: make api-client-generate
+
+      - name: Retain compiled web preview
+        if: ${{ !cancelled() && hashFiles('apps/web/build/index.html') != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: compiled-web-preview
+          path: apps/web/build
+          retention-days: 7
+
+      - name: Upload generated API contract
+        if: ${{ always() && steps.contract.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: current-api-contract
+          path: |
+            packages/api-client/openapi.json
+            packages/api-client/src/generated/schema.d.ts
+          retention-days: 7
+
+      - name: Check current API contract drift
+        if: ${{ always() && steps.contract.outcome == 'success' }}
+        run: git diff --exit-code -- packages/api-client/openapi.json packages/api-client/src/generated/schema.d.ts
 
   selfhost-runtime:
     name: Self-host runtime
@@ -129,6 +168,35 @@ jobs:
           tar -xzf selfhost-runtime-dist/stuffstash-selfhost.tar.gz -C selfhost-runtime-dist/extracted
           SELFHOST_RUNTIME_ROOT="$PWD/selfhost-runtime-dist/extracted/stuffstash-selfhost" \
             scripts/verify-selfhost-runtime.sh
+
+  conversation-browser:
+    name: Conversation browser journey
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install pinned browser
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - name: Exercise conversation settings
+        run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts
+      - name: Retain browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: conversation-browser-evidence
+          path: apps/web/test-results
+          retention-days: 7
 
   ios-dependency-lock:
     name: iOS dependency lock

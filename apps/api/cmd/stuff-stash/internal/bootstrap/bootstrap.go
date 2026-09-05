@@ -56,6 +56,11 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		IdleTimeout:              cfg.HTTPIdleTimeout,
 		RealtimeVoiceIdleTimeout: cfg.RealtimeVoiceIdleTimeout,
 	})
+	stopEvaluations, err := startEvaluationWorker(ctx, application, observer, cfg)
+	if err != nil {
+		return err
+	}
+	defer stopEvaluations()
 	startOutboxWorkers(ctx, application, observer, cfg)
 
 	errCh := make(chan error, 1)

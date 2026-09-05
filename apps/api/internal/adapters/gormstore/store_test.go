@@ -144,9 +144,16 @@ func auditRecordsIncludeAction(records []audit.Record, action audit.Action) bool
 	return false
 }
 
-func auditRecord(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action) audit.Record {
+func auditRecord(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action, targets ...audit.TargetType) audit.Record {
 	t.Helper()
-	return auditRecordAt(t, id, tenantID, inventoryID, action, time.Now())
+	record := auditRecordAt(t, id, tenantID, inventoryID, action, time.Now())
+	if len(targets) > 1 {
+		t.Fatal("expected at most one audit target")
+	}
+	if len(targets) == 1 {
+		record.TargetType = targets[0]
+	}
+	return record
 }
 
 func auditRecordAt(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory.InventoryID, action audit.Action, occurredAt time.Time) audit.Record {

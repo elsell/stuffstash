@@ -831,7 +831,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     expect(events).toEqual([{ type: 'session.failed', seq: 1, code: 'invalid_request', message: 'No provider.' }]);
   });
 
-  it('keeps the socket open and sends follow-up audio after a clarification completion', async () => {
+  it.each(['clarification', 'answer'] as const)('keeps the socket open after an advertised %s follow-up', async (kind) => {
     const socket = new FakeWebSocket();
     const transport = new WebSocketRealtimeVoiceTransport({
       apiBaseUrl: 'http://127.0.0.1:8080/',
@@ -858,9 +858,9 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       type: 'assistant.response.completed',
       seq: 2,
       sessionId: 'session-1',
-      response: { kind: 'clarification', spokenResponse: 'Which item?', displayResponse: 'Which item?' }
+      response: { kind, spokenResponse: 'Which item?', displayResponse: 'Which item?' }
     });
-    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1' });
+    socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1', followUpAvailable: true });
     await waitForEventType(events, 'session.completed');
 
     expect(transport.canSendFollowUpAudio()).toBe(true);
@@ -874,7 +874,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
       sessionId: 'session-1',
       response: { kind: 'answer', spokenResponse: 'Found it.', displayResponse: 'Found it.' }
     });
-    socket.receive({ type: 'session.completed', seq: 5, sessionId: 'session-1' });
+    socket.receive({ type: 'session.completed', seq: 5, sessionId: 'session-1', followUpAvailable: false });
 
     await followUp;
     await run;

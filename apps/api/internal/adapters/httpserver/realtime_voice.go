@@ -124,10 +124,11 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			return
 		}
 		session, err := application.StartRealtimeVoiceSession(ctx, app.RealtimeVoiceSessionInput{
-			Principal:   principal,
-			TenantID:    tenant.ID(start.TenantID),
-			InventoryID: inventory.InventoryID(start.InventoryID),
-			Source:      start.Source,
+			ConversationContinuity: start.ConversationContinuity,
+			Principal:              principal,
+			TenantID:               tenant.ID(start.TenantID),
+			InventoryID:            inventory.InventoryID(start.InventoryID),
+			Source:                 start.Source,
 			InputAudio: ports.RealtimeAudioFormat{
 				MimeType:   start.InputAudio.MimeType,
 				SampleRate: start.InputAudio.SampleRate,
@@ -157,7 +158,11 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 		lastClientSeq := start.Seq
 		conversationTurns := []ports.AgentConversationTurn{}
 		seenAudioChunkIDs := map[string]struct{}{}
-		for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
+		turnLimit := maxRealtimeVoiceTurnsPerSession
+		if session.ConversationContinuity {
+			turnLimit = app.RealtimeVoiceSessionTurnLimit(session)
+		}
+		for turn := 0; turn < turnLimit; turn++ {
 			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs, timeouts.idle)
 			lastClientSeq = nextClientSeq
 			if err != nil {
@@ -184,6 +189,7 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 
 			reviewPlanID := ""
 			completedResponseKind := ""
+			followUpAvailable := false
 			turnTranscript := ""
 			var completedResponse *ports.StructuredAgentResponse
 			err = application.RunRealtimeVoiceQuery(ctx, app.RealtimeVoiceQueryInput{
@@ -204,6 +210,11 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 					completedResponse = &responseCopy
 				}
 				message := realtimeServerMessageFromEvent(event, serverSeq)
+				if session.ConversationContinuity && event.Type == app.RealtimeVoiceEventSessionCompleted {
+					available := turn+1 < turnLimit && app.RealtimeVoiceCanContinue(session) && (completedResponseKind == string(ports.StructuredAgentResponseKindAnswer) || completedResponseKind == string(ports.StructuredAgentResponseKindClarification))
+					message.FollowUpAvailable = &available
+					followUpAvailable = available
+				}
 				serverSeq++
 				return writeRealtimeServerMessage(ctx, connection, message)
 			})
@@ -235,10 +246,16 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 				return
 			}
 			conversationTurns = appendRealtimeVoiceConversationTurns(conversationTurns, turnTranscript, completedResponse)
-			if completedResponseKind != string(ports.StructuredAgentResponseKindClarification) {
+			if (session.ConversationContinuity && !followUpAvailable) || (completedResponseKind != string(ports.StructuredAgentResponseKindClarification) && !(session.ConversationContinuity && completedResponseKind == string(ports.StructuredAgentResponseKindAnswer))) {
+				_ = application.MarkRealtimeVoiceSessionCompleted(ctx, session)
 				_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
 				return
 			}
+		}
+		if session.ConversationContinuity {
+			_ = application.MarkRealtimeVoiceSessionCompleted(ctx, session)
+			_ = connection.Close(websocket.StatusNormalClosure, "voice session completed")
+			return
 		}
 		_ = application.MarkRealtimeVoiceSessionFailed(ctx, session, "clarification_turn_limit")
 		_ = writeRealtimeServerMessage(ctx, connection, realtimeServerMessage{Type: realtimeServerMessageSessionFailed, Seq: serverSeq, SessionID: session.ID, Code: "clarification_turn_limit", Message: "The voice session needs a fresh start."})
@@ -272,28 +289,29 @@ func appendRealtimeVoiceConversationTurns(turns []ports.AgentConversationTurn, t
 }
 
 type realtimeClientMessage struct {
-	Type                  realtimeClientMessageType        `json:"type"`
-	Seq                   int                              `json:"seq"`
-	SessionID             string                           `json:"sessionId"`
-	TenantID              string                           `json:"tenantId"`
-	InventoryID           string                           `json:"inventoryId"`
-	Source                string                           `json:"source"`
-	ClientCorrelationID   string                           `json:"clientCorrelationId,omitempty"`
-	RequestedCapabilities []string                         `json:"requestedCapabilities"`
-	InputAudio            realtimeInputAudio               `json:"inputAudio"`
-	OutputAudio           realtimeOutputAudio              `json:"outputAudio"`
-	DeveloperDiagnostics  bool                             `json:"developerDiagnostics,omitempty"`
-	ChunkID               string                           `json:"chunkId"`
-	PlanID                string                           `json:"planId"`
-	AudioBase64           string                           `json:"audioBase64"`
-	IsFinalChunk          bool                             `json:"isFinalChunk"`
-	Reason                string                           `json:"reason"`
-	AckSeq                int                              `json:"ackSeq"`
-	Arguments             map[string]interface{}           `json:"arguments"`
-	PhotoAttachments      []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
-	PhotoAttachmentsSet   bool                             `json:"-"`
-	CommandEdits          []realtimeActionPlanCommandEdit  `json:"commandEdits,omitempty"`
-	CommandEditsSet       bool                             `json:"-"`
+	ConversationContinuity bool                             `json:"conversationContinuity,omitempty"`
+	Type                   realtimeClientMessageType        `json:"type"`
+	Seq                    int                              `json:"seq"`
+	SessionID              string                           `json:"sessionId"`
+	TenantID               string                           `json:"tenantId"`
+	InventoryID            string                           `json:"inventoryId"`
+	Source                 string                           `json:"source"`
+	ClientCorrelationID    string                           `json:"clientCorrelationId,omitempty"`
+	RequestedCapabilities  []string                         `json:"requestedCapabilities"`
+	InputAudio             realtimeInputAudio               `json:"inputAudio"`
+	OutputAudio            realtimeOutputAudio              `json:"outputAudio"`
+	DeveloperDiagnostics   bool                             `json:"developerDiagnostics,omitempty"`
+	ChunkID                string                           `json:"chunkId"`
+	PlanID                 string                           `json:"planId"`
+	AudioBase64            string                           `json:"audioBase64"`
+	IsFinalChunk           bool                             `json:"isFinalChunk"`
+	Reason                 string                           `json:"reason"`
+	AckSeq                 int                              `json:"ackSeq"`
+	Arguments              map[string]interface{}           `json:"arguments"`
+	PhotoAttachments       []realtimePhotoAttachmentRequest `json:"photoAttachments,omitempty"`
+	PhotoAttachmentsSet    bool                             `json:"-"`
+	CommandEdits           []realtimeActionPlanCommandEdit  `json:"commandEdits,omitempty"`
+	CommandEditsSet        bool                             `json:"-"`
 }
 
 type realtimeActionPlanCommandEdit struct {
@@ -318,6 +336,7 @@ type realtimeOutputAudio struct {
 }
 
 type realtimeServerMessage struct {
+	FollowUpAvailable       *bool                             `json:"followUpAvailable,omitempty"`
 	Type                    realtimeServerMessageType         `json:"type"`
 	Seq                     int                               `json:"seq"`
 	SessionID               string                            `json:"sessionId,omitempty"`

@@ -52,7 +52,10 @@ func compileRealtimeVoiceCreatePlan(intent agentmodel.Intent, resolutions []agen
 		if err != nil {
 			return realtimeVoiceCompiledActionPlan{}, err
 		}
-		return realtimeVoiceCompiledActionPlan{Disposition: realtimeVoicePlanNoOp, NoOpSummary: candidate.Title + " already exists in this inventory, so I did not prepare a duplicate."}, nil
+		if intent.CreationMode != agentmodel.CreationModeAdditional {
+			return realtimeVoiceCompiledActionPlan{Disposition: realtimeVoicePlanNoOp, NoOpSummary: candidate.Title + " already exists in this inventory, so I did not prepare a duplicate."}, nil
+		}
+		subject = agentmodel.Resolution{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionMissing}
 	}
 	if subject.Status != agentmodel.ResolutionMissing || len(subject.CandidateIDs) != 0 {
 		return realtimeVoiceCompiledActionPlan{}, ports.ErrInvalidProviderInput
@@ -66,6 +69,9 @@ func compileRealtimeVoiceCreatePlan(intent agentmodel.Intent, resolutions []agen
 	commands = append(commands, ActionPlanCommandInput{ID: "create-subject", Kind: actionplan.CommandKindCreateAsset, Summary: "Create " + strings.TrimSpace(intent.SubjectMention), Arguments: arguments})
 	destination := strings.Join(intent.DestinationPath, " / ")
 	confirmation := "Create " + strings.TrimSpace(intent.SubjectMention)
+	if intent.CreationMode == agentmodel.CreationModeAdditional {
+		confirmation = "Create an additional " + strings.TrimSpace(intent.SubjectMention)
+	}
 	if destination != "" {
 		confirmation += " in " + destination
 	}
@@ -74,8 +80,11 @@ func compileRealtimeVoiceCreatePlan(intent agentmodel.Intent, resolutions []agen
 		Disposition: realtimeVoicePlanReady, IntentSummary: confirmation[:len(confirmation)-1],
 		ModelInterpretationSummary: confirmation[:len(confirmation)-1], ConfirmationSummary: confirmation, Commands: commands,
 	}
+	if intent.CreationMode == agentmodel.CreationModeAdditional {
+		compiled.Risks = append(compiled.Risks, "This creates an additional physical item and leaves existing items unchanged.")
+	}
 	if createdDestinations {
-		compiled.Risks = []string{"This plan will create the missing destination path shown above."}
+		compiled.Risks = append(compiled.Risks, "This plan will create the missing destination path shown above.")
 	}
 	return compiled, nil
 }

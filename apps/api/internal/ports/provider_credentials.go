@@ -99,3 +99,14 @@ type ProviderCredentialRepository interface {
 	ActiveProviderCredentialsExist(ctx context.Context) (bool, error)
 	SupersedeActiveProviderCredential(ctx context.Context, scope ProviderCredentialScope, supersededAt time.Time) error
 }
+
+// VersionedProviderCredentialMaterial is internal secret material, never an API DTO.
+type VersionedProviderCredentialMaterial struct {
+	VersionID string
+	Raw       []byte `json:"-"`
+}
+
+// Version and material must come from the same active credential record.
+type VersionedProviderCredentialVault interface {
+	ActiveVersionedProviderCredential(context.Context, ProviderCredentialScope) (VersionedProviderCredentialMaterial, bool, error)
+}

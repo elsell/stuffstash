@@ -80,6 +80,12 @@ func canonicalRealtimeVoiceInvestigationStep(canonicalIntent agentmodel.Intent, 
 				return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 			}
 		}
+		if canonicalIntent.Operation == agentmodel.OperationCreate && canonicalIntent.CreationMode == agentmodel.CreationModeAdditional && reference == agentmodel.SemanticReferenceSubject {
+			if !discoveryCoverage[reference] {
+				return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
+			}
+			resolution = agentmodel.Resolution{ReferenceKey: reference, Status: agentmodel.ResolutionMissing, Evidence: "The user requested an additional physical item after authorized duplicate discovery."}
+		}
 		ordered = append(ordered, resolution)
 	}
 	if canonicalIntent.Operation == agentmodel.OperationMove || canonicalIntent.Operation == agentmodel.OperationCreate {
@@ -179,6 +185,7 @@ func realtimeVoiceLifecycleScopeIncludes(scopes []agentmodel.LifecycleScope, lif
 
 func sameRealtimeVoiceInvestigationIntent(left, right agentmodel.Intent) bool {
 	if left.RequestShape != right.RequestShape || left.Kind != right.Kind || left.Operation != right.Operation || strings.TrimSpace(left.SubjectMention) != strings.TrimSpace(right.SubjectMention) ||
+		left.CreationMode.Effective() != right.CreationMode.Effective() || strings.TrimSpace(left.CreationEvidence) != strings.TrimSpace(right.CreationEvidence) ||
 		strings.TrimSpace(left.NewAssetKind) != strings.TrimSpace(right.NewAssetKind) ||
 		len(left.DestinationPath) != len(right.DestinationPath) || len(left.DestinationKinds) != len(right.DestinationKinds) {
 		return false

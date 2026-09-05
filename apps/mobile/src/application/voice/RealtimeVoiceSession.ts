@@ -123,7 +123,7 @@ export type VoiceRealtimeEvent = VoiceRealtimeEventMetadata & (
   | { readonly type: 'tts.audio.started'; readonly mimeType: string }
   | { readonly type: 'tts.audio.chunk'; readonly chunkId: string; readonly audioBase64: string; readonly isFinalChunk: boolean }
   | { readonly type: 'tts.audio.completed' }
-  | { readonly type: 'session.completed' }
+  | { readonly type: 'session.completed'; readonly followUpAvailable?: boolean }
   | { readonly type: 'session.cancelled' }
 );
 
@@ -220,7 +220,7 @@ export type VoiceRealtimeState = {
   readonly spokenResponse?: string;
   readonly responseArtifacts?: readonly VoiceResponseArtifact[];
   readonly responseKind?: VoiceAssistantResponseKind;
-  readonly clarificationFollowUpAvailable?: boolean;
+  readonly followUpAvailable?: boolean;
   readonly conversationPhase?: VoiceConversationPhase;
   readonly progressLabel?: string;
   readonly debugEvents: readonly VoiceSafeDiagnosticEvent[];
@@ -271,6 +271,7 @@ export type VoiceSafeDiagnosticEvent = {
 export class RealtimeVoiceSessionController {
   private currentContext: { readonly tenantId: TenantId; readonly inventoryId: InventoryId; readonly tenantName: string; readonly inventoryName: string } | null = null;
   private recordingStarted = false;
+  private lastResponseKind: VoiceAssistantResponseKind | undefined;
   private activeRunAbortController: AbortController | null = null;
   private activeFollowUpAbortController: AbortController | null = null;
   private activeSessionGeneration = 0;
@@ -288,6 +289,7 @@ export class RealtimeVoiceSessionController {
   ) {}
 
   async start(): Promise<VoiceRealtimeState> {
+    this.lastResponseKind = undefined;
     const generation = ++this.activeSessionGeneration;
     const context = await this.selectedInventoryContext();
     await this.options.readinessChecker?.assertReady();
@@ -363,7 +365,7 @@ export class RealtimeVoiceSessionController {
         this.activeRunAbortController = null;
       }
     }
-    this.syncFinalClarificationFollowUpAvailability(states, onState);
+    this.syncFinalFollowUpAvailability(states, onState);
 
     return states;
   }
@@ -392,8 +394,8 @@ export class RealtimeVoiceSessionController {
       inventoryName: context.inventoryName,
       progressLabel: 'Listening',
       recordingLevel: this.recordingLevel(),
-      responseKind: 'clarification',
-      clarificationFollowUpAvailable: true,
+      responseKind: this.lastResponseKind,
+      followUpAvailable: true,
       debugEvents: []
     };
   }
@@ -442,7 +444,7 @@ export class RealtimeVoiceSessionController {
       states.push(withProgressStep(states[0], 'Done', { status: 'completed' }));
       onState?.(states[1]);
     }
-    this.syncFinalClarificationFollowUpAvailability(states, onState);
+    this.syncFinalFollowUpAvailability(states, onState);
     return states;
   }
 
@@ -617,6 +619,7 @@ export class RealtimeVoiceSessionController {
       case 'assistant.response.started':
         return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing', conversationPhase: 'answering' });
       case 'assistant.response.completed':
+        this.lastResponseKind = event.response.kind;
         const responseArtifacts = safeVoiceResponseArtifacts(event.response.artifacts ?? []);
         return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
           status: state.actionPlan ? 'review' : 'processing',
@@ -639,7 +642,7 @@ export class RealtimeVoiceSessionController {
           ? withProgressStep(state, 'Review needed', { status: 'review' })
           : withProgressStep(state, state.responseKind === 'clarification' ? 'Needs detail' : 'Done', {
               status: 'completed',
-              clarificationFollowUpAvailable: state.responseKind === 'clarification'
+              followUpAvailable: (state.responseKind === 'clarification' || state.responseKind === 'answer')
                 ? this.transport.canSendFollowUpAudio()
                 : undefined
             });
@@ -657,19 +660,19 @@ export class RealtimeVoiceSessionController {
     }
   }
 
-  private syncFinalClarificationFollowUpAvailability(
+  private syncFinalFollowUpAvailability(
     states: VoiceRealtimeState[],
     onState: VoiceRealtimeStateHandler | undefined
   ): void {
     const current = states[states.length - 1];
-    if (!current || current.status !== 'completed' || current.responseKind !== 'clarification') {
+    if (!current || current.status !== 'completed' || (current.responseKind !== 'clarification' && current.responseKind !== 'answer')) {
       return;
     }
     const next = {
       ...current,
-      clarificationFollowUpAvailable: this.transport.canSendFollowUpAudio()
+      followUpAvailable: this.transport.canSendFollowUpAudio()
     };
-    if (next.clarificationFollowUpAvailable === current.clarificationFollowUpAvailable) {
+    if (next.followUpAvailable === current.followUpAvailable) {
       return;
     }
     states.push(next);

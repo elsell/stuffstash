@@ -108,6 +108,232 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/conversation-evaluation-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation cases */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-cases"];
+        put?: never;
+        /** Post tenants by tenant ID conversation evaluation cases */
+        post: operations["post-tenants-by-tenant-id-conversation-evaluation-cases"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation cases by case ID */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation cases by case ID revisions */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions"];
+        put?: never;
+        /** Post tenants by tenant ID conversation evaluation cases by case ID revisions */
+        post: operations["post-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}/revisions/{revisionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation cases by case ID revisions by revision ID */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions-by-revision-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation runs */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-runs"];
+        put?: never;
+        /** Post tenants by tenant ID conversation evaluation runs */
+        post: operations["post-tenants-by-tenant-id-conversation-evaluation-runs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation evaluation runs by run ID */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-evaluation-runs/{runId}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID conversation evaluation runs by run ID cancellation */
+        post: operations["post-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id-cancellation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflow-selection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflow selection */
+        get: operations["get-tenants-by-tenant-id-conversation-workflow-selection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflows */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows"];
+        put?: never;
+        /** Post tenants by tenant ID conversation workflows */
+        post: operations["post-tenants-by-tenant-id-conversation-workflows"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflows by workflow ID */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows-by-workflow-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID conversation workflows by workflow ID activation */
+        post: operations["post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-activation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflows by workflow ID revisions */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions"];
+        put?: never;
+        /** Post tenants by tenant ID conversation workflows by workflow ID revisions */
+        post: operations["post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions/{revisionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflows by workflow ID revisions by revision ID */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions-by-revision-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/custom-asset-types": {
         parameters: {
             query?: never;
@@ -1295,6 +1521,17 @@ export interface components {
             permissions: string[] | null;
             relationship: string;
         };
+        AppendInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/AppendInputBody.json
+             */
+            readonly $schema?: string;
+            definition: components["schemas"]["Definition"];
+            /** Format: int64 */
+            expectedRevision: number;
+        };
         AssetActivityChangeResponse: {
             currentValue?: string;
             /** @enum {string} */
@@ -1442,6 +1679,16 @@ export interface components {
             email?: string;
             id: string;
         };
+        Budget: {
+            /** Format: int64 */
+            elapsedSeconds: number;
+            /** Format: int64 */
+            evidenceRounds: number;
+            /** Format: int64 */
+            followUpTurns: number;
+            /** Format: int64 */
+            modelCalls: number;
+        };
         CheckedOutAssetResponse: {
             asset: components["schemas"]["AssetResponse"];
             checkout: components["schemas"]["CurrentCheckout"];
@@ -1560,6 +1807,15 @@ export interface components {
              */
             type: "text" | "number" | "boolean" | "date" | "url" | "enum";
         };
+        CreateInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/CreateInputBody.json
+             */
+            readonly $schema?: string;
+            definition: components["schemas"]["Definition"];
+        };
         CreateInventoryBody: {
             /**
              * Format: uri
@@ -1632,6 +1888,13 @@ export interface components {
             id: string;
             state: string;
         };
+        Definition: {
+            budget: components["schemas"]["Budget"];
+            name: string;
+            response: string;
+            retrieval: string;
+            steps: components["schemas"]["Step"][] | null;
+        };
         DefinitionResponse: {
             applicability: string;
             customAssetTypeIds: string[] | null;
@@ -1675,6 +1938,189 @@ export interface components {
             readonly $schema?: string;
             error: components["schemas"]["ErrorBody"];
             meta: components["schemas"]["Meta"];
+        };
+        EvaluationCaseAppendBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EvaluationCaseAppendBody.json
+             */
+            readonly $schema?: string;
+            definition: components["schemas"]["EvaluationCaseDefinition"];
+            /** Format: int64 */
+            expectedRevision: number;
+        };
+        EvaluationCaseCreateBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EvaluationCaseCreateBody.json
+             */
+            readonly $schema?: string;
+            definition: components["schemas"]["EvaluationCaseDefinition"];
+        };
+        EvaluationCaseDefinition: {
+            assets?: components["schemas"]["EvaluationCaseFixtureAsset"][] | null;
+            expectations: components["schemas"]["EvaluationCaseExpectations"];
+            title: string;
+            utterance: string;
+        };
+        EvaluationCaseExpectations: {
+            forbiddenOperations?: string[] | null;
+            kind: string;
+            locations?: components["schemas"]["EvaluationCaseLocation"][] | null;
+            proposals?: components["schemas"]["EvaluationCaseProposal"][] | null;
+            referencedAssets?: string[] | null;
+        };
+        EvaluationCaseFixtureAsset: {
+            description?: string;
+            id: string;
+            kind: string;
+            parentId?: string;
+            tagNames?: string[] | null;
+            title: string;
+        };
+        EvaluationCaseHead: {
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** Format: int64 */
+            latestRevision: number;
+            latestRevisionId: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        EvaluationCaseLocation: {
+            ancestorId: string;
+            assetId: string;
+        };
+        EvaluationCaseProposal: {
+            destinationId?: string;
+            details?: string;
+            newKind?: string;
+            newTitle?: string;
+            operation: string;
+            targetId?: string;
+        };
+        EvaluationCaseRevision: {
+            authorId: string;
+            caseId: string;
+            /** Format: date-time */
+            createdAt: string;
+            definition: components["schemas"]["EvaluationCaseDefinition"];
+            id: string;
+            /** Format: int64 */
+            number: number;
+        };
+        EvaluationRun: {
+            authorId: string;
+            cases: components["schemas"]["EvaluationRunPinnedCase"][] | null;
+            /** Format: int64 */
+            completedCases: number;
+            /** @enum {string} */
+            coverage: "text_only";
+            /** Format: date-time */
+            createdAt: string;
+            failureCode?: string;
+            /** Format: date-time */
+            finishedAt: string | null;
+            id: string;
+            /** Format: int64 */
+            passedCases: number;
+            providers: components["schemas"]["EvaluationRunProvider"][] | null;
+            results: components["schemas"]["EvaluationRunResult"][] | null;
+            revisionId: string;
+            /** Format: date-time */
+            startedAt: string | null;
+            state: string;
+            /** Format: int64 */
+            totalCases: number;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+            workflowId: string;
+        };
+        EvaluationRunCancellationBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EvaluationRunCancellationBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            expectedVersion: number;
+        };
+        EvaluationRunCaseReference: {
+            caseId: string;
+            revisionId: string;
+        };
+        EvaluationRunFailure: {
+            code: string;
+            fixtureId?: string;
+            operation?: string;
+        };
+        EvaluationRunHead: {
+            /** Format: int64 */
+            completedCases: number;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** Format: int64 */
+            passedCases: number;
+            revisionId: string;
+            state: string;
+            /** Format: int64 */
+            totalCases: number;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+            workflowId: string;
+        };
+        EvaluationRunObservation: {
+            executedOperations: string[] | null;
+            kind: string;
+            locations: components["schemas"]["EvaluationCaseLocation"][] | null;
+            proposals: components["schemas"]["EvaluationCaseProposal"][] | null;
+            referencedAssets: string[] | null;
+        };
+        EvaluationRunPinnedCase: {
+            caseId: string;
+            revisionId: string;
+            title: string;
+        };
+        EvaluationRunProvider: {
+            configurationId: string;
+            profileId: string;
+            step: string;
+        };
+        EvaluationRunQueueBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EvaluationRunQueueBody.json
+             */
+            readonly $schema?: string;
+            cases: components["schemas"]["EvaluationRunCaseReference"][] | null;
+            revisionId: string;
+            workflowId: string;
+        };
+        EvaluationRunResult: {
+            caseRevisionId: string;
+            /** Format: date-time */
+            completedAt: string;
+            /** Format: double */
+            durationMilliseconds: number;
+            /** Format: int64 */
+            modelCalls: number;
+            observation: components["schemas"]["EvaluationRunObservation"];
+            verdict: components["schemas"]["EvaluationRunVerdict"];
+        };
+        EvaluationRunVerdict: {
+            failures: components["schemas"]["EvaluationRunFailure"][] | null;
+            passed: boolean;
         };
         GrantBody: {
             /**
@@ -1963,6 +2409,16 @@ export interface components {
             lifecycleState: string;
             name: string;
         };
+        NullableSuccessEnvelopeWorkflowSelection: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/NullableSuccessEnvelopeWorkflowSelection.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["WorkflowSelection"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         PaginationMeta: {
             hasMore: boolean;
             /** Format: int64 */
@@ -2045,6 +2501,16 @@ export interface components {
             /** @description Optional return details */
             details?: string;
         };
+        Revision: {
+            authorId: string;
+            /** Format: date-time */
+            createdAt: string;
+            definition: components["schemas"]["Definition"];
+            id: string;
+            /** Format: int64 */
+            number: number;
+            workflowId: string;
+        };
         SearchAncestor: {
             id: string;
             title: string;
@@ -2063,6 +2529,13 @@ export interface components {
         SearchMatch: {
             field: string;
             value: string;
+        };
+        Step: {
+            /** Format: int64 */
+            attempts: number;
+            instructions?: string;
+            kind: string;
+            providerProfileId?: string;
         };
         SuccessEnvelopeAssetCheckoutResponse: {
             /**
@@ -2142,6 +2615,26 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["DirectUploadResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeEvaluationCaseRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeEvaluationCaseRevision.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationCaseRevision"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeEvaluationRun: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeEvaluationRun.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationRun"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeGrantResponse: {
@@ -2304,6 +2797,36 @@ export interface components {
             data: components["schemas"]["DefinitionResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListEvaluationCaseHead: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListEvaluationCaseHead.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationCaseHead"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListEvaluationCaseRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListEvaluationCaseRevision.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationCaseRevision"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListEvaluationRunHead: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListEvaluationRunHead.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationRunHead"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListGrantResponse: {
             /**
              * Format: uri
@@ -2364,6 +2887,26 @@ export interface components {
             data: components["schemas"]["RecordResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListRevision.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Revision"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListWorkflowHead: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListWorkflowHead.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["WorkflowHead"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopePrincipalResponse: {
             /**
              * Format: uri
@@ -2382,6 +2925,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["ProviderProfileResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeRevision.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Revision"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeTenantResponse: {
@@ -2602,6 +3155,34 @@ export interface components {
             selectedProfileId?: string;
             /** @enum {string} */
             selectionSource: "explicit" | "implicit" | "missing";
+        };
+        WorkflowActivationBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/WorkflowActivationBody.json
+             */
+            readonly $schema?: string;
+            cases: components["schemas"]["EvaluationRunCaseReference"][] | null;
+            expected?: components["schemas"]["WorkflowSelection"];
+            revisionId: string;
+            runId: string;
+        };
+        WorkflowHead: {
+            activeRevisionId?: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** Format: int64 */
+            latestRevision: number;
+            latestRevisionId: string;
+            name: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        WorkflowSelection: {
+            revisionId: string;
+            workflowId: string;
         };
     };
     responses: never;
@@ -2898,6 +3479,674 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListRecordResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-cases": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListEvaluationCaseHead"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-evaluation-cases": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationCaseCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationCaseAppendBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions-by-revision-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                caseId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-runs": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListEvaluationRunHead"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-evaluation-runs": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRunQueueBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationRun"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationRun"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id-cancellation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRunCancellationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeEvaluationRun"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflow-selection": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NullableSuccessEnvelopeWorkflowSelection"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListWorkflowHead"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-workflows": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInputBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-activation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowActivationBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppendInputBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions-by-revision-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
                 };
             };
             /** @description Error */
