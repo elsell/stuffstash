@@ -3,6 +3,7 @@ package credentials
 import (
 	"bytes"
 	"context"
+	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -37,19 +38,27 @@ func (v DatabaseProviderCredentialVault) PrepareProviderCredential(ctx context.C
 }
 
 func (v DatabaseProviderCredentialVault) ActiveProviderCredentialMaterial(ctx context.Context, scope ports.ProviderCredentialScope) ([]byte, bool, error) {
+	material, found, err := v.ActiveVersionedProviderCredential(ctx, scope)
+	return material.Raw, found, err
+}
+
+func (v DatabaseProviderCredentialVault) ActiveVersionedProviderCredential(ctx context.Context, scope ports.ProviderCredentialScope) (ports.VersionedProviderCredentialMaterial, bool, error) {
 	if v.repository == nil || v.sealer == nil {
-		return nil, false, ports.ErrInvalidProviderInput
+		return ports.VersionedProviderCredentialMaterial{}, false, ports.ErrInvalidProviderInput
 	}
 	record, found, err := v.repository.ActiveProviderCredential(ctx, scope)
 	if err != nil {
-		return nil, false, err
+		return ports.VersionedProviderCredentialMaterial{}, false, err
 	}
 	if !found {
-		return nil, false, nil
+		return ports.VersionedProviderCredentialMaterial{}, false, nil
+	}
+	if record.Scope != scope || record.SupersededAt != nil || strings.TrimSpace(record.ID) == "" {
+		return ports.VersionedProviderCredentialMaterial{}, false, ports.ErrInvalidProviderInput
 	}
 	raw, err := v.sealer.UnsealProviderCredential(ctx, scope, record.Sealed)
 	if err != nil || len(bytes.TrimSpace(raw)) == 0 {
-		return nil, false, ports.ErrInvalidProviderInput
+		return ports.VersionedProviderCredentialMaterial{}, false, ports.ErrInvalidProviderInput
 	}
-	return append([]byte{}, raw...), true, nil
+	return ports.VersionedProviderCredentialMaterial{VersionID: record.ID, Raw: append([]byte{}, raw...)}, true, nil
 }
