@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"crypto/rand"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"time"
 
 	"github.com/oklog/ulid/v2"
@@ -80,6 +81,7 @@ type App struct {
 	assetService                 assetapp.Service
 	customFieldService           customfieldapp.Service
 	providerProfileService       agentmodelapp.Service
+	conversationWorkflowService  agentmodelapp.ConversationWorkflowService
 	speechToText                 ports.SpeechToTextProvider
 	languageInference            ports.LanguageInferenceProvider
 	voiceResponseGenerator       ports.VoiceResponseGenerator
@@ -120,6 +122,8 @@ type Dependencies struct {
 	BlobDeletionOutbox               ports.BlobDeletionOutbox
 	Audit                            ports.AuditRepository
 	Outbox                           ports.AuthorizationOutbox
+	ConversationWorkflows            ports.ConversationWorkflowRepository
+	ConversationWorkflowLimits       agentmodel.WorkflowLimits
 	ProviderProfiles                 ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork        ports.ProviderProfileUnitOfWork
 	VoiceProviderConfigs             ports.VoiceProviderConfigurationRepository
@@ -295,6 +299,10 @@ func New(deps Dependencies) App {
 		Clock:                     app.clock,
 		DefaultPageLimit:          app.defaultPageLimit,
 		MaxPageLimit:              app.maxPageLimit,
+	})
+	app.conversationWorkflowService = agentmodelapp.NewConversationWorkflowService(agentmodelapp.ConversationWorkflowDependencies{
+		Authorizer: app.authorizer, Repository: deps.ConversationWorkflows, Profiles: deps.ProviderProfiles,
+		IDs: app.ids, Clock: app.clock, Observer: app.observer, Limits: deps.ConversationWorkflowLimits,
 	})
 	app.providerProfileService = agentmodelapp.New(agentmodelapp.Dependencies{
 		Observer:                  app.observer,
