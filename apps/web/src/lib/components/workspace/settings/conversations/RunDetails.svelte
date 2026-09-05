@@ -13,17 +13,21 @@
   onMount(() => { const update = () => { documentVisible = document.visibilityState !== 'hidden'; }; update();
     document.addEventListener('visibilitychange', update); return () => document.removeEventListener('visibilitychange', update); });
   const key = () => conversationKey(session.scope, 'run', runId);
-  const run = createQuery(() => ({ queryKey: key(), queryFn: ({ signal }) => runs.get(session.scope.tenantId, runId, signal),
-    refetchInterval: query => query.state.data ? runPollInterval(query.state.data.state, query.state.fetchFailureCount, visible && documentVisible && !cancelling) : false
+  let failedPolls = 0;
+  const run = createQuery(() => ({ queryKey: key(), retry: false, queryFn: async ({ signal }) => {
+    try { const result = await runs.get(session.scope.tenantId, runId, signal); if (!signal.aborted) failedPolls = 0; return result; }
+    catch (error) { if (!signal.aborted) failedPolls = Math.min(4, failedPolls + 1); throw error; }
+  },
+    refetchInterval: query => query.state.data ? runPollInterval(query.state.data.state, failedPolls, visible && documentVisible && !cancelling) : false
   }), () => session.client);
   const names = { queued: 'Queued', running: 'Running', succeeded: 'Completed', failed: 'Failed', cancelled: 'Cancelled' };
   const pending = $derived(run.data?.state === 'queued' || run.data?.state === 'running');
   async function cancel() {
     if (!run.data || !pending || cancelling) return;
-    const version = run.data.version; cancelling = true; message = '';
+    const version = run.data.version; const requestedId = runId; const requestedKey = key(); cancelling = true; message = '';
     try {
-      await session.client.cancelQueries({ queryKey: key(), exact: true });
-      await session.mutate(() => runs.cancel(session.scope.tenantId, runId, version), value => { session.client.setQueryData(key(), value); });
+      await session.client.cancelQueries({ queryKey: requestedKey, exact: true });
+      await session.mutate(() => runs.cancel(session.scope.tenantId, requestedId, version), value => { session.client.setQueryData(requestedKey, value); });
     } catch (error) {
       if (!session.active) return;
       message = error instanceof ConversationFailure && error.kind === 'conflict' ? 'The run changed before cancellation. Refreshing its current status.' : 'Could not cancel the run. Check its current status and try again.';

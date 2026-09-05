@@ -22,7 +22,7 @@
     <section><h5>Observed</h5><p>Outcome: {result.observation.kind}</p>
       <p>Referenced items: {result.observation.referencedAssets.map(title).join(', ') || 'None'}</p>
       <ul>{#each result.observation.locations as location}<li>{title(location.assetId)} inside {title(location.ancestorId)}</li>{/each}</ul>
-      <ul>{#each result.observation.proposals as proposal}<li>{proposal.operation}: {proposal.newTitle || title(proposal.targetId)}{#if proposal.destinationId} → {title(proposal.destinationId)}{/if}{#if proposal.details} · {proposal.details}{/if}</li>{/each}</ul>
+      <ul>{#each result.observation.proposals as proposal}<li>{proposal.operation}{#if proposal.newKind} ({proposal.newKind}){/if}: {proposal.newTitle || title(proposal.targetId)}{#if proposal.destinationId} → {title(proposal.destinationId)}{/if}{#if proposal.details} · {proposal.details}{/if}</li>{/each}</ul>
       <p>Executed operations: {result.observation.executedOperations.join(', ') || 'None'}</p>
       {#if !result.verdict.passed}<h5>Differences</h5><ul>{#each result.verdict.failures as failure}<li>{failure.code.replaceAll('_', ' ')}{#if failure.fixtureId}: {title(failure.fixtureId)}{/if}{#if failure.operation} ({failure.operation}){/if}</li>{/each}</ul>{/if}
     </section></div>{/if}
