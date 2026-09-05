@@ -2,6 +2,7 @@ package agentmodel
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -108,5 +109,62 @@ func TestEvaluationQueueRejectsUnboundedRequestsBeforeClaims(t *testing.T) {
 	run, _, err := store.EvaluationRun(context.Background(), ref.TenantID, ref.ID)
 	if err != nil || run.Snapshot().Version != 1 {
 		t.Fatal("invalid drain claimed work")
+	}
+}
+
+type evaluationQueueFailingProviders struct{ err error }
+
+func (p evaluationQueueFailingProviders) ResolveEvaluationRunProviders(_ context.Context, _ tenant.ID, run model.EvaluationRun) (ports.EvaluationExecutionProviders, error) {
+	if run.Snapshot().Input.ID == "bad" {
+		return ports.EvaluationExecutionProviders{}, p.err
+	}
+	return ports.EvaluationExecutionProviders{}, nil
+}
+func TestEvaluationQueueContinuesAfterIndividualFailure(t *testing.T) {
+	deps, store, _, _ := evaluationWorkerSetup(t)
+	if err := store.SaveEvaluationRun(context.Background(), fixture.Run(t, "bad"), 0, fixture.Record(t, "bad-created", "bad", audit.ActionConversationEvaluationRunCreated)); err != nil {
+		t.Fatal(err)
+	}
+	failure := errors.New("provider temporarily unavailable")
+	deps.Providers = evaluationQueueFailingProviders{err: failure}
+	if err := NewEvaluationWorker(deps).Drain(context.Background(), 2, 1); !errors.Is(err, failure) {
+		t.Fatalf("queue lost failure: %v", err)
+	}
+	rows, err := store.ListEvaluationRuns(context.Background(), fixture.TenantID, ports.EvaluationRunPageRequest{Limit: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range rows {
+		if row.ID == "bad" {
+			if row.State != model.EvaluationRunRunning {
+				t.Fatal("failed run not recoverable")
+			}
+		} else if row.State != model.EvaluationRunSucceeded {
+			t.Fatal("failure prevented independent run")
+		}
+	}
+}
+func TestEvaluationQueueShutdownJoinsActiveExecution(t *testing.T) {
+	deps, _, _, _ := evaluationWorkerSetup(t)
+	executor := &evaluationConcurrentExecutor{started: make(chan struct{}, 2), release: make(chan struct{})}
+	deps.Executor = executor
+	deps.Providers = evaluationQueueProviders{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	finished := make(chan error, 1)
+	go func() { finished <- NewEvaluationWorker(deps).Drain(ctx, 1, 1) }()
+	select {
+	case <-executor.started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("executor did not start")
+	}
+	cancel()
+	select {
+	case err := <-finished:
+		if !errors.Is(err, context.Canceled) || executor.active.Load() != 0 {
+			t.Fatal("shutdown did not join executor")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("queue did not stop")
 	}
 }
