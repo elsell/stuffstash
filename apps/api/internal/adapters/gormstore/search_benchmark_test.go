@@ -16,22 +16,7 @@ import (
 )
 
 func BenchmarkPostgresSearch(b *testing.B) {
-	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
-	if dsn == "" {
-		b.Skip("requires an isolated benchmark PostgreSQL database")
-	}
-	db, err := OpenPostgres(dsn)
-	if err != nil {
-		b.Fatal(err)
-	}
-	connection, err := db.DB()
-	if err != nil {
-		b.Fatal(err)
-	}
-	b.Cleanup(func() { _ = connection.Close() })
-	if err := runEmbeddedPostgresMigrations(db); err != nil {
-		b.Fatal(err)
-	}
+	db := searchBenchmarkDatabase(b)
 	for _, volume := range []int{100, 10000} {
 		b.Run(fmt.Sprintf("assets_%d", volume), func(b *testing.B) {
 			tenantID, inventoryID := seedSearchBenchmark(b, db, volume)
@@ -71,6 +56,9 @@ func BenchmarkPostgresSearch(b *testing.B) {
 					var queries, rows int64
 					const callback = "benchmark:search_reads"
 					if err := db.Callback().Query().After("gorm:query").Register(callback, func(tx *gorm.DB) {
+						if tx.DryRun {
+							return
+						}
 						queries++
 						if tx.RowsAffected > 0 {
 							rows += tx.RowsAffected
@@ -137,4 +125,24 @@ func seedSearchBenchmark(b testing.TB, db *gorm.DB, volume int) (tenant.ID, inve
 		b.Fatal(err)
 	}
 	return tenantID, inventoryID
+}
+
+func searchBenchmarkDatabase(b *testing.B) *gorm.DB {
+	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
+	if dsn == "" {
+		b.Skip("requires an isolated benchmark PostgreSQL database")
+	}
+	db, err := OpenPostgres(dsn)
+	if err != nil {
+		b.Fatal(err)
+	}
+	connection, err := db.DB()
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Cleanup(func() { _ = connection.Close() })
+	if err := runEmbeddedPostgresMigrations(db); err != nil {
+		b.Fatal(err)
+	}
+	return db
 }

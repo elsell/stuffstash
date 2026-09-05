@@ -75,7 +75,7 @@ empty, attachment-only, and subsequent-page cases. Seed and perform a correctnes
 timed region; each measured iteration also checks result count and scope to avoid
 rewarding broken behavior. The reported latency includes those small checks. This warm repository benchmark
 excludes HTTP, authorization, audit writes, and production network latency. Row and
-query counters observe GORM Query callbacks; they do not count SQL work internal
+query counters observe executed GORM Query callbacks (excluding dry-run subquery construction); they do not count SQL work internal
 to PostgreSQL or any future Raw/Row execution path.
 
 ## Mobile path integration evidence
@@ -91,3 +91,21 @@ Mobile source validation passed 161 files / 1,058 tests, plus TypeScript; the AP
 client suite passed all 34 tests. The preceding API commit passed required CI
 checks, including its breadcrumb security tests. Independent-chain application
 benchmarking and final backend measurements remain required.
+
+The path benchmark combines the real PostgreSQL search repository with search
+application path enrichment for twenty results at depth four, comparing shared
+and distinct ancestor chains. It reports request-local database reads and total
+completion time, with fixture updates outside timing. It excludes authentication
+and network transport and must verify all twenty complete paths.
+
+## First bounded-candidate result
+
+CI run 33944243251 at 3f84fb550 passed candidate-budget/semantic PostgreSQL tests
+and measured 10,000-asset searches at 5.02–5.21 ms broad, 109.73–110.85 ms
+selective, 108.72–111.42 ms empty, 47.01–47.62 ms attachment-only, and
+5.09–5.53 ms subsequent-page. Broad pages loaded 385 rows and allocated 1.86 MB;
+selective queries loaded four rows and empty queries loaded one. These results
+justify retaining bounded hydration, but selective/empty cost remains high.
+The next measurement separates indexed and conservative candidate branches with
+UNION ALL. The earlier query-event counter included dry-run subquery compilation;
+subsequent measurements exclude it to report executed queries accurately.
