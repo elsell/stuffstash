@@ -164,4 +164,20 @@ describe('QueryClientInventoryMutationObserver', () => {
 
     expect(client.getQueryState(parentContents)?.isInvalidated).toBe(true);
   });
+  it('reconciles reversal history and containment without invalidating unrelated asset cores or photos', () => {
+    const client = createMobileQueryClient();
+    const observer = new QueryClientInventoryMutationObserver(client, 'scope');
+    const history = mobileQueryKeys.assetHistory('scope', 'tenant', 'inventory', 'asset', 'changes');
+    const unrelatedCore = mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'other');
+    const unrelatedPhotos = mobileQueryKeys.assetPhotos('scope', 'tenant', 'inventory', 'other');
+    const containment = mobileQueryKeys.assetContents('scope', 'tenant', 'inventory', 'ancestor', 'container:active:root');
+    for (const key of [history, unrelatedCore, unrelatedPhotos, containment]) client.setQueryData(key, 'cached');
+    observer.onInventoryMutation({ kind: 'operation_reversed', tenantId: 'tenant', inventoryId: 'inventory', assetId: 'asset' });
+    expect(client.getQueryState(history)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(containment)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(unrelatedCore)?.isInvalidated).toBe(false);
+    expect(client.getQueryState(unrelatedPhotos)?.isInvalidated).toBe(false);
+    client.clear();
+  });
+
 });

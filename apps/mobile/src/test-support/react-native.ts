@@ -22,6 +22,14 @@ export function FlatList(props: Record<string, unknown>) {
     rows.length ? rows.map((item, index) => createElement('Row', { key: index }, render?.({ item, index }))) : props.ListEmptyComponent as ReactNode,
     props.ListFooterComponent as ReactNode);
 }
+export function SectionList(props: Record<string, unknown>) {
+  const sections = props.sections as readonly { data: readonly unknown[] }[];
+  const render = props.renderItem as (input: { item: unknown }) => ReactNode;
+  return createElement('SectionList', props,
+    props.refreshControl as ReactNode,
+    sections.flatMap((section) => section.data).map((item, index) => createElement('Row', { key: index }, render({ item }))),
+    props.ListFooterComponent as ReactNode);
+}
 const appStateListeners = new Set<(state: string) => void>();
 export const AppState = {
   currentState: 'active',

@@ -50,7 +50,15 @@ describe('AssetActivityQuery', () => {
         sourceLabel: 'App'
       }]
     });
-    expect(query.cachedEntry({ tenantId: 'tenant-home', inventoryId: 'inventory-home', assetId: 'asset-drill', activityId: 'activity-update' })).toEqual({ ...activityEntry(), technical: { count: '2' } });
+    expect(result.entries).toEqual([{ ...activityEntry(), technical: { count: '2' } }]);
+  });
+
+  it('forwards cancellation to each paginated activity read', async () => {
+    const repository = new FakeActivityRepository();
+    const query = new AssetActivityQuery(repository);
+    const controller = new AbortController();
+    await query.execute({ tenantId: 'tenant', inventoryId: 'inventory', assetId: 'asset', cursor: 'older', signal: controller.signal });
+    expect(repository.input).toMatchObject({ cursor: 'older', signal: controller.signal });
   });
 
   it('rejects missing tenant, inventory, or asset scope', async () => {
@@ -67,11 +75,10 @@ describe('AssetActivityQuery', () => {
     expect(repository.input).toMatchObject({ tenantId: 'tenant-home', inventoryId: 'inventory-home', assetId: 'asset-drill', view: 'all' });
   });
 
-  it('never returns an activity cached under another asset scope', async () => {
+  it('does not retain a second application cache across asset scopes', async () => {
     const repository = new FakeActivityRepository();
     const query = new AssetActivityQuery(repository);
     await query.execute({ tenantId: 'tenant-home', inventoryId: 'inventory-home', assetId: 'asset-drill' });
-    expect(query.cachedEntry({ tenantId: 'tenant-home', inventoryId: 'inventory-home', assetId: 'asset-saw', activityId: 'activity-update' })).toBeUndefined();
     await query.loadEntry({ tenantId: 'tenant-home', inventoryId: 'inventory-home', assetId: 'asset-saw', activityId: 'activity-update' });
     expect(repository.input).toMatchObject({ assetId: 'asset-saw', view: 'all' });
   });

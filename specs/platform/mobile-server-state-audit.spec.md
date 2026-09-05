@@ -16,8 +16,8 @@ This matrix tracks implementation against `mobile-server-state.spec.md`. A migra
 | `assets/[assetId]/index`, nested location asset detail | AssetCoreQuery, AssetContentsQuery, AssetPhotosQuery | One selected asset GET before core; secondary queries reuse core. Independent loading and mutation request deduplication tested. Mounted delayed-region and changed-parent refresh tests pass; old/new ancestor mutation impacts are covered. |
 | `add` | AddAssetContextQuery, parent lookup, tag resolution | Context cached; parent lookup still issues immediate effect-driven requests. Add debounce, cache, and cancellation. |
 | Asset `edit`, `move`, `move-here` | Compatibility AssetDetailQuery, InventoryAssetTagsQuery, parent lookup | Full detail unnecessarily fetched for edit/move. Migrate to core and focused picker queries. |
-| Asset `checkouts` | AssetCheckoutHistoryQuery plus full detail | Split core/history; paginate history and reconcile checkout/return mutations. |
-| Asset `history/index`, `history/[activityId]` | AssetActivityQuery and activity detail/undo ports | Manual request ownership remains. Paginated scoped query keys and narrow undo reconciliation required. |
+| Asset `checkouts` | AssetCheckoutHistoryQuery and independent shared AssetCoreQuery | Focused scope discovery, cursor pages, retained rows on continuation failure; mounted test passes. |
+| Asset `history/index`, `history/[activityId]` | Scoped infinite pages and activity detail query; reversal observer | Mounted warm-page reuse, retained rows on failed refresh, scoped detail seeding/cancellation tests pass. No secondary application cache. Reversal keeps unrelated core/photos fresh; containment invalidation remains conservative until full paths are returned. Uncached direct event links still scan all-event pages. |
 | `settings/index`, `account`, `household/index`, `inventory/index` | Settings context/account ports | Audit coupled reads, share selected identity, preserve navigation during secondary loading. |
 | Household/inventory `asset-types`, `fields`; inventory `tags` (index/new/resource) | Customization collections and editor ports | Manual collection/editor requests. Add resource-family keys, permission-aware failure handling and mutation reconciliation. |
 | `settings/sharing`, `invitations/accept` | Invitation list/create/cancel/preview/accept ports | Cache lists only; one-time token/secret results stay workflow-owned. Verify selected scope refresh after acceptance. |
@@ -27,7 +27,7 @@ This matrix tracks implementation against `mobile-server-state.spec.md`. A migra
 
 ## Verified Source Checks
 
-- Progressive detail working pass: mobile TypeScript check and 137 test files / 997 tests pass; mobile structural check passes. This is source evidence, not a native build or end-to-end device check.
+- History working pass: mobile TypeScript check and 140 test files / 1003 tests pass; mobile structural check passes. This is source evidence, not a native build or end-to-end device check.
 - `AssetCoreQuery.test.ts`, `AssetContentsQuery.test.ts`, `AssetPhotosQuery.test.ts`, and `ApiInventorySummaryRepository.test.ts` cover the focused detail graph.
 - `fetchMobileInventoryServerQuery.test.ts` uses a real QueryObserver to prove one post-mutation request, joining active work and reusing completed fresh work.
 - `QueryClientInventoryMutationObserver.test.ts` covers parent reconciliation without cached child core and unaffected inventory/composition caches.

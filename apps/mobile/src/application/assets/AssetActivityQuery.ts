@@ -29,6 +29,7 @@ export interface AssetActivityRepository {
     readonly view: AssetActivityView;
     readonly limit: number;
     readonly cursor?: string;
+    readonly signal?: AbortSignal;
   }): Promise<AssetActivityPage>;
 }
 
@@ -43,6 +44,7 @@ export type AssetActivityRecordViewModel = {
 };
 
 export type AssetActivityViewModel = {
+  readonly entries: readonly AssetActivityEntry[];
   readonly records: readonly AssetActivityRecordViewModel[];
   readonly nextCursor?: string;
   readonly hasMore: boolean;
@@ -51,8 +53,6 @@ export type AssetActivityViewModel = {
 };
 
 export class AssetActivityQuery {
-  private readonly entries = new Map<string, AssetActivityEntry>();
-
   constructor(private readonly repository: AssetActivityRepository) {}
 
   async execute(input: {
@@ -62,6 +62,7 @@ export class AssetActivityQuery {
     readonly view?: AssetActivityView;
     readonly limit?: number;
     readonly cursor?: string;
+    readonly signal?: AbortSignal;
   }): Promise<AssetActivityViewModel> {
     const tenantId = input.tenantId.trim();
     const inventoryId = input.inventoryId.trim();
@@ -76,13 +77,13 @@ export class AssetActivityQuery {
       assetId,
       view,
       limit: input.limit ?? 20,
-      cursor: input.cursor
+      cursor: input.cursor,
+      ...(input.signal ? { signal: input.signal } : {})
     });
-    for (const entry of page.entries) {
-      this.entries.set(activityCacheKey({ tenantId, inventoryId, assetId, activityId: entry.id }), { ...entry, technical: safeTechnicalMetadata(entry.technical) });
-    }
+    const entries = page.entries.map((entry) => ({ ...entry, technical: safeTechnicalMetadata(entry.technical) }));
     return {
-      records: page.entries.map((entry) => toActivityRecordViewModel(this.cachedEntry({ tenantId, inventoryId, assetId, activityId: entry.id }) ?? entry)),
+      entries,
+      records: entries.map(toActivityRecordViewModel),
       nextCursor: page.nextCursor,
       hasMore: page.hasMore,
       emptyTitle: view === 'changes' ? 'No changes yet' : 'No activity yet',
@@ -92,22 +93,13 @@ export class AssetActivityQuery {
     };
   }
 
-  cachedEntry(scope: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly activityId: string }): AssetActivityEntry | undefined {
-    return this.entries.get(activityCacheKey(scope));
-  }
-
-  invalidateEntry(scope: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly activityId: string }): void {
-    this.entries.delete(activityCacheKey(scope));
-  }
-
-  async loadEntry(input: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly activityId: string }): Promise<AssetActivityEntry | undefined> {
-    const cached = this.cachedEntry(input);
-    if (cached) return cached;
+  async loadEntry(input: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly activityId: string; readonly signal?: AbortSignal }): Promise<AssetActivityEntry | undefined> {
     let cursor: string | undefined;
     const visited = new Set<string>();
     do {
+      input.signal?.throwIfAborted();
       const page = await this.execute({ ...input, view: 'all', limit: 100, cursor });
-      const entry = this.cachedEntry(input);
+      const entry = page.entries.find((entry) => entry.id === input.activityId);
       if (entry) return entry;
       cursor = page.hasMore ? page.nextCursor : undefined;
       if (cursor && visited.has(cursor)) break;
@@ -115,10 +107,6 @@ export class AssetActivityQuery {
     } while (cursor);
     return undefined;
   }
-}
-
-function activityCacheKey(scope: { readonly tenantId: string; readonly inventoryId: string; readonly assetId: string; readonly activityId: string }): string {
-  return `${scope.tenantId}\u0000${scope.inventoryId}\u0000${scope.assetId}\u0000${scope.activityId}`;
 }
 
 const safeTechnicalKeys = new Set([

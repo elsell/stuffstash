@@ -4,31 +4,31 @@ import type {
   AssetCheckoutHistoryRepository,
   AssetCheckoutRecord
 } from '../../application/assets/AssetCheckoutHistoryQuery';
-import type { InventorySummaryRepository } from '../../application/home/InventorySummaryRepository';
+import type { CurrentInventoryScopeRepository } from '../../application/home/CurrentInventoryScopeQuery';
 
 type CheckoutHistoryApiClient = Pick<StuffStashClient, 'listAssetCheckoutHistory'>;
 
 export class ApiAssetCheckoutHistoryRepository implements AssetCheckoutHistoryRepository {
   constructor(
     private readonly client: CheckoutHistoryApiClient,
-    private readonly inventories: Pick<InventorySummaryRepository, 'getDefaultInventorySummary'>
+    private readonly inventories: CurrentInventoryScopeRepository
   ) {}
 
-  async listAssetCheckoutHistory(input: {
-    readonly assetId: string;
-    readonly limit: number;
-  }): Promise<AssetCheckoutHistoryPage> {
-    const inventory = await this.inventories.getDefaultInventorySummary();
+  async listAssetCheckoutHistory(input: Parameters<AssetCheckoutHistoryRepository['listAssetCheckoutHistory']>[0]): Promise<AssetCheckoutHistoryPage> {
+    const inventory = await this.inventories.getCurrentInventoryScope({ signal: input.signal });
     const page = await this.client.listAssetCheckoutHistory(
       inventory.tenantId,
-      inventory.id,
+      inventory.inventoryId,
       input.assetId,
-      input.limit
+      input.limit,
+      input.cursor,
+      input.signal
     );
 
     return {
       records: page.items.map(mapCheckoutRecord),
-      hasMore: page.pagination.hasMore
+      hasMore: page.pagination.hasMore,
+      nextCursor: page.pagination.nextCursor ?? undefined
     };
   }
 }

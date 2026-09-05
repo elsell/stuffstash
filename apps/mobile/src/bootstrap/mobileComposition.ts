@@ -215,7 +215,7 @@ export function createMobileComposition(
     runtimeSeed.invitationAllowInsecureLocalHTTP
   );
   const assetActivity = new ApiAssetActivityRepository(client);
-  const assetChangeReversal = new ApiAssetOperationReversalRepository(client);
+  const assetChangeReversal = new ApiAssetOperationReversalRepository(client, new QueryClientInventoryMutationObserver(queryClient, serviceScopeId));
   const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
   const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries);

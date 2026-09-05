@@ -105,6 +105,15 @@ export const mobileQueryKeys = {
     'contents',
     containmentIdentity
   ] as const,
+  assetHistory: (scopeId: string, tenantId: string, inventoryId: string, assetId: string, view: 'changes' | 'all') => [
+    ...mobileQueryKeys.asset(scopeId, tenantId, inventoryId, assetId), 'history', view
+  ] as const,
+  assetActivity: (scopeId: string, tenantId: string, inventoryId: string, assetId: string, activityId: string) => [
+    ...mobileQueryKeys.asset(scopeId, tenantId, inventoryId, assetId), 'activity', activityId
+  ] as const,
+  assetCheckouts: (scopeId: string, tenantId: string, inventoryId: string, assetId: string) => [
+    ...mobileQueryKeys.asset(scopeId, tenantId, inventoryId, assetId), 'checkouts'
+  ] as const,
   assetPhotos: (
     compositionScopeId: string,
     tenantId: string,
