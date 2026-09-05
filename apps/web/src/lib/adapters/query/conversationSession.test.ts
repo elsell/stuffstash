@@ -4,10 +4,21 @@ import { createConversationSession } from './conversationSession';
 const scope = { apiIdentity: 'api', principalId: 'owner', tenantId: 'home' };
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>(done => { resolve = done; });
-  return { promise, resolve };
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; });
+  return { promise, resolve, reject };
 }
 describe('conversation session mutation ownership', () => {
+  it('does not notify a replacement workspace about a late access denial', async () => {
+    const work = deferred<string>(); const started = deferred<void>();
+    let denied = 0;
+    const session = createConversationSession(scope, () => { denied++; });
+    const pending = session.mutate(() => { started.resolve(); return work.promise; }, () => {});
+    await started.promise; await session.dispose();
+    work.reject(new ConversationFailure('forbidden'));
+    await expect(pending).rejects.toMatchObject({ kind: 'forbidden' });
+    expect(denied).toBe(0);
+  });
   it('reconciles an active mutation result', async () => {
     const session = createConversationSession(scope, () => {});
     const results: string[] = [];
