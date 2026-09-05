@@ -12,6 +12,10 @@ test('edits cases, runs pinned revisions and activates only after review', async
   await page.getByRole('button', { name: /Close editor/ }).click();
   await page.getByRole('button', { name: 'Test cases', exact: true }).click();
   await page.getByRole('button', { name: /Find baby clothes · Revision 1/ }).click();
+  await page.getByLabel('Case title', { exact: true }).fill('');
+  await page.getByRole('button', { name: 'Save test case', exact: true }).click();
+  await expect(page.getByLabel('Case title', { exact: true })).toHaveAttribute('aria-describedby', 'case-title-error');
+  await expect(page.locator('#case-title-error')).toBeVisible();
   await page.getByLabel('Case title', { exact: true }).fill('Baby clothes in the attic');
   await page.screenshot({ path: testInfo.outputPath('case-editor.png'), fullPage: true });
   await page.getByRole('button', { name: 'Save test case', exact: true }).click();

@@ -10,6 +10,18 @@ const initial: CaseDefinition = { title: ' Find clothes ', utterance: 'Where are
 ], expectations: { kind: 'answer', referencedAssets: ['clothes'], locations: [], proposals: [], forbiddenOperations: ['create'] } };
 function submit() { document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); }
 describe('case editor', () => {
+  it.each(['case-title', 'fixture-title-clothes', 'proposal-kind-0'])('associates inline errors with %s', async field => {
+    const draft = structuredClone(initial);
+    if (field === 'case-title') draft.title = '';
+    if (field === 'fixture-title-clothes') draft.assets[0].title = '';
+    if (field === 'proposal-kind-0') { draft.expectations.kind = 'proposal'; draft.expectations.forbiddenOperations = []; draft.expectations.proposals = [{ operation: 'create', targetId: '', destinationId: '', newTitle: 'More clothes', newKind: '', details: '' }]; }
+    component = mount(CaseEditor, { target: document.body, props: { initial: draft, onSave: async () => { throw new Error('Invalid draft must not save'); } } });
+    submit();
+    await expect.poll(() => document.querySelector(`[name="${field}"], [id="${field}"]`)?.getAttribute('aria-invalid')).toBe('true');
+    const control = document.querySelector(`[name="${field}"], [id="${field}"]`)!;
+    expect(control.getAttribute('aria-describedby')).toBe(`${field}-error`);
+    expect(document.getElementById(`${field}-error`)?.textContent).toMatch(/Enter|Choose/);
+  });
   it('saves a normalized case while preserving the source revision', async () => {
     const saved: CaseDefinition[] = [];
     component = mount(CaseEditor, { target: document.body, props: { initial, onSave: async value => { saved.push(value); } } });

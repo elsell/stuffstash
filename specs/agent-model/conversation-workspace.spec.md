@@ -30,7 +30,7 @@ Revision comparison uses the same pinned case versions and compatible provider c
 
 ## Responsive and accessible behavior
 
-Use existing local shadcn-style controls and semantic tokens. Desktop may place fixture editing beside expectations; narrow screens stack them in reading order. Lists remain bounded and use Load more, without requiring a wide table. Long titles and provider names wrap. Form controls have persistent labels, associated errors and keyboard access. Announce saved/error/terminal state through a polite live region without announcing every polling refresh. Maintain focus through saves, expansion and cancellation, and move focus to the validation summary only when submission fails. Status uses text as well as color. No sticky controls may obscure fields or results.
+Use existing local shadcn-style controls and semantic tokens. Desktop may place fixture editing beside expectations; narrow screens stack them in reading order. Lists remain bounded and use Load more, without requiring a wide table. Long titles and provider names wrap. Form controls have persistent labels, associated errors and keyboard access. Every client-validation issue appears beside its field and is connected with aria-describedby and aria-invalid; summary links focus the field or a focusable section heading for aggregate issues. Announce saved/error/terminal state through a polite live region without announcing every polling refresh. Maintain focus through saves, expansion and cancellation, and move focus to the validation summary only when submission fails. Status uses text as well as color. No sticky controls may obscure fields or results.
 
 ## Frontend ownership and network behavior
 
