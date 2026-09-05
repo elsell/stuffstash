@@ -229,6 +229,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/conversation-workflow-selection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflow selection */
+        get: operations["get-tenants-by-tenant-id-conversation-workflow-selection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/conversation-workflows": {
         parameters: {
             query?: never;
@@ -236,10 +253,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID conversation workflows */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows"];
         put?: never;
         /** Post tenants by tenant ID conversation workflows */
         post: operations["post-tenants-by-tenant-id-conversation-workflows"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflows by workflow ID */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows-by-workflow-id"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -270,10 +305,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID conversation workflows by workflow ID revisions */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions"];
         put?: never;
         /** Post tenants by tenant ID conversation workflows by workflow ID revisions */
         post: operations["post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions/{revisionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID conversation workflows by workflow ID revisions by revision ID */
+        get: operations["get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions-by-revision-id"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2813,6 +2866,26 @@ export interface components {
             data: components["schemas"]["RecordResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListRevision.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Revision"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListWorkflowHead: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListWorkflowHead.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["WorkflowHead"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopePrincipalResponse: {
             /**
              * Format: uri
@@ -2871,6 +2944,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["VoiceProviderConfigurationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeWorkflowSelection: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeWorkflowSelection.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["WorkflowSelection"];
             meta: components["schemas"]["Meta"];
         };
         TenantResponse: {
@@ -3073,6 +3156,18 @@ export interface components {
             expected?: components["schemas"]["WorkflowSelection"];
             revisionId: string;
             runId: string;
+        };
+        WorkflowHead: {
+            activeRevisionId?: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** Format: int64 */
+            latestRevision: number;
+            latestRevisionId: string;
+            name: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         WorkflowSelection: {
             revisionId: string;
@@ -3720,6 +3815,77 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-conversation-workflow-selection": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeWorkflowSelection"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListWorkflowHead"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "post-tenants-by-tenant-id-conversation-workflows": {
         parameters: {
             query?: never;
@@ -3740,6 +3906,41 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3797,6 +3998,44 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
         parameters: {
             query?: never;
@@ -3818,6 +4057,42 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions-by-revision-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                workflowId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
