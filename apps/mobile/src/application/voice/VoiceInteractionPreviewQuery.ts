@@ -1,4 +1,5 @@
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type { VoiceInventoryContextRepository } from './VoiceInventoryContext';
+import type { ReadRequest } from '../shared/ReadRequest';
 
 export type VoiceActionPreviewViewModel = {
   readonly summary: string;
@@ -15,27 +16,14 @@ export type VoiceInteractionPreviewViewModel = {
 };
 
 export class VoiceInteractionPreviewQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: VoiceInventoryContextRepository) {}
 
-  async execute(): Promise<VoiceInteractionPreviewViewModel> {
-    const workspace = await this.inventories.getInventoryWorkspace();
-    const inventory =
-      workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
-      workspace.inventories[0];
-
-    if (!inventory) {
-      throw new Error('Inventory workspace must include at least one inventory.');
-    }
-
-    const tenant = workspace.tenants.find((item) => item.id === inventory.tenantId);
-
-    if (!tenant) {
-      throw new Error('Selected inventory must belong to a tenant.');
-    }
+  async execute(request: ReadRequest = {}): Promise<VoiceInteractionPreviewViewModel> {
+    const context = await this.inventories.getVoiceInventoryContext(request);
 
     return {
-      tenantName: tenant.name,
-      inventoryName: inventory.name,
+      tenantName: context.tenantName,
+      inventoryName: context.inventoryName,
       sampleUtterance: 'Move the fertilizer from the garage shelf to the wire rack.',
       assistantSummary: 'I found one likely move. Review the plan before anything changes.',
       actionPreview: {

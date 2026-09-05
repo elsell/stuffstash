@@ -105,6 +105,7 @@ export const mobileQueryKeys = {
     'contents',
     containmentIdentity
   ] as const,
+  voiceContext: (scope: string, tenant: string, inventory: string) => [...mobileQueryKeys.inventory(scope, tenant, inventory), 'voice-context'] as const,
   invitations: (scope: string, tenant: string, inventory: string) => [...mobileQueryKeys.inventory(scope, tenant, inventory), 'invitations'] as const,
   customization: (scopeId: string, tenant: string, inventory: string, scope: string, kind: string, lifecycle: string) => [
     ...(scope === 'tenant' ? mobileQueryKeys.tenant(scopeId, tenant) : mobileQueryKeys.inventory(scopeId, tenant, inventory)), 'customization', kind, lifecycle

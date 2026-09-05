@@ -1,3 +1,4 @@
+import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
@@ -57,14 +58,14 @@ export function VoiceSessionSheetScreen() {
   const [commandDraftState, setCommandDraftState] = useState<{ readonly planId?: string; readonly drafts: VoicePlanCommandDrafts }>({ drafts: {} });
   const [parentPickerCommandId, setParentPickerCommandId] = useState<string | null>(null);
   const [parentQuery, setParentQuery] = useState('');
-  const [parentMatches, setParentMatches] = useState<readonly ParentLookupResult[]>([]);
   const safeAreaInsets = useSafeAreaInsets();
   const activePlanId = state.status === 'ready' ? state.realtime?.actionPlan?.planId : undefined;
   const activePlanStatus = state.status === 'ready' ? state.realtime?.actionPlan?.status : undefined;
   const activePlanIdRef = useRef(activePlanId);
   const activePlanStatusRef = useRef(activePlanStatus);
   const parentPickerCommandIdRef = useRef<string | null>(null);
-  const parentRequestGeneration = useRef(0);
+  const candidates = useParentCandidates(parentQuery, parentLookupQuery, parentPickerCommandId !== null && activePlanStatus === 'proposed');
+  const parentMatches = candidates.data ?? [];
   const commandDrafts = commandDraftState.planId === activePlanId && activePlanStatus === 'proposed' ? commandDraftState.drafts : {};
 
   useEffect(() => {
@@ -80,20 +81,7 @@ export function VoiceSessionSheetScreen() {
     setCommandDraftState({ planId: activePlanId, drafts: {} });
     setParentPickerCommandId(null);
     parentPickerCommandIdRef.current = null;
-    parentRequestGeneration.current += 1;
-    setParentMatches([]);
   }, [activePlanId, activePlanStatus]);
-
-  async function loadParentMatches(query: string): Promise<void> {
-    const generation = parentRequestGeneration.current + 1;
-    parentRequestGeneration.current = generation;
-    const planId = activePlanId;
-    const commandId = parentPickerCommandIdRef.current;
-    const matches = await parentLookupQuery.execute(query);
-    if (parentRequestGeneration.current === generation && activePlanIdRef.current === planId && parentPickerCommandIdRef.current === commandId) {
-      setParentMatches(matches);
-    }
-  }
 
   async function handleSessionMic(): Promise<void> {
     if (state.status !== 'ready') {
@@ -174,17 +162,13 @@ export function VoiceSessionSheetScreen() {
         setParentPickerCommandId(commandId);
         parentPickerCommandIdRef.current = commandId;
         setParentQuery('');
-        void loadParentMatches('');
       }}
       onCloseParentPicker={() => {
-        parentRequestGeneration.current += 1;
-        parentPickerCommandIdRef.current = null;
+            parentPickerCommandIdRef.current = null;
         setParentPickerCommandId(null);
-        setParentMatches([]);
-      }}
+          }}
       onChangeParentQuery={(query) => {
         setParentQuery(query);
-        void loadParentMatches(query);
       }}
       onSelectParent={(commandId, parent) => {
         setCommandDraftState((current) => ({ planId: activePlanId, drafts: { ...(current.planId === activePlanId ? current.drafts : {}), [commandId]: { ...(current.planId === activePlanId ? current.drafts[commandId] : {}), parent } } }));

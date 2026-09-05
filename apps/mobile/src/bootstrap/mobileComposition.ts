@@ -1,3 +1,4 @@
+import { QueryClientVoiceMutationObserver } from '../adapters/serverState/QueryClientVoiceMutationObserver';
 import { QueryClientInvitationMutationObserver } from '../adapters/serverState/QueryClientInvitationMutationObserver';
 import { ObservedCustomizationRepository } from '../adapters/customization/ObservedCustomizationRepository';
 import { QueryClientCustomizationMutationObserver } from '../adapters/serverState/QueryClientCustomizationMutationObserver';
@@ -302,7 +303,8 @@ export function createMobileComposition(
       }),
       new ExpoVoiceAudioPlayer(),
       {
-        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
+        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
+        mutationObserver: new QueryClientVoiceMutationObserver(queryClient, serviceScopeId)
       }
     ),
     authSessionController,

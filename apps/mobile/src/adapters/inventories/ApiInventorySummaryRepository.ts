@@ -534,6 +534,11 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     };
   }
 
+  async getVoiceInventoryContext(request: ReadRequest = {}) {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    return { tenantId: tenantId(selected.tenant.id), inventoryId: inventoryId(selected.inventory.id), tenantName: selected.tenant.name, inventoryName: selected.inventory.name };
+  }
+
   async selectInventory(selectedInventoryId: InventoryId): Promise<void> {
     let directory = await this.loadInventoryDirectory();
     let selection = directory.availableInventories.find((item) =>

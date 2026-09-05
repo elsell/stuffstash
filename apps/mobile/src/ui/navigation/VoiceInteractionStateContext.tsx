@@ -1,3 +1,5 @@
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   VoiceInteractionPreviewQuery,
@@ -53,44 +55,25 @@ type VoiceInteractionStateProviderProps = {
   readonly realtimeController: RealtimeVoiceSessionController;
 };
 
-export function VoiceInteractionStateProvider({
-  children,
-  diagnosticsEnabled = false,
-  previewQuery,
-  realtimeController
-}: VoiceInteractionStateProviderProps) {
+export function VoiceInteractionStateProvider(props: VoiceInteractionStateProviderProps) {
+  const preview = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceContext, query: signal => props.previewQuery.execute({ signal }) });
+  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, 'Voice preview is not available.') } : { status: 'loading' };
+  return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState} />;
+}
+
+type PreviewState = { readonly status: 'loading' } | { readonly status: 'error'; readonly message: string } | { readonly status: 'ready'; readonly preview: VoiceInteractionPreviewViewModel };
+
+function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = false, realtimeController, previewState, scopeKey }: VoiceInteractionStateProviderProps & { readonly previewState: PreviewState; readonly scopeKey: string }) {
   const [stage, setStage] = useState<VoiceInteractionStage>('ready');
   const [realtime, setRealtime] = useState<VoiceRealtimeState | null>(null);
   const sessionGeneration = useRef(0);
-  const [previewState, setPreviewState] = useState<
-    | { readonly status: 'loading' }
-    | { readonly status: 'error'; readonly message: string }
-    | { readonly status: 'ready'; readonly preview: VoiceInteractionPreviewViewModel }
-  >({ status: 'loading' });
-
+  const [stateOwner, setStateOwner] = useState(scopeKey);
   useEffect(() => {
-    let isCurrent = true;
-
-    previewQuery
-      .execute()
-      .then((preview) => {
-        if (isCurrent) {
-          setPreviewState({ status: 'ready', preview });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setPreviewState({
-            status: 'error',
-            message: readableError(error, 'Voice preview is not available.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [previewQuery]);
+    setStateOwner(scopeKey);
+    setStage('ready');
+    setRealtime(null);
+    return () => { sessionGeneration.current++; void realtimeController.dispose(); };
+  }, [realtimeController, scopeKey]);
 
   useEffect(() => {
     if (stage !== 'listening') {
@@ -131,7 +114,7 @@ export function VoiceInteractionStateProvider({
   const value = useMemo<VoiceInteractionStateContextValue>(() => {
     const state: VoiceInteractionState =
       previewState.status === 'ready'
-        ? { status: 'ready', stage, preview: previewState.preview, realtime }
+        ? { status: 'ready', stage: stateOwner === scopeKey ? stage : 'ready', preview: previewState.preview, realtime: stateOwner === scopeKey ? realtime : null }
         : previewState.status === 'error'
           ? { status: 'error', stage, message: previewState.message }
           : { status: 'loading', stage };
@@ -243,7 +226,7 @@ export function VoiceInteractionStateProvider({
         setStage('ready');
       }
     };
-  }, [diagnosticsEnabled, previewState, realtime, realtimeController, stage]);
+  }, [diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey]);
 
   return (
     <VoiceInteractionStateContext.Provider value={value}>

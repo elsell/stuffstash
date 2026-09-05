@@ -141,3 +141,9 @@ Customization collections and editor initialization share scoped query-owned def
 ## Invitation Read Ownership
 
 Sharing lists use scoped TanStack infinite queries with 50 safe summaries per page. Continuation loads only on request; cancellation reaches the HTTP adapter. Repeated cursors fail safely. Successful create/cancel commands notify an injected invitation mutation observer, which invalidates only the affected inventory list. One-time links remain local to the mounted, permission-qualified scope and never enter retained queries. Permission denial hides previously cached rows and links; transient refresh failures retain rows with retry feedback. Accept/preview are token-bearing workflows and remain outside retained query state. Opening an accepted inventory refreshes discovery and resets the selected-scope cache.
+
+## Voice Context and Mutation Reconciliation
+
+Voice preview and recording startup use a focused inventory-context port (tenant/inventory identity and names), never asset, attachment or tag enumeration. Preview is a scoped shared query; realtime audio and approval state remain controller-owned. Inventory replacement cancels and resets the active voice workflow. The voice parent picker shares the debounced, cancellable parent-candidate query.
+
+Only an executed plan matching the active reviewed plan reports an injected voice mutation impact, before optional photo uploads complete. One batched impact invalidates inventory projections and affected asset core/history/checkout reads. Core and containment/placement refresh conservatively because execution results omit automatically promoted parents and old/destination ancestry; incomplete result identifiers conservatively refresh asset projections. Unrelated inventories, configuration and photos remain fresh. Photo uploads report their own successful attachment impacts.

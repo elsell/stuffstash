@@ -2916,3 +2916,12 @@ function checkoutRecord(
     updatedAt: '2026-06-24T10:05:00Z'
   };
 }
+
+it('loads voice identity without asset, tag or attachment reads', async () => {
+  const client = new FakeInventoryApiClient();
+  const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  expect(await repository.getVoiceInventoryContext()).toMatchObject({ tenantId: 'tenant-home', inventoryId: 'inventory-home', inventoryName: 'Home Inventory' });
+  expect(client.listAssetRequests).toEqual([]);
+  expect(client.listAssetTagRequests).toEqual([]);
+  expect(client.listAttachmentRequests).toEqual([]);
+});
