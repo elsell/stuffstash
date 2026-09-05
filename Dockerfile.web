@@ -5,13 +5,16 @@ ARG WEB_RUNTIME_IMAGE=registry.access.redhat.com/ubi9/nginx-124@sha256:da5615d36
 ARG PNPM_VERSION=11.0.7
 
 FROM ${NODE_BUILDER_IMAGE} AS builder
+ARG PNPM_VERSION
 
 USER 0
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/web/package.json apps/web/package.json
 COPY packages/api-client/package.json packages/api-client/package.json
-RUN npm install --global --ignore-scripts "pnpm@${PNPM_VERSION}"
+RUN node -e 'if (!process.env.PNPM_VERSION || require("./package.json").packageManager !== "pnpm@" + process.env.PNPM_VERSION) throw new Error("PNPM_VERSION must match the workspace packageManager")' \
+    && npm install --global --ignore-scripts "pnpm@${PNPM_VERSION}" \
+    && test "$(pnpm --version)" = "${PNPM_VERSION}"
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/api-client packages/api-client
 COPY apps/web apps/web
