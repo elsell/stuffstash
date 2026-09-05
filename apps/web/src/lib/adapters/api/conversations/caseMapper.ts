@@ -36,3 +36,7 @@ export function caseDefinitionBody(value: CaseDefinition) {
       forbiddenOperations: [...value.expectations.forbiddenOperations], locations: value.expectations.locations.map(value => ({ ...value })),
       proposals: value.expectations.proposals.map(value => ({ ...value })) } };
 }
+
+export const caseOperation = (value: string): CaseOperation => member(value, operations);
+export const caseOutcome = (value: string): CaseOutcome => member(value, outcomes);
+export const caseAssetKind = (value: string): CaseAssetKind => member(value, kinds);

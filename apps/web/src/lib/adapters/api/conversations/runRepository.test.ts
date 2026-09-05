@@ -39,4 +39,18 @@ describe('evaluation run API repository', () => {
     await expect(repository({ ...run, id: 'other' }).get('home', 'run')).rejects.toMatchObject({ kind: 'invalid' });
     await expect(repository({ ...run, state: 'unknown' }).get('home', 'run')).rejects.toMatchObject({ kind: 'invalid' });
   });
+  it('rejects queue results for a different pinned workflow', async () => {
+    await expect(repository(run).queue('home', { workflowId: 'other', revisionId: 'revision', cases: [] }))
+      .rejects.toMatchObject({ kind: 'invalid' });
+  });
+  it('retains failed verdicts and unexpected proposed changes', async () => {
+    const proposal = { operation: 'create', targetId: '', destinationId: 'loft', newKind: 'item', newTitle: 'Baby clothes', details: '' };
+    const verdict = { passed: false, failures: [{ code: 'forbidden_operation', fixtureId: '', operation: 'create' }] };
+    const value = { ...run, state: 'failed', passedCases: 0, results: [{ ...run.results[0],
+      observation: { ...run.results[0].observation, kind: 'proposal', proposals: [proposal] }, verdict }] };
+    const result = await repository(value).get('home', 'run');
+    expect(result.results[0].observation.proposals).toEqual([proposal]);
+    expect(result.results[0].verdict).toEqual(verdict);
+    expect(result.passedCases).toBe(0);
+  });
 });
