@@ -79,7 +79,7 @@ func (s Store) AppendWorkflowRevision(ctx context.Context, revision agentmodel.W
 	})
 }
 
-func (s Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID, workflowID agentmodel.WorkflowID, revisionID, expectedActive agentmodel.WorkflowRevisionID, at time.Time, record audit.Record) error {
+func (s Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID, workflowID agentmodel.WorkflowID, revisionID agentmodel.WorkflowRevisionID, expectedActive ports.WorkflowSelectionReference, at time.Time, record audit.Record) error {
 	if at.IsZero() || string(record.TenantID) != tenantID.String() || record.Action != audit.ActionConversationWorkflowActivated {
 		return agentmodel.ErrInvalidWorkflowRevision
 	}
@@ -92,7 +92,27 @@ func (s Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID,
 		if err != nil {
 			return err
 		}
-		result := tx.Model(&conversationWorkflowModel{}).Where(map[string]any{"tenant_id": tenantID.String(), "id": string(workflowID), "active_revision_id": string(expectedActive)}).Updates(map[string]any{"active_revision_id": string(revisionID), "updated_at": at})
+		if (expectedActive.WorkflowID == "") != (expectedActive.RevisionID == "") {
+			return ports.ErrWorkflowConflict
+		}
+		if expectedActive == (ports.WorkflowSelectionReference{}) {
+			result := tx.Omit(clause.Associations).Clauses(clause.OnConflict{DoNothing: true}).Create(&conversationWorkflowSelectionModel{TenantID: tenantID.String(), WorkflowID: string(workflowID), RevisionID: string(revisionID), ActivatedAt: at})
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected != 1 {
+				return ports.ErrWorkflowConflict
+			}
+		} else {
+			result := tx.Model(&conversationWorkflowSelectionModel{}).Where(map[string]any{"tenant_id": tenantID.String(), "workflow_id": string(expectedActive.WorkflowID), "revision_id": string(expectedActive.RevisionID)}).Updates(map[string]any{"workflow_id": string(workflowID), "revision_id": string(revisionID), "activated_at": at})
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected != 1 {
+				return ports.ErrWorkflowConflict
+			}
+		}
+		result := tx.Model(&conversationWorkflowModel{}).Where(map[string]any{"tenant_id": tenantID.String(), "id": string(workflowID)}).Updates(map[string]any{"active_revision_id": string(revisionID), "updated_at": at})
 		if result.Error != nil {
 			return result.Error
 		}
@@ -101,4 +121,16 @@ func (s Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID,
 		}
 		return createAuditRecord(tx, record)
 	})
+}
+
+func (s Store) SelectedWorkflowRevision(ctx context.Context, tenantID tenant.ID) (ports.WorkflowSelectionReference, bool, error) {
+	var model conversationWorkflowSelectionModel
+	err := s.db.WithContext(ctx).Where(map[string]any{"tenant_id": tenantID.String()}).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ports.WorkflowSelectionReference{}, false, nil
+	}
+	if err != nil {
+		return ports.WorkflowSelectionReference{}, false, err
+	}
+	return ports.WorkflowSelectionReference{WorkflowID: agentmodel.WorkflowID(model.WorkflowID), RevisionID: agentmodel.WorkflowRevisionID(model.RevisionID)}, true, nil
 }

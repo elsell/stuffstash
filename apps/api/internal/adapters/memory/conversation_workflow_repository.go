@@ -82,7 +82,7 @@ func (s *Store) AppendWorkflowRevision(ctx context.Context, revision agentmodel.
 	s.auditRecords[record.ID] = record
 	return nil
 }
-func (s *Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID, workflowID agentmodel.WorkflowID, revisionID, expectedActive agentmodel.WorkflowRevisionID, at time.Time, record audit.Record) error {
+func (s *Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID, workflowID agentmodel.WorkflowID, revisionID agentmodel.WorkflowRevisionID, expectedActive ports.WorkflowSelectionReference, at time.Time, record audit.Record) error {
 	if at.IsZero() || record.TenantID.String() != tenantID.String() || record.Action != audit.ActionConversationWorkflowActivated || record.ID == "" || record.InventoryID != "" {
 		return agentmodel.ErrInvalidWorkflowRevision
 	}
@@ -96,16 +96,27 @@ func (s *Store) ActivateWorkflowRevision(ctx context.Context, tenantID tenant.ID
 		return ports.ErrWorkflowNotFound
 	}
 	head, found := s.workflowHeads[key]
-	if !found || head.ActiveRevisionID != expectedActive {
+	if !found || s.workflowSelections[tenantID] != expectedActive {
 		return ports.ErrWorkflowConflict
 	}
 	if _, exists := s.auditRecords[record.ID]; exists {
 		return ports.ErrWorkflowConflict
 	}
+	if s.workflowSelections == nil {
+		s.workflowSelections = map[tenant.ID]ports.WorkflowSelectionReference{}
+	}
+	s.workflowSelections[tenantID] = ports.WorkflowSelectionReference{WorkflowID: workflowID, RevisionID: revisionID}
 	head.ActiveRevisionID = revisionID
 	head.UpdatedAt = at
 	record.Metadata = maps.Clone(record.Metadata)
 	s.workflowHeads[key] = head
 	s.auditRecords[record.ID] = record
 	return nil
+}
+
+func (s *Store) SelectedWorkflowRevision(_ context.Context, tenantID tenant.ID) (ports.WorkflowSelectionReference, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	selection, found := s.workflowSelections[tenantID]
+	return selection, found, nil
 }

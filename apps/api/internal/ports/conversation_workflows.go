@@ -22,9 +22,15 @@ type WorkflowHeadRecord struct {
 	UpdatedAt        time.Time
 }
 
+type WorkflowSelectionReference struct {
+	WorkflowID agentmodel.WorkflowID
+	RevisionID agentmodel.WorkflowRevisionID
+}
+
 type ConversationWorkflowRepository interface {
+	SelectedWorkflowRevision(context.Context, tenant.ID) (WorkflowSelectionReference, bool, error)
 	WorkflowHead(context.Context, tenant.ID, agentmodel.WorkflowID) (WorkflowHeadRecord, bool, error)
 	WorkflowRevision(context.Context, tenant.ID, agentmodel.WorkflowID, agentmodel.WorkflowRevisionID) (agentmodel.WorkflowRevision, bool, error)
 	AppendWorkflowRevision(context.Context, agentmodel.WorkflowRevision, int, audit.Record) error
-	ActivateWorkflowRevision(context.Context, tenant.ID, agentmodel.WorkflowID, agentmodel.WorkflowRevisionID, agentmodel.WorkflowRevisionID, time.Time, audit.Record) error
+	ActivateWorkflowRevision(context.Context, tenant.ID, agentmodel.WorkflowID, agentmodel.WorkflowRevisionID, WorkflowSelectionReference, time.Time, audit.Record) error
 }

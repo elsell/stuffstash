@@ -63,13 +63,13 @@ func TestWorkflowMemoryAtomicScopeAndConflict(t *testing.T) {
 	if wins != 1 || conflicts != 1 {
 		t.Fatalf("CAS: wins=%d conflicts=%d", wins, conflicts)
 	}
-	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", "one", "", first.Snapshot().CreatedAt, record("active", audit.ActionConversationWorkflowActivated)); err != nil {
+	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", "one", ports.WorkflowSelectionReference{}, first.Snapshot().CreatedAt, record("active", audit.ActionConversationWorkflowActivated)); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", "one", "", first.Snapshot().CreatedAt, record("stale-active", audit.ActionConversationWorkflowActivated)); !errors.Is(err, ports.ErrWorkflowConflict) {
+	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", "one", ports.WorkflowSelectionReference{}, first.Snapshot().CreatedAt, record("stale-active", audit.ActionConversationWorkflowActivated)); !errors.Is(err, ports.ErrWorkflowConflict) {
 		t.Fatalf("stale activation: %v", err)
 	}
-	if err := store.ActivateWorkflowRevision(ctx, "other", "workflow-one", "one", "", first.Snapshot().CreatedAt, record("cross", audit.ActionConversationWorkflowActivated)); err == nil {
+	if err := store.ActivateWorkflowRevision(ctx, "other", "workflow-one", "one", ports.WorkflowSelectionReference{}, first.Snapshot().CreatedAt, record("cross", audit.ActionConversationWorkflowActivated)); err == nil {
 		t.Fatal("cross-tenant audit accepted")
 	}
 
@@ -83,7 +83,7 @@ func TestWorkflowMemoryAtomicScopeAndConflict(t *testing.T) {
 	if winner == "" {
 		t.Fatal("winning revision missing")
 	}
-	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", winner, "one", first.Snapshot().CreatedAt, record("active", audit.ActionConversationWorkflowActivated)); err == nil {
+	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", winner, ports.WorkflowSelectionReference{WorkflowID: "workflow-one", RevisionID: "one"}, first.Snapshot().CreatedAt, record("active", audit.ActionConversationWorkflowActivated)); err == nil {
 		t.Fatal("duplicate activation audit accepted")
 	}
 
@@ -92,7 +92,7 @@ func TestWorkflowMemoryAtomicScopeAndConflict(t *testing.T) {
 	if err := store.AppendWorkflowRevision(cancelled, persistedWorkflowRevision(t, "home", "cancelled", 3), 2, record("cancelled-append", audit.ActionConversationWorkflowRevisionCreated)); !errors.Is(err, context.Canceled) {
 		t.Fatalf("cancelled append: %v", err)
 	}
-	if err := store.ActivateWorkflowRevision(cancelled, "home", "workflow-one", winner, "one", first.Snapshot().CreatedAt, record("cancelled-active", audit.ActionConversationWorkflowActivated)); !errors.Is(err, context.Canceled) {
+	if err := store.ActivateWorkflowRevision(cancelled, "home", "workflow-one", winner, ports.WorkflowSelectionReference{WorkflowID: "workflow-one", RevisionID: "one"}, first.Snapshot().CreatedAt, record("cancelled-active", audit.ActionConversationWorkflowActivated)); !errors.Is(err, context.Canceled) {
 		t.Fatalf("cancelled activation: %v", err)
 	}
 	if _, found, _ := store.WorkflowRevision(ctx, "home", "workflow-one", "cancelled"); found {

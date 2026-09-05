@@ -16,35 +16,36 @@ import (
 )
 
 type Store struct {
-	workflowHeads     map[workflowKey]ports.WorkflowHeadRecord
-	workflowRevisions map[workflowRevisionKey]agentmodel.WorkflowRevision
-	mu                sync.RWMutex
-	users             map[identity.PrincipalID]identity.User
-	tenants           map[tenant.ID]tenant.Tenant
-	inventories       map[inventory.InventoryID]inventory.Inventory
-	accessGrants      map[string]ports.InventoryAccessGrant
-	invitations       map[string]ports.InventoryAccessInvitation
-	customAssetTypes  map[customfield.AssetTypeID]customfield.AssetType
-	customFields      map[customfield.ID]customfield.Definition
-	assets            map[asset.ID]asset.Asset
-	assetTags         map[assettag.ID]assettag.Tag
-	assetTagLinks     map[asset.ID]map[assettag.ID]struct{}
-	checkouts         map[asset.CheckoutID]asset.Checkout
-	undoables         map[string]ports.UndoableOperation
-	attachments       map[media.ID]media.Attachment
-	providerProfiles  map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
-	voiceConfigs      map[tenant.ID]ports.VoiceProviderConfigurationRecord
-	providerCreds     map[string]ports.ProviderCredentialRecord
-	realtimeSessions  map[string]ports.RealtimeSessionRecord
-	actionPlans       map[string]ports.ActionPlanRecord
-	importJobs        map[string]importjob.Record
-	importJobSources  map[string]ports.ImportJobSourceRecord
-	importLinks       map[string]ports.ImportSourceLink
-	importResources   map[string]ports.ImportJobResource
-	blobs             map[media.StorageKey][]byte
-	blobDeletions     map[string]ports.BlobDeletionEvent
-	auditRecords      map[audit.ID]audit.Record
-	outbox            map[string]ports.AuthorizationOutboxEvent
+	workflowSelections map[tenant.ID]ports.WorkflowSelectionReference
+	workflowHeads      map[workflowKey]ports.WorkflowHeadRecord
+	workflowRevisions  map[workflowRevisionKey]agentmodel.WorkflowRevision
+	mu                 sync.RWMutex
+	users              map[identity.PrincipalID]identity.User
+	tenants            map[tenant.ID]tenant.Tenant
+	inventories        map[inventory.InventoryID]inventory.Inventory
+	accessGrants       map[string]ports.InventoryAccessGrant
+	invitations        map[string]ports.InventoryAccessInvitation
+	customAssetTypes   map[customfield.AssetTypeID]customfield.AssetType
+	customFields       map[customfield.ID]customfield.Definition
+	assets             map[asset.ID]asset.Asset
+	assetTags          map[assettag.ID]assettag.Tag
+	assetTagLinks      map[asset.ID]map[assettag.ID]struct{}
+	checkouts          map[asset.CheckoutID]asset.Checkout
+	undoables          map[string]ports.UndoableOperation
+	attachments        map[media.ID]media.Attachment
+	providerProfiles   map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
+	voiceConfigs       map[tenant.ID]ports.VoiceProviderConfigurationRecord
+	providerCreds      map[string]ports.ProviderCredentialRecord
+	realtimeSessions   map[string]ports.RealtimeSessionRecord
+	actionPlans        map[string]ports.ActionPlanRecord
+	importJobs         map[string]importjob.Record
+	importJobSources   map[string]ports.ImportJobSourceRecord
+	importLinks        map[string]ports.ImportSourceLink
+	importResources    map[string]ports.ImportJobResource
+	blobs              map[media.StorageKey][]byte
+	blobDeletions      map[string]ports.BlobDeletionEvent
+	auditRecords       map[audit.ID]audit.Record
+	outbox             map[string]ports.AuthorizationOutboxEvent
 }
 
 func NewStore() *Store {

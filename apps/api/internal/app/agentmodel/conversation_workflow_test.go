@@ -97,6 +97,7 @@ func TestConversationWorkflowRejectsUnknownOrWrongCapabilityProvider(t *testing.
 }
 
 type workflowFakeRepository struct {
+	selected  map[tenant.ID]ports.WorkflowSelectionReference
 	revisions map[string]domain.WorkflowRevision
 	heads     map[string]ports.WorkflowHeadRecord
 	audit     []audit.Record
@@ -138,7 +139,7 @@ func (r *workflowFakeRepository) AppendWorkflowRevision(_ context.Context, v dom
 	r.audit = append(r.audit, a)
 	return nil
 }
-func (r *workflowFakeRepository) ActivateWorkflowRevision(_ context.Context, t tenant.ID, w domain.WorkflowID, id, expected domain.WorkflowRevisionID, at time.Time, a audit.Record) error {
+func (r *workflowFakeRepository) ActivateWorkflowRevision(_ context.Context, t tenant.ID, w domain.WorkflowID, id domain.WorkflowRevisionID, expected ports.WorkflowSelectionReference, at time.Time, a audit.Record) error {
 	key := t.String() + "/" + string(w)
 	head, ok := r.heads[key]
 	if !ok {
@@ -147,9 +148,18 @@ func (r *workflowFakeRepository) ActivateWorkflowRevision(_ context.Context, t t
 	if _, ok := r.revisions[key+"/"+string(id)]; !ok {
 		return ports.ErrWorkflowNotFound
 	}
-	if head.ActiveRevisionID != expected {
+	if r.selected[t] != expected {
 		return ports.ErrWorkflowConflict
 	}
+	for _, record := range r.audit {
+		if record.ID == a.ID {
+			return ports.ErrWorkflowConflict
+		}
+	}
+	if r.selected == nil {
+		r.selected = map[tenant.ID]ports.WorkflowSelectionReference{}
+	}
+	r.selected[t] = ports.WorkflowSelectionReference{WorkflowID: w, RevisionID: id}
 	head.ActiveRevisionID = id
 	head.UpdatedAt = at
 	r.heads[key] = head
@@ -174,4 +184,9 @@ func (v workflowStaleHeadView) WorkflowHead(_ context.Context, t tenant.ID, w do
 		return ports.WorkflowHeadRecord{}, false, nil
 	}
 	return v.head, true, nil
+}
+
+func (r *workflowFakeRepository) SelectedWorkflowRevision(_ context.Context, t tenant.ID) (ports.WorkflowSelectionReference, bool, error) {
+	value, found := r.selected[t]
+	return value, found, nil
 }

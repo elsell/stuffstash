@@ -60,3 +60,15 @@ func workflowRevisionFromModel(model conversationWorkflowRevisionModel) (agentmo
 	}
 	return agentmodel.NewWorkflowRevision(agentmodel.WorkflowRevisionInput{ID: agentmodel.WorkflowRevisionID(model.ID), WorkflowID: agentmodel.WorkflowID(model.WorkflowID), TenantID: agentmodel.TenantID(model.TenantID), AuthorID: agentmodel.WorkflowAuthorID(model.AuthorID), Number: model.Number, Definition: definition, Limits: snapshot.Limits, CreatedAt: model.CreatedAt})
 }
+
+type conversationWorkflowSelectionModel struct {
+	TenantID    string                            `gorm:"primaryKey;size:64"`
+	WorkflowID  string                            `gorm:"not null;size:64"`
+	RevisionID  string                            `gorm:"not null;size:64"`
+	ActivatedAt time.Time                         `gorm:"not null"`
+	Revision    conversationWorkflowRevisionModel `gorm:"foreignKey:TenantID,WorkflowID,RevisionID;references:TenantID,WorkflowID,ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+}
+
+func (conversationWorkflowSelectionModel) TableName() string {
+	return "conversation_workflow_selections"
+}
