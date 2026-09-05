@@ -150,7 +150,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get tenants by tenant ID conversation evaluation cases by case ID revisions */
+        get: operations["get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions"];
         put?: never;
         /** Post tenants by tenant ID conversation evaluation cases by case ID revisions */
         post: operations["post-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions"];
@@ -2806,6 +2807,16 @@ export interface components {
             data: components["schemas"]["EvaluationCaseHead"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListEvaluationCaseRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListEvaluationCaseRevision.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["EvaluationCaseRevision"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListEvaluationRunHead: {
             /**
              * Format: uri
@@ -3578,6 +3589,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeEvaluationCaseRevision"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListEvaluationCaseRevision"];
                 };
             };
             /** @description Error */
