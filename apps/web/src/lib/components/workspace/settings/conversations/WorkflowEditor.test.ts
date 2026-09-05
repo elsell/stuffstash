@@ -11,6 +11,14 @@ const definition: WorkflowDefinition = { name: 'Home', retrieval: 'expanded', re
 function input(name: string) { return document.querySelector<HTMLInputElement>(`[name="${name}"]`)!; }
 async function submit() { document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); await Promise.resolve(); flushSync(); }
 describe('workflow editor', () => {
+  it('focuses validation feedback while keeping the draft', async () => {
+    component = mount(WorkflowEditor, { target: document.body, props: { initial: definition, providers: [],
+      onSave: async () => { throw new ConversationFailure('invalid'); } } });
+    await submit();
+    await Promise.resolve(); flushSync();
+    expect(document.activeElement?.getAttribute('role')).toBe('alert');
+    expect(input('name').value).toBe('Home');
+  });
   it('saves edited settings without mutating the loaded revision', async () => {
     const saves: WorkflowDefinition[] = [];
     component = mount(WorkflowEditor, { target: document.body, props: { initial: definition, providers: [], onSave: async value => { saves.push(value); } } });
@@ -18,7 +26,7 @@ describe('workflow editor', () => {
     await submit();
     expect(saves[0].name).toBe('Baby clothes'); expect(definition.name).toBe('Home');
     expect(document.body.textContent).toContain('Draft saved');
-    expect(document.querySelector<HTMLSelectElement>('[name="provider-respond"]')!.disabled).toBe(true);
+    expect(document.querySelector<HTMLButtonElement>('#provider-respond')!.disabled).toBe(true);
   });
   it('preserves the draft and offers latest-revision reload after a conflict', async () => {
     let reloads = 0;
