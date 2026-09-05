@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { createConversationSession } from '$lib/adapters/query/conversationSession';
+  import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
   import { conversationKey } from '$lib/adapters/query/conversationQueryClient';
   import type { ConversationScope } from '$lib/domain/conversation';
   import type { WorkflowDefinition, WorkflowRevision } from '$lib/domain/conversationWorkflow';
@@ -9,11 +9,13 @@
   import type { ConversationProviderRepository } from '$lib/ports/conversationProviderRepository';
   import * as Button from '$lib/components/ui/button/index.js';
   import WorkflowEditor from './WorkflowEditor.svelte';
-  let { scope, workflows, providers, onNavigationBlockedChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; workflows: ConversationWorkflowRepository; providers: ConversationProviderRepository; onNavigationBlockedChange?: (blocked: boolean) => void; onAccessLost?: () => void } = $props();
+  let { scope, session: sharedSession, workflows, providers, onNavigationBlockedChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; session?: ConversationSession; workflows: ConversationWorkflowRepository; providers: ConversationProviderRepository; onNavigationBlockedChange?: (blocked: boolean) => void; onAccessLost?: () => void } = $props();
   let denied = $state(false);
   // svelte-ignore state_referenced_locally -- the parent keys this workspace by authenticated tenant scope.
-  const session = createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
-  onDestroy(() => { void session.dispose(); });
+  const session = sharedSession ?? createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
+  // svelte-ignore state_referenced_locally -- session ownership is fixed for this mount.
+  const ownsSession = sharedSession === undefined;
+  onDestroy(() => { if (ownsSession) void session.dispose(); });
   $effect(() => { onNavigationBlockedChange(editor !== null || busy); });
   let cursor = $state<string | undefined>();
   let editor = $state<{ revision: WorkflowRevision | null; definition: WorkflowDefinition; key: string } | null>(null);
@@ -57,6 +59,7 @@
         session.client.setQueryData(key('workflow', saved.workflowId, 'latest'), saved);
         session.client.setQueryData(key('workflow', saved.workflowId, saved.id), saved);
         void session.client.invalidateQueries({ queryKey: key('workflows') });
+        void session.client.invalidateQueries({ queryKey: key('workflow-history', saved.workflowId) });
         editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null;
         message = `Draft revision ${saved.number} saved. Run test cases before activation.`;
       }); } finally { if (session.active) busy = false; }

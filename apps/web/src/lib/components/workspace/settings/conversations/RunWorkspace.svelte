@@ -1,18 +1,20 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { createConversationSession } from '$lib/adapters/query/conversationSession';
+  import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
   import { conversationKey } from '$lib/adapters/query/conversationQueryClient';
   import type { ConversationScope } from '$lib/domain/conversation';
   import type { ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import * as Button from '$lib/components/ui/button/index.js';
   import RunSetup from './RunSetup.svelte';
   import RunDetails from './RunDetails.svelte';
-  let { scope, repositories, visible, onAccessLost = () => {}, onNavigationBlockedChange = () => {} }: { scope: ConversationScope; repositories: ConversationWorkspaceRepositories; visible: boolean; onAccessLost?: () => void; onNavigationBlockedChange?: (blocked: boolean) => void } = $props();
+  let { scope, session: sharedSession, repositories, visible, onAccessLost = () => {}, onNavigationBlockedChange = () => {} }: { scope: ConversationScope; session?: ConversationSession; repositories: ConversationWorkspaceRepositories; visible: boolean; onAccessLost?: () => void; onNavigationBlockedChange?: (blocked: boolean) => void } = $props();
   let denied = $state(false); let creating = $state(false); let busy = $state(false); let selectedId = $state(''); let cursor = $state<string | undefined>();
   // svelte-ignore state_referenced_locally -- parent keys the workspace by authenticated scope.
-  const session = createConversationSession(scope, () => { denied = true; creating = false; selectedId = ''; onAccessLost(); });
-  onDestroy(() => { void session.dispose(); });
+  const session = sharedSession ?? createConversationSession(scope, () => { denied = true; creating = false; selectedId = ''; onAccessLost(); });
+  // svelte-ignore state_referenced_locally -- session ownership is fixed for this mount.
+  const ownsSession = sharedSession === undefined;
+  onDestroy(() => { if (ownsSession) void session.dispose(); });
   $effect(() => { onNavigationBlockedChange(creating); });
   const heads = createQuery(() => ({ queryKey: conversationKey(session.scope, 'runs', cursor ?? ''), enabled: !denied,
     queryFn: ({ signal }) => repositories.runs.list(session.scope.tenantId, { limit: 20, cursor }, signal) }), () => session.client);

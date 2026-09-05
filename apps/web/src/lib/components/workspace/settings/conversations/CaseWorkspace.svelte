@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { createConversationSession } from '$lib/adapters/query/conversationSession';
+  import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
   import { conversationKey } from '$lib/adapters/query/conversationQueryClient';
   import type { ConversationScope } from '$lib/domain/conversation';
   import type { CaseDefinition, CaseRevision } from '$lib/domain/conversationCase';
@@ -9,12 +9,14 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import CaseEditor from './CaseEditor.svelte';
   import CaseSummary from './CaseSummary.svelte';
-  let { scope, cases, onNavigationBlockedChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; cases: ConversationCaseRepository; onNavigationBlockedChange?: (blocked: boolean) => void; onAccessLost?: () => void } = $props();
+  let { scope, session: sharedSession, cases, onNavigationBlockedChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; session?: ConversationSession; cases: ConversationCaseRepository; onNavigationBlockedChange?: (blocked: boolean) => void; onAccessLost?: () => void } = $props();
   let denied = $state(false); let editor = $state<{ revision: CaseRevision | null; definition: CaseDefinition; key: string } | null>(null);
   let comparison = $state<CaseRevision | null>(null); let busy = $state(false); let message = $state(''); let cursor = $state<string | undefined>();
   // svelte-ignore state_referenced_locally -- the parent keys this component by authenticated tenant scope.
-  const session = createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
-  onDestroy(() => { void session.dispose(); });
+  const session = sharedSession ?? createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
+  // svelte-ignore state_referenced_locally -- session ownership is fixed for this mount.
+  const ownsSession = sharedSession === undefined;
+  onDestroy(() => { if (ownsSession) void session.dispose(); });
   $effect(() => { onNavigationBlockedChange(editor !== null || busy); });
   const key = (...parts: string[]) => conversationKey(session.scope, ...parts);
   const heads = createQuery(() => ({ queryKey: key('cases', cursor ?? ''), enabled: !denied,
