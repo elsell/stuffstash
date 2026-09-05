@@ -120,4 +120,13 @@ if grep -q 'exp+stuff-stash' "$info_plist"; then
   exit 1
 fi
 
+python3 - "$info_plist" <<'PYTHON'
+import plistlib
+import sys
+with open(sys.argv[1], 'rb') as source:
+    info = plistlib.load(source)
+assert info.get('ITSAppUsesNonExemptEncryption') is False, 'Native iOS metadata must declare no non-exempt encryption'
+PYTHON
+grep -q "info.get('ITSAppUsesNonExemptEncryption') is not False" "$workflow"
+
 echo 'mobile release tests passed'

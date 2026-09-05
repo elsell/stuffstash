@@ -140,6 +140,14 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")" = "org.stuffstash.mobile"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")" = "${STUFF_STASH_MOBILE_RELEASE_TAG#v}"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist")" = "$MOBILE_BUILD_NUMBER"
+          python3 - "$info_plist" <<'PY'
+          import plistlib
+          import sys
+          with open(sys.argv[1], 'rb') as source:
+              info = plistlib.load(source)
+          if info.get('ITSAppUsesNonExemptEncryption') is not False:
+              raise SystemExit('Archive must declare Boolean ITSAppUsesNonExemptEncryption=false.')
+          PY
           test -z "$(find "$app_path" \( -iname '*EXDevLauncher*' -o -iname '*EXDevMenu*' \) -print -quit)"
           codesign -d --entitlements :- "$app_path" > "$RUNNER_TEMP/StuffStash-entitlements.plist"
           if /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.associated-domains' \

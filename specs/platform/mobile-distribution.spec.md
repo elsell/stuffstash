@@ -137,7 +137,16 @@ distribution, or automatic promotion from TestFlight to the public App Store.
   acceptance, sign-out, and the displayed application version. A
   deployment-specific build that declares an invitation host must also prove
   its universal link.
-- App Store Connect processing, export-compliance answers, privacy disclosures,
+- The current mobile app uses operating-system HTTPS/WSS, Keychain storage via
+  Expo SecureStore, and authentication hashing/randomness. It does not implement
+  custom or non-exempt encryption. Both Expo `ios.infoPlist` and the committed
+  native `Info.plist` must declare Boolean `ITSAppUsesNonExemptEncryption=false`.
+  Release source checks and signed-archive verification must reject a missing,
+  non-Boolean, or true declaration. Adding encryption functionality or a dependency
+  that changes this classification requires reviewing this spec and declaration
+  before release. This declaration does not mean network traffic is unencrypted.
+  See [Apple's encryption guidance](https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations).
+- App Store Connect processing, exceptional export-compliance requirements, privacy disclosures,
   review credentials, and tester groups remain operator gates. The workflow may
   upload a build but must not claim those external gates are complete.
 
