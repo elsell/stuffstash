@@ -67,3 +67,7 @@ Expected outcomes are answer, clarification, proposal or failure. Expectations m
 Fixture containment paths are limited to 32 assets to remain executable within voice evidence bounds. Proposed and forbidden operation expectations use mutation operations only; duplicate expectation entries and contradictory requirements are rejected.
 
 Fixture parents must be containers or locations, matching production containment. An item cannot be a parent, and evaluation setup must not silently convert its kind.
+
+## Outcome evaluation
+
+The deterministic case evaluator compares application-observed outcomes, not model self-reports or exact prose. It checks outcome kind, required fixture references, required containment facts and required proposed mutation operations. Forbidden operations fail if proposed or executed. Any executed mutation fails the default fixture evaluation contract, which observes approval proposals without granting approval. Additional valid references are allowed unless separately prohibited by a future expectation. Unknown fixture references, invalid outcome kinds and malformed operations fail as invalid observations rather than counting as a passing expected failure. Results contain typed failure codes and safe fixture/operation identifiers; raw model text is not needed to judge these expectations.
