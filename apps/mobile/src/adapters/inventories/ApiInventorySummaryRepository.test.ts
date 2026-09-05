@@ -1493,13 +1493,7 @@ describe('ApiInventorySummaryRepository', () => {
       tagIds: ['tag-workshop', 'tag-camping']
     });
 
-    expect(client.listAssetRequests).toEqual([
-      expect.objectContaining({
-        inventoryId: 'inventory-home',
-        lifecycleState: 'active',
-        sort: 'id_asc'
-      })
-    ]);
+    expect(client.listAssetRequests).toEqual([]);
     expect(client.searchAssetRequests[0]).toMatchObject({
       tenantId: 'tenant-home',
       query: '',
@@ -1684,7 +1678,18 @@ describe('ApiInventorySummaryRepository', () => {
     });
   });
 
-  it('uses the full active tree to build parent trails for browse result cards', async () => {
+  it('deduplicates shared browse-page ancestors without scanning unrelated assets', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets.push({ ...client.assets[1]!, id: 'second-filter', title: 'Spare filters' });
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    const page = await repository.browseAssets({ query: '', limit: 2, lifecycleState: 'active', checkoutState: 'any', kind: 'all', sort: 'updated_desc' });
+    expect(page.assets).toHaveLength(2);
+    expect(client.listAssetRequests).toEqual([expect.objectContaining({ limit: 2, sort: 'updated_desc' })]);
+    expect(client.getAssetRequests).toEqual([{ inventoryId: 'inventory-home', assetId: 'asset-garage' }]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads only missing page ancestors for browse result cards', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
       {
@@ -1736,10 +1741,10 @@ describe('ApiInventorySummaryRepository', () => {
       request.inventoryId === 'inventory-home' &&
       request.lifecycleState === 'active' &&
       request.sort === 'id_asc'
-    )).toHaveLength(1);
+    )).toHaveLength(0);
   });
 
-  it('uses the full active tree to build parent trails for search result cards', async () => {
+  it('loads only missing page ancestors for search result cards', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
       {
@@ -1791,10 +1796,10 @@ describe('ApiInventorySummaryRepository', () => {
       request.inventoryId === 'inventory-home' &&
       request.lifecycleState === 'active' &&
       request.sort === 'id_asc'
-    )).toHaveLength(1);
+    )).toHaveLength(0);
   });
 
-  it('preserves full-tree parent linkage when a search result omits parent asset id', async () => {
+  it('honors an authoritative root search result without borrowing old tree linkage', async () => {
     const client = new FakeInventoryApiClient();
     client.assets = [
       {
@@ -1838,8 +1843,8 @@ describe('ApiInventorySummaryRepository', () => {
       assets: [
         expect.objectContaining({
           id: 'asset-hand-towels',
-          locationTrail: ['Home Inventory', 'Holiday / seasonal bin', 'Christmas hand towels'],
-          parentLocationTrail: [{ id: assetId('asset-seasonal-bin'), title: 'Holiday / seasonal bin' }]
+          locationTrail: ['Home Inventory', 'Christmas hand towels'],
+          parentLocationTrail: []
         })
       ]
     });

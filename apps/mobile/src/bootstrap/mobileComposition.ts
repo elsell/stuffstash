@@ -1,3 +1,4 @@
+import { InventoryContextQuery } from '../application/home/InventoryContextQuery';
 import { StuffStashClient } from '@stuff-stash/api-client';
 import type { QueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
@@ -96,6 +97,7 @@ export type MobileComposition = {
   readonly currentInventoryScopeQuery: CurrentInventoryScopeQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
+  readonly inventoryContextQuery: InventoryContextQuery;
   readonly assetActivityQuery: AssetActivityQuery;
   readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
@@ -238,6 +240,7 @@ export function createMobileComposition(
       new QueryClientInventorySelectionObserver(queryClient, serviceScopeId)
     ),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
+    inventoryContextQuery: new InventoryContextQuery(inventorySummaries),
     assetActivityQuery: new AssetActivityQuery(assetActivity),
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries, inventorySummaries),

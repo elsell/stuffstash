@@ -11,7 +11,7 @@ This matrix tracks implementation against `mobile-server-state.spec.md`. A migra
 | Session/connection onboarding, root layout | Authentication commands; composition-owned QueryClient | QueryClient cancellation/clear tested; mounted provider replacement and connectivity behavior still to audit. |
 | `(tabs)/index`, `tenant-switcher` | HomeQuery, CurrentInventoryScopeQuery, tenant selection | Focused selected inventory; warm cache and return critical path tested. Recheck mounted switch behavior. |
 | `assets/index`, `locations/[locationId]/index` | InventoryAssetsQuery, LocationAssetsQuery | Focused cached lists; mutation observer reconciles selected inventory only. |
-| `(tabs)/search`, List and Places | SearchAssetsQuery, InventoryAssetTagsQuery, LocationsQuery | Transport cached, but manual pagination and local promise caches remain. Replace with infinite-query ownership and mounted switch/cancellation tests. |
+| `(tabs)/search`, List and Places | SearchAssetsQuery, InventoryAssetTagsQuery, LocationsQuery | Infinite query owns pages/cursors; mounted switch, replacement failure, secondary summary retry and inactive-consumer cancellation tests pass. List header uses focused context; page breadcrumbs fetch only missing ancestors. Remaining budget work: avoid repeated ancestors across pages and server-side kind filtering scans. |
 | `(tabs)/search`, Map and overlays | InventoryMapQuery, compatibility AssetDetailQuery | Manual effects and full detail hydration remain; separate containment metadata from visible detail/media. |
 | `assets/[assetId]/index`, nested location asset detail | AssetCoreQuery, AssetContentsQuery, AssetPhotosQuery | One selected asset GET before core; secondary queries reuse core. Independent loading and mutation request deduplication tested. Mounted delayed-region and changed-parent refresh tests pass; old/new ancestor mutation impacts are covered. |
 | `add` | AddAssetContextQuery, parent lookup, tag resolution | Context cached; parent lookup still issues immediate effect-driven requests. Add debounce, cache, and cancellation. |
@@ -27,7 +27,7 @@ This matrix tracks implementation against `mobile-server-state.spec.md`. A migra
 
 ## Verified Source Checks
 
-- Progressive detail working pass: mobile TypeScript check and 132 test files / 985 tests pass; mobile structural check passes. This is source evidence, not a native build or end-to-end device check.
+- Progressive detail working pass: mobile TypeScript check and 136 test files / 993 tests pass; mobile structural check passes. This is source evidence, not a native build or end-to-end device check.
 - `AssetCoreQuery.test.ts`, `AssetContentsQuery.test.ts`, `AssetPhotosQuery.test.ts`, and `ApiInventorySummaryRepository.test.ts` cover the focused detail graph.
 - `fetchMobileInventoryServerQuery.test.ts` uses a real QueryObserver to prove one post-mutation request, joining active work and reusing completed fresh work.
 - `QueryClientInventoryMutationObserver.test.ts` covers parent reconciliation without cached child core and unaffected inventory/composition caches.

@@ -111,6 +111,12 @@ export const mobileQueryKeys = {
     inventoryId: string,
     assetId: string
   ) => [...mobileQueryKeys.asset(compositionScopeId, tenantId, inventoryId, assetId), 'photos'] as const,
+  inventoryContext: (scopeId: string, tenantId: string, inventoryId: string) => [
+    ...mobileQueryKeys.inventory(scopeId, tenantId, inventoryId), 'context'
+  ] as const,
+  browsePages: (scopeId: string, tenantId: string, inventoryId: string, identity: BrowseQueryIdentityInput) => [
+    ...mobileQueryKeys.inventory(scopeId, tenantId, inventoryId), 'browse', normalizeBrowseQueryIdentity(identity), 'pages'
+  ] as const,
   inventoryAssets: (
     compositionScopeId: string,
     tenantId: string,

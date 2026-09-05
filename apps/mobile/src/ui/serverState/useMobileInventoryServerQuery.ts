@@ -28,7 +28,8 @@ export function useMobileInventoryServerQuery<TData>({
   const resourceQuery = useQuery({
     queryKey,
     queryFn: ({ signal }) => query(signal),
-    enabled: enabled && inventoryScope.isSuccess
+    enabled: enabled && inventoryScope.isSuccess,
+    subscribed: enabled && inventoryScope.isSuccess
   });
   const reconcile = () => fetchMobileInventoryServerQuery({ client, serverState, key, query });
   if (!inventoryScope.isError) {

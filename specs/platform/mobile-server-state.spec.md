@@ -46,6 +46,10 @@ Device-local preferences, secure credentials, in-progress Add drafts, native pic
 - Concurrent consumers of the same key share one request. Route focus effects must not independently duplicate a query already owned by the server-state coordinator.
 - Foreground mutation reconciliation joins an active invalidation request or reuses its fresh result if it already finished. Explicit user refresh may force a read; mutation completion must not force a second read.
 - Pagination caches preserve page identity and merge only compatible scopes. A result from an obsolete search, filter, tenant, inventory, or cursor must never overwrite the current surface.
+- Browse uses an infinite query per normalized applied filter set. Query-owned cursors and cancellation replace manual page arrays and request-sequence arbitration. Replacing filters preserves the last successful same-inventory result with progress/error feedback; switching inventories immediately removes prior results and picker metadata. Pagination cannot append while showing a previous filter result.
+- Browse header identity and create permission come from a focused selected-inventory context read; List and Map entry must not fetch the Places catalog for header metadata. Places summaries may load independently of paginated location results.
+- Browse/search breadcrumb resolution loads only missing ancestors of the returned page, deduplicating shared ancestors. It must not traverse the complete inventory. A current result's null parent is authoritative inventory-root placement and must not be replaced by linkage from an unrelated or older tree projection.
+- Inactive Browse surfaces unsubscribe from their queries, cancelling in-flight work only when no other consumer needs it. Secondary Places summary failures keep result rows available with a non-blocking error and targeted retry.
 - Thumbnail and attachment-resource caching remains identity-specific and bounded. Metadata may render before media materialization; invisible media must not block core content.
 
 ### Mutations And Visible Feedback

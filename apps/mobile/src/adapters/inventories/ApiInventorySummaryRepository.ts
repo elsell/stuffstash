@@ -209,11 +209,11 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     };
   }
 
-  async getCurrentSettingsScope(): Promise<{
+  async getCurrentSettingsScope(request: ReadRequest = {}): Promise<{
     readonly tenantId: string;
     readonly inventory: { readonly id: string; readonly name: string; readonly permissions: readonly string[] };
   }> {
-    const selected = await this.getSelectedInventoryIdentity();
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
     return {
       tenantId: selected.tenant.id,
       inventory: {
@@ -720,18 +720,13 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
   async browseAssets(input: AssetBrowsePageInput): Promise<AssetBrowsePage> {
     const selected = await this.getSelectedInventoryIdentity(input.signal);
     const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
-    const knownAssets = await this.listAllActiveInventoryAssets(
-      selected.tenant.id,
-      selected.inventory.id,
-      input.signal
-    );
     const hasTagFilters = (input.tagIds?.length ?? 0) > 0;
     if (!hasTagFilters && input.query.trim().length === 0 && input.checkoutState === 'checked_out') {
-      return await this.listCheckedOutInventoryAssetPage(inventory, input, knownAssets);
+      return await this.listCheckedOutInventoryAssetPage(inventory, input);
     }
     return input.query.trim().length > 0 || hasTagFilters
-      ? await this.searchInventoryAssetPage(inventory, input, knownAssets)
-      : await this.listInventoryAssetPage(inventory, input, knownAssets);
+      ? await this.searchInventoryAssetPage(inventory, input)
+      : await this.listInventoryAssetPage(inventory, input);
   }
 
   async listActiveInventoryMapAssets(): Promise<{
@@ -1293,8 +1288,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async listInventoryAssetPage(
     inventory: InventorySummary,
-    input: AssetBrowsePageInput,
-    knownAssets: readonly Asset[]
+    input: AssetBrowsePageInput
   ): Promise<AssetBrowsePage> {
     const desiredMatches = input.limit ?? 20;
     const selectedAssets: Asset[] = [];
@@ -1322,6 +1316,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       cursor = nextCursor;
     } while (selectedAssets.length < desiredMatches && hasMore);
 
+    const knownAssets = [...selectedAssets, ...await this.loadAncestorsForAssets(selectedAssets, input.signal)];
     const assets = await Promise.all(
       selectedAssets
         .slice(0, desiredMatches)
@@ -1337,8 +1332,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async searchInventoryAssetPage(
     inventory: InventorySummary,
-    input: AssetBrowsePageInput,
-    knownAssets: readonly Asset[]
+    input: AssetBrowsePageInput
   ): Promise<AssetBrowsePage> {
     const desiredMatches = input.limit ?? 20;
     const selectedResults: AssetSearchResult[] = [];
@@ -1368,13 +1362,14 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     } while (selectedResults.length < desiredMatches && hasMore);
 
     const pageResults = selectedResults.slice(0, desiredMatches);
+    const selectedAssets = pageResults.map((item) => item.asset);
+    const knownAssets = [...selectedAssets, ...await this.loadAncestorsForAssets(selectedAssets, input.signal)];
     const assets = await Promise.all(
       pageResults.map((item) =>
         this.mapAssetWithPrimaryPhoto(
           inventory.name,
           item.asset,
-          knownAssets,
-          { resolveMissingParentFromKnownAsset: true }
+          knownAssets
         )
       )
     );
@@ -1395,8 +1390,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private async listCheckedOutInventoryAssetPage(
     inventory: InventorySummary,
-    input: AssetBrowsePageInput,
-    knownAssets: readonly Asset[]
+    input: AssetBrowsePageInput
   ): Promise<AssetBrowsePage> {
     const page = await this.client.listCheckedOutAssets(
       inventory.tenantId,
@@ -1408,8 +1402,10 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     const selectedAssets = page.items
       .map((item) => item.asset)
       .filter((asset) => input.lifecycleState === 'all' || asset.lifecycleState === input.lifecycleState);
+    const visibleAssets = filterAssetsByKind(selectedAssets, input.kind);
+    const knownAssets = [...visibleAssets, ...await this.loadAncestorsForAssets(visibleAssets, input.signal)];
     const assets = await Promise.all(
-      filterAssetsByKind(selectedAssets, input.kind).map((asset) =>
+      visibleAssets.map((asset) =>
         this.mapAssetWithPrimaryPhoto(inventory.name, asset, knownAssets)
       )
     );

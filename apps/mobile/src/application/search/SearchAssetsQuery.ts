@@ -38,7 +38,7 @@ export type SearchAssetsViewModel = {
 };
 
 export class SearchAssetsQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: Pick<InventorySummaryRepository, 'browseAssets'>) {}
 
   async execute(input: SearchAssetsQueryInput): Promise<SearchAssetsViewModel> {
     const trimmed = input.query.trim();

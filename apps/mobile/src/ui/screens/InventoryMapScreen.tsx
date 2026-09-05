@@ -94,13 +94,13 @@ import { useAppFeedback } from '../feedback/AppFeedback';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type InventoryMapScreenProps = {
-  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
-  readonly assetCheckoutCommand: AssetCheckoutCommand;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
+  readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
+  readonly assetDetailQuery: Pick<AssetDetailQuery, 'execute'>;
+  readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
   readonly canAdd: boolean;
-  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
-  readonly inventoryMapQuery: InventoryMapQuery;
+  readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
+  readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly selectedSurface: InventoryMapSurface;
@@ -1268,12 +1268,12 @@ function InventoryMapInfoSheet({
   onClose,
   onMapChanged
 }: {
-  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
-  readonly assetCheckoutCommand: AssetCheckoutCommand;
+  readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
+  readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
   readonly asset?: InventoryMapAssetViewModel;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetLifecycleCommand: AssetLifecycleCommand;
-  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
+  readonly assetDetailQuery: Pick<AssetDetailQuery, 'execute'>;
+  readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
+  readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly onClose: () => void;
   readonly onMapChanged: () => void;
