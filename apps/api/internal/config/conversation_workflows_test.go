@@ -40,3 +40,10 @@ func TestProgrammaticWorkflowConfigurationUsesOperatorDefaults(t *testing.T) {
 		t.Fatalf("zero configuration: %+v %v", limits, err)
 	}
 }
+
+func TestWorkflowEvidenceBudgetRejectsStructuralOverflow(t *testing.T) {
+	t.Setenv("STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS", "9")
+	if _, err := Load().ConversationWorkflows.Limits(); err == nil || !strings.Contains(err.Error(), "STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS") {
+		t.Fatalf("unsupported evidence bound: %v", err)
+	}
+}

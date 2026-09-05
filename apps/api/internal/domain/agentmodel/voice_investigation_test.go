@@ -300,3 +300,11 @@ func TestInvestigationStepValidatesDecisionSpecificPayload(t *testing.T) {
 		}
 	}
 }
+
+func TestInvestigationAllowsThirdRoundWithinWorkflowBudget(t *testing.T) {
+	intent := Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "baby clothes"}
+	input := InvestigationInput{Phase: InvestigationPhaseEvidenceAssessment, PromptVersion: "test", SchemaVersion: "test", Transcript: "Where are my baby clothes?", EvidenceRound: 3, MaxEvidenceRounds: 3, CanonicalIntent: &intent, ReadEvidence: []ReadEvidence{{EvidenceRound: 3, ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Probe: "baby clothes", CandidateCount: 0}}}
+	if err := input.Validate(); err != nil {
+		t.Fatalf("valid third round rejected: %v", err)
+	}
+}

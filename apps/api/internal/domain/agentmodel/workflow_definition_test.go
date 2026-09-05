@@ -113,3 +113,13 @@ func TestWorkflowGlobalBudgetMayBoundStepMaxima(t *testing.T) {
 		t.Fatalf("global call budget is an execution cap, not a promise to exhaust every step maximum: %v", err)
 	}
 }
+
+func TestWorkflowRejectsEvidenceBeyondStructuralCeiling(t *testing.T) {
+	input := workflowTestInput()
+	input.Budget.EvidenceRounds = 9
+	limits := workflowTestLimits()
+	limits.Budget.EvidenceRounds = 9
+	if _, err := NewWorkflowDefinition(input, limits); err == nil {
+		t.Fatal("unsupported evidence rounds accepted")
+	}
+}
