@@ -60,6 +60,8 @@ func TestEvaluationRunPinsSnapshotsAndRejectsInvalidInputs(t *testing.T) {
 		"duplicate binding":       func(v *EvaluationRunInput) { v.Providers[1] = v.Providers[0] },
 		"arbitrary configuration": func(v *EvaluationRunInput) { v.Providers[0].ConfigurationID = "secret" },
 		"no attempts":             func(v *EvaluationRunInput) { v.MaxAttempts = 0 },
+		"inconsistent profile":    func(v *EvaluationRunInput) { v.Providers[1].ConfigurationID = strings.Repeat("b", 64) },
+		"inconsistent default":    func(v *EvaluationRunInput) { v.Providers[1].ProfileID = "other-model" },
 		"invalid limits":          func(v *EvaluationRunInput) { v.Limits.MaxStepAttempts = 0 },
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -187,5 +189,65 @@ func TestEvaluationRunRejectsExpiredLateAndExhaustedWork(t *testing.T) {
 	}
 	if _, err := run.Cancel(now.Add(-time.Second)); err == nil {
 		t.Fatal("clock regression accepted")
+	}
+}
+
+func TestEvaluationRunRenewalAndSafeFailures(t *testing.T) {
+	input := evaluationRunInput(t)
+	now := input.CreatedAt
+	run, _ := NewEvaluationRun(input)
+	run, _ = run.Claim("worker", now, time.Minute)
+	renewed, err := run.Renew("worker", now.Add(30*time.Second), time.Minute)
+	if err != nil || !renewed.Snapshot().LeaseUntil.Equal(now.Add(90*time.Second)) || renewed.Snapshot().Version != 3 {
+		t.Fatalf("renewal: %v", err)
+	}
+	if _, err := renewed.Fail("worker", EvaluationRunFailureCode("secret payload"), now.Add(31*time.Second)); err == nil {
+		t.Fatal("unsafe failure code accepted")
+	}
+	if _, err := renewed.Fail("other", EvaluationRunFailureExecution, now.Add(31*time.Second)); err == nil {
+		t.Fatal("wrong owner failed run")
+	}
+	failed, err := renewed.Fail("worker", EvaluationRunFailureConfigurationChanged, now.Add(31*time.Second))
+	if err != nil || failed.Snapshot().FailureCode != EvaluationRunFailureConfigurationChanged || failed.Snapshot().State != EvaluationRunFailed || failed.Snapshot().LeaseToken != "" {
+		t.Fatalf("safe failure: %v", err)
+	}
+	queued, _ := NewEvaluationRun(input)
+	cancelled, err := queued.Cancel(now)
+	if err != nil || cancelled.Snapshot().State != EvaluationRunCancelled || !cancelled.Snapshot().StartedAt.IsZero() {
+		t.Fatal("queued cancellation invalid")
+	}
+}
+
+func TestEvaluationRunResolvesOnlyRequiredPinnedProviders(t *testing.T) {
+	input := evaluationRunInput(t)
+	revision := input.Workflow.Snapshot()
+	settings := revision.Definition.Settings()
+	settings.Response = WorkflowResponseGrounded
+	settings.Steps[0].ProviderProfileID = "explicit"
+	definition, err := NewWorkflowDefinition(settings, input.Limits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	revision.Definition = definition
+	input.Workflow, err = NewWorkflowRevision(revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Providers = input.Providers[:2]
+	if _, err := NewEvaluationRun(input); err == nil {
+		t.Fatal("explicit profile silently substituted")
+	}
+	input.Providers[0].ProfileID = "explicit"
+	if _, err := NewEvaluationRun(input); err != nil {
+		t.Fatalf("grounded response required unused model: %v", err)
+	}
+	caseSnapshot := input.Cases[0].Snapshot()
+	caseSnapshot.TenantID = "other"
+	input.Cases[0], err = NewEvaluationCaseRevision(caseSnapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := NewEvaluationRun(input); err == nil {
+		t.Fatal("cross-tenant case accepted")
 	}
 }
