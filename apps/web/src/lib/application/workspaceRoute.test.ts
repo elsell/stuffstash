@@ -3,6 +3,10 @@ import type { WorkspaceMode } from '$lib/domain/inventory';
 import { parseWorkspaceRoute, workspaceRouteHref } from './workspaceRoute';
 
 describe('workspace route state', () => {
+  it('resolves conversations only at tenant scope', () => {
+    expect(parseWorkspaceRoute(new URL('https://app.test/settings/tenants/home/conversations'))).toMatchObject({ settingsLevel: 'tenant', settingsCollection: 'conversations', tenantId: 'home' });
+    expect(parseWorkspaceRoute(new URL('https://app.test/settings/tenants/home/inventories/inventory/conversations'))).toMatchObject({ settingsCollection: null });
+  });
   it('parses and formats canonical account-oriented settings routes', () => {
     expect(parseWorkspaceRoute(new URL('https://app.test/settings'))).toMatchObject({
       mode: 'settings',

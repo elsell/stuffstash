@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { settingsOverviewDestinations, settingsResourceHref } from './settingsManagementNavigation';
+import { settingsOverviewDestinations, settingsResourceHref, tenantSettingsDestinations } from './settingsManagementNavigation';
 
 describe('settings management navigation', () => {
+  it('offers the tenant conversation workspace', () => {
+    expect(tenantSettingsDestinations({ id: 'home' })).toContainEqual(expect.objectContaining({ label: 'Conversations', href: '/settings/tenants/home/conversations' }));
+  });
   it('uses actual tenant and inventory names for compact drill-ins', () => {
     expect(settingsOverviewDestinations({
       tenant: { id: 'tenant-one', name: 'The Sell House' },
