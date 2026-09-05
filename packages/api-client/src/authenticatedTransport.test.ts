@@ -25,15 +25,18 @@ describe('authenticated generated transport', () => {
   it('does not dispatch after cancellation while session resolution is pending', async () => {
     let resolveToken!: (token: string) => void;
     const token = new Promise<string>(resolve => { resolveToken = resolve; });
+    let reportStarted!: () => void;
+    const started = new Promise<void>(resolve => { reportStarted = resolve; });
     let dispatched = false;
     const client = createAuthenticatedTransport({
-      baseUrl: 'https://api.example.test', tokenProvider: () => token,
+      baseUrl: 'https://api.example.test', tokenProvider: () => { reportStarted(); return token; },
       fetch: async () => { dispatched = true; return Response.json({ data: null }); }
     });
     const controller = new AbortController();
     const pending = client.GET('/tenants/{tenantId}/conversation-workflow-selection', {
       signal: controller.signal, params: { path: { tenantId: 'home' } }
     });
+    await started;
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
     resolveToken('session');
