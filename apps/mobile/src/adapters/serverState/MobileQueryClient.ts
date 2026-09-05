@@ -105,6 +105,12 @@ export const mobileQueryKeys = {
     'contents',
     containmentIdentity
   ] as const,
+  assetPlacement: (scope: string, tenant: string, inventory: string, asset: string, parent: string) => [
+    ...mobileQueryKeys.asset(scope, tenant, inventory, asset), 'placement', parent
+  ] as const,
+  parentCandidates: (scope: string, tenant: string, inventory: string, query: string) => [
+    ...mobileQueryKeys.inventory(scope, tenant, inventory), 'parent-candidates', query.trim()
+  ] as const,
   assetHistory: (scopeId: string, tenantId: string, inventoryId: string, assetId: string, view: 'changes' | 'all') => [
     ...mobileQueryKeys.asset(scopeId, tenantId, inventoryId, assetId), 'history', view
   ] as const,

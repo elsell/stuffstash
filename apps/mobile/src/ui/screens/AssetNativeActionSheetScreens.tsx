@@ -1,7 +1,8 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
+  Pressable,
   Alert,
   StyleSheet,
   Text,
@@ -9,10 +10,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
-import { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
+import type { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
+import type { AssetPlacementQuery } from '../../application/assets/AssetPlacementQuery';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { useParentCandidates } from '../serverState/useParentCandidates';
 import { MoveAssetCommand } from '../../application/assets/MoveAssetCommand';
 import { UpdateAssetCommand } from '../../application/assets/UpdateAssetCommand';
-import { InventoryAssetTagsQuery, type AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
+import { InventoryAssetTagsQuery } from '../../application/assets/InventoryAssetTagsQuery';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { ParentLookupQuery, ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { reconcileCreatedAssetTags, type CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
@@ -40,52 +45,46 @@ import {
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 
-type LoadableAssetState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly asset: AssetDetailViewModel; readonly assetTags?: readonly AssetTagOptionViewModel[] }
-  | { readonly status: 'error'; readonly message: string };
-
-export function AssetEditSheetRouteScreen({
-  assetDetailQuery,
-  assetId,
-  inventoryAssetTagsQuery,
-  updateAssetCommand
-}: {
-  readonly assetDetailQuery: AssetDetailQuery;
+type ActionAssetQueries = {
   readonly assetId: string;
-  readonly inventoryAssetTagsQuery: InventoryAssetTagsQuery;
-  readonly updateAssetCommand: UpdateAssetCommand;
-}) {
-  const [state, setState] = useState<LoadableAssetState>({ status: 'loading' });
-  const [draft, setDraft] = useState<EditDraft | undefined>();
+  readonly assetCoreQuery: Pick<AssetCoreQuery, 'execute'>;
+  readonly assetPlacementQuery?: Pick<AssetPlacementQuery, 'execute'>;
+};
+
+function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }: ActionAssetQueries & { children: (asset: AssetDetailViewModel) => ReactNode }) {
+  const core = useMobileInventoryServerQuery({
+    key: (scope, tenant, inventory) => mobileQueryKeys.assetCore(scope, tenant, inventory, assetId),
+    query: (signal) => assetCoreQuery.execute(assetId, { signal })
+  });
+  const placement = useMobileInventoryServerQuery({
+    key: (scope, tenant, inventory) => mobileQueryKeys.assetPlacement(scope, tenant, inventory, assetId, core.data?.view.parentAssetId ?? 'root'),
+    query: (signal) => assetPlacementQuery!.execute(core.data!.snapshot, { signal }),
+    enabled: Boolean(assetPlacementQuery && core.data)
+  });
+  if (!core.data) return core.isError ? <ErrorState message="Could not load asset." onRetry={() => void core.refetch()} /> : <LoadingState label="Loading asset" />;
+  const asset = placement.data && assetPlacementQuery ? { ...core.data.view, parentLocationTrail: placement.data.parentLocationTrail, parentLocationTrailLabel: placement.data.parentLocationTrailLabel, locationTrailLabel: placement.data.locationTrailLabel, isPlacementLoading: false } : core.data.view;
+  return <Fragment key={`${asset.tenantId}:${asset.inventoryId}:${asset.id}`}>
+    {assetPlacementQuery && !placement.data ? <Text accessibilityLiveRegion="polite">{placement.isError ? 'Current placement could not be loaded.' : 'Loading current placement…'}</Text> : null}
+    {assetPlacementQuery && placement.isError ? <Pressable accessibilityRole="button" onPress={() => void placement.refetch()}><Text>Retry placement</Text></Pressable> : null}
+    {children(asset)}
+  </Fragment>;
+}
+
+type EditProps = ActionAssetQueries & {
+  readonly inventoryAssetTagsQuery: Pick<InventoryAssetTagsQuery, 'execute'>;
+  readonly updateAssetCommand: Pick<UpdateAssetCommand, 'execute'>;
+};
+export function AssetEditSheetRouteScreen(props: EditProps) {
+  return <ActionAsset {...props}>{(asset) => <EditAssetForm {...props} asset={asset} />}</ActionAsset>;
+}
+function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: EditProps & { asset: AssetDetailViewModel }) {
+  const assetId = asset.id;
+  const tags = useMobileInventoryServerQuery({ key: mobileQueryKeys.assetTags, query: (signal) => inventoryAssetTagsQuery.execute({ signal }) });
+  const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    let isCurrent = true;
-    Promise.all([assetDetailQuery.execute(assetId), inventoryAssetTagsQuery.execute()])
-      .then(([asset, assetTags]) => {
-        if (isCurrent) {
-          setState({ status: 'ready', asset, assetTags });
-          setDraft({
-            title: asset.title,
-            description: asset.description,
-            tagIds: asset.tags?.map((tag) => tag.id) ?? [],
-            newTags: []
-          });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setState({ status: 'error', message: readableError(error, 'Could not load asset.') });
-        }
-      });
-    return () => {
-      isCurrent = false;
-    };
-  }, [assetDetailQuery, assetId, inventoryAssetTagsQuery]);
-
   function close(): void {
-    if (state.status !== 'ready' || !hasDirtyEditAssetDraft(state.asset, draft)) {
+    if (!hasDirtyEditAssetDraft(asset, draft)) {
       router.back();
       return;
     }
@@ -108,7 +107,7 @@ export function AssetEditSheetRouteScreen({
         description: normalized.description,
         tagIds: normalized.tagIds,
         newTags: normalized.newTags,
-        activeTags: state.status === 'ready' ? state.assetTags ?? [] : []
+        activeTags: normalized.newTags?.length ? await tags.reconcile() : tags.data ?? []
       });
       recordAssetActionCompletion({
         assetId,
@@ -127,9 +126,8 @@ export function AssetEditSheetRouteScreen({
 
   async function refreshEditAssetTags(stagedTags: readonly CreateAssetTagDraft[]): Promise<void> {
     try {
-      const assetTags = await inventoryAssetTagsQuery.execute();
+      const assetTags = await tags.reconcile();
       const reconciled = reconcileCreatedAssetTags(stagedTags, assetTags);
-      setState((current) => current.status === 'ready' ? { ...current, assetTags } : current);
       if (reconciled.createdTagIds.length > 0) {
         setDraft((current) => current
           ? {
@@ -146,19 +144,18 @@ export function AssetEditSheetRouteScreen({
 
   return (
     <NativeSheetFrame title="Edit asset">
-      {state.status === 'loading' ? <LoadingState label="Loading asset" /> : null}
-      {state.status === 'error' ? <ErrorState message={state.message} /> : null}
-      {state.status === 'ready' ? (
+      {tags.isError ? <ErrorState message="Tags could not be loaded." onRetry={() => void tags.refetch()} /> : null}
+      {(
         <EditAssetSheet
-          asset={state.asset}
-          assetTags={state.assetTags ?? []}
+          asset={asset}
+          assetTags={tags.data ?? []}
           draft={draft}
           isSaving={isSaving}
           onChange={setDraft}
           onClose={close}
           onSave={() => void save()}
         />
-      ) : null}
+      )}
     </NativeSheetFrame>
   );
 }
@@ -167,61 +164,20 @@ function uniqueStrings(values: readonly string[]): readonly string[] {
   return Array.from(new Set(values));
 }
 
-export function AssetMoveSheetRouteScreen({
-  assetDetailQuery,
-  assetId,
-  createAssetCommand,
-  moveAssetCommand,
-  parentLookupQuery
-}: {
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetId: string;
-  readonly createAssetCommand: CreateAssetCommand;
-  readonly moveAssetCommand: MoveAssetCommand;
-  readonly parentLookupQuery: ParentLookupQuery;
-}) {
-  const [state, setState] = useState<LoadableAssetState>({ status: 'loading' });
-  const [draft, setDraft] = useState<MoveDraft | undefined>();
+type MoveProps = ActionAssetQueries & {
+  readonly createAssetCommand: Pick<CreateAssetCommand, 'execute'>;
+  readonly moveAssetCommand: Pick<MoveAssetCommand, 'execute'>;
+  readonly parentLookupQuery: Pick<ParentLookupQuery, 'execute'>;
+};
+export function AssetMoveSheetRouteScreen(props: MoveProps) {
+  return <ActionAsset {...props}>{(asset) => <MoveAssetForm {...props} asset={asset} />}</ActionAsset>;
+}
+function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLookupQuery }: MoveProps & { asset: AssetDetailViewModel }) {
+  const assetId = asset.id;
+  const [draft, setDraft] = useState<MoveDraft>(() => ({ createKind: 'location', query: '', matches: [], selectedParent: parentFromCurrentAssetPath(asset) }));
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-    async function load(): Promise<void> {
-      try {
-        const asset = await assetDetailQuery.execute(assetId);
-        const matches = await parentLookupQuery.execute('');
-        const safeMatches = moveDestinationMatches(matches, asset);
-        const currentParent = asset.parentAssetId
-          ? safeMatches.find((match) => match.id === asset.parentAssetId) ?? parentFromCurrentAssetPath(asset)
-          : null;
-        if (isCurrent) {
-          setState({ status: 'ready', asset });
-          setDraft({
-            createKind: 'location',
-            query: currentParent?.title ?? '',
-            matches: safeMatches,
-            selectedParent: currentParent
-          });
-        }
-      } catch (error) {
-        if (isCurrent) {
-          setState({ status: 'error', message: readableError(error, 'Could not load move options.') });
-        }
-      }
-    }
-    void load();
-    return () => {
-      isCurrent = false;
-    };
-  }, [assetDetailQuery, assetId, parentLookupQuery]);
-
-  async function updateQuery(query: string, asset: AssetDetailViewModel): Promise<void> {
-    setDraft((current) => current ? { ...current, query } : current);
-    const matches = await parentLookupQuery.execute(query);
-    setDraft((current) => current && current.query === query
-      ? { ...current, matches: moveDestinationMatches(matches, asset) }
-      : current);
-  }
+  const candidates = useParentCandidates(draft.query, parentLookupQuery);
+  const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(candidates.data ?? [], asset) };
 
   async function createDestination(asset: AssetDetailViewModel): Promise<void> {
     const name = draft?.query.trim() ?? '';
@@ -273,75 +229,37 @@ export function AssetMoveSheetRouteScreen({
 
   return (
     <NativeSheetFrame title="Move asset">
-      {state.status === 'loading' ? <LoadingState label="Loading move options" /> : null}
-      {state.status === 'error' ? <ErrorState message={state.message} /> : null}
-      {state.status === 'ready' ? (
+      <CandidateStatus candidates={candidates} />
+      {(
         <MoveAssetSheet
-          asset={state.asset}
-          draft={draft}
+          asset={asset}
+          draft={shownDraft}
           isSaving={isSaving}
           onChangeCreateKind={(createKind) => setDraft((current) => current ? { ...current, createKind } : current)}
-          onChangeQuery={(query) => void updateQuery(query, state.asset)}
+          onChangeQuery={(query) => setDraft((current) => ({ ...current, query }))}
           onClose={() => router.back()}
-          onCreateDestination={() => void createDestination(state.asset)}
+          onCreateDestination={() => void createDestination(asset)}
           onSelectParent={(selectedParent) => setDraft((current) => current ? { ...current, selectedParent } : current)}
           onSelectRoot={() => setDraft((current) => current ? { ...current, selectedParent: null } : current)}
           onSave={() => void save()}
         />
-      ) : null}
+      )}
     </NativeSheetFrame>
   );
 }
 
-export function AssetMoveHereSheetRouteScreen({
-  assetDetailQuery,
-  assetId,
-  moveAssetCommand,
-  parentLookupQuery
-}: {
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetId: string;
-  readonly moveAssetCommand: MoveAssetCommand;
-  readonly parentLookupQuery: ParentLookupQuery;
-}) {
-  const [state, setState] = useState<LoadableAssetState>({ status: 'loading' });
-  const [draft, setDraft] = useState<MoveIntoDraft | undefined>();
+type MoveHereProps = ActionAssetQueries & {
+  readonly moveAssetCommand: Pick<MoveAssetCommand, 'execute'>;
+  readonly parentLookupQuery: Pick<ParentLookupQuery, 'execute'>;
+};
+export function AssetMoveHereSheetRouteScreen(props: MoveHereProps) {
+  return <ActionAsset {...props}>{(asset) => <MoveHereForm {...props} asset={asset} />}</ActionAsset>;
+}
+function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHereProps & { asset: AssetDetailViewModel }) {
+  const [draft, setDraft] = useState<MoveIntoDraft>({ target: asset, query: '', matches: [], selectedAsset: undefined });
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-    async function load(): Promise<void> {
-      try {
-        const asset = await assetDetailQuery.execute(assetId);
-        const matches = await parentLookupQuery.execute('');
-        if (isCurrent) {
-          setState({ status: 'ready', asset });
-          setDraft({
-            target: asset,
-            query: '',
-            matches: matches.filter((match) => isSelectableMoveIntoCandidate(match, asset)),
-            selectedAsset: undefined
-          });
-        }
-      } catch (error) {
-        if (isCurrent) {
-          setState({ status: 'error', message: readableError(error, 'Could not load move options.') });
-        }
-      }
-    }
-    void load();
-    return () => {
-      isCurrent = false;
-    };
-  }, [assetDetailQuery, assetId, parentLookupQuery]);
-
-  async function updateQuery(query: string, target: AssetDetailViewModel): Promise<void> {
-    setDraft((current) => current ? { ...current, query } : current);
-    const matches = await parentLookupQuery.execute(query);
-    setDraft((current) => current && current.query === query
-      ? { ...current, matches: matches.filter((match) => isSelectableMoveIntoCandidate(match, target)) }
-      : current);
-  }
+  const candidates = useParentCandidates(draft.query, parentLookupQuery);
+  const shownDraft = { ...draft, matches: (candidates.data ?? []).filter((match) => isSelectableMoveIntoCandidate(match, asset)) };
 
   async function save(): Promise<void> {
     if (!draft?.selectedAsset) {
@@ -364,18 +282,17 @@ export function AssetMoveHereSheetRouteScreen({
 
   return (
     <NativeSheetFrame title="Move something here">
-      {state.status === 'loading' ? <LoadingState label="Loading move options" /> : null}
-      {state.status === 'error' ? <ErrorState message={state.message} /> : null}
-      {state.status === 'ready' ? (
+      <CandidateStatus candidates={candidates} />
+      {(
         <MoveThingsHereSheet
-          draft={draft}
+          draft={shownDraft}
           isSaving={isSaving}
-          onChangeQuery={(query) => void updateQuery(query, state.asset)}
+          onChangeQuery={(query) => setDraft((current) => ({ ...current, query }))}
           onClose={() => router.back()}
           onSave={() => void save()}
           onSelectAsset={(selectedAsset) => setDraft((current) => current ? { ...current, selectedAsset } : current)}
         />
-      ) : null}
+      )}
     </NativeSheetFrame>
   );
 }
@@ -407,14 +324,21 @@ function LoadingState({ label }: { readonly label: string }) {
   );
 }
 
-function ErrorState({ message }: { readonly message: string }) {
+function ErrorState({ message, onRetry }: { readonly message: string; readonly onRetry?: () => void }) {
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
       <Text style={styles.stateText}>{message}</Text>
+      {onRetry ? <Pressable accessibilityRole="button" onPress={onRetry}><Text style={styles.stateText}>Try again</Text></Pressable> : null}
     </View>
   );
+}
+
+function CandidateStatus({ candidates }: { candidates: ReturnType<typeof useParentCandidates> }) {
+  if (candidates.isError) return <View><Text accessibilityRole="alert">Suggestions could not be loaded.</Text><Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text>Retry suggestions</Text></Pressable></View>;
+  if (!candidates.data) return <Text accessibilityLiveRegion="polite">Loading suggestions…</Text>;
+  return null;
 }
 
 function moveDestinationMatches(

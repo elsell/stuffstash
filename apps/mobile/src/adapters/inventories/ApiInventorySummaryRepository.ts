@@ -449,6 +449,16 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     };
   }
 
+  async getAssetPlacement(core: AssetCoreSnapshot, request: ReadRequest = {}): Promise<AssetSummary> {
+    const selected = await this.getSelectedInventoryIdentity(request.signal);
+    if (selected.tenant.id !== core.tenantId || selected.inventory.id !== core.inventoryId) {
+      throw new Error('Asset scope no longer matches the selected inventory.');
+    }
+    const source = summaryToApiAsset(core.tenantId, core.inventoryId, core.asset);
+    const ancestors = await this.loadAssetAncestors(source, request.signal);
+    return mapAsset(selected.inventory.name, source, [...ancestors, source]);
+  }
+
   async getAssetContents(
     core: AssetCoreSnapshot,
     request: ReadRequest = {}
@@ -849,6 +859,11 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     await Promise.all(assets.map((asset) => loadParent(asset)));
     const visibleIds = new Set(assets.map((asset) => asset.id));
     return [...knownAssets.values()].filter((asset) => !visibleIds.has(asset.id));
+  }
+
+  async listParentCandidates(query: string, request: ReadRequest = {}): Promise<readonly AssetSummary[]> {
+    const page = await this.browseAssets({ query, limit: query ? 50 : 5, lifecycleState: 'active', kind: 'all', checkoutState: 'any', sort: 'updated_desc', signal: request.signal });
+    return page.assets;
   }
 
   async searchAssets(query: string): Promise<readonly AssetSummary[]> {

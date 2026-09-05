@@ -1,3 +1,4 @@
+import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import {
@@ -120,7 +121,7 @@ export function AddAssetScreen({
   const [description, setDescription] = useState(emptyDraft.description);
   const [parentAssetId, setParentAssetId] = useState<string | undefined>(emptyDraft.parentAssetId);
   const [parentQuery, setParentQuery] = useState(emptyDraft.parentQuery);
-  const [parentMatches, setParentMatches] = useState<readonly ParentLookupResult[]>([]);
+
   const [isCreatingParent, setIsCreatingParent] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<readonly SelectedAssetPhoto[]>(
     emptyDraft.selectedPhotos
@@ -135,6 +136,11 @@ export function AddAssetScreen({
   const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | undefined>();
   const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' });
   const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
+
+  const candidates = useParentCandidates(parentQuery, parentLookupQuery, isParentMenuOpen);
+  const parentMatches = createdParent && createdParent.title === parentQuery
+    ? [createdParent, ...(candidates.data ?? []).filter((parent) => parent.id !== createdParent.id)]
+    : candidates.data ?? [];
 
   useEffect(() => {
     if (!addContext.data) {
@@ -175,31 +181,6 @@ export function AddAssetScreen({
       isCurrent = false;
     };
   }, [addAssetDraftStore, addContext.data, addContext.error, addContext.isError, addDraftScopeQuery, initialParent]);
-
-  useEffect(() => {
-    let isCurrent = true;
-    if (!isParentMenuOpen && parentQuery.trim().length === 0) {
-      setParentMatches([]);
-      return;
-    }
-
-    parentLookupQuery
-      .execute(parentQuery)
-      .then((matches) => {
-        if (isCurrent) {
-          setParentMatches(matches);
-        }
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setParentMatches([]);
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [isParentMenuOpen, parentLookupQuery, parentQuery]);
 
   useEffect(() => {
     if (!draftContext) {
@@ -381,10 +362,7 @@ export function AddAssetScreen({
       setLastParent(createdParent);
       setCreatedParent(createdParent);
       setIsParentMenuOpen(true);
-      setParentMatches((current) => [
-        createdParent,
-        ...current.filter((parent) => parent.id !== result.id)
-      ]);
+
     } catch (error) {
       const message = readableError(error, 'Could not create parent.');
       setSaveState({ status: 'idle' });
@@ -567,6 +545,8 @@ export function AddAssetScreen({
                   value={title}
                 />
 
+                {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
+                {isParentMenuOpen && candidates.isError ? <Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text style={styles.fieldLabel}>Retry suggestions</Text></Pressable> : null}
                 <ParentPicker
                   isCreatingParent={isCreatingParent}
                   createdParent={createdParent}

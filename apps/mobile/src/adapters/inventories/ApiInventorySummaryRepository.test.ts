@@ -2319,6 +2319,26 @@ describe('ApiInventorySummaryRepository', () => {
     expect(client.listAttachmentRequests).toEqual([]);
   });
 
+  it('loads bounded parent suggestions without loading attachments or the inventory tree', async () => {
+    const client = new FakeInventoryApiClient();
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    await repository.listParentCandidates('');
+    expect(client.listAssetRequests).toEqual([expect.objectContaining({ limit: 5, sort: 'updated_desc' })]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
+  it('loads container placement without traversing its contents', async () => {
+    const client = new FakeInventoryApiClient();
+    client.assets[1] = { ...client.assets[1]!, kind: 'container' };
+    const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+    const core = await repository.getAssetCore(assetId('asset-filters'));
+    client.getAssetRequests.length = 0;
+    await expect(repository.getAssetPlacement(core)).resolves.toMatchObject({ parentLocationTrail: [{ id: 'asset-garage', title: 'Garage' }] });
+    expect(client.getAssetRequests).toEqual([{ inventoryId: 'inventory-home', assetId: 'asset-garage' }]);
+    expect(client.listAssetRequests).toEqual([]);
+    expect(client.listAttachmentRequests).toEqual([]);
+  });
+
   it('loads asset core through one detail request without attachment or containment hydration', async () => {
     const client = new FakeInventoryApiClient();
     const repository = new ApiInventorySummaryRepository(client, 'tenant-home');

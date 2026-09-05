@@ -4,7 +4,7 @@ import { AssetMoveHereSheetRouteScreen } from '../../../ui/screens/AssetNativeAc
 
 export default function AssetMoveHereRoute() {
   const {
-    assetDetailQuery,
+    assetCoreQuery,
     moveAssetCommand,
     parentLookupQuery
   } = useAppServices();
@@ -12,7 +12,7 @@ export default function AssetMoveHereRoute() {
 
   return (
     <AssetMoveHereSheetRouteScreen
-      assetDetailQuery={assetDetailQuery}
+      assetCoreQuery={assetCoreQuery}
       assetId={assetId}
       moveAssetCommand={moveAssetCommand}
       parentLookupQuery={parentLookupQuery}

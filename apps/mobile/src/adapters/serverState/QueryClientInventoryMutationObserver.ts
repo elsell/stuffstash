@@ -48,7 +48,7 @@ export class QueryClientInventoryMutationObserver implements InventoryMutationOb
       ) || (
         hasPrefix(query.queryKey, inventoryKey)
         && query.queryKey[inventoryKey.length] === 'asset'
-        && query.queryKey[inventoryKey.length + 2] === 'contents'
+        && ['contents', 'placement'].includes(String(query.queryKey[inventoryKey.length + 2]))
         && mutation.kind !== 'asset_checkout_changed'
         && mutation.kind !== 'asset_photo_changed'
         && Boolean(mutation.assetId && referencesAncestor(query.state.data, mutation.assetId))
@@ -74,6 +74,7 @@ function isAffectedInventoryQuery(
   if (resource === 'asset') {
     return isAffectedAssetQuery(queryKey, inventoryKey, mutation, relatedAssetIds);
   }
+  if (resource === 'parent-candidates') return kind !== 'asset_photo_changed' && kind !== 'asset_checkout_changed';
   if (kind === 'asset_checkout_changed') {
     return resource === 'map' || resource === 'home'
       || resource === 'assets'
@@ -96,7 +97,7 @@ function isAffectedAssetQuery(
   if (!mutation.assetId) return true;
   const queryAssetId = queryKey[inventoryKey.length + 1];
   const region = queryKey[inventoryKey.length + 2];
-  if (mutation.kind === 'operation_reversed' && region === 'contents') return true;
+  if (mutation.kind === 'operation_reversed' && (region === 'contents' || region === 'placement')) return true;
   if (queryAssetId === mutation.assetId) {
     if (region === 'history' || region === 'activity') return true;
     if (region === 'checkouts') return mutation.kind === 'asset_checkout_changed' || mutation.kind === 'operation_reversed';
@@ -111,7 +112,7 @@ function isAffectedAssetQuery(
       || mutation.kind === 'asset_lifecycle_changed'
       || mutation.kind === 'asset_created'
     ) {
-      return region === undefined || region === 'core' || region === 'contents';
+      return region === undefined || region === 'core' || region === 'contents' || region === 'placement';
     }
     return true;
   }

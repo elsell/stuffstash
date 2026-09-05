@@ -1,3 +1,4 @@
+import { AssetPlacementQuery } from '../application/assets/AssetPlacementQuery';
 import { InventoryContextQuery } from '../application/home/InventoryContextQuery';
 import { StuffStashClient } from '@stuff-stash/api-client';
 import type { QueryClient } from '@tanstack/react-query';
@@ -102,6 +103,7 @@ export type MobileComposition = {
   readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
   readonly assetCoreQuery: AssetCoreQuery;
+  readonly assetPlacementQuery: AssetPlacementQuery;
   readonly assetContentsQuery: AssetContentsQuery;
   readonly assetPhotosQuery: AssetPhotosQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
@@ -245,6 +247,7 @@ export function createMobileComposition(
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries, inventorySummaries),
     assetCoreQuery: new AssetCoreQuery(inventorySummaries),
+    assetPlacementQuery: new AssetPlacementQuery(inventorySummaries),
     assetContentsQuery: new AssetContentsQuery(inventorySummaries),
     assetPhotosQuery: new AssetPhotosQuery(inventorySummaries),
     assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
