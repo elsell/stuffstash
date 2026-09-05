@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -91,4 +92,41 @@ func TestMemoryEvaluationCaseAtomicHistoryAndConcurrentSaves(t *testing.T) {
 	if err != nil || len(rows) != 0 {
 		t.Fatal("cursor repeated case")
 	}
+	for _, id := range []domain.EvaluationCaseID{"case-z", "case-a"} {
+		snapshot := first.Snapshot()
+		snapshot.CaseID = id
+		snapshot.ID = domain.EvaluationCaseRevisionID("revision-" + string(id))
+		value, err := domain.NewEvaluationCaseRevision(snapshot)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := store.AppendEvaluationCaseRevision(ctx, value, 0, record("audit-"+string(id))); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ids := []domain.EvaluationCaseID{}
+	cursor := domain.EvaluationCaseID("")
+	for range 4 {
+		rows, err := store.ListEvaluationCases(ctx, "home", ports.EvaluationCasePageRequest{AfterID: cursor, Limit: 1})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(rows) == 0 {
+			break
+		}
+		if len(rows) != 1 {
+			t.Fatal("unbounded page")
+		}
+		ids = append(ids, rows[0].ID)
+		cursor = rows[0].ID
+	}
+	if !slices.Equal(ids, []domain.EvaluationCaseID{"case", "case-a", "case-z"}) {
+		t.Fatalf("pagination: %v", ids)
+	}
+	for _, limit := range []int{0, 101} {
+		if _, err := store.ListEvaluationCases(ctx, "home", ports.EvaluationCasePageRequest{Limit: limit}); !errors.Is(err, ports.ErrInvalidEvaluationCasePage) {
+			t.Fatalf("invalid limit %d: %v", limit, err)
+		}
+	}
+
 }

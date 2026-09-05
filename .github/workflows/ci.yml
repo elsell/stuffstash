@@ -53,7 +53,7 @@ jobs:
           STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000
         run: |
           set -o pipefail
-          timeout --signal=QUIT --kill-after=30s 8m go test -v -timeout=4m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search|VoiceConfiguration|ConversationWorkflow)' -bench '^BenchmarkPostgresSearch' -benchtime=5x -count=3 -benchmem 2>&1 | tee search-benchmark.txt
+          timeout --signal=QUIT --kill-after=30s 8m go test -v -timeout=4m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search|VoiceConfiguration|ConversationWorkflow|EvaluationCase)' -bench '^BenchmarkPostgresSearch' -benchtime=5x -count=3 -benchmem 2>&1 | tee search-benchmark.txt
       - name: Retain search measurements
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
