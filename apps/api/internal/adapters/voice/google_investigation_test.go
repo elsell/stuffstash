@@ -521,3 +521,11 @@ func mustJSON(t *testing.T, value any) []byte {
 	}
 	return payload
 }
+
+func TestInvestigationPreservesSeparateWorkflowInstructions(t *testing.T) {
+	instructions := strings.Repeat("界", 3000) + "Use household tags."
+	prompt := geminiInvestigationPrompt(ports.LanguageInferenceInput{Investigation: &agentmodel.InvestigationInput{Phase: agentmodel.InvestigationPhaseInitial}, PromptTemplate: strings.Repeat("Profile guidance. ", 1000), WorkflowInstructions: instructions})
+	if !strings.Contains(prompt, instructions) {
+		t.Fatal("workflow instructions truncated or crowded out")
+	}
+}

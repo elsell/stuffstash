@@ -3,10 +3,11 @@ package agentmodel
 import (
 	"context"
 	"errors"
-	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
-	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
 	"time"
+
+	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type workflowExecutionClock struct{ now time.Time }
@@ -14,14 +15,16 @@ type workflowExecutionClock struct{ now time.Time }
 func (c *workflowExecutionClock) Now() time.Time { return c.now }
 
 type workflowExecutionProvider struct {
-	calls    int
-	failures int
-	prompts  []string
+	calls        int
+	failures     int
+	prompts      []string
+	instructions []string
 }
 
 func (p *workflowExecutionProvider) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	p.calls++
 	p.prompts = append(p.prompts, input.PromptTemplate)
+	p.instructions = append(p.instructions, input.WorkflowInstructions)
 	if p.calls <= p.failures {
 		return ports.LanguageInferenceTurn{}, errors.New("provider unavailable")
 	}
@@ -53,7 +56,7 @@ func TestWorkflowModelAttemptsConsumeSharedBudget(t *testing.T) {
 	if _, err := execution.NextTurn(context.Background(), input); err != nil {
 		t.Fatal(err)
 	}
-	if provider.calls != 2 || provider.prompts[0] != "Household guidance.\nUse tags." {
+	if provider.calls != 2 || provider.prompts[0] != "Household guidance." || provider.instructions[0] != "Use tags." {
 		t.Fatalf("step policy not applied: %+v", provider)
 	}
 	if _, err := execution.NextTurn(context.Background(), input); !errors.Is(err, ErrWorkflowBudgetExhausted) {
@@ -77,5 +80,78 @@ func TestWorkflowModelHonorsCancellationAndElapsedBudget(t *testing.T) {
 	}
 	if provider.calls != 0 {
 		t.Fatal("expired execution called provider")
+	}
+}
+
+type lateWorkflowProvider struct{}
+
+func (lateWorkflowProvider) NextTurn(ctx context.Context, _ ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	<-ctx.Done()
+	return ports.LanguageInferenceTurn{}, nil
+}
+func (lateWorkflowProvider) GenerateResponse(ctx context.Context, _ ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	<-ctx.Done()
+	return ports.VoiceResponseGenerationResult{SpokenResponse: "Late success", DisplayResponse: "Late success"}, nil
+}
+func TestWorkflowRejectsLateSuccessInBothModelStages(t *testing.T) {
+	for _, kind := range []domain.WorkflowStepKind{domain.WorkflowStepInterpret, domain.WorkflowStepRespond} {
+		t.Run(string(kind), func(t *testing.T) {
+			execution, _, clock := workflowExecutionFixture(t, 4)
+			clock.now = clock.now.Add(30*time.Second - time.Millisecond)
+			execution.providers[kind] = WorkflowModelBinding{Language: lateWorkflowProvider{}, Response: lateWorkflowProvider{}}
+			var err error
+			if kind == domain.WorkflowStepInterpret {
+				_, err = execution.NextTurn(context.Background(), ports.LanguageInferenceInput{Investigation: &domain.InvestigationInput{Phase: domain.InvestigationPhaseInitial}})
+			} else {
+				_, err = execution.GenerateResponse(context.Background(), ports.VoiceResponseGenerationInput{Brief: domain.GroundedVoiceResponseBrief{Kind: domain.ResponseBriefKindAnswer, Mode: domain.ResponseAnswerModeNotFound, Operation: domain.OperationLocate, Subject: "clothes", Confidence: domain.ResponseConfidenceAbsent}})
+			}
+			if !errors.Is(err, ErrWorkflowBudgetExhausted) || execution.ModelCalls() != 1 {
+				t.Fatalf("late response escaped deadline: calls=%d err=%v", execution.ModelCalls(), err)
+			}
+		})
+	}
+}
+
+func TestWorkflowSharesBudgetBetweenInferenceAndWording(t *testing.T) {
+	execution, provider, _ := workflowExecutionFixture(t, 2)
+	provider.failures = 0
+	if _, err := execution.NextTurn(context.Background(), ports.LanguageInferenceInput{Investigation: &domain.InvestigationInput{Phase: domain.InvestigationPhaseInitial}}); err != nil {
+		t.Fatal(err)
+	}
+	brief := domain.GroundedVoiceResponseBrief{Kind: domain.ResponseBriefKindAnswer, Mode: domain.ResponseAnswerModeNotFound, Operation: domain.OperationLocate, Subject: "clothes", Confidence: domain.ResponseConfidenceAbsent}
+	if _, err := execution.GenerateResponse(context.Background(), ports.VoiceResponseGenerationInput{Brief: brief}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := execution.NextTurn(context.Background(), ports.LanguageInferenceInput{Investigation: &domain.InvestigationInput{Phase: domain.InvestigationPhaseEvidenceAssessment}}); !errors.Is(err, ErrWorkflowBudgetExhausted) {
+		t.Fatalf("assessment exceeded shared budget: %v", err)
+	}
+	if provider.calls != 2 || execution.ModelCalls() != 2 {
+		t.Fatal("model stages did not share their call budget")
+	}
+}
+
+func TestWorkflowGroundedResponseNeedsNoWordingProvider(t *testing.T) {
+	original, _, clock := workflowExecutionFixture(t, 2)
+	settings := original.definition.Settings()
+	settings.Response = domain.WorkflowResponseGrounded
+	limits := domain.WorkflowLimits{Budget: settings.Budget, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 1000}
+	definition, err := domain.NewWorkflowDefinition(settings, limits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bindings := map[domain.WorkflowStepKind]WorkflowModelBinding{
+		domain.WorkflowStepInterpret: original.providers[domain.WorkflowStepInterpret],
+		domain.WorkflowStepAssess:    original.providers[domain.WorkflowStepAssess],
+	}
+	execution, err := NewWorkflowModelExecution(definition, limits, clock, bindings)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := execution.GenerateResponse(context.Background(), ports.VoiceResponseGenerationInput{Brief: domain.GroundedVoiceResponseBrief{Kind: domain.ResponseBriefKindAnswer, Mode: domain.ResponseAnswerModeNotFound, Operation: domain.OperationLocate, Subject: "clothes", Confidence: domain.ResponseConfidenceAbsent}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.SpokenResponse == "" || execution.ModelCalls() != 0 {
+		t.Fatalf("grounded mode used provider or produced no response: %+v", result)
 	}
 }

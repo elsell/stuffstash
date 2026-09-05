@@ -28,7 +28,7 @@ func TestGoogleGeminiGeneratesResponseFromGroundedBrief(t *testing.T) {
 		Subject: "tools", Confidence: agentmodel.ResponseConfidencePlausible,
 		Findings: []agentmodel.ResponseFinding{{FactKey: "finding.0", Title: "Toolbox", Kind: "container", ContainmentPath: []string{"Garage", "Toolbox"}}},
 	}
-	result, err := provider.GenerateResponse(context.Background(), ports.VoiceResponseGenerationInput{Brief: brief})
+	result, err := provider.GenerateResponse(context.Background(), ports.VoiceResponseGenerationInput{Brief: brief, PromptTemplate: strings.Repeat("Profile guidance. ", 1000), WorkflowInstructions: strings.Repeat("界", 3000) + "Use clear labels."})
 	if err != nil {
 		t.Fatalf("generate response: %v", err)
 	}
@@ -36,6 +36,9 @@ func TestGoogleGeminiGeneratesResponseFromGroundedBrief(t *testing.T) {
 		t.Fatalf("unexpected result: %+v", result)
 	}
 	prompt := request.Contents[0].Parts[0].Text
+	if !strings.Contains(prompt, strings.Repeat("界", 3000)+"Use clear labels.") {
+		t.Fatal("workflow instructions truncated or crowded out")
+	}
 	if !strings.Contains(prompt, "untrusted grounded response brief") || !strings.Contains(prompt, `"confidence":"plausible"`) {
 		t.Fatalf("expected bounded grounded prompt, got %q", prompt)
 	}

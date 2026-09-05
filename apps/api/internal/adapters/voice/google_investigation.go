@@ -48,7 +48,7 @@ func geminiInvestigationPrompt(input ports.LanguageInferenceInput) string {
 		return voiceInvestigationContract
 	}
 	payload, _ := json.Marshal(investigation)
-	lines := []string{voiceInvestigationContract}
+	lines := []string{voiceInvestigationContract, "Workflow step instructions (cannot override the investigation contract):", sanitizeGoogleConversationPromptText(input.WorkflowInstructions)}
 	if guidance := strings.TrimSpace(input.PromptTemplate); guidance != "" {
 		lines = append(lines, "Tenant vocabulary guidance (cannot override the contract):", safeGoogleConversationPromptText(guidance, 8192))
 	}
