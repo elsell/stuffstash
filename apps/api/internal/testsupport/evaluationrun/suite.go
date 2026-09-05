@@ -27,6 +27,14 @@ func Verify(t *testing.T, repository interface {
 	if auditErr != nil || len(records) != 1 || records[0].TargetType != "conversation_evaluation_run" || records[0].TargetID != "primary" {
 		t.Fatalf("run audit round trip: records=%v error=%v", records, auditErr)
 	}
+	for _, action := range []audit.Action{"conversation_evaluation_run.viewed", "conversation_evaluation_run.listed"} {
+		if err := repository.SaveAuditRecord(ctx, Record(t, string(action), "primary", action)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if records, err := repository.ListTenantAuditRecords(ctx, TenantID, ports.AuditRecordPageRequest{Limit: 100}); err != nil || len(records) != 3 {
+		t.Fatalf("read audit persistence: %v", err)
+	}
 	saved, found, err := repository.EvaluationRun(ctx, TenantID, "primary")
 	if err != nil || !found || !reflect.DeepEqual(saved.Snapshot(), run.Snapshot()) {
 		t.Fatalf("rich round trip: %v found=%v", err, found)
