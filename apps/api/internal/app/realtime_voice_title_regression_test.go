@@ -30,3 +30,20 @@ func TestRealtimeVoiceGroundedAnswerAcceptsOrdinaryAssetTitles(t *testing.T) {
 		})
 	}
 }
+
+func TestRealtimeVoiceLabelsDoNotHideNarrativeDiagnostics(t *testing.T) {
+	t.Parallel()
+	for _, title := range []string{"Can", "?"} {
+		brief := agentmodel.GroundedVoiceResponseBrief{
+			Kind: agentmodel.ResponseBriefKindAnswer, Mode: agentmodel.ResponseAnswerModeLocate,
+			Operation: agentmodel.OperationLocate, Subject: title, Confidence: agentmodel.ResponseConfidenceStrong,
+			Findings: []agentmodel.ResponseFinding{{FactKey: "finding.0", Title: title, Kind: "item", ContainmentPath: []string{"Office", title}}},
+		}
+		for _, suffix := range []string{" This candidate matches.", " Is that okay?"} {
+			text := title + " is in the Office." + suffix
+			if err := validateRealtimeVoiceGeneratedResponse(brief, ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}); err == nil {
+				t.Fatalf("grounded label %q hid narrative %q", title, suffix)
+			}
+		}
+	}
+}
