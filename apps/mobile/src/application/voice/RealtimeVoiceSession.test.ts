@@ -287,7 +287,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)?.spokenResponse).not.toContain('Raw prompt');
   });
 
-  it('records and sends follow-up audio after a clarification completion', async () => {
+  it.each(['clarification', 'answer'] as const)('records follow-up audio after an available %s turn', async (kind) => {
     const recorder = new FakeRecorder();
     const transport = new FakeTransport([
       {
@@ -297,7 +297,7 @@ describe('RealtimeVoiceSessionController', () => {
         response: {
           spokenResponse: 'Which item should I update?',
           displayResponse: 'Which item should I update?',
-          kind: 'clarification'
+          kind
         }
       },
       { type: 'session.completed', seq: 2, sessionId: 'session-1' }
@@ -313,16 +313,16 @@ describe('RealtimeVoiceSessionController', () => {
     const states = await controller.stop();
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
-      responseKind: 'clarification',
+      responseKind: kind,
       clarificationFollowUpAvailable: true,
-      progressLabel: 'Needs detail'
+      progressLabel: kind === 'clarification' ? 'Needs detail' : 'Done'
     });
 
     const followUp = await controller.startFollowUp();
     expect(followUp).toMatchObject({
       status: 'listening',
       progressLabel: 'Listening',
-      responseKind: 'clarification',
+      responseKind: kind,
       clarificationFollowUpAvailable: true
     });
     const followUpStates = await controller.stopFollowUp();
