@@ -7,7 +7,7 @@ import {
   markPhotoRetryFailure,
   markPhotoRetryInProgress,
   markPhotoRetryResult,
-  refreshClarificationFollowUpAvailability
+  refreshVoiceFollowUpAvailability
 } from './VoiceInteractionStateContext';
 
 describe('buildFailedVoiceRealtimeState', () => {
@@ -84,18 +84,18 @@ describe('buildFailedVoiceRealtimeState', () => {
   });
 
   it('removes completed clarification follow-up availability when the live transport is gone', () => {
-    expect(refreshClarificationFollowUpAvailability({
+    expect(refreshVoiceFollowUpAvailability({
       status: 'completed',
       tenantName: 'Home tenant',
       inventoryName: 'Home',
       progressLabel: 'Needs detail',
       responseKind: 'clarification',
-      clarificationFollowUpAvailable: true,
+      followUpAvailable: true,
       debugEvents: []
     }, false)).toMatchObject({
       status: 'completed',
       responseKind: 'clarification',
-      clarificationFollowUpAvailable: false
+      followUpAvailable: false
     });
 
     const answerState = {
@@ -106,7 +106,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       responseKind: 'answer' as const,
       debugEvents: []
     };
-    expect(refreshClarificationFollowUpAvailability(answerState, false)).toBe(answerState);
+    expect(refreshVoiceFollowUpAvailability(answerState, false)).toBe(answerState);
   });
 
   it('marks only active proposed review plans as decision pending', () => {

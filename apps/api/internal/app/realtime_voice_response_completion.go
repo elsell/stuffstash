@@ -66,7 +66,7 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioCompleted, SessionID: session.ID}); err != nil {
 		return err
 	}
-	if !realtimeVoiceShouldContinueAfterClarification(response, continueAfterClarification...) {
+	if !realtimeVoiceShouldContinueAfterClarification(response, continueAfterClarification...) && !(session.ConversationContinuity && response.Kind == ports.StructuredAgentResponseKindAnswer) {
 		if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
 			return err
 		}

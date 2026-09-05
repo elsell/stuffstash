@@ -5,6 +5,16 @@ import {
 } from './VoiceSessionPresentation';
 
 describe('VoiceSessionPresentation', () => {
+  it('offers a follow-up without calling a completed answer a clarification', () => {
+    const session = buildVoiceSessionPresentation({
+      diagnosticsEnabled: false, diagnosticsExpanded: false, inventoryName: 'Home', tenantName: 'Main tenant', stage: 'completed',
+      realtime: { status: 'completed', tenantName: 'Main tenant', inventoryName: 'Home', progressLabel: 'Done', responseKind: 'answer', followUpAvailable: true, spokenResponse: 'The clothes are in the attic.', debugEvents: [] }
+    });
+    expect(session.title).toBe('Answer ready');
+    expect(session.bottomHint).toBe('Ask a follow-up to keep this conversation going.');
+    expect(session.bottomAction).toMatchObject({ kind: 'session_controls', mic: { accessibilityLabel: 'Ask a follow-up' } });
+  });
+
   it('starts listening from the collapsed ready bubble without navigating away', () => {
     expect(buildVoiceAccessoryPresentation({ pathname: '/', stage: 'ready', status: 'ready' })).toMatchObject({
       accessibilityLabel: 'Start voice interaction',
@@ -154,7 +164,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         progressLabel: 'Needs detail',
         responseKind: 'clarification',
-        clarificationFollowUpAvailable: true,
+        followUpAvailable: true,
         spokenResponse: 'Which item should I update?',
         debugEvents: []
       },
@@ -287,7 +297,7 @@ describe('VoiceSessionPresentation', () => {
         inventoryName: 'Home',
         progressLabel: 'Needs detail',
         responseKind: 'clarification',
-        clarificationFollowUpAvailable: true,
+        followUpAvailable: true,
         spokenResponse: 'Which item should I update?',
         debugEvents: []
       },
@@ -384,7 +394,7 @@ describe('VoiceSessionPresentation', () => {
       inventoryName: 'Home',
       progressLabel: 'Needs detail',
       responseKind: 'clarification' as const,
-      clarificationFollowUpAvailable: false,
+      followUpAvailable: false,
       spokenResponse: 'Which item should I update?',
       debugEvents: []
     };

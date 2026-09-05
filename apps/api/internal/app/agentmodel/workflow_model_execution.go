@@ -130,3 +130,11 @@ func executeWorkflowModelStep[T any](ctx context.Context, e *WorkflowModelExecut
 	}
 	return zero, last
 }
+
+// CanContinue reports capacity without reserving a provider call.
+func (e *WorkflowModelExecution) CanContinue() bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	budget := e.definition.Settings().Budget
+	return !e.expired && e.calls < budget.ModelCalls && e.clock.Now().Sub(e.started) < time.Duration(budget.ElapsedSeconds)*time.Second
+}

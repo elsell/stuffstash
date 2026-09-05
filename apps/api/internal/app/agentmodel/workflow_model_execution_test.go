@@ -155,3 +155,22 @@ func TestWorkflowGroundedResponseNeedsNoWordingProvider(t *testing.T) {
 		t.Fatalf("grounded mode used provider or produced no response: %+v", result)
 	}
 }
+
+func TestWorkflowContinuationAvailabilityRespectsSharedBudgets(t *testing.T) {
+	execution, provider, clock := workflowExecutionFixture(t, 2)
+	if !execution.CanContinue() {
+		t.Fatal("fresh workflow unavailable")
+	}
+	_, err := execution.NextTurn(context.Background(), ports.LanguageInferenceInput{Investigation: &domain.InvestigationInput{Phase: domain.InvestigationPhaseInitial}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if execution.CanContinue() || provider.calls != 2 {
+		t.Fatal("exhausted call budget advertised follow-up")
+	}
+	execution, _, clock = workflowExecutionFixture(t, 2)
+	clock.now = clock.now.Add(time.Minute)
+	if execution.CanContinue() {
+		t.Fatal("elapsed budget advertised follow-up")
+	}
+}

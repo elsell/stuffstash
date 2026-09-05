@@ -264,6 +264,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           source: input.source,
           requestedCapabilities: [...requiredRealtimeVoiceCapabilities],
           developerDiagnostics: this.diagnosticsEnabled,
+          conversationContinuity: true,
           ...(input.clientCorrelationId ? { clientCorrelationId: input.clientCorrelationId } : {}),
           inputAudio: input.inputAudio,
           outputAudio: { mimeTypes: input.outputAudioMimeTypes }
@@ -306,7 +307,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           }
           if (message.type === voiceServerMessage.sessionCompleted && !hasPendingActionPlan) {
             completed = true;
-            if (lastResponseKind === 'clarification') {
+            if (message.followUpAvailable === true || (message.followUpAvailable === undefined && lastResponseKind === 'clarification')) {
               followUpPending = false;
               followUpResolve?.();
               followUpResolve = null;
@@ -613,7 +614,7 @@ function parseServerMessage(raw: string, directUploadPolicy: DirectUploadTargetP
     case voiceServerMessage.textToSpeechAudioCompleted:
       return { ...metadata, type: voiceServerMessage.textToSpeechAudioCompleted, sessionId: stringField(message, 'sessionId') };
     case voiceServerMessage.sessionCompleted:
-      return { ...metadata, type: voiceServerMessage.sessionCompleted, sessionId: stringField(message, 'sessionId') };
+      return { ...metadata, type: voiceServerMessage.sessionCompleted, sessionId: stringField(message, 'sessionId'), ...(message.followUpAvailable === undefined ? {} : { followUpAvailable: booleanField(message, 'followUpAvailable') }) };
     case voiceServerMessage.sessionCancelled:
       return { ...metadata, type: voiceServerMessage.sessionCancelled, sessionId: stringField(message, 'sessionId') };
     default:

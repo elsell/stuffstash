@@ -36,6 +36,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 	}{
 		{"owner", "dev:user-1", "tenant-home", "inventory-home", true},
 		{"explicit model owner", "dev:user-1", "tenant-home", "inventory-home", true},
+		{"exhausted workflow owner", "dev:user-1", "tenant-home", "inventory-home", true},
 		{"outsider", "dev:user-2", "tenant-home", "inventory-home", false},
 		{"wrong inventory", "dev:user-1", "tenant-home", "inventory-other", false},
 		{"cross tenant", "dev:user-1", "tenant-other", "inventory-other", false},
@@ -55,9 +56,12 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 				t.Fatal(err)
 			}
 
-			if test.name == "explicit model owner" {
+			if test.name == "explicit model owner" || test.name == "exhausted workflow owner" {
 				snapshot := revision.Snapshot()
 				settings := snapshot.Definition.Settings()
+				if test.name == "exhausted workflow owner" {
+					settings.Budget.ModelCalls = 2
+				}
 				for index := range settings.Steps {
 					settings.Steps[index].ProviderProfileID = "explicit-model"
 				}
@@ -104,12 +108,26 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 					t.Fatal(err)
 				}
 				defer connection.Close(websocket.StatusNormalClosure, "")
-				writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage(test.tenant, test.inventory))
+				start := realtimeVoiceStartMessage(test.tenant, test.inventory)
+				start["conversationContinuity"] = true
+				writeRealtimeMessage(t, ctx, connection, start)
 				event := readRealtimeMessage(t, ctx, connection)
 				if test.allowed {
 					if event["type"] != "session.started" {
 						t.Fatalf("authorized workflow session failed: %+v", event)
 					}
+					if test.name == "exhausted workflow owner" {
+						writeRealtimeAudioTurn(t, ctx, connection, event["sessionId"].(string), 2, "budget-turn")
+						events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+						if findRealtimeEvent(t, events, "session.completed")["followUpAvailable"] != false {
+							t.Fatal("exhausted workflow advertised another recording")
+						}
+						_, _, closedErr := connection.Read(ctx)
+						if websocket.CloseStatus(closedErr) != websocket.StatusNormalClosure {
+							t.Fatalf("exhausted session not closed normally: %v", closedErr)
+						}
+					}
+
 				} else {
 					if event["type"] != "session.failed" || event["code"] != "forbidden" {
 						t.Fatalf("denied session: %+v", event)
@@ -138,7 +156,7 @@ func (workflowOnlyVoiceResolver) ResolveRealtimeVoiceProviders(_ context.Context
 	if !input.SkipDefaultLanguage {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
-	return ports.RealtimeVoiceProviderSet{SpeechToText: fakeSpeechToText{}, TextToSpeech: fakeTextToSpeech{}}, nil
+	return ports.RealtimeVoiceProviderSet{SpeechToText: fakeSpeechToText{transcript: "Where are my tools?"}, TextToSpeech: fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}}}, nil
 }
 func (workflowOnlyVoiceResolver) ResolveWorkflowLanguageProvider(_ context.Context, input ports.WorkflowLanguageProviderResolutionInput) (ports.WorkflowLanguageProviderBinding, error) {
 	if input.TenantID != "tenant-home" || input.ProfileID != "explicit-model" {

@@ -25,7 +25,7 @@ type PreparedWorkflow struct {
 	limits    domain.WorkflowLimits
 	clock     ports.Clock
 	bindings  map[domain.WorkflowStepKind]WorkflowModelBinding
-	once      sync.Once
+	mu        sync.Mutex
 	execution *WorkflowModelExecution
 	err       error
 }
@@ -131,9 +131,11 @@ func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.Re
 
 func (p *PreparedWorkflow) Revision() domain.WorkflowRevision { return p.revision }
 func (p *PreparedWorkflow) modelExecution() (*WorkflowModelExecution, error) {
-	p.once.Do(func() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.execution == nil && p.err == nil {
 		p.execution, p.err = NewWorkflowModelExecution(p.revision.Snapshot().Definition, p.limits, p.clock, p.bindings)
-	})
+	}
 	return p.execution, p.err
 }
 func (p *PreparedWorkflow) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
@@ -156,4 +158,13 @@ func (p *PreparedWorkflow) GenerateResponse(ctx context.Context, input ports.Voi
 		return ports.VoiceResponseGenerationResult{}, err
 	}
 	return execution.GenerateResponse(ctx, input)
+}
+
+func (p *PreparedWorkflow) CanContinue() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.err != nil {
+		return false
+	}
+	return p.execution == nil || p.execution.CanContinue()
 }

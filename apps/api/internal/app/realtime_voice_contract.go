@@ -53,13 +53,14 @@ const (
 )
 
 type RealtimeVoiceSessionInput struct {
-	Principal            identity.Principal
-	TenantID             tenant.ID
-	InventoryID          inventory.InventoryID
-	Source               string
-	InputAudio           ports.RealtimeAudioFormat
-	OutputAudio          RealtimeVoiceOutputAudio
-	DeveloperDiagnostics bool
+	ConversationContinuity bool
+	Principal              identity.Principal
+	TenantID               tenant.ID
+	InventoryID            inventory.InventoryID
+	Source                 string
+	InputAudio             ports.RealtimeAudioFormat
+	OutputAudio            RealtimeVoiceOutputAudio
+	DeveloperDiagnostics   bool
 }
 
 type RealtimeVoiceOutputAudio struct {
@@ -67,6 +68,7 @@ type RealtimeVoiceOutputAudio struct {
 }
 
 type RealtimeVoiceSession struct {
+	ConversationContinuity     bool
 	ID                         string
 	TenantID                   tenant.ID
 	InventoryID                inventory.InventoryID

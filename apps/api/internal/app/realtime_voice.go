@@ -85,6 +85,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
 	session := RealtimeVoiceSession{
+		ConversationContinuity:     input.ConversationContinuity,
 		ID:                         sessionID,
 		TenantID:                   input.TenantID,
 		InventoryID:                input.InventoryID,

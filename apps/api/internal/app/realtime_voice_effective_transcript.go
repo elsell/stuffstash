@@ -39,6 +39,9 @@ func realtimeVoiceEffectiveTranscript(current string, turns []ports.AgentConvers
 	if current == "" {
 		return ""
 	}
+	if realtimeVoiceSelfContainedRequest(current) {
+		return current
+	}
 	safeTurns := safeRealtimeVoiceConversationTurns(turns)
 	if len(safeTurns) == 0 {
 		return current
@@ -56,6 +59,8 @@ func realtimeVoiceEffectiveTranscript(current string, turns []ports.AgentConvers
 		case ports.AgentConversationRoleAssistant:
 			if turn.Kind == string(ports.StructuredAgentResponseKindClarification) && pendingUserIntent != "" {
 				latestUserIntent = pendingUserIntent
+			} else if turn.Kind != string(ports.StructuredAgentResponseKindClarification) {
+				latestUserIntent = ""
 			}
 		}
 	}
@@ -147,4 +152,19 @@ func realtimeVoiceLooksLikeCasualAcquisitionCreateRequest(normalizedText string)
 		}
 	}
 	return false
+}
+
+// Preserve legacy short clarification merging, but keep a complete new request
+// separate from prior intent. Reference-bearing replies still receive context.
+func realtimeVoiceSelfContainedRequest(text string) bool {
+	if !realtimeVoiceLooksLikeConversationIntent(text) {
+		return false
+	}
+	normalized := normalizedRealtimeVoiceVerbText(text)
+	for _, reference := range []string{" it ", " this ", " that ", " them ", " those ", " there ", " one ", " ones "} {
+		if strings.Contains(normalized, reference) {
+			return false
+		}
+	}
+	return true
 }

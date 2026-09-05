@@ -314,7 +314,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       responseKind: kind,
-      clarificationFollowUpAvailable: true,
+      followUpAvailable: true,
       progressLabel: kind === 'clarification' ? 'Needs detail' : 'Done'
     });
 
@@ -323,7 +323,7 @@ describe('RealtimeVoiceSessionController', () => {
       status: 'listening',
       progressLabel: 'Listening',
       responseKind: kind,
-      clarificationFollowUpAvailable: true
+      followUpAvailable: true
     });
     const followUpStates = await controller.stopFollowUp();
     expect(transport.followUpAudio).toEqual([['ZmFrZS1hdWRpbw==']]);
@@ -357,7 +357,7 @@ describe('RealtimeVoiceSessionController', () => {
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
       responseKind: 'clarification',
-      clarificationFollowUpAvailable: false
+      followUpAvailable: false
     });
     expect(controller.canSendFollowUpAudio()).toBe(false);
   });
