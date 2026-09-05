@@ -26,6 +26,17 @@ class Workflows implements ConversationWorkflowRepository {
 }
 function button(text: string) { return Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes(text)); }
 describe('workflow workspace', () => {
+  it('prevents a new draft from racing a pending revision load', async () => {
+    const workflows = new Workflows();
+    let resolve!: (value: WorkflowRevision) => void;
+    workflows.get = () => new Promise(done => { resolve = done; });
+    component = mount(WorkflowWorkspace, { target: document.body, props: { scope: { apiIdentity: 'api', principalId: 'owner', tenantId: 'home' }, workflows, providers: { list: async () => [] } } });
+    await expect.poll(() => button('Household')).toBeDefined(); button('Household')!.click();
+    await expect.poll(() => button('New workflow')?.disabled).toBe(true);
+    button('New workflow')!.click();
+    resolve(workflows.revision);
+    await expect.poll(() => document.querySelector<HTMLInputElement>('input[name="name"]')?.value).toBe('Household');
+  });
   it('loads a saved workflow and appends a draft through its repository', async () => {
     const workflows = new Workflows();
     component = mount(WorkflowWorkspace, { target: document.body, props: { scope: { apiIdentity: 'api', principalId: 'owner', tenantId: 'home' }, workflows, providers: { list: async () => [] } } });

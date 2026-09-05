@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { conversationWorkspaceRepositories } from '$lib/adapters/api/conversations/workspaceRepositories';
+  import type { ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import { onMount } from 'svelte';
   import { getStoredSession, signOut, startSignIn, type AuthSession } from '$lib/auth';
   import { loadRuntimeConfig, type RuntimeConfig } from '$lib/runtimeConfig';
@@ -31,6 +33,7 @@
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
   let repository = $state<WorkspaceRepository | null>(null);
+  let conversations = $state<ConversationWorkspaceRepositories | undefined>();
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
   let authFailure = $state<SignInFailure | null>(null);
@@ -68,6 +71,7 @@
             nextWorkspace = await provisionPersonalWorkspace(nextRepository, nextWorkspace.context.principal);
           }
           if (!mounted) return;
+          conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null);
           repository = nextRepository;
           workspaceData = nextWorkspace;
         }
@@ -159,7 +163,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {repository} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {repository} {conversations} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>
