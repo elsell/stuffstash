@@ -76,3 +76,41 @@ func TestEvaluationProviderResolutionDoesNotReselectDefault(t *testing.T) {
 		t.Fatal("default change redirected pinned run")
 	}
 }
+
+func TestEvaluationProviderResolutionChecksEntireSetBeforeConstruction(t *testing.T) {
+	resolver, run, _, factory := evaluationResolutionSetup(t, true)
+	repository := resolver.profiles.(providerResolverProfileRepository)
+	second := repository.profiles[0]
+	second.ID = "second"
+	repository.profiles = append(repository.profiles, second)
+	resolver.profiles = repository
+	input := run.Snapshot().Input
+	revision := input.Workflow.Snapshot()
+	settings := revision.Definition.Settings()
+	settings.Steps[1].ProviderProfileID = "second"
+	definition, err := model.NewWorkflowDefinition(settings, revision.Limits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	revision.Definition = definition
+	input.Workflow, err = model.NewWorkflowRevision(revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Providers, err = resolver.SnapshotEvaluationProviders(context.Background(), fixture.TenantID, input.Workflow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, err = model.NewEvaluationRun(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repository.profiles[1].ModelName = "changed-model"
+	resolver.profiles = repository
+	if _, err := resolver.ResolveEvaluationRunProviders(context.Background(), fixture.TenantID, run); !errors.Is(err, ports.ErrEvaluationConfigurationChanged) {
+		t.Fatalf("later profile drift: %v", err)
+	}
+	if len(factory.configs) != 0 {
+		t.Fatal("earlier provider constructed before later drift check")
+	}
+}
