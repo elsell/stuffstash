@@ -1049,11 +1049,13 @@ export class StuffStashClient {
     tenantId: string,
     limit = 50,
     cursor?: string,
-    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active',
+    signal?: AbortSignal
   ): Promise<Page<CustomAssetType>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/custom-asset-types', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId }, query: { limit, cursor, lifecycleState } }
       })
     );
@@ -1120,11 +1122,13 @@ export class StuffStashClient {
     inventoryId: string,
     limit = 50,
     cursor?: string,
-    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active',
+    signal?: AbortSignal
   ): Promise<Page<CustomAssetType>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId, inventoryId }, query: { limit, cursor, lifecycleState } }
       })
     );
@@ -1203,11 +1207,13 @@ export class StuffStashClient {
     tenantId: string,
     limit = 50,
     cursor?: string,
-    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active',
+    signal?: AbortSignal
   ): Promise<Page<CustomFieldDefinition>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/custom-field-definitions', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId }, query: { limit, cursor, lifecycleState } }
       })
     );
@@ -1277,11 +1283,13 @@ export class StuffStashClient {
     inventoryId: string,
     limit = 50,
     cursor?: string,
-    lifecycleState: CustomDefinitionLifecycleFilter = 'active'
+    lifecycleState: CustomDefinitionLifecycleFilter = 'active',
+    signal?: AbortSignal
   ): Promise<Page<CustomFieldDefinition>> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId, inventoryId }, query: { limit, cursor, lifecycleState } }
       })
     );

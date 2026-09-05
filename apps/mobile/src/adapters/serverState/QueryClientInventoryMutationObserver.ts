@@ -69,7 +69,7 @@ function isAffectedInventoryQuery(
   const resource = queryKey[inventoryKey.length];
   const kind = mutation.kind;
   if (kind === 'asset_tag_created') {
-    return resource === 'asset-tags' || resource === 'add-context' || resource === 'browse';
+    return resource === 'asset-tags' || resource === 'add-context' || resource === 'browse' || resource === 'customization' && queryKey[inventoryKey.length + 1] === 'tag';
   }
   if (resource === 'asset') {
     return isAffectedAssetQuery(queryKey, inventoryKey, mutation, relatedAssetIds);

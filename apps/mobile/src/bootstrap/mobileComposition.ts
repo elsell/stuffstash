@@ -1,3 +1,5 @@
+import { ObservedCustomizationRepository } from '../adapters/customization/ObservedCustomizationRepository';
+import { QueryClientCustomizationMutationObserver } from '../adapters/serverState/QueryClientCustomizationMutationObserver';
 import { QueryClientProviderProfileMutationObserver } from '../adapters/serverState/QueryClientProviderProfileMutationObserver';
 import { AssetPlacementQuery } from '../application/assets/AssetPlacementQuery';
 import { InventoryContextQuery } from '../application/home/InventoryContextQuery';
@@ -229,7 +231,7 @@ export function createMobileComposition(
     new ExpoSettingsDiagnosticsProvider(config),
     new ApiSettingsScopeRepository(client, inventorySummaries)
   );
-  const customization = new ApiCustomizationRepository(client);
+  const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 

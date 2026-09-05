@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../shared/ReadRequest';
 import type {
   AssetTagDefinition,
   CustomAssetTypeDefinition,
@@ -30,19 +31,19 @@ export type DefinitionAddress = {
 };
 
 export interface CustomizationRepository {
-  listTags(context: CustomizationContext, cursor?: string): Promise<CustomizationPage<AssetTagDefinition>>;
+  listTags(context: CustomizationContext, cursor?: string, request?: ReadRequest): Promise<CustomizationPage<AssetTagDefinition>>;
   createTag(context: CustomizationContext, input: { readonly displayName: string; readonly color?: string }): Promise<AssetTagDefinition>;
   updateTag(context: CustomizationContext, id: string, input: { readonly displayName?: string; readonly color?: string }): Promise<AssetTagDefinition>;
   archiveTag(context: CustomizationContext, id: string): Promise<void>;
 
-  listFields(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string): Promise<CustomizationPage<CustomFieldDefinition>>;
+  listFields(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string, request?: ReadRequest): Promise<CustomizationPage<CustomFieldDefinition>>;
   createField(context: CustomizationContext, scope: CustomizationScope, input: CreateCustomFieldInput): Promise<CustomFieldDefinition>;
   updateField(address: DefinitionAddress, input: UpdateCustomFieldInput): Promise<CustomFieldDefinition>;
   archiveField(address: DefinitionAddress): Promise<void>;
   restoreField(address: DefinitionAddress): Promise<void>;
   deleteField(address: DefinitionAddress): Promise<void>;
 
-  listAssetTypes(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string): Promise<CustomizationPage<CustomAssetTypeDefinition>>;
+  listAssetTypes(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string, request?: ReadRequest): Promise<CustomizationPage<CustomAssetTypeDefinition>>;
   createAssetType(context: CustomizationContext, scope: CustomizationScope, input: CreateCustomAssetTypeInput): Promise<CustomAssetTypeDefinition>;
   updateAssetType(address: DefinitionAddress, input: UpdateCustomAssetTypeInput): Promise<CustomAssetTypeDefinition>;
   archiveAssetType(address: DefinitionAddress): Promise<void>;

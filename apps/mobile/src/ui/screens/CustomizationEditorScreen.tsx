@@ -1,3 +1,6 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { useCustomizationReads } from '../serverState/useCustomizationReads';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
@@ -26,7 +29,7 @@ import { appKeyboardDismissMode } from '../components/AppTextInput';
 
 type EditorRecord = AssetTagDefinition | CustomDefinition;
 
-export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherited = false, kind, lifecycle = 'active', manageAssetTypes, manageFields, manageTags, mode, onDone, onManageInherited, query, resourceId, scope }: {
+export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceContext, inherited = false, kind, lifecycle = 'active', manageAssetTypes, manageFields, manageTags, mode, onDone, onManageInherited, query: sourceQuery, resourceId, scope }: {
   readonly accessPolicy: CustomizationAccessPolicy; readonly contextQuery: CustomizationContextQuery; readonly inherited?: boolean; readonly kind: CustomizationKind; readonly lifecycle?: CustomizationLifecycle;
   readonly manageAssetTypes: ManageCustomAssetTypes; readonly manageFields: ManageCustomFields; readonly manageTags: ManageTags;
   readonly mode: 'create' | 'edit'; readonly onDone: () => void; readonly onManageInherited?: () => void; readonly query: CustomizationCollectionQuery; readonly resourceId?: string; readonly scope: CustomizationScope;
@@ -53,6 +56,24 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
   const [nameTouched, setNameTouched] = useState(false);
   const [keyManuallyEdited, setKeyManuallyEdited] = useState(false);
   const [exitAuthorized, setExitAuthorized] = useState(false);
+
+  const reads = useCustomizationReads(sourceContext, sourceQuery, kind, scope, lifecycle, accessPolicy, mode === 'edit', true);
+  const { contextQuery, query } = reads;
+
+  useEffect(() => {
+    if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) {
+      if (status === 'ready') setDraftDenied(true);
+      else setStatus('denied');
+    }
+    if (reads.context && status === 'ready') {
+      setContext(reads.context);
+      if (!accessPolicy.canRead(reads.context, scope) || !accessPolicy.canMutate(reads.context, kind, scope, inherited)) setDraftDenied(true);
+    }
+  }, [reads.contextError, reads.resource.error, reads.context?.tenantPermissions.join(','), reads.context?.inventoryPermissions.join(',')]);
+
+  useEffect(() => {
+    if (reads.types.data) setEligibleTypes(reads.types.data.items.filter((item): item is CustomAssetTypeDefinition => item.kind === 'asset-type' && (scope === 'inventory' || item.scope === 'tenant')));
+  }, [reads.types.data, scope]);
 
   async function load() {
     const request = workflowRef.current.beginLoad();
@@ -88,7 +109,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
       if (!workflowRef.current.isCurrentLoad(request)) return;
       if (cause instanceof CustomizationFailure && cause.kind === 'permission-denied') {
         let refreshedContext: Awaited<ReturnType<CustomizationContextQuery['execute']>> | undefined;
-        try { refreshedContext = await contextQuery.execute(); } catch { /* The API denial remains authoritative. */ }
+        try { refreshedContext = await reads.refreshContext(); } catch { /* The API denial remains authoritative. */ }
         if (!workflowRef.current.isCurrentLoad(request)) return;
         if (refreshedContext) {
           setContext(refreshedContext);
@@ -102,10 +123,10 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
       setStatus('error');
     }
   }
-  useEffect(() => { void load(); return () => { workflowRef.current.invalidateLoads(); }; }, [resourceId, lifecycle, scope]);
+  useEffect(() => { void load(); return () => { workflowRef.current.invalidateLoads(); }; }, [resourceId, lifecycle, scope, reads.ownerKey]);
 
   const effectiveInherited = effectiveInheritedOwnership({ routeHint: inherited, recordScope: record && 'scope' in record ? record.scope : undefined, screenScope: scope });
-  const canMutate = Boolean(context && !draftDenied && accessPolicy.canMutate(context, kind, scope, effectiveInherited));
+  const canMutate = Boolean(context && !draftDenied && !isAccessFailure(reads.contextError) && !isAccessFailure(reads.resource.error) && accessPolicy.canMutate(context, kind, scope, effectiveInherited));
   const editorDraft: CustomizationEditorDraft = { name, key, keyManuallyEdited, description, color, fieldType, applicability, enumOptions, targetIds };
   const current = customizationEditorSnapshot(editorDraft);
   const dirty = customizationEditorIsDirty(editorDraft, initialSnapshot, mode, completed);
@@ -167,6 +188,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
     return () => navigation.setOptions({ gestureEnabled: true, headerBackVisible: true, headerLeft: undefined });
   }, [colors.action, dirty, navigation, onDone]);
 
+  if (status === 'ready' && (!reads.context && !isAccessFailure(reads.contextError) || reads.context && (context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId))) return <SettingsLoadingRow label="Loading setting…" />;
   if (status === 'loading') return <View style={settings.styles.shell}><View style={styles.loadingGroup}><SettingsLoadingRow label={`Loading ${label(kind).toLocaleLowerCase()}…`} /></View></View>;
   if (status === 'error') return <View style={[settings.styles.shell, settings.styles.errorContainer]}><Text accessibilityRole="header" style={settings.styles.errorTitle}>Setting unavailable</Text><Text style={settings.styles.errorMessage}>It may have been archived, deleted, or you may no longer have access.</Text><Pressable accessibilityRole="button" onPress={() => void load()} style={settings.styles.retryButton}><Text style={settings.styles.retryText}>Retry</Text></Pressable></View>;
   if (status === 'denied') return <DeniedSettingsState message={deniedMessage} />;
@@ -211,6 +233,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
     {effectiveInherited && context.tenantPermissions.includes('configure') && onManageInherited ? <SettingsSection><SettingsActionRow label={`Manage in ${context.tenantName}`} onPress={onManageInherited} /></SettingsSection> : null}
     {canMutate && lifecycle === 'active' ? <Pressable accessibilityRole="button" accessibilityState={{ busy: saving || lifecycleBusy, disabled: !valid || saving || lifecycleBusy || (mode === 'edit' && !dirty) }} disabled={!valid || saving || lifecycleBusy || (mode === 'edit' && !dirty)} onPress={() => void save()} style={[styles.save, (!valid || saving || lifecycleBusy || (mode === 'edit' && !dirty)) && styles.disabled]}><Text style={styles.saveText}>{saving ? 'Saving…' : 'Save'}</Text></Pressable> : null}
     {mode === 'edit' && canMutate ? <CustomizationLifecycleSection busy={lifecycleBusy || saving} kind={kind} lifecycle={lifecycle} onAction={lifecycleAction} /> : null}
+    <SettingsRefreshNotice visible={reads.resource.isRefetchError || reads.types.isRefetchError} onRetry={reads.refreshDefinitions} />
     {dirty ? <Text style={styles.unsaved}>Unsaved changes</Text> : null}
   </ScrollView></KeyboardAvoidingView>;
 
@@ -221,7 +244,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
     setDraftDenied(true);
     setError(undefined);
     try {
-      const refreshed = await contextQuery.execute();
+      const refreshed = await reads.refreshContext();
       setContext(refreshed);
       accessPolicy.mutationOrRecord(refreshed, kind, scope, effectiveInherited);
     } catch { /* Keep the populated draft fail-closed until access can be refreshed. */ }
@@ -229,7 +252,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery, inherite
 
   async function refreshDraftAccess(): Promise<void> {
     try {
-      const refreshed = await contextQuery.execute();
+      const refreshed = await reads.refreshContext();
       setContext(refreshed);
       if (accessPolicy.mutationOrRecord(refreshed, kind, scope, effectiveInherited)) {
         setDraftDenied(false);
