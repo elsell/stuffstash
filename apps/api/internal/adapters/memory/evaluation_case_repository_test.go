@@ -84,6 +84,28 @@ func TestMemoryEvaluationCaseAtomicHistoryAndConcurrentSaves(t *testing.T) {
 	if _, found, err := store.EvaluationCaseRevision(ctx, "home", "other", "one"); err != nil || found {
 		t.Fatal("cross case revision")
 	}
+	history, err := store.ListEvaluationCaseRevisions(ctx, "home", "case", ports.EvaluationCaseRevisionPageRequest{Limit: 1})
+	if err != nil || len(history) != 1 || history[0].Snapshot().Number != 1 {
+		t.Fatalf("first history: %v %v", history, err)
+	}
+	history, err = store.ListEvaluationCaseRevisions(ctx, "home", "case", ports.EvaluationCaseRevisionPageRequest{AfterNumber: 1, Limit: 100})
+	if err != nil || len(history) != 1 || history[0].Snapshot().Number != 2 {
+		t.Fatalf("exclusive history: %v %v", history, err)
+	}
+	for _, scope := range []struct {
+		tenant tenant.ID
+		caseID domain.EvaluationCaseID
+	}{{"other", "case"}, {"home", "missing"}} {
+		rows, err := store.ListEvaluationCaseRevisions(ctx, scope.tenant, scope.caseID, ports.EvaluationCaseRevisionPageRequest{Limit: 100})
+		if err != nil || len(rows) != 0 {
+			t.Fatalf("history scope leaked: %v %v", rows, err)
+		}
+	}
+	for _, page := range []ports.EvaluationCaseRevisionPageRequest{{Limit: 0}, {Limit: 101}, {Limit: 1, AfterNumber: -1}} {
+		if _, err := store.ListEvaluationCaseRevisions(ctx, "home", "case", page); !errors.Is(err, ports.ErrInvalidEvaluationCasePage) {
+			t.Fatalf("invalid history page: %v", err)
+		}
+	}
 	rows, err := store.ListEvaluationCases(ctx, "home", ports.EvaluationCasePageRequest{Limit: 1})
 	if err != nil || len(rows) != 1 || rows[0].LatestRevision != 2 {
 		t.Fatalf("head list: %+v %v", rows, err)

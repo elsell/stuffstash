@@ -10,6 +10,7 @@ import (
 
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -82,6 +83,28 @@ func verifyEvaluationCaseRepository(t *testing.T, ctx context.Context, store Sto
 	saved, found, err := store.EvaluationCaseRevision(ctx, "evaluation-home", "clothes", "revision-one")
 	if err != nil || !found || saved.Snapshot().Number != 1 || !reflect.DeepEqual(saved.Snapshot().Definition.Settings(), first.Snapshot().Definition.Settings()) {
 		t.Fatal("history changed")
+	}
+	history, err := store.ListEvaluationCaseRevisions(ctx, "evaluation-home", "clothes", ports.EvaluationCaseRevisionPageRequest{Limit: 1})
+	if err != nil || len(history) != 1 || history[0].Snapshot().Number != 1 {
+		t.Fatalf("first history: %v %v", history, err)
+	}
+	history, err = store.ListEvaluationCaseRevisions(ctx, "evaluation-home", "clothes", ports.EvaluationCaseRevisionPageRequest{AfterNumber: 1, Limit: 100})
+	if err != nil || len(history) != 1 || history[0].Snapshot().Number != 2 {
+		t.Fatalf("exclusive history: %v %v", history, err)
+	}
+	for _, scope := range []struct {
+		tenant tenant.ID
+		caseID domain.EvaluationCaseID
+	}{{"other", "clothes"}, {"evaluation-home", "missing"}} {
+		rows, err := store.ListEvaluationCaseRevisions(ctx, scope.tenant, scope.caseID, ports.EvaluationCaseRevisionPageRequest{Limit: 100})
+		if err != nil || len(rows) != 0 {
+			t.Fatalf("history scope leaked: %v %v", rows, err)
+		}
+	}
+	for _, page := range []ports.EvaluationCaseRevisionPageRequest{{Limit: 0}, {Limit: 101}, {Limit: 1, AfterNumber: -1}} {
+		if _, err := store.ListEvaluationCaseRevisions(ctx, "evaluation-home", "clothes", page); !errors.Is(err, ports.ErrInvalidEvaluationCasePage) {
+			t.Fatalf("invalid history page: %v", err)
+		}
 	}
 	rows, err := store.ListEvaluationCases(ctx, "evaluation-home", ports.EvaluationCasePageRequest{Limit: 1})
 	if err != nil || len(rows) != 1 || rows[0].LatestRevision != 2 || rows[0].LatestRevisionID != "revision-two" || rows[0].Title != "Edited clothes case" {

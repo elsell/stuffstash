@@ -37,6 +37,7 @@ func coverEvaluationCaseScenarios(t *testing.T, coverage executedScenarioCoverag
 	appendBody := evaluationCaseRequest()
 	appendBody["expectedRevision"] = 1
 	if adversarial {
+		coverage.request(t, server, http.MethodGet, revisions, base+"/unknown/revisions", "Bearer dev:viewer", nil, http.StatusForbidden)
 		coverage.request(t, server, http.MethodPost, collection, base, "Bearer dev:viewer", evaluationCaseRequest(), http.StatusForbidden)
 		coverage.request(t, server, http.MethodGet, collection, base, "Bearer dev:viewer", nil, http.StatusForbidden)
 		coverage.request(t, server, http.MethodGet, head, base+"/unknown", "Bearer dev:viewer", nil, http.StatusForbidden)
@@ -52,6 +53,7 @@ func coverEvaluationCaseScenarios(t *testing.T, coverage executedScenarioCoverag
 		}
 	}
 	decodeBody(t, created, &value)
+	coverage.request(t, server, http.MethodGet, revisions, base+"/"+value.Data.CaseID+"/revisions", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, collection, base, "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, head, base+"/"+value.Data.CaseID, "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, revision, base+"/"+value.Data.CaseID+"/revisions/"+value.Data.ID, "Bearer dev:owner", nil, http.StatusOK)

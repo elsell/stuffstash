@@ -11,6 +11,8 @@ type SaveEvaluationCaseInput = agentmodelapp.SaveEvaluationCaseInput
 type GetEvaluationCaseInput = agentmodelapp.GetEvaluationCaseInput
 type ListEvaluationCasesInput = agentmodelapp.ListEvaluationCasesInput
 type ListEvaluationCasesResult = agentmodelapp.ListEvaluationCasesResult
+type ListEvaluationCaseRevisionsInput = agentmodelapp.ListEvaluationCaseRevisionsInput
+type ListEvaluationCaseRevisionsResult = agentmodelapp.ListEvaluationCaseRevisionsResult
 
 func (a App) SaveEvaluationCaseRevision(ctx context.Context, input SaveEvaluationCaseInput) (agentmodel.EvaluationCaseRevision, error) {
 	return a.evaluationCaseService.SaveRevision(ctx, input)
@@ -20,4 +22,7 @@ func (a App) GetEvaluationCase(ctx context.Context, input GetEvaluationCaseInput
 }
 func (a App) ListEvaluationCases(ctx context.Context, input ListEvaluationCasesInput) (ListEvaluationCasesResult, error) {
 	return a.evaluationCaseService.List(ctx, input)
+}
+func (a App) ListEvaluationCaseRevisions(ctx context.Context, input ListEvaluationCaseRevisionsInput) (ListEvaluationCaseRevisionsResult, error) {
+	return a.evaluationCaseService.History(ctx, input)
 }

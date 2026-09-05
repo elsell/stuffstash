@@ -14,6 +14,7 @@ import (
 )
 
 func Register(api huma.API, application app.App) {
+	registerHistory(api, application)
 	huma.Post(api, "/tenants/{tenantId}/conversation-evaluation-cases", func(ctx context.Context, input *dto.CreateInput) (*dto.RevisionOutput, error) {
 		access, err := authenticate(ctx, application, input.AccessInput)
 		if err != nil {

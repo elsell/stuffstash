@@ -28,9 +28,14 @@ type EvaluationCasePageRequest struct {
 	AfterID agentmodel.EvaluationCaseID
 	Limit   int
 }
+type EvaluationCaseRevisionPageRequest struct {
+	AfterNumber int
+	Limit       int
+}
 type EvaluationCaseRepository interface {
 	EvaluationCaseHead(context.Context, tenant.ID, agentmodel.EvaluationCaseID) (EvaluationCaseHeadRecord, bool, error)
 	EvaluationCaseRevision(context.Context, tenant.ID, agentmodel.EvaluationCaseID, agentmodel.EvaluationCaseRevisionID) (agentmodel.EvaluationCaseRevision, bool, error)
 	ListEvaluationCases(context.Context, tenant.ID, EvaluationCasePageRequest) ([]EvaluationCaseHeadRecord, error)
+	ListEvaluationCaseRevisions(context.Context, tenant.ID, agentmodel.EvaluationCaseID, EvaluationCaseRevisionPageRequest) ([]agentmodel.EvaluationCaseRevision, error)
 	AppendEvaluationCaseRevision(context.Context, agentmodel.EvaluationCaseRevision, int, audit.Record) error
 }
