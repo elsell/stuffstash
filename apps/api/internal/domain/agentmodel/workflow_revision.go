@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"unicode"
 )
 
 var ErrInvalidWorkflowRevision = errors.New("invalid conversation workflow revision")
@@ -32,12 +33,12 @@ type WorkflowRevision struct {
 }
 
 func NewWorkflowRevision(input WorkflowRevisionInput) (WorkflowRevision, error) {
-	for _, id := range []string{string(input.ID), string(input.WorkflowID), string(input.AuthorID)} {
+	for _, id := range []string{string(input.ID), string(input.WorkflowID)} {
 		if !workflowIdentifierValid(id) {
 			return WorkflowRevision{}, ErrInvalidWorkflowRevision
 		}
 	}
-	if strings.TrimSpace(string(input.TenantID)) == "" || input.Number < 1 || input.CreatedAt.IsZero() {
+	if !workflowAuthorValid(string(input.AuthorID)) || strings.TrimSpace(string(input.TenantID)) == "" || input.Number < 1 || input.CreatedAt.IsZero() {
 		return WorkflowRevision{}, ErrInvalidWorkflowRevision
 	}
 	definition, err := NewWorkflowDefinition(input.Definition.Settings(), input.Limits)
@@ -58,6 +59,19 @@ func workflowIdentifierValid(value string) bool {
 	}
 	for _, c := range value {
 		if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '-' || c == '_' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+func workflowAuthorValid(value string) bool {
+	if value == "" {
+		return false
+	}
+	for _, r := range value {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_' || r == '.' {
 			continue
 		}
 		return false

@@ -3,6 +3,7 @@ package agentmodel
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -22,7 +23,7 @@ func workflowServiceLimits() domain.WorkflowLimits {
 
 func TestConversationWorkflowSaveAuthorizesBeforeMutation(t *testing.T) {
 	repository := newWorkflowFakeRepository()
-	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: denyTenantAuthorizer{}, Repository: repository, Profiles: newFakeProviderProfileRepository(), IDs: fixedIDGenerator{}, Clock: fixedClock{}, Limits: workflowServiceLimits()})
+	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: denyTenantAuthorizer{}, Repository: repository, Profiles: newFakeProviderProfileRepository(), IDs: &workflowSequenceIDs{}, Clock: fixedClock{}, Limits: workflowServiceLimits()})
 	if _, err := service.SaveRevision(context.Background(), workflowServiceInput()); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("unauthorized save: %v", err)
 	}
@@ -33,8 +34,9 @@ func TestConversationWorkflowSaveAuthorizesBeforeMutation(t *testing.T) {
 
 func TestConversationWorkflowSaveSnapshotsAndAudits(t *testing.T) {
 	repository := newWorkflowFakeRepository()
-	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: allowTenantConfigureAuthorizer{}, Repository: repository, Profiles: newFakeProviderProfileRepository(), IDs: fixedIDGenerator{}, Clock: fixedClock{}, Limits: workflowServiceLimits()})
+	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: allowTenantConfigureAuthorizer{}, Repository: repository, Profiles: newFakeProviderProfileRepository(), IDs: &workflowSequenceIDs{}, Clock: fixedClock{}, Limits: workflowServiceLimits()})
 	input := workflowServiceInput()
+	input.Principal.ID = "john.smith"
 	revision, err := service.SaveRevision(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
@@ -53,12 +55,31 @@ func TestConversationWorkflowSaveSnapshotsAndAudits(t *testing.T) {
 	if len(repository.audit) != 1 {
 		t.Fatal("stale save added audit")
 	}
+	input.ExpectedRevision = 1
+	second, err := service.SaveRevision(context.Background(), input)
+	if err != nil || second.Snapshot().Number != 2 || second.Snapshot().ID == got.ID {
+		t.Fatalf("second immutable revision failed: %v", err)
+	}
+	original, found, err := repository.WorkflowRevision(context.Background(), input.TenantID, got.WorkflowID, got.ID)
+	if err != nil || !found || original.Snapshot().Number != 1 {
+		t.Fatal("second save overwrote original")
+	}
+	// A stale read snapshot must not defeat the authoritative append CAS.
+	stale := service
+	stale.deps.Repository = workflowStaleHeadView{workflowFakeRepository: repository, head: ports.WorkflowHeadRecord{TenantID: input.TenantID, ID: got.WorkflowID, LatestRevision: 1}}
+	if _, err := stale.SaveRevision(context.Background(), input); !errors.Is(err, apperrors.ErrConflict) {
+		t.Fatalf("append race did not map to conflict: %v", err)
+	}
+	if len(repository.audit) != 2 {
+		t.Fatal("conflicting append changed audit")
+	}
+
 }
 
 func TestConversationWorkflowRejectsUnknownOrWrongCapabilityProvider(t *testing.T) {
 	repository := newWorkflowFakeRepository()
 	profiles := newFakeProviderProfileRepository()
-	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: allowTenantConfigureAuthorizer{}, Repository: repository, Profiles: profiles, IDs: fixedIDGenerator{}, Clock: fixedClock{}, Limits: workflowServiceLimits()})
+	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: allowTenantConfigureAuthorizer{}, Repository: repository, Profiles: profiles, IDs: &workflowSequenceIDs{}, Clock: fixedClock{}, Limits: workflowServiceLimits()})
 	for _, profile := range []domain.ProviderProfile{
 		mustProviderProfile(t, "provider-one", "tenant-other", domain.ProviderCapabilityLanguageInference, domain.ProviderProfileEnabled),
 		mustProviderProfile(t, "provider-one", "tenant-home", domain.ProviderCapabilitySpeechToText, domain.ProviderProfileEnabled),
@@ -99,8 +120,21 @@ func (r *workflowFakeRepository) AppendWorkflowRevision(_ context.Context, v dom
 	if head.LatestRevision != expected || s.Number != expected+1 {
 		return ports.ErrWorkflowConflict
 	}
+
+	if _, exists := r.revisions[key+"/"+string(s.ID)]; exists {
+		return ports.ErrWorkflowConflict
+	}
+	for _, existing := range r.audit {
+		if existing.ID == a.ID {
+			return ports.ErrWorkflowConflict
+		}
+	}
 	r.revisions[key+"/"+string(s.ID)] = v
-	r.heads[key] = ports.WorkflowHeadRecord{TenantID: tenant.ID(s.TenantID), ID: s.WorkflowID, LatestRevision: s.Number, ActiveRevisionID: head.ActiveRevisionID, CreatedAt: s.CreatedAt, UpdatedAt: s.CreatedAt}
+	createdAt := head.CreatedAt
+	if createdAt.IsZero() {
+		createdAt = s.CreatedAt
+	}
+	r.heads[key] = ports.WorkflowHeadRecord{TenantID: tenant.ID(s.TenantID), ID: s.WorkflowID, LatestRevision: s.Number, ActiveRevisionID: head.ActiveRevisionID, CreatedAt: createdAt, UpdatedAt: s.CreatedAt}
 	r.audit = append(r.audit, a)
 	return nil
 }
@@ -121,4 +155,23 @@ func (r *workflowFakeRepository) ActivateWorkflowRevision(_ context.Context, t t
 	r.heads[key] = head
 	r.audit = append(r.audit, a)
 	return nil
+}
+
+type workflowSequenceIDs struct{ next int }
+
+func (ids *workflowSequenceIDs) NewID() string {
+	ids.next++
+	return fmt.Sprintf("workflow-generated-%d", ids.next)
+}
+
+type workflowStaleHeadView struct {
+	*workflowFakeRepository
+	head ports.WorkflowHeadRecord
+}
+
+func (v workflowStaleHeadView) WorkflowHead(_ context.Context, t tenant.ID, w domain.WorkflowID) (ports.WorkflowHeadRecord, bool, error) {
+	if v.head.TenantID != t || v.head.ID != w {
+		return ports.WorkflowHeadRecord{}, false, nil
+	}
+	return v.head, true, nil
 }

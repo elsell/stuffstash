@@ -91,6 +91,7 @@ const (
 	EventAuthorizationOutboxFailed            EventName = "authorization_outbox.failed"
 	EventAuthorizationOutboxDeadLettered      EventName = "authorization_outbox.dead_lettered"
 	EventHTTPRateLimited                      EventName = "http.rate_limited"
+	EventConversationWorkflowRevisionCreated  EventName = "conversation_workflow.revision_created"
 	EventProviderProfileCreated               EventName = "provider_profile.created"
 	EventProviderProfileViewed                EventName = "provider_profile.viewed"
 	EventProviderProfilesListed               EventName = "provider_profile.listed"
