@@ -58,7 +58,7 @@ func registerQueries(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.SelectionOutput{Body: shared.SuccessEnvelope[*dto.WorkflowSelection]{Data: mapper.SelectionToResponse(result), Meta: shared.Meta{TenantID: input.TenantID}}}, nil
+		return &dto.SelectionOutput{Body: shared.NullableSuccessEnvelope[dto.WorkflowSelection]{Data: mapper.SelectionToResponse(result), Meta: shared.Meta{TenantID: input.TenantID}}}, nil
 	}, huma.OperationTags("conversation workflows"), shared.SecuredOperation)
 }
 func readAccess(ctx context.Context, application app.App, input dto.WorkflowReadAccess) (app.EvaluationRunAccess, error) {

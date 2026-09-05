@@ -43,5 +43,5 @@ type HistoryOutput struct {
 	Body shared.SuccessEnvelope[[]Revision]
 }
 type SelectionOutput struct {
-	Body shared.SuccessEnvelope[*WorkflowSelection]
+	Body shared.NullableSuccessEnvelope[WorkflowSelection]
 }
