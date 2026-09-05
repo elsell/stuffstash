@@ -54,3 +54,17 @@ Local Compose must run migrations before starting the API against Postgres. Kube
 - Migration tooling must be included in CI once database schema exists.
 - Tests must verify migration command behavior with missing configuration and no-op migration states.
 - Tests must verify API startup migration checks reject missing, dirty, or outdated schema state before the API serves requests.
+
+## Voice settings schema repair
+
+Migration 000038 must create the missing tenant-owned
+`voice_provider_configurations` table with a tenant primary/foreign key, three
+profile-selection strings defaulting to empty (automatic selection), and creation
+and update timestamps. Existing profile selection and audited writes retain their
+current behavior. No credentials are stored in this table.
+
+The voice configuration repository must be exercised against PostgreSQL created
+only from embedded SQL migrations in CI: an unconfigured tenant returns a normal
+miss, saves and updates round-trip, other tenants cannot read the configuration,
+and audit failure rolls back the configuration. SQLite AutoMigrate tests alone
+cannot establish production schema coverage.
