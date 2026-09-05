@@ -116,7 +116,7 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 		if event["type"] == "assistant.response.completed" {
 			response, _ = event["response"].(map[string]any)
 		}
-		if event["type"] == "session.failed" || event["type"] == "session.completed" || event["type"] == "action_plan.proposed" {
+		if event["type"] == "session.failed" || event["type"] == "session.completed" || event["type"] == app.RealtimeVoiceEventActionPlanProposed {
 			completed = true
 		}
 	}
