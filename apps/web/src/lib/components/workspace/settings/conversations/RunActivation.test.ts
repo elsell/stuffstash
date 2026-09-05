@@ -1,6 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
 import { mount, unmount } from 'svelte';
 import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
+import { conversationKey } from '$lib/adapters/query/conversationQueryClient';
 import type { EvaluationRun } from '$lib/domain/conversationRun';
 import type { WorkflowActivation, WorkflowRevision } from '$lib/domain/conversationWorkflow';
 import { ConversationFailure } from '$lib/domain/conversation';
@@ -23,8 +24,14 @@ it('sends exact passing evidence and expected selection before showing activatio
   await expect.poll(() => button()?.disabled).toBe(false); button()!.click();
   await expect.poll(() => requests.length).toBe(1);
   expect(requests[0]).toEqual({ revisionId: 'revision', runId: 'run', cases: [{ caseId: 'case', revisionId: 'case-revision' }], expected: null });
+  let releaseOld!: () => void;
+  const oldRead = session.client.fetchQuery({ queryKey: conversationKey(session.scope, 'selection'), staleTime: 0,
+    queryFn: () => new Promise<null>(resolve => { releaseOld = () => resolve(null); }) }).catch(() => undefined);
+  await expect.poll(() => releaseOld).toBeDefined();
   expect(document.body.textContent).not.toContain('This revision is active'); finish(revision);
   await expect.poll(() => document.body.textContent).toContain('This revision is active');
+  releaseOld(); await oldRead;
+  expect(session.client.getQueryData(conversationKey(session.scope, 'selection'))).toEqual({ workflowId: 'workflow', revisionId: 'revision' });
 });
 it('does not activate when the server rejects stale quality evidence', async () => {
   const workflows = repository(); workflows.activate = async () => { throw new ConversationFailure('precondition'); };

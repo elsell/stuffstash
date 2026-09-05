@@ -25,7 +25,7 @@
   {#if creating}<Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy) creating = false; }}>Discard run setup</Button.Root>
     <RunSetup {session} {repositories} onBusy={value => { busy = value; }} onQueued={run => { creating = false; busy = false; selectedId = run.id; }} />
   {:else if selectedId}<Button.Root variant="outline" onclick={() => { selectedId = ''; void heads.refetch(); }}>Back to runs</Button.Root>
-    {#key selectedId}<RunDetails {session} runs={repositories.runs} cases={repositories.cases} runId={selectedId} {visible} />{/key}
+    {#key selectedId}<RunDetails {session} runs={repositories.runs} cases={repositories.cases} workflows={repositories.workflows} runId={selectedId} {visible} />{/key}
   {:else}<Button.Root onclick={() => { creating = true; }}>New run</Button.Root>
     {#if heads.isPending}<p role="status">Loading runs…</p>{:else if heads.isError}<p role="alert">Could not load runs. <Button.Root onclick={() => heads.refetch()}>Retry runs</Button.Root></p>
     {:else}<ul>{#each heads.data.items as head (head.id)}<li><Button.Root variant="outline" onclick={() => { selectedId = head.id; }}>{names[head.state]} · {head.completedCases}/{head.totalCases} cases · {new Date(head.createdAt).toLocaleString()}</Button.Root></li>{/each}</ul>

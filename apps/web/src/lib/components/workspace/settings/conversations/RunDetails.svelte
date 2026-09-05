@@ -8,7 +8,9 @@
   import type { ConversationCaseRepository } from '$lib/ports/conversationCaseRepository';
   import * as Button from '$lib/components/ui/button/index.js';
   import RunResult from './RunResult.svelte';
-  let { session, runs, cases, runId, visible }: { session: ConversationSession; runs: ConversationRunRepository; cases: ConversationCaseRepository; runId: string; visible: boolean } = $props();
+  import RunActivation from './RunActivation.svelte';
+  import type { ConversationWorkflowRepository } from '$lib/ports/conversationWorkflowRepository';
+  let { session, runs, cases, workflows, runId, visible }: { session: ConversationSession; runs: ConversationRunRepository; cases: ConversationCaseRepository; workflows?: ConversationWorkflowRepository; runId: string; visible: boolean } = $props();
   let documentVisible = $state(false); let cancelling = $state(false); let message = $state('');
   onMount(() => { const update = () => { documentVisible = document.visibilityState !== 'hidden'; }; update();
     document.addEventListener('visibilitychange', update); return () => document.removeEventListener('visibilitychange', update); });
@@ -47,6 +49,7 @@
   <ul>{#each run.data.cases as pin (pin.revisionId)}{@const result = run.data.results.find(value => value.caseRevisionId === pin.revisionId)}
     <li><h4>{pin.title}</h4>{#if result}<RunResult {session} {cases} {pin} {result} />{:else}<p>{pending ? 'Not run yet' : 'Not completed'} — no passing result recorded.</p>{/if}</li>
   {/each}</ul>
+  {#if workflows}<RunActivation {session} {workflows} run={run.data} />{/if}
   <p role="status">{message}</p>
 </section>{/if}
 <style>.run-details, ul { display: grid; gap: 1rem; } ul { padding: 0; list-style: none; } li { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; overflow-wrap: anywhere; } h3, h4 { font-weight: 600; } .failure-code { display: block; }</style>
