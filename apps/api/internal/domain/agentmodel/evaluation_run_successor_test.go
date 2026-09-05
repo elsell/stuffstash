@@ -69,3 +69,27 @@ func TestEvaluationRunSuccessorsPreserveHistoryAndTerminalStates(t *testing.T) {
 		t.Fatal("multiple transitions collapsed into one CAS")
 	}
 }
+
+func TestEvaluationRunSuccessorSurvivesTimestampSerialization(t *testing.T) {
+	input := evaluationRunInput(t)
+	// Monotonic clock metadata cannot survive database/JSON serialization.
+	input.CreatedAt = time.Now()
+	original, err := NewEvaluationRun(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claimed, err := original.Claim("worker", input.CreatedAt, time.Minute)
+	if err != nil {
+		t.Fatal(err)
+	}
+	persisted := original.Snapshot()
+	persisted.Input.CreatedAt = persisted.Input.CreatedAt.Round(0).In(time.FixedZone("database-offset", 3600))
+	persisted.UpdatedAt = persisted.UpdatedAt.Round(0).UTC()
+	restored, err := RestoreEvaluationRun(persisted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !claimed.IsSuccessorOf(restored) {
+		t.Fatal("equivalent database timestamps rejected valid successor")
+	}
+}
