@@ -67,6 +67,7 @@ const (
 	envRealtimeVoiceIdleTimeout           = "STUFF_STASH_REALTIME_VOICE_IDLE_TIMEOUT"
 	envRealtimeVoiceToolCallTimeout       = "STUFF_STASH_REALTIME_VOICE_TOOL_CALL_TIMEOUT"
 	envVoiceProviderHTTPTimeout           = "STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT"
+	envGoogleADCCredentialVersion         = "STUFF_STASH_GOOGLE_ADC_CREDENTIAL_VERSION"
 	envGoogleCloudProject                 = "STUFF_STASH_GOOGLE_CLOUD_PROJECT"
 	envGoogleCloudLocation                = "STUFF_STASH_GOOGLE_CLOUD_LOCATION"
 	envGoogleGeminiModel                  = "STUFF_STASH_GOOGLE_GEMINI_MODEL"
@@ -193,6 +194,7 @@ type Config struct {
 	RealtimeVoiceIdleTimeout         time.Duration
 	RealtimeVoiceToolCallTimeout     time.Duration
 	VoiceProviderHTTPTimeout         time.Duration
+	GoogleADCCredentialVersion       string
 	GoogleCloudProject               string
 	GoogleCloudLocation              string
 	GoogleGeminiModel                string
@@ -266,6 +268,7 @@ func Load() Config {
 		RealtimeVoiceIdleTimeout:         durationEnvOrDefault(envRealtimeVoiceIdleTimeout, defaultRealtimeVoiceIdleTimeout),
 		RealtimeVoiceToolCallTimeout:     durationEnvOrDefault(envRealtimeVoiceToolCallTimeout, defaultRealtimeVoiceToolCallTimeout),
 		VoiceProviderHTTPTimeout:         durationEnvOrDefault(envVoiceProviderHTTPTimeout, defaultVoiceProviderHTTPTimeout),
+		GoogleADCCredentialVersion:       strings.TrimSpace(os.Getenv(envGoogleADCCredentialVersion)),
 		GoogleCloudProject:               os.Getenv(envGoogleCloudProject),
 		GoogleCloudLocation:              envOrDefault(envGoogleCloudLocation, defaultGoogleCloudLocation),
 		GoogleGeminiModel:                envOrDefault(envGoogleGeminiModel, defaultGoogleGeminiModel),

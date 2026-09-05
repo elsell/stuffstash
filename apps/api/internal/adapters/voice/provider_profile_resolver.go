@@ -9,9 +9,10 @@ import (
 )
 
 type ProviderProfileProviderConfig struct {
-	Profile           agentmodel.ProviderProfile
-	CredentialPurpose ports.ProviderCredentialPurpose
-	Credential        []byte
+	Profile             agentmodel.ProviderProfile
+	CredentialPurpose   ports.ProviderCredentialPurpose
+	CredentialVersionID string
+	Credential          []byte
 }
 
 type ProviderProfileProviderFactory interface {

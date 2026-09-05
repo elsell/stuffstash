@@ -109,9 +109,10 @@ func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories reposito
 func googleProviderProfileFactory(cfg config.Config) voice.GoogleProviderProfileFactory {
 	projectID := strings.TrimSpace(cfg.GoogleCloudProject)
 	return voice.GoogleProviderProfileFactory{
-		ServerADCProjectID:    projectID,
-		ServerADCLocation:     strings.TrimSpace(cfg.GoogleCloudLocation),
-		ServerADCQuotaProject: projectID,
+		ServerADCCredentialVersion: cfg.GoogleADCCredentialVersion,
+		ServerADCProjectID:         projectID,
+		ServerADCLocation:          strings.TrimSpace(cfg.GoogleCloudLocation),
+		ServerADCQuotaProject:      projectID,
 	}
 }
 
