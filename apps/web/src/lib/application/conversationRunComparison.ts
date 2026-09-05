@@ -6,7 +6,7 @@ export type ConversationRunComparison = { compatible: false; reason: 'same' | 'i
   compatible: true; baseline: ComparedRunTotals; candidate: ComparedRunTotals;
   cases: { title: string; baseline: ComparedCaseResult; candidate: ComparedCaseResult }[];
 };
-const complete = (run: EvaluationRun) => run.state === 'succeeded' && run.totalCases > 0 && run.completedCases === run.totalCases && run.cases.length === run.totalCases && run.results.length === run.totalCases;
+export const conversationRunHasCompleteResults = (run: EvaluationRun) => (run.state === 'succeeded' || run.state === 'failed') && !run.failureCode && run.totalCases > 0 && run.completedCases === run.totalCases && run.cases.length === run.totalCases && run.results.length === run.totalCases;
 const pins = (run: EvaluationRun) => run.cases.map(pin => JSON.stringify([pin.caseId, pin.revisionId])).sort();
 const providers = (run: EvaluationRun) => run.providers.map(pin => JSON.stringify([pin.step, pin.profileId, pin.configurationId])).sort();
 const same = (left: string[], right: string[]) => left.length === right.length && left.every((value, index) => value === right[index]);
@@ -16,7 +16,7 @@ function totals(values: ComparedCaseResult[]): ComparedRunTotals {
 }
 export function compareConversationRuns(baseline: EvaluationRun, candidate: EvaluationRun): ConversationRunComparison {
   if (baseline.id === candidate.id) return { compatible: false, reason: 'same' };
-  if (!complete(baseline) || !complete(candidate)) return { compatible: false, reason: 'incomplete' };
+  if (!conversationRunHasCompleteResults(baseline) || !conversationRunHasCompleteResults(candidate)) return { compatible: false, reason: 'incomplete' };
   if (!same(pins(baseline), pins(candidate))) return { compatible: false, reason: 'cases' };
   if (!same(providers(baseline), providers(candidate))) return { compatible: false, reason: 'providers' };
   const left = new Map(baseline.results.map(value => [value.caseRevisionId, value]));
