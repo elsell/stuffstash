@@ -72,6 +72,36 @@ func TestWorkflowMemoryAtomicScopeAndConflict(t *testing.T) {
 	if err := store.ActivateWorkflowRevision(ctx, "other", "workflow-one", "one", "", first.Snapshot().CreatedAt, record("cross", audit.ActionConversationWorkflowActivated)); err == nil {
 		t.Fatal("cross-tenant audit accepted")
 	}
+
+	var winner agentmodel.WorkflowRevisionID
+	for _, candidate := range revisions {
+		id := candidate.Snapshot().ID
+		if _, found, _ := store.WorkflowRevision(ctx, "home", "workflow-one", id); found {
+			winner = id
+		}
+	}
+	if winner == "" {
+		t.Fatal("winning revision missing")
+	}
+	if err := store.ActivateWorkflowRevision(ctx, "home", "workflow-one", winner, "one", first.Snapshot().CreatedAt, record("active", audit.ActionConversationWorkflowActivated)); err == nil {
+		t.Fatal("duplicate activation audit accepted")
+	}
+
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if err := store.AppendWorkflowRevision(cancelled, persistedWorkflowRevision(t, "home", "cancelled", 3), 2, record("cancelled-append", audit.ActionConversationWorkflowRevisionCreated)); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled append: %v", err)
+	}
+	if err := store.ActivateWorkflowRevision(cancelled, "home", "workflow-one", winner, "one", first.Snapshot().CreatedAt, record("cancelled-active", audit.ActionConversationWorkflowActivated)); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled activation: %v", err)
+	}
+	if _, found, _ := store.WorkflowRevision(ctx, "home", "workflow-one", "cancelled"); found {
+		t.Fatal("cancelled revision committed")
+	}
+	records, err := store.ListTenantAuditRecords(ctx, "home", ports.AuditRecordPageRequest{})
+	if err != nil || len(records) != 3 {
+		t.Fatalf("atomic audit count: %d %v", len(records), err)
+	}
 	original, found, err := store.WorkflowRevision(ctx, "home", "workflow-one", "one")
 	if err != nil || !found || original.Snapshot().Number != 1 {
 		t.Fatal("original revision lost")
