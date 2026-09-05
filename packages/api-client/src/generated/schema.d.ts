@@ -2408,6 +2408,16 @@ export interface components {
             lifecycleState: string;
             name: string;
         };
+        NullableSuccessEnvelopeWorkflowSelection: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/NullableSuccessEnvelopeWorkflowSelection.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["WorkflowSelection"] | null;
+            meta: components["schemas"]["Meta"];
+        };
         PaginationMeta: {
             hasMore: boolean;
             /** Format: int64 */
@@ -2944,16 +2954,6 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["VoiceProviderConfigurationResponse"];
-            meta: components["schemas"]["Meta"];
-        };
-        SuccessEnvelopeWorkflowSelection: {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/SuccessEnvelopeWorkflowSelection.json
-             */
-            readonly $schema?: string;
-            data: components["schemas"]["WorkflowSelection"];
             meta: components["schemas"]["Meta"];
         };
         TenantResponse: {
@@ -3835,7 +3835,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelopeWorkflowSelection"];
+                    "application/json": components["schemas"]["NullableSuccessEnvelopeWorkflowSelection"];
                 };
             };
             /** @description Error */
