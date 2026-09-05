@@ -12,14 +12,16 @@ import (
 )
 
 type EvaluationWorkerDependencies struct {
-	Runs       ports.EvaluationRunRepository
-	Authorizer ports.Authorizer
-	Providers  ports.EvaluationRunProviderResolver
-	Executor   ports.ConversationEvaluationExecutor
-	IDs        ports.IDGenerator
-	Clock      ports.Clock
-	Observer   ports.Observer
-	LeaseGrace time.Duration
+	Runs         ports.EvaluationRunRepository
+	Authorizer   ports.Authorizer
+	Providers    ports.EvaluationRunProviderResolver
+	Executor     ports.ConversationEvaluationExecutor
+	IDs          ports.IDGenerator
+	Clock        ports.Clock
+	Observer     ports.Observer
+	LeaseGrace   time.Duration
+	Delay        ports.Delay
+	PollInterval time.Duration
 }
 type EvaluationWorker struct{ deps EvaluationWorkerDependencies }
 
@@ -37,7 +39,7 @@ func (w EvaluationWorker) Process(ctx context.Context, ref ports.EvaluationRunRe
 	return err
 }
 func (w EvaluationWorker) process(ctx context.Context, ref ports.EvaluationRunReference) error {
-	if w.deps.Runs == nil || w.deps.Authorizer == nil || w.deps.Providers == nil || w.deps.Executor == nil || w.deps.IDs == nil || w.deps.Clock == nil || w.deps.LeaseGrace <= 0 {
+	if w.deps.Runs == nil || w.deps.Authorizer == nil || w.deps.Providers == nil || w.deps.Executor == nil || w.deps.IDs == nil || w.deps.Clock == nil || w.deps.LeaseGrace <= 0 || w.deps.Delay == nil || w.deps.PollInterval <= 0 {
 		return apperrors.ErrPrecondition
 	}
 	if err := ctx.Err(); err != nil {
@@ -122,17 +124,26 @@ func (w EvaluationWorker) process(ctx context.Context, ref ports.EvaluationRunRe
 			run = renewed
 		}
 		index := len(run.Snapshot().Results)
-		caseCtx, cancel := context.WithTimeout(ctx, budget)
-		result, executionErr := w.deps.Executor.Execute(caseCtx, ports.ConversationEvaluationInput{Case: initial.Input.Cases[index].Snapshot().Definition, Revision: initial.Input.Workflow, Limits: initial.Input.Limits, Principal: principal, Providers: providers.Providers, WorkflowProviders: providers.WorkflowProviders})
-		deadlineErr := caseCtx.Err()
-		cancel()
+		result, executionErr, supervisionErr := w.executeSupervised(ctx, ref, run, ports.ConversationEvaluationInput{Case: initial.Input.Cases[index].Snapshot().Definition, Revision: initial.Input.Workflow, Limits: initial.Input.Limits, Principal: principal, Providers: providers.Providers, WorkflowProviders: providers.WorkflowProviders}, budget)
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 		if current, err := w.stillOwned(ctx, ref, run); err != nil || !current {
 			return err
 		}
-		if executionErr != nil || deadlineErr != nil || result.Coverage != ports.EvaluationCoverageText {
+		if supervisionErr != nil {
+			if errors.Is(supervisionErr, ports.ErrForbidden) || errors.Is(supervisionErr, ports.ErrUnauthenticated) {
+				return w.fail(ctx, run, token, model.EvaluationRunFailureAccessRevoked)
+			}
+			return supervisionErr
+		}
+		if err := w.deps.Authorizer.CheckTenant(ctx, principal, ports.TenantPermissionConfigure, ref.TenantID); err != nil {
+			if errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrUnauthenticated) {
+				return w.fail(ctx, run, token, model.EvaluationRunFailureAccessRevoked)
+			}
+			return err
+		}
+		if executionErr != nil || result.Coverage != ports.EvaluationCoverageText {
 			return w.fail(ctx, run, token, model.EvaluationRunFailureExecution)
 		}
 		next, err := run.RecordCase(token, index, result.Outcome, result.ModelCalls, result.Duration, w.deps.Clock.Now())

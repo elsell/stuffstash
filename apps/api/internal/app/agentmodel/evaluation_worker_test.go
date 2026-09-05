@@ -58,7 +58,7 @@ func evaluationWorkerSetup(t *testing.T) (EvaluationWorkerDependencies, *memory.
 		{Kind: model.EvaluationOutcomeProposal, ReferencedAssets: []string{"clothes"}, Locations: []model.EvaluationLocationExpectation{{AssetID: "clothes", AncestorID: "box"}}, Proposals: []model.EvaluationProposal{{Operation: model.OperationCheckout, TargetID: "clothes", Details: "For Sam"}}},
 	}}
 	clock := &evaluationWorkerClock{now: evaluationCommandClock{}.Now()}
-	return EvaluationWorkerDependencies{Runs: store, Authorizer: allowTenantConfigureAuthorizer{}, Providers: &evaluationWorkerProviders{}, Executor: executor, IDs: &workflowSequenceIDs{next: 100}, Clock: clock, LeaseGrace: time.Minute}, store, executor, clock
+	return EvaluationWorkerDependencies{Runs: store, Authorizer: allowTenantConfigureAuthorizer{}, Providers: &evaluationWorkerProviders{}, Executor: executor, IDs: &workflowSequenceIDs{next: 100}, Clock: clock, LeaseGrace: time.Minute, Delay: evaluationPulseDelay{}, PollInterval: time.Second}, store, executor, clock
 }
 func workerReference(t *testing.T, store *memory.Store) ports.EvaluationRunReference {
 	t.Helper()
