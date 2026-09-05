@@ -880,3 +880,11 @@ Tests must cover:
 - Should the first implementation use tap-to-start/tap-to-stop or push-to-talk?
 - What future streaming-safe response contract would allow spoken-response deltas before full structured final validation?
 - What exact artifact shape should safe asset and location references use in final responses?
+
+## Conversation continuity negotiation
+
+Clients may opt into `conversationContinuity: true` on WebSocket `session.start`. For those clients, a completed answer or clarification can retain the session and bounded prior user/assistant context for another audio turn. Approval proposals remain an explicit review boundary and the first slice still terminates after its decision. A `session.completed` event marks a completed audio turn and includes `followUpAvailable` for negotiated sessions; false means the client must start a new session. Legacy clients retain clarification-only continuation and existing terminal-answer behavior.
+
+The pinned workflow permits one initial turn plus `FollowUpTurns`; the default flow permits three total turns. Follow-up authorization is rechecked before transcription or model disclosure. Each continuation performs fresh authorized reads; conversation prose never grants authority or makes prior IDs executable. The rolling context remains bounded to six user/assistant messages. A new self-contained request following a clarification is treated as a new intent rather than appended to an old question. At the negotiated turn limit the final completion advertises false and closes normally, preserving the final answer rather than replacing it with a limit error. Model-call and elapsed budgets remain shared across the session.
+
+The mobile client opts in, retains the transport only when advertised, and reuses it on the next microphone tap. It never begins recording automatically. Legacy servers without `followUpAvailable` retain clarification-only compatibility. Closed, cancelled, denied or exhausted sessions cannot advertise a follow-up. The UI continues to offer starting a fresh request.
