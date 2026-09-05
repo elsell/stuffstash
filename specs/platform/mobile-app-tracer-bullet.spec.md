@@ -37,13 +37,11 @@ This spec defines camera behavior only for attaching still photos during the Add
 - The local-dev token value is a development-only credential for the API's local-dev auth mode. Production mobile authentication is defined in `specs/identity-access/mobile-oidc-authentication.spec.md`.
 - Expo public environment variables are development defaults only. The app must not require them for first launch once onboarding exists.
 - On first launch without a saved connection profile, mobile must show an onboarding flow before the tab shell:
-  - The first onboarding step asks for a Stuff Stash instance URL.
-  - The URL must be normalized and saved in durable app-local storage so the user does not need to type it again on later launches.
-  - Durable connection profile storage must contain only non-secret profile metadata, such as the instance URL and selected tenant ID. Development tokens and future production credentials must not be written to this profile file.
-  - After the instance URL is saved, onboarding must guide the user through the OIDC SSO flow specified in `specs/identity-access/mobile-oidc-authentication.spec.md`.
-  - After the instance URL is saved, onboarding must guide the user to create a tenant if the authenticated principal has no usable tenant.
-  - After tenant creation, onboarding must guide the user to create an initial inventory if that tenant has no usable inventory.
-  - After initial inventory creation, the app must enter the regular Home/Browse tab shell backed by the newly created tenant and inventory.
+  - The first screen combines server entry and OIDC sign-in with `Connect to Stuff Stash`, `Server address`, and one `Connect and sign in` action. There is no separate SSO screen or global four-step indicator.
+  - The URL must be normalized and saved in durable app-local storage so the user does not need to type it again on later launches. Durable connection profiles contain only non-secret metadata, never credentials or tokens.
+  - After authentication, discovery skips setup when usable inventory context already exists. New tenants are presented as households: one `Set up your household` screen collects household and first-inventory names before creating either resource. An existing tenant lacking an inventory receives only inventory setup when permitted.
+  - The exact copy, combined creation/recovery behavior, full-width ghost `Sign out and start over` action, accessibility, and concise presentation contract are defined in `specs/identity-access/mobile-oidc-authentication.spec.md#onboarding-ux`.
+  - Once authentication and inventory context are ready, enter the regular Home/Browse tab shell. The HTML prototype's completion marker is not a native product screen.
 - A saved connection profile may include the selected tenant ID. Until durable selected-inventory preferences are specified, inventory selection may remain session-scoped and default to the first visible inventory for the selected tenant.
 - Settings must expose a way to revisit or reset the saved instance connection profile. Changing the profile must rebuild mobile application services instead of requiring an app reinstall.
 - Production mobile onboarding must use the OIDC flow defined in `specs/identity-access/mobile-oidc-authentication.spec.md`. The local-development auth token path may remain available only as an explicit development fallback.
@@ -66,7 +64,7 @@ This spec defines camera behavior only for attaching still photos during the Add
 - When a mounted authenticated surface receives an authentication-required
   result, mobile must clear stale secure auth state, preserve the saved instance
   URL and tenant hint, show a native session-expired dialog, and return to the
-  onboarding sign-in step. It must not leave the user on a generic `Could not
+  combined onboarding connection/sign-in screen with the server prefilled. It must not leave the user on a generic `Could not
   load` screen that requires manual app reset.
 - The first navigation shell must use the iOS and Android system tab bar through Expo Router Native Tabs.
 - React Navigation JavaScript bottom tabs are not sufficient for the first mobile shell because they do not render the iPhone-native tab bar.

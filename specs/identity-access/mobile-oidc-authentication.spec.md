@@ -58,16 +58,19 @@ production identity-provider provisioning.
   because token refresh fails, the API returns an authentication-required
   response, or the configured API authentication mode changes, mobile must clear
   stale secure session state, preserve the non-secret connection profile, and
-  return to the sign-in step. The app must surface this through a native
+  return to the combined connection/sign-in screen with the server address
+  prefilled. The app must surface this through a native
   blocking dialog with a clear `Sign in` action rather than leaving the user on a
   generic `Could not load` error.
 - User-initiated `Sign out` must clear secure authentication session state,
   transient PKCE state, session-only inventory selection, and any in-memory
   authenticated services while preserving the non-secret saved server URL and
-  tenant hint. It must return the user to the sign-in step for that server.
+  tenant hint. It must return the user to the combined connection/sign-in screen
+  with that server prefilled.
 - `Change server` is a separate operation. It must sign out, clear the durable
   non-secret connection profile including the server URL and tenant hint, and
-  return the user to the server-entry step.
+  return the user to the combined connection/sign-in screen with no saved server
+  address.
 - Neither `Sign out` nor `Change server` deletes server-side tenant, inventory,
   asset, provider-profile, audit, or identity data. Mobile confirmation copy
   must name the operation and the local state it clears; a generic `Continue`
@@ -116,21 +119,128 @@ development auth path.
 
 ## Onboarding UX
 
-Mobile onboarding must be a guided connection journey:
+The approved mobile flow combines server connection and browser sign-in on one
+screen, followed only by the setup the authenticated account actually needs.
+This replaces the separate Instance, Sign in, Tenant, and Inventory screen
+sequence. Internal application states may remain distinct; they must not force
+separate user-facing screens.
 
-1. Ask for the Stuff Stash instance URL.
-2. Validate the URL and load mobile authentication metadata.
-3. Show the configured SSO provider as the next step using provider-neutral copy.
-4. Start native sign-in.
-5. After successful sign-in, discover available tenants and inventories.
-6. Guide empty accounts through tenant and inventory creation.
-7. Enter the native tab shell only after both authentication and inventory
-   context are ready.
+### Connection and sign-in
 
-The onboarding screen must use calm product language, clear progress, safe error
-states, and one obvious primary action per step. It must not expose OAuth terms,
-raw token failures, issuer internals, or local fixture details unless developer
-diagnostics are explicitly enabled.
+- Heading: `Connect to Stuff Stash`.
+- Field label: `Server address`, with an example placeholder such as
+  `https://stash.example.com`. Examples are not runtime defaults.
+- Primary action: `Connect and sign in`.
+- The short note beside the primary action is `Your browser will open for
+  sign-in, then bring you back here.`
+- Do not add an introductory subtitle or always-visible server-address helper
+  sentence. Provide the secondary text action `Need help connecting?`, which
+  expands inline help only on request. Help explains that the app needs a running
+  Stuff Stash server and its full address, including any required port or path;
+  someone joining another person's inventory can request that server address.
+- One tap validates and normalizes the address, loads mobile authentication
+  metadata, saves non-secret connection metadata, and starts the existing native
+  authorization-code-with-PKCE browser flow. There is no intermediate SSO screen,
+  provider-explanation card, or second sign-in confirmation button.
+- Submitting a different server address must apply existing server-change
+  cleanup before authentication or discovery for the new destination. Do not
+  reuse credentials, tenant hints, or authenticated services across servers.
+- Address and connection errors remain on this screen. Browser cancellation
+  returns here with the entered address preserved and a usable retry action;
+  cancellation does not establish a session or create tenant/inventory data.
+- During an active operation, show loading feedback in the primary button and
+  prevent duplicate submissions. Ignore late results from an abandoned flow.
+- After successful authentication, discover authorized tenants and inventories.
+  A returning user with usable inventory context proceeds directly to the native
+  tab shell. Do not create new resources merely because onboarding was opened.
+
+### Household and inventory setup
+
+`Household` is the onboarding presentation of the existing tenant concept. It
+introduces no new domain entity or authorization boundary and does not change
+support for organization tenants.
+
+| Authenticated account state | Screen | Fields | Primary action |
+| --- | --- | --- | --- |
+| No usable tenant, eligible for creation under existing policy | `Set up your household` | `Household name`; `First inventory` | `Create household` |
+| Existing usable tenant with inventory-creation permission, but no inventory | `Create your first inventory` | `Inventory name` | `Create inventory` |
+| Usable inventory already exists | No setup screen | None | Enter the tab shell |
+
+- Household name starts empty, with an example such as `e.g. Maple Street
+  household`. The inventory name starts with the editable value `Home Inventory`.
+  Both creation screens omit redundant subtitles and inventory helper paragraphs.
+- `Create household` collects both names before executing tenant creation and
+  first-inventory creation through the existing application services and ports.
+  Validate both names before either write; preserve authorization, tenancy, and
+  audit history for each command. A combined screen does not imply an atomic
+  multi-request transaction or justify bypassing domain services.
+- If tenant creation succeeds but inventory creation fails, retain the created
+  tenant context and entered inventory name, explain the remaining failure, and
+  retry inventory creation without creating another tenant. Reconcile uncertain
+  write outcomes before retrying; never blindly repeat creation or silently
+  delete already-created resources. Relaunch discovery must reuse that tenant.
+- Users without usable context or permission must receive the existing safe
+  access/error state; the streamlined flow must not grant creation permission.
+- Enter the native tab shell only after authentication and usable inventory
+  context are ready. Do not introduce a standalone success/tutorial screen; the
+  prototype completion marker is a review aid, not a product screen.
+
+### Start over
+
+- Both setup screens expose `Sign out and start over` immediately below their
+  primary action. It is a full-width ghost button with centered text, no border
+  or filled resting background, and the same minimum height, corner radius, and
+  type size/weight as the primary button. Use subtle hover/pressed feedback and
+  visible keyboard focus.
+- This explicit action applies the existing change-server cleanup: clear secure
+  authentication and transient PKCE state, saved connection/tenant metadata,
+  session-only selection, authenticated services, and draft setup fields. Return
+  to connection with an empty address and restore the editable default inventory
+  name. It must invalidate pending callbacks/results from the abandoned flow.
+- It does not delete anything already created on the server. If a previous
+  partially completed setup created a tenant, subsequent discovery reuses it.
+- Ordinary Settings `Sign out` still preserves the saved server and tenant hint;
+  the onboarding start-over action is explicitly broader.
+
+### Presentation and language
+
+- Use the existing brand mark, semantic light/dark colors, and native system
+  typography. Keep the brand and heading at consistent top positions rather
+  than vertically centering a variable-height block. Use a strong heading,
+  regular-weight supporting text, and clear field labels; avoid making all text
+  heavy. Do not show a global four-step progress indicator for this branching flow.
+- At default text size, reference geometry is a 24-point horizontal inset,
+  54-point minimum primary/ghost button height, 12-point button radius, and
+  10-point gap between stacked primary and ghost actions. Actions sit near the
+  bottom, respect native safe areas, and remain reachable above the keyboard or
+  through scrolling. These are minimums, not clipping constraints: Dynamic Type,
+  small screens, long translations, and landscape may expand/reflow content.
+- Every field uses the shared mobile input primitive. Address entry disables
+  autocorrection/capitalization and uses the URL keyboard. Provide accessible
+  labels, announce validation/loading and screen changes, and preserve focus
+  when expanding inline help.
+- Keep headings, labels, example values, and actions sufficient to understand
+  each task. Omit subtitles that repeat them. Retain concise guidance only for
+  a meaningful consequence, optional help, or an actionable error.
+- Required-field errors must identify the relevant field, such as `Enter a
+  household name.` or `Enter an inventory name.`, rather than suggesting a
+  connection or sign-in failure. Keep recoverable draft values and distinguish
+  invalid addresses, connection failures, and authentication failures when the
+  application can reliably do so. Never expose raw token failures, OAuth
+  internals, or local fixture details outside explicit developer diagnostics.
+
+### Invitation scope
+
+Existing invitation parsing, browser acceptance, pending-link preservation,
+preview/explicit acceptance, identity checks, and server-binding constraints in
+`Invitation Deep Links` remain authoritative. Where invitation preview is shown,
+identify the inventory and household, use `You’re invited` and `Join inventory`,
+and omit copy that merely restates the join action. Show `Sign out and start over`
+where the user needs to leave the signed-in invitation flow; apply the cleanup
+above and clear the abandoned in-memory invitation/navigation reference.
+This UX revision does not add invitation server-prefill, arbitrary-domain native
+handoff, or trust in an invitation hostname as an API address. The prototype's
+sample invitation journey is not implementation evidence for those capabilities.
 
 ## Security Requirements
 
@@ -187,6 +297,19 @@ Local Dex must include a public mobile client for development builds.
   uses the same token provider and does not connect with an empty or stale token.
 - Onboarding tests must prove the app gates tenant/inventory onboarding behind a
   valid authenticated session and returns to sign-in after auth loss.
+- Onboarding UI/application tests must cover one-action connection/sign-in,
+  address errors, browser cancellation with address preservation, returning-user
+  discovery, both setup branches, name validation before writes, partial creation
+  and safe retry, restart discovery, start-over cleanup, duplicate-submission
+  prevention, and stale callback/result rejection. Use fakes rather than mocks.
+- Before implementing changes to authentication or creation interactions, update
+  adversarial end-to-end tests at the real boundaries for unauthenticated,
+  expired-session, wrong-role, cross-tenant, malformed-token, and escalation
+  attempts where applicable, alongside permitted-user success cases.
+- Native review must verify keyboard visibility, reachable primary/ghost actions,
+  VoiceOver/focus behavior, Dynamic Type, small-screen scrolling, light/dark
+  appearance, and returning from canceled browser sign-in. HTML prototype review
+  alone does not establish native behavior.
 - Local Dex verification must prove the API accepts an ID token with the mobile
   client audience and rejects wrong-audience tokens.
 - Local mobile OIDC verification must prove the mobile public client can obtain
