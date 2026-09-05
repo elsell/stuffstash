@@ -1,12 +1,12 @@
-import { afterEach, expect, it } from 'vitest';
-import { mount, unmount } from 'svelte';
+import { afterEach, expect, it, vi } from 'vitest';
+import { mount, unmount, tick } from 'svelte';
 import { createConversationSession } from '$lib/adapters/query/conversationSession';
 import type { ConversationSession } from '$lib/adapters/query/conversationSession';
 import type { EvaluationRun } from '$lib/domain/conversationRun';
 import type { ConversationRunRepository } from '$lib/ports/conversationRunRepository';
 import RunDetails from './RunDetails.svelte';
 let component: ReturnType<typeof mount> | undefined; let session: ConversationSession;
-afterEach(async () => { if (component) await unmount(component); component = undefined; await session?.dispose(); document.body.innerHTML = ''; });
+afterEach(async () => { if (component) await unmount(component); component = undefined; await session?.dispose(); document.body.innerHTML = ''; vi.useRealTimers(); });
 const queued: EvaluationRun = { id: 'run', state: 'queued', version: 1, workflowId: 'workflow', revisionId: 'revision',
   totalCases: 1, completedCases: 0, passedCases: 0, createdAt: '', updatedAt: '', authorId: 'owner', coverage: 'text_only',
   cases: [{ caseId: 'case', revisionId: 'case-revision', title: 'Baby clothes' }], providers: [], results: [], startedAt: null, finishedAt: null, failureCode: '' };
@@ -35,4 +35,17 @@ it('shows unrun cases as pending rather than passing', async () => {
   component = mount(RunDetails, { target: document.body, props: { session, runs: new Runs(), cases, runId: 'run', visible: false } });
   await expect.poll(() => document.body.textContent).toContain('Not run yet');
   expect(document.body.textContent).toContain('0 of 1');
+});
+
+it('backs off across failed polls rather than resetting on each request', async () => {
+  vi.useFakeTimers(); const runs = new Runs(); let reads = 0;
+  runs.get = async () => { reads++; if (reads > 1) throw new Error('Unavailable'); return structuredClone(queued); };
+  session = createConversationSession({ apiIdentity: 'api', principalId: 'owner', tenantId: 'home' }, () => {});
+  component = mount(RunDetails, { target: document.body, props: { session, runs, cases, runId: 'run', visible: true } });
+  await tick(); await vi.advanceTimersByTimeAsync(0); expect(reads).toBe(1);
+  await vi.advanceTimersByTimeAsync(2000); expect(reads).toBe(2);
+  await vi.advanceTimersByTimeAsync(3999); expect(reads).toBe(2);
+  await vi.advanceTimersByTimeAsync(1); expect(reads).toBe(3);
+  await vi.advanceTimersByTimeAsync(7999); expect(reads).toBe(3);
+  await vi.advanceTimersByTimeAsync(1); expect(reads).toBe(4);
 });
