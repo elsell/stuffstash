@@ -120,3 +120,38 @@ func TestConversationLoopModelBudgetRetainsExecutedEvidence(t *testing.T) {
 		t.Fatal("budget exhaustion discarded useful evidence")
 	}
 }
+
+func TestConversationApprovalHistoryClosesUnexecutedCalls(t *testing.T) {
+	result, err := RunConversation(context.Background(), &conversationProposalModel{}, &conversationProposalTools{}, ports.ConversationModelInput{
+		Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Move my drill."}},
+	}, ConversationLimits{ModelCalls: 4, ToolCalls: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	answered := map[string]bool{}
+	for _, message := range result.Messages {
+		for _, tool := range message.ToolResults {
+			answered[tool.CallID] = true
+		}
+	}
+	if !answered["proposal-1"] || !answered["later-read"] {
+		t.Fatal("approval left unresolved native tool calls in history")
+	}
+}
+
+type conversationCancellingTools struct{ cancel context.CancelFunc }
+
+func (e conversationCancellingTools) ExecuteConversationTool(_ context.Context, call ports.AgentToolCall) (ports.ConversationToolOutcome, error) {
+	e.cancel()
+	return ports.ConversationToolOutcome{Result: ports.AgentToolResult{CallID: call.ID, Name: call.Name, Content: "Proposed, not executed."}, ApprovalPlanID: "review-plan"}, nil
+}
+func TestConversationCancellationDuringProposalPreservesOutcomeWithoutSuccess(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	result, err := RunConversation(ctx, &conversationProposalModel{}, conversationCancellingTools{cancel: cancel}, ports.ConversationModelInput{
+		Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Move my drill."}},
+	}, ConversationLimits{ModelCalls: 4, ToolCalls: 4})
+	if err != context.Canceled || result.ApprovalPlanID != "review-plan" {
+		t.Fatalf("lost cancellation or durable proposal: %+v %v", result, err)
+	}
+}
