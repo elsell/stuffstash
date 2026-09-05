@@ -40,7 +40,7 @@ func newWorkflowHTTPTestApp(t *testing.T) app.App {
 	if err := authorizer.GrantInventoryViewer(ctx, principal("viewer"), tenant.ID("home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatal(err)
 	}
-	return app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, ProviderProfiles: store, ConversationWorkflows: repository, ConversationWorkflowLimits: agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}})
+	return app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, ProviderProfiles: store, ConversationWorkflows: repository, EvaluationCases: repository, Audit: repository, ConversationWorkflowLimits: agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}})
 }
 
 func workflowDraftRequest() map[string]any {

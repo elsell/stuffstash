@@ -82,6 +82,7 @@ type App struct {
 	customFieldService           customfieldapp.Service
 	providerProfileService       agentmodelapp.Service
 	conversationWorkflowService  agentmodelapp.ConversationWorkflowService
+	evaluationCaseService        agentmodelapp.EvaluationCaseService
 	speechToText                 ports.SpeechToTextProvider
 	languageInference            ports.LanguageInferenceProvider
 	voiceResponseGenerator       ports.VoiceResponseGenerator
@@ -123,6 +124,7 @@ type Dependencies struct {
 	Audit                            ports.AuditRepository
 	Outbox                           ports.AuthorizationOutbox
 	ConversationWorkflows            ports.ConversationWorkflowRepository
+	EvaluationCases                  ports.EvaluationCaseRepository
 	ConversationWorkflowLimits       agentmodel.WorkflowLimits
 	ProviderProfiles                 ports.ProviderProfileRepository
 	ProviderProfileUnitOfWork        ports.ProviderProfileUnitOfWork
@@ -304,6 +306,7 @@ func New(deps Dependencies) App {
 		Authorizer: app.authorizer, Repository: deps.ConversationWorkflows, Profiles: deps.ProviderProfiles,
 		IDs: app.ids, Clock: app.clock, Observer: app.observer, Limits: deps.ConversationWorkflowLimits,
 	})
+	app.evaluationCaseService = agentmodelapp.NewEvaluationCaseService(agentmodelapp.EvaluationCaseDependencies{Authorizer: app.authorizer, Repository: deps.EvaluationCases, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
 	app.providerProfileService = agentmodelapp.New(agentmodelapp.Dependencies{
 		Observer:                  app.observer,
 		Authorizer:                app.authorizer,

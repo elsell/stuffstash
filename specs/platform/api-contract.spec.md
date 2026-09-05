@@ -207,6 +207,7 @@ Error responses must use a consistent envelope:
 - API contract tests must verify response envelopes, error envelopes, pagination metadata, and status codes.
 - OpenAPI generation must be part of the normal build or verification workflow once REST domain endpoints exist.
 - Generated OpenAPI output must be checked for drift in CI or pre-commit once the generation workflow exists.
+- CI must regenerate OpenAPI from the current Go route registry and regenerate TypeScript from that output before checking both committed artifacts for drift. Comparing TypeScript only with a previously saved OpenAPI file is insufficient. Successful generation publishes both files as a short-lived CI artifact, including when drift causes the check to fail, so contributors on build-constrained hosts can retrieve the generated contract without building locally.
 - Security-focused end-to-end tests must cover every authentication and authorization boundary exposed by the REST adapter.
 - Every generated OpenAPI operation must be covered by representative scenario tests, not only isolated endpoint tests.
 - Representative scenario coverage has two required dimensions:

@@ -106,6 +106,25 @@ jobs:
         env:
           STUFF_STASH_STRUCTURAL_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || github.event_name == 'workflow_dispatch' && 'origin/main' || '' }}
 
+      - name: Generate current API contract
+        id: contract
+        if: always()
+        run: make api-client-generate
+
+      - name: Upload generated API contract
+        if: ${{ always() && steps.contract.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: current-api-contract
+          path: |
+            packages/api-client/openapi.json
+            packages/api-client/src/generated/schema.d.ts
+          retention-days: 7
+
+      - name: Check current API contract drift
+        if: ${{ always() && steps.contract.outcome == 'success' }}
+        run: git diff --exit-code -- packages/api-client/openapi.json packages/api-client/src/generated/schema.d.ts
+
   selfhost-runtime:
     name: Self-host runtime
     runs-on: ubuntu-24.04

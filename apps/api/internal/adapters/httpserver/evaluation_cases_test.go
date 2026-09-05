@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http"
+	"reflect"
 	"testing"
 )
 
@@ -32,6 +33,52 @@ func TestEvaluationCaseRoutesRequireTenantConfiguration(t *testing.T) {
 					t.Fatalf("expected %d got %d: %s", scenario.status, response.Code, response.Body.String())
 				}
 			})
+		}
+	}
+}
+
+func TestEvaluationCaseHTTPPreservesCompleteDefinition(t *testing.T) {
+	server := NewServer(":0", newWorkflowHTTPTestApp(t))
+	body := evaluationCaseRequest()
+	definition := body["definition"].(map[string]any)
+	definition["utterance"] = "Lend the baby clothes to Sam"
+	expectations := definition["expectations"].(map[string]any)
+	expectations["kind"] = "proposal"
+	expectations["proposals"] = []map[string]string{{"operation": "checkout", "targetId": "clothes", "details": "For Sam"}}
+	expectations["forbiddenOperations"] = []string{"archive"}
+	created := performRequest(server, http.MethodPost, "/tenants/home/conversation-evaluation-cases", "Bearer dev:owner", body)
+	if created.Code != http.StatusCreated {
+		t.Fatalf("create rich case: %d %s", created.Code, created.Body.String())
+	}
+	var saved struct {
+		Data struct {
+			ID         string         `json:"id"`
+			CaseID     string         `json:"caseId"`
+			Definition map[string]any `json:"definition"`
+		}
+	}
+	decodeBody(t, created, &saved)
+	for _, suffix := range []string{"", "/revisions/" + saved.Data.ID} {
+		read := performRequest(server, http.MethodGet, "/tenants/home/conversation-evaluation-cases/"+saved.Data.CaseID+suffix, "Bearer dev:owner", nil)
+		if read.Code != http.StatusOK {
+			t.Fatalf("read rich case: %d %s", read.Code, read.Body.String())
+		}
+		var value struct {
+			Data struct {
+				Definition map[string]any `json:"definition"`
+			}
+		}
+		decodeBody(t, read, &value)
+		if !reflect.DeepEqual(saved.Data.Definition, value.Data.Definition) {
+			t.Fatalf("definition changed in storage: %+v", value.Data.Definition)
+		}
+		assets := value.Data.Definition["assets"].([]any)
+		clothes := assets[1].(map[string]any)
+		checks := value.Data.Definition["expectations"].(map[string]any)
+		location := checks["locations"].([]any)[0].(map[string]any)
+		proposal := checks["proposals"].([]any)[0].(map[string]any)
+		if clothes["parentId"] != "box" || location["assetId"] != "clothes" || location["ancestorId"] != "box" || proposal["operation"] != "checkout" || proposal["targetId"] != "clothes" || proposal["details"] != "For Sam" {
+			t.Fatalf("semantic fields lost: %+v", value.Data.Definition)
 		}
 	}
 }

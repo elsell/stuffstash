@@ -118,6 +118,8 @@ const (
 	ActionConversationWorkflowRevisionCreated       Action = "conversation_workflow.revision_created"
 	ActionConversationWorkflowActivated             Action = "conversation_workflow.activated"
 	ActionConversationEvaluationCaseRevisionCreated Action = "conversation_evaluation_case.revision_created"
+	ActionConversationEvaluationCaseViewed          Action = "conversation_evaluation_case.viewed"
+	ActionConversationEvaluationCaseListed          Action = "conversation_evaluation_case.listed"
 	ActionVoiceProviderConfigurationUpdated         Action = "voice_provider_configuration.updated"
 	ActionImportJobPreviewed                        Action = "import_job.previewed"
 	ActionImportJobStarted                          Action = "import_job.started"
@@ -211,6 +213,8 @@ func NewAction(value string) (Action, bool) {
 		ActionConversationWorkflowRevisionCreated,
 		ActionConversationWorkflowActivated,
 		ActionConversationEvaluationCaseRevisionCreated,
+		ActionConversationEvaluationCaseViewed,
+		ActionConversationEvaluationCaseListed,
 		ActionImportJobPreviewed,
 		ActionImportJobStarted,
 		ActionImportJobCompleted,
