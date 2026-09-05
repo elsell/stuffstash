@@ -13,7 +13,7 @@
   // svelte-ignore state_referenced_locally -- the parent keys this editor by immutable case revision.
   let draft = $state<CaseDefinition>(structuredClone($state.snapshot(initial)));
   let issues = $state<CaseDraftIssue[]>([]); let message = $state(''); let saving = $state(false); let conflict = $state(false);
-  let form: HTMLFormElement; let summary: HTMLDivElement | undefined; let alive = true;
+  let form: HTMLFormElement; let summary = $state<HTMLDivElement>(); let alive = true;
   onDestroy(() => { alive = false; });
   const labels: Record<string, string> = { 'case-title': 'Case title', 'case-utterance': 'Request', 'case-fixtures-title': 'Test inventory', 'case-expectations-title': 'Expected results', 'expected-outcome': 'Expected outcome' };
   function fieldLabel(field: string) {

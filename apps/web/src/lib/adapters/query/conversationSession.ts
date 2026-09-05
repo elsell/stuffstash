@@ -15,7 +15,7 @@ export function createConversationSession(scope: ConversationScope, onAccessLost
     get active() { return active; },
     async mutate<T>(operation: () => Promise<T>, reconcile: (result: T) => void): Promise<T> {
       if (!active) throw new DOMException('Conversation session is no longer active.', 'AbortError');
-      const mutation = client.getMutationCache().build<T, Error, void>(client, {
+      const mutation = client.getMutationCache().build<T, Error, void, unknown>(client, {
         mutationFn: async () => {
           if (!active) throw new DOMException('Conversation session is no longer active.', 'AbortError');
           return operation();

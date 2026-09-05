@@ -20,7 +20,11 @@
     const workflowId = run.workflowId;
     const input = { revisionId: run.revisionId, runId: run.id, cases: run.cases.map(pin => ({ caseId: pin.caseId, revisionId: pin.revisionId })), expected: selection.data };
     busy = true; message = '';
-    try { await session.mutate(() => workflows.activate(session.scope.tenantId, workflowId, input), value => {
+    try { await session.mutate(async () => {
+      const value = await workflows.activate(session.scope.tenantId, workflowId, input);
+      await session.client.cancelQueries({ queryKey: key('selection'), exact: true });
+      return value;
+    }, value => {
       session.client.setQueryData(key('selection'), { workflowId: value.workflowId, revisionId: value.id });
       void session.client.invalidateQueries({ queryKey: key('workflows') }); message = 'Workflow activated.';
     }); } catch (error) { if (session.active) {
