@@ -6,6 +6,12 @@ const base: CaseDefinition = { title: ' Baby clothes ', utterance: ' Where are m
   { id: 'clothes', title: '3–6 months', kind: 'item', parentId: 'loft', description: '', tagNames: [' baby ', '', 'Baby', 'clothes, winter'] }
 ], expectations: { kind: 'answer', referencedAssets: ['clothes'], locations: [{ assetId: 'clothes', ancestorId: 'loft' }], proposals: [], forbiddenOperations: ['create'] } };
 describe('case draft preparation', () => {
+  it('points to duplicate location expectations instead of silently deleting them', () => {
+    const draft = structuredClone(base); draft.expectations.locations.push({ ...draft.expectations.locations[0] });
+    const result = prepareCaseDraft(draft);
+    expect(result.issues.map(issue => issue.field)).toContain('location-parent-1');
+    expect(result.definition.expectations.locations).toHaveLength(2);
+  });
   it('normalizes a valid tagged location case without mutating its draft', () => {
     const result = prepareCaseDraft(base);
     expect(result.issues).toEqual([]); expect(result.definition.title).toBe('Baby clothes');
