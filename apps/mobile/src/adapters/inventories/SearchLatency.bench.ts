@@ -10,7 +10,7 @@ const waitForTransport = () => new Promise<void>((resolve) => setTimeout(resolve
 
 class SearchLatencyTransport extends FakeInventoryApiClient {
   searchReads = 0;
-  constructor(depth: number) {
+  constructor(depth: number, private readonly includePath: boolean) {
     super();
     const template = this.assets[1]!;
     this.assets = Array.from({ length: depth + 1 }, (_, index) => ({
@@ -28,6 +28,7 @@ class SearchLatencyTransport extends FakeInventoryApiClient {
     return {
       items: this.assets.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())).map((asset) => ({
         type: 'asset', tenantId, inventory: this.inventory, asset,
+        ancestorPath: this.includePath ? this.assets.slice(1).reverse().map(({ id, title }) => ({ id, title })) : undefined,
         matches: [{ field: 'title', value: asset.title }]
       })),
       pagination: { limit: 20, hasMore: false, nextCursor: null }
@@ -41,10 +42,11 @@ class SearchLatencyTransport extends FakeInventoryApiClient {
 }
 
 describe('Warm-directory search hydration, no TanStack cache, 50 ms per search/ancestor read', () => {
+  for (const includePath of [false, true]) {
   for (const depth of [0, 1, 4]) {
-    const client = new SearchLatencyTransport(depth);
+    const client = new SearchLatencyTransport(depth, includePath);
     const query = new SearchAssetsQuery(new ApiInventorySummaryRepository(client, 'tenant-home'));
-    bench(`one result, ancestry depth ${depth}`, async () => {
+    bench(`one result, ancestry depth ${depth}, ${includePath ? "API path" : "legacy fallback"}`, async () => {
       client.searchReads = 0;
       client.getAssetRequests.length = 0;
       const result = await query.execute({
@@ -59,9 +61,10 @@ describe('Warm-directory search hydration, no TanStack cache, 50 ms per search/a
       if (JSON.stringify(trail) !== JSON.stringify(expectedTrail)) {
         throw new Error('Search benchmark must preserve the complete ancestor path.');
       }
-      if (client.searchReads !== 1 || client.getAssetRequests.length > depth) {
+      if (client.searchReads !== 1 || client.getAssetRequests.length > (includePath ? 0 : depth)) {
         throw new Error('Search hydration exceeded its baseline request budget.');
       }
     }, { iterations: 5, time: 300, warmupIterations: 1, warmupTime: 0 });
+  }
   }
 });

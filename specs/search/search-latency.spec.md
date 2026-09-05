@@ -77,3 +77,17 @@ rewarding broken behavior. The reported latency includes those small checks. Thi
 excludes HTTP, authorization, audit writes, and production network latency. Row and
 query counters observe GORM Query callbacks; they do not count SQL work internal
 to PostgreSQL or any future Raw/Row execution path.
+
+## Mobile path integration evidence
+
+The generated contract came from CI run 33943961458. With the API path consumed
+by the existing TanStack-backed search query, the controlled transport benchmark
+measured 52.11–52.34 ms at depths 0, 1, and 4 with one search request and zero
+ancestor requests. The simultaneously measured legacy fallback took 52.60,
+104.33, and 259.76 ms respectively. Full path correctness and request budgets
+are asserted. This excludes backend path resolution and remains synthetic.
+
+Mobile source validation passed 161 files / 1,058 tests, plus TypeScript; the API
+client suite passed all 34 tests. The preceding API commit passed required CI
+checks, including its breadcrumb security tests. Independent-chain application
+benchmarking and final backend measurements remain required.

@@ -1067,6 +1067,7 @@ describe('StuffStashClient', () => {
                   checkedOutByPrincipal: { id: 'user-one', email: 'user-one@example.test' }
                 }
               },
+              ancestorPath: [{ id: 'drawer-one', title: 'Drawer' }],
               matches: [{ field: 'title', value: 'Passport' }]
             }
           ],
@@ -1079,6 +1080,7 @@ describe('StuffStashClient', () => {
       client.searchAssets('tenant-one', 'Passport', { limit: 5, inventoryId: 'inventory-one', lifecycleState: 'archived', mode: 'exact' })
     ).resolves.toMatchObject({
       items: [{
+        ancestorPath: [{ id: 'drawer-one', title: 'Drawer' }],
         asset: {
           id: 'asset-one',
           lifecycleState: 'archived',
