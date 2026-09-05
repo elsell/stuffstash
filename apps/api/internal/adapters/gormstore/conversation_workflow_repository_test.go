@@ -41,11 +41,31 @@ func verifyConversationWorkflowRepository(t *testing.T, ctx context.Context, sto
 	if err := store.AppendWorkflowRevision(ctx, second, 1, auditRecord(t, "workflow-audit-two", home, "", audit.ActionConversationWorkflowRevisionCreated)); err != nil {
 		t.Fatal(err)
 	}
+
+	if err := store.AppendWorkflowRevision(ctx, persistedWorkflowRevision(t, string(home), "revision-stale-two", 2), 1, auditRecord(t, "workflow-real-stale", home, "", audit.ActionConversationWorkflowRevisionCreated)); !errors.Is(err, ports.ErrWorkflowConflict) {
+		t.Fatalf("database head CAS did not conflict: %v", err)
+	}
+	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-other", "revision-one", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-wrong-target", home, "", audit.ActionConversationWorkflowActivated)); !errors.Is(err, ports.ErrWorkflowNotFound) {
+		t.Fatalf("cross-workflow activation: %v", err)
+	}
+	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-one", "revision-one", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-wrong-audit", other, "", audit.ActionConversationWorkflowActivated)); err == nil {
+		t.Fatal("cross-tenant activation audit accepted")
+	}
 	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-one", "revision-one", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-active-one", home, "", audit.ActionConversationWorkflowActivated)); err != nil {
 		t.Fatal(err)
 	}
 	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-one", "revision-two", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-active-stale", home, "", audit.ActionConversationWorkflowActivated)); !errors.Is(err, ports.ErrWorkflowConflict) {
 		t.Fatalf("stale activation must conflict: %v", err)
+	}
+
+	if err := store.ActivateWorkflowRevision(ctx, other, "workflow-one", "revision-one", "", first.Snapshot().CreatedAt, auditRecord(t, "workflow-cross-active", other, "", audit.ActionConversationWorkflowActivated)); !errors.Is(err, ports.ErrWorkflowNotFound) {
+		t.Fatalf("cross-tenant activation: %v", err)
+	}
+	if err := store.ActivateWorkflowRevision(ctx, home, "workflow-one", "revision-two", "revision-one", first.Snapshot().CreatedAt, auditRecord(t, "workflow-active-one", home, "", audit.ActionConversationWorkflowActivated)); err == nil {
+		t.Fatal("duplicate activation audit accepted")
+	}
+	if err := store.AppendWorkflowRevision(ctx, persistedWorkflowRevision(t, string(home), "revision-cross-audit", 3), 2, auditRecord(t, "workflow-cross-audit", other, "", audit.ActionConversationWorkflowRevisionCreated)); err == nil {
+		t.Fatal("cross-tenant audit accepted")
 	}
 	head, found, err := store.WorkflowHead(ctx, home, "workflow-one")
 	if err != nil || !found || head.LatestRevision != 2 || head.ActiveRevisionID != "revision-one" {
