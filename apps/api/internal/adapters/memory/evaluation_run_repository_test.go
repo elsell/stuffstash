@@ -15,4 +15,5 @@ func TestEvaluationRunRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 	evaluationrun.Verify(t, store)
+	evaluationrun.VerifyConcurrentClaims(t, store)
 }

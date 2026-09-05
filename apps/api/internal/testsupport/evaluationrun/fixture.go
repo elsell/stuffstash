@@ -30,6 +30,17 @@ func Run(t *testing.T, id string) model.EvaluationRun {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if id == "two" {
+			input := definition.Settings()
+			input.Utterance = "Lend the baby clothes to Sam"
+			input.Expectations.Kind = model.EvaluationOutcomeProposal
+			input.Expectations.Proposals = []model.EvaluationProposal{{Operation: model.OperationCheckout, TargetID: "clothes", Details: "For Sam"}}
+			input.Expectations.ForbiddenOperations = []model.Operation{model.OperationArchive}
+			definition, err = model.NewEvaluationCaseDefinition(input)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
 		revision, err := model.NewEvaluationCaseRevision(model.EvaluationCaseRevisionInput{ID: model.EvaluationCaseRevisionID(id + "-revision"), CaseID: model.EvaluationCaseID(id), TenantID: TenantID, AuthorID: "owner", Number: 1, CreatedAt: Now, Definition: definition})
 		if err != nil {
 			t.Fatal(err)

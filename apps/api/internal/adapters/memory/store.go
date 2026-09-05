@@ -16,6 +16,7 @@ import (
 )
 
 type Store struct {
+	evaluationRuns          map[evaluationRunKey]agentmodel.EvaluationRun
 	evaluationCaseHeads     map[evaluationCaseKey]ports.EvaluationCaseHeadRecord
 	evaluationCaseRevisions map[evaluationCaseRevisionKey]agentmodel.EvaluationCaseRevision
 	workflowSelections      map[tenant.ID]ports.WorkflowSelectionReference

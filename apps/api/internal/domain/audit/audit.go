@@ -120,6 +120,9 @@ const (
 	ActionConversationEvaluationCaseRevisionCreated Action = "conversation_evaluation_case.revision_created"
 	ActionConversationEvaluationCaseViewed          Action = "conversation_evaluation_case.viewed"
 	ActionConversationEvaluationCaseListed          Action = "conversation_evaluation_case.listed"
+	ActionConversationEvaluationRunCreated          Action = "conversation_evaluation_run.created"
+	ActionConversationEvaluationRunProgressed       Action = "conversation_evaluation_run.progressed"
+	ActionConversationEvaluationRunCancelled        Action = "conversation_evaluation_run.cancelled"
 	ActionVoiceProviderConfigurationUpdated         Action = "voice_provider_configuration.updated"
 	ActionImportJobPreviewed                        Action = "import_job.previewed"
 	ActionImportJobStarted                          Action = "import_job.started"
@@ -215,6 +218,9 @@ func NewAction(value string) (Action, bool) {
 		ActionConversationEvaluationCaseRevisionCreated,
 		ActionConversationEvaluationCaseViewed,
 		ActionConversationEvaluationCaseListed,
+		ActionConversationEvaluationRunCreated,
+		ActionConversationEvaluationRunProgressed,
+		ActionConversationEvaluationRunCancelled,
 		ActionImportJobPreviewed,
 		ActionImportJobStarted,
 		ActionImportJobCompleted,

@@ -108,3 +108,59 @@ func Verify(t *testing.T, repository ports.EvaluationRunRepository) {
 		}
 	}
 }
+
+func VerifyConcurrentClaims(t *testing.T, repository ports.EvaluationRunRepository) {
+	t.Helper()
+	ctx := context.Background()
+	run := Run(t, "concurrent")
+	if err := repository.SaveEvaluationRun(ctx, run, 0, Record(t, "concurrent-created", "concurrent", audit.ActionConversationEvaluationRunCreated)); err != nil {
+		t.Fatal(err)
+	}
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	for _, token := range []string{"worker-a", "worker-b"} {
+		claim, err := run.Claim(token, Now, time.Minute)
+		if err != nil {
+			t.Fatal(err)
+		}
+		record := Record(t, token, "concurrent", audit.ActionConversationEvaluationRunProgressed)
+		go func() { <-start; results <- repository.SaveEvaluationRun(ctx, claim, 1, record) }()
+	}
+	close(start)
+	wins, conflicts := 0, 0
+	for range 2 {
+		err := <-results
+		if err == nil {
+			wins++
+		} else if errors.Is(err, ports.ErrEvaluationRunConflict) {
+			conflicts++
+		} else {
+			t.Fatal(err)
+		}
+	}
+	if wins != 1 || conflicts != 1 {
+		t.Fatalf("claims won=%d conflicts=%d", wins, conflicts)
+	}
+	ready, err := repository.RunnableEvaluationRuns(ctx, Now, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ref := range ready {
+		if ref.ID == "concurrent" {
+			t.Fatal("live lease discoverable")
+		}
+	}
+	ready, err = repository.RunnableEvaluationRuns(ctx, Now.Add(time.Minute), 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, ref := range ready {
+		if ref.ID == "concurrent" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("expired lease not recoverable")
+	}
+}
