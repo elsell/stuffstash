@@ -9,13 +9,13 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import CaseEditor from './CaseEditor.svelte';
   import CaseSummary from './CaseSummary.svelte';
-  let { scope, cases, onEditingChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; cases: ConversationCaseRepository; onEditingChange?: (editing: boolean) => void; onAccessLost?: () => void } = $props();
+  let { scope, cases, onNavigationBlockedChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; cases: ConversationCaseRepository; onNavigationBlockedChange?: (blocked: boolean) => void; onAccessLost?: () => void } = $props();
   let denied = $state(false); let editor = $state<{ revision: CaseRevision | null; definition: CaseDefinition; key: string } | null>(null);
   let comparison = $state<CaseRevision | null>(null); let busy = $state(false); let message = $state(''); let cursor = $state<string | undefined>();
   // svelte-ignore state_referenced_locally -- the parent keys this component by authenticated tenant scope.
   const session = createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
   onDestroy(() => { void session.dispose(); });
-  $effect(() => { onEditingChange(editor !== null); });
+  $effect(() => { onNavigationBlockedChange(editor !== null || busy); });
   const key = (...parts: string[]) => conversationKey(session.scope, ...parts);
   const heads = createQuery(() => ({ queryKey: key('cases', cursor ?? ''), enabled: !denied,
     queryFn: ({ signal }) => cases.list(session.scope.tenantId, { limit: 20, cursor }, signal) }), () => session.client);
@@ -49,7 +49,7 @@
 {:else}<section class="case-workspace" aria-labelledby="saved-cases-title"><header><h2 id="saved-cases-title">Test cases</h2><p>Check realistic requests against a controlled test inventory.</p></header>
   {#if editor}
     <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>Close editor and discard unsaved edits</Button.Root>
-    {#key editor.key}<CaseEditor initial={editor.definition} onSave={save} onReload={editor.revision ? () => { void load(editor!.revision!.caseId, true); } : undefined} />{/key}
+    {#key editor.key}<CaseEditor disabled={busy} initial={editor.definition} onSave={save} onReload={editor.revision ? () => { void load(editor!.revision!.caseId, true); } : undefined} />{/key}
     {#if comparison}<aside aria-label="Latest saved case"><h3>Latest saved revision {comparison.number}</h3><CaseSummary value={comparison.definition} />
       <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>Replace my edits with this revision</Button.Root></aside>{/if}
   {:else}<Button.Root disabled={busy} onclick={startNew}>New test case</Button.Root>

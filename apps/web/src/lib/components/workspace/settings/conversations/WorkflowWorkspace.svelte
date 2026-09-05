@@ -9,12 +9,12 @@
   import type { ConversationProviderRepository } from '$lib/ports/conversationProviderRepository';
   import * as Button from '$lib/components/ui/button/index.js';
   import WorkflowEditor from './WorkflowEditor.svelte';
-  let { scope, workflows, providers, onEditingChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; workflows: ConversationWorkflowRepository; providers: ConversationProviderRepository; onEditingChange?: (editing: boolean) => void; onAccessLost?: () => void } = $props();
+  let { scope, workflows, providers, onNavigationBlockedChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; workflows: ConversationWorkflowRepository; providers: ConversationProviderRepository; onNavigationBlockedChange?: (blocked: boolean) => void; onAccessLost?: () => void } = $props();
   let denied = $state(false);
   // svelte-ignore state_referenced_locally -- the parent keys this workspace by authenticated tenant scope.
   const session = createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
   onDestroy(() => { void session.dispose(); });
-  $effect(() => { onEditingChange(editor !== null); });
+  $effect(() => { onNavigationBlockedChange(editor !== null || busy); });
   let cursor = $state<string | undefined>();
   let editor = $state<{ revision: WorkflowRevision | null; definition: WorkflowDefinition; key: string } | null>(null);
   let comparison = $state<WorkflowRevision | null>(null);
@@ -76,7 +76,7 @@
       {#if models.isPending}<p role="status">Loading configured models…</p>
       {:else if models.isError}<p role="alert">Could not load configured models. <Button.Root onclick={() => models.refetch()}>Retry models</Button.Root></p>
       {:else}
-        {#key editor.key}<WorkflowEditor initial={editor.definition} providers={models.data ?? []} onSave={save}
+        {#key editor.key}<WorkflowEditor disabled={busy} initial={editor.definition} providers={models.data ?? []} onSave={save}
           onReload={editor.revision ? () => { void load(editor!.revision!.workflowId, true); } : undefined} />{/key}
       {/if}
       {#if comparison}

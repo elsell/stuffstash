@@ -9,7 +9,7 @@
   import * as Label from '$lib/components/ui/label/index.js';
   import CaseFixtures from './CaseFixtures.svelte';
   import CaseExpectations from './CaseExpectations.svelte';
-  let { initial, onSave, onReload }: { initial: CaseDefinition; onSave: (value: CaseDefinition) => Promise<void>; onReload?: () => void } = $props();
+  let { initial, onSave, onReload, disabled = false }: { initial: CaseDefinition; disabled?: boolean; onSave: (value: CaseDefinition) => Promise<void>; onReload?: () => void } = $props();
   // svelte-ignore state_referenced_locally -- the parent keys this editor by immutable case revision.
   let draft = $state<CaseDefinition>(structuredClone($state.snapshot(initial)));
   let issues = $state<CaseDraftIssue[]>([]); let message = $state(''); let saving = $state(false); let conflict = $state(false);
@@ -31,7 +31,7 @@
   }
   async function showIssues() { await tick(); if (alive) summary?.focus(); }
   async function save(event: SubmitEvent) {
-    event.preventDefault(); if (saving) return;
+    event.preventDefault(); if (saving || disabled) return;
     const prepared = prepareCaseDraft($state.snapshot(draft));
     issues = prepared.issues; message = ''; conflict = false;
     if (issues.length) { await showIssues(); return; }
@@ -56,12 +56,12 @@
   {#if issues.length}<div bind:this={summary} role="alert" tabindex="-1" class="validation-summary"><h3>Check these details</h3><ul>
     {#each issues as issue}<li><a href={`#${encodeURIComponent(issue.field)}`} onclick={event => focusField(event, issue.field)}>{fieldLabel(issue.field)}: {issue.message}</a></li>{/each}
   </ul></div>{/if}
-  <Label.Root class="grid gap-2">Case title<Input.Root id="case-title" name="case-title" bind:value={draft.title} disabled={saving} required aria-invalid={issues.some(issue => issue.field === 'case-title')} /></Label.Root>
-  <Label.Root class="grid gap-2">What the user says<Textarea.Root id="case-utterance" name="case-utterance" bind:value={draft.utterance} disabled={saving} required rows={3} aria-invalid={issues.some(issue => issue.field === 'case-utterance')} /></Label.Root>
-  <CaseFixtures value={draft} disabled={saving} onChange={value => { draft = value; }} />
-  <CaseExpectations value={draft} disabled={saving} onChange={value => { draft = value; }} />
-  <div class="actions"><Button.Root type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save test case'}</Button.Root>
-    {#if conflict && onReload}<Button.Root type="button" variant="outline" onclick={onReload}>Load latest to compare</Button.Root>{/if}
+  <Label.Root class="grid gap-2">Case title<Input.Root id="case-title" name="case-title" bind:value={draft.title} disabled={saving || disabled} required aria-invalid={issues.some(issue => issue.field === 'case-title')} /></Label.Root>
+  <Label.Root class="grid gap-2">What the user says<Textarea.Root id="case-utterance" name="case-utterance" bind:value={draft.utterance} disabled={saving || disabled} required rows={3} aria-invalid={issues.some(issue => issue.field === 'case-utterance')} /></Label.Root>
+  <CaseFixtures value={draft} disabled={saving || disabled} onChange={value => { draft = value; }} />
+  <CaseExpectations value={draft} disabled={saving || disabled} onChange={value => { draft = value; }} />
+  <div class="actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save test case'}</Button.Root>
+    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
   </div>
   <p role="status" aria-live="polite">{message}</p>
 </form>

@@ -10,8 +10,9 @@
   import type { ConversationModelChoice } from '$lib/domain/conversationProvider';
   import WorkflowSelect from './WorkflowSelect.svelte';
 
-  let { initial, providers, onSave, onReload }: {
+  let { initial, providers, onSave, onReload, disabled = false }: {
     initial: WorkflowDefinition;
+    disabled?: boolean;
     providers: ConversationModelChoice[];
     onSave: (definition: WorkflowDefinition) => Promise<void>;
     onReload?: () => void;
@@ -33,7 +34,7 @@
   ] as const;
   async function save(event: SubmitEvent) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || disabled) return;
     saving = true; message = ''; conflict = false; invalid = false;
     try {
       await onSave($state.snapshot(draft));
@@ -55,12 +56,12 @@
 
 <form class="conversation-editor" onsubmit={save}>
   <header><h2>Workflow settings</h2><p>Choose how your configured models understand requests and find answers. Saving creates a draft.</p></header>
-  <Label.Root class="grid gap-2 text-sm">Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving} /></Label.Root>
+  <Label.Root class="grid gap-2 text-sm">Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
   {#each draft.steps as step, index (step.kind)}
-    <fieldset disabled={saving}>
+    <fieldset disabled={saving || disabled}>
       <legend>{index + 1}. {labels[step.kind]}</legend>
       <WorkflowSelect id={`provider-${step.kind}`} label="Model profile" value={step.providerProfileId ?? ''}
-        disabled={saving || (step.kind === 'respond' && draft.response === 'grounded')}
+        disabled={saving || disabled || (step.kind === 'respond' && draft.response === 'grounded')}
         options={[{ value: '', label: 'Tenant default model' }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
           ...(step.providerProfileId && !providers.some(provider => provider.id === step.providerProfileId) ? [{ value: step.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
         onChange={value => { step.providerProfileId = value || null; }} />
@@ -70,17 +71,17 @@
     </fieldset>
   {/each}
   <details><summary>Advanced: retrieval, response and limits</summary>
-    <WorkflowSelect id="retrieval" label="Search strategy" value={draft.retrieval} disabled={saving}
+    <WorkflowSelect id="retrieval" label="Search strategy" value={draft.retrieval} disabled={saving || disabled}
       options={[{ value: 'precise_first', label: 'Precise matches first' }, { value: 'expanded', label: 'Broader discovery' }]}
       onChange={value => { if (value === 'precise_first' || value === 'expanded') draft.retrieval = value; }} />
-    <WorkflowSelect id="response" label="Answer style" value={draft.response} disabled={saving}
+    <WorkflowSelect id="response" label="Answer style" value={draft.response} disabled={saving || disabled}
       options={[{ value: 'generated_with_grounded_fallback', label: 'Model answer with grounded recovery' }, { value: 'grounded', label: 'Grounded facts' }]}
       onChange={value => { if (value === 'generated_with_grounded_fallback' || value === 'grounded') draft.response = value; }} />
-    <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
+    <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving || disabled} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
     <p class="help">Limits are shared across the conversation and must fit your server’s configured maximums.</p>
   </details>
-  <div class="editor-actions"><Button.Root type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save draft'}</Button.Root>
-    {#if conflict && onReload}<Button.Root type="button" variant="outline" onclick={onReload}>Load latest to compare</Button.Root>{/if}
+  <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save draft'}</Button.Root>
+    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
   </div>
   <p bind:this={errorSummary} tabindex="-1" role={invalid ? "alert" : "status"} aria-live="polite">{message}</p>
 </form>
