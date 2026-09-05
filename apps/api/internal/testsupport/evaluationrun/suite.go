@@ -12,13 +12,20 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func Verify(t *testing.T, repository ports.EvaluationRunRepository) {
+func Verify(t *testing.T, repository interface {
+	ports.EvaluationRunRepository
+	ports.AuditRepository
+}) {
 	t.Helper()
 	ctx := context.Background()
 	run := Run(t, "primary")
 	firstAudit := Record(t, "run-created", "primary", audit.ActionConversationEvaluationRunCreated)
 	if err := repository.SaveEvaluationRun(ctx, run, 0, firstAudit); err != nil {
 		t.Fatal(err)
+	}
+	records, auditErr := repository.ListTenantAuditRecords(ctx, TenantID, ports.AuditRecordPageRequest{Limit: 100})
+	if auditErr != nil || len(records) != 1 || records[0].TargetType != "conversation_evaluation_run" || records[0].TargetID != "primary" {
+		t.Fatalf("run audit round trip: records=%v error=%v", records, auditErr)
 	}
 	saved, found, err := repository.EvaluationRun(ctx, TenantID, "primary")
 	if err != nil || !found || !reflect.DeepEqual(saved.Snapshot(), run.Snapshot()) {

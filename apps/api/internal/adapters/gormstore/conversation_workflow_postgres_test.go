@@ -47,7 +47,7 @@ func TestPostgresConversationWorkflowProductionMigrations(t *testing.T) {
 	results := make(chan error, 2)
 	for _, id := range []string{"concurrent-one", "concurrent-two"} {
 		revision := persistedWorkflowRevision(t, "workflow-home", id, 3)
-		record := auditRecord(t, "audit-"+id, tenant.ID("workflow-home"), "", audit.ActionConversationWorkflowRevisionCreated)
+		record := auditRecord(t, "audit-"+id, tenant.ID("workflow-home"), "", audit.ActionConversationWorkflowRevisionCreated, "conversation_workflow")
 		go func() { <-start; results <- store.AppendWorkflowRevision(context.Background(), revision, 2, record) }()
 	}
 	close(start)
@@ -81,7 +81,7 @@ func TestPostgresConversationWorkflowProductionMigrations(t *testing.T) {
 	activationResults := make(chan error, 2)
 	expected := ports.WorkflowSelectionReference{WorkflowID: "workflow-other", RevisionID: "other-revision"}
 	for _, target := range []ports.WorkflowSelectionReference{{WorkflowID: "workflow-one", RevisionID: "revision-one"}, {WorkflowID: "workflow-other", RevisionID: "other-draft"}} {
-		record := auditRecord(t, "activation-"+string(target.WorkflowID), tenant.ID("workflow-home"), "", audit.ActionConversationWorkflowActivated)
+		record := auditRecord(t, "activation-"+string(target.WorkflowID), tenant.ID("workflow-home"), "", audit.ActionConversationWorkflowActivated, "conversation_workflow")
 		go func() {
 			<-activationStart
 			activationResults <- store.ActivateWorkflowRevision(context.Background(), "workflow-home", target.WorkflowID, target.RevisionID, expected, time.Date(2026, 9, 5, 13, 0, 0, 0, time.UTC), record)

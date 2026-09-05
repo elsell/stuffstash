@@ -39,7 +39,7 @@ func verifyEvaluationCaseRepository(t *testing.T, ctx context.Context, store Sto
 	t.Helper()
 	saveTenant(t, ctx, store, "evaluation-home", "Home")
 	first := storedEvaluationRevision(t, "revision-one", 1)
-	record := auditRecord(t, "case-audit-one", "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated)
+	record := auditRecord(t, "case-audit-one", "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated, "conversation_evaluation_case")
 	if err := store.AppendEvaluationCaseRevision(ctx, first, 0, record); err != nil {
 		t.Fatal(err)
 	}
@@ -72,11 +72,11 @@ func verifyEvaluationCaseRepository(t *testing.T, ctx context.Context, store Sto
 	if _, found, err := store.EvaluationCaseRevision(ctx, "evaluation-home", "clothes", "revision-two"); err != nil || found {
 		t.Fatal("audit failure persisted revision")
 	}
-	record = auditRecord(t, "case-audit-two", "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated)
+	record = auditRecord(t, "case-audit-two", "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated, "conversation_evaluation_case")
 	if err := store.AppendEvaluationCaseRevision(ctx, second, 1, record); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.AppendEvaluationCaseRevision(ctx, storedEvaluationRevision(t, "stale", 2), 1, auditRecord(t, "case-stale", "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated)); !errors.Is(err, ports.ErrEvaluationCaseConflict) {
+	if err := store.AppendEvaluationCaseRevision(ctx, storedEvaluationRevision(t, "stale", 2), 1, auditRecord(t, "case-stale", "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated, "conversation_evaluation_case")); !errors.Is(err, ports.ErrEvaluationCaseConflict) {
 		t.Fatalf("stale save did not conflict: %v", err)
 	}
 	saved, found, err := store.EvaluationCaseRevision(ctx, "evaluation-home", "clothes", "revision-one")
@@ -95,7 +95,7 @@ func verifyEvaluationCaseRepository(t *testing.T, ctx context.Context, store Sto
 	if err != nil || len(rows) != 0 {
 		t.Fatal("list leaked tenant")
 	}
-	if err := store.AppendEvaluationCaseRevision(ctx, storedEvaluationRevision(t, "cross-audit", 3), 2, auditRecord(t, "case-cross", "other", "", audit.ActionConversationEvaluationCaseRevisionCreated)); err == nil {
+	if err := store.AppendEvaluationCaseRevision(ctx, storedEvaluationRevision(t, "cross-audit", 3), 2, auditRecord(t, "case-cross", "other", "", audit.ActionConversationEvaluationCaseRevisionCreated, "conversation_evaluation_case")); err == nil {
 		t.Fatal("cross tenant audit accepted")
 	}
 	for _, caseID := range []domain.EvaluationCaseID{"case-c", "case-a", "case-b"} {
@@ -106,7 +106,7 @@ func verifyEvaluationCaseRepository(t *testing.T, ctx context.Context, store Sto
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := store.AppendEvaluationCaseRevision(ctx, revision, 0, auditRecord(t, "audit-"+string(caseID), "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated)); err != nil {
+		if err := store.AppendEvaluationCaseRevision(ctx, revision, 0, auditRecord(t, "audit-"+string(caseID), "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated, "conversation_evaluation_case")); err != nil {
 			t.Fatal(err)
 		}
 	}

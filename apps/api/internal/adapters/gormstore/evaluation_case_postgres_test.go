@@ -48,7 +48,7 @@ func TestPostgresEvaluationCaseMigrationsAndConcurrentSaves(t *testing.T) {
 	results := make(chan error, 2)
 	for _, id := range []string{"candidate-a", "candidate-b"} {
 		revision := storedEvaluationRevision(t, id, 3)
-		record := auditRecord(t, id, "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated)
+		record := auditRecord(t, id, "evaluation-home", "", audit.ActionConversationEvaluationCaseRevisionCreated, "conversation_evaluation_case")
 		go func() { <-start; results <- store.AppendEvaluationCaseRevision(ctx, revision, 2, record) }()
 	}
 	close(start)
