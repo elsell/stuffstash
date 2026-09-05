@@ -240,6 +240,8 @@ PODS:
     - React-Core
     - React-runtimescheduler
     - ReactCommon
+  - ExpoNetwork (55.0.14):
+    - ExpoModulesCore
   - ExpoRouter (55.0.16):
     - ExpoModulesCore
     - RNScreens
@@ -2442,6 +2444,7 @@ DEPENDENCIES:
   - "ExpoLogBox (from `../../../node_modules/.pnpm/@expo+log-box@55.0.12_@expo+dom-webview@55.0.6_expo@55.0.26_react-native@0.83.6_@babel+_ee3a694a8ce5c0b60469fa1f2e2f4d38/node_modules/@expo/log-box`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0_dfcb41f02c7f18ad41e4c8a37b6fc200/node_modules/expo-modules-core`)"
   - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0_dfcb41f02c7f18ad41e4c8a37b6fc200/node_modules/expo-modules-core`)"
+  - "ExpoNetwork (from `../../../node_modules/.pnpm/expo-network@55.0.14_expo@55.0.26_react@19.2.0/node_modules/expo-network/ios`)"
   - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@55.0.16_2a8c779d864e2d12d6cb12b2d14e9a6c/node_modules/expo-router/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios`)"
   - "ExpoSymbols (from `../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._d57ffd5a6a16a992b90b2f2e41a11a02/node_modules/expo-symbols/ios`)"
@@ -2588,6 +2591,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0_dfcb41f02c7f18ad41e4c8a37b6fc200/node_modules/expo-modules-core"
   ExpoModulesJSI:
     :path: "../../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0_dfcb41f02c7f18ad41e4c8a37b6fc200/node_modules/expo-modules-core"
+  ExpoNetwork:
+    :path: "../../../node_modules/.pnpm/expo-network@55.0.14_expo@55.0.26_react@19.2.0/node_modules/expo-network/ios"
   ExpoRouter:
     :path: "../../../node_modules/.pnpm/expo-router@55.0.16_2a8c779d864e2d12d6cb12b2d14e9a6c/node_modules/expo-router/ios"
   ExpoSecureStore:
@@ -2785,6 +2790,7 @@ SPEC CHECKSUMS:
   ExpoLogBox: a678d36477ab9544fe63e0b5328a0716539b6774
   ExpoModulesCore: 5e1ad569ce7cf8d35c0737585f34cc299fc3f0ca
   ExpoModulesJSI: 964334271fc77832736f66ee1785761cdc778dbe
+  ExpoNetwork: 03932b52899a8f72cbe6af38b0555ddb6d1f2d78
   ExpoRouter: e0e2aa4b03843e7abfa3e63e0cdd6c642d74780f
   ExpoSecureStore: f495a3e0ab65683be8427a96f694726a88048f46
   ExpoSymbols: 896159288ad708e1a32dc12c92fe5f90bff01126
