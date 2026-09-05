@@ -1,6 +1,9 @@
 package agentmodel
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func workflowTestInput() WorkflowDefinitionInput {
 	return WorkflowDefinitionInput{
@@ -67,5 +70,37 @@ func TestWorkflowDefinitionOwnsItsSnapshot(t *testing.T) {
 	settings.Steps[1].Instructions = "changed output"
 	if definition.Settings().Steps[0].Instructions != "" || definition.Settings().Steps[1].Instructions != "" {
 		t.Fatal("external mutation changed workflow snapshot")
+	}
+}
+
+func TestWorkflowDefinitionRejectsInvalidOperatorLimits(t *testing.T) {
+	limits := workflowTestLimits()
+	for _, change := range []func(*WorkflowLimits){
+		func(v *WorkflowLimits) { v.Budget.ModelCalls = 0 },
+		func(v *WorkflowLimits) { v.Budget.EvidenceRounds = -1 },
+		func(v *WorkflowLimits) { v.MaxStepAttempts = 0 },
+		func(v *WorkflowLimits) { v.MaxNameRunes = 0 },
+		func(v *WorkflowLimits) { v.MaxInstructionRunes = 0 },
+	} {
+		invalid := limits
+		change(&invalid)
+		if _, err := NewWorkflowDefinition(workflowTestInput(), invalid); err == nil {
+			t.Fatal("invalid operator limits accepted")
+		}
+	}
+}
+
+func TestWorkflowDefinitionBoundsInstructionsAndProfileReferences(t *testing.T) {
+	for _, change := range []func(*WorkflowDefinitionInput){
+		func(v *WorkflowDefinitionInput) { v.Name = strings.Repeat("家", 121) },
+		func(v *WorkflowDefinitionInput) { v.Steps[0].Instructions = strings.Repeat("家", 4001) },
+		func(v *WorkflowDefinitionInput) { v.Steps[0].ProviderProfileID = strings.Repeat("x", 65) },
+		func(v *WorkflowDefinitionInput) { v.Steps[0], v.Steps[1] = v.Steps[1], v.Steps[0] },
+	} {
+		input := workflowTestInput()
+		change(&input)
+		if _, err := NewWorkflowDefinition(input, workflowTestLimits()); err == nil {
+			t.Fatal("invalid workflow content accepted")
+		}
 	}
 }
