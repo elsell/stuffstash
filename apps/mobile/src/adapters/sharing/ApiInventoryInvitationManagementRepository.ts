@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { InventoryAccessInvitation, StuffStashClient } from '@stuff-stash/api-client';
 import type {
   CreatedInventoryInvitation,
@@ -22,11 +23,11 @@ export class ApiInventoryInvitationManagementRepository implements InventoryInvi
   ) {}
 
   async list(scope: InventorySharingScope, request: InventoryInvitationRead = {}): Promise<InventoryInvitationPage> {
-    request.signal?.throwIfAborted();
+    assertReadActive(request.signal);
     const page = await this.client.listInventoryAccessInvitations(
       scope.tenantId, scope.inventoryId, { limit: 50, cursor: request.cursor, status: 'all' }, request.signal
     );
-    request.signal?.throwIfAborted();
+    assertReadActive(request.signal);
     const nextCursor = page.pagination.nextCursor ?? undefined;
     if (nextCursor && nextCursor === request.cursor) throw new Error('Stuff Stash returned an invalid invitation page.');
     return { items: page.items.map((invitation) => mapSafeInvitation(invitation, scope)), nextCursor };

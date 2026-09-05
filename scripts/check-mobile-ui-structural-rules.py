@@ -46,6 +46,9 @@ def violations(path: Path) -> list[tuple[int, str]]:
     source = path.read_text(encoding="utf-8")
     findings: list[tuple[int, str]] = []
 
+    for match in re.finditer(r"\.\s*throwIfAborted\s*\(", source):
+        findings.append((line_number(source, match.start()), "uses AbortSignal.throwIfAborted unavailable in React Native; use assertReadActive"))
+
     if "application" in path.parts or "domain" in path.parts:
         for match in FRAMEWORK_IMPORT_PATTERN.finditer(source):
             module = match.group("module")

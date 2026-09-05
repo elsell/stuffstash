@@ -23,7 +23,10 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The mobile server-state implementation audit is complete; PR CI and device validation are the next gates for
+The immediate mobile follow-up is shipping the native cancellation compatibility
+fix exposed by the 0.16.3 device run, together with the export-compliance declaration.
+All 1055 source tests now use React Native’s actual AbortController. PR CI and
+replacement TestFlight validation are the next gates for
 `specs/platform/mobile-server-state.spec.md`: focused ports, composition-scoped
 TanStack Query identity, request cancellation, mutation reconciliation, bounded
 surface request graphs, native progressive loading, and request-count evidence.

@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import { ReadPageGuard } from '../shared/ReadPageGuard';
 import type {
   Asset,
@@ -118,7 +119,7 @@ export class ApiInventoryAssetPhotos {
 
     try {
       do {
-        options.signal?.throwIfAborted();
+        assertReadActive(options.signal);
         const page = await this.client.listAssetAttachments(
           asset.tenantId,
           asset.inventoryId,
@@ -127,7 +128,7 @@ export class ApiInventoryAssetPhotos {
           cursor,
           options.signal
         );
-        options.signal?.throwIfAborted();
+        assertReadActive(options.signal);
         attachments.push(...page.items);
         cursor = guard.accept(page.pagination.nextCursor, page.pagination.hasMore);
       } while (cursor);

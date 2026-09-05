@@ -1,3 +1,4 @@
+import { assertReadActive } from '../shared/ReadRequest';
 import type { ReadRequest } from '../shared/ReadRequest';
 import { customizationNameOrder, type CustomDefinition, type CustomizationLifecycle, type CustomizationScope } from '../../domain/customization/Customization';
 import type { CustomizationContext, CustomizationRepository } from './CustomizationRepository';
@@ -36,9 +37,9 @@ export class CustomizationCollectionQuery {
     const seen = new Set<string>();
     let cursor: string | undefined;
     for (let pageIndex = 0; pageIndex < maximumPages; pageIndex += 1) {
-      request.signal?.throwIfAborted();
+      assertReadActive(request.signal);
       const page = await load(cursor);
-      request.signal?.throwIfAborted();
+      assertReadActive(request.signal);
       for (const item of page.items) if (!seen.has(item.id)) { seen.add(item.id); items.push(item); }
       if (!page.nextCursor) return { items: customizationNameOrder(items), complete: true };
       if (page.nextCursor === cursor) return { items: customizationNameOrder(items), complete: false };

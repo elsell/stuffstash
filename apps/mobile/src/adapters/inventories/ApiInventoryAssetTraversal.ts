@@ -1,3 +1,4 @@
+import { assertReadActive } from '../../application/shared/ReadRequest';
 import { ReadPageGuard } from '../shared/ReadPageGuard';
 import type {
   Asset
@@ -13,9 +14,9 @@ export class ApiInventoryAssetTraversal {
     let parentId = asset.parentAssetId ?? undefined;
     while (parentId && !visited.has(parentId)) {
       visited.add(parentId);
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       const parent = await this.client.getAsset(asset.tenantId, asset.inventoryId, parentId, signal);
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       ancestors.unshift(parent);
       parentId = parent.parentAssetId ?? undefined;
     }
@@ -29,7 +30,7 @@ export class ApiInventoryAssetTraversal {
     const knownAssets = new Map(assets.map((asset) => [asset.id, asset]));
     const pendingAssets = new Map<string, Promise<Asset>>();
     const loadParent = async (source: Asset, visited = new Set<string>()): Promise<void> => {
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       if (visited.has(source.id)) {
         return;
       }
@@ -48,7 +49,7 @@ export class ApiInventoryAssetTraversal {
         parent = await pending;
         knownAssets.set(parent.id, parent);
       }
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       await loadParent(parent, nextVisited);
     };
     await Promise.all(assets.map((asset) => loadParent(asset)));
@@ -66,7 +67,7 @@ export class ApiInventoryAssetTraversal {
     const guard = new ReadPageGuard();
 
     do {
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       const page = await this.client.listAssets(
         tenantID,
         inventoryID,
@@ -76,7 +77,7 @@ export class ApiInventoryAssetTraversal {
         'id_asc',
         signal
       );
-      signal?.throwIfAborted();
+      assertReadActive(signal);
       assets.push(...page.items);
       cursor = guard.accept(page.pagination.nextCursor, page.pagination.hasMore);
     } while (cursor);

@@ -126,4 +126,15 @@ if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
   exit 1
 fi
 grep -F "800 lines" "$workdir/output" >/dev/null
+rm "$workdir/apps/mobile/src/adapters/inventories/CatchAll.ts"
+cat > "$workdir/apps/mobile/src/application/UnsupportedAbort.ts" <<'EOF'
+export function check(signal: AbortSignal) { signal?.throwIfAborted(); }
+EOF
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected unsupported native AbortSignal method to fail" >&2
+  exit 1
+fi
+grep -F "UnsupportedAbort.ts" "$workdir/output" >/dev/null
+rm "$workdir/apps/mobile/src/application/UnsupportedAbort.ts"
+"$checker" "$workdir/apps/mobile/src"
 echo "mobile UI structural rule tests passed"
