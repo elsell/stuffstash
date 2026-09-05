@@ -18,10 +18,11 @@ const (
 )
 
 type ConversationMessage struct {
-	Role        ConversationRole
-	Text        string
-	ToolCalls   []AgentToolCall
-	ToolResults []AgentToolResult
+	ProviderState []byte `json:"-"`
+	Role          ConversationRole
+	Text          string
+	ToolCalls     []AgentToolCall
+	ToolResults   []AgentToolResult
 }
 
 type ConversationToolDefinition struct {
@@ -46,9 +47,10 @@ type ConversationAnswer struct {
 }
 
 type ConversationModelTurn struct {
-	Text      string
-	ToolCalls []AgentToolCall
-	Answer    *ConversationAnswer
+	ProviderState []byte `json:"-"`
+	Text          string
+	ToolCalls     []AgentToolCall
+	Answer        *ConversationAnswer
 }
 
 type ConversationModel interface {
