@@ -51,7 +51,7 @@ jobs:
           STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable
         run: |
           set -o pipefail
-          go test ./apps/api/internal/adapters/gormstore -run '^TestPostgresStoreSearchAssets' -bench '^BenchmarkPostgresSearch$' -benchtime=5x -count=3 -benchmem | tee search-benchmark.txt
+          go test ./apps/api/internal/adapters/gormstore -run '^TestPostgres(StoreSearchAssets|Search)' -bench '^BenchmarkPostgresSearch$' -benchtime=5x -count=3 -benchmem | tee search-benchmark.txt
       - name: Retain search measurements
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

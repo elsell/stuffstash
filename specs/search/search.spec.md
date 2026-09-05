@@ -61,6 +61,14 @@ The first API slice is asset search:
 
 ## Initial Implementation Direction
 
+### Bounded candidate hydration
+
+- PostgreSQL search must prefilter candidate IDs in the database before loading domain assets and related attachment/tag/checkout metadata. Use GORM query composition and parameter-bound expressions behind the search repository; fixed reviewed expressions for ASCII `translate`, `LIKE`, JSON emptiness, and subqueries are justified for indexed candidate selection. No raw statement execution is introduced.
+- Candidate selection is a conservative superset of domain matches. The existing domain matcher remains authoritative for match labels, exact equality, substring semantics, and custom-field formatting. ASCII query text may use escaped lowercase substring predicates against scalar fields; non-ASCII stored values and nonempty custom-field objects remain candidates to avoid differences between PostgreSQL collation/JSON formatting and Go normalization. Non-ASCII query text uses bounded candidate scanning until normalization equivalence is established. Literal `%`, `_`, and backslash must never acquire wildcard meaning.
+- Add PostgreSQL trigram indexes on ASCII-folded asset title/description and attachment filename/content type using locale-independent `translate` and C collation, plus a tenant/concatenated-cursor expression index. Indexes update transactionally with their source rows; no eventually consistent search cache or background indexing queue is introduced. Smaller local SQLite stores retain equivalent bounded domain matching without PostgreSQL expressions.
+- Iterate candidates in stable bytewise `inventoryID + ":" + assetID` order (C collation on PostgreSQL, binary on SQLite, including variable-length IDs) using keyset batches of at most 128 rows; stop as soon as the requested result count is reached. Apply the incoming cursor before hydration, preserving current opaque cursor semantics. Metadata reads must be constrained to the current batch and authorized tenant/inventories. Selective and empty ASCII queries over assets with empty custom fields must not hydrate the entire inventory.
+- This is not a ranking or matching change. Short queries and conservative Unicode/custom-field fallbacks can still scan database candidates, but must keep application memory bounded and avoid reloading preceding pages.
+
 - PostgreSQL is the initial search backend.
 - External search systems should not be added until PostgreSQL is insufficient and a spec justifies the added operational cost.
 - Search adapters must not leak PostgreSQL-specific query details into domain logic.

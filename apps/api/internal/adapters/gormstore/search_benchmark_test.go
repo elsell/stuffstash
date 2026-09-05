@@ -95,7 +95,7 @@ func BenchmarkPostgresSearch(b *testing.B) {
 
 func searchBenchmarkID(volume, index int) string { return fmt.Sprintf("%026d", volume*100000+index) }
 
-func seedSearchBenchmark(b *testing.B, db *gorm.DB, volume int) (tenant.ID, inventory.InventoryID) {
+func seedSearchBenchmark(b testing.TB, db *gorm.DB, volume int) (tenant.ID, inventory.InventoryID) {
 	b.Helper()
 	tenantID := tenant.ID(searchBenchmarkID(volume, 0))
 	inventoryID := inventory.InventoryID(tenantID)
