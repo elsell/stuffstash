@@ -218,3 +218,5 @@ Error responses must use a consistent envelope:
 - Scenario coverage must record operation-level evidence, not only free-form references to test names or broad test families.
 - Exemptions are allowed only for intentionally public or local-only operations, and each exemption must be explicit, named, and justified in the test code.
 - Scenario coverage does not replace focused domain tests. Focused tests may still cover edge cases, but the scenario registry is the contract that the complete public API surface remains exercised in realistic and hostile flows.
+
+REST request body schemas must have domain-specific names when multiple adapter packages use the same input type name. Huma's shared schema registry does not scope anonymous body names by Go package. Server-construction/OpenAPI tests and CI generation must reject duplicate schema names before release.

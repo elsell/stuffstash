@@ -45,17 +45,19 @@ type AccessInput struct {
 }
 type CreateInput struct {
 	AccessInput
-	Body struct {
-		Definition EvaluationCaseDefinition `json:"definition"`
-	}
+	Body EvaluationCaseCreateBody
+}
+type EvaluationCaseCreateBody struct {
+	Definition EvaluationCaseDefinition `json:"definition"`
 }
 type AppendInput struct {
 	AccessInput
 	CaseID string `path:"caseId"`
-	Body   struct {
-		ExpectedRevision int                      `json:"expectedRevision" minimum:"1"`
-		Definition       EvaluationCaseDefinition `json:"definition"`
-	}
+	Body   EvaluationCaseAppendBody
+}
+type EvaluationCaseAppendBody struct {
+	ExpectedRevision int                      `json:"expectedRevision" minimum:"1"`
+	Definition       EvaluationCaseDefinition `json:"definition"`
 }
 type GetInput struct {
 	AccessInput
