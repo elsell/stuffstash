@@ -370,6 +370,7 @@ func (request SearchRequest) Validate() error {
 }
 
 type CandidateObservation struct {
+	TagNames        []string             `json:"tagNames"`
 	EvidenceRound   int                  `json:"evidenceRound"`
 	ReferenceKey    SemanticReferenceKey `json:"referenceKey"`
 	CandidateID     string               `json:"candidateId"`
@@ -387,7 +388,7 @@ type CandidateObservation struct {
 }
 
 func (observation CandidateObservation) Validate() error {
-	if observation.EvidenceRound < 1 || observation.EvidenceRound > MaxEvidenceRounds || !observation.ReferenceKey.Valid() ||
+	if !validObservationTagNames(observation.TagNames) || observation.EvidenceRound < 1 || observation.EvidenceRound > MaxEvidenceRounds || !observation.ReferenceKey.Valid() ||
 		!bounded(observation.CandidateID, 200, false) || !bounded(observation.Title, 500, false) ||
 		!bounded(observation.Description, maxInvestigationTextRunes, true) || !bounded(observation.ParentAssetID, 200, true) ||
 		!bounded(observation.ParentTitle, 500, true) || !validCandidateObservationKind(observation.ParentKind, true) || len(observation.ContainmentPath) > 32 ||

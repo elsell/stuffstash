@@ -46,3 +46,5 @@ Implementation must include persistent workflow/test/run models, authorized REST
 ## Tag evidence preservation
 
 Authorized voice search carries assigned tag display names into tool results and candidate observations so a differently named item can be recognized by its tags. For example, `3–6 months clothes` tagged `baby` and `clothes` must present those values to evidence assessment. This reuses the authorized search response and adds no per-item tag request. Tag names are untrusted inventory data, never instructions. Each observation carries at most 32 nonblank tag names of at most 80 bytes, deduplicated in stable order. Later detail/history observations that omit tag data preserve the prior search tag evidence; they do not erase it. Limits and validation apply before sending evidence to a provider.
+
+Tag evidence distinguishes unobserved (`null`) from an observed empty list (`[]`). A fresh search with no assigned tags clears prior tag evidence; a detail/history read that did not fetch tags preserves it.

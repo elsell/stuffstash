@@ -31,6 +31,9 @@ func TestRealtimeVoiceSearchPreservesAssignedTagsForAssessment(t *testing.T) {
 	tagName, _ := assettag.NewDisplayName("Baby")
 	tagColor, _ := assettag.NewColor("#2f80ed")
 	tag, _ := assettag.NewTag("tag-camping", assettag.TenantID(tenantID.String()), assettag.InventoryID(inventoryID.String()), tagKey, tagName, tagColor, time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC))
+	clothesKey, _ := assettag.NewKey("clothes")
+	clothesName, _ := assettag.NewDisplayName("Clothes")
+	clothesTag, _ := assettag.NewTag("tag-clothes", assettag.TenantID(tenantID.String()), assettag.InventoryID(inventoryID.String()), clothesKey, clothesName, tagColor, time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC))
 	application := New(Dependencies{
 		Observer:   &fakeObserver{},
 		Authorizer: &visibilityAuthorizer{t: t, tenantID: tenantID, visible: []inventory.InventoryID{inventoryID}},
@@ -43,7 +46,7 @@ func TestRealtimeVoiceSearchPreservesAssignedTagsForAssessment(t *testing.T) {
 			TenantID:     tenantID,
 			Inventory:    inventoryItem(inventoryID.String(), tenantID.String(), "Home"),
 			Asset:        item,
-			AssignedTags: []assettag.Tag{tag},
+			AssignedTags: []assettag.Tag{tag, clothesTag},
 		}}},
 		Audit:            &fakeAuditRepository{},
 		DefaultPageLimit: 10,
@@ -62,7 +65,7 @@ func TestRealtimeVoiceSearchPreservesAssignedTagsForAssessment(t *testing.T) {
 	if err := json.Unmarshal([]byte(result.Content), &tool); err != nil {
 		t.Fatal(err)
 	}
-	if len(tool.Items) != 1 || len(tool.Items[0].TagNames) != 1 || tool.Items[0].TagNames[0] != "Baby" {
+	if len(tool.Items) != 1 || len(tool.Items[0].TagNames) != 2 || tool.Items[0].TagNames[0] != "Baby" || tool.Items[0].TagNames[1] != "Clothes" {
 		t.Fatalf("tag evidence lost in tool result: %s", result.Content)
 	}
 	observations, err := realtimeVoiceInvestigationObservationsFromToolResult(1, agentmodel.SemanticReferenceKey("subject"), "baby clothes", result)
@@ -79,7 +82,29 @@ func TestRealtimeVoiceSearchPreservesAssignedTagsForAssessment(t *testing.T) {
 	if err := json.Unmarshal(raw, &observation); err != nil {
 		t.Fatal(err)
 	}
-	if len(observation.TagNames) != 1 || observation.TagNames[0] != "Baby" {
+	if len(observation.TagNames) != 2 || observation.TagNames[0] != "Baby" || observation.TagNames[1] != "Clothes" {
 		t.Fatalf("tag evidence lost before assessment: %s", raw)
+	}
+}
+
+func TestDetailObservationRetainsPriorSearchTagEvidence(t *testing.T) {
+	prior := agentmodel.CandidateObservation{CandidateID: "clothes", TagNames: []string{"Baby", "Clothes"}, MatchedProbes: []string{"baby clothes"}}
+	detail := agentmodel.CandidateObservation{CandidateID: "clothes", Description: "Stored upstairs"}
+	merged := mergeRealtimeVoiceInvestigationObservation(prior, detail)
+	if len(merged.TagNames) != 2 || merged.TagNames[0] != "Baby" {
+		t.Fatalf("detail erased tags: %+v", merged)
+	}
+	prior.TagNames[0] = "Changed"
+	if merged.TagNames[0] != "Baby" {
+		t.Fatal("merged tags alias earlier evidence")
+	}
+}
+
+func TestFreshEmptySearchClearsPriorTagEvidence(t *testing.T) {
+	prior := agentmodel.CandidateObservation{CandidateID: "clothes", TagNames: []string{"Baby"}}
+	fresh := realtimeVoiceInvestigationObservationFromItem(2, agentmodel.SemanticReferenceSubject, "clothes", realtimeVoiceAssetToolItem{AssetID: "clothes", TagNames: []string{}}, nil)
+	merged := mergeRealtimeVoiceInvestigationObservation(prior, fresh)
+	if merged.TagNames == nil || len(merged.TagNames) != 0 {
+		t.Fatalf("stale tags survived fresh search: %v", merged.TagNames)
 	}
 }

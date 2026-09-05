@@ -270,8 +270,13 @@ func realtimeVoiceInvestigationObservationFromItem(round int, reference agentmod
 	if strings.TrimSpace(probe) != "" {
 		matched = append(matched, strings.TrimSpace(probe))
 	}
+	var tagNames []string
+	if item.TagNames != nil {
+		tagNames = agentmodel.BoundedObservationTagNames(item.TagNames)
+	}
 	return agentmodel.CandidateObservation{
 		EvidenceRound: round, ReferenceKey: reference, CandidateID: item.AssetID, Title: item.Title, Kind: item.Kind,
+		TagNames:    tagNames,
 		Description: item.Description, ParentAssetID: item.ParentAssetID, ParentTitle: item.ParentTitle, ParentKind: item.ParentKind, LifecycleState: item.LifecycleState,
 		CheckoutState: checkoutState, ContainmentPath: append([]string{}, item.ContainmentPath...), MatchedProbes: matched, Facts: facts,
 	}
@@ -279,6 +284,11 @@ func realtimeVoiceInvestigationObservationFromItem(round int, reference agentmod
 
 func mergeRealtimeVoiceInvestigationObservation(left, right agentmodel.CandidateObservation) agentmodel.CandidateObservation {
 	merged := right
+	if right.TagNames == nil {
+		merged.TagNames = append([]string{}, left.TagNames...)
+	} else {
+		merged.TagNames = append([]string{}, right.TagNames...)
+	}
 	merged.MatchedProbes = appendUniqueRealtimeVoiceInvestigation(append([]string{}, left.MatchedProbes...), right.MatchedProbes...)
 	merged.Facts = appendUniqueRealtimeVoiceInvestigation(append([]string{}, left.Facts...), right.Facts...)
 	if merged.Description == "" {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"math"
 	"strings"
 	"time"
@@ -79,6 +80,11 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 		if err != nil {
 			return ports.AgentToolResult{}, err
 		}
+		names := make([]string, 0, len(result.AssignedTags))
+		for _, tag := range result.AssignedTags {
+			names = append(names, tag.DisplayName.String())
+		}
+		item.TagNames = agentmodel.BoundedObservationTagNames(names)
 		items = append(items, item)
 	}
 	return realtimeVoiceToolResult(call, realtimeVoiceAssetToolOutput{
