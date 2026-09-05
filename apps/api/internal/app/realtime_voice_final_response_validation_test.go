@@ -107,7 +107,7 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	}
 }
 
-func TestRealtimeVoiceResponseGenerationFailureDoesNotReachMobileOrTTS(t *testing.T) {
+func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.T) {
 	t.Parallel()
 
 	tts := &resolvedTextToSpeech{}
@@ -124,17 +124,22 @@ func TestRealtimeVoiceResponseGenerationFailureDoesNotReachMobileOrTTS(t *testin
 		events = append(events, event)
 		return nil
 	})
-	if realtimeVoiceErrorCode(err) != realtimeVoiceFailureLanguageInference {
-		t.Fatalf("expected language inference failure, got %v", err)
+	if err != nil {
+		t.Fatalf("grounded recovery failed: %v", err)
 	}
-	if tts.lastText != "" {
-		t.Fatalf("failed generated response reached TTS: %q", tts.lastText)
+	if tts.lastText == "" {
+		t.Fatal("grounded fallback did not reach TTS")
 	}
+	completed := false
 	for _, event := range events {
-		if event.Type == RealtimeVoiceEventAssistantResponseStarted || event.Type == RealtimeVoiceEventAssistantResponseCompleted {
-			t.Fatalf("failed generated response reached mobile: %+v", event)
+		if event.Type == RealtimeVoiceEventAssistantResponseCompleted {
+			completed = true
 		}
 	}
+	if !completed {
+		t.Fatal("grounded fallback did not reach mobile")
+	}
+
 }
 
 type failingVoiceResponseGenerator struct {
