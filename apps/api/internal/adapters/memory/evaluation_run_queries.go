@@ -68,7 +68,7 @@ func (s *Store) RunnableEvaluationRuns(ctx context.Context, now time.Time, limit
 func memoryEvaluationRunHead(run model.EvaluationRun) ports.EvaluationRunHead {
 	value := run.Snapshot()
 	workflow := value.Input.Workflow.Snapshot()
-	head := ports.EvaluationRunHead{EvaluationRunReference: ports.EvaluationRunReference{TenantID: tenant.ID(value.Input.TenantID), ID: value.Input.ID}, State: value.State, Version: value.Version, WorkflowID: workflow.WorkflowID, RevisionID: workflow.ID, TotalCases: len(value.Input.Cases), CompletedCases: len(value.Results), CreatedAt: value.Input.CreatedAt, UpdatedAt: value.UpdatedAt}
+	head := ports.EvaluationRunHead{EvaluationRunReference: ports.EvaluationRunReference{TenantID: tenant.ID(value.Input.TenantID), ID: value.Input.ID}, State: value.State, Version: value.Version, WorkflowID: workflow.WorkflowID, RevisionID: workflow.ID, TotalCases: len(value.Input.Cases), CompletedCases: len(value.Results), CreatedAt: value.Input.CreatedAt.UTC().Truncate(time.Microsecond), UpdatedAt: value.UpdatedAt.UTC().Truncate(time.Microsecond)}
 	for _, result := range value.Results {
 		if result.Verdict.Passed {
 			head.PassedCases++
