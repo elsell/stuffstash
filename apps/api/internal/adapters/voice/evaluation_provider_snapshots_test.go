@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	model "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	fixture "github.com/stuffstash/stuff-stash/internal/testsupport/evaluationrun"
 )
@@ -78,7 +79,7 @@ func TestEvaluationProviderSnapshotsFailClosed(t *testing.T) {
 			versioned := &evaluationSnapshotVault{version: "credential"}
 			var vault ports.ProviderCredentialVault = versioned
 			var factory ProviderProfileResolverFactory = &evaluationSnapshotFactory{}
-			target := fixture.TenantID
+			target := tenant.ID(fixture.TenantID)
 			switch scenario {
 			case "workflow tenant":
 				target = "outside"
@@ -102,5 +103,27 @@ func TestEvaluationProviderSnapshotsFailClosed(t *testing.T) {
 				t.Fatal("invalid snapshot accepted")
 			}
 		})
+	}
+}
+
+func TestEvaluationProviderSnapshotsHonorConfiguredDefaultWithoutFallback(t *testing.T) {
+	first := providerResolverProfile(t, "model", model.ProviderCapabilityLanguageInference, model.ProviderProfileEnabled, model.CredentialStatusConfigured)
+	first.TenantID = fixture.TenantID
+	selected := first
+	selected.ID = "selected"
+	profiles := providerResolverProfileRepository{profiles: []model.ProviderProfile{first, selected}}
+	configuration := providerResolverVoiceConfigurationRepository{found: true, record: ports.VoiceProviderConfigurationRecord{TenantID: fixture.TenantID, LanguageInferenceProfileID: "selected"}}
+	resolver := NewProviderProfileResolver(profiles, configuration, &evaluationSnapshotVault{version: "one"}, &evaluationSnapshotFactory{})
+	pins, err := resolver.SnapshotEvaluationProviders(context.Background(), fixture.TenantID, evaluationSnapshotWorkflow(t, false))
+	if err != nil || pins[0].ProfileID != "selected" || pins[1].ProfileID != "selected" {
+		t.Fatal("configured default ignored")
+	}
+	configuration.record.LanguageInferenceProfileID = "missing"
+	resolver = NewProviderProfileResolver(profiles, configuration, &evaluationSnapshotVault{version: "one"}, &evaluationSnapshotFactory{})
+	if _, err := resolver.SnapshotEvaluationProviders(context.Background(), fixture.TenantID, evaluationSnapshotWorkflow(t, false)); err == nil {
+		t.Fatal("missing default silently substituted")
+	}
+	if _, err := resolver.SnapshotEvaluationProviders(context.Background(), fixture.TenantID, evaluationSnapshotWorkflow(t, true)); err != nil {
+		t.Fatal("unused default required by explicit workflow")
 	}
 }

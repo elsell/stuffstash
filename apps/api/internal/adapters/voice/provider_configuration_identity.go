@@ -107,3 +107,8 @@ func (f GoogleProviderProfileFactory) ProviderConfigurationIdentity(_ context.Co
 	}
 	return providerConfigurationID(config, string(encoded))
 }
+
+func validProviderConfigurationID(value string) bool {
+	digest, err := hex.DecodeString(value)
+	return err == nil && len(digest) == sha256.Size && strings.ToLower(value) == value
+}

@@ -152,7 +152,16 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 			ProviderKind:      ports.ProviderKind(profile.ProviderKind.String()),
 			Purpose:           purpose,
 		}
-		raw, found, err := r.vault.ActiveProviderCredentialMaterial(ctx, scope)
+		var raw []byte
+		var found bool
+		var err error
+		var credentialVersion string
+		if versioned, ok := r.vault.(ports.VersionedProviderCredentialVault); ok {
+			material, present, resolveErr := versioned.ActiveVersionedProviderCredential(ctx, scope)
+			raw, found, err, credentialVersion = material.Raw, present, resolveErr, material.VersionID
+		} else {
+			raw, found, err = r.vault.ActiveProviderCredentialMaterial(ctx, scope)
+		}
 		if err != nil {
 			return ProviderProfileProviderConfig{}, err
 		}
@@ -162,7 +171,7 @@ func (r ProviderProfileResolver) providerConfig(ctx context.Context, tenantID te
 		if len(raw) == 0 {
 			return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput
 		}
-		return ProviderProfileProviderConfig{Profile: profile, CredentialPurpose: purpose, Credential: raw}, nil
+		return ProviderProfileProviderConfig{Profile: profile, CredentialPurpose: purpose, CredentialVersionID: credentialVersion, Credential: raw}, nil
 	}
 	return ProviderProfileProviderConfig{}, ports.ErrInvalidProviderInput
 }
