@@ -200,3 +200,21 @@ The web audit and Browse parity work needs a production-shaped path through:
 - Mobile inventory/auth tracer bullet after the Expo Go development loop is proven.
 - Conversational inventory provider profiles (`specs/agent-model/provider-profiles.spec.md`), MCP read tools (`specs/agent-model/mcp-agent-tools.spec.md`), mobile realtime voice query (`specs/agent-model/mobile-realtime-voice-query.spec.md`), API-mediated realtime sessions, credential sealing, ports, and broader action plan execution. Public MCP write tools must wait for the external approval/action-plan contract.
 - Import and export.
+
+
+## Approved Mobile Onboarding UX Follow-up
+
+The mobile onboarding redesign is specified in
+`specs/identity-access/mobile-oidc-authentication.spec.md#onboarding-ux` and aligned
+with the mobile tracer-bullet contract. An interactive HTML prototype was reviewed
+on 2026-09-05: combined connection/sign-in, conditional household and inventory
+setup, concise copy without a global stepper, and an aligned ghost start-over
+action. Native implementation and partial-creation/authentication recovery tests are in
+[PR #56](https://github.com/elsell/stuffstash/pull/56), which tracks final automated
+validation and merge evidence. Red baseline CI 33994428209 confirmed the missing
+combined commands and screen controls. Source review found no remaining blockers;
+CI is the merge gate, followed by the tagged TestFlight release workflow. Native
+device accessibility/keyboard review remains follow-up work.
+Invitation server-prefill and
+arbitrary-domain browser-to-app handoff remain deferred under the existing
+invitation contract.

@@ -80,7 +80,7 @@ describe('InventoryInvitationScreen behavior', () => {
     await runEffects();
     tree = render(props);
 
-    press(findTextButton(tree, 'Accept invitation'));
+    press(findTextButton(tree, 'Join inventory'));
     expect(accept).toHaveBeenCalledWith(referenceA);
     await flushPromises();
     tree = render(props);
@@ -109,8 +109,8 @@ describe('InventoryInvitationScreen behavior', () => {
     await flushPromises();
 
     const tree = render(props);
-    expect(findText(tree, 'Join Garage inventory')).toBeDefined();
-    expect(findText(tree, 'Join Old inventory')).toBeUndefined();
+    expect(findText(tree, 'Garage inventory')).toBeDefined();
+    expect(findText(tree, 'Old inventory')).toBeUndefined();
   });
 
   it('ignores a late acceptance after a newer invitation becomes current', async () => {
@@ -134,7 +134,7 @@ describe('InventoryInvitationScreen behavior', () => {
     render(props);
     const cleanup = await runEffects();
     let tree = render(props);
-    press(findTextButton(tree, 'Accept invitation'));
+    press(findTextButton(tree, 'Join inventory'));
 
     cleanup();
     props = screenProps({ previewQuery, reference: referenceB });
@@ -151,7 +151,7 @@ describe('InventoryInvitationScreen behavior', () => {
     await flushPromises();
 
     tree = render(props);
-    expect(findText(tree, 'Join Garage inventory')).toBeDefined();
+    expect(findText(tree, 'Garage inventory')).toBeDefined();
     expect(findText(tree, 'You’re in')).toBeUndefined();
   });
 
@@ -184,7 +184,7 @@ describe('InventoryInvitationScreen behavior', () => {
     const tree = render(props);
 
     expect(findText(tree, title)).toBeDefined();
-    expect(findTextButton(tree, 'Accept invitation')).toBeUndefined();
+    expect(findTextButton(tree, 'Join inventory')).toBeUndefined();
   });
 
   it('renders an already accepted invitation as success', async () => {

@@ -22,7 +22,7 @@ type ScreenState =
   | { readonly status: 'accepted'; readonly inventoryId: string; readonly inventoryName: string }
   | { readonly status: 'opening'; readonly inventoryId: string; readonly inventoryName: string }
   | { readonly status: 'open_error'; readonly inventoryId: string; readonly inventoryName: string }
-  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly retryable: boolean; readonly canSwitchAccount?: boolean };
+  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly retryable: boolean; readonly canSwitchAccount?: boolean; readonly retryStartOver?: boolean };
 
 export function InventoryInvitationScreen({
   acceptCommand,
@@ -31,6 +31,7 @@ export function InventoryInvitationScreen({
   onAccepted,
   onDismiss,
   onSwitchAccount,
+  onStartOver,
   previewQuery,
   reference
 }: {
@@ -40,6 +41,7 @@ export function InventoryInvitationScreen({
   readonly onAccepted: (inventoryId: string) => Promise<void>;
   readonly onDismiss: () => void;
   readonly onSwitchAccount: () => void;
+  readonly onStartOver?: () => Promise<void>;
   readonly previewQuery: Pick<PreviewInventoryInvitationQuery, 'execute'>;
   readonly reference?: InventoryInvitationReference;
 }) {
@@ -48,6 +50,7 @@ export function InventoryInvitationScreen({
   const styles = createStyles(colors, fontScale >= 2 || width < 340);
   const [state, setState] = useState<ScreenState>({ status: 'loading' });
   const requestGeneration = useRef(0);
+  const [startingOver, setStartingOver] = useState(false);
 
   const load = async () => {
     if (!reference) return;
@@ -110,10 +113,8 @@ export function InventoryInvitationScreen({
         ) : state.status === 'ready' || state.status === 'accepting' ? (
           <>
             <MailCheck color={colors.action} size={34} />
-            <Text accessibilityRole="header" style={styles.title}>Join {state.preview.inventoryName}</Text>
-            <Text style={styles.message}>
-              You’ve been invited as {relationshipLabel(state.preview.relationship)}. Review the invitation, then choose Accept invitation.
-            </Text>
+            <Text accessibilityRole="header" style={styles.title}>You’re invited</Text>
+            <Text style={styles.message}>{state.preview.inventoryName}</Text>
             <View style={styles.details}>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Access</Text>
@@ -126,14 +127,19 @@ export function InventoryInvitationScreen({
             </View>
             <Pressable
               accessibilityRole="button"
-              disabled={state.status === 'accepting'}
+              disabled={state.status === 'accepting' || startingOver}
               onPress={() => void accept()}
               style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
             >
               {state.status === 'accepting' ? <ActivityIndicator color={colors.onAction} /> :
-                <Text style={styles.primaryButtonText}>Accept invitation</Text>}
+                <Text style={styles.primaryButtonText}>Join inventory</Text>}
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={onDismiss} style={styles.secondaryButton}>
+            {onStartOver ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over"
+              disabled={startingOver || state.status === 'accepting'} onPress={() => void startOver()}
+              style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Sign out and start over</Text>
+            </Pressable> : null}
+            <Pressable accessibilityRole="button" disabled={startingOver} onPress={onDismiss} style={styles.secondaryButton}>
               <Text style={styles.secondaryButtonText}>Not now</Text>
             </Pressable>
           </>
@@ -158,7 +164,7 @@ export function InventoryInvitationScreen({
             <Text accessibilityRole="header" style={styles.title}>{state.title}</Text>
             <Text style={styles.message}>{state.message}</Text>
             {state.retryable ? (
-              <Pressable accessibilityRole="button" onPress={() => void load()} style={styles.primaryButton}>
+              <Pressable accessibilityRole="button" disabled={startingOver} onPress={() => void (state.retryStartOver ? startOver() : load())} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Try again</Text>
               </Pressable>
             ) : null}
@@ -175,6 +181,15 @@ export function InventoryInvitationScreen({
       </View>
     </ScrollView>
   );
+
+  async function startOver() {
+    if (!onStartOver || startingOver) return;
+    requestGeneration.current++;
+    setStartingOver(true);
+    try { await onStartOver(); }
+    catch { setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true, retryStartOver: true }); }
+    finally { setStartingOver(false); }
+  }
 
   async function openAcceptedInventory(inventoryId: string, inventoryName: string): Promise<void> {
     setState({ status: 'opening', inventoryId, inventoryName });
@@ -252,10 +267,10 @@ function createStyles(colors: MobileColorPalette, accessibilityLayout = false) {
     detailRow: { alignItems: 'flex-start', alignSelf: 'stretch', minHeight: 48, paddingVertical: spacing.sm },
     detailLabel: { color: colors.textMuted, fontSize: 15 },
     detailValue: { color: colors.text, fontSize: 16, fontWeight: '700' },
-    primaryButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.action, borderRadius: radius.md, justifyContent: 'center', marginTop: spacing.lg, minHeight: 50, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+    primaryButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.action, borderRadius: 12, justifyContent: 'center', marginTop: spacing.lg, minHeight: 54, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     primaryButtonPressed: { backgroundColor: colors.actionPressed },
-    primaryButtonText: { color: colors.onAction, flexShrink: 1, fontSize: 17, fontWeight: '700', textAlign: 'center' },
-    secondaryButton: { alignItems: 'center', alignSelf: 'stretch', justifyContent: 'center', marginTop: spacing.sm, minHeight: 48, paddingVertical: spacing.sm },
-    secondaryButtonText: { color: colors.action, flexShrink: 1, fontSize: 17, fontWeight: '600', textAlign: 'center' }
+    primaryButtonText: { color: colors.onAction, flexShrink: 1, fontSize: 16, fontWeight: '600', textAlign: 'center' },
+    secondaryButton: { alignItems: 'center', alignSelf: 'stretch', justifyContent: 'center', marginTop: spacing.sm, borderRadius: 12, minHeight: 54, paddingVertical: 12, paddingHorizontal: spacing.md },
+    secondaryButtonText: { color: colors.action, flexShrink: 1, fontSize: 16, fontWeight: '600', textAlign: 'center' }
   });
 }
