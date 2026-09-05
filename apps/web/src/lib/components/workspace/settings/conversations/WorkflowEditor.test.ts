@@ -16,7 +16,7 @@ describe('workflow editor', () => {
       onSave: async () => { throw new ConversationFailure('invalid'); } } });
     await submit();
     await Promise.resolve(); flushSync();
-    expect(document.activeElement?.getAttribute('role')).toBe('alert');
+    await expect.poll(() => document.activeElement?.getAttribute('role')).toBe('alert');
     expect(input('name').value).toBe('Home');
   });
   it('saves edited settings without mutating the loaded revision', async () => {

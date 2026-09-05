@@ -16,6 +16,7 @@
     onReload?: () => void;
   } = $props();
   // The owner keys this editor by revision. Query refreshes never overwrite a draft.
+  // svelte-ignore state_referenced_locally -- each keyed editor owns a draft seeded by its immutable revision.
   let draft = $state<WorkflowDefinition>(structuredClone($state.snapshot(initial)));
   let saving = $state(false);
   let message = $state('');
@@ -91,7 +92,7 @@
   fieldset { display: grid; gap: 1rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; min-width: 0; }
   legend { font-weight: 650; padding-inline: .4rem; }
   summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-  details > label, .budget-grid { margin-top: 1rem; }
+  .budget-grid { margin-top: 1rem; }
   summary { cursor: pointer; font-weight: 600; }
   .budget-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
   .editor-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
