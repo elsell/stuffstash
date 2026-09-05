@@ -26,3 +26,6 @@ export const UserRound = 'UserRoundIcon';
 
 export const Copy = "CopyIcon";
 export const Send = "SendIcon";
+export const Building2 = 'Building2Icon';
+export const ImagePlus = 'ImagePlusIcon';
+export const ChevronUp = 'ChevronUpIcon';

@@ -147,3 +147,7 @@ Sharing lists use scoped TanStack infinite queries with 50 safe summaries per pa
 Voice preview and recording startup use a focused inventory-context port (tenant/inventory identity and names), never asset, attachment or tag enumeration. Preview is a scoped shared query; realtime audio and approval state remain controller-owned. Inventory replacement cancels and resets the active voice workflow. The voice parent picker shares the debounced, cancellable parent-candidate query.
 
 Only an executed plan matching the active reviewed plan reports an injected voice mutation impact, before optional photo uploads complete. One batched impact invalidates inventory projections and affected asset core/history/checkout reads. Core and containment/placement refresh conservatively because execution results omit automatically promoted parents and old/destination ancestry; incomplete result identifiers conservatively refresh asset projections. Unrelated inventories, configuration and photos remain fresh. Photo uploads report their own successful attachment impacts.
+
+## Add Draft Ownership
+
+The Add form owns its draft per composition, tenant and inventory. Context/tag refreshes update available metadata and permissions without restoring a saved draft, reapplying the route parent, or rereading principal identity. Initial draft restoration occurs once per form scope. Scope replacement creates a new form owner. Local draft persistence remains separate from query data.

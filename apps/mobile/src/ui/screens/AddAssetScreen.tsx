@@ -1,3 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
+import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
+import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
@@ -64,7 +67,7 @@ import { useMobileInventoryServerQuery } from '../serverState/useMobileInventory
 type AddAssetScreenProps = {
   readonly addAssetDraftStore: AddAssetDraftStore;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
-  readonly createAssetCommand: CreateAssetCommand;
+  readonly createAssetCommand: Pick<CreateAssetCommand, 'execute'>;
   readonly addAssetContextQuery: AddAssetContextQuery;
   readonly initialParent?: ParentSelection;
   readonly onDismiss?: () => void;
@@ -96,23 +99,20 @@ const emptyDraft: AddAssetDraft = {
 };
 const addSheetBottomChromePadding = spacing.xl * 5;
 
-export function AddAssetScreen({
-  addAssetDraftStore,
-  addAssetContextQuery,
-  addDraftScopeQuery,
-  createAssetCommand,
-  initialParent,
-  onDismiss = () => router.back(),
-  parentLookupQuery,
-  photoSelectionQuery
-}: AddAssetScreenProps) {
+export function AddAssetScreen(props: AddAssetScreenProps) {
+  const scopeId = useMobileServerStateScopeId();
+  const addContext = useMobileInventoryServerQuery({ key: mobileQueryKeys.addContext, query: signal => props.addAssetContextQuery.execute({ signal }) });
+  const principal = useQuery({ queryKey: mobileQueryKeys.principal(scopeId), queryFn: ({ signal }) => props.addDraftScopeQuery.getPrincipal({ signal }) });
+  return <ScopedAddAssetScreen key={JSON.stringify(addContext.resourceKey)} {...props} addContext={addContext} principalId={principal.data?.id} principalError={principal.error} onRetry={() => { if (addContext.isError) void addContext.refetch({ cancelRefetch: false }); if (principal.isError) void principal.refetch({ cancelRefetch: false }); }} />;
+}
+
+function ScopedAddAssetScreen({
+  addAssetDraftStore, createAssetCommand, initialParent, onDismiss = () => router.back(), parentLookupQuery, photoSelectionQuery, addContext, principalId, principalError, onRetry
+}: AddAssetScreenProps & { readonly addContext: ReturnType<typeof useMobileInventoryServerQuery<AddAssetContext>>; readonly principalId?: string; readonly principalError: Error | null; readonly onRetry: () => void }) {
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const feedback = useAppFeedback();
-  const addContext = useMobileInventoryServerQuery({
-    key: mobileQueryKeys.addContext,
-    query: (signal) => addAssetContextQuery.execute({ signal })
-  });
+  const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
   const bottomChromeAllowance = safeAreaInsets.bottom + addSheetBottomChromePadding;
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
@@ -152,35 +152,20 @@ export function AddAssetScreen({
       }
       return;
     }
-    let isCurrent = true;
-
-    addDraftScopeQuery.execute()
-      .then((scope) => {
-        if (isCurrent) {
-          const context = addContext.data!;
-          const nextContext = {
-            tenantId: context.tenantId,
-            inventoryId: context.inventoryId,
-            principalId: scope.principalId
-          };
-          setLoadState({ status: 'ready', context });
-          setDraftContext(nextContext);
-          applyDraft(applyInitialParentToDraft(addAssetDraftStore.load(nextContext) ?? emptyDraft, initialParent));
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setLoadState({
-            status: 'error',
-            message: readableError(error, 'Could not load inventory context.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [addAssetDraftStore, addContext.data, addContext.error, addContext.isError, addDraftScopeQuery, initialParent]);
+    if (isAccessFailure(addContext.error) || principalError) {
+      setLoadState({ status: 'error', message: readableError(addContext.error ?? principalError, 'Could not load inventory context.') });
+      return;
+    }
+    if (!principalId) return;
+    const context = addContext.data;
+    setLoadState({ status: 'ready', context });
+    if (!restoredDraft.current) {
+      restoredDraft.current = true;
+      const nextContext = { tenantId: context.tenantId, inventoryId: context.inventoryId, principalId };
+      setDraftContext(nextContext);
+      applyDraft(applyInitialParentToDraft(addAssetDraftStore.load(nextContext) ?? emptyDraft, initialParent));
+    }
+  }, [addAssetDraftStore, addContext.data, addContext.error, addContext.isError, principalId, principalError, initialParent]);
 
   useEffect(() => {
     if (!draftContext) {
@@ -495,6 +480,7 @@ export function AddAssetScreen({
           <View style={styles.centerState}>
             <Text style={styles.errorTitle}>Could not load</Text>
             <Text style={styles.stateText}>{loadState.message}</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel="Retry Add context" onPress={onRetry}><Text style={styles.stateText}>Try again</Text></Pressable>
           </View>
         ) : null}
         {loadState.status === 'ready' ? (
