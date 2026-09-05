@@ -209,7 +209,7 @@ export function mapAsset(
   const assetWithResolvedParent = parentAssetID === asset.parentAssetId
     ? asset
     : { ...asset, parentAssetId: parentAssetID ?? null };
-  const ancestors = ancestorTrail(assetWithResolvedParent, assets);
+  const ancestors = options.ancestorPath ?? ancestorTrail(assetWithResolvedParent, assets);
   const photo = photos[0];
 
   return {
@@ -218,7 +218,7 @@ export function mapAsset(
     kind: asset.kind,
     lifecycleState: asset.lifecycleState,
     parentAssetId: parentAssetID ? assetId(parentAssetID) : undefined,
-    locationLabel: parent?.title ?? 'Inventory root',
+    locationLabel: ancestors[ancestors.length - 1]?.title ?? parent?.title ?? 'Inventory root',
     locationTrail: [inventoryName, ...ancestors.map((ancestor) => ancestor.title), asset.title].filter(isString),
     parentLocationTrail: ancestors.map((ancestor) => ({
       id: assetId(ancestor.id),
@@ -236,6 +236,7 @@ export function mapAsset(
 }
 
 export type MapAssetOptions = {
+  readonly ancestorPath?: readonly { readonly id: string; readonly title: string }[];
   readonly resolveMissingParentFromKnownAsset?: boolean;
 };
 

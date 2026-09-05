@@ -41,6 +41,12 @@ type AssetSearchResult struct {
 	CurrentCheckout *asset.Checkout
 	AssignedTags    []assettag.Tag
 	Matches         []search.Match
+	AncestorPath    []AssetSearchAncestor
+}
+
+type AssetSearchAncestor struct {
+	ID    asset.ID
+	Title asset.Title
 }
 
 func (r AssetSearchResult) CursorKey() string {

@@ -1379,6 +1379,7 @@ export interface components {
             updatedAt: string;
         };
         AssetSearchResultResponse: {
+            ancestorPath: components["schemas"]["SearchAncestor"][] | null;
             asset: components["schemas"]["AssetSummary"];
             inventory: components["schemas"]["InventorySummary"];
             matches: components["schemas"]["SearchMatch"][] | null;
@@ -2043,6 +2044,10 @@ export interface components {
             readonly $schema?: string;
             /** @description Optional return details */
             details?: string;
+        };
+        SearchAncestor: {
+            id: string;
+            title: string;
         };
         SearchCheckoutPrincipalResponse: {
             email?: string;

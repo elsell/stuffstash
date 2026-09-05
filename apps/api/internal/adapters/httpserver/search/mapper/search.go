@@ -61,9 +61,14 @@ func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *m
 			}
 		}
 	}
+	path := make([]dto.SearchAncestor, 0, len(result.AncestorPath))
+	for _, ancestor := range result.AncestorPath {
+		path = append(path, dto.SearchAncestor{ID: ancestor.ID.String(), Title: ancestor.Title.String()})
+	}
 	return dto.AssetSearchResultResponse{
-		Type:     result.Type.String(),
-		TenantID: result.TenantID.String(),
+		AncestorPath: path,
+		Type:         result.Type.String(),
+		TenantID:     result.TenantID.String(),
 		Inventory: dto.InventorySummary{
 			ID:   result.Inventory.ID.String(),
 			Name: result.Inventory.Name.String(),

@@ -274,6 +274,7 @@ export interface UpdateAssetTagInput {
 }
 
 export interface AssetSearchResult {
+  ancestorPath?: Array<{ id: string; title: string }>;
   type: 'asset';
   tenantId: string;
   inventory: {
@@ -2122,6 +2123,7 @@ function mapAssetTag(response: AssetTagResponse): AssetTag {
 
 function mapAssetSearchResult(response: components['schemas']['AssetSearchResultResponse']): AssetSearchResult {
   return {
+    ancestorPath: response.ancestorPath?.map(({ id, title }) => ({ id, title })),
     type: 'asset',
     tenantId: response.tenantId,
     inventory: response.inventory,

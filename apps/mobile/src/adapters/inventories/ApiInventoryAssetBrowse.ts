@@ -124,13 +124,15 @@ export class ApiInventoryAssetBrowse {
 
     const pageResults = selectedResults.slice(0, desiredMatches);
     const selectedAssets = pageResults.map((item) => item.asset);
-    const knownAssets = [...selectedAssets, ...await this.traversal.loadAncestorsForAssets(selectedAssets, input.signal)];
+    const legacyAssets = pageResults.filter((item) => item.ancestorPath === undefined).map((item) => item.asset);
+    const knownAssets = [...selectedAssets, ...await this.traversal.loadAncestorsForAssets(legacyAssets, input.signal)];
     const assets = await Promise.all(
       pageResults.map((item) =>
         this.photos.mapAssetWithPrimaryPhoto(
           inventory.name,
           item.asset,
-          knownAssets
+          knownAssets,
+          { ancestorPath: item.ancestorPath }
         )
       )
     );

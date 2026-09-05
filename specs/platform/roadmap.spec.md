@@ -23,16 +23,19 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The immediate mobile follow-up is shipping the native cancellation compatibility
-fix exposed by the 0.16.3 device run, together with the export-compliance declaration.
-All 1055 source tests now use React Native’s actual AbortController. PR CI and
-replacement TestFlight validation are the next gates for
-`specs/platform/mobile-server-state.spec.md`: focused ports, composition-scoped
-TanStack Query identity, request cancellation, mutation reconciliation, bounded
-surface request graphs, native progressive loading, and request-count evidence.
-Track route coverage and remaining verification in
-`specs/platform/mobile-server-state-audit.spec.md`. Run build checks in PR CI;
-the local host is disk constrained and must not run builds.
+Prioritize measured search latency improvements across mobile and the API following
+the 0.16.4 device test. Establish separate API and mobile hydration baselines,
+then remove confirmed bottlenecks while preserving matching, authorization,
+pagination, and TanStack cache ownership. The current persistence adapter scans
+candidate assets and related metadata per request; mobile search also waits for
+ancestor hydration. These are investigation findings, not measured production
+attribution. See `specs/search/search.spec.md`. Keep all builds in CI on this
+disk-constrained host. Resume the authenticated detail-photo benchmark afterward.
+
+The native cancellation and export-compliance fixes shipped in 0.16.4. The current
+search work uses compact authorized API paths to remove mobile ancestor HTTP
+waterfalls and bounds candidate hydration behind the search repository. Baseline
+and final PostgreSQL measurements live in `specs/search/search-latency.spec.md`: large-inventory queries improve to 107–163 ms in the latest run, with sharply reduced hydration. All implementation CI checks passed in run 33945506018; release validation remains pending. Production authenticated timings and query-plan variability remain follow-up work. Keep all builds in CI on this disk-constrained host.
 The first native GitHub Actions TestFlight path is operational and has installed a
 working signed build on a physical device; distribution remains a release gate,
 not the current implementation bottleneck.

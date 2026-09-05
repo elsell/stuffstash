@@ -52,12 +52,23 @@ The first API slice is asset search:
 - Results must include a stable `type` field. The first value is `asset`.
 - Results must include the matching asset and simple match metadata so clients can explain why a result appeared.
 - Results must include current checkout state when the asset has an open checkout.
+- Results must include an `ancestorPath` array of compact `{id, title}` breadcrumbs ordered from the inventory root to the immediate parent; an empty array explicitly identifies a root asset. The path excludes the result itself. Search application enrichment resolves only ancestors of the returned page, deduplicates shared ancestors within the request, and reads each ancestor through the tenant-and-inventory-scoped asset repository port. It must never follow a parent reference across the authorized result's tenant or inventory, and must fail safely on corrupt or cyclic paths rather than return misleading placement. Path resolution lives in the search application package, separate from REST mapping and persistence matching.
+- Mobile search uses the returned complete path without ancestor HTTP reads. When connected to an older API that omits `ancestorPath`, it retains the scoped, cancellable ancestor lookup fallback. Paths remain part of the TanStack search result, so search invalidation and scope replacement also replace placement; there is no second persistent ancestor cache.
 - Location-like assets are returned as assets with kind `location`.
 - The first slice searches asset title, description, custom field values, custom asset type key/display name/description, and attachment file name/content type.
 - Exact search uses case-insensitive whole-value equality for fields and metadata.
 - Fuzzy search uses case-insensitive substring matching.
 
 ## Initial Implementation Direction
+
+### Bounded candidate hydration
+
+- PostgreSQL search must prefilter candidate IDs in the database before loading domain assets and related attachment/tag/checkout metadata. Use GORM query composition and parameter-bound expressions behind the search repository; fixed reviewed expressions for ASCII `translate`, `LIKE`, JSON emptiness, and subqueries are justified for indexed candidate selection. No raw statement execution is introduced.
+- Candidate selection is a conservative superset of domain matches. The existing domain matcher remains authoritative for match labels, exact equality, substring semantics, and custom-field formatting. ASCII query text may use escaped lowercase substring predicates against scalar fields; non-ASCII stored values and nonempty custom-field objects remain candidates to avoid differences between PostgreSQL collation/JSON formatting and Go normalization. Non-ASCII or NUL-containing query text uses bounded candidate scanning until normalization equivalence is established. Literal `%`, `_`, and backslash must never acquire wildcard meaning.
+- Add PostgreSQL trigram indexes on ASCII-folded asset title/description and attachment filename/content type using locale-independent `translate` and C collation, plus a tenant/concatenated-cursor expression index. Indexes update transactionally with their source rows; no eventually consistent search cache or background indexing queue is introduced. Smaller local SQLite stores retain equivalent bounded domain matching without PostgreSQL expressions.
+- Iterate candidates in stable bytewise `inventoryID + ":" + assetID` order (C collation on PostgreSQL, binary on SQLite, including variable-length IDs) using keyset batches of at most 128 rows; stop as soon as the requested result count is reached. Apply the incoming cursor before hydration, preserving current opaque cursor semantics. Metadata reads must be constrained to the current batch and authorized tenant/inventories. Selective and empty ASCII queries over assets with empty custom fields must not hydrate the entire inventory.
+- Combine scalar predicates with scoped metadata subquery membership using OR. UNION variants regressed first-query latency in CI and must not replace this path without execution-plan evidence and passing cold/preflight benchmarks.
+- This is not a ranking or matching change. Short queries and conservative Unicode/custom-field fallbacks can still scan database candidates, but must keep application memory bounded and avoid reloading preceding pages.
 
 - PostgreSQL is the initial search backend.
 - External search systems should not be added until PostgreSQL is insufficient and a spec justifies the added operational cost.
@@ -75,6 +86,15 @@ The first API slice is asset search:
 - Fuzzy matches must not cause unsafe actions without clarification or confirmation when ambiguity exists.
 
 ## Testing
+
+### Search latency investigation
+
+- Measure API search separately from client result hydration, debounce, and image loading. Health endpoint timings are connectivity evidence, not search benchmarks.
+- Record candidate volume, result count, ancestry depth, request count, and cold/repeated timings with each benchmark. Controlled transport latency must be labeled synthetic; it must not be presented as a production measurement.
+- The mobile baseline must exercise the actual search application query and inventory adapter with a controlled in-memory transport. Include root assets and nested assets so required ancestor waterfalls are visible.
+- Backend baselines must include representative inventory and attachment volumes, selective and broad matches, empty results, and subsequent pages. Run compiled benchmarks and PostgreSQL verification in CI while the development host is disk constrained.
+- Optimization must retain case-insensitive whole-value exact matching and substring fuzzy matching across every currently supported field, deterministic cursors, safe read audit history, and authoritative tenant/inventory authorization. An index must not narrow fuzzy matching to word or prefix matching.
+- Do not add an unbounded or separately owned mobile entity cache to hide API latency. Result state remains scoped through TanStack Query; transport and search infrastructure stay behind project-owned ports.
 
 - Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, checkout-state filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
