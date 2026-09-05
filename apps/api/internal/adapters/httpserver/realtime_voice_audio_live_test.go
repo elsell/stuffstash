@@ -83,6 +83,7 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer connection.Close(websocket.StatusNormalClosure, "")
+	connection.SetReadLimit(maxRealtimeVoiceFrameBytes)
 	start := realtimeVoiceStartMessage("tenant-home", "inventory-home")
 	start["developerDiagnostics"] = true
 	writeRealtimeMessage(t, ctx, connection, start)
@@ -115,7 +116,7 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 		if event["type"] == "assistant.response.completed" {
 			response, _ = event["response"].(map[string]any)
 		}
-		if event["type"] == "session.failed" || event["type"] == "session.completed" {
+		if event["type"] == "session.failed" || event["type"] == "session.completed" || event["type"] == "action_plan.proposed" {
 			completed = true
 		}
 	}
