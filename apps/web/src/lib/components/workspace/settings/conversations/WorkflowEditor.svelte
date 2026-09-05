@@ -87,10 +87,10 @@
 
 <style>
   .conversation-editor { display: grid; gap: 1.25rem; max-width: 52rem; }
-  header h2 { font-size: 1.25rem; font-weight: 650; }
+  header h2 { font-size: 1.25rem; font-weight: 600; }
   header p, .help { color: var(--muted-foreground); font-size: .9rem; }
   fieldset { display: grid; gap: 1rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; min-width: 0; }
-  legend { font-weight: 650; padding-inline: .4rem; }
+  legend { font-weight: 600; padding-inline: .4rem; }
   summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   .budget-grid { margin-top: 1rem; }
   summary { cursor: pointer; font-weight: 600; }

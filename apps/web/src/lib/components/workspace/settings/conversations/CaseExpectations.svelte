@@ -75,6 +75,6 @@
   .case-expectations, fieldset, .expectation-row { display: grid; gap: 1rem; min-width: 0; }
   fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
   .expectation-row + .expectation-row { border-top: 1px solid var(--border); padding-top: 1rem; }
-  h3, legend { font-weight: 650; } p { color: var(--muted-foreground); font-size: .9rem; }
+  h3, legend { font-weight: 600; } p { color: var(--muted-foreground); font-size: .9rem; }
   .choices { display: flex; gap: .5rem; flex-wrap: wrap; }
 </style>

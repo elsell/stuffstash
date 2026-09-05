@@ -48,6 +48,6 @@
 <style>
   .case-fixtures, fieldset { display: grid; gap: 1rem; }
   fieldset { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
-  legend, h3 { font-weight: 650; } legend { overflow-wrap: anywhere; }
+  legend, h3 { font-weight: 600; } legend { overflow-wrap: anywhere; }
   p { font-size: .9rem; color: var(--muted-foreground); }
 </style>

@@ -105,7 +105,7 @@
 {/if}
 <style>
   .workflow-workspace { display: grid; gap: 1rem; max-width: 56rem; }
-  h1 { font-size: 1.6rem; font-weight: 650; } header p { color: var(--muted-foreground); }
+  h1 { font-size: 1.6rem; font-weight: 600; } header p { color: var(--muted-foreground); }
   ul { display: grid; gap: .75rem; list-style: none; padding: 0; }
   .instructions { white-space: pre-wrap; overflow-wrap: anywhere; }
   dt, h4 { font-weight: 600; }
