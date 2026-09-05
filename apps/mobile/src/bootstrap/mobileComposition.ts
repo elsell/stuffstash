@@ -1,3 +1,4 @@
+import { QueryClientProviderProfileMutationObserver } from '../adapters/serverState/QueryClientProviderProfileMutationObserver';
 import { AssetPlacementQuery } from '../application/assets/AssetPlacementQuery';
 import { InventoryContextQuery } from '../application/home/InventoryContextQuery';
 import { StuffStashClient } from '@stuff-stash/api-client';
@@ -220,7 +221,7 @@ export function createMobileComposition(
   const assetChangeReversal = new ApiAssetOperationReversalRepository(client, new QueryClientInventoryMutationObserver(queryClient, serviceScopeId));
   const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
-  const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries);
+  const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries, new QueryClientProviderProfileMutationObserver(queryClient, serviceScopeId));
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(serviceScopeId);
   const settingsQuery = new SettingsQuery(

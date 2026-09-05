@@ -1,3 +1,4 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Activity, Boxes, House, Info, Server, SunMedium, UserRound } from 'lucide-react-native';
@@ -24,7 +25,7 @@ export function SettingsScreen({
 }) {
   const { preference } = useAppearance();
   const { palette, styles } = useSettingsListStyles();
-  const { load, state } = useSettingsModel(settingsQuery);
+  const { load, state, hasRefreshError } = useSettingsModel(settingsQuery);
   const sections = useMemo(() => state.status === 'ready'
     ? buildSettingsRootSections({
         ...state.settings,
@@ -54,6 +55,7 @@ export function SettingsScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsRefreshNotice visible={hasRefreshError} onRetry={load} />
       {sections.map((section) => (
         <SettingsSection key={section.id} title={section.title}>
           {section.rows.map((row, index) => (

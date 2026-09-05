@@ -129,3 +129,9 @@ The migration is complete only when each surface family below has an explicit ap
 - `pnpm --dir apps/mobile test` and `pnpm --dir apps/mobile check` must pass without requiring a native build.
 - The structural mobile check must reject generated API client imports in UI and direct React/TanStack imports in domain or application packages.
 - Completion evidence includes a maintained surface audit table in the test suite or a generated verification report showing every route family mapped to its query/mutation contract.
+
+## Settings and administration read ownership
+
+Settings scope and principal identity have separate query lifetimes. Shared navigation renders when scope is ready while account identity continues loading; diagnostics and appearance stay local. Settings authorization scope refreshes the selected tenant and inventory from scoped API reads, rather than trusting session-long cached permissions. Customization context reads scope only and must not request principal identity. Every server read accepts the shared cancellation request through its application port and transport adapter. Refresh failures retain usable cached data with an explicit retry notice. Authorization denials remain authoritative and remove controls that require the denied permissions.
+
+Provider profile summaries and voice configuration/readiness use shared tenant-scoped server state. Credentials remain local ephemeral form values and are never cached. Profile/credential/test/configuration mutation success invalidates the affected tenant's provider summary and voice readiness queries through an injected observer; mutation failures do not pretend the server changed.

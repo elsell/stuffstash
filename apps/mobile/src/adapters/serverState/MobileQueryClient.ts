@@ -105,6 +105,11 @@ export const mobileQueryKeys = {
     'contents',
     containmentIdentity
   ] as const,
+  tenant: (scope: string, tenant: string) => [...mobileQueryKeys.root(scope), 'tenant', tenant] as const,
+  providerProfiles: (scope: string, tenant: string) => [...mobileQueryKeys.tenant(scope, tenant), 'provider-profiles'] as const,
+  voiceConfiguration: (scope: string, tenant: string) => [...mobileQueryKeys.tenant(scope, tenant), 'voice-configuration'] as const,
+  principal: (scope: string) => [...mobileQueryKeys.root(scope), 'principal'] as const,
+  settingsScope: (scope: string, tenant: string, inventory: string) => [...mobileQueryKeys.inventory(scope, tenant, inventory), 'settings-scope'] as const,
   assetPlacement: (scope: string, tenant: string, inventory: string, asset: string, parent: string) => [
     ...mobileQueryKeys.asset(scope, tenant, inventory, asset), 'placement', parent
   ] as const,

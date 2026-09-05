@@ -197,8 +197,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return (await this.loadInventoryWorkspace()).workspace;
   }
 
-  async getCurrentTenantId(): Promise<string> {
-    return (await this.getSelectedInventoryIdentity()).tenant.id;
+  async getCurrentTenantId(request: ReadRequest = {}): Promise<string> {
+    return (await this.getSelectedInventoryIdentity(request.signal)).tenant.id;
   }
 
   async getCurrentInventoryScope(request: ReadRequest = {}): Promise<{ readonly tenantId: string; readonly inventoryId: string }> {

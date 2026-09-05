@@ -686,10 +686,11 @@ export class StuffStashClient {
     });
   }
 
-  async me(): Promise<Principal> {
+  async me(signal?: AbortSignal): Promise<Principal> {
     const envelope = await this.unwrap(
       this.client.GET('/me', {
-        headers: await this.authHeaders()
+        headers: await this.authHeaders(),
+        signal
       })
     );
     return mapPrincipal(envelope.data);
@@ -718,10 +719,11 @@ export class StuffStashClient {
     return mapPage(envelope, mapTenant);
   }
 
-  async getTenant(tenantId: string): Promise<Tenant> {
+  async getTenant(tenantId: string, signal?: AbortSignal): Promise<Tenant> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId } }
       })
     );
@@ -1578,20 +1580,22 @@ export class StuffStashClient {
     return mapPage(envelope, mapAssetActivity);
   }
 
-  async listProviderProfiles(tenantId: string): Promise<ProviderProfile[]> {
+  async listProviderProfiles(tenantId: string, signal?: AbortSignal): Promise<ProviderProfile[]> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/provider-profiles', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId } }
       })
     );
     return (envelope.data ?? []).map(mapProviderProfile);
   }
 
-  async getVoiceProviderConfiguration(tenantId: string): Promise<VoiceProviderConfiguration> {
+  async getVoiceProviderConfiguration(tenantId: string, signal?: AbortSignal): Promise<VoiceProviderConfiguration> {
     const envelope = await this.unwrap(
       this.client.GET('/tenants/{tenantId}/voice-provider-configuration', {
         headers: await this.authHeaders(),
+        signal,
         params: { path: { tenantId } }
       })
     );

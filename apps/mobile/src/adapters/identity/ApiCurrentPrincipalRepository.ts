@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../../application/shared/ReadRequest';
 import type { StuffStashClient } from '@stuff-stash/api-client';
 import type {
   CurrentPrincipalRepository,
@@ -9,7 +10,7 @@ type PrincipalApiClient = Pick<StuffStashClient, 'me'>;
 export class ApiCurrentPrincipalRepository implements CurrentPrincipalRepository {
   constructor(private readonly client: PrincipalApiClient) {}
 
-  async getCurrentPrincipal(): Promise<SettingsPrincipal> {
-    return this.client.me();
+  async getCurrentPrincipal(request: ReadRequest = {}): Promise<SettingsPrincipal> {
+    return this.client.me(request.signal);
   }
 }

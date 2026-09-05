@@ -44,7 +44,7 @@ describe('ApiSettingsScopeRepository', () => {
       inventory: { id: 'inventory-home', name: 'Household', permissions: ['view', 'share'] }
     };
     const repository = new ApiSettingsScopeRepository(
-      { listMyTenants: async () => tenants },
+      { getTenant: async (id) => { const tenant = tenants.items.find((tenant) => tenant.id === id); if (!tenant) throw new Error('The selected Stuff Stash tenant is no longer available.'); return tenant; }, listInventories: async (id) => ({ items: Object.values(inventories).filter((inventory) => inventory.tenantId === id), pagination: { hasMore: false, nextCursor: null, limit: 100 } }) },
       { getCurrentSettingsScope: async () => currentScope }
     );
 
@@ -66,7 +66,7 @@ describe('ApiSettingsScopeRepository', () => {
 
   it('fails safely when the selected tenant is no longer accessible', async () => {
     const repository = new ApiSettingsScopeRepository(
-      { listMyTenants: async () => tenants },
+      { getTenant: async (id) => { const tenant = tenants.items.find((tenant) => tenant.id === id); if (!tenant) throw new Error('The selected Stuff Stash tenant is no longer available.'); return tenant; }, listInventories: async (id) => ({ items: Object.values(inventories).filter((inventory) => inventory.tenantId === id), pagination: { hasMore: false, nextCursor: null, limit: 100 } }) },
       { getCurrentSettingsScope: async () => ({
         tenantId: 'tenant-removed',
         inventory: { id: 'inventory-home', name: 'Household', permissions: ['view', 'share'] }

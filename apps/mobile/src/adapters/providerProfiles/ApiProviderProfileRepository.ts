@@ -1,3 +1,5 @@
+import { ignoreProviderProfileMutations, type ProviderProfileMutationObserver } from '../../application/providerProfiles/ProviderProfileMutationObserver';
+import type { ReadRequest } from '../../application/shared/ReadRequest';
 import type {
   ProviderProfile,
   ProviderProfileSummary as ApiProviderProfileSummary,
@@ -33,60 +35,69 @@ type ProviderProfileApiClient = Pick<
 >;
 
 export interface ProviderProfileTenantScope {
-  getCurrentTenantId(): Promise<string>;
+  getCurrentTenantId(request?: ReadRequest): Promise<string>;
 }
 
 export class ApiProviderProfileRepository implements ProviderProfileRepository {
   constructor(
     private readonly client: ProviderProfileApiClient,
-    private readonly tenantScope: string | ProviderProfileTenantScope
+    private readonly tenantScope: string | ProviderProfileTenantScope,
+    private readonly mutations: ProviderProfileMutationObserver = ignoreProviderProfileMutations
   ) {}
 
-  async listProviderProfiles(): Promise<readonly ProviderProfileSummary[]> {
-    const tenantId = await this.requireTenant();
-    const profiles = await this.client.listProviderProfiles(tenantId);
+  async listProviderProfiles(request: ReadRequest = {}): Promise<readonly ProviderProfileSummary[]> {
+    const tenantId = await this.requireTenant(request);
+    const profiles = await this.client.listProviderProfiles(tenantId, request.signal);
     return profiles.map(mapProviderProfile);
   }
 
-  async getVoiceProviderConfiguration(): Promise<VoiceProviderConfiguration> {
-    const tenantId = await this.requireTenant();
-    return mapVoiceProviderConfiguration(await this.client.getVoiceProviderConfiguration(tenantId));
+  async getVoiceProviderConfiguration(request: ReadRequest = {}): Promise<VoiceProviderConfiguration> {
+    const tenantId = await this.requireTenant(request);
+    return mapVoiceProviderConfiguration(await this.client.getVoiceProviderConfiguration(tenantId, request.signal));
   }
 
   async updateVoiceProviderConfiguration(
     input: UpdateVoiceProviderConfigurationInput
   ): Promise<VoiceProviderConfiguration> {
     const tenantId = await this.requireTenant();
-    return mapVoiceProviderConfiguration(
-      await this.client.updateVoiceProviderConfiguration(tenantId, input)
-    );
+    return this.reportChange(tenantId, async () => {
+      return mapVoiceProviderConfiguration(
+        await this.client.updateVoiceProviderConfiguration(tenantId, input)
+      );
+    });
   }
 
   async createProviderProfile(input: CreateProviderProfileInput): Promise<ProviderProfileSummary> {
     const tenantId = await this.requireTenant();
-    return mapProviderProfile(await this.client.createProviderProfile(tenantId, input));
+    return this.reportChange(tenantId, async () => {
+      return mapProviderProfile(await this.client.createProviderProfile(tenantId, input));
+    });
   }
 
   async updateProviderProfile(input: UpdateProviderProfileInput): Promise<ProviderProfileSummary> {
     const tenantId = await this.requireTenant();
-    return mapProviderProfile(
-      await this.client.updateProviderProfile(tenantId, input.providerProfileId, {
-        promptTemplate: input.promptTemplate
-      })
-    );
+    return this.reportChange(tenantId, async () => {
+      return mapProviderProfile(
+        await this.client.updateProviderProfile(tenantId, input.providerProfileId, {
+          promptTemplate: input.promptTemplate
+        })
+      );
+    });
   }
 
   async replaceProviderProfileCredential(
     input: ReplaceProviderProfileCredentialInput
   ): Promise<ProviderProfileSummary> {
     const tenantId = await this.requireTenant();
-    const body = input.purpose === 'server_adc'
-      ? { purpose: input.purpose }
-      : { purpose: input.purpose, credential: input.credential ?? '' };
+    return this.reportChange(tenantId, async () => {
+      const body = input.purpose === 'server_adc'
+        ? { purpose: input.purpose }
+        : { purpose: input.purpose, credential: input.credential ?? '' };
 
-    return mapProviderProfile(
-      await this.client.replaceProviderProfileCredential(tenantId, input.providerProfileId, body)
-    );
+      return mapProviderProfile(
+        await this.client.replaceProviderProfileCredential(tenantId, input.providerProfileId, body)
+      );
+    });
   }
 
   async changeProviderProfileLifecycle(
@@ -94,25 +105,35 @@ export class ApiProviderProfileRepository implements ProviderProfileRepository {
     action: ProviderProfileLifecycleAction
   ): Promise<ProviderProfileSummary> {
     const tenantId = await this.requireTenant();
-    switch (action) {
-      case 'enable':
-        return mapProviderProfile(await this.client.enableProviderProfile(tenantId, providerProfileId));
-      case 'disable':
-        return mapProviderProfile(await this.client.disableProviderProfile(tenantId, providerProfileId));
-      case 'archive':
-        return mapProviderProfile(await this.client.archiveProviderProfile(tenantId, providerProfileId));
-    }
+    return this.reportChange(tenantId, async () => {
+      switch (action) {
+        case 'enable':
+          return mapProviderProfile(await this.client.enableProviderProfile(tenantId, providerProfileId));
+        case 'disable':
+          return mapProviderProfile(await this.client.disableProviderProfile(tenantId, providerProfileId));
+        case 'archive':
+          return mapProviderProfile(await this.client.archiveProviderProfile(tenantId, providerProfileId));
+      }
+    });
   }
 
   async testProviderProfile(providerProfileId: string): Promise<ProviderProfileTestResult> {
     const tenantId = await this.requireTenant();
-    return this.client.testProviderProfile(tenantId, providerProfileId);
+    return this.reportChange(tenantId, async () => {
+      return this.client.testProviderProfile(tenantId, providerProfileId);
+    });
   }
 
-  private async requireTenant(): Promise<string> {
+  private async reportChange<T>(tenantId: string, operation: () => Promise<T>): Promise<T> {
+    const result = await operation();
+    this.mutations.onProviderProfilesChanged(tenantId);
+    return result;
+  }
+
+  private async requireTenant(request: ReadRequest = {}): Promise<string> {
     const tenantId = typeof this.tenantScope === 'string'
       ? this.tenantScope
-      : await this.tenantScope.getCurrentTenantId();
+      : await this.tenantScope.getCurrentTenantId(request);
     if (tenantId.trim().length === 0) {
       throw new Error('Complete mobile onboarding before managing voice provider profiles.');
     }

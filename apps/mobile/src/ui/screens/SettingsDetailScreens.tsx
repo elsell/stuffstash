@@ -1,3 +1,4 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
@@ -219,7 +220,7 @@ function SettingsModelScreen({
   readonly query: SettingsQuery;
 }) {
   const { palette, styles } = useSettingsListStyles();
-  const { load, state } = useSettingsModel(query);
+  const { load, state, hasRefreshError } = useSettingsModel(query);
   if (state.status === 'loading') {
     return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
   }
@@ -234,7 +235,7 @@ function SettingsModelScreen({
       </ScrollView>
     );
   }
-  return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>{children(state.settings)}</ScrollView>;
+  return <ScrollView contentContainerStyle={styles.content} style={styles.shell}><SettingsRefreshNotice visible={hasRefreshError} onRetry={load} />{children(state.settings)}</ScrollView>;
 }
 
 function confirmSignOut(label: string, onSignOut: () => Promise<void>): void {

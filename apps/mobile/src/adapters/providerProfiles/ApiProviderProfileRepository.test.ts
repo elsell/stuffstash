@@ -110,6 +110,21 @@ class FakeProviderProfileClient {
 }
 
 describe('ApiProviderProfileRepository', () => {
+  it('does not report a provider change after a rejected mutation', async () => {
+    const client = new FakeProviderProfileClient();
+    client.testProviderProfile = async () => { throw new Error('denied'); };
+    const changed: string[] = [];
+    const repository = new ApiProviderProfileRepository(client, 'tenant-home', { onProviderProfilesChanged: (tenant) => changed.push(tenant) });
+    await expect(repository.testProviderProfile('profile-language')).rejects.toThrow('denied');
+    expect(changed).toEqual([]);
+  });
+  it('reports the changed tenant only after a successful provider mutation', async () => {
+    const client = new FakeProviderProfileClient();
+    const changed: string[] = [];
+    const repository = new ApiProviderProfileRepository(client, 'tenant-home', { onProviderProfilesChanged: (tenant) => changed.push(tenant) });
+    await repository.testProviderProfile('profile-language');
+    expect(changed).toEqual(['tenant-home']);
+  });
   it('resolves the active tenant for every operation after an in-session tenant switch', async () => {
     const client = new FakeProviderProfileClient();
     const scope = new FakeProviderTenantScope('tenant-home');

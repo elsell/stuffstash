@@ -1,3 +1,6 @@
+import { SettingsQuery } from '../../application/settings/SettingsQuery';
+import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
+import { createMobileQueryClient } from '../../adapters/serverState/MobileQueryClient';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { TestInstance } from 'test-renderer';
@@ -317,13 +320,16 @@ describe('rendered mobile customization production states', () => {
   });
 
   it('renders the binding household/inventory role hierarchy', async () => {
-    const readOnly = { execute: async () => settings(['view'], ['view']) };
+    const value = settings(['view'], ['view']);
+    const readOnly = new SettingsQuery({ getCurrentPrincipal: async () => ({ id: 'principal', email: 'person@example.test' }) }, { getDiagnostics: () => ({ apiBaseUrl: 'https://example.test', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => ({ tenant: value.selectedTenant, inventory: value.selectedInventory }) });
+    const client = createMobileQueryClient();
+    const wrap = (child: React.ReactNode) => <MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-home', inventoryId: 'inventory-home' })}>{child}</MobileServerStateProvider>;
     harness = new MobileRenderHarness();
-    await harness.render(<InventorySettingsScreen onNavigate={() => undefined} settingsQuery={readOnly as never} />); await harness.settle();
+    await harness.render(wrap(<InventorySettingsScreen onNavigate={() => undefined} settingsQuery={readOnly} />)); await harness.run(() => new Promise((resolve) => setTimeout(resolve, 20)));
     expect(harness.allText()).toEqual(expect.arrayContaining(['Tags', 'Custom fields', 'Asset types']));
     expect(harness.allText()).not.toContain('Sharing');
 
-    await harness.render(<HouseholdSettingsScreen onNavigate={() => undefined} settingsQuery={readOnly as never} />); await harness.settle();
+    await harness.render(wrap(<HouseholdSettingsScreen onNavigate={() => undefined} settingsQuery={readOnly} />)); await harness.settle();
     expect(harness.allText()).toContain('Settings unavailable');
   });
 });

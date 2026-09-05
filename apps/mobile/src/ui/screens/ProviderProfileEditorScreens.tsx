@@ -1,3 +1,4 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ManageProviderProfileCommand } from '../../application/providerProfiles/ManageProviderProfileCommand';
@@ -9,7 +10,7 @@ import type { ProviderProfileSettingsQuery } from '../../application/providerPro
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useSettingsListStyles } from './SettingsList';
-import { ProviderStateView, readableError, useProviderSettings } from './ProviderSettingsSupport';
+import { ProviderStateView, readableError, useProviderProfileModel } from './ProviderSettingsSupport';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type ProviderEditorProps = {
@@ -27,15 +28,15 @@ export function ProviderCredentialScreen({
   profileId,
   query
 }: ProviderEditorProps) {
-  const providers = useProviderSettings(query);
+  const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.load} />;
+    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile?.credentialPurpose) {
-    return <ProviderStateView state={{ status: 'error', message: 'This profile does not support mobile credential editing.' }} onRetry={providers.load} />;
+    return <ProviderStateView state={{ status: 'error', message: 'This profile does not support mobile credential editing.' }} onRetry={providers.retry} />;
   }
-  return <CredentialForm manageCommand={manageCommand} onCancel={onCancel} onSaved={onSaved} profile={{ ...profile, credentialPurpose: profile.credentialPurpose }} />;
+  return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><CredentialForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onCancel={onCancel} onSaved={onSaved} profile={{ ...profile, credentialPurpose: profile.credentialPurpose }} /></>;
 }
 
 export function ProviderPromptScreen({
@@ -45,15 +46,15 @@ export function ProviderPromptScreen({
   profileId,
   query
 }: ProviderEditorProps) {
-  const providers = useProviderSettings(query);
+  const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.load} />;
+    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile) {
-    return <ProviderStateView state={{ status: 'error', message: 'This provider profile is no longer available.' }} onRetry={providers.load} />;
+    return <ProviderStateView state={{ status: 'error', message: 'This provider profile is no longer available.' }} onRetry={providers.retry} />;
   }
-  return <PromptForm manageCommand={manageCommand} onCancel={onCancel} onSaved={onSaved} profile={profile} />;
+  return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><PromptForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onCancel={onCancel} onSaved={onSaved} profile={profile} /></>;
 }
 
 function CredentialForm({

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import type {
   ProviderProfileSettingsQuery,
@@ -11,18 +13,28 @@ export type ProviderState =
   | { readonly status: 'ready'; readonly viewModel: ProviderProfileSettingsViewModel }
   | { readonly status: 'error'; readonly message: string };
 
+export function useProviderProfiles(query: ProviderProfileSettingsQuery) {
+  return useMobileInventoryServerQuery({ key: mobileQueryKeys.providerProfiles, query: (signal) => query.listProfiles({ signal }) });
+}
+
+export function useProviderProfileModel(query: ProviderProfileSettingsQuery) {
+  const profiles = useProviderProfiles(query);
+  const state: Exclude<ProviderState, { status: 'ready' }> | { status: 'ready'; viewModel: Pick<ProviderProfileSettingsViewModel, 'profiles'> } = isAccessFailure(profiles.error) ? { status: 'error', message: 'Provider profiles are no longer available.' } : profiles.data
+    ? { status: 'ready', viewModel: { profiles: profiles.data } }
+    : profiles.isError ? { status: 'error', message: 'Provider profiles could not be loaded.' } : { status: 'loading' };
+  return { state, ownerKey: JSON.stringify(profiles.resourceKey), load: async () => { await profiles.reconcile(); }, retry: async () => { await profiles.refetch(); }, hasRefreshError: profiles.isRefetchError };
+}
+
 export function useProviderSettings(query: ProviderProfileSettingsQuery) {
-  const [state, setState] = useState<ProviderState>({ status: 'loading' });
-  const load = useCallback(async () => {
-    setState({ status: 'loading' });
-    try {
-      setState({ status: 'ready', viewModel: await query.execute() });
-    } catch (error) {
-      setState({ status: 'error', message: readableError(error) });
-    }
-  }, [query]);
-  useEffect(() => { void load(); }, [load]);
-  return { load, state };
+  const profiles = useProviderProfiles(query);
+  const configuration = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceConfiguration, query: (signal) => query.getConfiguration({ signal }) });
+  const state: ProviderState = isAccessFailure(profiles.error) || isAccessFailure(configuration.error) ? { status: 'error', message: 'Voice settings are no longer available.' } : profiles.data && configuration.data ? { status: 'ready', viewModel: {
+    profiles: profiles.data, configuration: configuration.data,
+    missingCapabilities: configuration.data.slots.filter((slot) => slot.readiness !== 'ready').map((slot) => slot.capability)
+  } } : profiles.isError || configuration.isError ? { status: 'error', message: 'Voice settings could not be loaded.' } : { status: 'loading' };
+  const load = async () => { await Promise.all([profiles.reconcile(), configuration.reconcile()]); };
+  const retry = async () => { await Promise.all([profiles.refetch(), configuration.refetch()]); };
+  return { state, load, retry, hasRefreshError: profiles.isRefetchError || configuration.isRefetchError };
 }
 
 export function ProviderStateView({

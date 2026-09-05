@@ -13,7 +13,7 @@ export function useMobileInventoryServerQuery<TData>({
   key,
   query,
   enabled = true
-}: MobileInventoryServerQueryOptions<TData>): UseQueryResult<TData, Error> & { reconcile: () => Promise<TData> } {
+}: MobileInventoryServerQueryOptions<TData>): UseQueryResult<TData, Error> & { reconcile: () => Promise<TData>; resourceKey: QueryKey } {
   const client = useQueryClient();
   const serverState = useMobileServerStateScope();
   const inventoryScope = useQuery({
@@ -33,15 +33,16 @@ export function useMobileInventoryServerQuery<TData>({
   });
   const reconcile = () => fetchMobileInventoryServerQuery({ client, serverState, key, query });
   if (!inventoryScope.isError) {
-    return { ...resourceQuery, reconcile };
+    return { ...resourceQuery, reconcile, resourceKey: queryKey };
   }
   return {
     ...resourceQuery,
     reconcile,
+    resourceKey: queryKey,
     error: inventoryScope.error,
     isError: true,
     isLoading: false,
     isPending: false,
     status: 'error'
-  } as UseQueryResult<TData, Error> & { reconcile: () => Promise<TData> };
+  } as UseQueryResult<TData, Error> & { reconcile: () => Promise<TData>; resourceKey: QueryKey };
 }

@@ -1,3 +1,4 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -55,12 +56,13 @@ export function VoiceSetupScreen({
   const { styles } = useSettingsListStyles();
   const providers = useProviderSettings(query);
   const settings = useSettingsModel(settingsQuery);
-  if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.load} />;
+  if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   if (settings.state.status !== 'ready') return <SettingsStateBridge state={settings.state} onRetry={settings.load} />;
   const { configuration } = providers.state.viewModel;
   const tenant = settings.state.settings.selectedTenant;
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <View style={styles.detailHeader}>
         <Text accessibilityRole="header" style={styles.detailTitle}>
           {configuration.readiness === 'ready' ? 'Voice is ready' : 'Voice needs attention'}
@@ -118,9 +120,9 @@ export function VoiceCapabilityScreen({
   const providers = useProviderSettings(query);
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
-  if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.load} />;
+  if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   const slot = providers.state.viewModel.configuration.slots.find((item) => item.capability === capability);
-  if (!slot) return <ProviderStateView state={{ status: 'error', message: 'This voice stage is not available.' }} onRetry={providers.load} />;
+  if (!slot) return <ProviderStateView state={{ status: 'error', message: 'This voice stage is not available.' }} onRetry={providers.retry} />;
   const stage = stagePresentation(capability);
   const selectedProfile = slot.selectedProfile;
   const recommendedAction = slot.recommendedAction;
@@ -134,7 +136,7 @@ export function VoiceCapabilityScreen({
     try {
       await action();
       feedback.showNotice({ tone: 'success', title: success, message: `${stage.title} setup was updated.` });
-      await providers.load();
+      void providers.load().catch(() => undefined);
     } catch (error) {
       feedback.showNotice({ tone: 'error', title: 'Could not update voice', message: readableError(error) });
     } finally {
@@ -190,6 +192,7 @@ export function VoiceCapabilityScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <View style={styles.detailHeader}>
         <Text accessibilityRole="header" style={styles.detailTitle}>{stage.title}</Text>
         <Text style={styles.detailSubtitle}>{stage.longDescription}</Text>
