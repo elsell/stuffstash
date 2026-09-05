@@ -50,7 +50,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 			authorizer := memory.NewAuthorizer()
 			seedMemoryStore(t, ctx, store.Store, authorizer, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}, {id: "tenant-other", name: "Other", owner: "user-2"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}, {id: "inventory-other", tenantID: "tenant-other", name: "Other", owner: "user-2"}}})
 			limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 1000}
-			application := app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits}).WithRealtimeVoiceProviders(fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+			application := app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, Audit: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits}).WithRealtimeVoiceProviders(fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
 			revision, err := application.SaveConversationWorkflowRevision(ctx, app.SaveConversationWorkflowInput{Principal: principal("user-1"), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Home", Retrieval: agentmodel.WorkflowRetrievalPreciseFirst, Response: agentmodel.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []agentmodel.WorkflowStep{{Kind: agentmodel.WorkflowStepInterpret, Attempts: 1}, {Kind: agentmodel.WorkflowStepAssess, Attempts: 1}, {Kind: agentmodel.WorkflowStepRespond, Attempts: 1}}}})
 			if err != nil {
 				t.Fatal(err)
@@ -82,7 +82,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 				if err = store.AppendWorkflowRevision(ctx, revision, 1, created); err != nil {
 					t.Fatal(err)
 				}
-				application = app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits, RealtimeVoiceProviderResolver: workflowOnlyVoiceResolver{}})
+				application = app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, Audit: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits, RealtimeVoiceProviderResolver: workflowOnlyVoiceResolver{}})
 			}
 			snapshot := revision.Snapshot()
 			record, ok := audit.NewRecord("activation", "tenant-home", "", "user-1", audit.ActionConversationWorkflowActivated, audit.SourceAPI, "conversation_workflow", string(snapshot.WorkflowID), time.Now(), "", nil)
