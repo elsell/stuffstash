@@ -53,7 +53,7 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 				return result, ports.ErrInvalidProviderInput
 			}
 			result.Answer = answer
-			result.Messages = append(result.Messages, ports.ConversationMessage{Role: ports.ConversationRoleAssistant, Text: answer.Display})
+			result.Messages = append(result.Messages, ports.ConversationMessage{Role: ports.ConversationRoleAssistant, Text: answer.Display, ProviderState: turn.ProviderState})
 			return result, nil
 		}
 		if turn.Answer != nil {
@@ -69,7 +69,7 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 			}
 			seenCalls[call.ID] = struct{}{}
 		}
-		result.Messages = append(result.Messages, ports.ConversationMessage{Role: ports.ConversationRoleAssistant, Text: turn.Text, ToolCalls: turn.ToolCalls})
+		result.Messages = append(result.Messages, ports.ConversationMessage{Role: ports.ConversationRoleAssistant, Text: turn.Text, ToolCalls: turn.ToolCalls, ProviderState: turn.ProviderState})
 		for _, call := range turn.ToolCalls {
 			if err := ctx.Err(); err != nil {
 				return result, err

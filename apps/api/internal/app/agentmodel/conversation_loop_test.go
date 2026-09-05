@@ -16,7 +16,7 @@ func (m *conversationInventoryModel) Converse(_ context.Context, in ports.Conver
 	m.calls++
 	last := in.Messages[len(in.Messages)-1]
 	if last.Role == ports.ConversationRoleUser {
-		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "search-1", Name: "search", Arguments: map[string]any{"query": "chemicals"}}}}, nil
+		return ports.ConversationModelTurn{ProviderState: []byte("opaque-provider-state"), ToolCalls: []ports.AgentToolCall{{ID: "search-1", Name: "search", Arguments: map[string]any{"query": "chemicals"}}}}, nil
 	}
 	var titles []string
 	if len(last.ToolResults) > 0 {
@@ -59,6 +59,9 @@ func TestConversationLoopRetainsToolResultsInHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 	found := false
+	if len(result.Messages) < 2 || string(result.Messages[1].ProviderState) != "opaque-provider-state" {
+		t.Fatal("provider continuation was lost")
+	}
 	for _, message := range result.Messages {
 		if message.Role == ports.ConversationRoleTool && len(message.ToolResults) == 1 && message.ToolResults[0].CallID == "search-1" {
 			found = true
