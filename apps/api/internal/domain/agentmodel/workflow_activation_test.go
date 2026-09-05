@@ -32,7 +32,7 @@ func TestWorkflowActivationRequiresExactSuccessfulEvidence(t *testing.T) {
 	if err := run.ValidateActivation(candidate); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"queued", "failed", "missing case", "duplicate case", "wrong case revision", "wrong workflow", "changed configuration", "changed provider", "missing provider", "duplicate provider", "lower limits"} {
+	for _, name := range []string{"queued", "failed", "missing case", "duplicate case", "wrong case revision", "wrong workflow", "changed configuration", "changed provider", "missing provider", "duplicate provider", "lower limits", "changed timestamp"} {
 		t.Run(name, func(t *testing.T) {
 			altered := candidate
 			altered.Cases = append([]EvaluationCasePin(nil), candidate.Cases...)
@@ -65,6 +65,10 @@ func TestWorkflowActivationRequiresExactSuccessfulEvidence(t *testing.T) {
 				altered.Providers = altered.Providers[:1]
 			case "duplicate provider":
 				altered.Providers[1] = altered.Providers[0]
+			case "changed timestamp":
+				value := pinned.Workflow.Snapshot()
+				value.CreatedAt = value.CreatedAt.Add(time.Nanosecond)
+				altered.Workflow, _ = NewWorkflowRevision(value)
 			case "lower limits":
 				altered.Limits.Budget.ModelCalls = 1
 			}
@@ -72,6 +76,12 @@ func TestWorkflowActivationRequiresExactSuccessfulEvidence(t *testing.T) {
 				t.Fatal("invalid evidence accepted")
 			}
 		})
+	}
+	equivalent := pinned.Workflow.Snapshot()
+	equivalent.CreatedAt = equivalent.CreatedAt.In(time.FixedZone("offset", 3600))
+	candidate.Workflow, _ = NewWorkflowRevision(equivalent)
+	if err := run.ValidateActivation(candidate); err != nil {
+		t.Fatalf("equivalent timestamp rejected: %v", err)
 	}
 	candidate.Cases[0], candidate.Cases[1] = candidate.Cases[1], candidate.Cases[0]
 	candidate.Providers[0], candidate.Providers[1] = candidate.Providers[1], candidate.Providers[0]
