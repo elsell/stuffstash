@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as Label from '$lib/components/ui/label/index.js';
   import { onDestroy, tick } from 'svelte';
   import { ConversationFailure } from '$lib/domain/conversation';
   import type { WorkflowDefinition, WorkflowStepKind } from '$lib/domain/conversationWorkflow';
@@ -54,7 +55,7 @@
 
 <form class="conversation-editor" onsubmit={save}>
   <header><h2>Workflow settings</h2><p>Choose how your configured models understand requests and find answers. Saving creates a draft.</p></header>
-  <label>Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving} /></label>
+  <Label.Root class="grid gap-2 text-sm">Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving} /></Label.Root>
   {#each draft.steps as step, index (step.kind)}
     <fieldset disabled={saving}>
       <legend>{index + 1}. {labels[step.kind]}</legend>
@@ -64,8 +65,8 @@
           ...(step.providerProfileId && !providers.some(provider => provider.id === step.providerProfileId) ? [{ value: step.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
         onChange={value => { step.providerProfileId = value || null; }} />
       {#if step.kind === 'respond' && draft.response === 'grounded'}<p class="help">Grounded answers use verified inventory facts without another model call. This step’s model and instructions are unused.</p>{/if}
-      <label>Additional instructions<Textarea.Root name={`instructions-${step.kind}`} bind:value={step.instructions} disabled={step.kind === 'respond' && draft.response === 'grounded'} rows={3} /></label>
-      <label>Maximum attempts<Input.Root name={`attempts-${step.kind}`} type="number" min={1} step={1} required bind:value={step.attempts} /></label>
+      <Label.Root class="grid gap-2 text-sm">Additional instructions<Textarea.Root name={`instructions-${step.kind}`} bind:value={step.instructions} disabled={step.kind === 'respond' && draft.response === 'grounded'} rows={3} /></Label.Root>
+      <Label.Root class="grid gap-2 text-sm">Maximum attempts<Input.Root name={`attempts-${step.kind}`} type="number" min={1} step={1} required bind:value={step.attempts} /></Label.Root>
     </fieldset>
   {/each}
   <details><summary>Advanced: retrieval, response and limits</summary>
@@ -75,7 +76,7 @@
     <WorkflowSelect id="response" label="Answer style" value={draft.response} disabled={saving}
       options={[{ value: 'generated_with_grounded_fallback', label: 'Model answer with grounded recovery' }, { value: 'grounded', label: 'Grounded facts' }]}
       onChange={value => { if (value === 'generated_with_grounded_fallback' || value === 'grounded') draft.response = value; }} />
-    <div class="budget-grid">{#each budgets as budget}<label>{budget.label}<Input.Root name={budget.key} disabled={saving} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></label>{/each}</div>
+    <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
     <p class="help">Limits are shared across the conversation and must fit your server’s configured maximums.</p>
   </details>
   <div class="editor-actions"><Button.Root type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save draft'}</Button.Root>
@@ -88,7 +89,6 @@
   .conversation-editor { display: grid; gap: 1.25rem; max-width: 52rem; }
   header h2 { font-size: 1.25rem; font-weight: 650; }
   header p, .help { color: var(--muted-foreground); font-size: .9rem; }
-  label { display: grid; gap: .4rem; font-size: .9rem; font-weight: 500; }
   fieldset { display: grid; gap: 1rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; min-width: 0; }
   legend { font-weight: 650; padding-inline: .4rem; }
   summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
