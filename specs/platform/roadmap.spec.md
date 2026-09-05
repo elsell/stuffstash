@@ -210,11 +210,11 @@ with the mobile tracer-bullet contract. An interactive HTML prototype was review
 on 2026-09-05: combined connection/sign-in, conditional household and inventory
 setup, concise copy without a global stepper, and an aligned ghost start-over
 action. Native implementation and partial-creation/authentication recovery tests are in
-PR #56. Red baseline CI 33994428209 failed on the absent combined commands and
-new screen controls as expected. Initial implementation CI 33994747603 passed
-existing coverage and exposed two new-test fixture issues (OIDC claims and a
-missing test icon), now corrected; final CI remains pending. Native device
-accessibility/keyboard review remains pending.
-This records design approval, not shipped behavior. Invitation server-prefill and
+[PR #56](https://github.com/elsell/stuffstash/pull/56), which tracks final automated
+validation and merge evidence. Red baseline CI 33994428209 confirmed the missing
+combined commands and screen controls. Source review found no remaining blockers;
+CI is the merge gate, followed by the tagged TestFlight release workflow. Native
+device accessibility/keyboard review remains follow-up work.
+Invitation server-prefill and
 arbitrary-domain browser-to-app handoff remain deferred under the existing
 invitation contract.
