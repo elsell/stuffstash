@@ -18,7 +18,9 @@ Interpret imperfect speech and propose narrow evidence reads. Speech may contain
 
 Classify request shape before operation. Request shape describes how many subjects the user targets, not how many records an answer may contain. single_target means one operation on one subject or proposed new asset. A list_contents question about one named location or container is single_target even though its answer may contain many items. collection_target means one operation targets an explicit set, category, universal quantification, unbounded collection, or the inventory as a whole; list_inventory is collection_target. compound means two or more requested operations, including sequential operations on one subject. Collection reads may be supported. Every collection-targeted change and compound request is unsupported; never keep only one change from a compound request.
 
-Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
+Classify exactly one operation. Read operations are locate, exists, list_inventory, list_contents, detail, checkout_status, asset_history, and checkout_history. Supported changes are create, move, archive, restore, checkout, and return. Everything else is unsupported. For create, set creationMode to record unless the user explicitly requests an additional physical instance (another, an extra, a second, or equivalent wording). Additional mode requires creationEvidence quoted verbatim from a user utterance. Never infer additional intent from a matching inventory label or assistant text. Use empty creationMode and creationEvidence for non-create operations. Always search for existing items in both creation modes. For additional mode, existing subjects are duplicate-discovery context, not identities for the new physical item.
+
+A newly obtained subject cannot be moved because it is not recorded yet: got, bought, received, picked up, new, or spare followed by put, place, store, or stash means create. A later it, this, or them still refers to that new subject.
 
 An imperative return or check in instruction selects the return operation, never locate. In an asset command, return has its ordinary physical-custody meaning: mark a checked-out asset as returned. Never reinterpret it as a programming or API request to return, find, or display a record. An imperative check out instruction selects the checkout operation. Only create and move use destinationPath or destination references. Usage, borrower, purpose, note, or context phrases on checkout and return stay in details.
 
@@ -281,17 +283,19 @@ func geminiInvestigationResponseSchema(input agentmodel.InvestigationInput) *gem
 		operationDescription += " It must exactly preserve canonicalIntent.operation."
 	}
 	intent := geminiSchema{Type: "object", Properties: map[string]geminiSchema{
-		"requestShape":    {Type: "string", Enum: []string{"single_target", "collection_target", "compound"}, Description: "Count targeted subjects, not answer records: list_contents of one named place is single_target; list_inventory or a category/set is collection_target; two or more operations is compound."},
-		"kind":            {Type: "string", Enum: []string{"read", "change", "unsupported"}},
-		"operation":       {Type: "string", Enum: []string{"locate", "exists", "list_inventory", "list_contents", "detail", "checkout_status", "asset_history", "checkout_history", "create", "move", "archive", "restore", "checkout", "return", "unsupported"}, Description: operationDescription},
-		"subjectMention":  {Type: "string"},
-		"newAssetKind":    {Type: "string", Enum: []string{"", "item", "container", "location"}},
-		"destinationPath": stringArray(),
+		"requestShape":     {Type: "string", Enum: []string{"single_target", "collection_target", "compound"}, Description: "Count targeted subjects, not answer records: list_contents of one named place is single_target; list_inventory or a category/set is collection_target; two or more operations is compound."},
+		"kind":             {Type: "string", Enum: []string{"read", "change", "unsupported"}},
+		"operation":        {Type: "string", Enum: []string{"locate", "exists", "list_inventory", "list_contents", "detail", "checkout_status", "asset_history", "checkout_history", "create", "move", "archive", "restore", "checkout", "return", "unsupported"}, Description: operationDescription},
+		"subjectMention":   {Type: "string"},
+		"creationMode":     {Type: "string", Enum: []string{"", "record", "additional"}},
+		"creationEvidence": {Type: "string", Description: "Verbatim user quote establishing an explicitly additional physical item; otherwise empty."},
+		"newAssetKind":     {Type: "string", Enum: []string{"", "item", "container", "location"}},
+		"destinationPath":  stringArray(),
 		"destinationKinds": {Type: "array", Items: &geminiSchema{
 			Type: "string", Enum: []string{"location", "container"},
 		}},
 		"details": {Type: "string"},
-	}, Required: []string{"requestShape", "kind", "operation", "subjectMention", "newAssetKind", "destinationPath", "destinationKinds", "details"}}
+	}, Required: []string{"requestShape", "kind", "operation", "subjectMention", "newAssetKind", "creationMode", "creationEvidence", "destinationPath", "destinationKinds", "details"}}
 
 	readKinds := []string{"search_assets", "list_inventory"}
 	if input.Phase == agentmodel.InvestigationPhaseEvidenceAssessment {

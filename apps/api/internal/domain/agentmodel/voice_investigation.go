@@ -125,6 +125,8 @@ func CanonicalizeIntent(intent Intent) Intent {
 	}
 	if intent.Operation != OperationCreate {
 		intent.NewAssetKind = ""
+		intent.CreationMode = ""
+		intent.CreationEvidence = ""
 	}
 	if intent.Operation != OperationCreate && intent.Operation != OperationMove {
 		intent.DestinationPath = nil
@@ -269,6 +271,8 @@ func (kind DestinationKind) Valid() bool {
 }
 
 type Intent struct {
+	CreationMode     CreationMode      `json:"creationMode"`
+	CreationEvidence string            `json:"creationEvidence"`
 	RequestShape     RequestShape      `json:"requestShape"`
 	Kind             IntentKind        `json:"kind"`
 	Operation        Operation         `json:"operation"`
@@ -280,7 +284,7 @@ type Intent struct {
 }
 
 func (intent Intent) Validate() error {
-	if !intent.RequestShape.Valid() || !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
+	if !intent.validCreationIntent() || !intent.RequestShape.Valid() || !intent.Kind.Valid() || !intent.Operation.Valid() || !bounded(intent.SubjectMention, maxInvestigationTextRunes, true) ||
 		!bounded(intent.Details, MaxInvestigationDetailRunes, true) || len(intent.DestinationPath) > MaxDestinationSegments ||
 		len(intent.DestinationKinds) != len(intent.DestinationPath) {
 		return ErrInvalidVoiceInvestigation

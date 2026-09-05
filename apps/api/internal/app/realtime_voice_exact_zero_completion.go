@@ -36,6 +36,10 @@ func realtimeVoiceExactOrZeroCompletion(intent agentmodel.Intent, step agentmode
 		candidates := byReference[reference]
 		mention := realtimeVoiceInvestigationReferenceMention(intent, reference)
 		if reference == agentmodel.SemanticReferenceSubject && intent.Operation == agentmodel.OperationCreate {
+			if intent.CreationMode == agentmodel.CreationModeAdditional {
+				resolutions = append(resolutions, agentmodel.Resolution{ReferenceKey: reference, Status: agentmodel.ResolutionMissing, Evidence: "The user requested an additional physical item after authorized duplicate discovery."})
+				continue
+			}
 			exactIDs := make([]string, 0, 1)
 			for _, candidate := range candidates {
 				if realtimeVoiceInvestigationTitleMatchesMention(candidate.Title, mention) {

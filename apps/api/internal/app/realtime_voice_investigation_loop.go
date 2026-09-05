@@ -157,6 +157,7 @@ func realtimeVoiceDestinationRepairAllowed(transcript string, original, repaired
 	if (original.Operation != agentmodel.OperationCreate && original.Operation != agentmodel.OperationMove) ||
 		original.RequestShape != repaired.RequestShape || original.Kind != repaired.Kind || original.Operation != repaired.Operation ||
 		normalizeRealtimeVoiceSemanticMention(original.SubjectMention) != normalizeRealtimeVoiceSemanticMention(repaired.SubjectMention) ||
+		original.CreationMode.Effective() != repaired.CreationMode.Effective() || strings.TrimSpace(original.CreationEvidence) != strings.TrimSpace(repaired.CreationEvidence) ||
 		strings.TrimSpace(original.NewAssetKind) != strings.TrimSpace(repaired.NewAssetKind) || strings.TrimSpace(original.Details) != strings.TrimSpace(repaired.Details) ||
 		len(repaired.DestinationPath) < len(original.DestinationPath) || repaired.Validate() != nil {
 		return false
@@ -276,7 +277,7 @@ func (a App) nextRealtimeVoiceInvestigation(ctx context.Context, session Realtim
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	turn.Investigation.Intent = agentmodel.CanonicalizeIntent(turn.Investigation.Intent)
-	if turn.Investigation.Validate() != nil {
+	if turn.Investigation.Validate() != nil || !realtimeVoiceCreationEvidenceGrounded(turn.Investigation.Intent, transcript, conversationTurns) {
 		return agentmodel.InvestigationStep{}, ports.ErrInvalidProviderInput
 	}
 	if err := emitRealtimeVoiceInvestigationDiagnostic(session, investigation, *turn.Investigation, emit); err != nil {
