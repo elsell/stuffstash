@@ -92,6 +92,7 @@ func TestWorkflowDefinitionRejectsInvalidOperatorLimits(t *testing.T) {
 
 func TestWorkflowDefinitionBoundsInstructionsAndProfileReferences(t *testing.T) {
 	for _, change := range []func(*WorkflowDefinitionInput){
+		func(v *WorkflowDefinitionInput) { v.Steps[0].ProviderProfileID = string([]byte{0xff}) },
 		func(v *WorkflowDefinitionInput) { v.Name = strings.Repeat("家", 121) },
 		func(v *WorkflowDefinitionInput) { v.Steps[0].Instructions = strings.Repeat("家", 4001) },
 		func(v *WorkflowDefinitionInput) { v.Steps[0].ProviderProfileID = strings.Repeat("x", 65) },
@@ -102,5 +103,13 @@ func TestWorkflowDefinitionBoundsInstructionsAndProfileReferences(t *testing.T) 
 		if _, err := NewWorkflowDefinition(input, workflowTestLimits()); err == nil {
 			t.Fatal("invalid workflow content accepted")
 		}
+	}
+}
+
+func TestWorkflowGlobalBudgetMayBoundStepMaxima(t *testing.T) {
+	input := workflowTestInput()
+	input.Budget.ModelCalls = 2
+	if _, err := NewWorkflowDefinition(input, workflowTestLimits()); err != nil {
+		t.Fatalf("global call budget is an execution cap, not a promise to exhaust every step maximum: %v", err)
 	}
 }
