@@ -31,7 +31,7 @@ func validEvaluationProposal(value EvaluationProposal, assets map[string]Evaluat
 		}
 	}
 	if value.Operation == OperationCreate {
-		if value.TargetID != "" || !workflowTextWithin(value.NewTitle, 160, false) || strings.TrimSpace(value.NewTitle) != value.NewTitle {
+		if value.TargetID != "" || !validEvaluationAssetTitle(value.NewTitle) {
 			return false
 		}
 		switch value.NewKind {

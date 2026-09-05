@@ -10,6 +10,7 @@ var ErrInvalidEvaluationCase = errors.New("invalid evaluation case")
 
 const MaxEvaluationFixtureAssets = 100
 const MaxEvaluationFixtureDepth = 32
+const MaxEvaluationAssetTitleBytes = 160
 
 type EvaluationFixtureKind string
 
@@ -67,7 +68,7 @@ func NewEvaluationCaseDefinition(input EvaluationCaseDefinitionInput) (Evaluatio
 		value := &input.Assets[i]
 		value.Title = strings.TrimSpace(value.Title)
 		value.Description = strings.TrimSpace(value.Description)
-		if !workflowIdentifierValid(value.ID) || !workflowTextWithin(value.Title, 160, false) || !workflowTextWithin(value.Description, 2000, true) || !validObservationTagNames(value.TagNames) {
+		if !workflowIdentifierValid(value.ID) || !validEvaluationAssetTitle(value.Title) || !workflowTextWithin(value.Description, 2000, true) || !validObservationTagNames(value.TagNames) {
 			return EvaluationCaseDefinition{}, ErrInvalidEvaluationCase
 		}
 		switch value.Kind {
@@ -95,6 +96,9 @@ func NewEvaluationCaseDefinition(input EvaluationCaseDefinitionInput) (Evaluatio
 		return EvaluationCaseDefinition{}, ErrInvalidEvaluationCase
 	}
 	return EvaluationCaseDefinition{settings: input}, nil
+}
+func validEvaluationAssetTitle(value string) bool {
+	return len(value) <= MaxEvaluationAssetTitleBytes && workflowTextWithin(value, MaxEvaluationAssetTitleBytes, false) && strings.TrimSpace(value) == value
 }
 func (value EvaluationCaseDefinition) Settings() EvaluationCaseDefinitionInput {
 	return cloneEvaluationCase(value.settings)
