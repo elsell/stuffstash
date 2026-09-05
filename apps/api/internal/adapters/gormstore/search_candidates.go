@@ -20,7 +20,7 @@ func (s Store) postgresSearchCandidates(ctx context.Context, query *gorm.DB, ten
 		return query
 	}
 	for _, character := range text {
-		if character > 127 {
+		if character == 0 || character > 127 {
 			return query
 		}
 	}
@@ -68,7 +68,7 @@ func searchCandidateUnion(queries ...*gorm.DB) clause.Expression {
 		parts = append(parts, "(?)")
 		values = append(values, query)
 	}
-	return clause.Expr{SQL: strings.Join(parts, " UNION ALL "), Vars: values}
+	return clause.Expr{SQL: strings.Join(parts, " UNION "), Vars: values}
 }
 
 func searchInSubquery(column string, query *gorm.DB) clause.Expression {

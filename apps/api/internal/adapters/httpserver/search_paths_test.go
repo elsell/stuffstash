@@ -27,6 +27,12 @@ func TestSearchReturnsAuthorizedAncestorPath(t *testing.T) {
 		}
 		parent = decodeAsset(t, response).Data.ID
 	}
+	for _, mode := range []string{"exact", "fuzzy"} {
+		response := searchAssetsResponse(server, tenantID, inventoryID, "Bearer dev:owner", "\x00", mode, "", "", 0, "")
+		if response.Code != http.StatusOK || len(decodeAssetSearch(t, response).Data) != 0 {
+			t.Fatalf("NUL query must remain a successful empty search: %d %s", response.Code, response.Body.String())
+		}
+	}
 	result := searchAssets(t, server, tenantID, "Bearer dev:owner", "Drill", "", "", "")
 	if len(result.Data) != 1 || len(result.Data[0].AncestorPath) != 2 {
 		t.Fatalf("expected complete path, got %+v", result.Data)

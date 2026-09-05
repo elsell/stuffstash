@@ -121,3 +121,9 @@ output identifies the test/benchmark phase. Always retain completed output.
 The Go cache uses the actual `apps/api/go.sum` rather than a nonexistent root
 manifest. Run 33944443098 was stopped after over ten minutes without measurement
 output; its ordinary checks passed, but no performance result is claimed from it.
+
+The UNION ALL refinement failed the first selective-query correctness preflight
+in run 33945124237 by exceeding the 10-second statement timeout. No benchmark
+result from that run is accepted. Candidate composition now deduplicates using
+UNION before outer membership; the same first-query test must pass without
+adding a warm-up or increasing the timeout.

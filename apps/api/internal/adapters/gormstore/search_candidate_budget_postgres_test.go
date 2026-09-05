@@ -80,6 +80,17 @@ func TestPostgresSearchBoundsCandidateHydration(t *testing.T) {
 			t.Fatalf("query %q changed semantics: %+v, %v", scenario.query, items, err)
 		}
 	}
+	// NUL is a valid domain query but cannot be passed as PostgreSQL text.
+	for _, mode := range []search.Mode{search.ModeExact, search.ModeFuzzy} {
+		query, ok := search.NewQuery("\x00")
+		if !ok {
+			t.Fatal("NUL query must remain valid")
+		}
+		items, err := store.SearchAssets(context.Background(), tenantID, []inventory.InventoryID{inventoryID}, ports.AssetSearchPageRequest{Query: query, Mode: mode, Limit: 20})
+		if err != nil || len(items) != 0 {
+			t.Fatalf("NUL query changed semantics: %+v, %v", items, err)
+		}
+	}
 	// Opaque cursors use bytewise concatenated IDs, including prefix inventory IDs.
 	inventoryIDs := []inventory.InventoryID{"search-prefix-a", "search-prefix-a0"}
 	expected := []string{}
