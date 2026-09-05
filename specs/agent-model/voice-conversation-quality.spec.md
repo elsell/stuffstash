@@ -2,6 +2,8 @@
 
 ## Purpose and precedence
 
+The replacement runtime is defined by [Model-led Voice Loop](model-led-voice-loop.spec.md). Its model-led tool execution and natural-response requirements supersede the structured investigation and phrase-validation mechanisms described historically below.
+
 Make conversational inventory useful across ordinary household language, corrections, and follow-ups. This spec refines the mobile realtime voice spec: its requirements supersede earlier requirements that make generated prose mandatory without a grounded fallback or restrict conversation continuation to clarification responses. Security, tenant/provider isolation, audited reads and approval-backed writes remain mandatory.
 
 ## Acceptance behavior
