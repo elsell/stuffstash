@@ -35,7 +35,7 @@ func TestEvaluationResponseProjectionRequiresDisplayedEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	delete(ids, "runtime-clothes")
-	response := ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, DisplayResponse: "3 to 6 months is in Baby box.", Artifacts: []ports.StructuredAgentResponseArtifact{
+	response := ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "3 to 6 months is in Baby box.", DisplayResponse: "3 to 6 months is in Baby box.", Artifacts: []ports.StructuredAgentResponseArtifact{
 		{Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: "runtime-clothes", Title: "3 to 6 months", AssetKind: "item", Context: "Baby box"},
 		{Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: "runtime-box", Title: "Baby box", AssetKind: "container", Context: "Attic"},
 	}}
@@ -73,6 +73,35 @@ func TestEvaluationProjectionRejectsIncompleteOrAliasedFixtureMaps(t *testing.T)
 				t.Fatal("invalid identity map accepted")
 			}
 		})
+	}
+}
+
+func TestEvaluationProjectionCannotTreatInvalidEvidenceAsExpectedFailure(t *testing.T) {
+	settings := projectionFixture(t).Settings()
+	settings.Expectations = domain.EvaluationExpectations{Kind: domain.EvaluationOutcomeFailure}
+	definition, err := domain.NewEvaluationCaseDefinition(settings)
+	if err != nil {
+		t.Fatal(err)
+	}
+	projector, err := NewEvaluationProjector(definition, projectionIDs())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, response := range []ports.StructuredAgentResponse{
+		{Kind: "unknown"},
+		{Kind: ports.StructuredAgentResponseKindSafeFailure},
+		{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: " ", DisplayResponse: "I could not finish."},
+		{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: "I could not finish.", DisplayResponse: " \n"},
+		{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: "I could not finish.", DisplayResponse: "3 to 6 months", Artifacts: []ports.StructuredAgentResponseArtifact{{Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: "outside", Title: "3 to 6 months", AssetKind: "item"}}},
+		{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "No items found.", DisplayResponse: "No items found.", Artifacts: []ports.StructuredAgentResponseArtifact{{Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: "runtime-clothes", Title: "3 to 6 months", AssetKind: "item"}}},
+	} {
+		if _, err := projector.Response(response); err == nil {
+			t.Fatal("malformed response could satisfy an expected failure")
+		}
+	}
+	outcome, err := projector.Response(ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: "I could not finish. Please try again.", DisplayResponse: "I could not finish. Please try again."})
+	if err != nil || !definition.Evaluate(outcome).Passed {
+		t.Fatalf("valid safe failure not preserved: %+v %v", outcome, err)
 	}
 }
 func TestEvaluationProposalProjectionPreservesFullCommandSemantics(t *testing.T) {
