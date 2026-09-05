@@ -36,7 +36,7 @@ function fixture(result: NativeAuthPromptResult) {
     },
     async exchangeCode(config) {
       expect(config.extraParams.code_verifier).toBe('verifier');
-      return { idToken: 'test-id-token', refreshToken: 'test-refresh-token', expiresIn: 3600, issuedAt: 1_000 };
+      return { idToken: `test.${btoa(JSON.stringify({ iss: 'https://issuer.example.test', aud: 'mobile', exp: 4600 }))}.test`, refreshToken: 'test-refresh-token', expiresIn: 3600, issuedAt: 1_000 };
     },
     async refresh() { throw new Error('Not expected'); }
   };

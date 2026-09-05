@@ -122,3 +122,12 @@ it('serializes start-over after a profile save already in progress', async () =>
   expect(f.profiles.profile).toBeUndefined();
   expect(f.auth.signIns).toHaveLength(0);
 });
+
+it('clears an API-rejected session instead of leaving setup authenticated', async () => {
+  const { command, auth, api } = fixture();
+  const state = await command.connectAndSignIn({ apiBaseUrl: onboardingServer });
+  api.listTenantsError = Object.assign(new Error('Revoked'), { status: 401 });
+  await expect(command.createHousehold({ profile: state.profile!, ...names })).rejects.toThrow('Sign in to Stuff Stash.');
+  expect(auth.signedIn).toBe(false);
+  expect(api.tenantWrites).toBe(0);
+});

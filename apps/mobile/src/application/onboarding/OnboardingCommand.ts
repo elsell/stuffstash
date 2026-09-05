@@ -1,5 +1,5 @@
 import { OrderedConnectionProfileStore } from './OrderedConnectionProfileStore';
-import { HouseholdSetup } from './HouseholdSetup';
+import { HouseholdSetup, OnboardingPartialSetupError } from './HouseholdSetup';
 import {
   ConnectionProfile,
   ConnectionProfileStore,
@@ -119,6 +119,16 @@ export class OnboardingCommand {
     const generation = this.generation;
     const active = () => { if (generation !== this.generation) throw new OnboardingSupersededError(); };
     try { return await action(active); }
+    catch (error) {
+      active();
+      const cause = error instanceof OnboardingPartialSetupError ? error.failure : error;
+      if (isAuthenticationRequiredError(cause)) {
+        this.householdSetup.clear();
+        await this.auth.signOut();
+        throw new MobileAuthenticationRequiredError();
+      }
+      throw error;
+    }
     finally { if (generation === this.generation) this.operationInFlight = false; }
   }
 

@@ -22,7 +22,7 @@ type ScreenState =
   | { readonly status: 'accepted'; readonly inventoryId: string; readonly inventoryName: string }
   | { readonly status: 'opening'; readonly inventoryId: string; readonly inventoryName: string }
   | { readonly status: 'open_error'; readonly inventoryId: string; readonly inventoryName: string }
-  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly retryable: boolean; readonly canSwitchAccount?: boolean };
+  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly retryable: boolean; readonly canSwitchAccount?: boolean; readonly retryStartOver?: boolean };
 
 export function InventoryInvitationScreen({
   acceptCommand,
@@ -164,7 +164,7 @@ export function InventoryInvitationScreen({
             <Text accessibilityRole="header" style={styles.title}>{state.title}</Text>
             <Text style={styles.message}>{state.message}</Text>
             {state.retryable ? (
-              <Pressable accessibilityRole="button" onPress={() => void load()} style={styles.primaryButton}>
+              <Pressable accessibilityRole="button" disabled={startingOver} onPress={() => void (state.retryStartOver ? startOver() : load())} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Try again</Text>
               </Pressable>
             ) : null}
@@ -187,7 +187,7 @@ export function InventoryInvitationScreen({
     requestGeneration.current++;
     setStartingOver(true);
     try { await onStartOver(); }
-    catch { setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true }); }
+    catch { setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true, retryStartOver: true }); }
     finally { setStartingOver(false); }
   }
 
@@ -267,10 +267,10 @@ function createStyles(colors: MobileColorPalette, accessibilityLayout = false) {
     detailRow: { alignItems: 'flex-start', alignSelf: 'stretch', minHeight: 48, paddingVertical: spacing.sm },
     detailLabel: { color: colors.textMuted, fontSize: 15 },
     detailValue: { color: colors.text, fontSize: 16, fontWeight: '700' },
-    primaryButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.action, borderRadius: radius.md, justifyContent: 'center', marginTop: spacing.lg, minHeight: 50, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+    primaryButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.action, borderRadius: 12, justifyContent: 'center', marginTop: spacing.lg, minHeight: 54, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     primaryButtonPressed: { backgroundColor: colors.actionPressed },
-    primaryButtonText: { color: colors.onAction, flexShrink: 1, fontSize: 17, fontWeight: '700', textAlign: 'center' },
-    secondaryButton: { alignItems: 'center', alignSelf: 'stretch', justifyContent: 'center', marginTop: spacing.sm, minHeight: 48, paddingVertical: spacing.sm },
-    secondaryButtonText: { color: colors.action, flexShrink: 1, fontSize: 17, fontWeight: '600', textAlign: 'center' }
+    primaryButtonText: { color: colors.onAction, flexShrink: 1, fontSize: 16, fontWeight: '600', textAlign: 'center' },
+    secondaryButton: { alignItems: 'center', alignSelf: 'stretch', justifyContent: 'center', marginTop: spacing.sm, borderRadius: 12, minHeight: 54, paddingVertical: 12, paddingHorizontal: spacing.md },
+    secondaryButtonText: { color: colors.action, flexShrink: 1, fontSize: 16, fontWeight: '600', textAlign: 'center' }
   });
 }

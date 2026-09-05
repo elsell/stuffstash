@@ -48,4 +48,22 @@ describe('onboarding screen', () => {
     expect(api.inventoryWrites).toBe(1);
     await harness.unmount();
   });
+  it('shows inventory-only recovery after household creation and keeps the entered inventory name', async () => {
+    const { harness, api } = await fixture();
+    await harness.changeText(harness.byLabel('Server address'), onboardingServer);
+    await harness.press(harness.byLabel('Connect and sign in'));
+    await harness.changeText(harness.byLabel('Household name'), 'Maple Street');
+    await harness.changeText(harness.byLabel('First inventory'), 'Workshop');
+    api.failInventoryBeforeWrite = true;
+    await harness.press(harness.byLabel('Create household'));
+    expect(harness.byText('Create your first inventory')).toBeDefined();
+    expect(harness.byLabel('Household name')).toBeUndefined();
+    expect(harness.byLabel('Inventory name')?.props.value).toBe('Workshop');
+    api.failInventoryBeforeWrite = false;
+    await harness.press(harness.byLabel('Create inventory'));
+    expect(api.tenantWrites).toBe(1);
+    expect(api.inventoryWrites).toBe(1);
+    await harness.unmount();
+  });
+
 });

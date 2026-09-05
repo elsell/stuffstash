@@ -314,3 +314,25 @@ it('orders sign-out after a secure-store save already in progress', async () => 
   await Promise.all([signingIn, signingOut]);
   expect(saved).toBeUndefined();
 });
+
+it('finishes a stale-session clear before storing a newer sign-in', async () => {
+  let stored: MobileAuthSession | undefined = { ...freshSession(), expiresAt: 1, refreshToken: undefined };
+  let release!: () => void;
+  let entered!: () => void;
+  const clearing = new Promise<void>(resolve => { entered = resolve; });
+  const blocked = new Promise<void>(resolve => { release = resolve; });
+  const store: MobileAuthSessionStore = {
+    async load() { return stored; },
+    async save(session) { stored = session; },
+    async clear() { entered(); await blocked; stored = undefined; }
+  };
+  const controller = new MobileAuthSessionController(store, new FakeMetadataGateway(metadata), new FakeOidcClient({
+    idToken: 'new-token', refreshToken: 'new-refresh', expiresAt: 200_000
+  }), () => 1_000);
+  const expired = controller.validSession('https://api.example.test').catch(() => undefined);
+  await clearing;
+  const newSignIn = controller.signIn('https://api.example.test');
+  release();
+  await Promise.all([expired, newSignIn]);
+  expect(stored?.idToken).toBe('new-token');
+});

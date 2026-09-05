@@ -29,3 +29,5 @@ export const Send = "SendIcon";
 export const Building2 = 'Building2Icon';
 export const ImagePlus = 'ImagePlusIcon';
 export const ChevronUp = 'ChevronUpIcon';
+
+export const MailCheck = 'MailCheckIcon';

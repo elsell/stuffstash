@@ -120,7 +120,7 @@ export class MobileAuthSessionController {
       return session;
     }
     if (!session.refreshToken) {
-      await this.store.clear();
+      await this.clearMatchingSession(session);
       throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
     }
     const key = refreshKey(session);
@@ -133,6 +133,16 @@ export class MobileAuthSessionController {
       this.refreshInFlight = { key, promise };
     }
     return this.refreshInFlight.promise;
+  }
+
+  private clearMatchingSession(session: MobileAuthSession) {
+    const generation = this.sessionGeneration;
+    return this.writeStorage(async () => {
+      const current = await this.store.load();
+      if (generation === this.sessionGeneration && current && refreshKey(current) === refreshKey(session)) {
+        await this.store.clear();
+      }
+    });
   }
 
   private writeStorage(action: () => Promise<void>) {
@@ -152,7 +162,7 @@ export class MobileAuthSessionController {
   private async refreshSession(session: MobileAuthSession): Promise<MobileAuthSession> {
     const generation = this.sessionGeneration;
     if (!session.refreshToken) {
-      await this.store.clear();
+      await this.clearMatchingSession(session);
       throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
     }
 

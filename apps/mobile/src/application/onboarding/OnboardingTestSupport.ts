@@ -32,6 +32,7 @@ export class OnboardingAuthFake implements OnboardingAuthPort {
 export class OnboardingApiFake implements OnboardingApiPort {
   tenants: OnboardingTenant[] = [];
   inventories: OnboardingInventory[] = [];
+  listTenantsError?: Error;
   tenantWrites = 0;
   inventoryWrites = 0;
   failTenantAfterWrite = false;
@@ -39,7 +40,7 @@ export class OnboardingApiFake implements OnboardingApiPort {
   failInventoryBeforeWrite = false;
   constructor(readonly auth: OnboardingAuthFake) {}
   private authorize() { if (!this.auth.signedIn) throw Object.assign(new Error('Unauthorized'), { status: 401 }); }
-  async listTenants() { this.authorize(); return [...this.tenants]; }
+  async listTenants() { this.authorize(); if (this.listTenantsError) throw this.listTenantsError; return [...this.tenants]; }
   async listInventories(tenantId: string) { this.authorize(); return this.inventories.filter(i => i.tenantId === tenantId); }
   async createTenant(name: string) {
     this.authorize(); this.tenantWrites++;
