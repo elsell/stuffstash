@@ -266,3 +266,19 @@ settings unless they map to a `STUFF_STASH_*` variable above.
 | `NODE_BUILDER_IMAGE` | pinned digest | Web builder image override. Must stay digest-pinned. |
 | `WEB_RUNTIME_IMAGE` | pinned digest | Web runtime image override. Must stay digest-pinned. |
 | `PNPM_VERSION` | `11.0.7` | pnpm version used by the web image build. |
+
+## Conversation evaluation workers
+
+Evaluation workers run saved test suites against configured models using isolated inventory fixtures. Each API process runs one suite at a time by default. Keep that default for a small local model; increase concurrency only when the provider has capacity. A run keeps its selected workflow, cases and provider configuration.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_EVALUATION_WORKER_ENABLED` | `true` | Disable processing on API replicas that should leave queued work to other replicas. |
+| `STUFF_STASH_EVALUATION_CONCURRENCY` | `1` | Concurrent suites per process, from 1 to 8. |
+| `STUFF_STASH_EVALUATION_DRAIN_LIMIT` | `10` | Maximum runs discovered per batch, from 1 to 100. |
+| `STUFF_STASH_EVALUATION_INTERVAL` | `5s` | Queue polling interval; batches never overlap. |
+| `STUFF_STASH_EVALUATION_POLL_INTERVAL` | `2s` | How often active runs check cancellation and access. |
+| `STUFF_STASH_EVALUATION_LEASE_GRACE` | `30s` | Extra time beyond a case deadline for recording progress. |
+| `STUFF_STASH_EVALUATION_MAX_ATTEMPTS` | `2` | Maximum claims after interrupted processing, from 1 to 10. |
+
+For Google server ADC evaluations, also set `STUFF_STASH_GOOGLE_ADC_CREDENTIAL_VERSION` to a non-secret revision label. Change it whenever you replace the mounted ADC credential or account. Normal token refresh does not need a new label. This lets queued evaluations detect credential changes without storing or hashing secret material. Ordinary voice use does not require this label.

@@ -9,7 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-const MaxEvaluationWorkerConcurrency = 8
+const MaxEvaluationWorkerConcurrency = ports.MaxEvaluationWorkerConcurrency
 
 func (w EvaluationWorker) Drain(ctx context.Context, limit, concurrency int) error {
 	if limit < 1 || limit > ports.MaxEvaluationRunPageLimit || concurrency < 1 || concurrency > MaxEvaluationWorkerConcurrency {

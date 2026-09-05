@@ -13,6 +13,7 @@ var ErrEvaluationRunConflict = errors.New("evaluation run changed")
 var ErrInvalidEvaluationRunPage = errors.New("invalid evaluation run page")
 
 const MaxEvaluationRunPageLimit = 100
+const MaxEvaluationWorkerConcurrency = 8
 
 type EvaluationRunReference struct {
 	TenantID tenant.ID

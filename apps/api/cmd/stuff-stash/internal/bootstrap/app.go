@@ -14,6 +14,10 @@ import (
 )
 
 func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+	evaluationSettings, err := cfg.ConversationEvaluations.Settings()
+	if err != nil {
+		return app.App{}, err
+	}
 	workflowLimits, err := cfg.ConversationWorkflows.Limits()
 	if err != nil {
 		return app.App{}, err
@@ -36,7 +40,10 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	}
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
 	importer := homebox.NewLegacyImporter(nil)
+	evaluationCommands, evaluationWorker := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
+		EvaluationRunCommands:            evaluationCommands,
+		EvaluationWorker:                 evaluationWorker,
 		Observer:                         observer,
 		Auth:                             authenticator,
 		Authorizer:                       authorizer,
