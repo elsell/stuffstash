@@ -76,6 +76,15 @@ The first API slice is asset search:
 
 ## Testing
 
+### Search latency investigation
+
+- Measure API search separately from client result hydration, debounce, and image loading. Health endpoint timings are connectivity evidence, not search benchmarks.
+- Record candidate volume, result count, ancestry depth, request count, and cold/repeated timings with each benchmark. Controlled transport latency must be labeled synthetic; it must not be presented as a production measurement.
+- The mobile baseline must exercise the actual search application query and inventory adapter with a controlled in-memory transport. Include root assets and nested assets so required ancestor waterfalls are visible.
+- Backend baselines must include representative inventory and attachment volumes, selective and broad matches, empty results, and subsequent pages. Run compiled benchmarks and PostgreSQL verification in CI while the development host is disk constrained.
+- Optimization must retain case-insensitive whole-value exact matching and substring fuzzy matching across every currently supported field, deterministic cursors, safe read audit history, and authoritative tenant/inventory authorization. An index must not narrow fuzzy matching to word or prefix matching.
+- Do not add an unbounded or separately owned mobile entity cache to hide API latency. Result state remains scoped through TanStack Query; transport and search infrastructure stay behind project-owned ports.
+
 - Tests must verify exact search, fuzzy search, custom asset type filtering, custom field search, attachment metadata search, pagination, tenant filtering, inventory filtering, lifecycle filtering, checkout-state filtering, and authorization filtering.
 - Tests must verify that unauthorized resources do not appear in results.
 - Tests must verify search read audit records are written with safe metadata and without raw queries or result payloads, including conversational search use.

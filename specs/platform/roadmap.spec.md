@@ -23,6 +23,15 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+Prioritize measured search latency improvements across mobile and the API following
+the 0.16.4 device test. Establish separate API and mobile hydration baselines,
+then remove confirmed bottlenecks while preserving matching, authorization,
+pagination, and TanStack cache ownership. The current persistence adapter scans
+candidate assets and related metadata per request; mobile search also waits for
+ancestor hydration. These are investigation findings, not measured production
+attribution. See `specs/search/search.spec.md`. Keep all builds in CI on this
+disk-constrained host. Resume the authenticated detail-photo benchmark afterward.
+
 The immediate mobile follow-up is shipping the native cancellation compatibility
 fix exposed by the 0.16.3 device run, together with the export-compliance declaration.
 All 1055 source tests now use React Native’s actual AbortController. PR CI and

@@ -24,6 +24,42 @@ env:
   PNPM_VERSION: "11.0.7"
 
 jobs:
+  search-benchmark:
+    name: Search PostgreSQL benchmark
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18.1-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
+        env:
+          POSTGRES_USER: benchmark
+          POSTGRES_PASSWORD: benchmark
+          POSTGRES_DB: search_benchmark
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U benchmark -d search_benchmark"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Setup Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Measure search repository
+        env:
+          STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable
+        run: |
+          set -o pipefail
+          go test ./apps/api/internal/adapters/gormstore -run '^TestPostgresStoreSearchAssets' -bench '^BenchmarkPostgresSearch$' -benchtime=5x -count=3 -benchmem | tee search-benchmark.txt
+      - name: Retain search measurements
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: search-benchmark
+          path: search-benchmark.txt
+          retention-days: 14
+
   required-checks:
     name: Required checks
     runs-on: ubuntu-24.04
