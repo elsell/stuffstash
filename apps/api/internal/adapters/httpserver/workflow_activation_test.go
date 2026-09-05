@@ -58,7 +58,7 @@ func TestWorkflowActivationHTTPAuthorizationAndEvidence(t *testing.T) {
 
 // Supply successful controlled outcomes through real domain transitions and
 // repository CAS, retaining the distinction from live-provider quality evidence.
-func completeHTTPWorkflowRun(t *testing.T, store *gormstore.Store, id string) {
+func completeHTTPWorkflowRun(t *testing.T, store gormstore.Store, id string) {
 	t.Helper()
 	ctx := context.Background()
 	run, found, err := store.EvaluationRun(ctx, "home", model.EvaluationRunID(id))

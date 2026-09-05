@@ -22,7 +22,7 @@ func newWorkflowHTTPTestApp(t *testing.T) app.App {
 	return application
 }
 
-func newWorkflowHTTPTestRuntime(t *testing.T) (app.App, *gormstore.Store) {
+func newWorkflowHTTPTestRuntime(t *testing.T) (app.App, gormstore.Store) {
 	t.Helper()
 	ctx := context.Background()
 	db, err := gormstore.OpenSQLite(filepath.Join(t.TempDir(), "workflow.sqlite"))
