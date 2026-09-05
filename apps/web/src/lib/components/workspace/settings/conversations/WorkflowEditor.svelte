@@ -6,11 +6,12 @@
   import * as Input from '$lib/components/ui/input/index.js';
   import * as Textarea from '$lib/components/ui/textarea/index.js';
 
+  import type { ConversationModelChoice } from '$lib/domain/conversationProvider';
   import WorkflowSelect from './WorkflowSelect.svelte';
 
   let { initial, providers, onSave, onReload }: {
     initial: WorkflowDefinition;
-    providers: { id: string; name: string }[];
+    providers: ConversationModelChoice[];
     onSave: (definition: WorkflowDefinition) => Promise<void>;
     onReload?: () => void;
   } = $props();
