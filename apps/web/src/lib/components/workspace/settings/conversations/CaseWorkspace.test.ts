@@ -19,6 +19,24 @@ class Cases implements ConversationCaseRepository {
 }
 function button(text: string) { return Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes(text)); }
 describe('case workspace', () => {
+  it('disables saving while loading a conflicting revision for comparison', async () => {
+    const cases = new Cases(); let writes = 0;
+    cases.append = async () => { writes++; throw new ConversationFailure('conflict'); };
+    component = mount(CaseWorkspace, { target: document.body, props: { scope: { apiIdentity: 'api', principalId: 'owner', tenantId: 'home' }, cases } });
+    await expect.poll(() => button('Find baby clothes')).toBeDefined(); button('Find baby clothes')!.click();
+    await expect.poll(() => document.querySelector('form')).not.toBeNull();
+    document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await expect.poll(() => document.body.textContent).toContain('newer revision');
+    let finish!: (value: CaseRevision) => void;
+    cases.get = () => new Promise(done => { finish = done; });
+    const compare = Array.from(document.querySelectorAll('button')).find(value => /latest/i.test(value.textContent ?? ''))!;
+    compare.click();
+    await expect.poll(() => button('Save test case')?.disabled).toBe(true);
+    document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(writes).toBe(1); finish(cases.revision);
+    await expect.poll(() => button('Save test case')?.disabled).toBe(false);
+  });
+
   it('opens a saved case and appends its edited revision', async () => {
     const cases = new Cases();
     component = mount(CaseWorkspace, { target: document.body, props: { scope: { apiIdentity: 'api', principalId: 'owner', tenantId: 'home' }, cases } });

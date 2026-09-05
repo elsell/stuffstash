@@ -9,11 +9,12 @@
   import type { ConversationProviderRepository } from '$lib/ports/conversationProviderRepository';
   import * as Button from '$lib/components/ui/button/index.js';
   import WorkflowEditor from './WorkflowEditor.svelte';
-  let { scope, workflows, providers }: { scope: ConversationScope; workflows: ConversationWorkflowRepository; providers: ConversationProviderRepository } = $props();
+  let { scope, workflows, providers, onEditingChange = () => {}, onAccessLost = () => {} }: { scope: ConversationScope; workflows: ConversationWorkflowRepository; providers: ConversationProviderRepository; onEditingChange?: (editing: boolean) => void; onAccessLost?: () => void } = $props();
   let denied = $state(false);
   // svelte-ignore state_referenced_locally -- the parent keys this workspace by authenticated tenant scope.
-  const session = createConversationSession(scope, () => { denied = true; editor = null; comparison = null; });
+  const session = createConversationSession(scope, () => { denied = true; editor = null; comparison = null; onAccessLost(); });
   onDestroy(() => { void session.dispose(); });
+  $effect(() => { onEditingChange(editor !== null); });
   let cursor = $state<string | undefined>();
   let editor = $state<{ revision: WorkflowRevision | null; definition: WorkflowDefinition; key: string } | null>(null);
   let comparison = $state<WorkflowRevision | null>(null);

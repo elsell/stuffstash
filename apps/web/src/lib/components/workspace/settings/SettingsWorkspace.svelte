@@ -2,7 +2,7 @@
   import './settings-management.css';
   import { getContext } from 'svelte';
   import { conversationWorkspaceContext, type ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
-  import WorkflowWorkspace from './conversations/WorkflowWorkspace.svelte';
+  import ConversationWorkspace from './conversations/ConversationWorkspace.svelte';
   const conversations = getContext<ConversationWorkspaceRepositories | undefined>(conversationWorkspaceContext);
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import { settingsOverviewDestinations, tenantSettingsDestinations, inventorySettingsDestinations, settingsResourceHref } from '$lib/application/settingsManagementNavigation';
@@ -68,7 +68,7 @@
     <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
     {#if route.settingsCollection === 'conversations' && route.settingsLevel === 'tenant' && conversations}
       {#key JSON.stringify([conversations.apiIdentity, principal.id, tenant.id])}
-        <WorkflowWorkspace scope={{ apiIdentity: conversations.apiIdentity, principalId: principal.id, tenantId: tenant.id }} workflows={conversations.workflows} providers={conversations.providers} />
+        <ConversationWorkspace scope={{ apiIdentity: conversations.apiIdentity, principalId: principal.id, tenantId: tenant.id }} repositories={conversations} />
       {/key}
     {:else if route.settingsCollection === 'tags' && inventory}
       <TagSettingsManager {inventory} {repository} {observer} resourceId={route.settingsResourceId} action={route.settingsResourceAction} {onNavigate} {onTagsChange} {onPermissionDenied} />

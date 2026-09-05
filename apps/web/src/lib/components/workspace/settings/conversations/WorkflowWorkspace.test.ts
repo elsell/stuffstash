@@ -26,6 +26,24 @@ class Workflows implements ConversationWorkflowRepository {
 }
 function button(text: string) { return Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes(text)); }
 describe('workflow workspace', () => {
+  it('disables saving while loading a conflicting revision for comparison', async () => {
+    const workflows = new Workflows(); let writes = 0;
+    workflows.append = async () => { writes++; throw new ConversationFailure('conflict'); };
+    component = mount(WorkflowWorkspace, { target: document.body, props: { scope: { apiIdentity: 'api', principalId: 'owner', tenantId: 'home' }, workflows, providers: { list: async () => [] } } });
+    await expect.poll(() => button('Household')).toBeDefined(); button('Household')!.click();
+    await expect.poll(() => document.querySelector('form')).not.toBeNull();
+    document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await expect.poll(() => document.body.textContent).toContain('newer revision');
+    let finish!: (value: WorkflowRevision) => void;
+    workflows.get = () => new Promise(done => { finish = done; });
+    const compare = Array.from(document.querySelectorAll('button')).find(value => /latest/i.test(value.textContent ?? ''))!;
+    compare.click();
+    await expect.poll(() => button('Save draft')?.disabled).toBe(true);
+    document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(writes).toBe(1); finish(workflows.revision);
+    await expect.poll(() => button('Save draft')?.disabled).toBe(false);
+  });
+
   it('prevents a new draft from racing a pending revision load', async () => {
     const workflows = new Workflows();
     let resolve!: (value: WorkflowRevision) => void;

@@ -13,9 +13,9 @@ describe('case expectations', () => {
     const changes: CaseDefinition[] = [];
     const initial = { operation: label === 'Create' ? 'move' as const : 'create' as const, targetId: '', destinationId: '', newKind: '' as const, newTitle: 'Old title', details: 'Old details' };
     component = mount(CaseExpectations, { target: document.body, props: { value: { ...value, expectations: { ...value.expectations, kind: 'proposal', proposals: [initial] } }, onChange: changed => changes.push(changed) } });
-    document.querySelector<HTMLButtonElement>('#proposal-operation-0')!.click(); flushSync();
+    document.querySelector<HTMLButtonElement>('#proposal-operation-0')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); flushSync();
     const option = () => Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(item => item.textContent?.trim() === label);
-    await expect.poll(option).toBeDefined(); option()!.click(); flushSync();
+    await expect.poll(option).toBeDefined(); option()!.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'mouse', bubbles: true, cancelable: true })); flushSync();
     await expect.poll(() => changes.length).toBeGreaterThan(0);
     expect(changes.at(-1)!.expectations.proposals[0]).toEqual({ operation: label === 'Check out' ? 'checkout' : label.toLowerCase(), targetId: '', destinationId: '', newTitle: '', newKind: label === 'Create' ? 'item' : '', details: '' });
   });
