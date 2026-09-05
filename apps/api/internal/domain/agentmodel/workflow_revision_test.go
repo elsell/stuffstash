@@ -42,7 +42,7 @@ func TestWorkflowRevisionRejectsInvalidSnapshots(t *testing.T) {
 		"missing tenant":               func(v *WorkflowRevisionInput) { v.TenantID = "" },
 		"missing author":               func(v *WorkflowRevisionInput) { v.AuthorID = "" },
 		"path identifier":              func(v *WorkflowRevisionInput) { v.ID = "../another" },
-		"malformed tenant":             func(v *WorkflowRevisionInput) { v.TenantID = "tenant\x00other" },
+		"blank tenant":                 func(v *WorkflowRevisionInput) { v.TenantID = " " },
 		"missing sequence":             func(v *WorkflowRevisionInput) { v.Number = 0 },
 		"missing timestamp":            func(v *WorkflowRevisionInput) { v.CreatedAt = time.Time{} },
 		"missing definition":           func(v *WorkflowRevisionInput) { v.Definition = WorkflowDefinition{} },
@@ -56,5 +56,14 @@ func TestWorkflowRevisionRejectsInvalidSnapshots(t *testing.T) {
 				t.Fatal("invalid revision accepted")
 			}
 		})
+	}
+}
+
+func TestWorkflowRevisionPreservesExistingTenantIdentity(t *testing.T) {
+	input := workflowRevisionTestInput(t)
+	input.TenantID = "tenant.home"
+	revision, err := NewWorkflowRevision(input)
+	if err != nil || revision.Snapshot().TenantID != input.TenantID {
+		t.Fatalf("valid tenant reference changed or rejected: %v", err)
 	}
 }
