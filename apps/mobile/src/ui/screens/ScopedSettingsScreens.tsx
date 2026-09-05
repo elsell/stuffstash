@@ -1,3 +1,4 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useEffect, useRef } from 'react';
 import { AccessibilityInfo, ActivityIndicator, findNodeHandle, Pressable, ScrollView, Text, View } from 'react-native';
 import { AudioLines, Braces, Share2, Tags } from 'lucide-react-native';
@@ -38,6 +39,7 @@ function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<
       ];
   if (scope === 'tenant' && !tenantCanConfigure) return <DeniedSettingsState message="You don’t have permission to manage settings shared by this household." />;
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+    <SettingsRefreshNotice visible={model.hasRefreshError} onRetry={model.load} />
     <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? 'Household settings' : `Inventory in ${settings.selectedTenant.name}`}</Text></View>
     <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow accessibilityLabel={`Open ${row.label} for ${name}`} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
   </ScrollView>;

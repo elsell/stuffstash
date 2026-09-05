@@ -8,6 +8,7 @@ workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir"' EXIT
 
 mkdir -p "$workdir/apps/mobile/src/ui/components" "$workdir/apps/mobile/src/ui/screens"
+mkdir -p "$workdir/apps/mobile/src/application" "$workdir/apps/mobile/src/domain"
 
 cat > "$workdir/apps/mobile/src/ui/components/AppTextInput.tsx" <<'EOF'
 import { TextInput } from 'react-native';
@@ -75,4 +76,54 @@ fi
 
 grep -F "RequiredNamespace.tsx" "$workdir/output" >/dev/null
 
+rm "$workdir/apps/mobile/src/ui/screens/RequiredNamespace.tsx"
+cat > "$workdir/apps/mobile/src/application/LeakyQuery.ts" <<'EOF'
+import { useQuery } from '@tanstack/react-query';
+export const query = useQuery;
+EOF
+
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected TanStack Query imports in application code to fail the mobile structural check" >&2
+  exit 1
+fi
+
+grep -F "LeakyQuery.ts" "$workdir/output" >/dev/null
+grep -F "TanStack Query" "$workdir/output" >/dev/null
+
+rm "$workdir/apps/mobile/src/application/LeakyQuery.ts"
+cat > "$workdir/apps/mobile/src/domain/LeakyReact.ts" <<'EOF'
+import { useEffect } from 'react';
+export const effect = useEffect;
+EOF
+
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected React imports in domain code to fail the mobile structural check" >&2
+  exit 1
+fi
+
+grep -F "LeakyReact.ts" "$workdir/output" >/dev/null
+grep -F "React or TanStack Query" "$workdir/output" >/dev/null
+
+rm "$workdir/apps/mobile/src/domain/LeakyReact.ts"
+cat > "$workdir/apps/mobile/src/application/LeakyClient.ts" <<'EOF'
+import type { Asset } from '@stuff-stash/api-client';
+export type Leaked = Asset;
+EOF
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected generated transport leakage to fail" >&2
+  exit 1
+fi
+grep -F "LeakyClient.ts" "$workdir/output" >/dev/null
+rm "$workdir/apps/mobile/src/application/LeakyClient.ts"
+mkdir -p "$workdir/apps/mobile/src/adapters/inventories"
+python3 - "$workdir/apps/mobile/src/adapters/inventories/CatchAll.ts" <<'PYTHON'
+from pathlib import Path
+import sys
+Path(sys.argv[1]).write_text('// oversized adapter\n' * 801)
+PYTHON
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected oversized inventory adapter to fail" >&2
+  exit 1
+fi
+grep -F "800 lines" "$workdir/output" >/dev/null
 echo "mobile UI structural rule tests passed"

@@ -17,9 +17,9 @@ export default function AddRoute() {
   ]);
   const {
     addAssetDraftStore,
+    addAssetContextQuery,
     addDraftScopeQuery,
     createAssetCommand,
-    homeDashboardQuery,
     parentLookupQuery,
     photoSelectionQuery
   } = useAppServices();
@@ -27,9 +27,9 @@ export default function AddRoute() {
   return (
     <AddAssetScreen
       addAssetDraftStore={addAssetDraftStore}
+      addAssetContextQuery={addAssetContextQuery}
       addDraftScopeQuery={addDraftScopeQuery}
       createAssetCommand={createAssetCommand}
-      dashboardQuery={homeDashboardQuery}
       initialParent={initialParent}
       onDismiss={() => router.back()}
       parentLookupQuery={parentLookupQuery}

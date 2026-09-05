@@ -11,6 +11,7 @@ import type {
 } from '../../domain/assets/AssetSummary';
 import type { AssetTagSummary } from '../../domain/assets/AssetSummary';
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
+import type { ReadRequest } from '../shared/ReadRequest';
 
 export type InventoryWorkspace = {
   readonly tenants: readonly TenantContext[];
@@ -24,13 +25,13 @@ export type HomeDashboardSnapshot = {
 };
 
 export interface HomeDashboardSnapshotRepository {
-  getHomeDashboardSnapshot(): Promise<HomeDashboardSnapshot>;
+  getHomeDashboardSnapshot(request?: ReadRequest): Promise<HomeDashboardSnapshot>;
 }
 
 export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
-  getAssetDetail?(input: GetInventoryAssetDetailInput): Promise<AssetSummary>;
+  getAssetDetail?(input: GetInventoryAssetDetailInput, request?: ReadRequest): Promise<AssetSummary>;
   selectInventory(inventoryId: InventoryId): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   createAssetTag?(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary>;
@@ -75,6 +76,7 @@ export type AssetBrowseSort = 'updated_desc' | 'id_asc';
 export type AssetBrowseCheckoutFilter = 'any' | 'checked_out' | 'available';
 
 export type AssetBrowsePageInput = {
+  readonly signal?: AbortSignal;
   readonly query: string;
   readonly cursor?: string;
   readonly limit?: number;

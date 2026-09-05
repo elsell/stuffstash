@@ -662,11 +662,13 @@ describe('RealtimeVoiceSessionController', () => {
 
   it('approves a proposed action plan through the active realtime transport', async () => {
     const transport = new ReviewDecisionTransport();
+    const impacts: unknown[] = [];
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),
       new FakeRecorder(),
       transport,
-      new FakePlayer()
+      new FakePlayer(),
+      { mutationObserver: { onVoicePlanExecuted: (impact) => { impacts.push(impact); } } }
     );
     const observed: string[] = [];
 
@@ -679,6 +681,7 @@ describe('RealtimeVoiceSessionController', () => {
     await controller.approveActionPlan('plan-1');
     const states = await stop;
 
+    expect(impacts).toEqual([{ tenantId: 'tenant-home', inventoryId: 'inventory-home', assetIds: [] }]);
     expect(transport.approvedPlanIds).toEqual(['plan-1']);
     expect(states.at(-1)).toMatchObject({
       status: 'completed',
@@ -2263,6 +2266,9 @@ function sessionStarted() {
 }
 
 class FakeInventoryRepository implements InventorySummaryRepository {
+  async getVoiceInventoryContext() {
+    return { tenantId: tenantId('tenant-home'), inventoryId: inventoryId('inventory-home'), tenantName: 'Home tenant', inventoryName: 'Home' };
+  }
   readonly addedPhotos: Array<{ readonly tenantId?: string; readonly inventoryId?: string; readonly assetId: string; readonly fileName: string; readonly uploadId?: string }> = [];
   failPhotoUploads = 0;
   photoUploadFailureMessage = 'Photo upload failed.';
@@ -2328,3 +2334,26 @@ class FakeInventoryRepository implements InventorySummaryRepository {
     return [];
   }
 }
+
+it('does not start recording after its pending startup is disposed', async () => {
+  let ready!: () => void;
+  const recorder = new FakeRecorder();
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), recorder, new FakeTransport([]), new FakePlayer(), { readinessChecker: { assertReady: () => new Promise<void>(resolve => { ready = resolve; }) } });
+  const start = controller.start();
+  await Promise.resolve(); await Promise.resolve();
+  await controller.dispose(); ready();
+  await expect(start).rejects.toThrow('Voice session cancelled');
+  expect(recorder.started).toBe(false);
+});
+
+it('does not restart follow-up recording after scope disposal during readiness', async () => {
+  let ready!: () => void;
+  const recorder = new FakeRecorder(); const transport = new FakeTransport([]);
+  transport.canSendFollowUpAudio = () => true;
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), recorder, transport, new FakePlayer(), { readinessChecker: { assertReady: () => new Promise<void>(resolve => { ready = resolve; }) } });
+  const start = controller.startFollowUp();
+  await Promise.resolve(); await Promise.resolve();
+  await controller.dispose(); ready();
+  await expect(start).rejects.toThrow('Voice session cancelled');
+  expect(recorder.started).toBe(false);
+});

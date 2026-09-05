@@ -13,6 +13,7 @@ import type {
 export type SearchAssetsMode = 'browse' | 'search';
 
 export type SearchAssetsQueryInput = {
+  readonly signal?: AbortSignal;
   readonly query: string;
   readonly cursor?: string;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
@@ -37,7 +38,7 @@ export type SearchAssetsViewModel = {
 };
 
 export class SearchAssetsQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: Pick<InventorySummaryRepository, 'browseAssets'>) {}
 
   async execute(input: SearchAssetsQueryInput): Promise<SearchAssetsViewModel> {
     const trimmed = input.query.trim();

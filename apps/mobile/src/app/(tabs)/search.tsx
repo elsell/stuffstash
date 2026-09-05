@@ -7,10 +7,13 @@ export default function SearchRoute() {
   const {
     addAssetPhotosCommand,
     assetCheckoutCommand,
-    assetDetailQuery,
+    assetCoreQuery,
+    assetContentsQuery,
+    assetPhotosQuery,
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
     inventoryMapQuery,
+    inventoryContextQuery,
     inventoryAssetTagsQuery,
     locationsQuery,
     photoSelectionQuery,
@@ -24,10 +27,13 @@ export default function SearchRoute() {
       {...initialBrowseState}
       addAssetPhotosCommand={addAssetPhotosCommand}
       assetCheckoutCommand={assetCheckoutCommand}
-      assetDetailQuery={assetDetailQuery}
+      assetCoreQuery={assetCoreQuery}
+      assetContentsQuery={assetContentsQuery}
+      assetPhotosQuery={assetPhotosQuery}
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}
       inventoryMapQuery={inventoryMapQuery}
+      inventoryContextQuery={inventoryContextQuery}
       inventoryAssetTagsQuery={inventoryAssetTagsQuery}
       locationsQuery={locationsQuery}
       photoSelectionQuery={photoSelectionQuery}

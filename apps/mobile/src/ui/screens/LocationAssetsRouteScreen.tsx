@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
@@ -18,16 +18,13 @@ import { assetDetailHref, locationAssetDetailHref } from './AssetDetailNavigatio
 import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type LocationAssetsRouteScreenProps = {
   readonly locationAssetsQuery: LocationAssetsQuery;
   readonly locationId: string;
 };
-
-type ScreenState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly locationAssets: LocationAssetsViewModel }
-  | { readonly status: 'error'; readonly message: string };
 
 export function LocationAssetsRouteScreen({
   locationAssetsQuery,
@@ -35,58 +32,27 @@ export function LocationAssetsRouteScreen({
 }: LocationAssetsRouteScreenProps) {
   const palette = useAppearancePalette();
   const styles = useMemo(() => createStyles(palette), [palette]);
-  const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    locationAssetsQuery
-      .execute(locationId)
-      .then((locationAssets) => {
-        if (isCurrent) {
-          setScreenState({ status: 'ready', locationAssets });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setScreenState({
-            status: 'error',
-            message: readableError(error, 'Could not load location.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [locationAssetsQuery, locationId]);
+  const locationAssets = useMobileInventoryServerQuery({
+    key: (scopeId, tenantId, inventoryId) =>
+      mobileQueryKeys.locationAssets(scopeId, tenantId, inventoryId, locationId),
+    query: (signal) => locationAssetsQuery.execute(locationId, { signal })
+  });
 
   async function refreshLocationAssets(): Promise<void> {
-    setIsRefreshing(true);
-
-    try {
-      const locationAssets = await locationAssetsQuery.execute(locationId);
-      setScreenState({ status: 'ready', locationAssets });
-    } catch (error) {
-      setScreenState({
-        status: 'error',
-        message: readableError(error, 'Could not refresh location.')
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
+    await locationAssets.refetch();
   }
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
-      {screenState.status === 'ready' ? (
+      {locationAssets.isPending && !locationAssets.data ? <LoadingState /> : null}
+      {locationAssets.isError && !locationAssets.data ? (
+        <ErrorState message={readableError(locationAssets.error, 'Could not load location.')} />
+      ) : null}
+      {locationAssets.data ? (
         <LocationAssetList
-          isRefreshing={isRefreshing}
-          locationAssets={screenState.locationAssets}
-          onRefresh={refreshLocationAssets}
+          isRefreshing={locationAssets.isRefetching}
+          locationAssets={locationAssets.data}
+          onRefresh={() => { void refreshLocationAssets(); }}
         />
       ) : null}
     </SafeAreaView>

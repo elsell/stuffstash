@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -43,53 +48,35 @@ export function InventorySharingScreen({
   const palette = useAppearancePalette();
   const { layout, styles: settingsStyles } = useSettingsListStyles();
   const styles = createStyles(palette);
-  const scopeKey = `${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
+  const compositionScopeId = useMobileServerStateScopeId();
+  const scopeKey = `${compositionScopeId}:${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
   const [email, setEmail] = useState('');
   const [relationship, setRelationship] = useState<InventoryInvitationRelationship>('viewer');
-  const [invitations, setInvitations] = useState<readonly InventoryInvitationSummary[]>([]);
-  const [invitationsScopeKey, setInvitationsScopeKey] = useState(scopeKey);
   const [created, setCreated] = useState<CreatedInventoryInvitation>();
   const [createdScopeKey, setCreatedScopeKey] = useState<string>();
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [working, setWorking] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [cancellingId, setCancellingId] = useState<string>();
   const workingRef = useRef(false);
-  const requestGenerationRef = useRef(0);
   const currentScopeKeyRef = useRef(scopeKey);
   currentScopeKeyRef.current = scopeKey;
-  const visibleInvitations = invitationsScopeKey === scopeKey ? invitations : [];
-  const visibleCreated = createdScopeKey === scopeKey ? created : undefined;
-
-  const load = useCallback(async (refresh = false) => {
-    const generation = ++requestGenerationRef.current;
-    if (refresh) setRefreshing(true); else setStatus('loading');
-    try {
-      const loaded = await listQuery.execute(scope);
-      if (generation !== requestGenerationRef.current) return;
-      setInvitations(loaded);
-      setInvitationsScopeKey(scopeKey);
-      setStatus('ready');
-    } catch (error) {
-      if (generation !== requestGenerationRef.current) return;
-      if (refresh) {
-        feedback.showNotice({ tone: 'error', title: 'Could not refresh invitations', message: readableError(error) });
-      } else {
-        setStatus('error');
-      }
-    } finally {
-      if (generation === requestGenerationRef.current) setRefreshing(false);
-    }
-  }, [feedback, listQuery, scopeKey]);
-
+  const canShare = scope.permissions.includes('share');
+  const list = useInfiniteQuery({
+    queryKey: mobileQueryKeys.invitations(compositionScopeId, scope.tenantId, scope.inventoryId),
+    queryFn: ({ signal, pageParam }) => listQuery.execute(scope, { signal, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last, _pages, _param, params) => last.nextCursor && !params.includes(last.nextCursor) ? last.nextCursor : undefined,
+    enabled: canShare,
+    subscribed: canShare
+  });
+  const denied = !canShare || isAccessFailure(list.error);
+  const visibleInvitations = denied ? [] : list.data?.pages.flatMap(page => page.items) ?? [];
+  const visibleCreated = !denied && createdScopeKey === scopeKey ? created : undefined;
   useEffect(() => {
     setCreated(undefined);
     setCreatedScopeKey(undefined);
-    setInvitations([]);
-    setInvitationsScopeKey(scopeKey);
-    void load();
-    return () => { requestGenerationRef.current += 1; };
-  }, [load, scopeKey]);
+    setEmail('');
+    setRelationship('viewer');
+  }, [scopeKey]);
 
   async function create(): Promise<void> {
     if (workingRef.current) return;
@@ -101,8 +88,6 @@ export function InventorySharingScreen({
       if (currentScopeKeyRef.current !== requestedScopeKey) return;
       setCreated(invitation);
       setCreatedScopeKey(requestedScopeKey);
-      setInvitations((current) => [withoutLink(invitation), ...current]);
-      setInvitationsScopeKey(requestedScopeKey);
       setEmail('');
     } catch (error) {
       feedback.showNotice({ tone: 'error', title: 'Could not create invitation', message: readableError(error) });
@@ -132,9 +117,7 @@ export function InventorySharingScreen({
     try {
       await cancelCommand.execute(scope, invitation.id);
       if (currentScopeKeyRef.current !== requestedScopeKey) return;
-      setInvitations((current) => current.map((item) => item.id === invitation.id
-        ? { ...item, status: 'cancelled' }
-        : item));
+
     } catch (error) {
       feedback.showNotice({ tone: 'error', title: 'Could not cancel invitation', message: readableError(error) });
     } finally {
@@ -142,15 +125,15 @@ export function InventorySharingScreen({
     }
   }
 
-  if (status === 'loading') {
+  if (list.isPending && !denied) {
     return <View style={[settingsStyles.shell, settingsStyles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
   }
-  if (status === 'error') {
+  if (denied || (list.isError && !list.data)) {
     return (
       <View style={[settingsStyles.shell, settingsStyles.errorContainer]}>
         <Text accessibilityRole="header" style={settingsStyles.errorTitle}>Could not load invitations</Text>
         <Text style={settingsStyles.errorMessage}>Your invitation settings are still safe. Try again.</Text>
-        <Pressable accessibilityRole="button" onPress={() => void load()} style={settingsStyles.retryButton}>
+        <Pressable accessibilityRole="button" onPress={() => list.refetch({ cancelRefetch: false })} style={settingsStyles.retryButton}>
           <Text style={settingsStyles.retryText}>Retry</Text>
         </Pressable>
       </View>
@@ -162,7 +145,7 @@ export function InventorySharingScreen({
       contentContainerStyle={settingsStyles.content}
       keyboardDismissMode={appKeyboardDismissMode()}
       keyboardShouldPersistTaps="handled"
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={palette.action} />}
+      refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch({ cancelRefetch: false })} tintColor={palette.action} />}
       style={settingsStyles.shell}
     >
       <View style={settingsStyles.detailHeader}>
@@ -170,6 +153,7 @@ export function InventorySharingScreen({
         <Text style={settingsStyles.detailSubtitle}>Invite someone by email as a viewer or editor.</Text>
       </View>
 
+      <SettingsRefreshNotice visible={list.isRefetchError || list.isFetchNextPageError} onRetry={async () => { await (list.isFetchNextPageError ? list.fetchNextPage({ cancelRefetch: false }) : list.refetch({ cancelRefetch: false })); }} />
       <SettingsSection title="New Invitation">
         <View style={styles.form}>
           <Text style={styles.label}>Email</Text>
@@ -207,6 +191,7 @@ export function InventorySharingScreen({
           </View>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Create Invitation"
             accessibilityState={{ busy: working, disabled: working || email.trim().length === 0 }}
             disabled={working || email.trim().length === 0}
             onPress={() => void create()}
@@ -269,6 +254,7 @@ export function InventorySharingScreen({
           </View>
         ))}
       </SettingsSection>
+      {list.hasNextPage ? <Pressable accessibilityRole="button" accessibilityLabel="Load older invitations" disabled={list.isFetching} onPress={() => void list.fetchNextPage({ cancelRefetch: false })} style={settingsStyles.retryButton}><Text style={settingsStyles.retryText}>{list.isFetchingNextPage ? 'Loading…' : 'Load older invitations'}</Text></Pressable> : null}
     </ScrollView>
   );
 }
@@ -281,11 +267,6 @@ function LinkButton({ icon, label, onPress }: { readonly icon: ReactNode; readon
       {icon}<Text style={styles.linkButtonText}>{label}</Text>
     </Pressable>
   );
-}
-
-function withoutLink(invitation: CreatedInventoryInvitation): InventoryInvitationSummary {
-  const { inviteUrl: _inviteUrl, ...safe } = invitation;
-  return safe;
 }
 
 function statusLabel(invitation: InventoryInvitationSummary): string {

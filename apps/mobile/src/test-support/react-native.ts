@@ -12,6 +12,37 @@ let highTextContrastEnabled = false;
 let systemColorScheme: 'light' | 'dark' = 'light';
 
 export const View = 'View';
+export const Image = 'Image';
+export function FlatList(props: Record<string, unknown>) {
+  const rows = (props.data ?? []) as readonly unknown[];
+  const render = props.renderItem as ((input: { item: unknown; index: number }) => ReactNode) | undefined;
+  return createElement('FlatList', props,
+    props.ListHeaderComponent as ReactNode,
+    props.refreshControl as ReactNode,
+    rows.length ? rows.map((item, index) => createElement('Row', { key: index }, render?.({ item, index }))) : props.ListEmptyComponent as ReactNode,
+    props.ListFooterComponent as ReactNode);
+}
+export function SectionList(props: Record<string, unknown>) {
+  const sections = props.sections as readonly { data: readonly unknown[] }[];
+  const render = props.renderItem as (input: { item: unknown }) => ReactNode;
+  return createElement('SectionList', props,
+    props.refreshControl as ReactNode,
+    sections.flatMap((section) => section.data).map((item, index) => createElement('Row', { key: index }, render({ item }))),
+    props.ListFooterComponent as ReactNode);
+}
+const appStateListeners = new Set<(state: string) => void>();
+export const AppState = {
+  currentState: 'active',
+  addEventListener(_event: string, callback: (state: string) => void) {
+    appStateListeners.add(callback);
+    return { remove: () => appStateListeners.delete(callback) };
+  }
+};
+export function setAppStateForTest(state: string) {
+  AppState.currentState = state;
+  for (const listener of appStateListeners) listener(state);
+}
+export const ActionSheetIOS = { showActionSheetWithOptions() {} };
 export const Text = 'Text';
 export const Pressable = 'Pressable';
 export const ScrollView = 'ScrollView';
@@ -25,6 +56,7 @@ export const TextInput = forwardRef<{ focus(): void }, Record<string, unknown>>(
 });
 export const Alert = { alert(title: string, message?: string, buttons: readonly AlertButton[] = [], options?: AlertRecord['options']) { alerts.push({ title, message, buttons, options }); } };
 export const AccessibilityInfo = {
+  isReduceMotionEnabled: async () => false,
   addEventListener(event: string, listener: (enabled: boolean) => void) {
     const listeners = accessibilityListeners.get(event) ?? new Set<(enabled: boolean) => void>();
     listeners.add(listener);
@@ -52,9 +84,20 @@ export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 }
 export const findNodeHandle = () => 1;
 export const useWindowDimensions = () => ({ fontScale: 1, height: 844, width: 390 });
 export const useColorScheme = () => systemColorScheme;
-class AnimatedValue { constructor(readonly initial: number) {} setValue() {} }
-const animation = () => ({ start(callback?: () => void) { callback?.(); } });
-export const Animated = { Value: AnimatedValue, View: 'AnimatedView', parallel: animation, spring: animation, timing: animation };
+class AnimatedValue {
+  private value: number;
+  private listeners = new Map<string, (event: { value: number }) => void>();
+  constructor(readonly initial: number) { this.value = initial; }
+  setValue(value: number) { this.value = value; for (const listener of this.listeners.values()) listener({ value }); }
+  addListener(listener: (event: { value: number }) => void) { const id = String(this.listeners.size); this.listeners.set(id, listener); return id; }
+  removeListener(id: string) { this.listeners.delete(id); }
+  stopAnimation() {}
+  interpolate() { return this.value; }
+}
+const animation = (value?: AnimatedValue, options?: { toValue: number }) => ({
+  start(callback?: (result: { finished: boolean }) => void) { if (value && options) value.setValue(options.toValue); callback?.({ finished: true }); }
+});
+export const Animated = { Value: AnimatedValue, View: 'AnimatedView', multiply: (value: AnimatedValue, factor: number) => ({ value, factor }), parallel: animation, spring: animation, timing: animation };
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
@@ -91,4 +134,4 @@ export function setHighTextContrastEnabledForTest(enabled: boolean) {
 export function setSystemColorSchemeForTest(colorScheme: 'light' | 'dark') {
   systemColorScheme = colorScheme;
 }
-import { createElement, forwardRef, useImperativeHandle } from 'react';
+import { createElement, forwardRef, useImperativeHandle, type ReactNode } from 'react';

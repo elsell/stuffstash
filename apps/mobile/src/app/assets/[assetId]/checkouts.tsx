@@ -1,15 +1,15 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useAppServices } from '../../../ui/navigation/AppServicesContext';
-import { AssetCheckoutHistorySheetRouteScreen } from '../../../ui/screens/AssetNativeActionSheetScreens';
+import { AssetCheckoutHistorySheetRouteScreen } from '../../../ui/screens/AssetCheckoutHistoryScreen';
 
 export default function AssetCheckoutHistoryRoute() {
-  const { assetCheckoutHistoryQuery, assetDetailQuery } = useAppServices();
+  const { assetCheckoutHistoryQuery, assetCoreQuery } = useAppServices();
   const { assetId } = useLocalSearchParams<{ readonly assetId: string }>();
 
   return (
     <AssetCheckoutHistorySheetRouteScreen
       assetCheckoutHistoryQuery={assetCheckoutHistoryQuery}
-      assetDetailQuery={assetDetailQuery}
+      assetCoreQuery={assetCoreQuery}
       assetId={assetId}
     />
   );

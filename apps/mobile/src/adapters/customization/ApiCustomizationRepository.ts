@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../../application/shared/ReadRequest';
 import { StuffStashAPIError, type StuffStashClient } from '@stuff-stash/api-client';
 import { CustomizationFailure, type CustomizationFailureKind } from '../../application/customization/CustomizationErrors';
 import type { AssetTagDefinition, CustomAssetTypeDefinition, CustomFieldDefinition, CustomizationLifecycle, CustomizationScope } from '../../domain/customization/Customization';
@@ -37,8 +38,8 @@ export class ApiCustomizationRepository implements CustomizationRepository {
   private readonly api: ApiClient;
   constructor(client: StuffStashClient) { this.api = client as ApiClient; }
 
-  async listTags(context: CustomizationContext, cursor?: string): Promise<CustomizationPage<AssetTagDefinition>> {
-    const page = await this.safe(() => this.api.listAssetTags(context.tenantId, context.inventoryId, 50, cursor));
+  async listTags(context: CustomizationContext, cursor?: string, request: ReadRequest = {}): Promise<CustomizationPage<AssetTagDefinition>> {
+    const page = await this.safe(() => this.api.listAssetTags(context.tenantId, context.inventoryId, 50, cursor, request.signal));
     return mapPage(page, (item) => ({ kind: 'tag', ...item }));
   }
   async createTag(context: CustomizationContext, input: { readonly displayName: string; readonly color?: string }) {
@@ -49,10 +50,10 @@ export class ApiCustomizationRepository implements CustomizationRepository {
   }
   async archiveTag(context: CustomizationContext, id: string) { await this.safe(() => this.api.archiveAssetTag(context.tenantId, context.inventoryId, id)); }
 
-  async listFields(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string) {
+  async listFields(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string, request: ReadRequest = {}) {
     const page = scope === 'tenant'
-      ? await this.safe(() => this.api.listTenantCustomFieldDefinitions(context.tenantId, 50, cursor, lifecycle))
-      : await this.safe(() => this.api.listInventoryCustomFieldDefinitions(context.tenantId, context.inventoryId, 50, cursor, lifecycle));
+      ? await this.safe(() => this.api.listTenantCustomFieldDefinitions(context.tenantId, 50, cursor, lifecycle, request.signal))
+      : await this.safe(() => this.api.listInventoryCustomFieldDefinitions(context.tenantId, context.inventoryId, 50, cursor, lifecycle, request.signal));
     return mapPage(page as Page<ApiField>, mapField);
   }
   async createField(context: CustomizationContext, scope: CustomizationScope, input: CreateCustomFieldInput) {
@@ -73,10 +74,10 @@ export class ApiCustomizationRepository implements CustomizationRepository {
   async restoreField(address: DefinitionAddress) { await this.fieldLifecycle(address, 'restore'); }
   async deleteField(address: DefinitionAddress) { await this.fieldLifecycle(address, 'delete'); }
 
-  async listAssetTypes(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string) {
+  async listAssetTypes(context: CustomizationContext, scope: CustomizationScope, lifecycle: CustomizationLifecycle, cursor?: string, request: ReadRequest = {}) {
     const page = scope === 'tenant'
-      ? await this.safe(() => this.api.listTenantCustomAssetTypes(context.tenantId, 50, cursor, lifecycle))
-      : await this.safe(() => this.api.listInventoryCustomAssetTypes(context.tenantId, context.inventoryId, 50, cursor, lifecycle));
+      ? await this.safe(() => this.api.listTenantCustomAssetTypes(context.tenantId, 50, cursor, lifecycle, request.signal))
+      : await this.safe(() => this.api.listInventoryCustomAssetTypes(context.tenantId, context.inventoryId, 50, cursor, lifecycle, request.signal));
     return mapPage(page as Page<ApiAssetType>, mapAssetType);
   }
   async createAssetType(context: CustomizationContext, scope: CustomizationScope, input: CreateCustomAssetTypeInput) {

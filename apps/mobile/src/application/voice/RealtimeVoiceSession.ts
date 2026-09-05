@@ -1,3 +1,4 @@
+import type { VoiceInventoryContextRepository, VoiceInventoryMutationObserver } from './VoiceInventoryContext';
 import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
 import type { CreateInventoryAssetPhotoInput } from '../home/InventorySummaryRepository';
 import { assetId } from '../../domain/assets/AssetSummary';
@@ -59,6 +60,7 @@ export type RealtimeVoiceTransportRunOptions = {
 
 export type RealtimeVoiceSessionControllerOptions = {
   readonly diagnosticsEnabled?: boolean;
+  readonly mutationObserver?: VoiceInventoryMutationObserver;
   readonly readinessChecker?: VoiceProviderReadinessChecker;
 };
 
@@ -278,7 +280,7 @@ export class RealtimeVoiceSessionController {
   private ttsMimeType = 'audio/mpeg';
 
   constructor(
-    private readonly inventories: InventorySummaryRepository,
+    private readonly inventories: VoiceInventoryContextRepository & Pick<InventorySummaryRepository, 'addInventoryAssetPhoto'>,
     private readonly recorder: VoiceAudioRecorder,
     private readonly transport: RealtimeVoiceTransport,
     private readonly player: VoiceAudioPlayer,
@@ -286,12 +288,15 @@ export class RealtimeVoiceSessionController {
   ) {}
 
   async start(): Promise<VoiceRealtimeState> {
+    const generation = ++this.activeSessionGeneration;
     const context = await this.selectedInventoryContext();
     await this.options.readinessChecker?.assertReady();
-    this.activeSessionGeneration++;
+    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
     this.currentContext = context;
     await this.player.stop();
+    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
     await this.recorder.start();
+    if (this.isSessionGenerationCancelled(generation)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
     this.recordingStarted = true;
     return {
       status: 'listening',
@@ -371,12 +376,15 @@ export class RealtimeVoiceSessionController {
     if (!this.transport.canSendFollowUpAudio()) {
       throw new Error('Voice follow-up session is not active.');
     }
+    const generation = ++this.activeSessionGeneration;
     const context = this.currentContext ?? (await this.selectedInventoryContext());
     await this.options.readinessChecker?.assertReady();
-    this.activeSessionGeneration++;
+    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
     this.currentContext = context;
     await this.player.stop();
+    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
     await this.recorder.start();
+    if (this.isSessionGenerationCancelled(generation)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
     this.recordingStarted = true;
     return {
       status: 'listening',
@@ -436,6 +444,19 @@ export class RealtimeVoiceSessionController {
     }
     this.syncFinalClarificationFollowUpAvailability(states, onState);
     return states;
+  }
+
+  async dispose(): Promise<void> {
+    this.cancelledThroughSessionGeneration = Math.max(this.cancelledThroughSessionGeneration, this.activeSessionGeneration);
+    this.activeRunAbortController?.abort();
+    this.activeFollowUpAbortController?.abort();
+    this.pendingPhotoDraftsByPlanId.clear();
+    this.pendingPhotoRetriesByPlanId.clear();
+    this.currentContext = null;
+    const wasRecording = this.recordingStarted;
+    this.recordingStarted = false;
+    if (wasRecording) await this.recorder.cancel();
+    await this.player.stop();
   }
 
   async cancel(): Promise<VoiceRealtimeState> {
@@ -561,8 +582,15 @@ export class RealtimeVoiceSessionController {
           reviewDecisionPending: false
         });
       case 'action.plan.executed':
-        if (!actionPlanEventMatchesState(state, event.planId)) {
+        if (!actionPlanEventMatchesState(state, event.planId) || state.actionPlan.status === 'executed') {
           return state;
+        }
+        if (this.currentContext) {
+          this.options.mutationObserver?.onVoicePlanExecuted({
+            tenantId: this.currentContext.tenantId,
+            inventoryId: this.currentContext.inventoryId,
+            assetIds: [...new Set((event.commandResults ?? []).map(result => result.assetId).filter(id => id.trim().length > 0))]
+          });
         }
         const photoAttachmentStatus = await this.attachApprovedPlanPhotos({
           ...event,
@@ -649,26 +677,7 @@ export class RealtimeVoiceSessionController {
   }
 
   private async selectedInventoryContext() {
-    const workspace = await this.inventories.getInventoryWorkspace();
-    const inventory =
-      workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
-      workspace.inventories[0];
-
-    if (!inventory) {
-      throw new Error('Inventory workspace must include at least one inventory.');
-    }
-
-    const tenant = workspace.tenants.find((item) => item.id === inventory.tenantId);
-    if (!tenant) {
-      throw new Error('Selected inventory must belong to a tenant.');
-    }
-
-    return {
-      tenantId: inventory.tenantId,
-      inventoryId: inventory.id,
-      tenantName: tenant.name,
-      inventoryName: inventory.name
-    };
+    return this.inventories.getVoiceInventoryContext();
   }
 
   private async attachApprovedPlanPhotos(

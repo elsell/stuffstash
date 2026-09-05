@@ -102,4 +102,13 @@ describe('createMobileComposition', () => {
     ]);
     expect(composition.customizationObservability.events()).toEqual(events);
   });
+
+  it('creates an isolated server-state cache for each authenticated composition', () => {
+    const first = createMobileComposition({ apiBaseUrl: 'http://api.local', tenantId: 'tenant-home' });
+    const second = createMobileComposition({ apiBaseUrl: 'http://api.local', tenantId: 'tenant-home' });
+
+    expect(first.serviceScopeId).not.toBe(second.serviceScopeId);
+    expect(first.queryClient).not.toBe(second.queryClient);
+    expect(first.queryClient.getQueryCache().getAll()).toEqual([]);
+  });
 });

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -18,8 +19,10 @@ export type AssetCheckoutHistorySheetState =
 
 export function AssetCheckoutHistorySheet({
   onClose,
+  footer,
   state
 }: {
+  readonly footer?: ReactNode;
   readonly onClose: () => void;
   readonly state: AssetCheckoutHistorySheetState;
 }) {
@@ -39,7 +42,8 @@ export function AssetCheckoutHistorySheet({
       </View>
       {state.status === 'loading' ? <LoadingHistory /> : null}
       {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}
-      {state.status === 'ready' ? <ReadyHistory history={state.history} /> : null}
+      {state.status !== 'ready' ? footer : null}
+      {state.status === 'ready' ? <ReadyHistory history={state.history} footer={footer} /> : null}
     </View>
   );
 }
@@ -65,13 +69,14 @@ function ErrorHistory({ message }: { readonly message: string }) {
   );
 }
 
-function ReadyHistory({ history }: { readonly history: AssetCheckoutHistoryViewModel }) {
+function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHistoryViewModel; readonly footer?: ReactNode }) {
   const styles = useStyles();
   if (history.records.length === 0) {
     return (
       <View style={styles.centerState}>
         <Text style={styles.emptyTitle}>{history.emptyTitle}</Text>
         <Text style={styles.stateText}>{history.emptyMessage}</Text>
+        {footer}
       </View>
     );
   }
@@ -108,9 +113,7 @@ function ReadyHistory({ history }: { readonly history: AssetCheckoutHistoryViewM
           </View>
         </View>
       ))}
-      {history.hasMore ? (
-        <Text style={styles.moreText}>More checkout history is available.</Text>
-      ) : null}
+      {footer}
     </ScrollView>
   );
 }

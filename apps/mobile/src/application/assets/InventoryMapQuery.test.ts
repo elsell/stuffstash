@@ -23,6 +23,17 @@ class FakeInventoryMapAssetRepository implements InventoryMapAssetRepository {
 }
 
 describe('InventoryMapQuery', () => {
+  it('forwards cancellation to the containment read port', async () => {
+    const controller = new AbortController();
+    let received: AbortSignal | undefined;
+    const source = new FakeInventoryMapAssetRepository(inventory([]));
+    const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async (request) => {
+      received = request?.signal;
+      return source.listActiveInventoryMapAssets();
+    } });
+    await query.execute({ signal: controller.signal });
+    expect(received).toBe(controller.signal);
+  });
   it('builds a full active containment map for the selected inventory', async () => {
     const query = new InventoryMapQuery(new FakeInventoryMapAssetRepository(inventory([
       asset('item-loose', 'Loose flashlight', 'item'),

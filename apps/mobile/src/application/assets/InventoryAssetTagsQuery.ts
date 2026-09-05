@@ -1,5 +1,5 @@
 import type { AssetTagSummary } from '../../domain/assets/AssetSummary';
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type { ReadRequest } from '../shared/ReadRequest';
 
 export type AssetTagOptionViewModel = {
   readonly id: string;
@@ -8,12 +8,16 @@ export type AssetTagOptionViewModel = {
   readonly color?: string;
 };
 
-export class InventoryAssetTagsQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+export type InventoryAssetTagsRepository = {
+  getInventoryAssetTags(request?: ReadRequest): Promise<readonly AssetTagSummary[]>;
+};
 
-  async execute(): Promise<readonly AssetTagOptionViewModel[]> {
-    const inventory = await this.inventories.getDefaultInventorySummary();
-    return (inventory.assetTags ?? []).map(toTagOption);
+export class InventoryAssetTagsQuery {
+  constructor(private readonly inventories: InventoryAssetTagsRepository) {}
+
+  async execute(request: ReadRequest = {}): Promise<readonly AssetTagOptionViewModel[]> {
+    const tags = await this.inventories.getInventoryAssetTags(request);
+    return tags.map(toTagOption);
   }
 }
 

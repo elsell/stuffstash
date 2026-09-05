@@ -69,6 +69,7 @@ export type AssetDetailViewModel = {
   readonly locationTrailLabel: string;
   readonly parentLocationTrailLabel: string;
   readonly parentLocationTrail: readonly AssetParentLocationCrumbViewModel[];
+  readonly isPlacementLoading?: boolean;
   readonly lifecycleLabel: string;
   readonly isActive: boolean;
   readonly canEdit: boolean;
@@ -133,6 +134,7 @@ export function toAssetDetailViewModel(
     readonly canEditAsset?: boolean;
     readonly canCreateAsset?: boolean;
     readonly allAssets?: readonly AssetSummary[];
+    readonly isPlacementLoading?: boolean;
   } = {}
 ): AssetDetailViewModel {
   const canManageLifecycle = options.canManageLifecycle ?? true;
@@ -154,19 +156,8 @@ export function toAssetDetailViewModel(
     kind: asset.kind,
     parentAssetId: asset.parentAssetId,
     parentLocationTrailLabel: labelParentLocationTrail(asset),
-    photos: (asset.photos ?? (asset.photo ? [asset.photo] : [])).map((photo, index) => ({
-      id: photo.id,
-      fileName: photo.fileName,
-      contentType: photo.contentType,
-      sizeBytes: photo.sizeBytes,
-      label: photo.fileName ?? `Photo ${(index + 1).toString()}`,
-      uri: photo.uri,
-      heroUri: photo.heroUri,
-      heroHeaders: photo.heroHeaders,
-      viewerUri: photo.viewerUri,
-      viewerHeaders: photo.viewerHeaders,
-      headers: photo.headers
-    })),
+    isPlacementLoading: options.isPlacementLoading,
+    photos: toAssetPhotoViewModels(asset.photos ?? (asset.photo ? [asset.photo] : [])),
     lifecycleLabel: asset.lifecycleState === 'active' ? 'Active' : 'Archived',
     isActive: asset.lifecycleState === 'active',
     canEdit: canEditAsset && asset.lifecycleState === 'active',
@@ -193,6 +184,24 @@ export function toAssetDetailViewModel(
     canContainAssets: asset.kind === 'container' || asset.kind === 'location',
     canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
+}
+
+export function toAssetPhotoViewModels(
+  photos: AssetSummary['photos'] = []
+): readonly AssetPhotoViewModel[] {
+  return (photos ?? []).map((photo, index) => ({
+    id: photo.id,
+    fileName: photo.fileName,
+    contentType: photo.contentType,
+    sizeBytes: photo.sizeBytes,
+    label: photo.fileName ?? `Photo ${(index + 1).toString()}`,
+    uri: photo.uri,
+    heroUri: photo.heroUri,
+    heroHeaders: photo.heroHeaders,
+    viewerUri: photo.viewerUri,
+    viewerHeaders: photo.viewerHeaders,
+    headers: photo.headers
+  }));
 }
 
 function locationWorkspaceContents(

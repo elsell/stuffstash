@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -16,47 +16,23 @@ import { SelectInventoryCommand } from '../../application/home/SelectInventoryCo
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type TenantSwitcherSheetScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
 };
 
-type ScreenState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly dashboard: HomeDashboardViewModel }
-  | { readonly status: 'error'; readonly message: string };
-
 export function TenantSwitcherSheetScreen({
   dashboardQuery,
   selectInventoryCommand
 }: TenantSwitcherSheetScreenProps) {
   const styles = useStyles();
-  const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    dashboardQuery
-      .execute()
-      .then((dashboard) => {
-        if (isCurrent) {
-          setScreenState({ status: 'ready', dashboard });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setScreenState({
-            status: 'error',
-            message: readableError(error, 'Could not load tenants.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [dashboardQuery]);
+  const dashboard = useMobileInventoryServerQuery({
+    key: mobileQueryKeys.home,
+    query: (signal) => dashboardQuery.execute({ signal })
+  });
 
   async function selectInventory(inventoryId: string): Promise<void> {
     await selectInventoryCommand.execute(inventoryId);
@@ -65,11 +41,13 @@ export function TenantSwitcherSheetScreen({
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right', 'bottom']}>
-      {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
-      {screenState.status === 'ready' ? (
+      {dashboard.isPending && !dashboard.data ? <LoadingState /> : null}
+      {dashboard.isError && !dashboard.data ? (
+        <ErrorState message={readableError(dashboard.error, 'Could not load tenants.')} />
+      ) : null}
+      {dashboard.data ? (
         <TenantSwitcher
-          dashboard={screenState.dashboard}
+          dashboard={dashboard.data}
           onSelectInventory={selectInventory}
         />
       ) : null}

@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../shared/ReadRequest';
 import {
   ProviderProfileRepository,
   ProviderProfileSummary,
@@ -19,10 +20,15 @@ const requiredCapabilities = [
 export class ProviderProfileSettingsQuery {
   constructor(private readonly profiles: ProviderProfileRepository) {}
 
-  async execute(): Promise<ProviderProfileSettingsViewModel> {
+  async listProfiles(request: ReadRequest = {}) {
+    return [...await this.profiles.listProviderProfiles(request)].sort(compareProfiles);
+  }
+  getConfiguration(request: ReadRequest = {}) { return this.profiles.getVoiceProviderConfiguration(request); }
+
+  async execute(request: ReadRequest = {}): Promise<ProviderProfileSettingsViewModel> {
     const [profiles, configuration] = await Promise.all([
-      this.profiles.listProviderProfiles(),
-      this.profiles.getVoiceProviderConfiguration()
+      this.listProfiles(request),
+      this.getConfiguration(request)
     ]);
 
     return {

@@ -1,3 +1,6 @@
+import type { ReadRequest } from '../shared/ReadRequest';
+export { SelectedInventoryUnavailableError as SettingsScopeUnavailableError } from '../shared/SelectedInventoryUnavailableError';
+
 export type SettingsPrincipal = {
   readonly id: string;
   readonly email?: string;
@@ -34,7 +37,7 @@ export type SettingsViewModel = {
 };
 
 export interface CurrentPrincipalRepository {
-  getCurrentPrincipal(): Promise<SettingsPrincipal>;
+  getCurrentPrincipal(request?: ReadRequest): Promise<SettingsPrincipal>;
 }
 
 export interface SettingsDiagnosticsProvider {
@@ -42,7 +45,7 @@ export interface SettingsDiagnosticsProvider {
 }
 
 export interface SettingsScopeRepository {
-  getSelectedScope(): Promise<{
+  getSelectedScope(request?: ReadRequest): Promise<{
     readonly tenant: SettingsTenantScope;
     readonly inventory: SettingsInventoryScope;
   }>;
@@ -55,11 +58,15 @@ export class SettingsQuery {
     private readonly scope: SettingsScopeRepository
   ) {}
 
-  async execute(): Promise<SettingsViewModel> {
+  getPrincipal(request: ReadRequest = {}) { return this.principals.getCurrentPrincipal(request); }
+  getSelectedScope(request: ReadRequest = {}) { return this.scope.getSelectedScope(request); }
+  getDiagnostics() { return this.diagnostics.getDiagnostics(); }
+
+  async execute(request: ReadRequest = {}): Promise<SettingsViewModel> {
     const [principal, diagnostics, selectedScope] = await Promise.all([
-      this.principals.getCurrentPrincipal(),
+      this.getPrincipal(request),
       Promise.resolve(this.diagnostics.getDiagnostics()),
-      this.scope.getSelectedScope()
+      this.getSelectedScope(request)
     ]);
 
     return {

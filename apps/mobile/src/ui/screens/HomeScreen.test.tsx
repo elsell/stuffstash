@@ -4,10 +4,11 @@ import { HomeScreen } from './HomeScreen';
 
 const testState = vi.hoisted(() => ({
   stateValues: [] as unknown[],
-  stateIndex: 0
+  stateIndex: 0,
+  stateSetters: [] as ReturnType<typeof vi.fn>[]
 }));
 const routerPush = vi.hoisted(() => vi.fn());
-const useFocusEffectMock = vi.hoisted(() => vi.fn());
+const serverQueryState = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 
 vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
@@ -17,7 +18,9 @@ vi.mock('react', async (importOriginal) => ({
   useState: <T,>(initialValue?: T) => {
     const index = testState.stateIndex++;
     const value = index < testState.stateValues.length ? testState.stateValues[index] : initialValue;
-    return [value, vi.fn()];
+    const setter = vi.fn();
+    testState.stateSetters[index] = setter;
+    return [value, setter];
   }
 }));
 
@@ -25,8 +28,11 @@ vi.mock('expo-router', () => ({
   router: {
     navigate: vi.fn(),
     push: routerPush
-  },
-  useFocusEffect: useFocusEffectMock
+  }
+}));
+
+vi.mock('../serverState/useMobileInventoryServerQuery', () => ({
+  useMobileInventoryServerQuery: () => serverQueryState.current
 }));
 
 vi.mock('lucide-react-native', () => ({
@@ -122,16 +128,16 @@ const dashboard: HomeDashboardViewModel = {
   }],
   canAdd: true,
   recentAssets: [recentAsset],
-  checkedOutAssets: [checkedOutAsset],
-  assetTags: []
+  checkedOutAssets: [checkedOutAsset]
 };
 
 describe('HomeScreen asset cards', () => {
   beforeEach(() => {
     testState.stateIndex = 0;
-    testState.stateValues = [{ status: 'ready', dashboard }, false, undefined, undefined];
+    testState.stateSetters = [];
+    testState.stateValues = [undefined, undefined];
+    serverQueryState.current = readyServerQuery(dashboard);
     routerPush.mockClear();
-    useFocusEffectMock.mockClear();
   });
 
   it('wires recent and checked-out entries through the shared compact card', () => {
@@ -244,18 +250,68 @@ describe('HomeScreen asset cards', () => {
     expect(execute).toHaveBeenCalledWith({ action: 'return', assetId: 'asset-checked-out' });
 
     testState.stateIndex = 0;
-    testState.stateValues = [{ status: 'ready', dashboard }, false, 'asset-checked-out', undefined];
+    testState.stateValues = ['asset-checked-out', undefined];
     const returningCard = renderHomeCards(execute).find((card) => card.props?.asset === checkedOutAsset);
 
     expect(returningCard?.props?.footerAction).toMatchObject({ disabled: true, label: 'Returning...' });
+  });
+
+  it('shows return details before the dashboard refresh completes', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      id: 'checkout-one',
+      assetId: 'asset-checked-out',
+      undoableOperationId: 'operation-one'
+    });
+    const dashboardExecute = vi.fn(() => new Promise<HomeDashboardViewModel>(() => undefined));
+    const tree = renderHome(dashboardExecute, execute);
+    const checkedOut = findAllByType(tree, 'AssetCard')
+      .find((card) => card.props?.asset === checkedOutAsset);
+
+    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(dashboardExecute).toHaveBeenCalledTimes(1);
+    expect(testState.stateSetters[1]).toHaveBeenCalledWith(expect.objectContaining({
+      checkoutId: 'checkout-one',
+      asset: checkedOutAsset
+    }));
+  });
+
+  it('reconciles a successful return even when undo is unavailable', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      id: 'checkout-one',
+      assetId: 'asset-checked-out',
+      undoableOperationId: undefined
+    });
+    const dashboardExecute = vi.fn().mockResolvedValue(dashboard);
+    const tree = renderHome(dashboardExecute, execute);
+    const checkedOut = findAllByType(tree, 'AssetCard')
+      .find((card) => card.props?.asset === checkedOutAsset);
+
+    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(dashboardExecute).toHaveBeenCalledTimes(1);
+    expect(testState.stateSetters[1]).toHaveBeenCalledWith(expect.objectContaining({
+      checkoutId: 'checkout-one',
+      undoableOperationId: undefined
+    }));
   });
 });
 
 describe('HomeScreen recovery', () => {
   it('offers an explicit Retry action after the initial load fails', async () => {
     testState.stateIndex = 0;
-    testState.stateValues = [{ status: 'error', message: 'Network unavailable' }, false];
     const execute = vi.fn().mockResolvedValue(dashboard);
+    serverQueryState.current = {
+      ...readyServerQuery(undefined),
+      error: new Error('Network unavailable'),
+      isError: true,
+      isPending: false,
+      refetch: execute
+    };
     const tree = renderHome(execute);
     const retry = findByAccessibilityLabel(tree, 'Retry loading Home');
 
@@ -264,12 +320,6 @@ describe('HomeScreen recovery', () => {
     await Promise.resolve();
 
     expect(execute).toHaveBeenCalledTimes(1);
-
-    const focusRefresh = useFocusEffectMock.mock.calls.at(-1)?.[0] as (() => void) | undefined;
-    focusRefresh?.();
-    await Promise.resolve();
-
-    expect(execute).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -285,11 +335,18 @@ function renderHomeCards(execute = vi.fn()): readonly ElementNode[] {
 
 function renderReadyHome(readyDashboard: HomeDashboardViewModel = dashboard): unknown {
   testState.stateIndex = 0;
-  testState.stateValues = [{ status: 'ready', dashboard: readyDashboard }, false, undefined, undefined];
+  testState.stateValues = [undefined, undefined];
+  serverQueryState.current = readyServerQuery(readyDashboard);
   return renderHome();
 }
 
 function renderHome(dashboardExecute?: ReturnType<typeof vi.fn>, checkoutExecute = vi.fn()): unknown {
+  if (dashboardExecute) {
+    serverQueryState.current = {
+      ...serverQueryState.current,
+      refetch: dashboardExecute
+    };
+  }
   return HomeScreen({
     assetCheckoutCommand: {
       execute: checkoutExecute,
@@ -298,6 +355,17 @@ function renderHome(dashboardExecute?: ReturnType<typeof vi.fn>, checkoutExecute
     } as never,
     dashboardQuery: { execute: dashboardExecute ?? vi.fn().mockResolvedValue(dashboard) } as never
   });
+}
+
+function readyServerQuery(data: HomeDashboardViewModel | undefined): Record<string, unknown> {
+  return {
+    data,
+    error: null,
+    isError: false,
+    isPending: data === undefined,
+    isRefetching: false,
+    refetch: vi.fn().mockResolvedValue({ data })
+  };
 }
 
 function findAllByType(node: unknown, type: unknown): readonly ElementNode[] {

@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../shared/ReadRequest';
 export type ProviderProfileCapability =
   | 'speech_to_text'
   | 'language_inference'
@@ -103,8 +104,8 @@ export type ReplaceProviderProfileCredentialInput = {
 export type ProviderProfileLifecycleAction = 'enable' | 'disable' | 'archive';
 
 export interface ProviderProfileRepository {
-  listProviderProfiles(): Promise<readonly ProviderProfileSummary[]>;
-  getVoiceProviderConfiguration(): Promise<VoiceProviderConfiguration>;
+  listProviderProfiles(request?: ReadRequest): Promise<readonly ProviderProfileSummary[]>;
+  getVoiceProviderConfiguration(request?: ReadRequest): Promise<VoiceProviderConfiguration>;
   updateVoiceProviderConfiguration(input: UpdateVoiceProviderConfigurationInput): Promise<VoiceProviderConfiguration>;
   createProviderProfile(input: CreateProviderProfileInput): Promise<ProviderProfileSummary>;
   updateProviderProfile(input: UpdateProviderProfileInput): Promise<ProviderProfileSummary>;

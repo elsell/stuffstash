@@ -3,6 +3,7 @@ import { toAssetCardViewModel } from '../assets/AssetViewModels';
 import { createInventoryOverview } from '../../domain/inventories/InventorySummary';
 import type { AccessRole } from '../../domain/inventories/InventorySummary';
 import { HomeDashboardSnapshotRepository } from './InventorySummaryRepository';
+import type { ReadRequest } from '../shared/ReadRequest';
 
 export type HomeDashboardInventoryViewModel = {
   readonly id: string;
@@ -28,19 +29,13 @@ export type HomeDashboardViewModel = {
   readonly canAdd: boolean;
   readonly recentAssets: readonly AssetCardViewModel[];
   readonly checkedOutAssets: readonly AssetCardViewModel[];
-  readonly assetTags: readonly {
-    readonly id: string;
-    readonly key: string;
-    readonly displayName: string;
-    readonly color?: string;
-  }[];
 };
 
 export class HomeDashboardQuery {
   constructor(private readonly inventories: HomeDashboardSnapshotRepository) {}
 
-  async execute(): Promise<HomeDashboardViewModel> {
-    const { checkedOutAssets, workspace } = await this.inventories.getHomeDashboardSnapshot();
+  async execute(request: ReadRequest = {}): Promise<HomeDashboardViewModel> {
+    const { checkedOutAssets, workspace } = await this.inventories.getHomeDashboardSnapshot(request);
     const inventory =
       workspace.inventories.find((item) => item.id === workspace.defaultInventoryId) ??
       workspace.inventories[0];
@@ -81,8 +76,7 @@ export class HomeDashboardQuery {
         .filter((asset) => asset.lifecycleState === 'active')
         .slice(0, 10)
         .map(toAssetCardViewModel),
-      checkedOutAssets: checkedOutAssets.slice(0, 10).map(toAssetCardViewModel),
-      assetTags: [...(inventory.assetTags ?? [])]
+      checkedOutAssets: checkedOutAssets.slice(0, 10).map(toAssetCardViewModel)
     };
   }
 }

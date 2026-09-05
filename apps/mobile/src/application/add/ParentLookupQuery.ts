@@ -1,5 +1,9 @@
 import type { AssetKind, AssetSummary } from '../../domain/assets/AssetSummary';
-import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
+import type { ReadRequest } from '../shared/ReadRequest';
+
+export interface ParentLookupRepository {
+  listParentCandidates(query: string, request?: ReadRequest): Promise<readonly AssetSummary[]>;
+}
 
 export type ParentLookupResult = {
   readonly id: string;
@@ -15,18 +19,14 @@ export type ParentLookupResult = {
 };
 
 export class ParentLookupQuery {
-  constructor(private readonly inventories: InventorySummaryRepository) {}
+  constructor(private readonly inventories: ParentLookupRepository) {}
 
-  async execute(query: string): Promise<readonly ParentLookupResult[]> {
+  async execute(query: string, request: ReadRequest = {}): Promise<readonly ParentLookupResult[]> {
     const trimmed = query.trim();
-    if (trimmed.length === 0) {
-      const inventory = await this.inventories.getDefaultInventorySummary();
-      return inventory.assets.slice(0, 5).map(toParentLookupResult);
-    }
-
-    const assets = await this.inventories.searchAssets(trimmed);
-    return prioritizeExactTitleMatches(assets, trimmed).slice(0, 6).map(toParentLookupResult);
+    const assets = await this.inventories.listParentCandidates(trimmed, request);
+    return prioritizeExactTitleMatches(assets, trimmed).slice(0, trimmed ? 6 : 5).map(toParentLookupResult);
   }
+
 }
 
 function prioritizeExactTitleMatches(

@@ -73,6 +73,7 @@ vi.mock('../theme/AppearanceContext', () => ({
 }));
 
 vi.mock('react-native', () => ({
+  ActivityIndicator: 'ActivityIndicator',
   DynamicColorIOS: ({ light }: { light: string }) => light,
   FlatList: (props: Record<string, unknown>) => {
     const data = (props.data as readonly unknown[] | undefined) ?? [];
@@ -413,6 +414,32 @@ describe('AssetDetailView', () => {
     expect(moveButton?.props?.disabled).toBe(true);
     expect(moveButton?.props?.accessibilityState).toEqual({ disabled: true });
   });
+
+  it('keeps core details visible while photos load', () => {
+    const tree = AssetDetailView({
+      asset: assetDetail(),
+      isPhotosLoading: true,
+      onAddPhotos: vi.fn()
+    });
+
+    expect(collectText(tree)).toContain('Family tent');
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Loading photos')?.props)
+      .toMatchObject({ accessibilityLiveRegion: 'polite', accessibilityRole: 'progressbar' });
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Add photos')).toBeUndefined();
+  });
+  it('allows photo additions while location and contents load', () => {
+    const tree = AssetDetailView({
+      asset: assetDetail(),
+      isContentsLoading: true,
+      onAddPhotos: () => undefined
+    });
+
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Loading location and contents')?.props)
+      .toMatchObject({ accessibilityLiveRegion: 'polite', accessibilityRole: 'progressbar' });
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Loading photos')).toBeUndefined();
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Add photos')).toBeDefined();
+  });
+
 });
 
 function assetDetail(): AssetDetailViewModel {

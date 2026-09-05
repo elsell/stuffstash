@@ -4,7 +4,8 @@ import { AssetMoveSheetRouteScreen } from '../../../ui/screens/AssetNativeAction
 
 export default function AssetMoveRoute() {
   const {
-    assetDetailQuery,
+    assetCoreQuery,
+    assetPlacementQuery,
     createAssetCommand,
     moveAssetCommand,
     parentLookupQuery
@@ -13,7 +14,8 @@ export default function AssetMoveRoute() {
 
   return (
     <AssetMoveSheetRouteScreen
-      assetDetailQuery={assetDetailQuery}
+      assetCoreQuery={assetCoreQuery}
+      assetPlacementQuery={assetPlacementQuery}
       assetId={assetId}
       createAssetCommand={createAssetCommand}
       moveAssetCommand={moveAssetCommand}

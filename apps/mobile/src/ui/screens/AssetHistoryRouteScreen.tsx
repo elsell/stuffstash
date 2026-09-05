@@ -1,5 +1,9 @@
-import { useCallback, useState } from 'react';
-import { router, Stack, useFocusEffect } from 'expo-router';
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
+import { useState } from 'react';
+import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -49,52 +53,34 @@ export function AssetHistoryRouteScreen({
   const styles = createStyles(palette);
   const feedback = useAppFeedback();
   const [view, setView] = useState<AssetActivityView>('changes');
-  const [state, setState] = useState<HistoryState>({ status: 'loading' });
+  const scopeId = useMobileServerStateScopeId();
+  const history = useInfiniteQuery({
+    queryKey: mobileQueryKeys.assetHistory(scopeId, tenantId, inventoryId, assetId, view),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ signal, pageParam }) => assetActivityQuery.execute({ tenantId, inventoryId, assetId, view, limit: 20, cursor: pageParam, signal }),
+    getNextPageParam: (page) => page.hasMore ? page.nextCursor : undefined
+  });
+  const firstPage = isAccessFailure(history.error) ? undefined : history.data?.pages[0];
+  const state: HistoryState = firstPage
+    ? { ...firstPage, status: 'ready', records: history.data!.pages.flatMap((page) => page.records), hasMore: history.hasNextPage }
+    : history.isError ? { status: 'error', ...historyLoadError(history.error) } : { status: 'loading' };
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [pageError, setPageError] = useState<string>();
-
-  const load = useCallback(async (selectedView: AssetActivityView) => {
-    setState({ status: 'loading' });
-    setPageError(undefined);
-    try {
-      const result = await assetActivityQuery.execute({ tenantId, inventoryId, assetId, view: selectedView, limit: 20 });
-      setState({ status: 'ready', ...result });
-    } catch (error) {
-      setState({ status: 'error', ...historyLoadError(error) });
-    }
-  }, [assetActivityQuery, assetId, inventoryId, tenantId]);
-
-  useFocusEffect(useCallback(() => {
-    void load(view);
-  }, [load, view]));
+  const isLoadingMore = history.isFetchingNextPage;
+  const pageError = history.isFetchNextPageError ? 'Older activity could not be loaded.' : undefined;
 
   async function refresh(): Promise<void> {
     setIsRefreshing(true);
     try {
-      const result = await assetActivityQuery.execute({ tenantId, inventoryId, assetId, view, limit: 20 });
-      setState({ status: 'ready', ...result });
-    } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh History', message: readableError(error, 'Your existing History is still shown.') });
+      await history.refetch({ throwOnError: true });
+    } catch {
+      feedback.showNotice({ tone: 'error', title: 'Could not refresh History', message: 'Please try again when access and connectivity are available.' });
     } finally {
       setIsRefreshing(false);
     }
   }
 
   async function loadMore(): Promise<void> {
-    if (state.status !== 'ready' || !state.hasMore || !state.nextCursor || isLoadingMore) return;
-    setIsLoadingMore(true);
-    setPageError(undefined);
-    try {
-      const result = await assetActivityQuery.execute({
-        tenantId, inventoryId, assetId, view, limit: 20, cursor: state.nextCursor
-      });
-      setState({ ...result, status: 'ready', records: [...state.records, ...result.records] });
-    } catch (error) {
-      setPageError(readableError(error, 'Older activity could not be loaded.'));
-    } finally {
-      setIsLoadingMore(false);
-    }
+    if (history.hasNextPage && !history.isFetching) await history.fetchNextPage();
   }
 
   function openDetail(record: AssetActivityRecordViewModel): void {
@@ -116,11 +102,15 @@ export function AssetHistoryRouteScreen({
         <View style={styles.centerState}>
           <Text accessibilityRole="header" style={styles.stateTitle}>{state.title}</Text>
           <Text style={styles.stateMessage}>{state.message}</Text>
-          {state.canRetry ? <Pressable accessibilityRole="button" onPress={() => void load(view)} style={styles.primaryButton}>
+          {state.canRetry ? <Pressable accessibilityRole="button" onPress={() => void history.refetch()} style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>Try again</Text>
           </Pressable> : null}
         </View>
       ) : null}
+      {state.status === 'ready' && history.isRefetchError ? <View style={styles.heading}>
+        <Text accessibilityRole="alert" style={styles.pageError}>History could not be refreshed. Previously loaded activity is shown.</Text>
+        <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>Try refreshing again</Text></Pressable>
+      </View> : null}
       {state.status === 'ready' ? (
         <SectionList
           contentContainerStyle={state.records.length === 0 ? styles.emptyList : styles.list}
@@ -140,7 +130,7 @@ export function AssetHistoryRouteScreen({
           ListFooterComponent={state.hasMore || pageError ? (
             <View style={styles.footer}>
               {pageError ? <Text accessibilityRole="alert" style={styles.pageError}>{pageError}</Text> : null}
-              <Pressable accessibilityRole="button" disabled={isLoadingMore} onPress={() => void loadMore()} style={styles.secondaryButton}>
+              <Pressable accessibilityLabel="Load older activity" accessibilityRole="button" disabled={history.isFetching} onPress={() => void loadMore()} style={styles.secondaryButton}>
                 {isLoadingMore ? <ActivityIndicator color={palette.action} /> : <Text style={styles.secondaryButtonText}>{pageError ? 'Try older activity again' : 'Load older activity'}</Text>}
               </Pressable>
             </View>
@@ -178,11 +168,6 @@ function HistoryRow({ record, onPress, styles }: { readonly record: AssetActivit
 
 function CenteredState({ label, palette, styles }: { readonly label: string; readonly palette: MobileColorPalette; readonly styles: ReturnType<typeof createStyles> }) {
   return <View style={styles.centerState}><ActivityIndicator color={palette.action} /><Text style={styles.stateMessage}>{label}</Text></View>;
-}
-
-function readableError(error: unknown, fallback: string): string {
-  void error;
-  return fallback;
 }
 
 function createStyles(colors: MobileColorPalette) {

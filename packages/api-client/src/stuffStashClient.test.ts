@@ -1504,6 +1504,18 @@ describe('StuffStashClient', () => {
     ]);
   });
 
+  it('forwards cancellation for the principal read', async () => {
+    const controller = new AbortController();
+    let received: AbortSignal | null | undefined;
+    const client = new StuffStashClient({ baseUrl: 'http://api.local', tokenProvider: () => null, fetch: async (request) => {
+      received = (request as Request).signal;
+      return Response.json({ data: { id: 'principal', email: 'person@example.test' } });
+    } });
+    await client.me(controller.signal);
+    controller.abort();
+    expect(received?.aborted).toBe(true);
+  });
+
   it('maps API errors into typed client errors', async () => {
     const client = new StuffStashClient({
       baseUrl: 'http://api.local',

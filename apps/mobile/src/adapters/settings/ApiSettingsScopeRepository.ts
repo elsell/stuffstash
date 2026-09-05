@@ -1,3 +1,5 @@
+import { SettingsScopeUnavailableError } from '../../application/settings/SettingsQuery';
+import type { ReadRequest } from '../../application/shared/ReadRequest';
 import type { StuffStashClient } from '@stuff-stash/api-client';
 import type {
   SettingsInventoryScope,
@@ -5,10 +7,10 @@ import type {
   SettingsTenantScope
 } from '../../application/settings/SettingsQuery';
 
-type SettingsScopeApiClient = Pick<StuffStashClient, 'listMyTenants'>;
+type SettingsScopeApiClient = Pick<StuffStashClient, 'getTenant' | 'listInventories'>;
 
 type CurrentTenantScope = {
-  getCurrentSettingsScope(): Promise<{
+  getCurrentSettingsScope(request?: ReadRequest): Promise<{
     readonly tenantId: string;
     readonly inventory: SettingsInventoryScope;
   }>;
@@ -20,21 +22,31 @@ export class ApiSettingsScopeRepository implements SettingsScopeRepository {
     private readonly currentTenant: CurrentTenantScope
   ) {}
 
-  async getSelectedScope(): Promise<{ readonly tenant: SettingsTenantScope; readonly inventory: SettingsInventoryScope }> {
-    const [scope, page] = await Promise.all([
-      this.currentTenant.getCurrentSettingsScope(),
-      this.client.listMyTenants(100)
+  async getSelectedScope(request: ReadRequest = {}): Promise<{ readonly tenant: SettingsTenantScope; readonly inventory: SettingsInventoryScope }> {
+    const scope = await this.currentTenant.getCurrentSettingsScope(request);
+    const [tenant, inventory] = await Promise.all([
+      this.client.getTenant(scope.tenantId, request.signal),
+      this.selectedInventory(scope.tenantId, scope.inventory.id, request)
     ]);
-    const tenant = page.items.find((item) => item.id === scope.tenantId);
-    if (!tenant) {
-      throw new Error('The selected Stuff Stash tenant is no longer available.');
-    }
-    if (scope.inventory.id.length === 0) {
-      throw new Error('The selected Stuff Stash inventory is no longer available.');
-    }
+
     return {
       tenant: { id: tenant.id, name: tenant.name, permissions: [...tenant.access.permissions] },
-      inventory: { ...scope.inventory, permissions: [...scope.inventory.permissions] }
+      inventory: { id: inventory.id, name: inventory.name, permissions: [...inventory.access.permissions] }
     };
   }
+  private async selectedInventory(tenantId: string, inventoryId: string, request: ReadRequest) {
+    let cursor: string | undefined;
+    const visited = new Set<string>();
+    do {
+      request.signal?.throwIfAborted();
+      const page = await this.client.listInventories(tenantId, 100, cursor, request.signal);
+      const inventory = page.items.find((candidate) => candidate.id === inventoryId);
+      if (inventory) return inventory;
+      cursor = page.pagination.hasMore ? page.pagination.nextCursor ?? undefined : undefined;
+      if (cursor && visited.has(cursor)) break;
+      if (cursor) visited.add(cursor);
+    } while (cursor);
+    throw new SettingsScopeUnavailableError();
+  }
+
 }

@@ -12,11 +12,14 @@ export type AssetCheckoutRecord = {
 export type AssetCheckoutHistoryPage = {
   readonly records: readonly AssetCheckoutRecord[];
   readonly hasMore: boolean;
+  readonly nextCursor?: string;
 };
 
 export interface AssetCheckoutHistoryRepository {
   listAssetCheckoutHistory(input: {
     readonly assetId: string;
+    readonly cursor?: string;
+    readonly signal?: AbortSignal;
     readonly limit: number;
   }): Promise<AssetCheckoutHistoryPage>;
 }
@@ -25,6 +28,7 @@ export type AssetCheckoutHistoryViewModel = {
   readonly assetId: string;
   readonly records: readonly AssetCheckoutRecordViewModel[];
   readonly hasMore: boolean;
+  readonly nextCursor?: string;
   readonly emptyTitle: string;
   readonly emptyMessage: string;
 };
@@ -47,6 +51,8 @@ export class AssetCheckoutHistoryQuery {
 
   async execute(input: {
     readonly assetId: string;
+    readonly cursor?: string;
+    readonly signal?: AbortSignal;
     readonly limit?: number;
   }): Promise<AssetCheckoutHistoryViewModel> {
     const assetId = input.assetId.trim();
@@ -56,13 +62,16 @@ export class AssetCheckoutHistoryQuery {
 
     const page = await this.repository.listAssetCheckoutHistory({
       assetId,
-      limit: input.limit ?? 20
+      limit: input.limit ?? 20,
+      cursor: input.cursor,
+      signal: input.signal
     });
 
     return {
       assetId,
       records: page.records.map(toRecordViewModel),
       hasMore: page.hasMore,
+      nextCursor: page.nextCursor,
       emptyTitle: 'No checkout history yet',
       emptyMessage: 'Checkouts and returns for this asset will appear here.'
     };

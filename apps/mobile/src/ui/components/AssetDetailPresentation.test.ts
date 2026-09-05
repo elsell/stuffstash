@@ -159,6 +159,17 @@ describe('AssetDetailPresentation', () => {
     });
   });
 
+  it('does not claim a placed core asset has no location while its path is loading', () => {
+    expect(assetDetailPlacement({
+      parentLocationTrail: [],
+      isPlacementLoading: true
+    })).toEqual({
+      accessibilityLabel: 'Location loading',
+      crumbs: [],
+      fallbackLabel: 'Loading location…'
+    });
+  });
+
   it('renders only the applicable direct availability action', () => {
     expect(assetDetailAvailabilityAction({ canCheckout: true, canReturn: false })).toEqual({
       id: 'check_out',

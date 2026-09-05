@@ -82,3 +82,43 @@ jobs:
           tar -xzf selfhost-runtime-dist/stuffstash-selfhost.tar.gz -C selfhost-runtime-dist/extracted
           SELFHOST_RUNTIME_ROOT="$PWD/selfhost-runtime-dist/extracted/stuffstash-selfhost" \
             scripts/verify-selfhost-runtime.sh
+
+  ios-dependency-lock:
+    name: iOS dependency lock
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      EX_DEV_CLIENT_NETWORK_INSPECTOR: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve with pinned CocoaPods
+        working-directory: apps/mobile/ios
+        run: |
+          test "$(pod --version)" = "1.17.0"
+          pod install --no-repo-update
+
+      - name: Verify committed lockfile
+        run: git diff --exit-code -- apps/mobile/ios/Podfile.lock
+
+      - name: Retain resolved lockfile
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ios-dependency-lock
+          path: apps/mobile/ios/Podfile.lock
+          retention-days: 3

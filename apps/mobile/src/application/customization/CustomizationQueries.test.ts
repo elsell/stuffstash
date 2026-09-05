@@ -4,6 +4,12 @@ import { BufferedCustomizationObservability } from './CustomizationObservability
 import { CustomizationCollectionQuery } from './CustomizationQueries';
 
 describe('CustomizationCollectionQuery', () => {
+  it('stops pagination when its owner cancels, even if the port returns an uncancellable page', async () => {
+    const controller = new AbortController(); let calls = 0;
+    const repository = { listTags: async () => { calls++; controller.abort(); return { items: [], nextCursor: 'next' }; } } as unknown as CustomizationRepository;
+    await expect(new CustomizationCollectionQuery(repository).tags({} as never, { signal: controller.signal })).rejects.toThrow();
+    expect(calls).toBe(1);
+  });
   it('loads every page before presenting local search as complete', async () => {
     const calls: Array<string | undefined> = [];
     const repository = {

@@ -1,45 +1,38 @@
+import { InventoryMapInfoSheet } from './InventoryMapInfoSheet';
+import { createStyles } from './InventoryMapScreen.styles';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import type { ProgressiveAssetDetailQueries } from '../serverState/useProgressiveAssetDetail';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
-  Alert,
   AccessibilityInfo,
   Animated,
   FlatList,
   Image,
-  Modal,
   PanResponder,
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   useWindowDimensions,
   View
 } from 'react-native';
 import { ChevronRight, Info, Package, Plus, Search, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type {
-  AddAssetPhotoProgressEvent,
-  AddAssetPhotosCommand,
-  AddAssetPhotosCommandResult
-} from '../../application/assets/AddAssetPhotosCommand';
+import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
 import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
-import type { AssetDetailQuery } from '../../application/assets/AssetDetailQuery';
 import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
 import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
-import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type {
   InventoryMapAssetViewModel,
   InventoryMapQuery,
   InventoryMapViewModel
 } from '../../application/assets/InventoryMapQuery';
-import type {
-  PhotoSelectionQuery,
-  SelectedAssetPhoto
-} from '../../application/add/PhotoSelectionQuery';
-import { radius, spacing } from '../theme/tokens';
+import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
+import { spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import {
@@ -51,7 +44,6 @@ import {
   findInventoryMapSearchMatch,
   inventoryMapBranchSwipeOffset,
   inventoryMapGestureConfig,
-  inventoryMapEmbeddedDetailRequest,
   InventoryMapSurface,
   mapOverviewLabel,
   nearestInventoryMapColumnForOffset,
@@ -65,42 +57,19 @@ import {
 import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapColumnViewModel } from './InventoryMapPresentation';
 import { addHereRouteParams } from './AddAssetInitialParent';
-import {
-  AssetDetailView,
-  AssetPhotoUploadProgressViewModel
-} from '../components/AssetDetailView';
-import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
-import { AssetOverflowMenu } from './AssetOverflowMenu';
-import {
-  assetPhotoViewerModel,
-  isAssetPhotoId
-} from '../components/AssetPhotoWorkspacePresentation';
-import {
-  assetLifecycleConfirmation,
-  assetLifecycleFailurePresentation,
-  AssetLifecycleActionKind
-} from './AssetLifecyclePresentation';
-import {
-  applyPhotoUploadProgress,
-  photoUploadRows
-} from './AssetPhotoUploadProgressPresentation';
-import {
-  assetWorkspaceSuccessStatus,
-  visibleAssetWorkspaceStatus,
-  AssetWorkspaceStatus
-} from './AssetWorkspaceStatusPresentation';
-import { showPhotoSourceChooser } from './PhotoSourceChooser';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type InventoryMapScreenProps = {
-  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
-  readonly assetCheckoutCommand: AssetCheckoutCommand;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetLifecycleCommand: AssetLifecycleCommand;
+  readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
+  readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
+  readonly assetCoreQuery: ProgressiveAssetDetailQueries['assetCoreQuery'];
+  readonly assetContentsQuery: ProgressiveAssetDetailQueries['assetContentsQuery'];
+  readonly assetPhotosQuery: ProgressiveAssetDetailQueries['assetPhotosQuery'];
+  readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
   readonly canAdd: boolean;
-  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
-  readonly inventoryMapQuery: InventoryMapQuery;
+  readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
+  readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
   readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly selectedSurface: InventoryMapSurface;
@@ -113,12 +82,6 @@ type InventoryMapState =
   | { readonly status: 'ready'; readonly map: InventoryMapViewModel }
   | { readonly status: 'error'; readonly message: string };
 
-type MapSheetDetailState =
-  | { readonly status: 'idle' }
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly asset: AssetDetailViewModel }
-  | { readonly status: 'error'; readonly message: string };
-
 type BranchSwipeVisualState = {
   readonly assetId: string;
   readonly dragX: number;
@@ -126,12 +89,6 @@ type BranchSwipeVisualState = {
 
 type FinishBranchSwipeOptions = {
   readonly preserveVisual?: boolean;
-};
-
-type LoadMapOptions = {
-  readonly preserveSelectedAsset?: boolean;
-  readonly requestId: number;
-  readonly showLoading: boolean;
 };
 
 type RenderedInventoryMapColumn = {
@@ -147,7 +104,9 @@ const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 export function InventoryMapScreen({
   addAssetPhotosCommand,
   assetCheckoutCommand,
-  assetDetailQuery,
+  assetCoreQuery,
+  assetContentsQuery,
+  assetPhotosQuery,
   assetLifecycleCommand,
   canAdd,
   deleteAssetPhotoCommand,
@@ -169,17 +128,29 @@ export function InventoryMapScreen({
   const mapOffset = useRef(new Animated.Value(0)).current;
   const mapOffsetValue = useRef(0);
   const mapPanStartOffset = useRef(0);
-  const requestSequence = useRef(0);
   const branchSwipeVisualClearTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previousColumnsMapKey = useRef<string | undefined>(undefined);
-  const [state, setState] = useState<InventoryMapState>({ status: 'loading' });
+  const feedback = useAppFeedback();
+  const mapQuery = useMobileInventoryServerQuery({
+    key: mobileQueryKeys.inventoryMap,
+    query: (signal) => inventoryMapQuery.execute({ signal })
+  });
+  const state: InventoryMapState = mapQuery.data
+    ? { status: 'ready', map: mapQuery.data }
+    : mapQuery.isError
+      ? { status: 'error', message: 'Inventory map could not load.' }
+      : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
   const [query, setQuery] = useState('');
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingScrollLevel, setPendingScrollLevel] = useState<number | undefined>();
   const [highlightedAssetId, setHighlightedAssetId] = useState<string | undefined>();
-  const [selectedAsset, setSelectedAsset] = useState<InventoryMapAssetViewModel | undefined>();
+  const [selection, setSelection] = useState<{ scope: string; asset: InventoryMapAssetViewModel }>();
+  const selectedAsset = mapQuery.data && selection?.scope === mapStorageKey(mapQuery.data) ? selection.asset : undefined;
+  function setSelectedAsset(asset: InventoryMapAssetViewModel | undefined): void {
+    setSelection(asset && mapQuery.data ? { scope: mapStorageKey(mapQuery.data), asset } : undefined);
+  }
   const [branchSwipeVisual, setBranchSwipeVisual] = useState<BranchSwipeVisualState | undefined>();
   const [mapVerticalScrollLocked, setMapVerticalScrollLocked] = useState(false);
   const [exitingColumns, setExitingColumns] = useState<readonly RenderedInventoryMapColumn[]>([]);
@@ -213,18 +184,22 @@ export function InventoryMapScreen({
   }, []);
 
   useEffect(() => {
-    const requestId = nextRequestId(requestSequence);
-    loadMap({ requestId, showLoading: true });
-  }, [inventoryMapQuery]);
+    if (!mapQuery.data) return;
+    const nextMap = mapQuery.data;
+    setHighlightedAssetId(undefined);
+    setSelection((current) => current?.scope === mapStorageKey(nextMap)
+      ? { ...current, asset: nextMap.assets.find((next) => next.id === current.asset.id) ?? current.asset }
+      : undefined);
+    setBranchSwipeVisual(undefined);
+    setMapVerticalScrollLocked(false);
+    setOpenPath(pathStore.current.get(mapStorageKey(nextMap)) ?? []);
+  }, [mapQuery.data, pathStore]);
 
-  useFocusEffect(useCallback(() => {
-    if (state.status !== 'ready') {
-      return;
+  useEffect(() => {
+    if (mapQuery.isError && mapQuery.data) {
+      feedback.showNotice({ tone: 'error', title: 'Could not refresh Map', message: 'Your last loaded map is still available. Pull to refresh.' });
     }
-
-    const requestId = nextRequestId(requestSequence);
-    loadMap({ preserveSelectedAsset: true, requestId, showLoading: false });
-  }, [inventoryMapQuery, state.status]));
+  }, [mapQuery.isError, mapQuery.error, feedback]);
 
   const map = state.status === 'ready' ? state.map : undefined;
   const columns = useMemo(
@@ -370,56 +345,10 @@ export function InventoryMapScreen({
     mapOffsetValue.current = clampedOffset;
   }, [mapOffset, maxMapOffset]);
 
-  function loadMap({
-    preserveSelectedAsset = false,
-    requestId,
-    showLoading
-  }: LoadMapOptions): void {
-    if (showLoading) {
-      setState({ status: 'loading' });
-    }
-
-    inventoryMapQuery
-      .execute()
-      .then((nextMap) => {
-        if (!isCurrentRequest(requestSequence, requestId)) {
-          return;
-        }
-        setState({ status: 'ready', map: nextMap });
-        setHighlightedAssetId(undefined);
-        setSelectedAsset((current) => {
-          if (!preserveSelectedAsset || !current) {
-            return undefined;
-          }
-          return nextMap.assets.find((nextAsset) => nextAsset.id === current.id) ?? current;
-        });
-        setBranchSwipeVisual(undefined);
-        setMapVerticalScrollLocked(false);
-        setOpenPath(pathStore.current.get(mapStorageKey(nextMap)) ?? []);
-      })
-      .catch((error) => {
-        if (isCurrentRequest(requestSequence, requestId)) {
-          setState({
-            status: 'error',
-            message: error instanceof Error ? error.message : 'Inventory map failed to load.'
-          });
-        }
-      })
-      .finally(() => {
-        if (isCurrentRequest(requestSequence, requestId)) {
-          setIsRefreshing(false);
-        }
-      });
-  }
-
-  function refreshMap(options: { readonly preserveSelectedAsset?: boolean } = {}): void {
-    const requestId = nextRequestId(requestSequence);
+  async function refreshMap(): Promise<void> {
     setIsRefreshing(true);
-    loadMap({
-      preserveSelectedAsset: options.preserveSelectedAsset,
-      requestId,
-      showLoading: false
-    });
+    try { await mapQuery.refetch({ cancelRefetch: false }); }
+    finally { setIsRefreshing(false); }
   }
 
   function scrollToColumn(level: number): void {
@@ -703,6 +632,9 @@ export function InventoryMapScreen({
         <View style={styles.centerState}>
           <Text style={styles.errorTitle}>Map unavailable</Text>
           <Text style={styles.centerText}>{state.message}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Retry map" onPress={() => void refreshMap()}>
+            <Text style={styles.sheetCloseText}>Retry</Text>
+          </Pressable>
         </View>
       ) : null}
       {state.status === 'ready' ? (
@@ -752,12 +684,14 @@ export function InventoryMapScreen({
         addAssetPhotosCommand={addAssetPhotosCommand}
         assetCheckoutCommand={assetCheckoutCommand}
         asset={selectedAsset}
-        assetDetailQuery={assetDetailQuery}
+        assetCoreQuery={assetCoreQuery}
+        assetContentsQuery={assetContentsQuery}
+        assetPhotosQuery={assetPhotosQuery}
         assetLifecycleCommand={assetLifecycleCommand}
         deleteAssetPhotoCommand={deleteAssetPhotoCommand}
         photoSelectionQuery={photoSelectionQuery}
         onClose={() => setSelectedAsset(undefined)}
-        onMapChanged={() => refreshMap({ preserveSelectedAsset: true })}
+        onMapChanged={() => { void mapQuery.reconcile().catch(() => undefined); }}
       />
     </View>
   );
@@ -1257,798 +1191,6 @@ function InventoryMapRow({
   );
 }
 
-function InventoryMapInfoSheet({
-  addAssetPhotosCommand,
-  asset,
-  assetCheckoutCommand,
-  assetDetailQuery,
-  assetLifecycleCommand,
-  deleteAssetPhotoCommand,
-  photoSelectionQuery,
-  onClose,
-  onMapChanged
-}: {
-  readonly addAssetPhotosCommand: AddAssetPhotosCommand;
-  readonly assetCheckoutCommand: AssetCheckoutCommand;
-  readonly asset?: InventoryMapAssetViewModel;
-  readonly assetDetailQuery: AssetDetailQuery;
-  readonly assetLifecycleCommand: AssetLifecycleCommand;
-  readonly deleteAssetPhotoCommand: DeleteAssetPhotoCommand;
-  readonly photoSelectionQuery: PhotoSelectionQuery;
-  readonly onClose: () => void;
-  readonly onMapChanged: () => void;
-}) {
-  const colors = useAppearancePalette();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const feedback = useAppFeedback();
-  const [detailState, setDetailState] = useState<MapSheetDetailState>({ status: 'idle' });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pendingAction, setPendingAction] = useState<PendingMapSheetAction | undefined>();
-  const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
-  const [photoUploads, setPhotoUploads] = useState<readonly AssetPhotoUploadProgressViewModel[]>([]);
-  const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
-  const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
-
-  const activeDetailAssetId = detailState.status === 'ready' ? detailState.asset.id : asset?.id;
-
-  useEffect(() => {
-    if (!asset) {
-      setDetailState({ status: 'idle' });
-      setIsRefreshing(false);
-      setPendingAction(undefined);
-      setFailedPhotoDrafts([]);
-      setPhotoUploads([]);
-      setPhotoStatus(undefined);
-      setWorkspaceStatus(undefined);
-      setSelectedPhotoId(undefined);
-      return;
-    }
-
-    let isCurrent = true;
-    setDetailState({ status: 'loading' });
-    assetDetailQuery
-      .execute(asset.id, { source: 'map' })
-      .then((detail) => {
-        if (isCurrent) {
-          setDetailState({ status: 'ready', asset: detail });
-        }
-      })
-      .catch((error) => {
-        if (isCurrent) {
-          setDetailState({
-            status: 'error',
-            message: error instanceof Error ? error.message : 'Could not load asset details.'
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [asset, assetDetailQuery]);
-
-  async function reloadDetail(): Promise<AssetDetailViewModel> {
-    if (!activeDetailAssetId) {
-      throw new Error('No asset selected.');
-    }
-
-    const detail = await assetDetailQuery.execute(activeDetailAssetId, { source: 'map' });
-    setDetailState({ status: 'ready', asset: detail });
-    return detail;
-  }
-
-  async function refreshDetail(): Promise<void> {
-    setIsRefreshing(true);
-    setWorkspaceStatus(undefined);
-
-    try {
-      await reloadDetail();
-      onMapChanged();
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not refresh asset',
-        message: readableError(error, 'Could not refresh asset.')
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
-  }
-
-  function choosePhotos(currentPhotoCount: number): void {
-    showPhotoSourceChooser({
-      onCamera: () => {
-        void addPhotos('camera', currentPhotoCount);
-      },
-      onLibrary: () => {
-        void addPhotos('library', currentPhotoCount);
-      }
-    });
-  }
-
-  async function addPhotos(source: 'camera' | 'library', currentPhotoCount: number): Promise<void> {
-    if (!activeDetailAssetId) {
-      return;
-    }
-
-    setPendingAction('photos');
-    try {
-      const photos = source === 'camera'
-        ? await photoSelectionQuery.captureFromCamera(currentPhotoCount)
-        : await photoSelectionQuery.selectFromLibrary(currentPhotoCount);
-      if (photos.length === 0) {
-        return;
-      }
-      setPhotoStatus(undefined);
-      setPhotoUploads(photoUploadRows(photos));
-      const result = await addAssetPhotosCommand.execute({
-        assetId: activeDetailAssetId,
-        photos,
-        onPhotoProgress: updatePhotoUploadProgress
-      });
-      setPhotoStatus(result);
-      setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
-      await reloadDetail();
-      onMapChanged();
-      if (result.failedCount === 0) {
-        setPhotoUploads([]);
-      }
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not add photos',
-        message: readableError(error, 'Photo upload failed.')
-      });
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  async function retryPhotos(): Promise<void> {
-    if (!activeDetailAssetId || failedPhotoDrafts.length === 0) {
-      return;
-    }
-
-    setPendingAction('photos');
-    try {
-      setPhotoStatus(undefined);
-      setPhotoUploads(photoUploadRows(failedPhotoDrafts));
-      const result = await addAssetPhotosCommand.execute({
-        assetId: activeDetailAssetId,
-        photos: failedPhotoDrafts,
-        onPhotoProgress: updatePhotoUploadProgress
-      });
-      setPhotoStatus(result);
-      setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
-      await reloadDetail();
-      onMapChanged();
-      if (result.failedCount === 0) {
-        setPhotoUploads([]);
-      }
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not retry photos',
-        message: readableError(error, 'Photo retry failed.')
-      });
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  async function removePhoto(photoId: string): Promise<void> {
-    if (!activeDetailAssetId) {
-      return;
-    }
-
-    setPendingAction('photos');
-    try {
-      const result = await deleteAssetPhotoCommand.execute({ assetId: activeDetailAssetId, photoId });
-      setPhotoStatus({
-        attachedCount: 0,
-        failedCount: 0,
-        failedPhotos: [],
-        message: result.message,
-        canRetry: false
-      });
-      setFailedPhotoDrafts([]);
-      setSelectedPhotoId(undefined);
-      setPhotoUploads([]);
-      await reloadDetail();
-      onMapChanged();
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not remove photo',
-        message: readableError(error, 'Photo removal failed.')
-      });
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  function updatePhotoUploadProgress(event: AddAssetPhotoProgressEvent): void {
-    setPhotoUploads((current) => applyPhotoUploadProgress(current, event));
-  }
-
-  function selectAssetPhoto(detail: AssetDetailViewModel, photoId: string): void {
-    if (!isAssetPhotoId(detail.photos, photoId)) {
-      return;
-    }
-
-    setSelectedPhotoId(photoId);
-  }
-
-  function openEmbeddedDetail(assetId: string): void {
-    const request = inventoryMapEmbeddedDetailRequest(assetId);
-    setSelectedPhotoId(undefined);
-    setPhotoUploads([]);
-    setPhotoStatus(undefined);
-    setWorkspaceStatus(undefined);
-    setDetailState({ status: 'loading' });
-    assetDetailQuery
-      .execute(request.assetId, request.options)
-      .then((nextDetail) => setDetailState({ status: 'ready', asset: nextDetail }))
-      .catch((error) => setDetailState({
-        status: 'error',
-        message: readableError(error, 'Could not load asset details.')
-      }));
-  }
-
-  function confirmLifecycleAction(action: AssetLifecycleActionKind, detail: AssetDetailViewModel): void {
-    const confirmation = assetLifecycleConfirmation(action, detail);
-    Alert.alert(confirmation.title, confirmation.message, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: confirmation.confirmLabel,
-        style: confirmation.isDestructive ? 'destructive' : 'default',
-        onPress: () => void runLifecycleAction(action, detail)
-      }
-    ]);
-  }
-
-  async function runLifecycleAction(action: AssetLifecycleActionKind, detail: AssetDetailViewModel): Promise<void> {
-    setPendingAction(action);
-    setWorkspaceStatus(undefined);
-
-    try {
-      await assetLifecycleCommand.execute({ action, assetId: detail.id });
-      if (action === 'delete') {
-        onMapChanged();
-        onClose();
-        feedback.showNotice({
-          tone: 'success',
-          title: 'Asset deleted',
-          message: `${detail.title} was permanently deleted.`
-        });
-        return;
-      }
-
-      await reloadDetail();
-      onMapChanged();
-      setWorkspaceStatus(assetWorkspaceSuccessStatus(action, detail));
-    } catch (error) {
-      const failure = assetLifecycleFailurePresentation(
-        action,
-        detail,
-        readableError(error, 'Lifecycle action failed.')
-      );
-      feedback.showNotice({
-        tone: 'error',
-        title: failure.title,
-        message: failure.message
-      });
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  async function runCheckoutAction(action: 'checkout' | 'return', detail: AssetDetailViewModel): Promise<void> {
-    setPendingAction(action);
-    setWorkspaceStatus(undefined);
-
-    try {
-      await assetCheckoutCommand.execute({ action, assetId: detail.id });
-      await reloadDetail();
-      onMapChanged();
-      setWorkspaceStatus(assetWorkspaceSuccessStatus(action, detail));
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: action === 'checkout' ? 'Checkout failed' : 'Return failed',
-        message: readableError(error, action === 'checkout'
-          ? 'Could not check out this asset.'
-          : 'Could not return this asset.')
-      });
-    } finally {
-      setPendingAction(undefined);
-    }
-  }
-
-  return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onClose}
-      presentationStyle="pageSheet"
-      visible={asset !== undefined}
-    >
-      {asset ? (
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <View style={styles.sheetTopBar}>
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.sheetCloseButton}>
-              <Text style={styles.sheetCloseText}>Done</Text>
-            </Pressable>
-          </View>
-          {detailState.status === 'loading' ? (
-            <View style={styles.sheetLoadingState}>
-              <ActivityIndicator color={colors.accent} />
-              <Text style={styles.centerText}>Loading details</Text>
-            </View>
-          ) : null}
-          {detailState.status === 'error' ? (
-            <View style={styles.sheetLoadingState}>
-              <Text style={styles.errorTitle}>Details unavailable</Text>
-              <Text style={styles.centerText}>{detailState.message}</Text>
-            </View>
-          ) : null}
-          {detailState.status === 'ready' ? (
-            <>
-              {(() => {
-                const photoViewer = assetPhotoViewerModel(detailState.asset.photos, selectedPhotoId);
-                return (
-                  <AssetPhotoViewerSheet
-                    canRemove={detailState.asset.canAddPhotos}
-                    model={photoViewer}
-                    onClose={() => setSelectedPhotoId(undefined)}
-                    onRemove={(photoId) => void removePhoto(photoId)}
-                    onSelectPhoto={setSelectedPhotoId}
-                    photos={detailState.asset.photos}
-                  />
-                );
-              })()}
-              <AssetDetailView
-                asset={detailState.asset}
-                canRetryPhotos={photoStatus?.canRetry}
-                isActionPending={pendingAction !== undefined}
-                onAddHere={detailState.asset.canAddContainedAssets ? () => {
-                  onClose();
-                  router.push({
-                    pathname: '/add',
-                    params: addHereRouteParams(detailState.asset)
-                  });
-                } : undefined}
-                onAddPhotos={() => choosePhotos(detailState.asset.photos.length)}
-                onChildPress={openEmbeddedDetail}
-                onEdit={() => {
-                  onClose();
-                  router.push(`/assets/${detailState.asset.id}/edit`);
-                }}
-                onCheckout={() => void runCheckoutAction('checkout', detailState.asset)}
-                overflowMenu={(
-                  <AssetOverflowMenu
-                    asset={detailState.asset}
-                    disabled={pendingAction !== undefined}
-                    onCheckoutHistory={() => {
-                      onClose();
-                      router.push(`/assets/${detailState.asset.id}/checkouts`);
-                    }}
-                    onHistory={() => {
-                      onClose();
-                      router.push({
-                        pathname: '/assets/[assetId]/history',
-                        params: {
-                          assetId: detailState.asset.id,
-                          tenantId: detailState.asset.tenantId ?? '',
-                          inventoryId: detailState.asset.inventoryId ?? '',
-                          assetTitle: detailState.asset.title
-                        }
-                      });
-                    }}
-                    onLifecycleAction={(action) => confirmLifecycleAction(action, detailState.asset)}
-                  />
-                )}
-                onMove={() => {
-                  onClose();
-                  router.push(`/assets/${detailState.asset.id}/move`);
-                }}
-                onMoveThingsHere={detailState.asset.canAddContainedAssets ? () => {
-                  onClose();
-                  router.push(`/assets/${detailState.asset.id}/move-here`);
-                } : undefined}
-                onPhotoPress={(photoId) => selectAssetPhoto(detailState.asset, photoId)}
-                onParentLocationPress={(parent) => openEmbeddedDetail(parent.id)}
-                onRetryPhotos={() => void retryPhotos()}
-                onReturn={() => void runCheckoutAction('return', detailState.asset)}
-                photoUploads={photoUploads}
-                photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={isRefreshing}
-                    tintColor={colors.action}
-                    onRefresh={refreshDetail}
-                  />
-                }
-                workspaceStatusKind={visibleAssetWorkspaceStatus(pendingAction, workspaceStatus)?.kind}
-                workspaceStatusMessage={visibleAssetWorkspaceStatus(pendingAction, workspaceStatus)?.message}
-              />
-            </>
-          ) : null}
-        </View>
-      ) : null}
-    </Modal>
-  );
-}
-
-type PendingMapSheetAction = 'archive' | 'restore' | 'delete' | 'photos' | 'checkout' | 'return';
-
 function mapStorageKey(map: InventoryMapViewModel): string {
   return `${map.sessionScopeId}:${map.tenantId}:${map.inventoryId}`;
-}
-
-function nextRequestId(requestSequence: { current: number }): number {
-  requestSequence.current += 1;
-  return requestSequence.current;
-}
-
-function isCurrentRequest(
-  requestSequence: { readonly current: number },
-  requestId: number
-): boolean {
-  return requestSequence.current === requestId;
-}
-
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
-
-function createStyles(colors: MobileColorPalette) {
-  return StyleSheet.create({
-  shell: {
-    backgroundColor: colors.background,
-    flex: 1
-  },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm
-  },
-  headerTopRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.xs
-  },
-  headerActions: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.xs
-  },
-  headerAddButton: {
-    alignItems: 'center',
-    borderRadius: 22,
-    justifyContent: 'center',
-    minHeight: 44,
-    minWidth: 44
-  },
-  titleBlock: {
-    flex: 1,
-    minWidth: 0
-  },
-  title: {
-    color: colors.text,
-    fontSize: 25,
-    fontWeight: '900',
-    letterSpacing: 0,
-    lineHeight: 30
-  },
-  searchBar: {
-    alignItems: 'center',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 44,
-    paddingHorizontal: spacing.sm
-  },
-  searchInput: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 15,
-    minHeight: 44,
-    paddingVertical: 0
-  },
-  iconButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 32,
-    minWidth: 32
-  },
-  breadcrumbs: {
-    alignItems: 'center',
-    paddingTop: spacing.xs
-  },
-  breadcrumbItem: {
-    alignItems: 'center',
-    flexDirection: 'row'
-  },
-  breadcrumbButton: {
-    justifyContent: 'center',
-    minHeight: 44,
-    maxWidth: 150,
-    paddingHorizontal: spacing.xs
-  },
-  breadcrumbButtonPressed: {
-    opacity: 0.62
-  },
-  breadcrumbText: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  overviewText: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0,
-    marginTop: 0
-  },
-  mapScroller: {
-    flex: 1,
-    marginTop: spacing.xs,
-    overflow: 'hidden'
-  },
-  mapContent: {
-    alignItems: 'stretch',
-    flexDirection: 'row',
-    height: '100%',
-    paddingBottom: spacing.xl,
-    paddingTop: spacing.sm
-  },
-  column: {
-    backgroundColor: 'transparent',
-    flexShrink: 0,
-    height: '100%',
-    overflow: 'hidden'
-  },
-  columnTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.sm
-  },
-  columnList: {
-    gap: spacing.xs,
-    paddingTop: 2
-  },
-  columnListSurface: {
-    flex: 1
-  },
-  mapRow: {
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    minHeight: 74,
-    overflow: 'hidden',
-    position: 'relative',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4
-  },
-  mapRowExpanded: {
-    backgroundColor: colors.brandDustyBlueSoft,
-    borderColor: colors.border
-  },
-  mapRowHighlighted: {
-    borderColor: colors.focusRing,
-    shadowColor: colors.focusRing,
-    shadowOpacity: 0.22,
-    shadowRadius: 8
-  },
-  rowSwipeUnderlay: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    bottom: 0,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: inventoryMapGestureConfig.branchSwipeRevealWidth
-  },
-  rowCard: {
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    backgroundColor: colors.elevatedSurface,
-    flex: 1,
-    flexDirection: 'row',
-    minWidth: 0
-  },
-  rowMainGesture: {
-    alignSelf: 'stretch',
-    flex: 1,
-    minWidth: 0
-  },
-  rowMain: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 72,
-    minWidth: 0,
-    paddingLeft: spacing.sm,
-    paddingVertical: spacing.xs
-  },
-  rowImageWrap: {
-    position: 'relative'
-  },
-  rowImageFrame: {
-    alignItems: 'center',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    height: 52,
-    justifyContent: 'center',
-    overflow: 'hidden',
-    width: 52
-  },
-  childCountBadge: {
-    alignItems: 'center',
-    backgroundColor: colors.accentStrong,
-    borderColor: colors.elevatedSurface,
-    borderRadius: 9,
-    borderWidth: 1,
-    bottom: -3,
-    flexDirection: 'row',
-    gap: 2,
-    minHeight: 18,
-    paddingHorizontal: 5,
-    position: 'absolute',
-    right: -4
-  },
-  childCountBadgeText: {
-    color: colors.onAction,
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  rowImage: {
-    height: '100%',
-    width: '100%'
-  },
-  rowImageLabel: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  rowText: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0
-  },
-  rowTitleLine: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.xs
-  },
-  rowTitle: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  rowMeta: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  rowTrail: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 16
-  },
-  rowInfoButton: {
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    backgroundColor: colors.elevatedSurface,
-    justifyContent: 'center',
-    minWidth: 48
-  },
-  emptyColumn: {
-    alignItems: 'center',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 130,
-    padding: spacing.md
-  },
-  emptyColumnText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0,
-    textAlign: 'center'
-  },
-  emptyColumnAction: {
-    alignItems: 'center',
-    backgroundColor: colors.elevatedSurface,
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-    minHeight: 40,
-    paddingHorizontal: spacing.md
-  },
-  emptyColumnActionText: {
-    color: colors.action,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  centerState: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: spacing.lg
-  },
-  centerText: {
-    color: colors.textMuted,
-    fontSize: 15,
-    fontWeight: '700',
-    lineHeight: 22,
-    marginTop: spacing.sm,
-    textAlign: 'center'
-  },
-  errorTitle: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    flex: 1,
-    padding: spacing.lg
-  },
-  sheetHandle: {
-    alignSelf: 'center',
-    backgroundColor: colors.border,
-    borderRadius: 2,
-    height: 4,
-    marginBottom: spacing.xs,
-    width: 44
-  },
-  sheetTopBar: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    minHeight: 44
-  },
-  sheetLoadingState: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: spacing.lg
-  },
-  sheetCloseButton: {
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.xs
-  },
-  sheetCloseText: {
-    color: colors.action,
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0
-  }
-  });
 }

@@ -17,8 +17,8 @@ class FakeInventoryContext {
     assets: []
   };
 
-  async getDefaultInventorySummary(): Promise<InventorySummary> {
-    return this.inventory;
+  async getCurrentInventoryScope() {
+    return { tenantId: this.inventory.tenantId, inventoryId: this.inventory.id };
   }
 }
 
@@ -111,7 +111,7 @@ describe('ApiAssetCheckoutHistoryRepository', () => {
       limit: 1
     })).resolves.toMatchObject({
       records: [{ id: 'checkout-open' }],
-      hasMore: true
+      hasMore: true, nextCursor: 'next-page'
     });
   });
 });

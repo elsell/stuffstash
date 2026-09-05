@@ -1,3 +1,4 @@
+import type { ReadRequest } from '../shared/ReadRequest';
 export type InventoryInvitationRelationship = 'viewer' | 'editor';
 export type InventoryInvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
 
@@ -21,8 +22,15 @@ export type CreatedInventoryInvitation = InventoryInvitationSummary & {
   readonly inviteUrl: string;
 };
 
+export type InventoryInvitationPage = { readonly items: readonly InventoryInvitationSummary[]; readonly nextCursor?: string };
+export type InventoryInvitationRead = ReadRequest & { readonly cursor?: string };
+export interface InventoryInvitationMutationObserver {
+  onInvitationsChanged(scope: InventorySharingScope, cancelledInvitationId?: string): void;
+}
+const noInvitationObserver: InventoryInvitationMutationObserver = { onInvitationsChanged: () => undefined };
+
 export interface InventoryInvitationManagementRepository {
-  list(scope: InventorySharingScope): Promise<readonly InventoryInvitationSummary[]>;
+  list(scope: InventorySharingScope, request?: InventoryInvitationRead): Promise<InventoryInvitationPage>;
   create(
     scope: InventorySharingScope,
     input: { readonly email: string; readonly relationship: InventoryInvitationRelationship }
@@ -45,14 +53,14 @@ export class InventorySharingPermissionError extends Error {
 export class ListInventoryInvitationsQuery {
   constructor(private readonly invitations: InventoryInvitationManagementRepository) {}
 
-  async execute(scope: InventorySharingScope): Promise<readonly InventoryInvitationSummary[]> {
+  async execute(scope: InventorySharingScope, request: InventoryInvitationRead = {}): Promise<InventoryInvitationPage> {
     requireShare(scope);
-    return await this.invitations.list(scope);
+    return await this.invitations.list(scope, request);
   }
 }
 
 export class CreateInventoryInvitationCommand {
-  constructor(private readonly invitations: InventoryInvitationManagementRepository) {}
+  constructor(private readonly invitations: InventoryInvitationManagementRepository, private readonly observer: InventoryInvitationMutationObserver = noInvitationObserver) {}
 
   async execute(
     scope: InventorySharingScope,
@@ -63,12 +71,14 @@ export class CreateInventoryInvitationCommand {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error('Enter a valid email address.');
     }
-    return await this.invitations.create(scope, { email, relationship: input.relationship });
+    const result = await this.invitations.create(scope, { email, relationship: input.relationship });
+    this.observer.onInvitationsChanged(scope);
+    return result;
   }
 }
 
 export class CancelInventoryInvitationCommand {
-  constructor(private readonly invitations: InventoryInvitationManagementRepository) {}
+  constructor(private readonly invitations: InventoryInvitationManagementRepository, private readonly observer: InventoryInvitationMutationObserver = noInvitationObserver) {}
 
   async execute(scope: InventorySharingScope, invitationId: string): Promise<void> {
     requireShare(scope);
@@ -77,6 +87,7 @@ export class CancelInventoryInvitationCommand {
       throw new Error('Invitation ID must not be empty.');
     }
     await this.invitations.cancel(scope, id);
+    this.observer.onInvitationsChanged(scope, id);
   }
 }
 

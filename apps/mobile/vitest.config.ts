@@ -6,6 +6,8 @@ const support = (file: string) => fileURLToPath(new URL(`./src/test-support/${fi
 export default defineConfig({
   resolve: {
     alias: [
+      { find: /^expo-network$/, replacement: support('expo-network.ts') },
+      { find: /^react-native-image-viewing$/, replacement: support('react-native-image-viewing.ts') },
       { find: /^react-native$/, replacement: support('react-native.ts') },
       { find: /^react-native-safe-area-context$/, replacement: support('react-native-safe-area-context.tsx') },
       { find: /^react-native-keyboard-controller$/, replacement: support('react-native-keyboard-controller.ts') },

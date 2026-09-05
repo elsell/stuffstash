@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
+import type { AssetActivityViewModel } from '../../application/assets/AssetActivityQuery';
+import { useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AssetActivityQuery } from '../../application/assets/AssetActivityQuery';
@@ -26,10 +31,25 @@ export function AssetHistoryDetailRouteScreen({
   readonly inventoryId: string;
   readonly assetTitle: string;
 }) {
-  const activityScope = { tenantId, inventoryId, assetId, activityId };
-  const [entry, setEntry] = useState(() => assetActivityQuery.cachedEntry(activityScope));
-  const [isLoading, setIsLoading] = useState(!entry);
-  const [loadFailure, setLoadFailure] = useState<ReturnType<typeof historyLoadError>>();
+  const scopeId = useMobileServerStateScopeId();
+  const queryClient = useQueryClient();
+  const queryKey = mobileQueryKeys.assetActivity(scopeId, tenantId, inventoryId, assetId, activityId);
+  const pages = queryClient.getQueryCache().findAll({
+    queryKey: [...mobileQueryKeys.asset(scopeId, tenantId, inventoryId, assetId), 'history']
+  }).filter((query) => !query.state.isInvalidated && !isAccessFailure(query.state.error)).sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
+  const cached = pages.map((query) => ({
+    entry: (query.state.data as InfiniteData<AssetActivityViewModel> | undefined)?.pages.flatMap((page) => page.entries).find((entry) => entry.id === activityId),
+    updatedAt: query.state.dataUpdatedAt
+  })).find((page) => page.entry);
+  const detail = useQuery({
+    queryKey,
+    queryFn: async ({ signal }) => await assetActivityQuery.loadEntry({ tenantId, inventoryId, assetId, activityId, signal }) ?? null,
+    initialData: queryClient.getQueryState(queryKey) ? undefined : cached?.entry,
+    initialDataUpdatedAt: cached?.updatedAt
+  });
+  const entry = isAccessFailure(detail.error) ? undefined : detail.data;
+  const isLoading = detail.isPending;
+  const loadFailure = detail.isError && !entry ? historyLoadError(detail.error) : undefined;
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
   const feedback = useAppFeedback();
@@ -37,29 +57,6 @@ export function AssetHistoryDetailRouteScreen({
   const [isReverting, setIsReverting] = useState(false);
   const isRevertingRef = useRef(false);
   const [isRevertUnavailable, setIsRevertUnavailable] = useState(false);
-
-  useEffect(() => {
-    if (entry) return;
-    let current = true;
-    assetActivityQuery.loadEntry({ tenantId, inventoryId, assetId, activityId })
-      .then((loaded) => { if (current) setEntry(loaded); })
-      .catch((error) => { if (current) setLoadFailure(historyLoadError(error)); })
-      .finally(() => { if (current) setIsLoading(false); });
-    return () => { current = false; };
-  }, [activityId, assetActivityQuery, assetId, entry, inventoryId, tenantId]);
-
-  async function retryLoad(): Promise<void> {
-    setIsLoading(true);
-    setLoadFailure(undefined);
-    try {
-      const loaded = await assetActivityQuery.loadEntry({ tenantId, inventoryId, assetId, activityId });
-      setEntry(loaded);
-    } catch (error) {
-      setLoadFailure(historyLoadError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   if (isLoading) {
     return <View style={styles.centerState}><Stack.Screen options={{ title: 'History detail' }} /><Text style={styles.muted}>Loading activity…</Text></View>;
@@ -71,7 +68,7 @@ export function AssetHistoryDetailRouteScreen({
         <Stack.Screen options={{ title: 'History detail' }} />
         <Text accessibilityRole="header" style={styles.title}>{loadFailure.title}</Text>
         <Text style={styles.muted}>{loadFailure.message}</Text>
-        {loadFailure.canRetry ? <Pressable accessibilityRole="button" onPress={() => void retryLoad()} style={styles.button}>
+        {loadFailure.canRetry ? <Pressable accessibilityRole="button" onPress={() => void detail.refetch()} style={styles.button}>
           <Text style={styles.buttonText}>Try again</Text>
         </Pressable> : null}
       </View>
@@ -111,7 +108,7 @@ export function AssetHistoryDetailRouteScreen({
       revertAssetChangeCommand,
       { tenantId, inventoryId, operationId: entry.undo.operationId },
       {
-        invalidateActivity: () => assetActivityQuery.invalidateEntry(activityScope),
+        invalidateActivity: () => { void queryClient.invalidateQueries({ queryKey, exact: true, refetchType: 'none' }); },
         showSuccess: () => feedback.showNotice({ tone: 'success', title: 'Change reverted', message: `“${assetTitle}” was updated. The reversal is now in History.` }),
         navigateBack: () => router.back()
       }
@@ -128,6 +125,10 @@ export function AssetHistoryDetailRouteScreen({
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
       <Stack.Screen options={{ title: 'History detail' }} />
+      {detail.isRefetchError ? <View style={styles.section}>
+        <Text accessibilityRole="alert" style={styles.muted}>Activity could not be refreshed. Previously loaded details are shown.</Text>
+        <Pressable accessibilityRole="button" onPress={() => void detail.refetch()} style={styles.button}><Text style={styles.buttonText}>Try refreshing again</Text></Pressable>
+      </View> : null}
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
         <Text style={styles.timestamp}>{exactTime(entry.occurredAt)}</Text>
@@ -146,7 +147,7 @@ export function AssetHistoryDetailRouteScreen({
         </View>
       ) : null}
 
-      {entry.undo?.status === 'available' && !isRevertUnavailable ? (
+      {entry.undo?.status === 'available' && !isRevertUnavailable && !detail.isRefetchError ? (
         <Pressable accessibilityRole="button" accessibilityState={{ disabled: isReverting }} disabled={isReverting} onPress={confirmRevert} style={styles.button}>
           <Text style={styles.buttonText}>{isReverting ? 'Reverting…' : 'Revert change'}</Text>
         </Pressable>

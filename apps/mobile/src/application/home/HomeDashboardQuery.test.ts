@@ -173,14 +173,7 @@ describe('HomeDashboardQuery', () => {
     ]);
     expect(dashboard).not.toHaveProperty('topLocations');
     expect(dashboard).not.toHaveProperty('locations');
-    expect(dashboard.assetTags).toEqual([
-      {
-        id: 'tag-workshop',
-        key: 'workshop',
-        displayName: 'Workshop',
-        color: '#2F80ED'
-      }
-    ]);
+    expect(dashboard).not.toHaveProperty('assetTags');
     expect(dashboard.recentAssets).toEqual([
       {
         id: 'asset-fresh-batteries',

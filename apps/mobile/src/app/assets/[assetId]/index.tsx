@@ -6,7 +6,9 @@ export default function AssetDetailRoute() {
   const {
     addAssetPhotosCommand,
     assetCheckoutCommand,
-    assetDetailQuery,
+    assetContentsQuery,
+    assetCoreQuery,
+    assetPhotosQuery,
     assetLifecycleCommand,
     deleteAssetPhotoCommand,
     photoSelectionQuery,
@@ -18,7 +20,9 @@ export default function AssetDetailRoute() {
     <AssetDetailRouteScreen
       addAssetPhotosCommand={addAssetPhotosCommand}
       assetCheckoutCommand={assetCheckoutCommand}
-      assetDetailQuery={assetDetailQuery}
+      assetContentsQuery={assetContentsQuery}
+      assetCoreQuery={assetCoreQuery}
+      assetPhotosQuery={assetPhotosQuery}
       assetLifecycleCommand={assetLifecycleCommand}
       deleteAssetPhotoCommand={deleteAssetPhotoCommand}
       photoSelectionQuery={photoSelectionQuery}

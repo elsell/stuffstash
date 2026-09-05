@@ -1,3 +1,6 @@
+import { SettingsQuery } from '../../application/settings/SettingsQuery';
+import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
+import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { TestInstance } from 'test-renderer';
@@ -13,10 +16,47 @@ import { CustomizationEditorScreen } from './CustomizationEditorScreen';
 import { DeniedSettingsState, HouseholdSettingsScreen, InventorySettingsScreen } from './ScopedSettingsScreens';
 
 let harness: MobileRenderHarness | undefined;
-beforeEach(() => { resetNativeTestState(); resetNavigation(); Reflect.deleteProperty(globalThis, 'expo'); });
+let queryClient = createMobileQueryClient();
+beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState(); resetNavigation(); Reflect.deleteProperty(globalThis, 'expo'); });
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it('reconciles a mounted collection from query invalidation without discarding the local search', async () => {
+    let rows = [tag('one', 'Tools')]; let reads = 0;
+    const screen = await renderCollection({ query: { tags: async () => { reads++; return { items: rows, complete: true }; } } });
+    await screen.changeText(screen.byLabel('Search Tags'), 'Tool');
+    rows = [tag('two', 'Toolboxes')];
+    await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'tag', 'active') }));
+    await settleQueries(screen);
+    expect(reads).toBe(2);
+    expect(screen.allText()).toContain('Toolboxes');
+    expect(screen.byLabel('Search Tags')?.props.value).toBe('Tool');
+  });
+
+  it('keeps collection access denied when an older definition request completes late', async () => {
+    const delayed = deferred<{ items: readonly ReturnType<typeof tag>[]; complete: true }>();
+    let denied = false; let calls = 0;
+    const screen = await renderCollection({ contextQuery: { execute: async () => { if (denied) throw new CustomizationFailure('permission-denied'); return context(['configure'], ['view', 'edit_asset']); } }, query: { tags: async () => ++calls === 1 ? { items: [tag('old', 'Old private row')], complete: true } : delayed.promise } });
+    await screen.run(() => { void queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'tag', 'active') }); });
+    denied = true;
+    await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.settingsScope('scope', 'tenant-1', 'inventory-1') })); await settleQueries(screen);
+    await screen.run(() => delayed.resolve({ items: [tag('late', 'Late private row')], complete: true })); await settleQueries(screen);
+    expect(screen.allText()).toContain('Settings unavailable');
+    expect(screen.allText()).not.toContain('Late private row');
+  });
+
+  it('refreshes field type choices while preserving a dirty field draft', async () => {
+    let types = [assetType('old', 'Old type', 'inventory')];
+    const record = { ...field('field', 'Field', 'inventory'), applicability: 'custom_asset_types' };
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', resourceId: record.id, query: { fields: async () => ({ items: [record], complete: true }), assetTypes: async () => ({ items: types, complete: true }) } });
+    await screen.changeText(screen.byLabel('Name'), 'My dirty field');
+    types = [assetType('new', 'New type', 'inventory')];
+    await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'asset-type', 'active') })); await settleQueries(screen);
+    expect(screen.byLabel('Name')?.props.value).toBe('My dirty field');
+    expect(screen.allText()).toContain('Add New type');
+    expect(screen.allText()).not.toContain('Add Old type');
+  });
+
   it('aligns collection chrome and editor actions to the shared 16-point content column', async () => {
     const collection = await renderCollection({ query: collectionQuery({ tags: [tag('tag-1', 'Tools')] }) });
     expect(collection.byLabel('Search Tags')?.props.style).toMatchObject({ minHeight: 44 });
@@ -34,7 +74,7 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).toContain('Private tag');
     const refresh = screen.byType('ScrollView')?.props.refreshControl as React.ReactElement<{ onRefresh: () => void }>;
     refresh.props.onRefresh();
-    await screen.settle();
+    await settleQueries(screen);
     expect(screen.allText()).toContain('Settings unavailable');
     expect(screen.allText()).not.toContain('Private tag');
   });
@@ -108,23 +148,24 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).not.toContain('Inherited from Home. Manage it from household settings.');
   });
 
-  it('prevents a stale resource load from overwriting a newer editor route', async () => {
+  it('shares a pending definition list and selects the latest editor route', async () => {
     const first = deferred<{ items: readonly ReturnType<typeof field>[]; complete: true }>();
     const resourceA = field('field-a', 'Resource A', 'inventory');
     const resourceB = field('field-b', 'Resource B', 'inventory');
     let calls = 0;
     const query = {
       assetTypes: async () => ({ items: [], complete: true }),
-      fields: async () => ++calls === 1 ? first.promise : { items: [resourceB], complete: true }
+      fields: async () => { calls++; return first.promise; }
     };
     harness = new MobileRenderHarness();
     await harness.render(editorElement({ kind: 'field', mode: 'edit', query, resourceId: resourceA.id }));
     await harness.render(editorElement({ kind: 'field', mode: 'edit', query, resourceId: resourceB.id }));
-    await harness.settle();
+    await settleQueries(harness);
+    expect(harness.byLabel('Name')).toBeUndefined();
+    first.resolve({ items: [resourceA, resourceB], complete: true });
+    await settleQueries(harness);
     expect(harness.byLabel('Name')?.props.value).toBe('Resource B');
-    first.resolve({ items: [resourceA], complete: true });
-    await harness.settle();
-    expect(harness.byLabel('Name')?.props.value).toBe('Resource B');
+    expect(calls).toBe(1);
   });
 
   it('lets read-only viewers inspect local detail without exposing controls', async () => {
@@ -207,7 +248,7 @@ describe('rendered mobile customization production states', () => {
     const manager = managerFake({ archive: async () => { throw new CustomizationFailure('conflict'); } });
     const screen = await renderEditor({ kind: 'field', manageFields: manager, mode: 'edit', query: collectionQuery({ fields: [record] }), resourceId: record.id });
     await screen.press(screen.byText('Archive')?.parent ?? undefined);
-    await screen.run(() => pressAlertButton('Archive')); await screen.settle();
+    await screen.run(() => pressAlertButton('Archive')); await settleQueries(screen);
     expect(screen.byLabel('Name')?.props.value).toBe('Priority');
     expect(screen.allText()).toContain('Could not archive');
     expect(focusedAccessibilityHandles()).toContain(1);
@@ -234,7 +275,7 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).not.toContain('No archived custom fields');
 
     archived.resolve({ items: [field('archived', 'Archived field', 'inventory')], complete: true });
-    await screen.settle();
+    await settleQueries(screen);
     expect(screen.allText()).toContain('Archived field');
     expect(screen.allText()).not.toContain('Active field');
   });
@@ -243,7 +284,7 @@ describe('rendered mobile customization production states', () => {
     const fields = sequence<{ items: readonly ReturnType<typeof field>[]; complete: true }>({ items: [field('active', 'Active field', 'inventory')], complete: true }, new CustomizationFailure('conflict'));
     const screen = await renderCollection({ kind: 'field', query: { fields: fields.next }, scope: 'inventory' });
     await screen.change(screen.byType('NativeSegmentedControl'), 'Archived');
-    await screen.settle();
+    await settleQueries(screen);
     expect(screen.allText()).toContain('Active field');
     expect(screen.allText()).not.toContain('Archived field');
     expect(screen.byType('NativeSegmentedControl')?.props.selectedIndex).toBe(0);
@@ -255,7 +296,7 @@ describe('rendered mobile customization production states', () => {
     const screen = await renderEditor({ contextQuery: { execute: contexts.next }, manageTags: manager });
     await screen.changeText(screen.byLabel('Name'), 'Garage');
     await screen.press(screen.byText('Save')?.parent ?? undefined);
-    await screen.settle();
+    await settleQueries(screen);
     expect(screen.allText()).toEqual(expect.arrayContaining(['Access changed', 'Garage', 'Refresh access']));
     expect(screen.byLabel('Name')).toBeUndefined();
     expect(screen.allText()).toContain('Garage');
@@ -285,11 +326,11 @@ describe('rendered mobile customization production states', () => {
     const action = { type: 'GESTURE_BACK' };
     attemptNavigation(action);
     expect(latestAlert()).toMatchObject({ title: 'Discard changes?', message: 'Your unsaved changes will be lost.' });
-    await pressAlertButton('Keep Editing'); await screen.settle();
+    await pressAlertButton('Keep Editing'); await settleQueries(screen);
     expect(dispatchedActions()).toEqual([]);
     expect(screen.byLabel('Name')?.props.value).toBe('Populated draft');
     attemptNavigation(action);
-    await pressAlertButton('Discard'); await pressAlertButton('Discard'); await screen.settle();
+    await pressAlertButton('Discard'); await pressAlertButton('Discard'); await settleQueries(screen);
     expect(dispatchedActions()).toEqual([action]);
   });
 
@@ -306,7 +347,7 @@ describe('rendered mobile customization production states', () => {
     await pressAlertButton('Archive');
     expect(archives).toBe(1);
     expect(screen.allText()).toContain('Working…');
-    pending.resolve(record); await mutation; await screen.settle();
+    pending.resolve(record); await mutation; await settleQueries(screen);
   });
 
   it('focuses and announces direct denied settings states', async () => {
@@ -317,13 +358,16 @@ describe('rendered mobile customization production states', () => {
   });
 
   it('renders the binding household/inventory role hierarchy', async () => {
-    const readOnly = { execute: async () => settings(['view'], ['view']) };
+    const value = settings(['view'], ['view']);
+    const readOnly = new SettingsQuery({ getCurrentPrincipal: async () => ({ id: 'principal', email: 'person@example.test' }) }, { getDiagnostics: () => ({ apiBaseUrl: 'https://example.test', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => ({ tenant: value.selectedTenant, inventory: value.selectedInventory }) });
+    const client = createMobileQueryClient();
+    const wrap = (child: React.ReactNode) => <MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-1', inventoryId: 'inventory-1' })}>{child}</MobileServerStateProvider>;
     harness = new MobileRenderHarness();
-    await harness.render(<InventorySettingsScreen onNavigate={() => undefined} settingsQuery={readOnly as never} />); await harness.settle();
+    await harness.render(wrap(<InventorySettingsScreen onNavigate={() => undefined} settingsQuery={readOnly} />)); await harness.run(() => new Promise((resolve) => setTimeout(resolve, 20)));
     expect(harness.allText()).toEqual(expect.arrayContaining(['Tags', 'Custom fields', 'Asset types']));
     expect(harness.allText()).not.toContain('Sharing');
 
-    await harness.render(<HouseholdSettingsScreen onNavigate={() => undefined} settingsQuery={readOnly as never} />); await harness.settle();
+    await harness.render(wrap(<HouseholdSettingsScreen onNavigate={() => undefined} settingsQuery={readOnly} />)); await settleQueries(harness);
     expect(harness.allText()).toContain('Settings unavailable');
   });
 });
@@ -334,14 +378,14 @@ async function renderCollection(overrides: Record<string, unknown> = {}) {
     accessPolicy: policy, contextQuery: { execute: async () => context(['configure'], ['view', 'configure', 'edit_asset']) }, kind: 'tag',
     onAdd: () => undefined, onOpen: () => undefined, query: collectionQuery(), scope: 'inventory', ...overrides
   } as unknown as React.ComponentProps<typeof CustomizationCollectionScreen>;
-  await harness.render(<AppFeedbackProvider><CustomizationCollectionScreen {...props} /></AppFeedbackProvider>);
-  await harness.settle(); return harness;
+  await harness.render(withQueries(<AppFeedbackProvider><CustomizationCollectionScreen {...props} /></AppFeedbackProvider>));
+  await settleQueries(harness); return harness;
 }
 
 async function renderEditor(overrides: Record<string, unknown> = {}) {
   harness = new MobileRenderHarness();
   await harness.render(editorElement(overrides));
-  await harness.settle(); return harness;
+  await settleQueries(harness); return harness;
 }
 
 function editorElement(overrides: Record<string, unknown> = {}) {
@@ -350,7 +394,7 @@ function editorElement(overrides: Record<string, unknown> = {}) {
     accessPolicy: policy, contextQuery: { execute: async () => context(['configure'], ['view', 'configure', 'edit_asset']) }, inherited: false, kind: 'tag', lifecycle: 'active',
     manageAssetTypes: inert, manageFields: inert, manageTags: inert, mode: 'create', onDone: () => undefined, query: collectionQuery(), scope: 'inventory', ...overrides
   } as unknown as React.ComponentProps<typeof CustomizationEditorScreen>;
-  return <AppFeedbackProvider><CustomizationEditorScreen {...props} /></AppFeedbackProvider>;
+  return withQueries(<AppFeedbackProvider><CustomizationEditorScreen {...props} /></AppFeedbackProvider>);
 }
 
 function collectionQuery(values: { tags?: readonly Record<string, unknown>[]; fields?: readonly Record<string, unknown>[]; assetTypes?: readonly Record<string, unknown>[] } = {}) {
@@ -380,3 +424,11 @@ function settings(tenantPermissions: readonly string[], inventoryPermissions: re
 function hasStyle(expected: Record<string, unknown>) { return (node: TestInstance) => { const styles = Array.isArray(node.props.style) ? node.props.style : [node.props.style]; return styles.some((style) => style && Object.entries(expected).every(([key, value]) => style[key] === value)); }; }
 function sequence<T>(...values: Array<T | Error | Promise<T>>) { let index = 0; return { next: async () => { const value = values[Math.min(index++, values.length - 1)]; if (value instanceof Error) throw value; return await value; } }; }
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((done) => { resolve = done; }); return { promise, resolve }; }
+
+function withQueries(child: React.ReactNode) {
+  return <MobileServerStateProvider client={queryClient} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-1', inventoryId: 'inventory-1' })}>{child}</MobileServerStateProvider>;
+}
+async function settleQueries(harness: MobileRenderHarness) {
+  await harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
+  await harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
+}

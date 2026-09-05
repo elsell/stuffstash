@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
@@ -18,73 +18,38 @@ import { assetDetailHref } from './AssetDetailNavigation';
 import { navigateToAssetTagSearch } from './AssetTagSearchNavigation';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type InventoryAssetsRouteScreenProps = {
   readonly inventoryAssetsQuery: InventoryAssetsQuery;
 };
-
-type ScreenState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly inventoryAssets: InventoryAssetsViewModel }
-  | { readonly status: 'error'; readonly message: string };
 
 export function InventoryAssetsRouteScreen({
   inventoryAssetsQuery
 }: InventoryAssetsRouteScreenProps) {
   const palette = useAppearancePalette();
   const styles = useMemo(() => createStyles(palette), [palette]);
-  const [screenState, setScreenState] = useState<ScreenState>({ status: 'loading' });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    inventoryAssetsQuery
-      .execute()
-      .then((inventoryAssets) => {
-        if (isCurrent) {
-          setScreenState({ status: 'ready', inventoryAssets });
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setScreenState({
-            status: 'error',
-            message: readableError(error, 'Could not load assets.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [inventoryAssetsQuery]);
+  const inventoryAssets = useMobileInventoryServerQuery({
+    key: mobileQueryKeys.inventoryAssets,
+    query: (signal) => inventoryAssetsQuery.execute({ signal })
+  });
 
   async function refreshInventoryAssets(): Promise<void> {
-    setIsRefreshing(true);
-
-    try {
-      const inventoryAssets = await inventoryAssetsQuery.execute();
-      setScreenState({ status: 'ready', inventoryAssets });
-    } catch (error) {
-      setScreenState({
-        status: 'error',
-        message: readableError(error, 'Could not refresh assets.')
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
+    await inventoryAssets.refetch();
   }
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      {screenState.status === 'loading' ? <LoadingState /> : null}
-      {screenState.status === 'error' ? <ErrorState message={screenState.message} /> : null}
-      {screenState.status === 'ready' ? (
+      {inventoryAssets.isPending && !inventoryAssets.data ? <LoadingState /> : null}
+      {inventoryAssets.isError && !inventoryAssets.data ? (
+        <ErrorState message={readableError(inventoryAssets.error, 'Could not load assets.')} />
+      ) : null}
+      {inventoryAssets.data ? (
         <InventoryAssetList
-          inventoryAssets={screenState.inventoryAssets}
-          isRefreshing={isRefreshing}
-          onRefresh={refreshInventoryAssets}
+          inventoryAssets={inventoryAssets.data}
+          isRefreshing={inventoryAssets.isRefetching}
+          onRefresh={() => { void refreshInventoryAssets(); }}
         />
       ) : null}
     </SafeAreaView>

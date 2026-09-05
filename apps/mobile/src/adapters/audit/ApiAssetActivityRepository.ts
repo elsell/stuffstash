@@ -15,7 +15,8 @@ export class ApiAssetActivityRepository implements AssetActivityRepository {
       input.tenantId,
       input.inventoryId,
       input.assetId,
-      { view: input.view, limit: input.limit, cursor: input.cursor }
+      { view: input.view, limit: input.limit, cursor: input.cursor },
+      input.signal
     );
     return {
       entries: page.items.map((entry): AssetActivityEntry => ({

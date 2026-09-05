@@ -1,4 +1,15 @@
+import * as Network from 'expo-network';
+import type { ConnectivitySource } from '../application/shared/ConnectivitySource';
+import { ExpoConnectivitySource } from '../adapters/serverState/ExpoConnectivitySource';
+import { QueryClientVoiceMutationObserver } from '../adapters/serverState/QueryClientVoiceMutationObserver';
+import { QueryClientInvitationMutationObserver } from '../adapters/serverState/QueryClientInvitationMutationObserver';
+import { ObservedCustomizationRepository } from '../adapters/customization/ObservedCustomizationRepository';
+import { QueryClientCustomizationMutationObserver } from '../adapters/serverState/QueryClientCustomizationMutationObserver';
+import { QueryClientProviderProfileMutationObserver } from '../adapters/serverState/QueryClientProviderProfileMutationObserver';
+import { AssetPlacementQuery } from '../application/assets/AssetPlacementQuery';
+import { InventoryContextQuery } from '../application/home/InventoryContextQuery';
 import { StuffStashClient } from '@stuff-stash/api-client';
+import type { QueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { ApiMobileAuthMetadataGateway } from '../adapters/auth/ApiMobileAuthMetadataGateway';
 import { ExpoOidcNativeClient } from '../adapters/auth/ExpoOidcNativeClient';
@@ -24,6 +35,7 @@ import { WebSocketRealtimeVoiceTransport } from '../adapters/voice/WebSocketReal
 import { InMemoryAddAssetDraftStore } from '../application/add/AddAssetDraftStore';
 import { CreateAssetCommand } from '../application/add/CreateAssetCommand';
 import { AddDraftScopeQuery } from '../application/add/AddDraftScopeQuery';
+import { AddAssetContextQuery } from '../application/add/AddAssetContextQuery';
 import { ParentLookupQuery } from '../application/add/ParentLookupQuery';
 import { PhotoSelectionQuery } from '../application/add/PhotoSelectionQuery';
 import { AddAssetPhotosCommand } from '../application/assets/AddAssetPhotosCommand';
@@ -31,6 +43,9 @@ import { AssetActivityQuery } from '../application/assets/AssetActivityQuery';
 import { AssetCheckoutCommand } from '../application/assets/AssetCheckoutCommand';
 import { AssetCheckoutHistoryQuery } from '../application/assets/AssetCheckoutHistoryQuery';
 import { AssetDetailQuery } from '../application/assets/AssetDetailQuery';
+import { AssetCoreQuery } from '../application/assets/AssetCoreQuery';
+import { AssetContentsQuery } from '../application/assets/AssetContentsQuery';
+import { AssetPhotosQuery } from '../application/assets/AssetPhotosQuery';
 import { AssetLifecycleCommand } from '../application/assets/AssetLifecycleCommand';
 import { DeleteAssetPhotoCommand } from '../application/assets/DeleteAssetPhotoCommand';
 import { InventoryAssetsQuery } from '../application/assets/InventoryAssetsQuery';
@@ -42,6 +57,7 @@ import { UndoAssetEditCommand } from '../application/assets/UndoAssetEditCommand
 import { RevertAssetChangeCommand } from '../application/assets/RevertAssetChangeCommand';
 import { HomeDashboardQuery } from '../application/home/HomeDashboardQuery';
 import { SelectInventoryCommand } from '../application/home/SelectInventoryCommand';
+import { CurrentInventoryScopeQuery } from '../application/home/CurrentInventoryScopeQuery';
 import { LocationAssetsQuery } from '../application/locations/LocationAssetsQuery';
 import { LocationsQuery } from '../application/locations/LocationsQuery';
 import {
@@ -78,14 +94,27 @@ import {
 } from '../application/auth/MobileAuthSession';
 import { loadMobileRuntimeConfigSeed } from '../config/mobileRuntimeConfig';
 import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
+import { createMobileQueryClient } from '../adapters/serverState/MobileQueryClient';
+import { QueryClientInventoryMutationObserver } from '../adapters/serverState/QueryClientInventoryMutationObserver';
+import { QueryClientInventorySelectionObserver } from '../adapters/serverState/QueryClientInventorySelectionObserver';
+import { createTimeoutFetch } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly serviceScopeId: string;
+  readonly queryClient: QueryClient;
+  readonly connectivitySource: ConnectivitySource;
   readonly homeDashboardQuery: HomeDashboardQuery;
+  readonly currentInventoryScopeQuery: CurrentInventoryScopeQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
   readonly searchAssetsQuery: SearchAssetsQuery;
+  readonly inventoryContextQuery: InventoryContextQuery;
   readonly assetActivityQuery: AssetActivityQuery;
   readonly assetCheckoutHistoryQuery: AssetCheckoutHistoryQuery;
   readonly assetDetailQuery: AssetDetailQuery;
+  readonly assetCoreQuery: AssetCoreQuery;
+  readonly assetPlacementQuery: AssetPlacementQuery;
+  readonly assetContentsQuery: AssetContentsQuery;
+  readonly assetPhotosQuery: AssetPhotosQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly assetLifecycleCommand: AssetLifecycleCommand;
   readonly addAssetPhotosCommand: AddAssetPhotosCommand;
@@ -99,6 +128,7 @@ export type MobileComposition = {
   readonly inventoryMapQuery: InventoryMapQuery;
   readonly createAssetCommand: CreateAssetCommand;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
+  readonly addAssetContextQuery: AddAssetContextQuery;
   readonly addAssetDraftStore: InMemoryAddAssetDraftStore;
   readonly parentLookupQuery: ParentLookupQuery;
   readonly photoSelectionQuery: PhotoSelectionQuery;
@@ -176,6 +206,7 @@ export function createMobileComposition(
 ): MobileComposition {
   const client = createStuffStashClient(profile, options);
   const serviceScopeId = createServiceScopeId();
+  const queryClient = createMobileQueryClient();
   const config = toRuntimeConfig(profile);
   const directUploadPolicy = {
     allowLocalDevelopmentTargets: runtimeSeed.directUploadLocalDevelopmentTargetsEnabled
@@ -185,7 +216,8 @@ export function createMobileComposition(
     profile.tenantId ?? '',
     undefined,
     serviceScopeId,
-    directUploadPolicy
+    directUploadPolicy,
+    new QueryClientInventoryMutationObserver(queryClient, serviceScopeId)
   );
   const inventoryInvitations = new ApiInventoryInvitationRepository(client);
   const managedInvitations = new ApiInventoryInvitationManagementRepository(
@@ -194,10 +226,10 @@ export function createMobileComposition(
     runtimeSeed.invitationAllowInsecureLocalHTTP
   );
   const assetActivity = new ApiAssetActivityRepository(client);
-  const assetChangeReversal = new ApiAssetOperationReversalRepository(client);
+  const assetChangeReversal = new ApiAssetOperationReversalRepository(client, new QueryClientInventoryMutationObserver(queryClient, serviceScopeId));
   const assetCheckoutHistory = new ApiAssetCheckoutHistoryRepository(client, inventorySummaries);
   const principals = new ApiCurrentPrincipalRepository(client);
-  const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries);
+  const providerProfiles = new ApiProviderProfileRepository(client, inventorySummaries, new QueryClientProviderProfileMutationObserver(queryClient, serviceScopeId));
   const providerProfileSettingsQuery = new ProviderProfileSettingsQuery(providerProfiles);
   const addAssetDraftStore = new InMemoryAddAssetDraftStore(serviceScopeId);
   const settingsQuery = new SettingsQuery(
@@ -205,17 +237,29 @@ export function createMobileComposition(
     new ExpoSettingsDiagnosticsProvider(config),
     new ApiSettingsScopeRepository(client, inventorySummaries)
   );
-  const customization = new ApiCustomizationRepository(client);
+  const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
+    serviceScopeId,
+    queryClient,
+    connectivitySource: new ExpoConnectivitySource(Network),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
-    selectInventoryCommand: new SelectInventoryCommand(inventorySummaries),
+    currentInventoryScopeQuery: new CurrentInventoryScopeQuery(inventorySummaries),
+    selectInventoryCommand: new SelectInventoryCommand(
+      inventorySummaries,
+      new QueryClientInventorySelectionObserver(queryClient, serviceScopeId)
+    ),
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
+    inventoryContextQuery: new InventoryContextQuery(inventorySummaries),
     assetActivityQuery: new AssetActivityQuery(assetActivity),
     assetCheckoutHistoryQuery: new AssetCheckoutHistoryQuery(assetCheckoutHistory),
     assetDetailQuery: new AssetDetailQuery(inventorySummaries, inventorySummaries, inventorySummaries),
+    assetCoreQuery: new AssetCoreQuery(inventorySummaries),
+    assetPlacementQuery: new AssetPlacementQuery(inventorySummaries),
+    assetContentsQuery: new AssetContentsQuery(inventorySummaries),
+    assetPhotosQuery: new AssetPhotosQuery(inventorySummaries),
     assetCheckoutCommand: new AssetCheckoutCommand(inventorySummaries),
     assetLifecycleCommand: new AssetLifecycleCommand(inventorySummaries),
     addAssetPhotosCommand: new AddAssetPhotosCommand(inventorySummaries),
@@ -229,6 +273,7 @@ export function createMobileComposition(
     inventoryMapQuery: new InventoryMapQuery(inventorySummaries),
     createAssetCommand: new CreateAssetCommand(inventorySummaries),
     addDraftScopeQuery: new AddDraftScopeQuery(principals),
+    addAssetContextQuery: new AddAssetContextQuery(inventorySummaries),
     addAssetDraftStore,
     parentLookupQuery: new ParentLookupQuery(inventorySummaries),
     photoSelectionQuery: new PhotoSelectionQuery(new ExpoPhotoSelectionProvider()),
@@ -245,8 +290,8 @@ export function createMobileComposition(
     customizationAccessPolicy,
     customizationObservability,
     listInventoryInvitationsQuery: new ListInventoryInvitationsQuery(managedInvitations),
-    createInventoryInvitationCommand: new CreateInventoryInvitationCommand(managedInvitations),
-    cancelInventoryInvitationCommand: new CancelInventoryInvitationCommand(managedInvitations),
+    createInventoryInvitationCommand: new CreateInventoryInvitationCommand(managedInvitations, new QueryClientInvitationMutationObserver(queryClient, serviceScopeId)),
+    cancelInventoryInvitationCommand: new CancelInventoryInvitationCommand(managedInvitations, new QueryClientInvitationMutationObserver(queryClient, serviceScopeId)),
     invitationLinkActions: new ExpoInvitationLinkActions(),
     providerProfileSettingsQuery,
     manageProviderProfileCommand: new ManageProviderProfileCommand(providerProfiles),
@@ -263,7 +308,8 @@ export function createMobileComposition(
       }),
       new ExpoVoiceAudioPlayer(),
       {
-        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled
+        diagnosticsEnabled: runtimeSeed.voiceDeveloperDiagnosticsEnabled,
+        mutationObserver: new QueryClientVoiceMutationObserver(queryClient, serviceScopeId)
       }
     ),
     authSessionController,
@@ -334,26 +380,4 @@ function toRuntimeConfig(profile: ConnectionProfile): MobileRuntimeConfig | unde
 
 function createServiceScopeId(): string {
   return `mobile-composition-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
-
-function createTimeoutFetch(timeoutMs: number): typeof fetch {
-  return async (input, init) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      return await fetch(input, {
-        ...init,
-        signal: init?.signal ?? controller.signal
-      });
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Network request timed out. Check that the API is reachable from this phone.');
-      }
-
-      throw error;
-    } finally {
-      clearTimeout(timeout);
-    }
-  };
 }

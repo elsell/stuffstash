@@ -1,3 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
+import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import {
@@ -41,10 +45,7 @@ import {
   PhotoSelectionQuery,
   SelectedAssetPhoto
 } from '../../application/add/PhotoSelectionQuery';
-import {
-  HomeDashboardQuery,
-  HomeDashboardViewModel
-} from '../../application/home/HomeDashboardQuery';
+import { AddAssetContextQuery, type AddAssetContext } from '../../application/add/AddAssetContextQuery';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
@@ -60,12 +61,14 @@ import {
 import { applyInitialParentToDraft } from './AddAssetInitialParent';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type AddAssetScreenProps = {
   readonly addAssetDraftStore: AddAssetDraftStore;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
-  readonly createAssetCommand: CreateAssetCommand;
-  readonly dashboardQuery: HomeDashboardQuery;
+  readonly createAssetCommand: Pick<CreateAssetCommand, 'execute'>;
+  readonly addAssetContextQuery: AddAssetContextQuery;
   readonly initialParent?: ParentSelection;
   readonly onDismiss?: () => void;
   readonly parentLookupQuery: ParentLookupQuery;
@@ -74,7 +77,7 @@ type AddAssetScreenProps = {
 
 type LoadState =
   | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly dashboard: HomeDashboardViewModel }
+  | { readonly status: 'ready'; readonly context: AddAssetContext }
   | { readonly status: 'error'; readonly message: string };
 
 type SaveState =
@@ -96,19 +99,20 @@ const emptyDraft: AddAssetDraft = {
 };
 const addSheetBottomChromePadding = spacing.xl * 5;
 
-export function AddAssetScreen({
-  addAssetDraftStore,
-  addDraftScopeQuery,
-  createAssetCommand,
-  dashboardQuery,
-  initialParent,
-  onDismiss = () => router.back(),
-  parentLookupQuery,
-  photoSelectionQuery
-}: AddAssetScreenProps) {
+export function AddAssetScreen(props: AddAssetScreenProps) {
+  const scopeId = useMobileServerStateScopeId();
+  const addContext = useMobileInventoryServerQuery({ key: mobileQueryKeys.addContext, query: signal => props.addAssetContextQuery.execute({ signal }) });
+  const principal = useQuery({ queryKey: mobileQueryKeys.principal(scopeId), queryFn: ({ signal }) => props.addDraftScopeQuery.getPrincipal({ signal }) });
+  return <ScopedAddAssetScreen key={JSON.stringify(addContext.resourceKey)} {...props} addContext={addContext} principalId={principal.data?.id} principalError={principal.error} onRetry={() => { if (addContext.isError) void addContext.refetch({ cancelRefetch: false }); if (principal.isError) void principal.refetch({ cancelRefetch: false }); }} />;
+}
+
+function ScopedAddAssetScreen({
+  addAssetDraftStore, createAssetCommand, initialParent, onDismiss = () => router.back(), parentLookupQuery, photoSelectionQuery, addContext, principalId, principalError, onRetry
+}: AddAssetScreenProps & { readonly addContext: ReturnType<typeof useMobileInventoryServerQuery<AddAssetContext>>; readonly principalId?: string; readonly principalError: Error | null; readonly onRetry: () => void }) {
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const feedback = useAppFeedback();
+  const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
   const bottomChromeAllowance = safeAreaInsets.bottom + addSheetBottomChromePadding;
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
@@ -117,7 +121,7 @@ export function AddAssetScreen({
   const [description, setDescription] = useState(emptyDraft.description);
   const [parentAssetId, setParentAssetId] = useState<string | undefined>(emptyDraft.parentAssetId);
   const [parentQuery, setParentQuery] = useState(emptyDraft.parentQuery);
-  const [parentMatches, setParentMatches] = useState<readonly ParentLookupResult[]>([]);
+
   const [isCreatingParent, setIsCreatingParent] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<readonly SelectedAssetPhoto[]>(
     emptyDraft.selectedPhotos
@@ -133,60 +137,35 @@ export function AddAssetScreen({
   const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' });
   const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
-  useEffect(() => {
-    let isCurrent = true;
-
-    Promise.all([dashboardQuery.execute(), addDraftScopeQuery.execute()])
-      .then(([dashboard, scope]) => {
-        if (isCurrent) {
-          const nextContext = {
-            tenantId: dashboard.tenantId,
-            inventoryId: dashboard.inventoryId,
-            principalId: scope.principalId
-          };
-          setLoadState({ status: 'ready', dashboard });
-          setDraftContext(nextContext);
-          applyDraft(applyInitialParentToDraft(addAssetDraftStore.load(nextContext) ?? emptyDraft, initialParent));
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
-          setLoadState({
-            status: 'error',
-            message: readableError(error, 'Could not load inventory context.')
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [addAssetDraftStore, addDraftScopeQuery, dashboardQuery, initialParent]);
+  const candidates = useParentCandidates(parentQuery, parentLookupQuery, isParentMenuOpen);
+  const parentMatches = createdParent && createdParent.title === parentQuery
+    ? [createdParent, ...(candidates.data ?? []).filter((parent) => parent.id !== createdParent.id)]
+    : candidates.data ?? [];
 
   useEffect(() => {
-    let isCurrent = true;
-    if (!isParentMenuOpen && parentQuery.trim().length === 0) {
-      setParentMatches([]);
+    if (!addContext.data) {
+      if (addContext.isError) {
+        setLoadState({
+          status: 'error',
+          message: readableError(addContext.error, 'Could not load inventory context.')
+        });
+      }
       return;
     }
-
-    parentLookupQuery
-      .execute(parentQuery)
-      .then((matches) => {
-        if (isCurrent) {
-          setParentMatches(matches);
-        }
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setParentMatches([]);
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [isParentMenuOpen, parentLookupQuery, parentQuery]);
+    if (isAccessFailure(addContext.error) || principalError) {
+      setLoadState({ status: 'error', message: readableError(addContext.error ?? principalError, 'Could not load inventory context.') });
+      return;
+    }
+    if (!principalId) return;
+    const context = addContext.data;
+    setLoadState({ status: 'ready', context });
+    if (!restoredDraft.current) {
+      restoredDraft.current = true;
+      const nextContext = { tenantId: context.tenantId, inventoryId: context.inventoryId, principalId };
+      setDraftContext(nextContext);
+      applyDraft(applyInitialParentToDraft(addAssetDraftStore.load(nextContext) ?? emptyDraft, initialParent));
+    }
+  }, [addAssetDraftStore, addContext.data, addContext.error, addContext.isError, principalId, principalError, initialParent]);
 
   useEffect(() => {
     if (!draftContext) {
@@ -271,7 +250,7 @@ export function AddAssetScreen({
         parentAssetId: resolvedParentAssetId,
         tagIds: selectedTagIds,
         newTags,
-        activeTags: loadState.status === 'ready' ? loadState.dashboard.assetTags : [],
+        activeTags: loadState.status === 'ready' ? loadState.context.assetTags : [],
         photos: selectedPhotos.map((photo) => ({
           fileName: photo.fileName,
           contentType: photo.contentType,
@@ -324,9 +303,13 @@ export function AddAssetScreen({
 
   async function refreshDashboardAfterTagCreation(stagedTags: readonly CreateAssetTagDraft[]): Promise<void> {
     try {
-      const dashboard = await dashboardQuery.execute();
-      setLoadState({ status: 'ready', dashboard });
-      const reconciled = reconcileCreatedAssetTags(stagedTags, dashboard.assetTags);
+      const refreshed = await addContext.refetch({ throwOnError: true });
+      const context = refreshed.data;
+      if (!context) {
+        throw new Error('Could not refresh inventory context.');
+      }
+      setLoadState({ status: 'ready', context });
+      const reconciled = reconcileCreatedAssetTags(stagedTags, context.assetTags);
       if (reconciled.createdTagIds.length > 0) {
         setSelectedTagIds((current) => uniqueStrings([...current, ...reconciled.createdTagIds]));
         setNewTags(reconciled.remainingTags);
@@ -350,7 +333,6 @@ export function AddAssetScreen({
         title: parentName,
         description: ''
       });
-      const dashboard = await dashboardQuery.execute();
       const createdParent = {
         id: result.id,
         title: result.title,
@@ -360,16 +342,12 @@ export function AddAssetScreen({
         selectionHint: 'Location',
         willPromoteToContainer: false
       };
-      setLoadState({ status: 'ready', dashboard });
       setParentAssetId(result.id);
       setParentQuery(result.title);
       setLastParent(createdParent);
       setCreatedParent(createdParent);
       setIsParentMenuOpen(true);
-      setParentMatches((current) => [
-        createdParent,
-        ...current.filter((parent) => parent.id !== result.id)
-      ]);
+
     } catch (error) {
       const message = readableError(error, 'Could not create parent.');
       setSaveState({ status: 'idle' });
@@ -502,6 +480,7 @@ export function AddAssetScreen({
           <View style={styles.centerState}>
             <Text style={styles.errorTitle}>Could not load</Text>
             <Text style={styles.stateText}>{loadState.message}</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel="Retry Add context" onPress={onRetry}><Text style={styles.stateText}>Try again</Text></Pressable>
           </View>
         ) : null}
         {loadState.status === 'ready' ? (
@@ -511,18 +490,18 @@ export function AddAssetScreen({
               <IdentityLabel
                 iconSize="xs"
                 kind="inventory"
-                label={loadState.dashboard.inventoryName}
+                label={loadState.context.inventoryName}
                 textStyle={styles.contextText}
               />
               <IdentityLabel
                 iconSize="xs"
                 kind="tenant"
-                label={loadState.dashboard.tenantName}
+                label={loadState.context.tenantName}
                 textStyle={styles.contextText}
               />
             </View>
 
-            {!loadState.dashboard.canAdd ? (
+            {!loadState.context.canAdd ? (
               <View style={styles.unavailablePanel}>
                 <Text style={styles.unavailableTitle}>Add is unavailable</Text>
                 <Text style={styles.unavailableText}>
@@ -552,6 +531,8 @@ export function AddAssetScreen({
                   value={title}
                 />
 
+                {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
+                {isParentMenuOpen && candidates.isError ? <Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text style={styles.fieldLabel}>Retry suggestions</Text></Pressable> : null}
                 <ParentPicker
                   isCreatingParent={isCreatingParent}
                   createdParent={createdParent}
@@ -603,7 +584,7 @@ export function AddAssetScreen({
                       value={description}
                     />
                     <AssetTagPicker
-                      tags={loadState.dashboard.assetTags}
+                      tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
                       onChange={setSelectedTagIds}
                       newTags={newTags}

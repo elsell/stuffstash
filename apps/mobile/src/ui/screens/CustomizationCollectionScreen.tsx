@@ -1,3 +1,5 @@
+import { isAccessFailure } from '../serverState/isAccessFailure';
+import { useCustomizationReads } from '../serverState/useCustomizationReads';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight, Plus, Search } from 'lucide-react-native';
@@ -19,7 +21,7 @@ import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput
 
 type Row = AssetTagDefinition | CustomDefinition;
 
-export function CustomizationCollectionScreen({ accessPolicy, contextQuery, kind, onAdd, onOpen, query, scope }: {
+export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sourceContext, kind, onAdd, onOpen, query: sourceQuery, scope }: {
   readonly accessPolicy: CustomizationAccessPolicy;
   readonly contextQuery: CustomizationContextQuery;
   readonly kind: CustomizationKind;
@@ -41,10 +43,31 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery, kind
   const [incomplete, setIncomplete] = useState(false);
   const { lifecycle, pendingLifecycle, rows } = collection;
 
+  const reads = useCustomizationReads(sourceContext, sourceQuery, kind, scope, pendingLifecycle ?? lifecycle, accessPolicy);
+  const { contextQuery, query } = reads;
+  useEffect(() => {
+    if (reads.resource.data && !pendingLifecycle && reads.context) {
+      setContext(reads.context);
+      setCollection((current) => commitLifecycleTransition(current, lifecycle, reads.resource.data!.items));
+      setIncomplete(!reads.resource.data.complete);
+      setStatus('ready');
+    }
+  }, [reads.resource.data]);
+
+  useEffect(() => {
+    if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error) || reads.context && !accessPolicy.canRead(reads.context, scope)) {
+      setCollection((current) => ({ ...current, rows: [], pendingLifecycle: undefined }));
+      setStatus('denied');
+    } else if (reads.resource.isRefetchError) {
+      feedback.showNotice({ tone: 'error', title: 'Could not refresh settings', message: 'Previously loaded settings are still shown. Refresh to retry.' });
+    }
+  }, [reads.contextError, reads.resource.error, reads.context?.tenantPermissions.join(','), reads.context?.inventoryPermissions.join(',')]);
+
   const load = useCallback(async (refresh = false, targetLifecycle = lifecycle) => {
     const request = ++requestRef.current;
     if (refresh) setRefreshing(true); else if (rows.length === 0) setStatus('loading');
     try {
+      if (refresh) await reads.invalidateResource();
       const nextContext = await contextQuery.execute();
       if (!accessPolicy.readOrRecord(nextContext, kind, scope)) {
         if (request === requestRef.current) { setContext(nextContext); setStatus('denied'); }
@@ -62,7 +85,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery, kind
       if (request !== requestRef.current) return;
       if (error instanceof CustomizationFailure && error.kind === 'permission-denied') {
         let refreshedContext: Awaited<ReturnType<CustomizationContextQuery['execute']>> | undefined;
-        try { refreshedContext = await contextQuery.execute(); } catch { /* The API denial remains authoritative. */ }
+        try { refreshedContext = await reads.refreshContext(); } catch { /* The API denial remains authoritative. */ }
         if (request !== requestRef.current) return;
         if (refreshedContext) accessPolicy.readOrRecord(refreshedContext, kind, scope);
         setContext(refreshedContext);
@@ -76,13 +99,15 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery, kind
     } finally { if (request === requestRef.current) setRefreshing(false); }
   }, [accessPolicy, contextQuery, feedback, kind, lifecycle, query, rows.length, scope]);
 
-  useEffect(() => { void load(); return () => { requestRef.current += 1; }; }, []);
+  useEffect(() => { void load(); return () => { requestRef.current += 1; }; }, [reads.ownerKey]);
 
   const canEdit = context && accessPolicy.canMutate(context, kind, scope);
   const filtered = useMemo(() => rows.filter((row) => row.displayName.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())), [rows, search]);
   const inherited = scope === 'inventory' && kind !== 'tag' ? filtered.filter((row) => 'scope' in row && row.scope === 'tenant') : [];
   const local = filtered.filter((row) => !inherited.includes(row));
 
+  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return <DeniedSettingsState message="You don’t have permission to view these settings." />;
+  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return <SettingsLoadingRow label="Loading settings…" />;
   if (status === 'loading') return <View style={settings.styles.shell}><View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View></View>;
   if (status === 'error') return <View style={[settings.styles.shell, settings.styles.errorContainer]}><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><Pressable accessibilityRole="button" onPress={() => void load()} style={settings.styles.retryButton}><Text style={settings.styles.retryText}>Retry</Text></Pressable></View>;
   if (status === 'denied') return <DeniedSettingsState message="You don’t have permission to view these settings." />;

@@ -1,3 +1,4 @@
+import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import type { ManageProviderProfileCommand } from '../../application/providerProfiles/ManageProviderProfileCommand';
@@ -23,7 +24,7 @@ import {
 import {
   ProviderStateView,
   readableError,
-  useProviderSettings
+  useProviderProfileModel
 } from './ProviderSettingsSupport';
 import { stagePresentation } from './VoiceStagePresentation';
 
@@ -37,13 +38,14 @@ export function ProviderProfileListScreen({
   readonly query: ProviderProfileSettingsQuery;
 }) {
   const { styles } = useSettingsListStyles();
-  const providers = useProviderSettings(query);
+  const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.load} />;
+    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <SettingsSection footer="Profiles are shared tenant-wide and supply one stage of the voice pipeline.">
         <SettingsActionRow accessibilityLabel="Add a provider profile" label="Add Profile" onPress={onAdd} />
       </SettingsSection>
@@ -149,18 +151,18 @@ export function ProviderProfileDetailScreen({
 }) {
   const { styles } = useSettingsListStyles();
   const feedback = useAppFeedback();
-  const providers = useProviderSettings(query);
+  const providers = useProviderProfileModel(query);
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.load} />;
+    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile) {
     return (
       <ProviderStateView
         state={{ status: 'error', message: 'This provider profile is no longer available.' }}
-        onRetry={providers.load}
+        onRetry={providers.retry}
       />
     );
   }
@@ -177,7 +179,7 @@ export function ProviderProfileDetailScreen({
         title,
         message: `${profileDisplayName} was updated.`
       });
-      await providers.load();
+      void providers.load().catch(() => undefined);
     } catch (error) {
       feedback.showNotice({
         tone: 'error',
@@ -193,6 +195,7 @@ export function ProviderProfileDetailScreen({
   const lifecycleAction = profile.lifecycleState === 'enabled' ? 'disable' : 'enable';
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <View style={styles.detailHeader}>
         <Text accessibilityRole="header" style={styles.detailTitle}>{profile.displayName}</Text>
         <Text style={styles.detailSubtitle}>{stagePresentation(profile.capability).title} · {profile.providerKind}</Text>
