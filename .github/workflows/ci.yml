@@ -101,11 +101,6 @@ jobs:
           corepack enable
           corepack prepare pnpm@${PNPM_VERSION} --activate
 
-      - name: Run required checks
-        run: make required-checks
-        env:
-          STUFF_STASH_STRUCTURAL_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || github.event_name == 'workflow_dispatch' && 'origin/main' || '' }}
-
       - name: Compile live voice regression executable
         if: github.event_name == 'workflow_dispatch'
         run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test -c -o /tmp/voice-http.test ./apps/api/internal/adapters/httpserver
@@ -117,6 +112,11 @@ jobs:
           name: live-voice-http-test
           path: /tmp/voice-http.test
           retention-days: 3
+
+      - name: Run required checks
+        run: make required-checks
+        env:
+          STUFF_STASH_STRUCTURAL_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || github.event_name == 'workflow_dispatch' && 'origin/main' || '' }}
 
       - name: Generate current API contract
         id: contract
