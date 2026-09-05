@@ -76,7 +76,7 @@ func TestEvaluationRuntimeUsesConfiguredAuthorizationAndRunStorage(t *testing.T)
 	}
 	defer closeStore()
 	name, _ := tenant.NewName("Evaluation home")
-	if err := repos.tenants.SaveTenant(ctx, tenant.Tenant{ID: fixture.TenantID, Name: name}); err != nil {
+	if err := repos.tenantUnitOfWork.SaveTenant(ctx, tenant.Tenant{ID: fixture.TenantID, Name: name}); err != nil {
 		t.Fatal(err)
 	}
 	if err := repos.evaluationRuns.SaveEvaluationRun(ctx, fixture.Run(t, "runtime"), 0, fixture.Record(t, "runtime-created", "runtime", audit.ActionConversationEvaluationRunCreated)); err != nil {
@@ -90,8 +90,8 @@ func TestEvaluationRuntimeUsesConfiguredAuthorizationAndRunStorage(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, worker := buildEvaluationRuntime(cfg, settings, limits, nil, memory.NewAuthorizer(), repos, nil)
-	if err := worker.Drain(ctx, 1, 1); err != nil {
+	services := buildEvaluationRuntime(cfg, settings, limits, nil, memory.NewAuthorizer(), repos, nil)
+	if err := services.worker.Drain(ctx, 1, 1); err != nil {
 		t.Fatal(err)
 	}
 	run, found, err := repos.evaluationRuns.EvaluationRun(ctx, fixture.TenantID, "runtime")

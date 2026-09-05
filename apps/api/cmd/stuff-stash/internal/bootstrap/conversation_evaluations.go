@@ -13,14 +13,15 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func buildEvaluationRuntime(cfg config.Config, settings config.EvaluationSettings, limits agentmodel.WorkflowLimits, observer ports.Observer, authorizer ports.Authorizer, repositories repositories, vault ports.ProviderCredentialVault) (modelapp.EvaluationRunCommandService, modelapp.EvaluationWorker) {
+func buildEvaluationRuntime(cfg config.Config, settings config.EvaluationSettings, limits agentmodel.WorkflowLimits, observer ports.Observer, authorizer ports.Authorizer, repositories repositories, vault ports.ProviderCredentialVault) evaluationServices {
 	clock := ports.SystemClock{}
 	ids := idgen.NewULIDGenerator()
 	resolver := voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, googleProviderProfileFactory(cfg))
 	executor := conversationeval.New(conversationeval.Dependencies{Clock: clock, IDs: ids, Observer: observer})
 	commands := modelapp.NewEvaluationRunCommandService(modelapp.EvaluationRunCommandDependencies{Authorizer: authorizer, Runs: repositories.evaluationRuns, Workflows: repositories.conversationWorkflows, Cases: repositories.evaluationCases, Providers: resolver, IDs: ids, Clock: clock, Observer: observer, Limits: limits, MaxAttempts: settings.MaxAttempts})
 	worker := modelapp.NewEvaluationWorker(modelapp.EvaluationWorkerDependencies{Runs: repositories.evaluationRuns, Authorizer: authorizer, Providers: resolver, Executor: executor, IDs: ids, Clock: clock, Observer: observer, LeaseGrace: settings.LeaseGrace, Delay: scheduling.Delay{}, PollInterval: settings.PollInterval})
-	return commands, worker
+	queries := modelapp.NewEvaluationRunQueryService(modelapp.EvaluationRunQueryDependencies{Authorizer: authorizer, Runs: repositories.evaluationRuns, Audit: repositories.audit, IDs: ids, Clock: clock, DefaultPageLimit: cfg.DefaultPageLimit, MaxPageLimit: cfg.MaxPageLimit})
+	return evaluationServices{commands: commands, queries: queries, worker: worker}
 }
 
 type evaluationQueueDrainer interface {
@@ -46,4 +47,10 @@ func startEvaluationWorker(parent context.Context, application evaluationQueueDr
 		})
 	}()
 	return func() { cancel(); <-finished }, nil
+}
+
+type evaluationServices struct {
+	commands modelapp.EvaluationRunCommandService
+	queries  modelapp.EvaluationRunQueryService
+	worker   modelapp.EvaluationWorker
 }

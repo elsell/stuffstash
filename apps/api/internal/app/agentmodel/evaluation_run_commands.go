@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -60,17 +59,8 @@ type CancelEvaluationRunInput struct {
 }
 
 func (s EvaluationRunCommandService) authorize(ctx context.Context, input EvaluationRunAccess) error {
-	if input.Principal.ID == "" {
-		return apperrors.ErrUnauthenticated
-	}
-	if s.deps.Authorizer == nil {
-		return apperrors.ErrPrecondition
-	}
-	if err := s.deps.Authorizer.CheckTenant(ctx, input.Principal, ports.TenantPermissionConfigure, input.TenantID); err != nil {
+	if err := authorizeEvaluationRunAccess(ctx, s.deps.Authorizer, input); err != nil {
 		return err
-	}
-	if strings.TrimSpace(input.TenantID.String()) == "" {
-		return apperrors.ErrValidation
 	}
 	if s.deps.Runs == nil || s.deps.IDs == nil || s.deps.Clock == nil {
 		return apperrors.ErrPrecondition

@@ -40,10 +40,11 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	}
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
 	importer := homebox.NewLegacyImporter(nil)
-	evaluationCommands, evaluationWorker := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
+	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
-		EvaluationRunCommands:            evaluationCommands,
-		EvaluationWorker:                 evaluationWorker,
+		EvaluationRunCommands:            evaluations.commands,
+		EvaluationRunQueries:             evaluations.queries,
+		EvaluationWorker:                 evaluations.worker,
 		Observer:                         observer,
 		Auth:                             authenticator,
 		Authorizer:                       authorizer,

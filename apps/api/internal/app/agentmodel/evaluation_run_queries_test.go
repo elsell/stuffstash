@@ -3,6 +3,7 @@ package agentmodel
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
@@ -74,5 +75,34 @@ func TestEvaluationRunQueriesAuthorizeScopeAndAudit(t *testing.T) {
 	}
 	if _, err := denied.List(ctx, ListEvaluationRunsInput{EvaluationRunAccess: input.EvaluationRunAccess}); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatal("run list accessed dependencies before permission")
+	}
+}
+
+func TestEvaluationRunQueriesDistinguishFullFinalPageFromMoreResults(t *testing.T) {
+	commands, input, store := evaluationCommandSetup(t)
+	ctx := context.Background()
+	for index := 0; index < 100; index++ {
+		id := fmt.Sprintf("page-%03d", index)
+		if err := store.SaveEvaluationRun(ctx, fixture.Run(t, id), 0, fixture.Record(t, "created-"+id, id, audit.ActionConversationEvaluationRunCreated)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	service := NewEvaluationRunQueryService(EvaluationRunQueryDependencies{Authorizer: commands.Authorizer, Runs: store, Audit: store, IDs: commands.IDs, Clock: commands.Clock})
+	query := ListEvaluationRunsInput{EvaluationRunAccess: input.EvaluationRunAccess, Limit: 100}
+	page, err := service.List(ctx, query)
+	if err != nil || len(page.Items) != 100 || page.NextCursor != nil {
+		t.Fatal("exactly full final page reported more rows")
+	}
+	if err := store.SaveEvaluationRun(ctx, fixture.Run(t, "page-100"), 0, fixture.Record(t, "created-page-100", "page-100", audit.ActionConversationEvaluationRunCreated)); err != nil {
+		t.Fatal(err)
+	}
+	page, err = service.List(ctx, query)
+	if err != nil || len(page.Items) != 100 || page.NextCursor == nil {
+		t.Fatal("additional row missed at limit")
+	}
+	query.Cursor = *page.NextCursor
+	tail, err := service.List(ctx, query)
+	if err != nil || len(tail.Items) != 1 || tail.NextCursor != nil || tail.Items[0].ID != "page-100" {
+		t.Fatal("final row missing")
 	}
 }

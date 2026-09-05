@@ -84,6 +84,7 @@ type App struct {
 	conversationWorkflowService  agentmodelapp.ConversationWorkflowService
 	evaluationCaseService        agentmodelapp.EvaluationCaseService
 	evaluationRunCommands        agentmodelapp.EvaluationRunCommandService
+	evaluationRunQueries         agentmodelapp.EvaluationRunQueryService
 	evaluationWorker             agentmodelapp.EvaluationWorker
 	speechToText                 ports.SpeechToTextProvider
 	languageInference            ports.LanguageInferenceProvider
@@ -128,6 +129,7 @@ type Dependencies struct {
 	ConversationWorkflows            ports.ConversationWorkflowRepository
 	EvaluationCases                  ports.EvaluationCaseRepository
 	EvaluationRunCommands            agentmodelapp.EvaluationRunCommandService
+	EvaluationRunQueries             agentmodelapp.EvaluationRunQueryService
 	EvaluationWorker                 agentmodelapp.EvaluationWorker
 	ConversationWorkflowLimits       agentmodel.WorkflowLimits
 	ProviderProfiles                 ports.ProviderProfileRepository
@@ -312,6 +314,7 @@ func New(deps Dependencies) App {
 	})
 	app.evaluationCaseService = agentmodelapp.NewEvaluationCaseService(agentmodelapp.EvaluationCaseDependencies{Authorizer: app.authorizer, Repository: deps.EvaluationCases, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
 	app.evaluationRunCommands = deps.EvaluationRunCommands
+	app.evaluationRunQueries = deps.EvaluationRunQueries
 	app.evaluationWorker = deps.EvaluationWorker
 	app.providerProfileService = agentmodelapp.New(agentmodelapp.Dependencies{
 		Observer:                  app.observer,
