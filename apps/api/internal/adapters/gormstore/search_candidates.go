@@ -28,47 +28,28 @@ func (s Store) postgresSearchCandidates(ctx context.Context, query *gorm.DB, ten
 	scoped := func(model any) *gorm.DB {
 		return s.db.WithContext(ctx).Model(model).Where(map[string]any{"tenant_id": tenantID.String(), "inventory_id": inventories})
 	}
-	attachments := scoped(&attachmentModel{}).Select("asset_id").Where(searchASCIITextCandidates(pattern, "file_name", "content_type"))
-	attachmentFallback := scoped(&attachmentModel{}).Select("asset_id").Where(searchMultibyteCandidates("file_name", "content_type"))
+	attachments := scoped(&attachmentModel{}).Select("asset_id").Where(searchTextCandidates(pattern, "file_name", "content_type"))
 	types := s.db.WithContext(ctx).Model(&customAssetTypeModel{}).Select("id").Where(map[string]any{"tenant_id": tenantID.String()}).Where(searchTextCandidates(pattern, "type_key", "display_name", "description"))
 	tags := scoped(&assetTagModel{}).Select("id").Where(map[string]any{"lifecycle_state": "active"}).Where(searchTextCandidates(pattern, "key", "display_name"))
 	assignments := scoped(&assetTagAssignmentModel{}).Select("asset_id").Where(searchInSubquery("tag_id", tags))
-	assetText := scoped(&assetModel{}).Select("id").Where(searchASCIITextCandidates(pattern, "title", "description"))
-	assetFallback := scoped(&assetModel{}).Select("id").Where(clause.Or(searchMultibyteCandidates("title", "description"), clause.Neq{Column: clause.Column{Name: "custom_fields"}, Value: "{}"}))
-	assetTypes := scoped(&assetModel{}).Select("id").Where(searchInSubquery("custom_asset_type_id", types))
-	return query.Where(clause.Expr{SQL: "? IN (?)", Vars: []any{clause.Column{Name: "id"}, searchCandidateUnion(assetText, assetFallback, attachments, attachmentFallback, assetTypes, assignments)}})
+	return query.Where(clause.Or(
+		searchTextCandidates(pattern, "title", "description"),
+		clause.Neq{Column: clause.Column{Name: "custom_fields"}, Value: "{}"},
+		searchInSubquery("id", attachments),
+		searchInSubquery("custom_asset_type_id", types),
+		searchInSubquery("id", assignments),
+	))
 }
 
 func searchTextCandidates(pattern string, columns ...string) clause.Expression {
-	return clause.Or(searchASCIITextCandidates(pattern, columns...), searchMultibyteCandidates(columns...))
-}
-
-func searchASCIITextCandidates(pattern string, columns ...string) clause.Expression {
 	expressions := make([]clause.Expression, 0, len(columns))
 	for _, name := range columns {
 		column := clause.Column{Name: name}
-		expressions = append(expressions, clause.Expr{SQL: `translate(?, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') COLLATE "C" LIKE ?`, Vars: []any{column, pattern}})
+		// Multibyte values stay candidates even if database case folding differs
+		// from Go. All column names are repository-owned; values are parameters.
+		expressions = append(expressions, clause.Expr{SQL: `translate(?, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') COLLATE "C" LIKE ? OR octet_length(?) <> char_length(?)`, Vars: []any{column, pattern, column, column}})
 	}
 	return clause.Or(expressions...)
-}
-
-func searchMultibyteCandidates(columns ...string) clause.Expression {
-	expressions := make([]clause.Expression, 0, len(columns))
-	for _, name := range columns {
-		column := clause.Column{Name: name}
-		expressions = append(expressions, clause.Expr{SQL: "octet_length(?) <> char_length(?)", Vars: []any{column, column}})
-	}
-	return clause.Or(expressions...)
-}
-
-func searchCandidateUnion(queries ...*gorm.DB) clause.Expression {
-	parts := make([]string, 0, len(queries))
-	values := make([]any, 0, len(queries))
-	for _, query := range queries {
-		parts = append(parts, "(?)")
-		values = append(values, query)
-	}
-	return clause.Expr{SQL: strings.Join(parts, " UNION "), Vars: values}
 }
 
 func searchInSubquery(column string, query *gorm.DB) clause.Expression {

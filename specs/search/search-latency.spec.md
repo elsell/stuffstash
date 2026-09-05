@@ -127,3 +127,10 @@ in run 33945124237 by exceeding the 10-second statement timeout. No benchmark
 result from that run is accepted. Candidate composition now deduplicates using
 UNION before outer membership; the same first-query test must pass without
 adding a warm-up or increasing the timeout.
+
+Run 33945334406 showed deduplicating UNION also regressed first-query behavior:
+broad search took 7.82 seconds and attachment search exceeded ten seconds.
+Both UNION variants are rejected. Restore the previously measured OR-based
+candidate filter, retain bounded hydration and the NUL-query fallback, and
+repeat the final benchmark including application ancestor paths. The exact
+planner cause was not established; no stronger causal claim is made.
