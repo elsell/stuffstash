@@ -44,7 +44,7 @@ type EvaluationExpectations struct {
 	Kind                EvaluationOutcomeKind
 	ReferencedAssets    []string
 	Locations           []EvaluationLocationExpectation
-	ProposedOperations  []Operation
+	Proposals           []EvaluationProposal
 	ForbiddenOperations []Operation
 }
 type EvaluationCaseDefinitionInput struct {
@@ -106,7 +106,7 @@ func cloneEvaluationCase(value EvaluationCaseDefinitionInput) EvaluationCaseDefi
 	}
 	value.Expectations.ReferencedAssets = slices.Clone(value.Expectations.ReferencedAssets)
 	value.Expectations.Locations = slices.Clone(value.Expectations.Locations)
-	value.Expectations.ProposedOperations = slices.Clone(value.Expectations.ProposedOperations)
+	value.Expectations.Proposals = slices.Clone(value.Expectations.Proposals)
 	value.Expectations.ForbiddenOperations = slices.Clone(value.Expectations.ForbiddenOperations)
 	return value
 }

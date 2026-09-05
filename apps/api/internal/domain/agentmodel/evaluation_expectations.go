@@ -6,10 +6,10 @@ func validEvaluationExpectations(value EvaluationExpectations, assets map[string
 	default:
 		return false
 	}
-	if (value.Kind == EvaluationOutcomeProposal) != (len(value.ProposedOperations) > 0) {
+	if (value.Kind == EvaluationOutcomeProposal) != (len(value.Proposals) > 0) {
 		return false
 	}
-	if len(value.ReferencedAssets) > MaxEvaluationFixtureAssets || len(value.Locations) > MaxEvaluationFixtureAssets {
+	if len(value.Proposals) > MaxEvaluationFixtureAssets || len(value.ReferencedAssets) > MaxEvaluationFixtureAssets || len(value.Locations) > MaxEvaluationFixtureAssets {
 		return false
 	}
 	seen := map[string]bool{}
@@ -38,11 +38,13 @@ func validEvaluationExpectations(value EvaluationExpectations, assets map[string
 		}
 	}
 	operations := map[Operation]bool{}
-	for _, operation := range value.ProposedOperations {
-		if !operation.changesInventory() || operations[operation] {
+	proposals := map[EvaluationProposal]bool{}
+	for _, proposal := range value.Proposals {
+		if !validEvaluationProposal(proposal, assets) || proposals[proposal] {
 			return false
 		}
-		operations[operation] = true
+		proposals[proposal] = true
+		operations[proposal.Operation] = true
 	}
 	forbidden := map[Operation]bool{}
 	for _, operation := range value.ForbiddenOperations {

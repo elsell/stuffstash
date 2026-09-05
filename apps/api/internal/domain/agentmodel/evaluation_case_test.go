@@ -44,10 +44,12 @@ func TestEvaluationCaseRejectsInvalidFixtureGraphsAndExpectations(t *testing.T) 
 		}},
 		{"unknown outcome", func(v *EvaluationCaseDefinitionInput) { v.Expectations.Kind = "arbitrary" }},
 		{"proposal without operation", func(v *EvaluationCaseDefinitionInput) { v.Expectations.Kind = EvaluationOutcomeProposal }},
-		{"answer with proposal", func(v *EvaluationCaseDefinitionInput) { v.Expectations.ProposedOperations = []Operation{OperationMove} }},
+		{"answer with proposal", func(v *EvaluationCaseDefinitionInput) {
+			v.Expectations.Proposals = []EvaluationProposal{{Operation: OperationMove, TargetID: "clothes", DestinationID: "attic"}}
+		}},
 		{"contradictory operation", func(v *EvaluationCaseDefinitionInput) {
 			v.Expectations.Kind = EvaluationOutcomeProposal
-			v.Expectations.ProposedOperations = []Operation{OperationCreate}
+			v.Expectations.Proposals = []EvaluationProposal{{Operation: OperationCreate, NewTitle: "Extra clothes", NewKind: EvaluationFixtureItem, DestinationID: "box"}}
 		}},
 	}
 	for _, tc := range cases {

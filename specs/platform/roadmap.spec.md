@@ -25,6 +25,8 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 Prioritize tenant-configurable conversation workflows and a web evaluation workspace, integrated with production voice and configured providers. Preserve the voice conversation quality work after the 0.16.6 provider deployment: semantic/tag discovery, correct existing-item intent, grounded fallback, useful recovery, follow-up continuity and measured responsiveness. Follow `specs/agent-model/voice-conversation-quality.spec.md` through failing regression tests, live ADC-backed evaluation, code review, TestFlight publication and infra GitOps rollout. Search optimization shipped; retain its bounded candidate-loading and TanStack behavior. All builds remain in CI. The detail-photo benchmark remains follow-up work.
 
+The current branch has workflow draft revision persistence/API wiring, operator limits, tag-evidence preservation and grounded response recovery. CI run 33978495782 passed for commit a6a071e42. Evaluation fixture definitions and deterministic outcome assertions are in progress; they are not yet connected to an execution worker or web UI. Next integrate the shared workflow executor, immutable case/run persistence, provider selection, activation gates and web editing/evaluation. Live ADC tests and the TestFlight/GitOps release gates remain outstanding; do not treat domain-only evaluation tests as voice acceptance evidence.
+
 The native cancellation and export-compliance fixes shipped in 0.16.4. The current
 search work uses compact authorized API paths to remove mobile ancestor HTTP
 waterfalls and bounds candidate hydration behind the search repository. Baseline

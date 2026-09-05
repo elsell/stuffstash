@@ -22,7 +22,7 @@ func TestEvaluationJudgesGroundedOutcomeInsteadOfProse(t *testing.T) {
 		{"missing location", func(v *EvaluationObservedOutcome) { v.Locations = nil }, EvaluationFailureLocation},
 		{"forbidden create", func(v *EvaluationObservedOutcome) {
 			v.Kind = EvaluationOutcomeProposal
-			v.ProposedOperations = []Operation{OperationCreate}
+			v.Proposals = []EvaluationProposal{{Operation: OperationCreate, NewTitle: "Extra clothes", NewKind: EvaluationFixtureItem, DestinationID: "box"}}
 		}, EvaluationFailureForbiddenOperation},
 		{"unapproved write", func(v *EvaluationObservedOutcome) { v.ExecutedOperations = []Operation{OperationMove} }, EvaluationFailureMutation},
 		{"foreign asset", func(v *EvaluationObservedOutcome) { v.ReferencedAssets = []string{"live-inventory-id"} }, EvaluationFailureInvalidObservation},
@@ -44,7 +44,7 @@ func TestEvaluationJudgesGroundedOutcomeInsteadOfProse(t *testing.T) {
 }
 func TestEvaluationRequiresProposedChangeWithoutExecutingIt(t *testing.T) {
 	input := fixtureEvaluationInput()
-	input.Expectations = EvaluationExpectations{Kind: EvaluationOutcomeProposal, ProposedOperations: []Operation{OperationMove}, ForbiddenOperations: []Operation{OperationCreate}}
+	input.Expectations = EvaluationExpectations{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{{Operation: OperationMove, TargetID: "clothes", DestinationID: "attic"}}, ForbiddenOperations: []Operation{OperationCreate}}
 	definition, err := NewEvaluationCaseDefinition(input)
 	if err != nil {
 		t.Fatal(err)
@@ -53,7 +53,7 @@ func TestEvaluationRequiresProposedChangeWithoutExecutingIt(t *testing.T) {
 	if missing.Passed || len(missing.Failures) != 1 || missing.Failures[0].Code != EvaluationFailureProposal {
 		t.Fatal("missing proposed move passed")
 	}
-	if verdict := definition.Evaluate(EvaluationObservedOutcome{Kind: EvaluationOutcomeProposal, ProposedOperations: []Operation{OperationMove}}); !verdict.Passed {
+	if verdict := definition.Evaluate(EvaluationObservedOutcome{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{{Operation: OperationMove, TargetID: "clothes", DestinationID: "attic"}}}); !verdict.Passed {
 		t.Fatalf("valid proposal failed: %+v", verdict)
 	}
 	var empty EvaluationCaseDefinition
@@ -64,12 +64,12 @@ func TestEvaluationRequiresProposedChangeWithoutExecutingIt(t *testing.T) {
 
 func TestEvaluationRejectsUnexpectedProposedMutation(t *testing.T) {
 	input := fixtureEvaluationInput()
-	input.Expectations = EvaluationExpectations{Kind: EvaluationOutcomeProposal, ProposedOperations: []Operation{OperationMove}, ForbiddenOperations: []Operation{OperationCreate}}
+	input.Expectations = EvaluationExpectations{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{{Operation: OperationMove, TargetID: "clothes", DestinationID: "attic"}}, ForbiddenOperations: []Operation{OperationCreate}}
 	definition, err := NewEvaluationCaseDefinition(input)
 	if err != nil {
 		t.Fatal(err)
 	}
-	result := definition.Evaluate(EvaluationObservedOutcome{Kind: EvaluationOutcomeProposal, ProposedOperations: []Operation{OperationMove, OperationArchive}})
+	result := definition.Evaluate(EvaluationObservedOutcome{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{{Operation: OperationMove, TargetID: "clothes", DestinationID: "attic"}, {Operation: OperationArchive, TargetID: "clothes"}}})
 	if result.Passed || len(result.Failures) != 1 || result.Failures[0].Code != EvaluationFailureUnexpectedProposal || result.Failures[0].Operation != OperationArchive {
 		t.Fatalf("extra mutation passed: %+v", result)
 	}

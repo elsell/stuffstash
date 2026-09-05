@@ -6,7 +6,7 @@ type EvaluationObservedOutcome struct {
 	Kind               EvaluationOutcomeKind
 	ReferencedAssets   []string
 	Locations          []EvaluationLocationExpectation
-	ProposedOperations []Operation
+	Proposals          []EvaluationProposal
 	ExecutedOperations []Operation
 }
 type EvaluationFailureCode string
@@ -54,18 +54,25 @@ func (definition EvaluationCaseDefinition) Evaluate(observed EvaluationObservedO
 			failures = append(failures, EvaluationFailure{Code: EvaluationFailureLocation, FixtureID: location.AssetID})
 		}
 	}
-	for _, operation := range expected.ProposedOperations {
-		if !slices.Contains(observed.ProposedOperations, operation) {
-			failures = append(failures, EvaluationFailure{Code: EvaluationFailureProposal, Operation: operation})
+	remaining := map[EvaluationProposal]int{}
+	for _, proposal := range observed.Proposals {
+		remaining[proposal]++
+	}
+	for _, proposal := range expected.Proposals {
+		if remaining[proposal] == 0 {
+			failures = append(failures, EvaluationFailure{Code: EvaluationFailureProposal, FixtureID: proposal.TargetID, Operation: proposal.Operation})
+		} else {
+			remaining[proposal]--
 		}
 	}
-	for _, operation := range observed.ProposedOperations {
-		if !slices.Contains(expected.ProposedOperations, operation) {
-			failures = append(failures, EvaluationFailure{Code: EvaluationFailureUnexpectedProposal, Operation: operation})
+	for _, proposal := range observed.Proposals {
+		if remaining[proposal] > 0 {
+			failures = append(failures, EvaluationFailure{Code: EvaluationFailureUnexpectedProposal, FixtureID: proposal.TargetID, Operation: proposal.Operation})
+			remaining[proposal]--
 		}
 	}
 	for _, operation := range expected.ForbiddenOperations {
-		if slices.Contains(observed.ProposedOperations, operation) || slices.Contains(observed.ExecutedOperations, operation) {
+		if evaluationProposesOperation(observed.Proposals, operation) || slices.Contains(observed.ExecutedOperations, operation) {
 			failures = append(failures, EvaluationFailure{Code: EvaluationFailureForbiddenOperation, Operation: operation})
 		}
 	}
@@ -81,10 +88,10 @@ func (definition EvaluationCaseDefinition) validObservedOutcome(observed Evaluat
 	default:
 		return false
 	}
-	if len(observed.ReferencedAssets) > MaxEvaluationFixtureAssets || len(observed.Locations) > MaxEvaluationFixtureAssets || len(observed.ProposedOperations) > MaxEvaluationFixtureAssets || len(observed.ExecutedOperations) > MaxEvaluationFixtureAssets {
+	if len(observed.ReferencedAssets) > MaxEvaluationFixtureAssets || len(observed.Locations) > MaxEvaluationFixtureAssets || len(observed.Proposals) > MaxEvaluationFixtureAssets || len(observed.ExecutedOperations) > MaxEvaluationFixtureAssets {
 		return false
 	}
-	if len(observed.ProposedOperations) > 0 && observed.Kind != EvaluationOutcomeProposal {
+	if len(observed.Proposals) > 0 && observed.Kind != EvaluationOutcomeProposal {
 		return false
 	}
 	assets := map[string]EvaluationFixtureAsset{}
@@ -112,12 +119,25 @@ func (definition EvaluationCaseDefinition) validObservedOutcome(observed Evaluat
 			return false
 		}
 	}
-	for _, operations := range [][]Operation{observed.ProposedOperations, observed.ExecutedOperations} {
-		for _, operation := range operations {
-			if !operation.changesInventory() {
-				return false
-			}
+	for _, proposal := range observed.Proposals {
+		if !validEvaluationProposal(proposal, assets) {
+			return false
 		}
 	}
+	for _, operation := range observed.ExecutedOperations {
+		if !operation.changesInventory() {
+			return false
+		}
+	}
+
 	return true
+}
+
+func evaluationProposesOperation(proposals []EvaluationProposal, operation Operation) bool {
+	for _, proposal := range proposals {
+		if proposal.Operation == operation {
+			return true
+		}
+	}
+	return false
 }

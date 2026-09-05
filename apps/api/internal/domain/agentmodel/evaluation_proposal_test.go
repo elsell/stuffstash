@@ -40,3 +40,38 @@ func TestEvaluationCreateAssertionsDescribeAnAdditionalItem(t *testing.T) {
 		t.Fatal("create reused an existing identity")
 	}
 }
+
+func TestEvaluationRejectsImpossibleExpectedCommands(t *testing.T) {
+	for _, proposal := range []EvaluationProposal{
+		{Operation: OperationMove, TargetID: "box", DestinationID: "box"},
+		{Operation: OperationMove, TargetID: "attic", DestinationID: "box"},
+		{Operation: OperationArchive, TargetID: "clothes", DestinationID: "attic"},
+		{Operation: OperationCreate, NewTitle: " ", NewKind: EvaluationFixtureItem},
+		{Operation: OperationCreate, NewTitle: "Extra", NewKind: EvaluationFixtureItem, DestinationID: "clothes"},
+	} {
+		input := fixtureEvaluationInput()
+		input.Expectations = EvaluationExpectations{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{proposal}}
+		if _, err := NewEvaluationCaseDefinition(input); err == nil {
+			t.Fatalf("impossible expectation accepted: %+v", proposal)
+		}
+	}
+}
+
+func TestEvaluationChecksCheckoutAndReturnDetails(t *testing.T) {
+	for _, operation := range []Operation{OperationCheckout, OperationReturn} {
+		input := fixtureEvaluationInput()
+		proposal := EvaluationProposal{Operation: operation, TargetID: "clothes", Details: "for Jordan"}
+		input.Expectations = EvaluationExpectations{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{proposal}}
+		definition, err := NewEvaluationCaseDefinition(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result := definition.Evaluate(EvaluationObservedOutcome{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{proposal}}); !result.Passed {
+			t.Fatalf("matching details failed: %+v", result)
+		}
+		proposal.Details = "for Sam"
+		if result := definition.Evaluate(EvaluationObservedOutcome{Kind: EvaluationOutcomeProposal, Proposals: []EvaluationProposal{proposal}}); result.Passed {
+			t.Fatal("wrong checkout/return details passed")
+		}
+	}
+}
