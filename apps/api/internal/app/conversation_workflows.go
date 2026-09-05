@@ -11,3 +11,9 @@ type SaveConversationWorkflowInput = agentmodelapp.SaveConversationWorkflowInput
 func (a App) SaveConversationWorkflowRevision(ctx context.Context, input SaveConversationWorkflowInput) (agentmodel.WorkflowRevision, error) {
 	return a.conversationWorkflowService.SaveRevision(ctx, input)
 }
+
+type ActivateWorkflowInput = agentmodelapp.ActivateWorkflowInput
+
+func (a App) ActivateConversationWorkflow(ctx context.Context, input ActivateWorkflowInput) (agentmodel.WorkflowRevision, error) {
+	return a.workflowActivation.Activate(ctx, input)
+}

@@ -21,7 +21,8 @@ func buildEvaluationRuntime(cfg config.Config, settings config.EvaluationSetting
 	commands := modelapp.NewEvaluationRunCommandService(modelapp.EvaluationRunCommandDependencies{Authorizer: authorizer, Runs: repositories.evaluationRuns, Workflows: repositories.conversationWorkflows, Cases: repositories.evaluationCases, Providers: resolver, IDs: ids, Clock: clock, Observer: observer, Limits: limits, MaxAttempts: settings.MaxAttempts})
 	worker := modelapp.NewEvaluationWorker(modelapp.EvaluationWorkerDependencies{Runs: repositories.evaluationRuns, Authorizer: authorizer, Providers: resolver, Executor: executor, IDs: ids, Clock: clock, Observer: observer, LeaseGrace: settings.LeaseGrace, Delay: scheduling.Delay{}, PollInterval: settings.PollInterval})
 	queries := modelapp.NewEvaluationRunQueryService(modelapp.EvaluationRunQueryDependencies{Authorizer: authorizer, Runs: repositories.evaluationRuns, Audit: repositories.audit, IDs: ids, Clock: clock, DefaultPageLimit: cfg.DefaultPageLimit, MaxPageLimit: cfg.MaxPageLimit})
-	return evaluationServices{commands: commands, queries: queries, worker: worker}
+	activation := modelapp.NewWorkflowActivationService(modelapp.WorkflowActivationDependencies{Authorizer: authorizer, Workflows: repositories.conversationWorkflows, Runs: repositories.evaluationRuns, Providers: resolver, IDs: ids, Clock: clock, Observer: observer, Limits: limits})
+	return evaluationServices{commands: commands, queries: queries, worker: worker, activation: activation}
 }
 
 type evaluationQueueDrainer interface {
@@ -50,7 +51,8 @@ func startEvaluationWorker(parent context.Context, application evaluationQueueDr
 }
 
 type evaluationServices struct {
-	commands modelapp.EvaluationRunCommandService
-	queries  modelapp.EvaluationRunQueryService
-	worker   modelapp.EvaluationWorker
+	activation modelapp.WorkflowActivationService
+	commands   modelapp.EvaluationRunCommandService
+	queries    modelapp.EvaluationRunQueryService
+	worker     modelapp.EvaluationWorker
 }

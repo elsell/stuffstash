@@ -83,6 +83,7 @@ type App struct {
 	providerProfileService       agentmodelapp.Service
 	conversationWorkflowService  agentmodelapp.ConversationWorkflowService
 	evaluationCaseService        agentmodelapp.EvaluationCaseService
+	workflowActivation           agentmodelapp.WorkflowActivationService
 	evaluationRunCommands        agentmodelapp.EvaluationRunCommandService
 	evaluationRunQueries         agentmodelapp.EvaluationRunQueryService
 	evaluationWorker             agentmodelapp.EvaluationWorker
@@ -128,6 +129,7 @@ type Dependencies struct {
 	Outbox                           ports.AuthorizationOutbox
 	ConversationWorkflows            ports.ConversationWorkflowRepository
 	EvaluationCases                  ports.EvaluationCaseRepository
+	WorkflowActivation               agentmodelapp.WorkflowActivationService
 	EvaluationRunCommands            agentmodelapp.EvaluationRunCommandService
 	EvaluationRunQueries             agentmodelapp.EvaluationRunQueryService
 	EvaluationWorker                 agentmodelapp.EvaluationWorker
@@ -313,6 +315,7 @@ func New(deps Dependencies) App {
 		IDs: app.ids, Clock: app.clock, Observer: app.observer, Limits: deps.ConversationWorkflowLimits,
 	})
 	app.evaluationCaseService = agentmodelapp.NewEvaluationCaseService(agentmodelapp.EvaluationCaseDependencies{Authorizer: app.authorizer, Repository: deps.EvaluationCases, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer, DefaultPageLimit: app.defaultPageLimit, MaxPageLimit: app.maxPageLimit})
+	app.workflowActivation = deps.WorkflowActivation
 	app.evaluationRunCommands = deps.EvaluationRunCommands
 	app.evaluationRunQueries = deps.EvaluationRunQueries
 	app.evaluationWorker = deps.EvaluationWorker

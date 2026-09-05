@@ -30,6 +30,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 
 	coverage := newExecutedScenarioCoverage("real use")
 	coverWorkflowDraftScenarios(t, coverage, false)
+	coverWorkflowActivationScenarios(t, coverage, false)
 	coverEvaluationCaseScenarios(t, coverage, false)
 	coverEvaluationRunScenarios(t, coverage, false)
 	directUploads := &httpFakeDirectAttachmentUploader{}
@@ -231,6 +232,7 @@ func adversarialScenarioOperations(t *testing.T) executedScenarioCoverage {
 	setup := realUseAdversarialFixture(t)
 	coverage := newExecutedScenarioCoverage("adversarial")
 	coverWorkflowDraftScenarios(t, coverage, true)
+	coverWorkflowActivationScenarios(t, coverage, true)
 	coverEvaluationCaseScenarios(t, coverage, true)
 	coverEvaluationRunScenarios(t, coverage, true)
 	for _, request := range setup.requests {

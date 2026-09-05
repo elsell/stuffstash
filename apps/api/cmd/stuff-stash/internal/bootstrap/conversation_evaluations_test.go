@@ -2,6 +2,10 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
+	modelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -91,6 +95,9 @@ func TestEvaluationRuntimeUsesConfiguredAuthorizationAndRunStorage(t *testing.T)
 		t.Fatal(err)
 	}
 	services := buildEvaluationRuntime(cfg, settings, limits, nil, memory.NewAuthorizer(), repos, nil)
+	if _, err := services.activation.Activate(ctx, modelapp.ActivateWorkflowInput{EvaluationRunAccess: modelapp.EvaluationRunAccess{Principal: identity.Principal{ID: "owner"}, TenantID: fixture.TenantID}}); !errors.Is(err, ports.ErrForbidden) {
+		t.Fatalf("activation did not use configured authorization: %v", err)
+	}
 	if err := services.worker.Drain(ctx, 1, 1); err != nil {
 		t.Fatal(err)
 	}
