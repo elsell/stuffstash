@@ -61,9 +61,8 @@ repository numbers from CI, not production API latency. The artifact is
 `search-benchmark` on that run. CI exports OpenAPI as a small artifact when the
 search response evolves so client code can be generated without a local Go build.
 
-Ancestor-path response enrichment is the first in-progress mobile request-count
-optimization. Backend candidate hydration remains to be replaced and measured;
-the overall optimization is not complete.
+The baseline above predates bounded candidate hydration and API ancestor paths.
+Final measurements and remaining limitations are recorded below.
 
 ## Backend benchmark contract
 
@@ -134,3 +133,45 @@ Both UNION variants are rejected. Restore the previously measured OR-based
 candidate filter, retain bounded hydration and the NUL-query fallback, and
 repeat the final benchmark including application ancestor paths. The exact
 planner cause was not established; no stronger causal claim is made.
+
+## Final implementation measurements
+
+CI run 33945506018 at 11936b939 passed the PostgreSQL search correctness,
+candidate-budget, NUL-input, and benchmark checks. Three five-iteration samples:
+
+| 10,000 assets / 20,000 attachments | Final latency | Rows loaded | Allocation/search |
+| --- | --- | --- | --- |
+| Broad | 76.89–122.22 ms | 385 | 1.86 MB |
+| Selective | 108.14–112.62 ms | 4 | 0.190 MB |
+| Empty | 106.65–107.49 ms | 1 | 0.091 MB |
+| Attachment metadata | 163.07–163.34 ms | 385 | 1.86 MB |
+| Subsequent page | 122.14–122.68 ms | 385 | 1.86 MB |
+
+These final latencies supersede the much faster first bounded-candidate run
+for release claims. All large-inventory cases improve over the 189–217 ms
+baseline, but execution-plan and fixture-state sensitivity remains unresolved.
+Do not promise the earlier 5 ms broad result in production. At 100 assets, final
+cases ranged from 2.49 to 5.34 ms versus 3.43–4.16 ms originally; not every
+small-inventory case improved. Final executed query counts were five for
+nonempty result cases and two for empty results.
+
+Search plus complete ancestor paths for twenty depth-four results measured
+6.78–6.86 ms with shared ancestors (nine queries, 65 rows) and 25.88–28.51 ms
+with distinct ancestors (85 queries, 141 rows), over the 200-asset fixture.
+Shared paths reuse request-local reads; distinct chains still perform sequential
+scoped repository reads. These timings exclude authorization, audit, network,
+and device rendering. Mobile controlled-transport results remain about 52 ms
+with one HTTP request at all tested depths, compared with about 260 ms at depth
+four using legacy ancestor requests. A real TanStack Query cache test verifies
+repeated query reuse and refreshed paths after an ancestor rename, without
+extra asset GETs. Existing scope/cancellation tests remain part of required CI.
+
+Production search latency and photo-transfer attribution still require an
+authenticated session. Further query-planner tuning must capture execution plans
+and compare both first-search and repeated-query behavior before replacing this
+measured implementation. No local builds were run for final verification.
+
+All jobs in implementation CI run 33945506018 passed, including required checks,
+PostgreSQL search measurements, self-host runtime, and iOS dependency validation.
+The code critic reviewed the implementation and the final evidence with no
+remaining findings. Release publication remains a separate validation step.

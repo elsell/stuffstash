@@ -35,8 +35,7 @@ disk-constrained host. Resume the authenticated detail-photo benchmark afterward
 The native cancellation and export-compliance fixes shipped in 0.16.4. The current
 search work uses compact authorized API paths to remove mobile ancestor HTTP
 waterfalls and bounds candidate hydration behind the search repository. Baseline
-and follow-up measurements live in `specs/search/search-latency.spec.md`; final
-CI evidence is pending. Keep all builds in CI on this disk-constrained host.
+and final PostgreSQL measurements live in `specs/search/search-latency.spec.md`: large-inventory queries improve to 107–163 ms in the latest run, with sharply reduced hydration. All implementation CI checks passed in run 33945506018; release validation remains pending. Production authenticated timings and query-plan variability remain follow-up work. Keep all builds in CI on this disk-constrained host.
 The first native GitHub Actions TestFlight path is operational and has installed a
 working signed build on a physical device; distribution remains a release gate,
 not the current implementation bottleneck.
