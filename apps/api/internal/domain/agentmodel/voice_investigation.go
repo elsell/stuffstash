@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	MaxEvidenceRounds             = 2
+	DefaultEvidenceRounds         = 2
+	MaxEvidenceRounds             = 8
 	MaxDestinationSegments        = 6
 	MaxSearchProbesPerRequest     = 5
 	MaxSearchRequestsPerStep      = 24

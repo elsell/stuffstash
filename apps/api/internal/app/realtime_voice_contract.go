@@ -1,6 +1,7 @@
 package app
 
 import (
+	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -79,6 +80,7 @@ type RealtimeVoiceSession struct {
 	WorkflowRevisionID         string
 	LanguagePromptTemplate     string
 	DeveloperDiagnostics       bool
+	workflow                   *agentmodelapp.PreparedWorkflow
 	speechToText               ports.SpeechToTextProvider
 	languageInference          ports.LanguageInferenceProvider
 	responseGenerator          ports.VoiceResponseGenerator

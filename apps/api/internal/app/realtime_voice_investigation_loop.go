@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -13,13 +14,14 @@ import (
 const realtimeVoiceInvestigationVersion = "voice-investigation-v2"
 
 func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session RealtimeVoiceSession, transcript string, conversationTurns []ports.AgentConversationTurn, continueAfterClarification bool, emit RealtimeVoiceEventSink) error {
+	maxEvidenceRounds := realtimeVoiceEvidenceRoundLimit(session)
 	vocabulary, vocabularyCatalog, err := a.loadRealtimeVoiceVocabulary(ctx, session.TenantID, session.InventoryID)
 	if err != nil {
 		return err
 	}
 	initialInput := agentmodel.InvestigationInput{
 		Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: realtimeVoiceInvestigationVersion,
-		SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: transcript, MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
+		SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: transcript, MaxEvidenceRounds: maxEvidenceRounds,
 		Vocabulary: vocabulary,
 	}
 	step, err := a.nextRealtimeVoiceInvestigation(ctx, session, transcript, conversationTurns, initialInput, nil, emit)
@@ -74,8 +76,11 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 	requests := []agentmodel.SearchRequest{}
 	observations := []agentmodel.CandidateObservation{}
 	readEvidence := []agentmodel.ReadEvidence{}
-	for evidenceRound := 1; evidenceRound <= agentmodel.MaxEvidenceRounds; evidenceRound++ {
+	for evidenceRound := 1; evidenceRound <= maxEvidenceRounds; evidenceRound++ {
 		readResult, err := a.executeRealtimeVoiceInvestigationReads(ctx, session, evidenceRound, step.SearchRequests, readState, emit)
+		if errors.Is(err, errRealtimeVoiceCandidateCapacity) {
+			return a.completeRealtimeVoiceResponse(ctx, session, ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindClarification, SpokenResponse: "I found many possible matches. Which tag or location should I focus on?", DisplayResponse: "I found many possible matches. Which tag or location should I focus on?"}, readState.toolCallIDs, readState.toolResults, emit, continueAfterClarification)
+		}
 		if err != nil {
 			return err
 		}
@@ -86,7 +91,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 		assessmentInput := agentmodel.InvestigationInput{
 			Phase: agentmodel.InvestigationPhaseEvidenceAssessment, PromptVersion: realtimeVoiceInvestigationVersion,
 			SchemaVersion: realtimeVoiceInvestigationVersion, Transcript: transcript, EvidenceRound: evidenceRound,
-			MaxEvidenceRounds: agentmodel.MaxEvidenceRounds, CanonicalIntent: &intentCopy,
+			MaxEvidenceRounds: maxEvidenceRounds, CanonicalIntent: &intentCopy,
 			PreviousRequests: append([]agentmodel.SearchRequest{}, requests...), Observations: append([]agentmodel.CandidateObservation{}, observations...),
 			ReadEvidence: append([]agentmodel.ReadEvidence{}, readEvidence...),
 			Vocabulary:   vocabulary, VocabularyRequests: append([]agentmodel.VoiceVocabularyRequest{}, vocabularyRequests...),
@@ -97,7 +102,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 			return err
 		}
 		if !sameRealtimeVoiceInvestigationIntent(canonicalIntent, step.Intent) {
-			if evidenceRound < agentmodel.MaxEvidenceRounds && step.Decision == agentmodel.InvestigationDecisionSearchAgain &&
+			if evidenceRound < maxEvidenceRounds && step.Decision == agentmodel.InvestigationDecisionSearchAgain &&
 				realtimeVoiceDestinationRepairAllowed(transcript, canonicalIntent, step.Intent) &&
 				realtimeVoiceDestinationRepairRequestsValid(step.Intent, step.SearchRequests) {
 				canonicalIntent = step.Intent
@@ -127,7 +132,7 @@ func (a App) runRealtimeVoiceInvestigationLoop(ctx context.Context, session Real
 			}
 		}
 		if step.Decision == agentmodel.InvestigationDecisionSearchAgain {
-			if evidenceRound == agentmodel.MaxEvidenceRounds {
+			if evidenceRound == maxEvidenceRounds {
 				return a.recoverRealtimeVoiceResponse(ctx, session, readState.toolCallIDs, readState.toolResults, emit)
 			}
 			vocabularyRequests, vocabularyDefinitions, err = mergeRealtimeVoiceVocabularyResolution(vocabularyCatalog, vocabularyRequests, vocabularyDefinitions, step.VocabularyRequests)

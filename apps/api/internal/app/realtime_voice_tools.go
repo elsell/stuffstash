@@ -60,18 +60,19 @@ func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session Realtim
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}
-	results, err := a.SearchAssets(ctx, SearchAssetsInput{
-		Principal:      session.Principal,
-		TenantID:       session.TenantID,
-		InventoryIDs:   []inventory.InventoryID{session.InventoryID},
-		Source:         audit.SourceConversation,
-		Query:          args.Query,
-		Mode:           "fuzzy",
-		LifecycleState: args.LifecycleState,
-		Limit:          args.Limit,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, err
+	input := SearchAssetsInput{
+		Principal: session.Principal, TenantID: session.TenantID, InventoryIDs: []inventory.InventoryID{session.InventoryID}, Source: audit.SourceConversation, Query: args.Query, LifecycleState: args.LifecycleState, Limit: args.Limit,
+	}
+	var results SearchAssetsResult
+	for _, mode := range realtimeVoiceSearchModes(session) {
+		input.Mode = mode.String()
+		results, err = a.SearchAssets(ctx, input)
+		if err != nil {
+			return ports.AgentToolResult{}, err
+		}
+		if len(results.Items) > 0 {
+			break
+		}
 	}
 
 	items := make([]realtimeVoiceAssetToolItem, 0, len(results.Items))

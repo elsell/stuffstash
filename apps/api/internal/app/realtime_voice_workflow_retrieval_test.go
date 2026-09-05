@@ -185,8 +185,17 @@ func TestWorkflowCandidateCapacityAsksForNarrowerSearch(t *testing.T) {
 	if response == nil || response.Kind != ports.StructuredAgentResponseKindClarification {
 		t.Fatalf("too many candidates failed instead of clarifying: %+v", response)
 	}
-	if language.callCount != 3 || len(recorder.modes) != 7 {
+	if language.callCount != 3 || len(recorder.modes) != 14 {
 		t.Fatalf("exhausted context dispatched further work: models=%d reads=%d", language.callCount, len(recorder.modes))
+	}
+	for index, mode := range recorder.modes {
+		expected := search.ModeExact
+		if index%2 == 1 {
+			expected = search.ModeFuzzy
+		}
+		if mode != expected {
+			t.Fatalf("capacity case search strategy: %v", recorder.modes)
+		}
 	}
 	for _, input := range language.seenInvestigations {
 		if len(input.Observations) > agentmodel.MaxCandidateObservations {

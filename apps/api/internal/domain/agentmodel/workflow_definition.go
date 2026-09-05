@@ -69,7 +69,7 @@ type WorkflowDefinition struct {
 }
 
 func NewWorkflowDefinition(input WorkflowDefinitionInput, limits WorkflowLimits) (WorkflowDefinition, error) {
-	if !limits.valid() || !input.Budget.within(limits.Budget) {
+	if !limits.valid() || !input.Budget.within(limits.Budget) || input.Budget.EvidenceRounds > MaxEvidenceRounds {
 		return WorkflowDefinition{}, ErrInvalidWorkflowDefinition
 	}
 	input.Name = strings.TrimSpace(input.Name)

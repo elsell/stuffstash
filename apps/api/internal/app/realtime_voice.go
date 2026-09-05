@@ -104,6 +104,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	}
 	if workflow != nil {
 		session.WorkflowRevisionID = string(workflow.Revision().Snapshot().ID)
+		session.workflow = workflow
 	}
 	now := a.clock.Now()
 	if err := a.realtimeSessions.SaveRealtimeSession(ctx, ports.RealtimeSessionRecord{

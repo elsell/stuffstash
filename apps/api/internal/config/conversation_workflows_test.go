@@ -21,6 +21,7 @@ func TestWorkflowLimitsCaptureEnvironmentAndRejectInvalidValues(t *testing.T) {
 	if err != nil || limits.Budget.EvidenceRounds != 7 {
 		t.Fatalf("configuration was not captured: %+v %v", limits, err)
 	}
+	t.Setenv(names[0], "")
 	for _, name := range names {
 		for _, value := range []string{"0", "-1", "not-an-integer", "99999999999999999999999999"} {
 			t.Run(name+"/"+value, func(t *testing.T) {
