@@ -135,6 +135,7 @@ const (
 const defaultGoogleCredentialMode = GoogleCredentialModeADC
 
 type Config struct {
+	ConversationWorkflows            WorkflowConfiguration
 	HTTPAddr                         string
 	HTTPReadHeaderTimeout            time.Duration
 	HTTPReadTimeout                  time.Duration
@@ -207,6 +208,7 @@ type Config struct {
 
 func Load() Config {
 	return Config{
+		ConversationWorkflows:            loadWorkflowConfiguration(),
 		HTTPAddr:                         envOrDefault(envHTTPAddr, defaultHTTPAddr),
 		HTTPReadHeaderTimeout:            durationEnvOrDefault(envHTTPReadHeaderTimeout, defaultHTTPReadHeader),
 		HTTPReadTimeout:                  durationEnvOrDefault(envHTTPReadTimeout, defaultHTTPRead),

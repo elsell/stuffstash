@@ -14,6 +14,10 @@ import (
 )
 
 func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+	workflowLimits, err := cfg.ConversationWorkflows.Limits()
+	if err != nil {
+		return app.App{}, err
+	}
 	if err := validateInvitationPublicBaseURL(cfg); err != nil {
 		return app.App{}, err
 	}
@@ -63,6 +67,8 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Audit:                            repositories.audit,
 		Outbox:                           repositories.outbox,
 		Users:                            repositories.users,
+		ConversationWorkflowLimits:       workflowLimits,
+		ConversationWorkflows:            repositories.conversationWorkflows,
 		ProviderProfiles:                 repositories.providerProfiles,
 		ProviderProfileUnitOfWork:        repositories.providerProfileUnitOfWork,
 		VoiceProviderConfigs:             repositories.voiceProviderConfigs,
