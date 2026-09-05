@@ -14,6 +14,7 @@ func TestEvaluationCaseRoutesRequireTenantConfiguration(t *testing.T) {
 		{http.MethodGet, "/tenants/home/conversation-evaluation-cases"},
 		{http.MethodGet, "/tenants/home/conversation-evaluation-cases/case-one"},
 		{http.MethodGet, "/tenants/home/conversation-evaluation-cases/case-one/revisions/revision-one"},
+		{http.MethodGet, "/tenants/home/conversation-evaluation-cases/case-one/revisions"},
 	} {
 		for _, scenario := range []struct {
 			name, token string

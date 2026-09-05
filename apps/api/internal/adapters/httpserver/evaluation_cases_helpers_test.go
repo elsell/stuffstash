@@ -5,6 +5,23 @@ import (
 	"testing"
 )
 
+type evaluationCaseHistoryWire struct {
+	Data []struct {
+		ID         string `json:"id"`
+		CaseID     string `json:"caseId"`
+		Number     int    `json:"number"`
+		Definition struct {
+			Title string `json:"title"`
+		} `json:"definition"`
+	} `json:"data"`
+	Meta struct {
+		Pagination struct {
+			NextCursor *string `json:"nextCursor"`
+			HasMore    bool    `json:"hasMore"`
+		} `json:"pagination"`
+	} `json:"meta"`
+}
+
 func evaluationCaseRequest() map[string]any {
 	return map[string]any{"definition": map[string]any{"title": "Baby clothes", "utterance": "Where are my baby clothes?", "assets": []map[string]any{{"id": "box", "title": "Attic box", "kind": "container"}, {"id": "clothes", "title": "3 to 6 months", "kind": "item", "parentId": "box", "tagNames": []string{"baby", "clothes"}}}, "expectations": map[string]any{"kind": "answer", "referencedAssets": []string{"clothes"}, "locations": []map[string]string{{"assetId": "clothes", "ancestorId": "box"}}}}}
 }
