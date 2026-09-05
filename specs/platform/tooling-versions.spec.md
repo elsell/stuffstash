@@ -196,3 +196,9 @@ mobile OIDC support must align with the already-pinned Expo SDK 55 runtime:
 ## Conversation workspace query adapter
 
 Pin `@tanstack/svelte-query` to `6.1.38`. The npm release dated 2026-07-21 supports Svelte `^5.25.0` and uses the existing exact `@tanstack/query-core 5.101.4`. Keep TanStack in frontend adapters, with independent domain models and ports. Update the lockfile using pinned pnpm without lifecycle scripts or local builds. Reference: https://tanstack.com/query/latest/docs/framework/svelte/overview and npm registry metadata for `@tanstack/svelte-query/6.1.38`.
+
+## Container package-manager pin enforcement
+
+The web builder must consume the global `PNPM_VERSION` build argument inside its build stage before using it in a `RUN` instruction. The installed package version must equal the requested pin and the workspace `packageManager` version before dependency installation. An empty or mismatched version must fail instead of installing an npm default or triggering an implicit package-manager download. Docker global arguments are not automatically inherited into stages: https://docs.docker.com/build/building/variables/#scoping.
+
+CI must build the actual web Dockerfile without publishing an image on pull requests, main pushes and manual validation. Ordinary web bundle tests are insufficient to validate the pinned container toolchain. Release run 33992836105 supplies the failing baseline: the out-of-scope pin caused pnpm self-management to invoke a binary requiring an absent `libatomic.so.1`. No local container build is required on disk-constrained development hosts.
