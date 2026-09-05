@@ -25,3 +25,16 @@ it.each(['cases', 'providers', 'incomplete', 'same'] as const)('rejects %s compa
   if (change === 'same') candidate.id = baseline.id;
   expect(compareConversationRuns(baseline, candidate)).toEqual({ compatible: false, reason: change });
 });
+it('compares a fully evaluated failing baseline with an improved passing revision', () => {
+  const baseline = run('baseline'); baseline.state = 'failed'; baseline.passedCases = 0;
+  baseline.results[0].verdict = { passed: false, failures: [{ code: 'missing_reference', fixtureId: 'clothes', operation: '' }] };
+  const comparison = compareConversationRuns(baseline, run('candidate'));
+  expect(comparison.compatible).toBe(true);
+  if (!comparison.compatible) throw new Error('Expected assertion failures to remain comparable');
+  expect(comparison.baseline.passedCases).toBe(0); expect(comparison.candidate.passedCases).toBe(1);
+  expect(comparison.cases[0].baseline.passed).toBe(false);
+});
+it('does not treat an operational failure as a completed comparison', () => {
+  const baseline = run('baseline'); baseline.state = 'failed'; baseline.failureCode = 'provider_unavailable';
+  expect(compareConversationRuns(baseline, run('candidate'))).toEqual({ compatible: false, reason: 'incomplete' });
+});
