@@ -45,7 +45,25 @@ replacement implementation.
   authorization at the real API boundary for any changed search interaction.
 - CI tests and build results for the final implementation, plus code critic review.
 
-No optimization has been implemented or claimed complete by this baseline.
+## PostgreSQL baseline evidence
+
+CI run 33943741006 at commit 324e64955 passed the repository benchmark and
+PostgreSQL search-audit test. Three repetitions of five iterations each measured:
+
+| Assets / attachments | Search cases | Latency range | Rows loaded | Allocated bytes/search |
+| --- | --- | --- | --- | --- |
+| 100 / 200 | all five | 3.43–4.16 ms | 301 | 1.54–1.68 MB |
+| 10,000 / 20,000 | all five | 189.25–217.49 ms | 30,001 | 197.48–218.29 MB |
+
+Every case made six GORM queries. Empty and selective queries incur nearly the
+same hydration cost as broad queries; subsequent pages repeat it. These are warm
+repository numbers from CI, not production API latency. The artifact is
+`search-benchmark` on that run. CI exports OpenAPI as a small artifact when the
+search response evolves so client code can be generated without a local Go build.
+
+Ancestor-path response enrichment is the first in-progress mobile request-count
+optimization. Backend candidate hydration remains to be replaced and measured;
+the overall optimization is not complete.
 
 ## Backend benchmark contract
 

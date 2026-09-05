@@ -8,6 +8,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
+	searchapp "github.com/stuffstash/stuff-stash/internal/app/search"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -130,6 +131,10 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 		nextCursor = encodePageCursor("search.assets", cursorScope, items[len(items)-1].CursorKey())
 	}
 	primaryPhotos, err := a.primaryImageAttachmentsForSearchResults(ctx, input.TenantID, items)
+	if err != nil {
+		return SearchAssetsResult{}, err
+	}
+	items, err = searchapp.WithAncestorPaths(ctx, a.assets, items)
 	if err != nil {
 		return SearchAssetsResult{}, err
 	}

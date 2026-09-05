@@ -59,6 +59,14 @@ jobs:
           name: search-benchmark
           path: search-benchmark.txt
           retention-days: 14
+      - name: Export API contract for client generation
+        run: go run ./apps/api/cmd/stuff-stash-openapi > search-openapi.json
+      - name: Retain API contract
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: search-openapi
+          path: search-openapi.json
+          retention-days: 3
 
   required-checks:
     name: Required checks

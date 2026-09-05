@@ -25,11 +25,17 @@ type SearchAssetsOutput struct {
 }
 
 type AssetSearchResultResponse struct {
-	Type      string           `json:"type"`
-	TenantID  string           `json:"tenantId"`
-	Inventory InventorySummary `json:"inventory"`
-	Asset     AssetSummary     `json:"asset"`
-	Matches   []SearchMatch    `json:"matches"`
+	Type         string           `json:"type"`
+	TenantID     string           `json:"tenantId"`
+	Inventory    InventorySummary `json:"inventory"`
+	Asset        AssetSummary     `json:"asset"`
+	Matches      []SearchMatch    `json:"matches"`
+	AncestorPath []SearchAncestor `json:"ancestorPath"`
+}
+
+type SearchAncestor struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
 }
 
 type InventorySummary struct {

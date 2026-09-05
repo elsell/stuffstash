@@ -30,6 +30,10 @@ type searchAssetResultResponse struct {
 		Field string `json:"field"`
 		Value string `json:"value"`
 	} `json:"matches"`
+	AncestorPath []struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+	} `json:"ancestorPath"`
 }
 
 type searchAssetListBody struct {

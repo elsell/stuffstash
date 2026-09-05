@@ -52,6 +52,8 @@ The first API slice is asset search:
 - Results must include a stable `type` field. The first value is `asset`.
 - Results must include the matching asset and simple match metadata so clients can explain why a result appeared.
 - Results must include current checkout state when the asset has an open checkout.
+- Results must include an `ancestorPath` array of compact `{id, title}` breadcrumbs ordered from the inventory root to the immediate parent; an empty array explicitly identifies a root asset. The path excludes the result itself. Search application enrichment resolves only ancestors of the returned page, deduplicates shared ancestors within the request, and reads each ancestor through the tenant-and-inventory-scoped asset repository port. It must never follow a parent reference across the authorized result's tenant or inventory, and must fail safely on corrupt or cyclic paths rather than return misleading placement. Path resolution lives in the search application package, separate from REST mapping and persistence matching.
+- Mobile search uses the returned complete path without ancestor HTTP reads. When connected to an older API that omits `ancestorPath`, it retains the scoped, cancellable ancestor lookup fallback. Paths remain part of the TanStack search result, so search invalidation and scope replacement also replace placement; there is no second persistent ancestor cache.
 - Location-like assets are returned as assets with kind `location`.
 - The first slice searches asset title, description, custom field values, custom asset type key/display name/description, and attachment file name/content type.
 - Exact search uses case-insensitive whole-value equality for fields and metadata.
