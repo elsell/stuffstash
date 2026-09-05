@@ -42,7 +42,7 @@ func (s *Store) SaveEvaluationRun(ctx context.Context, run model.EvaluationRun, 
 	} else if snapshot.State == model.EvaluationRunCancelled {
 		action = audit.ActionConversationEvaluationRunCancelled
 	}
-	if record.TenantID.String() != string(snapshot.Input.TenantID) || record.InventoryID != "" || record.ID == "" || record.Action != action || record.TargetType != "conversation_evaluation_run" || record.TargetID != string(snapshot.Input.ID) {
+	if record.TenantID.String() != string(snapshot.Input.TenantID) || record.InventoryID != "" || record.ID == "" || record.Action != action || record.TargetType != audit.TargetConversationEvaluationRun || record.TargetID != string(snapshot.Input.ID) {
 		return model.ErrInvalidEvaluationRun
 	}
 	s.mu.Lock()

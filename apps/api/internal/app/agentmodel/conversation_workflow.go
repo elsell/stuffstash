@@ -88,7 +88,7 @@ func (s ConversationWorkflowService) SaveRevision(ctx context.Context, input Sav
 		return domain.WorkflowRevision{}, apperrors.ErrValidation
 	}
 	snapshot := revision.Snapshot()
-	record, ok := audit.NewRecord(audit.ID(s.deps.IDs.NewID()), audit.TenantID(input.TenantID.String()), "", audit.PrincipalID(input.Principal.ID.String()), audit.ActionConversationWorkflowRevisionCreated, input.Source, audit.TargetType("conversation_workflow"), string(workflowID), snapshot.CreatedAt, input.RequestID, map[string]string{"workflow_id": string(workflowID), "revision_id": string(snapshot.ID), "revision_number": strconv.Itoa(snapshot.Number)})
+	record, ok := audit.NewRecord(audit.ID(s.deps.IDs.NewID()), audit.TenantID(input.TenantID.String()), "", audit.PrincipalID(input.Principal.ID.String()), audit.ActionConversationWorkflowRevisionCreated, input.Source, audit.TargetConversationWorkflow, string(workflowID), snapshot.CreatedAt, input.RequestID, map[string]string{"workflow_id": string(workflowID), "revision_id": string(snapshot.ID), "revision_number": strconv.Itoa(snapshot.Number)})
 	if !ok {
 		return domain.WorkflowRevision{}, apperrors.ErrValidation
 	}

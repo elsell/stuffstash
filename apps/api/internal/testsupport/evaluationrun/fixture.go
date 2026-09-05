@@ -55,7 +55,7 @@ func Run(t *testing.T, id string) model.EvaluationRun {
 }
 func Record(t *testing.T, id, runID string, action audit.Action) audit.Record {
 	t.Helper()
-	record, ok := audit.NewRecord(audit.ID(id), TenantID, "", "owner", action, audit.SourceSystem, "conversation_evaluation_run", runID, Now, "", nil)
+	record, ok := audit.NewRecord(audit.ID(id), TenantID, "", "owner", action, audit.SourceSystem, audit.TargetConversationEvaluationRun, runID, Now, "", nil)
 	if !ok {
 		t.Fatal("invalid fixture audit")
 	}

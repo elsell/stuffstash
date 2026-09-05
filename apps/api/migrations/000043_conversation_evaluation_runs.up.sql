@@ -16,6 +16,14 @@ ALTER TABLE audit_records ADD CONSTRAINT chk_audit_records_action CHECK (action 
   'import_job.previewed','import_job.started','import_job.completed','import_job.failed','import_job.cancellation_requested','import_job.cancelled','import_job.history_removed','import_job.credential_cleaned'
 ));
 
+ALTER TABLE audit_records DROP CONSTRAINT chk_audit_records_target_type;
+ALTER TABLE audit_records ADD CONSTRAINT chk_audit_records_target_type CHECK (
+ target_type IN ('tenant','inventory','inventory_access_grant','inventory_invitation',
+ 'custom_asset_type','custom_field_definition','asset','asset_tag','attachment',
+ 'audit_record','undoable_operation','provider_profile','import_job',
+ 'conversation_workflow','conversation_evaluation_case','conversation_evaluation_run')
+);
+
 CREATE TABLE conversation_evaluation_runs (
  tenant_id VARCHAR(64) NOT NULL REFERENCES tenants(id) ON UPDATE CASCADE ON DELETE RESTRICT,
  id VARCHAR(64) NOT NULL,

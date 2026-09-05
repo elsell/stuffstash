@@ -267,25 +267,28 @@ func (s Source) String() string {
 type TargetType string
 
 const (
-	TargetTenant                TargetType = "tenant"
-	TargetInventory             TargetType = "inventory"
-	TargetInventoryAccessGrant  TargetType = "inventory_access_grant"
-	TargetInventoryInvitation   TargetType = "inventory_invitation"
-	TargetCustomAssetType       TargetType = "custom_asset_type"
-	TargetCustomFieldDefinition TargetType = "custom_field_definition"
-	TargetAsset                 TargetType = "asset"
-	TargetAssetTag              TargetType = "asset_tag"
-	TargetAttachment            TargetType = "attachment"
-	TargetAuditRecord           TargetType = "audit_record"
-	TargetUndoableOperation     TargetType = "undoable_operation"
-	TargetProviderProfile       TargetType = "provider_profile"
-	TargetImportJob             TargetType = "import_job"
+	TargetTenant                     TargetType = "tenant"
+	TargetInventory                  TargetType = "inventory"
+	TargetInventoryAccessGrant       TargetType = "inventory_access_grant"
+	TargetInventoryInvitation        TargetType = "inventory_invitation"
+	TargetCustomAssetType            TargetType = "custom_asset_type"
+	TargetCustomFieldDefinition      TargetType = "custom_field_definition"
+	TargetAsset                      TargetType = "asset"
+	TargetAssetTag                   TargetType = "asset_tag"
+	TargetAttachment                 TargetType = "attachment"
+	TargetAuditRecord                TargetType = "audit_record"
+	TargetUndoableOperation          TargetType = "undoable_operation"
+	TargetProviderProfile            TargetType = "provider_profile"
+	TargetImportJob                  TargetType = "import_job"
+	TargetConversationWorkflow       TargetType = "conversation_workflow"
+	TargetConversationEvaluationCase TargetType = "conversation_evaluation_case"
+	TargetConversationEvaluationRun  TargetType = "conversation_evaluation_run"
 )
 
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob:
+	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
 		return targetType, true
 	default:
 		return "", false

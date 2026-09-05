@@ -116,7 +116,7 @@ func (s EvaluationCaseService) SaveRevision(ctx context.Context, input SaveEvalu
 	return revision, nil
 }
 func (s EvaluationCaseService) auditRecord(input EvaluationCaseAccess, action audit.Action, targetID string, metadata map[string]string) (audit.Record, error) {
-	record, ok := audit.NewRecord(audit.ID(s.deps.IDs.NewID()), audit.TenantID(input.TenantID), "", audit.PrincipalID(input.Principal.ID), action, input.Source, "conversation_evaluation_case", targetID, s.deps.Clock.Now(), input.RequestID, metadata)
+	record, ok := audit.NewRecord(audit.ID(s.deps.IDs.NewID()), audit.TenantID(input.TenantID), "", audit.PrincipalID(input.Principal.ID), action, input.Source, audit.TargetConversationEvaluationCase, targetID, s.deps.Clock.Now(), input.RequestID, metadata)
 	if !ok {
 		return audit.Record{}, apperrors.ErrValidation
 	}

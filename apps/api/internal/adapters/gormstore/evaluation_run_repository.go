@@ -37,7 +37,7 @@ func (s Store) SaveEvaluationRun(ctx context.Context, run model.EvaluationRun, e
 	} else if run.Snapshot().State == model.EvaluationRunCancelled {
 		action = audit.ActionConversationEvaluationRunCancelled
 	}
-	if record.TenantID.String() != value.TenantID || record.InventoryID != "" || record.ID == "" || record.Action != action || record.TargetType != "conversation_evaluation_run" || record.TargetID != value.ID {
+	if record.TenantID.String() != value.TenantID || record.InventoryID != "" || record.ID == "" || record.Action != action || record.TargetType != audit.TargetConversationEvaluationRun || record.TargetID != value.ID {
 		return model.ErrInvalidEvaluationRun
 	}
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
