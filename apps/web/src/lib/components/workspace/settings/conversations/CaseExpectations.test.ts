@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
+import { flushSync, mount, unmount, tick } from 'svelte';
 import type { CaseDefinition } from '$lib/domain/conversationCase';
 import CaseExpectations from './CaseExpectations.svelte';
 let component: ReturnType<typeof mount> | undefined;
@@ -13,9 +13,12 @@ describe('case expectations', () => {
     const changes: CaseDefinition[] = [];
     const initial = { operation: label === 'Create' ? 'move' as const : 'create' as const, targetId: '', destinationId: '', newKind: '' as const, newTitle: 'Old title', details: 'Old details' };
     component = mount(CaseExpectations, { target: document.body, props: { value: { ...value, expectations: { ...value.expectations, kind: 'proposal', proposals: [initial] } }, onChange: changed => changes.push(changed) } });
-    document.querySelector<HTMLButtonElement>('#proposal-operation-0')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); flushSync();
+    flushSync(); await tick();
+    const trigger = document.querySelector<HTMLButtonElement>('#proposal-operation-0')!; trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); flushSync();
     const option = () => Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(item => item.textContent?.trim() === label);
-    await expect.poll(option).toBeDefined(); option()!.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'mouse', bubbles: true, cancelable: true })); flushSync();
+    await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('true');
+    await expect.poll(() => Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).map(item => item.textContent?.trim())).toContain(label); option()!.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'mouse', bubbles: true, cancelable: true })); flushSync();
     await expect.poll(() => changes.length).toBeGreaterThan(0);
     expect(changes.at(-1)!.expectations.proposals[0]).toEqual({ operation: label === 'Check out' ? 'checkout' : label.toLowerCase(), targetId: '', destinationId: '', newTitle: '', newKind: label === 'Create' ? 'item' : '', details: '' });
   });
