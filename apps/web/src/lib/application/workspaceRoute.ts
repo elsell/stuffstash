@@ -109,7 +109,7 @@ const assetActions = new Set<AssetRouteAction>(['edit', 'move', 'move-here', 'ar
 const attachmentActions = new Set<AttachmentRouteAction>(['delete']);
 const accessInvitationActions = new Set<AccessInvitationRouteAction>(['expire', 'cancel', 'delete']);
 const settingsSections = new Set<SettingsSection>(['overview', 'access', 'fields', 'activity', 'administration']);
-const settingsCollections = new Set<Exclude<SettingsCollection, null>>(['access', 'activity', 'fields', 'asset-types', 'tags']);
+const settingsCollections = new Set<Exclude<SettingsCollection, null>>(['access', 'activity', 'fields', 'asset-types', 'tags', 'conversations']);
 const settingsResourceActions = new Set<Exclude<SettingsResourceAction, null>>(['edit', 'archive', 'restore', 'delete']);
 const invitationStatuses = new Set<InvitationStatusFilter>(['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired']);
 const auditScopes = new Set<AuditScope>(['inventory', 'tenant']);
@@ -510,6 +510,7 @@ function parseSettingsCollectionSegments(route: WorkspaceRouteState, segments: s
     ? (segments[0] as Exclude<SettingsCollection, null>)
     : null;
   if (!collection) return route;
+  if (collection === 'conversations' && (route.settingsLevel !== 'tenant' || segments.length !== 1)) return route;
   if (segments.length === 1) return { ...route, settingsCollection: collection };
   if (collection === 'access' && segments.length === 4 && segments[1] === 'invitations') {
     const action = parseAccessInvitationAction(segments[3]);

@@ -1,7 +1,7 @@
 import type { AuditScope, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
 import { workspaceRouteHref, type AccessInvitationRouteAction, type SettingsCollection, type SettingsResourceAction } from './workspaceRoute';
 
-export type SettingsDestinationIcon = 'account' | 'tenant' | 'inventory' | 'access' | 'activity' | 'fields' | 'asset-types' | 'tags';
+export type SettingsDestinationIcon = 'account' | 'tenant' | 'inventory' | 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | 'conversations';
 
 export interface SettingsDestination {
   label: string;
@@ -47,6 +47,7 @@ export function settingsResourceHref(input: {
 
 export function tenantSettingsDestinations(tenant: Pick<Tenant, 'id'>): SettingsDestination[] {
   return [
+    { label: 'Conversations', eyebrow: 'Voice and models', description: 'Tune workflows and test realistic inventory requests', icon: 'conversations', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'conversations' }) },
     { label: 'Custom fields', eyebrow: 'Shared schema', description: 'Fields available to every inventory', icon: 'fields', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'fields' }) },
     { label: 'Asset types', eyebrow: 'Shared schema', description: 'Types available to every inventory', icon: 'asset-types', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'asset-types' }) }
   ];

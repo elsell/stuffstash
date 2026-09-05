@@ -7,6 +7,7 @@
   import Activity from '@lucide/svelte/icons/activity';
   import ListChecks from '@lucide/svelte/icons/list-checks';
   import Shapes from '@lucide/svelte/icons/shapes';
+  import MessageCircle from '@lucide/svelte/icons/message-circle';
   import Tags from '@lucide/svelte/icons/tags';
   import type { Component } from 'svelte';
   import type { SettingsDestination, SettingsDestinationIcon } from '$lib/application/settingsManagementNavigation';
@@ -15,7 +16,7 @@
   let { label, destinations, onNavigate }: { label: string; destinations: SettingsDestination[]; onNavigate: (href: string) => void } = $props();
   const icons: Record<SettingsDestinationIcon, Component> = {
     account: CircleUserRound, tenant: Building2, inventory: Boxes, access: Users, activity: Activity,
-    fields: ListChecks, 'asset-types': Shapes, tags: Tags
+    fields: ListChecks, 'asset-types': Shapes, tags: Tags, conversations: MessageCircle
   };
   function navigate(event: MouseEvent, href: string): void {
     if (!shouldHandleWorkspaceLinkClick(event)) return;
