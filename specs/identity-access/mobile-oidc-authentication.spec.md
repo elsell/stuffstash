@@ -178,7 +178,9 @@ support for organization tenants.
   tenant context and entered inventory name, explain the remaining failure, and
   retry inventory creation without creating another tenant. Reconcile uncertain
   write outcomes before retrying; never blindly repeat creation or silently
-  delete already-created resources. Relaunch discovery must reuse that tenant.
+  delete already-created resources. If discovery cannot confirm an uncertain
+  write, keep retry read-only and ask the user to check its status; do not resend
+  creation automatically. Relaunch discovery must reuse that tenant.
 - Users without usable context or permission must receive the existing safe
   access/error state; the streamlined flow must not grant creation permission.
 - Enter the native tab shell only after authentication and usable inventory
@@ -234,7 +236,8 @@ support for organization tenants.
 Existing invitation parsing, browser acceptance, pending-link preservation,
 preview/explicit acceptance, identity checks, and server-binding constraints in
 `Invitation Deep Links` remain authoritative. Where invitation preview is shown,
-identify the inventory and household, use `You’re invited` and `Join inventory`,
+identify the inventory and its authorized access/expiry details, use `You’re invited` and `Join inventory`,
+and show household identity only if supplied by the authorized preview contract,
 and omit copy that merely restates the join action. Show `Sign out and start over`
 where the user needs to leave the signed-in invitation flow; apply the cleanup
 above and clear the abandoned in-memory invitation/navigation reference.

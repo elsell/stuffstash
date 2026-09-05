@@ -1,3 +1,5 @@
+import { OrderedConnectionProfileStore } from './OrderedConnectionProfileStore';
+import { HouseholdSetup } from './HouseholdSetup';
 import {
   ConnectionProfile,
   ConnectionProfileStore,
@@ -45,11 +47,80 @@ export interface OnboardingAuthPort {
 }
 
 export class OnboardingCommand {
+  private generation = 0;
+  private operationInFlight = false;
+  private readonly householdSetup: HouseholdSetup;
+  private readonly profiles: ConnectionProfileStore;
   constructor(
-    private readonly profiles: ConnectionProfileStore,
+    profiles: ConnectionProfileStore,
     private readonly clientFactory: OnboardingClientFactory,
     private readonly auth: OnboardingAuthPort
-  ) {}
+  ) {
+    this.profiles = new OrderedConnectionProfileStore(profiles);
+    this.householdSetup = new HouseholdSetup(this.profiles, clientFactory);
+  }
+
+  async connectAndSignIn(input: { readonly apiBaseUrl: string }): Promise<OnboardingStartState> {
+    return this.run(async active => {
+      const apiBaseUrl = normalizeInstanceUrl(input.apiBaseUrl);
+      const previous = await this.profiles.load();
+      active();
+      if (previous && previous.apiBaseUrl !== apiBaseUrl) {
+        await this.auth.signOut();
+        active();
+        await this.profiles.clear();
+        active();
+        this.householdSetup.clear();
+      }
+      await this.auth.prepareSignIn(apiBaseUrl);
+      active();
+      const profile = previous?.apiBaseUrl === apiBaseUrl ? previous : { apiBaseUrl };
+      await this.profiles.save(profile);
+      active();
+      this.householdSetup.clear();
+      await this.auth.signIn(apiBaseUrl);
+      active();
+      return this.resolveProfileState(profile, active);
+    });
+  }
+
+  async createHousehold(input: {
+    readonly profile: ConnectionProfile;
+    readonly householdName: string;
+    readonly inventoryName: string;
+  }): Promise<OnboardingStartState> {
+    return this.run(async active => {
+      await this.requireAuthentication(input.profile);
+      active();
+      return this.householdSetup.create(input, active);
+    });
+  }
+
+  async completeInventorySetup(input: {
+    readonly profile: ConnectionProfile;
+    readonly inventoryName: string;
+  }): Promise<OnboardingStartState> {
+    return this.run(async active => {
+      await this.requireAuthentication(input.profile);
+      active();
+      return this.householdSetup.createInventory(input, active);
+    });
+  }
+
+  private async requireAuthentication(profile: ConnectionProfile) {
+    if ((await this.auth.status(profile.apiBaseUrl)).status !== 'signed_in') {
+      throw new MobileAuthenticationRequiredError();
+    }
+  }
+
+  private async run(action: (active: () => void) => Promise<OnboardingStartState>) {
+    if (this.operationInFlight) throw new Error('Setup is already in progress.');
+    this.operationInFlight = true;
+    const generation = this.generation;
+    const active = () => { if (generation !== this.generation) throw new OnboardingSupersededError(); };
+    try { return await action(active); }
+    finally { if (generation === this.generation) this.operationInFlight = false; }
+  }
 
   async getStartState(): Promise<OnboardingStartState> {
     const profile = await this.profiles.load();
@@ -104,12 +175,18 @@ export class OnboardingCommand {
   }
 
   async reset(): Promise<void> {
-    await this.auth.signOut();
-    await this.profiles.clear();
+    this.generation++;
+    this.operationInFlight = true;
+    this.householdSetup.clear();
+    try { await this.auth.signOut(); await this.profiles.clear(); }
+    finally { this.operationInFlight = false; }
   }
 
   async expireSession(input: { readonly profile: ConnectionProfile }): Promise<OnboardingStartState> {
+    this.generation++;
+    this.householdSetup.clear();
     await this.auth.signOut();
+    this.operationInFlight = false;
     return { step: 'signIn', profile: input.profile };
   }
 
@@ -130,10 +207,12 @@ export class OnboardingCommand {
     }
   }
 
-  private async resolveProfileState(profile: ConnectionProfile): Promise<OnboardingStartState> {
+  private async resolveProfileState(profile: ConnectionProfile, active: () => void = () => {}): Promise<OnboardingStartState> {
     const client = this.clientFactory(profile);
     const tenants = await client.listTenants();
+    active();
     const tenantWithInventory = await firstTenantWithInventory(client, tenants, profile.tenantId);
+    active();
     const configuredTenant = tenants.find((tenant) => tenant.id === profile.tenantId);
     const firstCreatableTenant = tenants.find((tenant) => tenant.canCreateInventory);
     const firstTenant = tenantWithInventory ?? configuredTenant ?? firstCreatableTenant;
@@ -143,16 +222,22 @@ export class OnboardingCommand {
         throw new Error('No usable tenant is available for mobile onboarding.');
       }
 
-      return { step: 'tenant', profile };
+      const unscopedProfile = { apiBaseUrl: profile.apiBaseUrl };
+      await this.profiles.save(unscopedProfile);
+      active();
+      return { step: 'tenant', profile: unscopedProfile };
     }
 
     const nextProfile =
       profile.tenantId === firstTenant.id ? profile : { ...profile, tenantId: firstTenant.id };
     if (nextProfile !== profile) {
       await this.profiles.save(toSavedProfile(nextProfile));
+      active();
     }
 
-    return this.resolveTenantState(nextProfile, firstTenant);
+    const next = await this.resolveTenantState(nextProfile, firstTenant);
+    active();
+    return next;
   }
 
   private async resolveTenantState(
@@ -218,3 +303,5 @@ async function firstTenantWithInventory(
 
   return undefined;
 }
+
+export class OnboardingSupersededError extends Error {}

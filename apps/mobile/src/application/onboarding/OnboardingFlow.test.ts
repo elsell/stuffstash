@@ -75,3 +75,50 @@ describe('combined onboarding flow', () => {
     expect(api.inventoryWrites).toBe(0);
   });
 });
+
+it('discards in-memory household recovery when signing in as another account on the same server', async () => {
+  const { command, api, auth } = fixture();
+  const state = await command.connectAndSignIn({ apiBaseUrl: onboardingServer });
+  api.failInventoryBeforeWrite = true;
+  await expect(command.createHousehold({ profile: state.profile!, ...names })).rejects.toThrow();
+  await command.expireSession({ profile: state.profile! });
+  api.tenants = [];
+  api.failInventoryBeforeWrite = false;
+  auth.signedIn = false;
+  const second = await command.connectAndSignIn({ apiBaseUrl: onboardingServer });
+  await expect(command.createHousehold({ profile: second.profile!, ...names })).resolves.toMatchObject({ step: 'complete' });
+  expect(api.tenantWrites).toBe(2);
+});
+
+it('prevents duplicate submission while sign-in is pending', async () => {
+  const { command, auth } = fixture();
+  let release!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  auth.beforeSignIn = () => waiting;
+  const first = command.connectAndSignIn({ apiBaseUrl: onboardingServer });
+  await expect(command.connectAndSignIn({ apiBaseUrl: onboardingServer })).rejects.toThrow('already in progress');
+  release();
+  await first;
+  expect(auth.signIns).toHaveLength(1);
+});
+
+it('serializes start-over after a profile save already in progress', async () => {
+  const f = onboardingFakes();
+  let release!: () => void;
+  let started!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  const store = {
+    load: () => f.profiles.load(),
+    async save(profile: Parameters<typeof f.profiles.save>[0]) { started(); await waiting; await f.profiles.save(profile); },
+    clear: () => f.profiles.clear()
+  };
+  const command = new OnboardingCommand(store, () => f.api, f.auth);
+  const pending = command.connectAndSignIn({ apiBaseUrl: onboardingServer }).catch(() => undefined);
+  await entered;
+  const reset = command.reset();
+  release();
+  await Promise.all([pending, reset]);
+  expect(f.profiles.profile).toBeUndefined();
+  expect(f.auth.signIns).toHaveLength(0);
+});

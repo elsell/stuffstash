@@ -31,6 +31,7 @@ export function InventoryInvitationScreen({
   onAccepted,
   onDismiss,
   onSwitchAccount,
+  onStartOver,
   previewQuery,
   reference
 }: {
@@ -40,6 +41,7 @@ export function InventoryInvitationScreen({
   readonly onAccepted: (inventoryId: string) => Promise<void>;
   readonly onDismiss: () => void;
   readonly onSwitchAccount: () => void;
+  readonly onStartOver?: () => Promise<void>;
   readonly previewQuery: Pick<PreviewInventoryInvitationQuery, 'execute'>;
   readonly reference?: InventoryInvitationReference;
 }) {
@@ -48,6 +50,7 @@ export function InventoryInvitationScreen({
   const styles = createStyles(colors, fontScale >= 2 || width < 340);
   const [state, setState] = useState<ScreenState>({ status: 'loading' });
   const requestGeneration = useRef(0);
+  const [startingOver, setStartingOver] = useState(false);
 
   const load = async () => {
     if (!reference) return;
@@ -110,10 +113,8 @@ export function InventoryInvitationScreen({
         ) : state.status === 'ready' || state.status === 'accepting' ? (
           <>
             <MailCheck color={colors.action} size={34} />
-            <Text accessibilityRole="header" style={styles.title}>Join {state.preview.inventoryName}</Text>
-            <Text style={styles.message}>
-              You’ve been invited as {relationshipLabel(state.preview.relationship)}. Review the invitation, then choose Accept invitation.
-            </Text>
+            <Text accessibilityRole="header" style={styles.title}>You’re invited</Text>
+            <Text style={styles.message}>{state.preview.inventoryName}</Text>
             <View style={styles.details}>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Access</Text>
@@ -126,14 +127,19 @@ export function InventoryInvitationScreen({
             </View>
             <Pressable
               accessibilityRole="button"
-              disabled={state.status === 'accepting'}
+              disabled={state.status === 'accepting' || startingOver}
               onPress={() => void accept()}
               style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
             >
               {state.status === 'accepting' ? <ActivityIndicator color={colors.onAction} /> :
-                <Text style={styles.primaryButtonText}>Accept invitation</Text>}
+                <Text style={styles.primaryButtonText}>Join inventory</Text>}
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={onDismiss} style={styles.secondaryButton}>
+            {onStartOver ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over"
+              disabled={startingOver || state.status === 'accepting'} onPress={() => void startOver()}
+              style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Sign out and start over</Text>
+            </Pressable> : null}
+            <Pressable accessibilityRole="button" disabled={startingOver} onPress={onDismiss} style={styles.secondaryButton}>
               <Text style={styles.secondaryButtonText}>Not now</Text>
             </Pressable>
           </>
@@ -175,6 +181,15 @@ export function InventoryInvitationScreen({
       </View>
     </ScrollView>
   );
+
+  async function startOver() {
+    if (!onStartOver || startingOver) return;
+    requestGeneration.current++;
+    setStartingOver(true);
+    try { await onStartOver(); }
+    catch { setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true }); }
+    finally { setStartingOver(false); }
+  }
 
   async function openAcceptedInventory(inventoryId: string, inventoryName: string): Promise<void> {
     setState({ status: 'opening', inventoryId, inventoryName });

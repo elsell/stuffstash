@@ -7,7 +7,7 @@ import { InventoryInvitationScreen } from '../../ui/screens/InventoryInvitationS
 export default function InventoryInvitationRoute() {
   const router = useRouter();
   const routeParams = useLocalSearchParams();
-  const { signOut } = useAppConnectionActions();
+  const { signOut, changeServer } = useAppConnectionActions();
   const link = useInventoryInvitationLink();
   const {
     acceptInventoryInvitationCommand,
@@ -35,6 +35,7 @@ export default function InventoryInvitationRoute() {
       onAccepted={openInventory}
       onDismiss={dismiss}
       onSwitchAccount={() => void signOut()}
+      onStartOver={async () => { await changeServer(); dismiss(); }}
       previewQuery={previewInventoryInvitationQuery}
       reference={link.reference}
     />

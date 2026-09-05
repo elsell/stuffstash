@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
@@ -47,6 +48,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
 
 function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   const invitationLink = useInventoryInvitationLink();
+  const router = useRouter();
   const onboardingCommand = useMemo(() => createOnboardingCommand(), []);
   const [state, setState] = useState<AppServicesState>({ status: 'loading' });
   const feedback = useAppFeedback();
@@ -114,6 +116,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
         initialApiBaseUrl={createSeedConnectionProfile()?.apiBaseUrl}
         initialState={state.onboardingState}
         invitationPending={Boolean(invitationLink.reference)}
+        onStartOver={() => { invitationLink.clear(); router.replace('/'); }}
         onComplete={(profile) => {
           authPromptVisibleRef.current = false;
           setState({ status: 'ready', composition: buildComposition(profile) });
