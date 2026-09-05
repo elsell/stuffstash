@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WorkflowAPIRepository } from './workflowRepository';
+import type { WorkflowDefinition } from '$lib/domain/conversationWorkflow';
 
 const definition = {
   name: 'Household', retrieval: 'expanded', response: 'grounded',
@@ -18,6 +19,36 @@ function repository(reply: unknown, status = 200, requests: Request[] = []) {
 }
 
 describe('workflow API repository', () => {
+  it('sends immutable draft revisions and activation evidence through their scoped commands', async () => {
+    const requests: Request[] = [];
+    const repo = repository({ data: revision, meta: { tenantId: 'home' } }, 201, requests);
+    const settings: WorkflowDefinition = { ...definition, retrieval: 'expanded', response: 'grounded', steps: [
+      { kind: 'interpret', attempts: 2, instructions: 'Recognize baby clothing', providerProfileId: 'local' },
+      { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null },
+      { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }
+    ] };
+    await repo.create('home', settings);
+    await repo.append('home', 'workflow', 1, settings);
+    const evidence = { revisionId: 'revision', runId: 'run', cases: [{ caseId: 'case', revisionId: 'case-revision' }],
+      expected: { workflowId: 'old-workflow', revisionId: 'old-revision' } };
+    await repo.activate('home', 'workflow', evidence);
+    expect(requests.map(request => new URL(request.url).pathname)).toEqual([
+      '/tenants/home/conversation-workflows', '/tenants/home/conversation-workflows/workflow/revisions',
+      '/tenants/home/conversation-workflows/workflow/activation'
+    ]);
+    expect(await requests[1].json()).toEqual({ expectedRevision: 1, definition: {
+      ...settings, steps: settings.steps.map(({ providerProfileId, ...step }) => ({ ...step, ...(providerProfileId ? { providerProfileId } : {}) }))
+    } });
+    expect(await requests[2].json()).toEqual(evidence);
+  });
+
+  it('propagates cancellation to the transport without retryable failure translation', async () => {
+    const controller = new AbortController();
+    const reason = new Error('workspace replaced');
+    controller.abort(reason);
+    await expect(repository({}).get('home', 'workflow', undefined, controller.signal)).rejects.toBe(reason);
+  });
+
   it('reads a pinned revision and maps optional step fields without losing settings', async () => {
     const requests: Request[] = [];
     const result = await repository({ data: revision, meta: { tenantId: 'home' } }, 200, requests)
