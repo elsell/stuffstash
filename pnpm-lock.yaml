@@ -171,6 +171,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 7.1.2
         version: 7.1.2(svelte@5.56.2)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
+      '@tanstack/svelte-query':
+        specifier: 6.1.38
+        version: 6.1.38(svelte@5.56.2)
       bits-ui:
         specifier: 2.18.1
         version: 2.18.1(@internationalized/date@3.12.2)(@sveltejs/kit@2.63.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.2)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)))(svelte@5.56.2)(typescript@5.9.3)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)))(svelte@5.56.2)
@@ -1748,6 +1751,11 @@ packages:
     resolution: {integrity: sha512-yRg2pfOCxIs4ZJW3XYYHU/WgtD04FHSnfHlpRT7h7pR77hwkdRG4wxbKe4aq6P0RvXUTBSQpQeadS1SUYUe+KA==}
     peerDependencies:
       react: ^18 || ^19
+
+  '@tanstack/svelte-query@6.1.38':
+    resolution: {integrity: sha512-oV5S/+uAot23p3lJChLAHr82+8ApgQMyIgroWPpN0d6Y6TlThRbLSXnhx6CoUk6AkwlCPxf9vh4SOHa0eXHiWg==}
+    peerDependencies:
+      svelte: ^5.25.0
 
   '@testing-library/react-native@14.0.1':
     resolution: {integrity: sha512-2r2e2y8SkUNRWKRXlUGqDYunB+AkbdXUPn49Bs5rpv9oxRb0K3USBVugbPbAKJjfj4w5Ba91NJ8LcQCZyopUZA==}
@@ -6169,6 +6177,11 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.101.4
       react: 19.2.0
+
+  '@tanstack/svelte-query@6.1.38(svelte@5.56.2)':
+    dependencies:
+      '@tanstack/query-core': 5.101.4
+      svelte: 5.56.2
 
   '@testing-library/react-native@14.0.1(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)(supports-color@10.2.2))(react@19.2.0)(test-renderer@1.2.0(@types/react@19.2.17)(react@19.2.0))':
     dependencies:
