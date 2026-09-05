@@ -76,6 +76,7 @@ type RealtimeVoiceSession struct {
 	SpeechToTextProfileID      string
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
+	WorkflowRevisionID         string
 	LanguagePromptTemplate     string
 	DeveloperDiagnostics       bool
 	speechToText               ports.SpeechToTextProvider

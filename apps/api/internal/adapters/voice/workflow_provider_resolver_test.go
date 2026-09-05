@@ -46,3 +46,22 @@ func TestWorkflowProviderResolverRequiresExactUsableScopedProfile(t *testing.T) 
 		})
 	}
 }
+
+func TestWorkflowCanResolveSpeechWithoutAnUnusedDefaultLanguageModel(t *testing.T) {
+	profiles := []agentmodel.ProviderProfile{
+		providerResolverProfile(t, "stt", agentmodel.ProviderCapabilitySpeechToText, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+		providerResolverProfile(t, "tts", agentmodel.ProviderCapabilityTextToSpeech, agentmodel.ProviderProfileEnabled, agentmodel.CredentialStatusConfigured),
+	}
+	factory := &providerResolverFactory{}
+	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, nil, newProviderResolverCredentialVault(profiles...), factory)
+	set, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: "tenant-home", SkipDefaultLanguage: true})
+	if err != nil || set.SpeechToText == nil || set.TextToSpeech == nil || set.LanguageInference != nil {
+		t.Fatalf("unused default LM still required: %+v %v", set, err)
+	}
+	if len(factory.configs) != 2 {
+		t.Fatalf("unexpected provider construction: %d", len(factory.configs))
+	}
+	if _, err = resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: "tenant-home"}); !errors.Is(err, ports.ErrInvalidProviderInput) {
+		t.Fatal("default flow must still require LM")
+	}
+}

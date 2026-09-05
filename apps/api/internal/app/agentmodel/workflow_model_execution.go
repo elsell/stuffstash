@@ -14,9 +14,10 @@ import (
 var ErrWorkflowBudgetExhausted = errors.New("conversation workflow budget exhausted")
 
 type WorkflowModelBinding struct {
-	ProfileID string
-	Language  ports.LanguageInferenceProvider
-	Response  ports.VoiceResponseGenerator
+	ProfileID      string
+	PromptTemplate string
+	Language       ports.LanguageInferenceProvider
+	Response       ports.VoiceResponseGenerator
 }
 type WorkflowModelExecution struct {
 	definition domain.WorkflowDefinition
@@ -91,6 +92,9 @@ func (e *WorkflowModelExecution) NextTurn(ctx context.Context, input ports.Langu
 	}
 	step := e.steps[kind]
 	input.WorkflowInstructions = step.Instructions
+	if e.providers[kind].PromptTemplate != "" {
+		input.PromptTemplate = e.providers[kind].PromptTemplate
+	}
 	return executeWorkflowModelStep(ctx, e, kind, func(callCtx context.Context) (ports.LanguageInferenceTurn, error) {
 		return e.providers[kind].Language.NextTurn(callCtx, input)
 	})

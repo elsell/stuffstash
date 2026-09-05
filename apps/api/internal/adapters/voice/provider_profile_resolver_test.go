@@ -244,7 +244,12 @@ type providerResolverProfileRepository struct {
 	profiles []agentmodel.ProviderProfile
 }
 
-func (r providerResolverProfileRepository) ProviderProfileByID(context.Context, tenant.ID, agentmodel.ProviderProfileID) (agentmodel.ProviderProfile, bool, error) {
+func (r providerResolverProfileRepository) ProviderProfileByID(_ context.Context, tenantID tenant.ID, id agentmodel.ProviderProfileID) (agentmodel.ProviderProfile, bool, error) {
+	for _, profile := range r.profiles {
+		if profile.TenantID.String() == tenantID.String() && profile.ID == id {
+			return profile, true, nil
+		}
+	}
 	return agentmodel.ProviderProfile{}, false, nil
 }
 

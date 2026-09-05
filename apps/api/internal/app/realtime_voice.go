@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -48,16 +49,32 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if err := a.ensureRealtimeVoiceAccess(ctx, input.Principal, input.TenantID, input.InventoryID); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
+	selectedWorkflow, err := a.conversationWorkflowService.Selected(ctx, input.Principal, input.TenantID)
+	if err != nil {
+		return RealtimeVoiceSession{}, err
+	}
 	providers, err := a.realtimeVoiceProviders.ResolveRealtimeVoiceProviders(ctx, ports.RealtimeVoiceProviderResolutionInput{
-		TenantID:    input.TenantID,
-		InventoryID: input.InventoryID,
-		Principal:   input.Principal,
+		SkipDefaultLanguage: selectedWorkflow != nil && !selectedWorkflow.NeedsDefaultLanguage(),
+		TenantID:            input.TenantID,
+		InventoryID:         input.InventoryID,
+		Principal:           input.Principal,
 	})
 	if err != nil {
 		return RealtimeVoiceSession{}, err
 	}
 	if a.voiceResponseGenerator != nil {
 		providers.ResponseGenerator = a.voiceResponseGenerator
+	}
+
+	var workflow *agentmodelapp.PreparedWorkflow
+	if selectedWorkflow != nil {
+		workflowResolver, _ := a.realtimeVoiceProviders.(ports.WorkflowLanguageProviderResolver)
+		workflow, err = selectedWorkflow.Prepare(ctx, providers, workflowResolver)
+		if err != nil {
+			return RealtimeVoiceSession{}, err
+		}
+		providers.LanguageInference = workflow
+		providers.ResponseGenerator = workflow
 	}
 	if providers.SpeechToText == nil || providers.LanguageInference == nil || providers.ResponseGenerator == nil || providers.TextToSpeech == nil {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
@@ -84,6 +101,9 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		languageInference:          providers.LanguageInference,
 		responseGenerator:          providers.ResponseGenerator,
 		textToSpeech:               providers.TextToSpeech,
+	}
+	if workflow != nil {
+		session.WorkflowRevisionID = string(workflow.Revision().Snapshot().ID)
 	}
 	now := a.clock.Now()
 	if err := a.realtimeSessions.SaveRealtimeSession(ctx, ports.RealtimeSessionRecord{

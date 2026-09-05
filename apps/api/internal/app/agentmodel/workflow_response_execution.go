@@ -24,6 +24,7 @@ func (e *WorkflowModelExecution) GenerateResponse(ctx context.Context, input por
 	}
 	step := e.steps[domain.WorkflowStepRespond]
 	input.WorkflowInstructions = step.Instructions
+	input.PromptTemplate = e.providers[domain.WorkflowStepRespond].PromptTemplate
 	return executeWorkflowModelStep(ctx, e, domain.WorkflowStepRespond, func(callCtx context.Context) (ports.VoiceResponseGenerationResult, error) {
 		return e.providers[domain.WorkflowStepRespond].Response.GenerateResponse(callCtx, input)
 	})

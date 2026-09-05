@@ -8,6 +8,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -30,7 +31,7 @@ func TestWorkflowPreparationPinsRevisionProvidersAndStartsBudgetLazily(t *testin
 	ctx := context.Background()
 	repository := newWorkflowFakeRepository()
 	clock := &workflowExecutionClock{now: time.Date(2026, 9, 5, 12, 0, 0, 0, time.UTC)}
-	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: allowTenantConfigureAuthorizer{}, Repository: repository, Profiles: newFakeProviderProfileRepository(), IDs: &workflowSequenceIDs{}, Clock: clock, Limits: workflowServiceLimits()})
+	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: workflowViewAuthorizer{}, Repository: repository, Profiles: newFakeProviderProfileRepository(), IDs: &workflowSequenceIDs{}, Clock: clock, Limits: workflowServiceLimits()})
 	saved, err := service.SaveRevision(ctx, workflowServiceInput())
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +86,7 @@ func TestWorkflowPreparationRequiresAccessAndFailsClosedOnBrokenSelection(t *tes
 	if _, err := service.PrepareSelected(context.Background(), input); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatalf("denial lost: %v", err)
 	}
-	service.deps.Authorizer = allowTenantConfigureAuthorizer{}
+	service.deps.Authorizer = workflowViewAuthorizer{}
 	if _, err := service.PrepareSelected(context.Background(), input); !errors.Is(err, apperrors.ErrPrecondition) {
 		t.Fatalf("broken selection silently defaulted: %v", err)
 	}
@@ -93,4 +94,13 @@ func TestWorkflowPreparationRequiresAccessAndFailsClosedOnBrokenSelection(t *tes
 	if prepared, err := service.PrepareSelected(context.Background(), input); err != nil || prepared != nil {
 		t.Fatalf("absent selection should use default: %v", err)
 	}
+}
+
+type workflowViewAuthorizer struct{ allowTenantConfigureAuthorizer }
+
+func (workflowViewAuthorizer) CheckTenant(_ context.Context, _ identity.Principal, permission ports.TenantPermission, _ tenant.ID) error {
+	if permission == ports.TenantPermissionView || permission == ports.TenantPermissionConfigure {
+		return nil
+	}
+	return ports.ErrForbidden
 }

@@ -169,9 +169,11 @@ type RealtimeAudioFormat struct {
 }
 
 type RealtimeVoiceProviderResolutionInput struct {
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Principal   identity.Principal
+	// Set only when a pinned workflow explicitly supplies every model-using step.
+	SkipDefaultLanguage bool
+	TenantID            tenant.ID
+	InventoryID         inventory.InventoryID
+	Principal           identity.Principal
 }
 
 type RealtimeVoiceProviderSet struct {
