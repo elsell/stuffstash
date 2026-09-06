@@ -22,7 +22,7 @@ type Telemetry struct {
 }
 
 func NewTelemetry(tracer trace.TracerProvider, meter metric.MeterProvider, logger otellog.LoggerProvider) (*Telemetry, error) {
-	duration, err := meter.Meter(instrumentationName).Float64Histogram("stuffstash.operation.duration", metric.WithUnit("s"), metric.WithDescription("Duration of completed inventory operations"))
+	duration, err := meter.Meter(instrumentationName).Float64Histogram("stuffstash.operation.duration", metric.WithUnit("s"), metric.WithExplicitBucketBoundaries(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30), metric.WithDescription("Duration of completed inventory operations"))
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +50,9 @@ func (t *Telemetry) Start(ctx context.Context, operation ports.Operation) (conte
 }
 
 func (t *Telemetry) Record(ctx context.Context, event ports.Event) {
+	if !event.Name.Known() {
+		return
+	}
 	var record otellog.Record
 	record.SetTimestamp(time.Now())
 	record.SetBody(otellog.StringValue(string(event.Name)))

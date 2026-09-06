@@ -1,6 +1,11 @@
 name: Media observability validation
 on:
   workflow_dispatch:
+    inputs:
+      benchmark:
+        description: Run codec benchmark and collect profiles
+        type: boolean
+        default: false
   push:
     branches: [codex/media-observability]
 permissions:
@@ -18,6 +23,7 @@ jobs:
       - name: Test telemetry behavior
         run: go test -race -count=1 ./apps/api/internal/adapters/observability ./apps/api/internal/config
   codec-baseline:
+    if: github.event_name == 'workflow_dispatch' && inputs.benchmark
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
