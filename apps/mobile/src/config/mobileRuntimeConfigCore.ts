@@ -1,6 +1,7 @@
 export type MobileRuntimeConfig = {
   readonly apiBaseUrl: string;
   readonly tenantId: string;
+  readonly performanceTelemetryEnabled?: boolean;
   readonly voiceDeveloperDiagnosticsEnabled: boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled: boolean;
   readonly invitationOrigin?: string;
@@ -10,6 +11,7 @@ export type MobileRuntimeConfig = {
 export type MobileRuntimeConfigSeed = {
   readonly apiBaseUrl?: string;
   readonly tenantId?: string;
+  readonly performanceTelemetryEnabled?: boolean;
   readonly voiceDeveloperDiagnosticsEnabled: boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled: boolean;
   readonly invitationOrigin?: string;
@@ -19,6 +21,7 @@ export type MobileRuntimeConfigSeed = {
 export type RawMobileRuntimeConfig = {
   readonly apiBaseUrl?: string;
   readonly tenantId?: string;
+  readonly performanceTelemetryEnabled?: string | boolean;
   readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled?: string | boolean;
   readonly invitationOrigin?: string;
@@ -32,6 +35,7 @@ export function mergeMobileRuntimeConfigSources(
   return {
     apiBaseUrl: preferConfigured(expoPublicEnv.apiBaseUrl, expoExtra.apiBaseUrl),
     tenantId: preferConfigured(expoPublicEnv.tenantId, expoExtra.tenantId),
+    performanceTelemetryEnabled: preferConfigured(expoPublicEnv.performanceTelemetryEnabled, expoExtra.performanceTelemetryEnabled),
     voiceDeveloperDiagnosticsEnabled: preferConfigured(
       expoPublicEnv.voiceDeveloperDiagnosticsEnabled,
       expoExtra.voiceDeveloperDiagnosticsEnabled
@@ -51,6 +55,7 @@ export function mergeMobileRuntimeConfigSources(
 export function parseMobileRuntimeConfig(input: {
   readonly apiBaseUrl?: string;
   readonly tenantId?: string;
+  readonly performanceTelemetryEnabled?: string | boolean;
   readonly voiceDeveloperDiagnosticsEnabled?: string | boolean;
   readonly directUploadLocalDevelopmentTargetsEnabled?: string | boolean;
   readonly invitationOrigin?: string;
@@ -58,6 +63,7 @@ export function parseMobileRuntimeConfig(input: {
 }): MobileRuntimeConfig {
   const apiBaseUrl = requireValue('EXPO_PUBLIC_STUFF_STASH_API_BASE_URL', input.apiBaseUrl);
   const tenantId = requireValue('EXPO_PUBLIC_STUFF_STASH_TENANT_ID', input.tenantId);
+  const performanceTelemetryEnabled = optionalBooleanValue('EXPO_PUBLIC_STUFF_STASH_PERFORMANCE_TELEMETRY_ENABLED', input.performanceTelemetryEnabled);
   const voiceDeveloperDiagnosticsEnabled = optionalBooleanValue(
     'EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED',
     input.voiceDeveloperDiagnosticsEnabled
@@ -79,6 +85,7 @@ export function parseMobileRuntimeConfig(input: {
   return {
     apiBaseUrl: apiBaseUrl.replace(/\/+$/, ''),
     tenantId,
+    performanceTelemetryEnabled,
     voiceDeveloperDiagnosticsEnabled,
     directUploadLocalDevelopmentTargetsEnabled,
     invitationOrigin,

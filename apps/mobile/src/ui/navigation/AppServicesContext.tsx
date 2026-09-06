@@ -130,6 +130,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
 
   const mobileComposition = state.composition;
   const signOut = async (): Promise<void> => {
+    mobileComposition.disposePerformance();
     const profile = await getConnectionProfileStore().load();
     if (!profile) {
       await onboardingCommand.reset();
@@ -141,6 +142,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
     setState(appServicesStateAfterSignOut(profile));
   };
   const changeServer = async (): Promise<void> => {
+    mobileComposition.disposePerformance();
     await onboardingCommand.reset();
     setState(appServicesStateAfterServerChange());
   };
@@ -148,6 +150,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   return (
     <MobileServerStateProvider
       client={mobileComposition.queryClient}
+      disposePerformance={mobileComposition.disposePerformance}
       connectivitySource={mobileComposition.connectivitySource}
       loadInventoryScope={(request) => mobileComposition.currentInventoryScopeQuery.execute(request)}
       scopeId={mobileComposition.serviceScopeId}
