@@ -191,3 +191,6 @@ Deployment patches are prohibited. Ingestion secrets are supplied by the operato
 in the existing Infisical production environment, root path, synced to
 `stuffstash/stuffstash-secrets`. Do not commit credentials or derive ingestion
 credentials from the Grafana management service account.
+
+Profiling accepts an empty username/password pair for an unauthenticated private
+collector, but rejects a partially populated pair before starting the SDK.

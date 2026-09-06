@@ -57,3 +57,19 @@ func TestProfilingRejectsUnsafeConfigurationWithoutEchoingValues(t *testing.T) {
 		})
 	}
 }
+
+func TestProfilingRejectsIncompleteCredentials(t *testing.T) {
+	for _, field := range []string{"STUFF_STASH_PROFILING_USERNAME", "STUFF_STASH_PROFILING_PASSWORD"} {
+		t.Run(field, func(t *testing.T) {
+			t.Setenv("STUFF_STASH_PROFILING_ENABLED", "true")
+			t.Setenv("STUFF_STASH_PROFILING_ENDPOINT", "https://profiles.example.test")
+			t.Setenv("STUFF_STASH_PROFILING_USERNAME", "")
+			t.Setenv("STUFF_STASH_PROFILING_PASSWORD", "")
+			t.Setenv(field, "private-secret")
+			_, err := LoadProfiling()
+			if err == nil || err.Error() != "incomplete profiling credentials" {
+				t.Fatalf("expected safe credentials error, got %v", err)
+			}
+		})
+	}
+}
