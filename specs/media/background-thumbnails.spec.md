@@ -237,5 +237,11 @@ configuration and batch telemetry) passed API race and PostgreSQL jobs in CI
 `34066855351`. The same run passed the SQLite WAL publication regression. This is
 implementation evidence, not production deployment or performance evidence.
 Backfill, ambiguous-write cleanup, operational retry and production comparison
-remain required. The follow-up code-critic review was temporarily unavailable due
-to account usage limits; that final review remains outstanding.
+remain required. The follow-up code-critic review resumed and accepted the SQLite fix and
+transactional backfill design. PostgreSQL backfill concurrency and rollback tests
+remain required.
+
+During rollout, finish replacing API instances that predate transactional scheduling
+before enabling the initial backfill. Otherwise an old instance could create an
+attachment behind the saved cursor without enqueueing it. Enable backfill in a
+subsequent GitOps change after verifying all API replicas use the new image.
