@@ -296,3 +296,6 @@ and defaults to the internal setting for compatibility. Preserve signed upload
 authorization and bounds. In the cluster deployment, use the Garage service for
 API reads/writes and retain HTTPS for public upload URLs. Compare the same image
 workload before claiming any effect on storage tail latency.
+
+An invalid nonempty public TLS setting must fail S3 startup with a safe configuration
+error; it must never silently fall back to HTTP. An unset value inherits internal TLS.

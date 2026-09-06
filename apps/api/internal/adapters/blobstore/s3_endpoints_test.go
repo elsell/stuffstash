@@ -17,6 +17,7 @@ func TestInternalBlobHTTPKeepsPublicUploadsHTTPS(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		w.Header().Set("Last-Modified", time.Unix(0, 0).UTC().Format(http.TimeFormat))
 		w.Header().Set("Content-Length", "7")
 		w.Header().Set("Content-Type", "image/jpeg")
 		if r.Method != http.MethodHead {

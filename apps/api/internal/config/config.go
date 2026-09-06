@@ -188,6 +188,7 @@ type Config struct {
 	S3Region                         string
 	S3Secure                         bool
 	S3PublicSecure                   bool
+	s3PublicSecureRaw                string
 	MaxAttachmentBytes               int
 	PrimaryThumbnailWarmLimit        int
 	PrimaryThumbnailWarmConcurrency  int
@@ -263,6 +264,7 @@ func Load() Config {
 		S3Bucket:                         os.Getenv(envS3Bucket),
 		S3Region:                         envOrDefault(envS3Region, defaultS3Region),
 		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
+		s3PublicSecureRaw:                os.Getenv(envS3PublicSecure),
 		S3PublicSecure:                   boolEnvOrDefault(envS3PublicSecure, boolEnvOrDefault(envS3Secure, defaultS3Secure)),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 		PrimaryThumbnailWarmLimit:        intEnvOrDefault(envPrimaryThumbnailWarmLimit, defaultPrimaryThumbnailWarmLimit),
