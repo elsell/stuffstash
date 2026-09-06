@@ -83,3 +83,30 @@ the CI benchmark workflow. No thumbnail behavior has changed.
   release fixes. No image scheduling behavior has changed yet. The original
   deterministic codec measurements remain synthetic evidence at their recorded
   revision, not a measured production comparison.
+
+## Live four-signal acceptance
+
+The operator populated the profiling password. CI-built collector probes ran on
+`paul` using secret values decoded only in process memory. Probe `c2cc26e3f` passed
+in 2.93s; `e0415f472` added one second of fixed CPU work and passed in 3.71s.
+Grafana queries returned the isolated `stuffstash-observability-probe` service:
+
+- Prometheus runtime gauges/counters and duration buckets, with the dashboard's
+  standard translated metric names.
+- Loki health event stream and a Tempo `http.request` trace (initial trace ID
+  `a4a2293940bf7f25bcbe4665102f9375`).
+- Pyroscope allocation, heap, goroutine and mutex profile types from the initial
+  run, plus CPU and block profile types from the CPU-exercising run.
+
+This proves stored probe data is queryable across the four backends. It does not
+prove deployed application instrumentation, frontend measurements, or overhead.
+The reusable dashboard is provisioned as `stuffstash-image-performance`, version
+2; its healthy failure-ratio fallback is applied. Thumbnail-counter naming still
+needs verification with image traffic.
+
+The web sign-in flow restored an authenticated session. A new empty inventory,
+`Media Performance Test`, was created for this work; its IDs are retained only in
+local measurement state. Existing inventory contents were not modified. No image
+fixtures have been uploaded yet. This resolves the prior sign-in/test-scope input
+gap. Full CI `34055010819` ended cancelled after a stalled browser runner; its
+other five jobs passed. Fresh full validation is running as `34055943177`.
