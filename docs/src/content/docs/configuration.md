@@ -167,7 +167,10 @@ unreadable.
 ## Web Runtime Config
 
 The web app reads `/config.json` at runtime. It is not configured through
-`STUFF_STASH_*` environment variables inside the browser bundle.
+`STUFF_STASH_*` environment variables inside the browser bundle. The web
+container generates this file at startup; set `STUFF_STASH_WEB_MEDIA_MAX_BYTES`
+to override its upload limit. When unset, it uses
+`STUFF_STASH_MAX_ATTACHMENT_BYTES`, then the 25 MiB default.
 
 | Field | Required | Purpose |
 | --- | --- | --- |
@@ -176,7 +179,7 @@ The web app reads `/config.json` at runtime. It is not configured through
 | `oidcClientId` | yes | Browser OIDC client ID. |
 | `oidcRedirectUri` | yes | Browser redirect URI after OIDC sign-in. |
 | `mediaUploadPolicy.supportedContentTypes` | no | Allowed upload content types. Defaults to JPEG, PNG, WebP, and PDF. |
-| `mediaUploadPolicy.maxBytes` | no | Client upload limit. Defaults to `5242880`. |
+| `mediaUploadPolicy.maxBytes` | no | Client upload limit. Defaults to `26214400` (25 MiB). |
 
 Example:
 
@@ -188,7 +191,7 @@ Example:
   "oidcRedirectUri": "https://stuffstash.example.test/callback",
   "mediaUploadPolicy": {
     "supportedContentTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-    "maxBytes": 5242880
+    "maxBytes": 26214400
   }
 }
 ```
