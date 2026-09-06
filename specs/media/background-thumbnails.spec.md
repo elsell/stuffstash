@@ -126,3 +126,14 @@ Publication guards receive an injected clock and check lease validity after acqu
 locks, rather than accepting a timestamp captured before a potentially long wait.
 A guard must reject empty scope, changed source identity, a deleted attachment,
 and an expired or replaced background claim before calling the publisher.
+
+
+Transaction ownership during publication must be independent of caller cancellation:
+reserve the database connection and acquire locks with the caller's bounded context,
+then keep the transaction alive until the publication callback actually returns.
+Propagate cancellation to blob publication, not to transaction ownership. A cancelled
+caller must not let automatic transaction rollback release the lock while a blob
+write is still unwinding. Transport errors can leave remotely accepted writes
+ambiguous even after the callback exits; durable eventual cleanup for those writes
+must be resolved and verified before deployment, rather than claiming that a database
+lock alone fences object-storage completion.

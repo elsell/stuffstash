@@ -82,7 +82,7 @@ func (s Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThumb
 		if err != nil {
 			return err
 		}
-		if model.Revision != int(job.Revision) || model.ClaimedUntil == nil || !model.ClaimedUntil.Equal(claim.ClaimedUntil) || !model.ClaimedUntil.After(resolution.At) || !model.claim().Job.Matches(media.Attachment{ID: job.AttachmentID, TenantID: job.TenantID, InventoryID: job.InventoryID, AssetID: job.AssetID, StorageKey: job.StorageKey, SHA256: job.SHA256}) {
+		if !validThumbnailClaim(model, claim, resolution.At) {
 			return ports.ErrOutboxClaimLost
 		}
 		return tx.Model(&model).Updates(map[string]any{
@@ -91,4 +91,12 @@ func (s Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThumb
 			"next_attempt_at": resolution.NextAttemptAt, "updated_at": resolution.At,
 		}).Error
 	})
+}
+
+func validThumbnailClaim(model thumbnailJobModel, claim ports.ClaimedThumbnailJob, now time.Time) bool {
+	job := claim.Job
+	return claim.ClaimID != "" && model.ClaimID == claim.ClaimID &&
+		model.Status == string(ports.ThumbnailJobPending) && model.Revision == int(job.Revision) &&
+		model.ClaimedUntil != nil && model.ClaimedUntil.Equal(claim.ClaimedUntil) && model.ClaimedUntil.After(now) &&
+		model.claim().Job.Matches(media.Attachment{ID: job.AttachmentID, TenantID: job.TenantID, InventoryID: job.InventoryID, AssetID: job.AssetID, StorageKey: job.StorageKey, SHA256: job.SHA256})
 }
