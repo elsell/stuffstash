@@ -90,10 +90,17 @@ func (s *processorSource) AttachmentByID(_ context.Context, t tenant.ID, i inven
 
 type processorGuard struct {
 	source         *processorSource
+	before         func()
 	writes, failAt int
 }
 
 func (g *processorGuard) Publish(ctx context.Context, a domain.Attachment, claim *ports.ClaimedThumbnailJob, publish func(context.Context) error) error {
+	if g.before != nil {
+		g.before()
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if g.source.missing || claim == nil || !claim.Job.Matches(a) || !claim.Job.Matches(g.source.attachment) {
 		return ports.ErrOutboxClaimLost
 	}
@@ -126,4 +133,66 @@ func processorFixture(t *testing.T) (*Processor, *processorSource, *memory.Store
 		t.Fatal(err)
 	}
 	return processor, source, blobs, guard, ports.ClaimedThumbnailJob{Job: job, ClaimID: "claim", ClaimedUntil: now.Add(time.Minute), Attempts: 1}
+}
+
+func TestProcessorRepairsMetadataWriteFailure(t *testing.T) {
+	processor, source, blobs, _, claim := processorFixture(t)
+	key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	failing := &processorFailingBlobs{BlobStorage: blobs, failKey: thumbnailMetadataKey(key)}
+	processor.blobs = failing
+	if err := processor.ProcessThumbnailJob(context.Background(), claim); err == nil {
+		t.Fatal("metadata failure hidden")
+	}
+	if _, err := blobs.GetBlob(context.Background(), key); err != nil {
+		t.Fatal("test did not leave derivative bytes behind", err)
+	}
+	if _, err := readCachedThumbnail(context.Background(), blobs, key); !errors.Is(err, ports.ErrBlobNotFound) {
+		t.Fatal("incomplete derivative treated as ready", err)
+	}
+	failing.failKey = ""
+	if err := processor.ProcessThumbnailJob(context.Background(), claim); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readCachedThumbnail(context.Background(), blobs, key); err != nil {
+		t.Fatal("retry did not repair metadata", err)
+	}
+}
+
+func TestProcessorRejectsCancellationAndLostClaimAtPublication(t *testing.T) {
+	for _, cancelDuringPublication := range []bool{false, true} {
+		processor, source, blobs, guard, claim := processorFixture(t)
+		ctx, cancel := context.WithCancel(context.Background())
+		guard.before = func() {
+			if cancelDuringPublication {
+				cancel()
+			} else {
+				source.missing = true
+			}
+		}
+		err := processor.ProcessThumbnailJob(ctx, claim)
+		cancel()
+		expected := ports.ErrOutboxClaimLost
+		if cancelDuringPublication {
+			expected = context.Canceled
+		}
+		if !errors.Is(err, expected) {
+			t.Fatalf("publication error = %v, want %v", err, expected)
+		}
+		key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+		if _, err := blobs.GetBlob(context.Background(), key); !errors.Is(err, ports.ErrBlobNotFound) {
+			t.Fatal("invalid publication wrote bytes")
+		}
+	}
+}
+
+type processorFailingBlobs struct {
+	ports.BlobStorage
+	failKey domain.StorageKey
+}
+
+func (b *processorFailingBlobs) PutBlob(ctx context.Context, key domain.StorageKey, kind domain.ContentType, data []byte) error {
+	if key == b.failKey {
+		return errors.New("controlled metadata storage failure")
+	}
+	return b.BlobStorage.PutBlob(ctx, key, kind, data)
 }
