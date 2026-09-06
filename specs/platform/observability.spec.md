@@ -111,3 +111,19 @@ These are hypotheses to measure, not quantified performance results.
   metric interval to 30s, queue capacity to 2048 and batch size to 256. Durations
   and sizes must be positive and batch size must not exceed queue capacity.
 - Runtime configuration validation returns fixed messages without secrets.
+
+## Export failure privacy
+
+Exporter decorators must consume terminal export failures after the transport's
+bounded retries, increment per-signal dropped-batch counters, and prevent raw
+collector bodies from reaching the SDK's global error logger. SDK global handlers
+must remain untouched. Shutdown/flush errors return fixed categories only. A clean
+shutdown proves resources were stopped; delivery additionally requires zero dropped
+batches and evidence at the collector. Failure counters remain readable without
+using the failed export path and are exported when metrics delivery recovers.
+
+Before constructing an enabled SDK, reject unsupported nonempty `OTEL_*` variables
+with fixed errors. This prevents SDK environment parsers logging raw invalid
+values. Supported variables are the base endpoint, headers, service name/version;
+project variables own sampling, batching, and timeouts. Validate ambient base
+endpoint/headers even when runtime configuration is constructed programmatically.
