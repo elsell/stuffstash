@@ -28,6 +28,11 @@ jobs:
         run: |
           pnpm --dir packages/api-client test
           pnpm --dir packages/api-client check
+      - name: Test web performance session and runtime configuration
+        run: |
+          pnpm --dir apps/web exec svelte-kit sync
+          pnpm --dir apps/web test src/lib/adapters/observability/webPerformanceSession.test.ts src/lib/runtimeConfig.test.ts
+          pnpm --dir apps/web check
   telemetry:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
