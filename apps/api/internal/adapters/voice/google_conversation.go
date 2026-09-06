@@ -88,10 +88,17 @@ type googleConversationDeclaration struct {
 	Parameters  json.RawMessage `json:"parameters"`
 }
 type googleConversationWireRequest struct {
-	GenerationConfig  *geminiGenerationConfig     `json:"generationConfig"`
-	Contents          []googleConversationContent `json:"contents"`
-	SystemInstruction *googleConversationContent  `json:"systemInstruction,omitempty"`
-	Tools             []googleConversationTool    `json:"tools,omitempty"`
+	ToolConfig        *googleConversationToolConfig `json:"toolConfig,omitempty"`
+	GenerationConfig  *geminiGenerationConfig       `json:"generationConfig"`
+	Contents          []googleConversationContent   `json:"contents"`
+	SystemInstruction *googleConversationContent    `json:"systemInstruction,omitempty"`
+	Tools             []googleConversationTool      `json:"tools,omitempty"`
+}
+type googleConversationToolConfig struct {
+	FunctionCallingConfig googleConversationCallingConfig `json:"functionCallingConfig"`
+}
+type googleConversationCallingConfig struct {
+	Mode string `json:"mode"`
 }
 type googleConversationTool struct {
 	FunctionDeclarations []googleConversationDeclaration `json:"functionDeclarations"`
@@ -112,6 +119,11 @@ func googleConversationRequest(input ports.ConversationModelInput) (googleConver
 			return request, ports.ErrInvalidProviderInput
 		}
 		declarations = append(declarations, googleConversationDeclaration{Name: tool.Name, Description: tool.Description, Parameters: tool.Parameters})
+		if tool.ResponseTool {
+			// A response tool lets the model answer without any external action.
+			// Constrain the envelope while leaving every declared tool available.
+			request.ToolConfig = &googleConversationToolConfig{FunctionCallingConfig: googleConversationCallingConfig{Mode: "ANY"}}
+		}
 	}
 	if len(declarations) > 0 {
 		request.Tools = []googleConversationTool{{FunctionDeclarations: declarations}}
