@@ -169,3 +169,10 @@ and model-image preparation separately from thumbnail generation.
 Profiling defaults are upload interval 15s, request timeout 5s, mutex profile
 fraction 5, and block profile rate 1,000,000 ns. Fractions/rates must be nonnegative
 and durations positive. Zero disables the corresponding contention sample type.
+
+Only one managed profiler may run per process. The adapter owns contention sampling
+while active, restores the prior mutex fraction and disables block sampling after
+stop (Go exposes no block-rate getter). Reject an adhoc endpoint override even when
+its value is empty, because the SDK treats its presence as an override. Shutdown
+flushes non-CPU profiles explicitly before stopping the SDK and keeps a single
+bounded-lifetime shutdown worker; repeated Stop calls join the same work.

@@ -41,6 +41,7 @@ func TestProfilingRejectsUnsafeConfigurationWithoutEchoingValues(t *testing.T) {
 		{"STUFF_STASH_PROFILING_MUTEX_FRACTION", "-1"},
 		{"STUFF_STASH_PROFILING_BLOCK_RATE", "-1"},
 		{"PYROSCOPE_ADHOC_SERVER_ADDRESS", "https://private-secret.example.test"},
+		{"PYROSCOPE_ADHOC_SERVER_ADDRESS", ""},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Setenv("STUFF_STASH_PROFILING_ENABLED", "true")
