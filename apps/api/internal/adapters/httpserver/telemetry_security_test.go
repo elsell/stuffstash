@@ -53,12 +53,19 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 			}
 		})
 	}
-	for _, span := range exporter.GetSpans() {
+	spans := exporter.GetSpans()
+	if len(spans) != 5 {
+		t.Fatalf("expected five request spans, got %d", len(spans))
+	}
+	for _, span := range spans {
+		if span.Name != "GET /tenants/{tenantId}/inventories/{inventoryId}/assets" {
+			t.Fatalf("unexpected route template %q", span.Name)
+		}
 		if strings.Contains(span.Name, tenantID) {
 			t.Fatal("tenant ID exposed in span name")
 		}
 		for _, attr := range span.Attributes {
-			if strings.Contains(attr.Value.AsString(), tenantID) || strings.Contains(attr.Value.AsString(), "private-invalid-token") {
+			if strings.Contains(attr.Value.AsString(), tenantID) || strings.Contains(attr.Value.AsString(), inventoryID) || strings.Contains(attr.Value.AsString(), otherTenant) || strings.Contains(attr.Value.AsString(), "private-invalid-token") {
 				t.Fatal("private request information exposed")
 			}
 		}
