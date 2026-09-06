@@ -38,7 +38,7 @@ func (t ProviderProfileTester) TestProviderProfile(ctx context.Context, input po
 			return ports.ProviderProfileTestResult{}, err
 		}
 	case agentmodel.ProviderCapabilityLanguageInference:
-		provider, err := t.factory.LanguageInferenceProvider(ctx, config)
+		provider, err := t.factory.ConversationModelProvider(ctx, config)
 		if err != nil {
 			return ports.ProviderProfileTestResult{}, err
 		}
@@ -79,7 +79,7 @@ func probeSpeechToTextProvider(ctx context.Context, provider ports.SpeechToTextP
 	return ports.ErrInvalidProviderInput
 }
 
-func probeLanguageInferenceProvider(ctx context.Context, provider ports.LanguageInferenceProvider) error {
+func probeLanguageInferenceProvider(ctx context.Context, provider ports.ConversationModel) error {
 	if probe, ok := provider.(ports.LanguageInferenceProviderProbe); ok {
 		return probe.ProbeLanguageInference(ctx)
 	}

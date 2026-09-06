@@ -78,7 +78,7 @@ func TestEvaluationProviderSnapshotsFailClosed(t *testing.T) {
 			profile.TenantID = fixture.TenantID
 			versioned := &evaluationSnapshotVault{version: "credential"}
 			var vault ports.ProviderCredentialVault = versioned
-			var factory ProviderProfileResolverFactory = &evaluationSnapshotFactory{}
+			var factory ProviderProfileProviderFactory = &evaluationSnapshotFactory{}
 			target := tenant.ID(fixture.TenantID)
 			switch scenario {
 			case "workflow tenant":

@@ -59,7 +59,7 @@ func (r ProviderProfileResolver) ResolveEvaluationRunProviders(ctx context.Conte
 			return ports.EvaluationExecutionProviders{}, err
 		}
 		config := configurations[id]
-		provider, err := r.factory.RealtimeLanguageProvider(ctx, config)
+		provider, err := r.factory.ConversationModelProvider(ctx, config)
 		if err != nil {
 			return ports.EvaluationExecutionProviders{}, evaluationResolutionError(err)
 		}
@@ -84,8 +84,7 @@ func (r ProviderProfileResolver) ResolveEvaluationRunProviders(ctx context.Conte
 		binding := bindings[id.String()]
 		result.Providers.LanguageInferenceProfileID = binding.ProfileID
 		result.Providers.LanguagePromptTemplate = binding.PromptTemplate
-		result.Providers.LanguageInference = binding.Provider
-		result.Providers.ResponseGenerator = binding.Provider
+		result.Providers.ConversationModel = binding.Provider
 		break
 	}
 	return result, nil

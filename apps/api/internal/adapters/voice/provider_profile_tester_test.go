@@ -138,7 +138,7 @@ func (nilProviderProfileFactory) SpeechToTextProvider(context.Context, ProviderP
 	return nil, nil
 }
 
-func (nilProviderProfileFactory) LanguageInferenceProvider(context.Context, ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
+func (nilProviderProfileFactory) ConversationModelProvider(context.Context, ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	return nil, nil
 }
 
@@ -152,7 +152,7 @@ func (nonProbeSpeechToTextFactory) SpeechToTextProvider(context.Context, Provide
 	return providerResolverSpeechToText{}, nil
 }
 
-func (nonProbeSpeechToTextFactory) LanguageInferenceProvider(context.Context, ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
+func (nonProbeSpeechToTextFactory) ConversationModelProvider(context.Context, ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	return providerResolverLanguageInference{}, nil
 }
 
@@ -166,7 +166,7 @@ func (nonProbeLanguageInferenceFactory) SpeechToTextProvider(context.Context, Pr
 	return providerResolverSpeechToText{}, nil
 }
 
-func (nonProbeLanguageInferenceFactory) LanguageInferenceProvider(context.Context, ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
+func (nonProbeLanguageInferenceFactory) ConversationModelProvider(context.Context, ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	return languageInferenceWithoutProbe{}, nil
 }
 
@@ -176,8 +176,8 @@ func (nonProbeLanguageInferenceFactory) TextToSpeechProvider(context.Context, Pr
 
 type languageInferenceWithoutProbe struct{}
 
-func (languageInferenceWithoutProbe) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+func (languageInferenceWithoutProbe) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 }
 
 type probeProviderProfileFactory struct {
@@ -190,7 +190,7 @@ func (f *probeProviderProfileFactory) SpeechToTextProvider(context.Context, Prov
 	return &f.stt, nil
 }
 
-func (f *probeProviderProfileFactory) LanguageInferenceProvider(context.Context, ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
+func (f *probeProviderProfileFactory) ConversationModelProvider(context.Context, ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	return &f.language, nil
 }
 
@@ -217,8 +217,8 @@ type probeLanguageInferenceDouble struct {
 	err    error
 }
 
-func (p *probeLanguageInferenceDouble) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+func (p *probeLanguageInferenceDouble) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 }
 
 func (p *probeLanguageInferenceDouble) ProbeLanguageInference(context.Context) error {

@@ -84,12 +84,11 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	}
 }
 
-func TestRealtimeVoiceConversationDoesNotInvokeRetiredWordingProvider(t *testing.T) {
+func TestRealtimeVoiceConversationDeliversModelAnswerToSpeechAndMobile(t *testing.T) {
 	t.Parallel()
 
 	tts := &resolvedTextToSpeech{}
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.ResponseGenerator = failingVoiceResponseGenerator{err: errors.New("generation unavailable")}
 	resolver.providers.TextToSpeech = tts
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
@@ -117,12 +116,4 @@ func TestRealtimeVoiceConversationDoesNotInvokeRetiredWordingProvider(t *testing
 		t.Fatal("model answer did not reach mobile")
 	}
 
-}
-
-type failingVoiceResponseGenerator struct {
-	err error
-}
-
-func (f failingVoiceResponseGenerator) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, f.err
 }

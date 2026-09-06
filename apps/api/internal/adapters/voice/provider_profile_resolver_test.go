@@ -331,12 +331,7 @@ func (f *providerResolverFactory) SpeechToTextProvider(_ context.Context, config
 	return providerResolverSpeechToText{}, nil
 }
 
-func (f *providerResolverFactory) LanguageInferenceProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
-	f.record(config)
-	return providerResolverLanguageInference{}, nil
-}
-
-func (f *providerResolverFactory) RealtimeLanguageProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error) {
+func (f *providerResolverFactory) ConversationModelProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	f.record(config)
 	return providerResolverLanguageInference{}, nil
 }

@@ -82,7 +82,7 @@ func TestEvaluationPreservesAndCountsNativeProviderCalls(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					conversation, _ = binding.Provider.(ports.ConversationModel)
+					conversation = binding.Provider
 				} else {
 					providers, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{})
 					if err != nil {

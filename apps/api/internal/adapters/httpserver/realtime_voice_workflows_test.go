@@ -149,14 +149,6 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 type workflowOnlyVoiceResolver struct{}
 type workflowHTTPModel struct{}
 
-// The remaining workflow binding still requires these retired signatures.
-func (workflowHTTPModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-func (workflowHTTPModel) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
-}
-
 func (workflowOnlyVoiceResolver) ResolveRealtimeVoiceProviders(_ context.Context, input ports.RealtimeVoiceProviderResolutionInput) (ports.RealtimeVoiceProviderSet, error) {
 	if !input.SkipDefaultLanguage {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput

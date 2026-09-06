@@ -12,7 +12,6 @@ import (
 )
 
 type workflowConversationProvider struct {
-	workflowExecutionProvider
 	calls        int
 	instructions string
 }
@@ -112,7 +111,7 @@ func TestNativeWorkflowBudgetDoesNotSpendOnCancellationAndExpiresAcrossUtterance
 	}
 }
 
-func TestSelectedWorkflowRejectsRetiredOnlyModelBeforeCapture(t *testing.T) {
+func TestSelectedWorkflowRejectsMissingModelBeforeCapture(t *testing.T) {
 	clock := &workflowExecutionClock{now: time.Date(2026, 9, 5, 12, 0, 0, 0, time.UTC)}
 	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: workflowViewAuthorizer{}, Repository: newWorkflowFakeRepository(), Profiles: newFakeProviderProfileRepository(), IDs: &workflowSequenceIDs{}, Clock: clock, Limits: workflowServiceLimits()})
 	revision, err := service.SaveRevision(context.Background(), workflowServiceInput())
@@ -120,21 +119,10 @@ func TestSelectedWorkflowRejectsRetiredOnlyModelBeforeCapture(t *testing.T) {
 		t.Fatal(err)
 	}
 	selected := &SelectedWorkflow{revision: revision, limits: workflowServiceLimits(), clock: clock}
-	retired := &workflowExecutionProvider{}
-	prepared, err := selected.Prepare(context.Background(), ports.RealtimeVoiceProviderSet{LanguageInference: retired, ResponseGenerator: retired}, nil)
+	prepared, err := selected.Prepare(context.Background(), ports.RealtimeVoiceProviderSet{}, nil)
 	if err == nil || prepared != nil {
 		t.Fatal("retired-only provider activated the old workflow execution path")
 	}
-}
-
-// A retired-only implementation is retained solely to prove it is rejected.
-type workflowExecutionProvider struct{}
-
-func (*workflowExecutionProvider) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-func (*workflowExecutionProvider) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
 }
 
 type workflowExecutionClock struct{ now time.Time }

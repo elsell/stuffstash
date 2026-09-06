@@ -34,19 +34,6 @@ type SpeechToTextResult struct {
 	Transcript string
 }
 
-type LanguageInferenceProvider interface {
-	NextTurn(ctx context.Context, input LanguageInferenceInput) (LanguageInferenceTurn, error)
-}
-
-type VoiceResponseGenerator interface {
-	GenerateResponse(ctx context.Context, input VoiceResponseGenerationInput) (VoiceResponseGenerationResult, error)
-}
-
-type RealtimeLanguageProvider interface {
-	LanguageInferenceProvider
-	VoiceResponseGenerator
-}
-
 type LanguageInferenceProviderProbe interface {
 	ProbeLanguageInference(ctx context.Context) error
 }
@@ -183,8 +170,6 @@ type RealtimeVoiceProviderSet struct {
 	TextToSpeechProfileID      string
 	LanguagePromptTemplate     string
 	SpeechToText               SpeechToTextProvider
-	LanguageInference          LanguageInferenceProvider
-	ResponseGenerator          VoiceResponseGenerator
 	TextToSpeech               TextToSpeechProvider
 }
 

@@ -83,9 +83,6 @@ func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.Re
 	}
 	step := settings.Steps[0]
 	model := defaults.ConversationModel
-	if model == nil {
-		model, _ = defaults.LanguageInference.(ports.ConversationModel)
-	}
 	profileID, prompt := defaults.LanguageInferenceProfileID, defaults.LanguagePromptTemplate
 	if step.ProviderProfileID != "" && step.ProviderProfileID != profileID {
 		if resolver == nil {
@@ -98,7 +95,7 @@ func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.Re
 		if binding.ProfileID != step.ProviderProfileID || binding.Provider == nil {
 			return nil, ports.ErrInvalidProviderInput
 		}
-		model, _ = binding.Provider.(ports.ConversationModel)
+		model = binding.Provider
 		profileID, prompt = binding.ProfileID, binding.PromptTemplate
 	}
 	if model == nil {

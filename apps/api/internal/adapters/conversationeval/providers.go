@@ -18,9 +18,6 @@ func (p textProviders) ResolveRealtimeVoiceProviders(context.Context, ports.Real
 	result := p.providers
 	result.SpeechToText = transcriptBridge{p.transcript}
 	result.TextToSpeech = discardSpeech{}
-	if result.ConversationModel == nil {
-		result.ConversationModel, _ = result.LanguageInference.(ports.ConversationModel)
-	}
 	if result.ConversationModel != nil {
 		result.ConversationModel = countedConversation{provider: result.ConversationModel, calls: p.calls}
 	}
@@ -35,11 +32,11 @@ func (p textProviders) ResolveWorkflowLanguageProvider(ctx context.Context, inpu
 	if err != nil {
 		return ports.WorkflowLanguageProviderBinding{}, err
 	}
-	native, ok := resolved.Provider.(ports.ConversationModel)
-	if !ok || native == nil {
+	native := resolved.Provider
+	if native == nil {
 		return ports.WorkflowLanguageProviderBinding{}, ErrInvalidExecution
 	}
-	resolved.Provider = countedNativeModel{RealtimeLanguageProvider: resolved.Provider, countedConversation: countedConversation{provider: native, calls: p.calls}}
+	resolved.Provider = countedConversation{provider: native, calls: p.calls}
 	return resolved, nil
 }
 
@@ -51,11 +48,6 @@ type countedConversation struct {
 func (p countedConversation) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	p.calls.Add(1)
 	return p.provider.Converse(ctx, input)
-}
-
-type countedNativeModel struct {
-	ports.RealtimeLanguageProvider
-	countedConversation
 }
 
 // Text-only evaluation deliberately substitutes these two boundaries. No audio
