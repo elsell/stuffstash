@@ -339,6 +339,20 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 		}
 	}
 
+	assetURL := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID
+	deniedDelete := performRequest(server, http.MethodDelete, assetURL, "Bearer dev:viewer", nil)
+	if deniedDelete.Code != http.StatusForbidden {
+		t.Fatalf("viewer deleted image-owning asset: %d", deniedDelete.Code)
+	}
+	deleted := performRequest(server, http.MethodDelete, assetURL, "Bearer dev:owner", nil)
+	if deleted.Code != http.StatusOK && deleted.Code != http.StatusNoContent {
+		t.Fatalf("owner could not delete asset: %d %s", deleted.Code, deleted.Body.String())
+	}
+	afterDelete := performRequest(server, http.MethodGet, assetURL+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "Bearer dev:owner", nil)
+	if afterDelete.Code != http.StatusNotFound {
+		t.Fatalf("deleted asset exposed cached thumbnail: %d", afterDelete.Code)
+	}
+
 }
 
 func TestAttachmentListIsPaginated(t *testing.T) {
