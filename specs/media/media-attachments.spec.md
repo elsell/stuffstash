@@ -280,3 +280,9 @@ buffer required by a single full-resolution separable filter. Verify high-freque
 patterns average rather than alias, preserve alpha/geometry, and compare CPU and
 allocated bytes against the previous codec on the same runner. Do not deploy the
 candidate until the production HTTP baseline is recorded.
+
+The 4032×3024 RGBA-to-1600×1200 resize regression budget is 100 MiB allocated
+(excluding caller-owned input and decoding). Its expected buffers total 92.8 MiB:
+2016×1512 RGBA intermediate, 1600×1512×32-byte Catmull-Rom scratch, and output.
+This retains final-filter quality; further reducing below the output resolution
+just to meet a smaller allocation budget is not acceptable.

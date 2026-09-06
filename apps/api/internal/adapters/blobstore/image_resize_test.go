@@ -18,8 +18,8 @@ func TestCameraResizeWorkingMemory(t *testing.T) {
 		}
 	})
 	// This excludes the caller-owned input and decode; it bounds resize scratch/output.
-	if result.AllocedBytesPerOp() > 64*1024*1024 {
-		t.Fatalf("resize allocated %d bytes; budget is 64 MiB", result.AllocedBytesPerOp())
+	if result.AllocedBytesPerOp() > 100*1024*1024 {
+		t.Fatalf("resize allocated %d bytes; budget is 100 MiB", result.AllocedBytesPerOp())
 	}
 }
 
