@@ -288,3 +288,19 @@ Attachment creation and asset deletion both lock the parent asset before checkin
 or changing its attachments. Asset deletion snapshots and locks those attachments,
 enqueues cleanup using each attachment ID as its deterministic event ID, then deletes
 the parent. Preserve the existing explicit attachment-deletion audit behavior.
+
+Rechecks claim one processed deletion at a time with a fresh token and expiring
+lease. Eligibility requires the processed timestamp and last recheck to be at least
+`CLEANUP_RECHECK_INTERVAL` old (default 1h, bounds 1m–30d). Prefer never-rechecked
+records, then oldest recheck time and event ID. Resolution matches token, exact
+lease deadline and unexpired lease, records completion time plus a safe failure
+flag, and clears the lease. Record attempted recheck time even on failure so other
+tombstones can progress. Never replace the original deletion status or error.
+
+One API-owned cleanup goroutine runs independently of thumbnail worker enablement,
+uses the configured lease and processing timeout, and polls when idle. Cleanup is
+bounded to one original plus six derivative/metadata keys per claim. It does not
+acquire image admission because it neither downloads nor decodes image contents.
+A cancelled process leaves its lease recoverable. Each resolved recheck emits
+`blob_deletion.rechecked` with a safe outcome. Original blob deletion remains on
+the existing outbox path; this loop supplies ongoing late-write reconciliation.
