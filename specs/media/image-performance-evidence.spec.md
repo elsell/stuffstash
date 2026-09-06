@@ -36,7 +36,7 @@ averaging away during downsampling. Do not generalize its compression ratio.
   implementation.
 - Run `34053013594` passed configuration and real OTLP exporter integration tests.
 - Code review identified coarse default histogram buckets and unrestricted event
-  names; both were corrected. Exporter-failure privacy handling remains underway.
+  names; both were corrected. Exporter-failure privacy handling is now covered by real collector failure tests.
 
 ## Remaining acceptance gates
 
@@ -47,3 +47,18 @@ averaging away during downsampling. Do not generalize its compression ratio.
 - Implement durable derivative generation, shared decoding, concurrency limits,
   mobile gallery loading improvements, and web upload decoupling as measured.
 - Repeat the same corpus/workload and report evidence, regressions, and limitations.
+
+## Runtime instrumentation checkpoint
+
+Revision `5d0d22faa` passed CI run `34054029170`: race tests for observability,
+configuration, the HTTP adapter (including adversarial telemetry boundary tests),
+and bootstrap. API startup now enables OTLP through environment configuration;
+HTTP/media scopes and console trace correlation are wired. Collector failures are
+counted without exporting response bodies to SDK diagnostics. Streaming interruption
+and real WebSocket 101 regressions passed after their red run `34053649692`.
+Code critic review of wiring found no new confirmed defect.
+
+Continuous profiling configuration red tests were committed at `a692225fd`; the
+profiling adapter and runtime wiring are not implemented yet. Local `go tool pprof`
+also attempted compilation and ran out of disk; profile summarization is now in
+the CI benchmark workflow. No thumbnail behavior has changed.
