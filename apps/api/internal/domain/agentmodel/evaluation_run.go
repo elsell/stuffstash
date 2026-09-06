@@ -14,6 +14,13 @@ var ErrEvaluationRunTransition = errors.New("evaluation run transition rejected"
 const MaxEvaluationRunCases = 100
 const MaxEvaluationRunAttempts = 10
 
+type EvaluationRuntimeContract string
+
+const (
+	CurrentEvaluationRuntimeContract EvaluationRuntimeContract = "conversation-tools-v1"
+	LegacyEvaluationRuntimeContract  EvaluationRuntimeContract = "legacy-investigation-v1"
+)
+
 type EvaluationRunID string
 type EvaluationRunState string
 
@@ -35,20 +42,20 @@ const (
 )
 
 type EvaluationRunProvider struct {
-	Step            WorkflowStepKind
 	ProfileID       ProviderProfileID
 	ConfigurationID string
 }
 type EvaluationRunInput struct {
-	ID          EvaluationRunID
-	TenantID    TenantID
-	AuthorID    WorkflowAuthorID
-	CreatedAt   time.Time
-	Workflow    WorkflowRevision
-	Cases       []EvaluationCaseRevision
-	Limits      WorkflowLimits
-	MaxAttempts int
-	Providers   []EvaluationRunProvider
+	RuntimeContract EvaluationRuntimeContract
+	ID              EvaluationRunID
+	TenantID        TenantID
+	AuthorID        WorkflowAuthorID
+	CreatedAt       time.Time
+	Workflow        WorkflowRevision
+	Cases           []EvaluationCaseRevision
+	Limits          WorkflowLimits
+	MaxAttempts     int
+	Providers       []EvaluationRunProvider
 }
 type EvaluationRunCaseResult struct {
 	CaseRevisionID EvaluationCaseRevisionID
@@ -77,6 +84,20 @@ type EvaluationRunSnapshot struct {
 type EvaluationRun struct{ snapshot EvaluationRunSnapshot }
 
 func NewEvaluationRun(input EvaluationRunInput) (EvaluationRun, error) {
+	if input.RuntimeContract == "" {
+		input.RuntimeContract = CurrentEvaluationRuntimeContract
+	}
+	if input.RuntimeContract != CurrentEvaluationRuntimeContract {
+		return EvaluationRun{}, ErrInvalidEvaluationRun
+	}
+	return validatedEvaluationRun(input)
+}
+
+// Historical snapshots remain readable without endorsing their quality evidence.
+func validatedEvaluationRun(input EvaluationRunInput) (EvaluationRun, error) {
+	if input.RuntimeContract != CurrentEvaluationRuntimeContract && input.RuntimeContract != LegacyEvaluationRuntimeContract {
+		return EvaluationRun{}, ErrInvalidEvaluationRun
+	}
 	if !workflowIdentifierValid(string(input.ID)) || !workflowAuthorValid(string(input.AuthorID)) || strings.TrimSpace(string(input.TenantID)) == "" || input.CreatedAt.IsZero() || len(input.Cases) == 0 || len(input.Cases) > MaxEvaluationRunCases || input.MaxAttempts < 1 || input.MaxAttempts > MaxEvaluationRunAttempts {
 		return EvaluationRun{}, ErrInvalidEvaluationRun
 	}
@@ -97,38 +118,21 @@ func NewEvaluationRun(input EvaluationRunInput) (EvaluationRun, error) {
 		seen[data.CaseID] = true
 	}
 	definition := workflow.Snapshot().Definition.Settings()
-	bindings := map[WorkflowStepKind]EvaluationRunProvider{}
+	if len(input.Providers) == 0 || len(input.Providers) > 3 || (input.RuntimeContract == CurrentEvaluationRuntimeContract && len(input.Providers) != 1) {
+		return EvaluationRun{}, ErrInvalidEvaluationRun
+	}
 	configurations := map[ProviderProfileID]string{}
 	for _, binding := range input.Providers {
-		_, duplicate := bindings[binding.Step]
 		digest, err := hex.DecodeString(binding.ConfigurationID)
-		if duplicate || binding.ProfileID == "" || !workflowProfileReferenceValid(string(binding.ProfileID)) || err != nil || len(digest) != 32 || strings.ToLower(binding.ConfigurationID) != binding.ConfigurationID {
+		if !workflowProfileReferenceValid(string(binding.ProfileID)) || binding.ProfileID == "" || err != nil || len(digest) != 32 || strings.ToLower(binding.ConfigurationID) != binding.ConfigurationID {
 			return EvaluationRun{}, ErrInvalidEvaluationRun
 		}
 		if previous, exists := configurations[binding.ProfileID]; exists && previous != binding.ConfigurationID {
 			return EvaluationRun{}, ErrInvalidEvaluationRun
 		}
 		configurations[binding.ProfileID] = binding.ConfigurationID
-		bindings[binding.Step] = binding
 	}
-	var defaultProfile ProviderProfileID
-	for _, step := range definition.Steps {
-		if step.Kind == WorkflowStepRespond && definition.Response == WorkflowResponseGrounded {
-			continue
-		}
-		binding, ok := bindings[step.Kind]
-		if !ok || (step.ProviderProfileID != "" && step.ProviderProfileID != string(binding.ProfileID)) {
-			return EvaluationRun{}, ErrInvalidEvaluationRun
-		}
-		if step.ProviderProfileID == "" {
-			if defaultProfile != "" && defaultProfile != binding.ProfileID {
-				return EvaluationRun{}, ErrInvalidEvaluationRun
-			}
-			defaultProfile = binding.ProfileID
-		}
-		delete(bindings, step.Kind)
-	}
-	if len(bindings) != 0 {
+	if input.RuntimeContract == CurrentEvaluationRuntimeContract && definition.ProviderProfileID != "" && definition.ProviderProfileID != string(input.Providers[0].ProfileID) {
 		return EvaluationRun{}, ErrInvalidEvaluationRun
 	}
 	input.Cases = slices.Clone(input.Cases)

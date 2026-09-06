@@ -6,11 +6,8 @@ import type { ConversationWorkflowRepository } from '$lib/ports/conversationWork
 import WorkflowWorkspace from './WorkflowWorkspace.svelte';
 let component: ReturnType<typeof mount> | undefined;
 afterEach(async () => { if (component) await unmount(component); component = undefined; document.body.innerHTML = ''; });
-const definition: WorkflowDefinition = { name: 'Household', retrieval: 'precise_first', response: 'grounded',
-  budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 }, steps: [
-    { kind: 'interpret', attempts: 1, instructions: '', providerProfileId: null },
-    { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null },
-    { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }] };
+const definition: WorkflowDefinition = { name: 'Household', providerProfileId: null, instructions: '',
+  budget: { toolCalls: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } };
 class Workflows implements ConversationWorkflowRepository {
   revision: WorkflowRevision = { id: 'revision', workflowId: 'workflow', number: 1, authorId: 'owner', createdAt: '2026-09-05T12:00:00Z', definition };
   async list() { return { items: [{ id: 'workflow', name: 'Household', latestRevision: this.revision.number, latestRevisionId: this.revision.id, activeRevisionId: null, createdAt: this.revision.createdAt, updatedAt: this.revision.createdAt }], pagination: { limit: 20, hasMore: false, nextCursor: null } }; }

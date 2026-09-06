@@ -138,8 +138,8 @@ func verifyConversationWorkflowRepository(t *testing.T, ctx context.Context, sto
 
 func persistedWorkflowRevision(t *testing.T, tenantID, id string, number int) agentmodel.WorkflowRevision {
 	t.Helper()
-	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 4, ModelCalls: 20, ElapsedSeconds: 120, FollowUpTurns: 8}, MaxStepAttempts: 3, MaxNameRunes: 120, MaxInstructionRunes: 4000}
-	definition, err := agentmodel.NewWorkflowDefinition(agentmodel.WorkflowDefinitionInput{Name: "Home workflow", Retrieval: agentmodel.WorkflowRetrievalPreciseFirst, Response: agentmodel.WorkflowResponseGroundedFallback, Budget: limits.Budget, Steps: []agentmodel.WorkflowStep{{Kind: agentmodel.WorkflowStepInterpret, Attempts: 1}, {Kind: agentmodel.WorkflowStepAssess, Attempts: 1}, {Kind: agentmodel.WorkflowStepRespond, Attempts: 1}}}, limits)
+	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 4, ModelCalls: 20, ElapsedSeconds: 120, FollowUpTurns: 8}, MaxNameRunes: 120, MaxInstructionRunes: 4000}
+	definition, err := agentmodel.NewWorkflowDefinition(agentmodel.WorkflowDefinitionInput{Name: "Home workflow", Budget: limits.Budget}, limits)
 	if err != nil {
 		t.Fatal(err)
 	}

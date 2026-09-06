@@ -22,7 +22,7 @@ func (r ProviderProfileResolver) ResolveWorkflowLanguageProvider(ctx context.Con
 	if err != nil {
 		return ports.WorkflowLanguageProviderBinding{}, err
 	}
-	provider, err := r.factory.RealtimeLanguageProvider(ctx, config)
+	provider, err := r.factory.ConversationModelProvider(ctx, config)
 	if err != nil {
 		return ports.WorkflowLanguageProviderBinding{}, err
 	}

@@ -68,7 +68,7 @@
   {:else if revision.data}<section aria-label="Run usage"><h4>{revision.data.definition.name} · Revision {revision.data.number}</h4>
     <p>Per attempt, up to {revision.data.definition.budget.modelCalls * selectedCases.length} model calls across {selectedCases.length} cases; each case has a {revision.data.definition.budget.elapsedSeconds}-second budget. Recovering an interrupted run may add model calls.</p>
     {#if profiles.isPending}<p role="status">Loading model choices…</p>{:else if profiles.isError}<p role="alert">Could not load configured models. <Button.Root onclick={() => profiles.refetch()}>Retry models</Button.Root></p>
-    {:else}<ul>{#each revision.data.definition.steps as step (step.kind)}<li>{step.kind === 'interpret' ? 'Understand' : step.kind === 'assess' ? 'Look up and assess' : 'Respond'}: {step.kind === 'respond' && revision.data.definition.response === 'grounded' ? 'Grounded answer; no model call' : step.providerProfileId ? profiles.data.find(profile => profile.id === step.providerProfileId)?.name ?? 'Selected profile unavailable' : 'Tenant default model'}</li>{/each}</ul>{/if}
+    {:else}<p>Model: {revision.data.definition.providerProfileId ? profiles.data.find(profile => profile.id === revision.data?.definition.providerProfileId)?.name ?? 'Selected profile unavailable' : 'Tenant default model'}</p>{/if}
     <p>Text-only coverage. Speech input and playback need separate testing.</p>
   </section>{/if}
   <Button.Root disabled={busy || !revision.data || revision.isError || !profiles.isSuccess || selectedCases.length === 0} onclick={queue}>{busy ? 'Queueing…' : 'Run selected cases'}</Button.Root><p role="status">{message}</p>

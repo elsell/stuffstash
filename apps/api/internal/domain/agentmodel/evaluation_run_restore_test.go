@@ -37,6 +37,7 @@ func TestEvaluationRunRestoresValidatedProgress(t *testing.T) {
 		t.Fatal("rehydration retained caller collections")
 	}
 	for name, change := range map[string]func(*EvaluationRunSnapshot){
+		"unknown runtime":       func(v *EvaluationRunSnapshot) { v.Input.RuntimeContract = "unknown-runtime" },
 		"forged verdict":        func(v *EvaluationRunSnapshot) { v.Results[0].Verdict.Passed = false },
 		"foreign case":          func(v *EvaluationRunSnapshot) { v.Results[0].CaseRevisionID = "outside" },
 		"unknown observed item": func(v *EvaluationRunSnapshot) { v.Results[0].Observation.ReferencedAssets[0] = "outside" },

@@ -17,7 +17,7 @@ export function evaluationRun(value: RunDTO, runId?: string): EvaluationRun {
   if (value.coverage !== 'text_only') throw new ConversationFailure('invalid');
   return { ...head, authorId: value.authorId, coverage: value.coverage,
     cases: (value.cases ?? []).map(pin => ({ caseId: pin.caseId, revisionId: pin.revisionId, title: pin.title })),
-    providers: (value.providers ?? []).map(provider => ({ step: provider.step, profileId: provider.profileId, configurationId: provider.configurationId })),
+    providers: (value.providers ?? []).map(provider => ({ profileId: provider.profileId, configurationId: provider.configurationId })),
     startedAt: value.startedAt, finishedAt: value.finishedAt, failureCode: value.failureCode ?? '',
     results: (value.results ?? []).map(result => ({ caseRevisionId: result.caseRevisionId, modelCalls: result.modelCalls,
       durationMilliseconds: result.durationMilliseconds, completedAt: result.completedAt,

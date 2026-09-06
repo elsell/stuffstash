@@ -17,13 +17,7 @@ type ProviderProfileProviderConfig struct {
 
 type ProviderProfileProviderFactory interface {
 	SpeechToTextProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.SpeechToTextProvider, error)
-	LanguageInferenceProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error)
-	TextToSpeechProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.TextToSpeechProvider, error)
-}
-
-type ProviderProfileResolverFactory interface {
-	SpeechToTextProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.SpeechToTextProvider, error)
-	RealtimeLanguageProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error)
+	ConversationModelProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.ConversationModel, error)
 	TextToSpeechProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.TextToSpeechProvider, error)
 }
 
@@ -31,10 +25,10 @@ type ProviderProfileResolver struct {
 	profiles     ports.ProviderProfileRepository
 	voiceConfigs ports.VoiceProviderConfigurationRepository
 	vault        ports.ProviderCredentialVault
-	factory      ProviderProfileResolverFactory
+	factory      ProviderProfileProviderFactory
 }
 
-func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, voiceConfigs ports.VoiceProviderConfigurationRepository, vault ports.ProviderCredentialVault, factory ProviderProfileResolverFactory) ProviderProfileResolver {
+func NewProviderProfileResolver(profiles ports.ProviderProfileRepository, voiceConfigs ports.VoiceProviderConfigurationRepository, vault ports.ProviderCredentialVault, factory ProviderProfileProviderFactory) ProviderProfileResolver {
 	return ProviderProfileResolver{
 		profiles:     profiles,
 		voiceConfigs: voiceConfigs,
@@ -91,9 +85,9 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if err != nil {
 		return ports.RealtimeVoiceProviderSet{}, err
 	}
-	var language ports.RealtimeLanguageProvider
+	var language ports.ConversationModel
 	if !input.SkipDefaultLanguage {
-		language, err = r.factory.RealtimeLanguageProvider(ctx, languageConfig)
+		language, err = r.factory.ConversationModelProvider(ctx, languageConfig)
 		if err != nil {
 			return ports.RealtimeVoiceProviderSet{}, err
 		}
@@ -106,13 +100,12 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
 	return ports.RealtimeVoiceProviderSet{
+		ConversationModel:          language,
 		SpeechToTextProfileID:      sttProfile.ID.String(),
 		LanguageInferenceProfileID: languageProfile.ID.String(),
 		TextToSpeechProfileID:      ttsProfile.ID.String(),
 		LanguagePromptTemplate:     languageProfile.PromptTemplate.String(),
 		SpeechToText:               stt,
-		LanguageInference:          language,
-		ResponseGenerator:          language,
 		TextToSpeech:               tts,
 	}, nil
 }

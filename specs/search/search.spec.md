@@ -57,7 +57,7 @@ The first API slice is asset search:
 - Location-like assets are returned as assets with kind `location`.
 - The first slice searches asset title, description, custom field values, custom asset type key/display name/description, and attachment file name/content type.
 - Exact search uses case-insensitive whole-value equality for fields and metadata.
-- Fuzzy search uses case-insensitive substring matching.
+- Fuzzy search splits the trimmed query on whitespace and requires every term to match a case-insensitive substring somewhere in the same asset document. Terms may match different fields or assigned tags; matching evidence is deduplicated. Exact search retains whole-value equality and does not split the query. For example, `baby clothes` matches an item titled `3–6 months clothes` tagged `baby`, but not a baby carrier without a clothes match.
 
 ## Initial Implementation Direction
 
@@ -110,3 +110,7 @@ The first API slice is asset search:
 - Which custom field types should be searchable first?
 - How should search handle aliases and synonyms?
 - How should SpiceDB filtering be applied efficiently for larger inventories?
+
+### Multi-term candidate filtering
+
+PostgreSQL may prefilter by the longest fuzzy query term as a conservative indexed candidate set, then apply the full cross-field conjunction in the domain matcher. This retains existing trigram indexes and bounds query-plan complexity independently of term count. Exact queries retain the whole query predicate. Verify selective multi-term candidate hydration, tenant/inventory isolation and parity with in-memory/SQLite matching in CI before release.

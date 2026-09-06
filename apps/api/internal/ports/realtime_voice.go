@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -34,33 +33,8 @@ type SpeechToTextResult struct {
 	Transcript string
 }
 
-type LanguageInferenceProvider interface {
-	NextTurn(ctx context.Context, input LanguageInferenceInput) (LanguageInferenceTurn, error)
-}
-
-type VoiceResponseGenerator interface {
-	GenerateResponse(ctx context.Context, input VoiceResponseGenerationInput) (VoiceResponseGenerationResult, error)
-}
-
-type RealtimeLanguageProvider interface {
-	LanguageInferenceProvider
-	VoiceResponseGenerator
-}
-
 type LanguageInferenceProviderProbe interface {
 	ProbeLanguageInference(ctx context.Context) error
-}
-
-type LanguageInferenceInput struct {
-	WorkflowInstructions string
-	TenantID             tenant.ID
-	InventoryID          inventory.InventoryID
-	Principal            identity.Principal
-	Transcript           string
-	ConversationTurns    []AgentConversationTurn
-	PromptTemplate       string
-	PreviousTurns        int
-	Investigation        *agentmodel.InvestigationInput
 }
 
 type AgentConversationRole string
@@ -74,24 +48,6 @@ type AgentConversationTurn struct {
 	Role AgentConversationRole
 	Kind string
 	Text string
-}
-
-type LanguageInferenceTurn struct {
-	Investigation *agentmodel.InvestigationStep
-}
-
-type VoiceResponseGenerationInput struct {
-	WorkflowInstructions string
-	PromptTemplate       string
-	TenantID             tenant.ID
-	InventoryID          inventory.InventoryID
-	Principal            identity.Principal
-	Brief                agentmodel.GroundedVoiceResponseBrief
-}
-
-type VoiceResponseGenerationResult struct {
-	SpokenResponse  string `json:"spokenResponse"`
-	DisplayResponse string `json:"displayResponse"`
 }
 
 type AgentToolCall struct {
@@ -177,13 +133,12 @@ type RealtimeVoiceProviderResolutionInput struct {
 }
 
 type RealtimeVoiceProviderSet struct {
+	ConversationModel          ConversationModel
 	SpeechToTextProfileID      string
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
 	LanguagePromptTemplate     string
 	SpeechToText               SpeechToTextProvider
-	LanguageInference          LanguageInferenceProvider
-	ResponseGenerator          VoiceResponseGenerator
 	TextToSpeech               TextToSpeechProvider
 }
 

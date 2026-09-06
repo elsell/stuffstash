@@ -1,12 +1,13 @@
 package app
 
 import (
+	"context"
 	"errors"
-	"regexp"
-	"strings"
-
+	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"strings"
+	"unicode/utf8"
 )
 
 var errRealtimeVoiceToolCallTimedOut = errors.New("realtime voice tool call timed out")
@@ -27,7 +28,7 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 	if !safeRealtimeVoiceFinalText(response.SpokenResponse, 500) {
 		return ports.ErrInvalidProviderInput
 	}
-	if strings.TrimSpace(response.DisplayResponse) != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
+	if response.DisplayResponse != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
 		return ports.ErrInvalidProviderInput
 	}
 	if err := validateRealtimeVoiceResponseArtifacts(response.DisplayResponse, response.Artifacts); err != nil {
@@ -37,57 +38,7 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 }
 
 func safeRealtimeVoiceFinalText(value string, limit int) bool {
-	value = strings.TrimSpace(value)
-	return value != "" && len(value) <= limit && !realtimeVoiceFinalTextLooksUnsafe(value)
-}
-
-func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
-	normalized := strings.ToLower(strings.TrimSpace(value))
-	if strings.HasPrefix(normalized, "{") || strings.HasPrefix(normalized, "[") || realtimeVoiceFinalJSONFragmentPattern.MatchString(value) {
-		return true
-	}
-	for _, token := range []string{
-		"```",
-		"search_authorized_assets",
-		"list_authorized_assets",
-		"get_asset_detail",
-		"list_asset_audit_history",
-		"list_asset_checkout_history",
-		"list_checked_out_assets",
-		"chain of thought",
-		"reasoning:",
-		"raw prompt",
-		"provider response",
-		"provider session",
-		"stack trace",
-		"raw transcript",
-		"raw audio",
-		"tool_call",
-		"functioncall",
-	} {
-		if strings.Contains(normalized, token) {
-			return true
-		}
-	}
-	collapsed := realtimeVoiceFinalCollapsedText(normalized)
-	for _, token := range []string{"assetid", "parentassetid", "inventoryid", "tenantid", "toolcallid"} {
-		if strings.Contains(collapsed, token) {
-			return true
-		}
-	}
-	return realtimeVoiceFinalSecretPattern.MatchString(value)
-}
-
-var (
-	realtimeVoiceFinalJSONFragmentPattern = regexp.MustCompile(`["']?[a-zA-Z][a-zA-Z0-9_-]*["']?\s*:\s*["'{\[]`)
-	realtimeVoiceFinalSecretPattern       = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?(bearer\s+)?[a-z0-9._~+/=-]{16,}|bearer\s+[^"',\s}\]\)]+`)
-)
-
-func realtimeVoiceFinalCollapsedText(value string) string {
-	value = strings.ReplaceAll(value, "_", "")
-	value = strings.ReplaceAll(value, "-", "")
-	value = strings.ReplaceAll(value, " ", "")
-	return value
+	return strings.TrimSpace(value) != "" && len(value) <= limit && utf8.ValidString(value)
 }
 
 func realtimeVoiceErrorCode(err error) string {
@@ -140,4 +91,15 @@ func (e realtimeVoiceProviderStageError) Error() string {
 
 func (e realtimeVoiceProviderStageError) Unwrap() error {
 	return e.err
+}
+
+// Stage attribution is applied only around the model port, never around tool execution.
+type realtimeConversationProvider struct{ model ports.ConversationModel }
+
+func (p realtimeConversationProvider) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	turn, err := p.model.Converse(ctx, input)
+	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrUnauthenticated) || errors.Is(err, agentmodelapp.ErrConversationBudgetExhausted) {
+		return turn, err
+	}
+	return turn, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}
 }

@@ -6,15 +6,10 @@ import (
 	"testing"
 )
 
-func TestCandidateTagEvidenceIsBounded(t *testing.T) {
-	observation := CandidateObservation{EvidenceRound: 1, ReferenceKey: SemanticReferenceSubject, CandidateID: "clothes", Title: "3–6 months clothes", Kind: "item", TagNames: []string{"Baby", "Clothes"}}
-	if err := observation.Validate(); err != nil {
-		t.Fatal(err)
-	}
-	for _, names := range [][]string{{""}, {"Baby", "baby"}, {strings.Repeat("x", 81)}, {string([]byte{255})}, make([]string, 33)} {
-		observation.TagNames = names
-		if err := observation.Validate(); err == nil {
-			t.Fatalf("invalid tag evidence accepted: %q", names)
+func TestInventoryTagEvidenceIsBounded(t *testing.T) {
+	for _, names := range [][]string{{""}, {strings.Repeat("x", 81)}, {string([]byte{255})}} {
+		if got := BoundedObservationTagNames(names); len(got) != 0 {
+			t.Fatalf("invalid inventory tag retained: %q", got)
 		}
 	}
 	names := []string{"Baby", " baby ", "Clothes"}

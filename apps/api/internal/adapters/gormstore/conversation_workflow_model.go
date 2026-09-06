@@ -35,8 +35,9 @@ type conversationWorkflowRevisionModel struct {
 func (conversationWorkflowRevisionModel) TableName() string { return "conversation_workflow_revisions" }
 
 type workflowDefinitionSnapshot struct {
-	Definition agentmodel.WorkflowDefinitionInput
-	Limits     agentmodel.WorkflowLimits
+	SettingsMigration agentmodel.WorkflowSettingsMigration
+	Definition        agentmodel.WorkflowDefinitionInput
+	Limits            agentmodel.WorkflowLimits
 }
 
 func workflowRevisionModel(revision agentmodel.WorkflowRevision) (conversationWorkflowRevisionModel, error) {
@@ -44,7 +45,7 @@ func workflowRevisionModel(revision agentmodel.WorkflowRevision) (conversationWo
 	if _, err := agentmodel.NewWorkflowRevision(input); err != nil {
 		return conversationWorkflowRevisionModel{}, err
 	}
-	raw, err := json.Marshal(workflowDefinitionSnapshot{Definition: input.Definition.Settings(), Limits: input.Limits})
+	raw, err := json.Marshal(workflowDefinitionSnapshot{Definition: input.Definition.Settings(), Limits: input.Limits, SettingsMigration: input.SettingsMigration})
 	if err != nil {
 		return conversationWorkflowRevisionModel{}, err
 	}
@@ -60,7 +61,7 @@ func workflowRevisionFromModel(model conversationWorkflowRevisionModel) (agentmo
 	if err != nil {
 		return agentmodel.WorkflowRevision{}, err
 	}
-	return agentmodel.NewWorkflowRevision(agentmodel.WorkflowRevisionInput{ID: agentmodel.WorkflowRevisionID(model.ID), WorkflowID: agentmodel.WorkflowID(model.WorkflowID), TenantID: agentmodel.TenantID(model.TenantID), AuthorID: agentmodel.WorkflowAuthorID(model.AuthorID), Number: model.Number, Definition: definition, Limits: snapshot.Limits, CreatedAt: model.CreatedAt})
+	return agentmodel.NewWorkflowRevision(agentmodel.WorkflowRevisionInput{ID: agentmodel.WorkflowRevisionID(model.ID), WorkflowID: agentmodel.WorkflowID(model.WorkflowID), TenantID: agentmodel.TenantID(model.TenantID), AuthorID: agentmodel.WorkflowAuthorID(model.AuthorID), Number: model.Number, Definition: definition, Limits: snapshot.Limits, CreatedAt: model.CreatedAt, SettingsMigration: snapshot.SettingsMigration})
 }
 
 type conversationWorkflowSelectionModel struct {

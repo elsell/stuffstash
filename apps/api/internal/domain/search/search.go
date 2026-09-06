@@ -42,6 +42,26 @@ func (q Query) String() string {
 	return string(q)
 }
 
+// Terms preserves exact whole-value lookup and normalizes fuzzy conjunctions.
+func (q Query) Terms(mode Mode) []string {
+	value := strings.TrimSpace(strings.ToLower(q.String()))
+	if value == "" {
+		return nil
+	}
+	if mode == ModeExact {
+		return []string{value}
+	}
+	seen := map[string]bool{}
+	terms := []string{}
+	for _, term := range strings.Fields(value) {
+		if !seen[term] {
+			seen[term] = true
+			terms = append(terms, term)
+		}
+	}
+	return terms
+}
+
 type ResultType string
 
 const (

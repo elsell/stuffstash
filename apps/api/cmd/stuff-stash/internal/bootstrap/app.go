@@ -22,6 +22,10 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	if err != nil {
 		return app.App{}, err
 	}
+	contextBytes, err := cfg.ConversationWorkflows.ContextBytes()
+	if err != nil {
+		return app.App{}, err
+	}
 	if err := validateInvitationPublicBaseURL(cfg); err != nil {
 		return app.App{}, err
 	}
@@ -42,6 +46,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	importer := homebox.NewLegacyImporter(nil)
 	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
+		ConversationContextBytes:         contextBytes,
 		WorkflowActivation:               evaluations.activation,
 		EvaluationRunCommands:            evaluations.commands,
 		EvaluationRunQueries:             evaluations.queries,
@@ -111,8 +116,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		PrimaryThumbnailWarmTimeout:      cfg.PrimaryThumbnailWarmTimeout,
 		RealtimeVoiceToolCallTimeout:     cfg.RealtimeVoiceToolCallTimeout,
 		SpeechToText:                     stt,
-		LanguageInference:                languageInference,
-		VoiceResponseGenerator:           languageInference,
+		ConversationModel:                languageInference,
 		TextToSpeech:                     tts,
 		RealtimeVoiceProviderResolver:    realtimeVoiceProviderResolver,
 	})

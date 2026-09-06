@@ -2,7 +2,7 @@
   import * as Label from '$lib/components/ui/label/index.js';
   import { onDestroy, tick } from 'svelte';
   import { ConversationFailure } from '$lib/domain/conversation';
-  import type { WorkflowDefinition, WorkflowStepKind } from '$lib/domain/conversationWorkflow';
+  import type { WorkflowDefinition } from '$lib/domain/conversationWorkflow';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Input from '$lib/components/ui/input/index.js';
   import * as Textarea from '$lib/components/ui/textarea/index.js';
@@ -27,10 +27,9 @@
   let invalid = $state(false);
   let alive = true;
   onDestroy(() => { alive = false; });
-  const labels: Record<WorkflowStepKind, string> = { interpret: 'Understand', assess: 'Look up and assess', respond: 'Respond' };
   const budgets = [
-    { key: 'evidenceRounds', label: 'Search rounds' }, { key: 'modelCalls', label: 'Model calls' },
-    { key: 'elapsedSeconds', label: 'Time limit (seconds)' }, { key: 'followUpTurns', label: 'Follow-up turns' }
+    { key: 'toolCalls', label: 'Tool calls per turn' }, { key: 'modelCalls', label: 'Model calls per turn' },
+    { key: 'elapsedSeconds', label: 'Processing time per turn (seconds)' }, { key: 'followUpTurns', label: 'Follow-up turns' }
   ] as const;
   async function save(event: SubmitEvent) {
     event.preventDefault();
@@ -55,30 +54,17 @@
 </script>
 
 <form class="conversation-editor" onsubmit={save}>
-  <header><h2>Workflow settings</h2><p>Choose how your configured models understand requests and find answers. Saving creates a draft.</p></header>
+  <header><h2>Workflow settings</h2><p>Choose a model and give it guidance for your inventory. Saving creates a draft.</p></header>
   <Label.Root class="grid gap-2 text-sm">Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
-  {#each draft.steps as step, index (step.kind)}
-    <fieldset disabled={saving || disabled}>
-      <legend>{index + 1}. {labels[step.kind]}</legend>
-      <WorkflowSelect id={`provider-${step.kind}`} label="Model profile" value={step.providerProfileId ?? ''}
-        disabled={saving || disabled || (step.kind === 'respond' && draft.response === 'grounded')}
-        options={[{ value: '', label: 'Tenant default model' }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
-          ...(step.providerProfileId && !providers.some(provider => provider.id === step.providerProfileId) ? [{ value: step.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
-        onChange={value => { step.providerProfileId = value || null; }} />
-      {#if step.kind === 'respond' && draft.response === 'grounded'}<p class="help">Grounded answers use verified inventory facts without another model call. This step’s model and instructions are unused.</p>{/if}
-      <Label.Root class="grid gap-2 text-sm">Additional instructions<Textarea.Root name={`instructions-${step.kind}`} bind:value={step.instructions} disabled={step.kind === 'respond' && draft.response === 'grounded'} rows={3} /></Label.Root>
-      <Label.Root class="grid gap-2 text-sm">Maximum attempts<Input.Root name={`attempts-${step.kind}`} type="number" min={1} step={1} required bind:value={step.attempts} /></Label.Root>
-    </fieldset>
-  {/each}
-  <details><summary>Advanced: retrieval, response and limits</summary>
-    <WorkflowSelect id="retrieval" label="Search strategy" value={draft.retrieval} disabled={saving || disabled}
-      options={[{ value: 'precise_first', label: 'Precise matches first' }, { value: 'expanded', label: 'Broader discovery' }]}
-      onChange={value => { if (value === 'precise_first' || value === 'expanded') draft.retrieval = value; }} />
-    <WorkflowSelect id="response" label="Answer style" value={draft.response} disabled={saving || disabled}
-      options={[{ value: 'generated_with_grounded_fallback', label: 'Model answer with grounded recovery' }, { value: 'grounded', label: 'Grounded facts' }]}
-      onChange={value => { if (value === 'generated_with_grounded_fallback' || value === 'grounded') draft.response = value; }} />
+  <WorkflowSelect id="provider-model" label="Model profile" value={draft.providerProfileId ?? ''}
+    disabled={saving || disabled}
+    options={[{ value: '', label: 'Tenant default model' }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
+      ...(draft.providerProfileId && !providers.some(provider => provider.id === draft.providerProfileId) ? [{ value: draft.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
+    onChange={value => { draft.providerProfileId = value || null; }} />
+  <Label.Root class="grid gap-2 text-sm">Additional instructions<Textarea.Root name="instructions" bind:value={draft.instructions} disabled={saving || disabled} rows={3} /></Label.Root>
+  <details><summary>Conversation limits</summary>
     <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving || disabled} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
-    <p class="help">Limits are shared across the conversation and must fit your server’s configured maximums.</p>
+    <p class="help">Call and processing limits apply to each turn. Time spent waiting for you does not count. Follow-up turns limit the conversation. Values must fit your server’s configured maximums.</p>
   </details>
   <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save draft'}</Button.Root>
     {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
@@ -90,8 +76,6 @@
   .conversation-editor { display: grid; gap: 1.25rem; max-width: 52rem; }
   header h2 { font-size: 1.25rem; font-weight: 600; }
   header p, .help { color: var(--muted-foreground); font-size: .9rem; }
-  fieldset { display: grid; gap: 1rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; min-width: 0; }
-  legend { font-weight: 600; padding-inline: .4rem; }
   summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   .budget-grid { margin-top: 1rem; }
   summary { cursor: pointer; font-weight: 600; }

@@ -8,18 +8,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"nhooyr.io/websocket"
 )
 
 type continuousVoiceModel struct {
-	inputs []ports.LanguageInferenceInput
+	inputs []ports.ConversationModelInput
 }
 
-func (m *continuousVoiceModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (m *continuousVoiceModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	m.inputs = append(m.inputs, input)
-	return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "tools"), nil)
+	return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "tools"}, nil)
 }
 
 func TestRealtimeContinuityRetainsAnswerContextAndEndsAtLimit(t *testing.T) {
@@ -55,9 +55,24 @@ func TestRealtimeContinuityRetainsAnswerContextAndEndsAtLimit(t *testing.T) {
 			t.Fatalf("normal answer not completed: %+v", payload)
 		}
 	}
-	if len(language.inputs) != 6 || len(language.inputs[2].ConversationTurns) != 2 || language.inputs[2].ConversationTurns[1].Kind != "answer" {
-		t.Fatalf("answer context not retained: %+v", language.inputs)
+	if len(language.inputs) != 6 {
+		t.Fatalf("expected one read and answer per turn, got %d model calls", len(language.inputs))
 	}
+	// The next audio turn must receive the actual prior answer and tool evidence,
+	// not a reconstructed intent or a synthetic clarification classification.
+	followUp := language.inputs[2].Messages
+	if len(followUp) < 2 {
+		t.Fatalf("missing prior conversation: %+v", followUp)
+	}
+	var priorAnswer, priorEvidence bool
+	for _, message := range followUp[:len(followUp)-1] {
+		priorAnswer = priorAnswer || (message.Role == ports.ConversationRoleAssistant && message.Text == "I couldn't find matching belongings in this inventory.")
+		priorEvidence = priorEvidence || (message.Role == ports.ConversationRoleTool && len(message.ToolResults) == 1)
+	}
+	if !priorAnswer || !priorEvidence || followUp[len(followUp)-1].Role != ports.ConversationRoleUser {
+		t.Fatalf("answer and tool context not retained before follow-up: %+v", followUp)
+	}
+
 	_, _, err = connection.Read(ctx)
 	if websocket.CloseStatus(err) != websocket.StatusNormalClosure {
 		t.Fatalf("limit did not close normally: %v", err)

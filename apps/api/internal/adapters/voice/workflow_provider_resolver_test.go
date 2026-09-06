@@ -55,7 +55,7 @@ func TestWorkflowCanResolveSpeechWithoutAnUnusedDefaultLanguageModel(t *testing.
 	factory := &providerResolverFactory{}
 	resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: profiles}, nil, newProviderResolverCredentialVault(profiles...), factory)
 	set, err := resolver.ResolveRealtimeVoiceProviders(context.Background(), ports.RealtimeVoiceProviderResolutionInput{TenantID: "tenant-home", SkipDefaultLanguage: true})
-	if err != nil || set.SpeechToText == nil || set.TextToSpeech == nil || set.LanguageInference != nil {
+	if err != nil || set.SpeechToText == nil || set.TextToSpeech == nil || set.ConversationModel != nil {
 		t.Fatalf("unused default LM still required: %+v %v", set, err)
 	}
 	if len(factory.configs) != 2 {

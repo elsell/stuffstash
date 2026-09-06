@@ -12,69 +12,42 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/oauth2/google"
 	"nhooyr.io/websocket"
 
-	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/audit"
-	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 )
 
 // This opt-in regression uses real audio and providers, but isolated inventory and
 // local development authentication. It does not claim deployed or device coverage.
 func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
+	runGoogleLiveRealtimeAudio(t, "STUFF_STASH_VOICE_BABY_CLOTHES_AUDIO_FILE", seedLiveBabyClothes)
+}
+
+func TestGoogleLiveRealtimeAudioFindsChemicals(t *testing.T) {
+	runGoogleLiveRealtimeAudio(t, "STUFF_STASH_VOICE_CHEMICALS_AUDIO_FILE", seedLiveChemicals)
+}
+
+type liveAudioFixture struct {
+	expectedIDs     []string
+	excludedIDs     []string
+	spokenLocations []string
+}
+
+type liveAudioSeeder func(*testing.T, context.Context, app.App) liveAudioFixture
+
+func runGoogleLiveRealtimeAudio(t *testing.T, audioFileKey string, seed liveAudioSeeder) {
 	if os.Getenv("STUFF_STASH_GOOGLE_LIVE_TESTS") != "1" {
 		t.Skip("explicit live Google opt-in required")
 	}
-	required := func(key string) string {
-		t.Helper()
-		value := strings.TrimSpace(os.Getenv(key))
-		if value == "" {
-			t.Fatalf("%s is required for the enabled live test", key)
-		}
-		return value
-	}
-	project := required("STUFF_STASH_GOOGLE_CLOUD_PROJECT")
-	model := required("STUFF_STASH_GOOGLE_GEMINI_MODEL")
-	location := required("STUFF_STASH_GOOGLE_CLOUD_LOCATION")
-	inputAudio, err := os.ReadFile(required("STUFF_STASH_VOICE_AUDIO_FILE"))
+	inputAudio, err := os.ReadFile(liveVoiceRequired(t, audioFileKey))
 	if err != nil || len(inputAudio) == 0 {
 		t.Fatalf("read recorded MP4 input: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		t.Fatal("ADC unavailable")
-	}
-	config := voice.GoogleGeminiConfig{ProjectID: project, Location: location, Model: model, QuotaProject: project, TokenSource: tokenSource, HTTPTimeout: 45 * time.Second, HTTPClient: &http.Client{Transport: liveVoiceTraceTransport{t: t, next: http.DefaultTransport}}}
-	language := voice.NewGoogleGeminiLanguageInference(config)
-	speech := voice.NewGoogleTextToSpeech(voice.GoogleTextToSpeechConfig{LanguageCode: required("STUFF_STASH_GOOGLE_TTS_LANGUAGE"), VoiceName: required("STUFF_STASH_GOOGLE_TTS_VOICE"), QuotaProject: project, TokenSource: tokenSource, HTTPTimeout: 45 * time.Second})
-	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviders(voice.NewGoogleGeminiSpeechToText(config), language, speech).WithRealtimeVoiceResponseGenerator(language)
-	principal := identity.Principal{ID: "user-1"}
-	tags := []string{}
-	for _, name := range []string{"baby", "clothes"} {
-		tag, err := application.CreateAssetTag(ctx, app.CreateAssetTagInput{Principal: principal, Source: audit.SourceAPI, TenantID: "tenant-home", InventoryID: "inventory-home", Key: name, DisplayName: name, Color: "#2f80ed"})
-		if err != nil {
-			t.Fatal(err)
-		}
-		tags = append(tags, tag.ID.String())
-	}
-	create := func(kind, title, parent string, tagIDs []string) string {
-		t.Helper()
-		r, err := application.CreateAssetWithOperation(ctx, app.CreateAssetInput{Principal: principal, Source: audit.SourceAPI, TenantID: "tenant-home", InventoryID: "inventory-home", Kind: kind, Title: title, ParentAssetID: parent, TagIDs: tagIDs})
-		if err != nil {
-			t.Fatal(err)
-		}
-		return r.Asset.ID.String()
-	}
-	closet := create("location", "Hall Closet", "", nil)
-	bin58 := create("container", "Bin 58", closet, nil)
-	bin106 := create("container", "Bin 106", closet, nil)
-	first := create("item", "3–6 months clothes", bin58, tags)
-	second := create("item", "6–9 months clothes", bin106, tags)
-	create("item", "Adult winter jacket", closet, nil)
+	providers := liveGoogleVoiceProviders(t, ctx)
+	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviders(providers.SpeechToText, providers.ConversationModel, providers.TextToSpeech)
+	fixture := seed(t, ctx, application)
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	defer server.Close()
 	startedAt := time.Now()
@@ -141,7 +114,7 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 		t.Fatalf("expected location answer, got %v", response["kind"])
 	}
 	spoken, _ := response["spokenResponse"].(string)
-	for _, location := range []string{"Bin 58", "Bin 106"} {
+	for _, location := range fixture.spokenLocations {
 		if !strings.Contains(strings.ToLower(spoken), strings.ToLower(location)) {
 			t.Errorf("spoken answer omits recorded location %q: %s", location, spoken)
 		}
@@ -153,7 +126,14 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 		id, _ := item["assetId"].(string)
 		seen[id] = true
 	}
-	if !seen[first] || !seen[second] {
-		t.Error("answer must ground both tagged clothing items")
+	for _, id := range fixture.expectedIDs {
+		if !seen[id] {
+			t.Errorf("answer omits relevant asset %s", id)
+		}
+	}
+	for _, id := range fixture.excludedIDs {
+		if seen[id] {
+			t.Errorf("answer includes irrelevant asset %s", id)
+		}
 	}
 }

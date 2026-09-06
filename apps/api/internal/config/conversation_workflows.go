@@ -11,13 +11,14 @@ import (
 // WorkflowConfiguration captures environment-backed limits before application construction.
 // Its zero value provides the documented defaults for programmatic callers.
 type WorkflowConfiguration struct {
-	limits   agentmodel.WorkflowLimits
-	captured bool
-	err      error
+	contextBytes int
+	limits       agentmodel.WorkflowLimits
+	captured     bool
+	err          error
 }
 
 func defaultWorkflowLimits() agentmodel.WorkflowLimits {
-	return agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 4, ModelCalls: 12, ElapsedSeconds: 60, FollowUpTurns: 8}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 4000}
+	return agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 12, ModelCalls: 12, ElapsedSeconds: 60, FollowUpTurns: 8}, MaxNameRunes: 100, MaxInstructionRunes: 4000}
 }
 func (c WorkflowConfiguration) Limits() (agentmodel.WorkflowLimits, error) {
 	if c.err != nil {
@@ -29,16 +30,22 @@ func (c WorkflowConfiguration) Limits() (agentmodel.WorkflowLimits, error) {
 	return c.limits, nil
 }
 func loadWorkflowConfiguration() WorkflowConfiguration {
-	result := WorkflowConfiguration{limits: defaultWorkflowLimits(), captured: true}
+	result := WorkflowConfiguration{limits: defaultWorkflowLimits(), contextBytes: 2 * 1024 * 1024, captured: true}
+	for _, retired := range []string{"STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS", "STUFF_STASH_WORKFLOW_MAX_STEP_ATTEMPTS"} {
+		if _, configured := os.LookupEnv(retired); configured {
+			result.err = fmt.Errorf("%s is retired; remove it and configure STUFF_STASH_WORKFLOW_MAX_MODEL_CALLS and STUFF_STASH_WORKFLOW_MAX_TOOL_CALLS for the conversation loop", retired)
+			return result
+		}
+	}
 	entries := []struct {
 		name   string
 		target *int
 	}{
-		{"STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS", &result.limits.Budget.EvidenceRounds},
+		{"STUFF_STASH_CONVERSATION_MAX_CONTEXT_BYTES", &result.contextBytes},
+		{"STUFF_STASH_WORKFLOW_MAX_TOOL_CALLS", &result.limits.Budget.ToolCalls},
 		{"STUFF_STASH_WORKFLOW_MAX_MODEL_CALLS", &result.limits.Budget.ModelCalls},
 		{"STUFF_STASH_WORKFLOW_MAX_ELAPSED_SECONDS", &result.limits.Budget.ElapsedSeconds},
 		{"STUFF_STASH_WORKFLOW_MAX_FOLLOW_UP_TURNS", &result.limits.Budget.FollowUpTurns},
-		{"STUFF_STASH_WORKFLOW_MAX_STEP_ATTEMPTS", &result.limits.MaxStepAttempts},
 		{"STUFF_STASH_WORKFLOW_MAX_NAME_RUNES", &result.limits.MaxNameRunes},
 		{"STUFF_STASH_WORKFLOW_MAX_INSTRUCTION_RUNES", &result.limits.MaxInstructionRunes},
 	}
@@ -54,8 +61,15 @@ func loadWorkflowConfiguration() WorkflowConfiguration {
 		}
 		*entry.target = value
 	}
-	if result.limits.Budget.EvidenceRounds > agentmodel.MaxEvidenceRounds {
-		result.err = fmt.Errorf("STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS exceeds the supported investigation ceiling")
-	}
 	return result
+}
+
+func (c WorkflowConfiguration) ContextBytes() (int, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	if !c.captured {
+		return 2 * 1024 * 1024, nil
+	}
+	return c.contextBytes, nil
 }

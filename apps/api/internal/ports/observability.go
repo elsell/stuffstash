@@ -108,7 +108,6 @@ const (
 	EventProviderProfileCredentialReplaced         EventName = "provider_profile.credential_replaced"
 	EventProviderProfileTested                     EventName = "provider_profile.tested"
 	EventVoiceProviderConfigurationUpdated         EventName = "voice_provider_configuration.updated"
-	EventRealtimeVoiceResponseFallback             EventName = "realtime_voice.response_fallback"
 	EventRealtimeVoiceFailed                       EventName = "realtime_voice.failed"
 	EventImportJobPreviewed                        EventName = "import_job.previewed"
 	EventImportJobStarted                          EventName = "import_job.started"

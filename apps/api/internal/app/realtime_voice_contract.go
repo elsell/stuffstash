@@ -29,6 +29,7 @@ const (
 	RealtimeVoiceEventTextToSpeechAudioCompleted  = "tts.audio.completed"
 	RealtimeVoiceEventSessionCompleted            = "session.completed"
 	RealtimeVoiceToolSearchAuthorizedAssets       = "search_authorized_assets"
+	RealtimeVoiceToolGetInventoryVocabulary       = "get_inventory_vocabulary"
 	RealtimeVoiceToolGetAssetDetail               = "get_asset_detail"
 	RealtimeVoiceToolListAuthorizedAssets         = "list_authorized_assets"
 	RealtimeVoiceToolListAssetAuditHistory        = "list_asset_audit_history"
@@ -68,6 +69,8 @@ type RealtimeVoiceOutputAudio struct {
 }
 
 type RealtimeVoiceSession struct {
+	conversationMemory         *agentmodelapp.ConversationMemory
+	conversationModel          ports.ConversationModel
 	ConversationContinuity     bool
 	ID                         string
 	TenantID                   tenant.ID
@@ -84,8 +87,6 @@ type RealtimeVoiceSession struct {
 	DeveloperDiagnostics       bool
 	workflow                   *agentmodelapp.PreparedWorkflow
 	speechToText               ports.SpeechToTextProvider
-	languageInference          ports.LanguageInferenceProvider
-	responseGenerator          ports.VoiceResponseGenerator
 	textToSpeech               ports.TextToSpeechProvider
 }
 

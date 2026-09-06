@@ -37,6 +37,9 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if set.SpeechToTextProfileID != "stt-profile" || set.LanguageInferenceProfileID != "lm-profile" || set.TextToSpeechProfileID != "tts-profile" {
 		t.Fatalf("unexpected selected profile IDs: %+v", set)
 	}
+	if set.ConversationModel == nil {
+		t.Fatal("configured model is unavailable to the native conversation loop")
+	}
 	if set.LanguagePromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected language prompt template from selected language profile, got %q", set.LanguagePromptTemplate)
 	}
@@ -328,12 +331,7 @@ func (f *providerResolverFactory) SpeechToTextProvider(_ context.Context, config
 	return providerResolverSpeechToText{}, nil
 }
 
-func (f *providerResolverFactory) LanguageInferenceProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
-	f.record(config)
-	return providerResolverLanguageInference{}, nil
-}
-
-func (f *providerResolverFactory) RealtimeLanguageProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error) {
+func (f *providerResolverFactory) ConversationModelProvider(_ context.Context, config ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	f.record(config)
 	return providerResolverLanguageInference{}, nil
 }
@@ -358,18 +356,14 @@ func (providerResolverSpeechToText) Transcribe(context.Context, ports.SpeechToTe
 
 type providerResolverLanguageInference struct{}
 
-func (providerResolverLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
-func (providerResolverLanguageInference) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{SpokenResponse: "response", DisplayResponse: "response"}, nil
-}
-
 func (providerResolverLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
 
 type providerResolverTextToSpeech struct{}
 
 func (providerResolverTextToSpeech) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
 	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: [][]byte{[]byte("speech")}}, nil
+}
+
+func (providerResolverLanguageInference) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	return ports.ConversationModelTurn{Text: "A natural answer."}, nil
 }

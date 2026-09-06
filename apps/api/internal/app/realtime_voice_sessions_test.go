@@ -81,7 +81,7 @@ func TestRealtimeVoiceSessionPersistsProviderStageFailureWithSafeCode(t *testing
 
 	repository := newFakeRealtimeSessionRepository()
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.LanguageInference = &failingResolvedLanguageInference{err: errors.New("provider account detail")}
+	resolver.providers.ConversationModel = &resolvedConversationModel{err: errors.New("provider account detail")}
 	application := newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, repository)
 
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
@@ -134,8 +134,7 @@ func successfulRealtimeVoiceResolver() *fakeRealtimeVoiceProviderResolver {
 			TextToSpeechProfileID:      "tts-profile",
 			LanguagePromptTemplate:     "Prefer concise spoken answers.",
 			SpeechToText:               resolvedSpeechToText{transcript: "Where are my tools?"},
-			LanguageInference:          &resolvedLanguageInference{},
-			ResponseGenerator:          &resolvedLanguageInference{},
+			ConversationModel:          &resolvedConversationModel{inventoryConversationModel: inventoryConversationModel{query: "tools"}},
 			TextToSpeech:               &resolvedTextToSpeech{},
 		},
 	}

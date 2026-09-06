@@ -66,7 +66,7 @@ func TestStoreSearchAssetsReturnsInventoryScopedResultsAndWritesReadAudit(t *tes
 		InventoryIDs:   []inventory.InventoryID{inventoryID},
 		Source:         audit.SourceAPI,
 		RequestID:      "search-request-one",
-		Query:          "fertilizer",
+		Query:          "garage fertilizer",
 		LifecycleState: string(ports.AssetLifecycleFilterActive),
 		Mode:           search.ModeFuzzy.String(),
 		CheckoutState:  string(ports.AssetCheckoutStateFilterAny),
@@ -203,6 +203,14 @@ func TestStoreSearchAssetsMatchesPersistedMetadata(t *testing.T) {
 		t.Fatalf("expected attachment file name search to find drill, got %+v", attachmentResults)
 	}
 
+	crossField := searchPersistedAssets(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "workshop warranty", search.ModeFuzzy, ports.AssetLifecycleFilterActive, "", "", 10)
+	if len(crossField) != 1 || crossField[0].Asset.ID != drill.ID {
+		t.Fatalf("cross-tag/attachment terms lost: %+v", crossField)
+	}
+	excluded := searchPersistedAssets(t, ctx, store, tenantID, []inventory.InventoryID{toolsID}, "storage only", search.ModeFuzzy, ports.AssetLifecycleFilterActive, "", "", 10)
+	if len(excluded) != 0 {
+		t.Fatalf("terms escaped inventory scope: %+v", excluded)
+	}
 	tagResults := searchPersistedAssets(t, ctx, store, tenantID, []inventory.InventoryID{toolsID, medicineID}, "workshop", search.ModeExact, ports.AssetLifecycleFilterActive, "", "", 10)
 	if len(tagResults) != 1 || tagResults[0].Asset.ID != drill.ID || tagResults[0].Matches[0].Field != search.MatchFieldTagDisplayName {
 		t.Fatalf("expected exact tag display-name search to find drill, got %+v", tagResults)

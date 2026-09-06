@@ -15,10 +15,10 @@ import (
 )
 
 func workflowServiceInput() SaveConversationWorkflowInput {
-	return SaveConversationWorkflowInput{Principal: testPrincipal(), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: domain.WorkflowDefinitionInput{Name: "Household", Retrieval: domain.WorkflowRetrievalPreciseFirst, Response: domain.WorkflowResponseGroundedFallback, Budget: domain.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 8, ElapsedSeconds: 60, FollowUpTurns: 4}, Steps: []domain.WorkflowStep{{Kind: domain.WorkflowStepInterpret, Attempts: 1}, {Kind: domain.WorkflowStepAssess, Attempts: 1}, {Kind: domain.WorkflowStepRespond, Attempts: 1}}}}
+	return SaveConversationWorkflowInput{Principal: testPrincipal(), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: domain.WorkflowDefinitionInput{Name: "Household", Budget: domain.WorkflowBudget{ToolCalls: 2, ModelCalls: 8, ElapsedSeconds: 60, FollowUpTurns: 4}}}
 }
 func workflowServiceLimits() domain.WorkflowLimits {
-	return domain.WorkflowLimits{Budget: domain.WorkflowBudget{EvidenceRounds: 6, ModelCalls: 20, ElapsedSeconds: 180, FollowUpTurns: 12}, MaxStepAttempts: 3, MaxNameRunes: 120, MaxInstructionRunes: 4000}
+	return domain.WorkflowLimits{Budget: domain.WorkflowBudget{ToolCalls: 6, ModelCalls: 20, ElapsedSeconds: 180, FollowUpTurns: 12}, MaxNameRunes: 120, MaxInstructionRunes: 4000}
 }
 
 func TestConversationWorkflowSaveAuthorizesBeforeMutation(t *testing.T) {
@@ -86,7 +86,7 @@ func TestConversationWorkflowRejectsUnknownOrWrongCapabilityProvider(t *testing.
 	} {
 		profiles.saved["provider-one"] = profile
 		input := workflowServiceInput()
-		input.Definition.Steps[0].ProviderProfileID = "provider-one"
+		input.Definition.ProviderProfileID = "provider-one"
 		if _, err := service.SaveRevision(context.Background(), input); !errors.Is(err, apperrors.ErrValidation) {
 			t.Fatalf("invalid provider selection: %v", err)
 		}

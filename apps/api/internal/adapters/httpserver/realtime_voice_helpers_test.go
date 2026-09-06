@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -25,60 +23,11 @@ type capturingLanguageModel struct {
 	lastToolResult string
 }
 
-func (m *capturingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "tools"), &m.lastToolResult)
-}
-
-func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) app.App {
+func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.SpeechToTextProvider, lm ports.ConversationModel, tts ports.TextToSpeechProvider) app.App {
 	t.Helper()
 
 	application := newSeededTestApp(t, state)
-	return application.WithRealtimeVoiceProviders(stt, lm, tts).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
-}
-
-type httpTestVoiceResponseGenerator struct{}
-
-func (httpTestVoiceResponseGenerator) GenerateResponse(_ context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	brief := input.Brief
-	titles := make([]string, 0, len(brief.Findings))
-	for _, finding := range brief.Findings {
-		titles = append(titles, finding.Title)
-	}
-	text := "I couldn't find " + brief.Subject + " in this inventory."
-	switch brief.Mode {
-	case agentmodel.ResponseAnswerModeLocate:
-		finding := brief.Findings[0]
-		path := finding.ContainmentPath
-		if len(path) <= 1 && finding.Kind == "item" {
-			text = "I found " + finding.Title + ", but it isn't assigned to a location."
-			break
-		}
-		location := finding.Title
-		if len(path) > 1 && (finding.Kind == "item" || brief.Confidence == agentmodel.ResponseConfidenceStrong) {
-			location = path[len(path)-2]
-		} else if len(path) == 1 && finding.Kind == "item" {
-			location = path[0]
-		}
-		prefix := "I found " + finding.Title
-		if brief.Confidence == agentmodel.ResponseConfidencePlausible {
-			prefix = "I think " + brief.Subject + " are probably"
-		}
-		text = prefix + " in " + location + "."
-	case agentmodel.ResponseAnswerModeInventory:
-		text = "You have " + strings.Join(titles, " and ") + "."
-	case agentmodel.ResponseAnswerModeContents:
-		text = brief.Subject + " contains " + strings.Join(titles, " and ") + "."
-	case agentmodel.ResponseAnswerModeClarify:
-		text = "I found " + strings.Join(titles, " or ") + " as possible matches. Which one did you mean?"
-	case agentmodel.ResponseAnswerModeUnsupported:
-		text = "I can't help with that inventory request."
-	case agentmodel.ResponseAnswerModeExists, agentmodel.ResponseAnswerModeDetail, agentmodel.ResponseAnswerModeHistory, agentmodel.ResponseAnswerModeCheckout:
-		text = "I found " + strings.Join(titles, " and ") + "."
-		if len(brief.Findings) == 1 && len(brief.Findings[0].Facts) > 0 {
-			text = brief.Findings[0].Title + ": " + brief.Findings[0].Facts[len(brief.Findings[0].Facts)-1]
-		}
-	}
-	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}, nil
+	return application.WithRealtimeVoiceProviders(stt, lm, tts)
 }
 
 func seedVoiceAsset(t *testing.T, application app.App, principalID string, tenantID string, inventoryID string, kind string, title string, parentAssetID string) {
@@ -189,153 +138,29 @@ func (s *scriptedSpeechToText) Transcribe(_ context.Context, input ports.SpeechT
 
 type scriptedLanguageModel struct{}
 
-func (scriptedLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "tools"), nil)
-}
-
 type locationAwareLanguageModel struct {
 	lastToolResult string
-}
-
-func (m *locationAwareLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "water bottle"), &m.lastToolResult)
 }
 
 type itemListingLanguageModel struct {
 	lastToolResult string
 }
 
-func (m *itemListingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := voiceReadIntent(agentmodel.OperationListInventory, "items")
-	return typedVoiceInvestigationTurn(input, intent, &m.lastToolResult)
-}
-
-type finalResponseLanguageModel struct {
-	final ports.StructuredAgentResponse
-}
-
-func (m finalResponseLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{}}, nil
-}
-
 type scriptedFinalLanguageModel struct {
-	inputs          []ports.LanguageInferenceInput
+	inputs          []ports.ConversationModelInput
 	alwaysAmbiguous bool
 }
 
-func (m *scriptedFinalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (m *scriptedFinalLanguageModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	m.inputs = append(m.inputs, input)
-	if !m.alwaysAmbiguous && len(input.ConversationTurns) > 0 {
-		return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "Office"), nil)
+	if !m.alwaysAmbiguous && len(input.Messages) > 1 {
+		return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "Office"}, nil)
 	}
-	return typedAmbiguousItemInvestigationTurn(input)
+	return ports.ConversationModelTurn{Text: "Which item do you mean?"}, nil
 }
 
 type failingLanguageModel struct {
 	err error
-}
-
-func (m failingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, m.err
-}
-
-func voiceReadIntent(operation agentmodel.Operation, subject string) agentmodel.Intent {
-	return agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: operation, SubjectMention: subject}
-}
-
-func typedVoiceInvestigationTurn(input ports.LanguageInferenceInput, intent agentmodel.Intent, capture *string) (ports.LanguageInferenceTurn, error) {
-	if input.Investigation == nil || input.Investigation.Validate() != nil {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
-		requests := typedVoiceInvestigationRequests(intent)
-		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: requests}
-		return ports.LanguageInferenceTurn{Investigation: &step}, nil
-	}
-	if capture != nil {
-		payload, err := json.Marshal(input.Investigation.Observations)
-		if err != nil {
-			return ports.LanguageInferenceTurn{}, err
-		}
-		*capture = string(payload)
-	}
-	resolutions := typedVoiceInvestigationResolutions(intent, input.Investigation.Observations)
-	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: resolutions}
-	return ports.LanguageInferenceTurn{Investigation: &step}, nil
-}
-
-func typedVoiceInvestigationRequests(intent agentmodel.Intent) []agentmodel.SearchRequest {
-	if intent.Operation == agentmodel.OperationListInventory {
-		return []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadListInventory, Mention: intent.SubjectMention, KindHint: "item"}}
-	}
-	subjectLifecycle := agentmodel.LifecycleScopeActive
-	if intent.Operation == agentmodel.OperationRestore {
-		subjectLifecycle = agentmodel.LifecycleScopeArchived
-	}
-	requests := []agentmodel.SearchRequest{{
-		ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
-		Mention: intent.SubjectMention, SearchProbes: []string{intent.SubjectMention}, LifecycleScope: subjectLifecycle,
-	}}
-	for index, segment := range intent.DestinationPath {
-		key, _ := agentmodel.NewSemanticReferenceKey("destination." + strconv.Itoa(index))
-		requests = append(requests, agentmodel.SearchRequest{ReferenceKey: key, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: segment, SearchProbes: []string{segment}})
-	}
-	return requests
-}
-
-func typedVoiceInvestigationResolutions(intent agentmodel.Intent, observations []agentmodel.CandidateObservation) []agentmodel.Resolution {
-	byReference := map[agentmodel.SemanticReferenceKey][]string{}
-	for _, observation := range observations {
-		byReference[observation.ReferenceKey] = append(byReference[observation.ReferenceKey], observation.CandidateID)
-	}
-	keys := []agentmodel.SemanticReferenceKey{agentmodel.SemanticReferenceSubject}
-	for index := range intent.DestinationPath {
-		key, _ := agentmodel.NewSemanticReferenceKey("destination." + strconv.Itoa(index))
-		keys = append(keys, key)
-	}
-	resolutions := make([]agentmodel.Resolution, 0, len(keys))
-	for _, key := range keys {
-		ids := byReference[key]
-		status := agentmodel.ResolutionStrong
-		switch {
-		case intent.Operation == agentmodel.OperationListInventory && key == agentmodel.SemanticReferenceSubject:
-			status = agentmodel.ResolutionCollection
-		case len(ids) > 1:
-			status = agentmodel.ResolutionAmbiguous
-		case len(ids) == 0 && intent.Kind == agentmodel.IntentKindChange && (intent.Operation == agentmodel.OperationCreate || key != agentmodel.SemanticReferenceSubject):
-			status = agentmodel.ResolutionMissing
-		case len(ids) == 0:
-			status = agentmodel.ResolutionAbsent
-		}
-		resolutions = append(resolutions, agentmodel.Resolution{ReferenceKey: key, Status: status, CandidateIDs: ids, Evidence: "Derived from the authorized test read."})
-	}
-	return resolutions
-}
-
-func typedAmbiguousItemInvestigationTurn(input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := voiceReadIntent(agentmodel.OperationLocate, "item")
-	if input.Investigation == nil || input.Investigation.Validate() != nil {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
-		step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionSearch, Intent: intent, SearchRequests: []agentmodel.SearchRequest{{
-			ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadListInventory, Mention: "item", KindHint: "item",
-		}}}
-		return ports.LanguageInferenceTurn{Investigation: &step}, nil
-	}
-	ids := make([]string, 0, len(input.Investigation.Observations))
-	for _, observation := range input.Investigation.Observations {
-		ids = append(ids, observation.CandidateID)
-	}
-	status := agentmodel.ResolutionAmbiguous
-	if len(ids) < 2 {
-		status = agentmodel.ResolutionAbsent
-		ids = nil
-	}
-	step := agentmodel.InvestigationStep{Decision: agentmodel.InvestigationDecisionFinish, Intent: intent, Resolutions: []agentmodel.Resolution{{
-		ReferenceKey: agentmodel.SemanticReferenceSubject, Status: status, CandidateIDs: ids, Evidence: "Derived from the authorized test read.",
-	}}}
-	return ports.LanguageInferenceTurn{Investigation: &step}, nil
 }
 
 type fakeTextToSpeech struct {

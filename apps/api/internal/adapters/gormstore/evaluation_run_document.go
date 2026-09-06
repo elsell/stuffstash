@@ -7,14 +7,15 @@ import (
 )
 
 type evaluationRunWorkflowDocument struct {
-	ID         model.WorkflowRevisionID
-	WorkflowID model.WorkflowID
-	TenantID   model.TenantID
-	AuthorID   model.WorkflowAuthorID
-	Number     int
-	CreatedAt  time.Time
-	Definition model.WorkflowDefinitionInput
-	Limits     model.WorkflowLimits
+	SettingsMigration model.WorkflowSettingsMigration
+	ID                model.WorkflowRevisionID
+	WorkflowID        model.WorkflowID
+	TenantID          model.TenantID
+	AuthorID          model.WorkflowAuthorID
+	Number            int
+	CreatedAt         time.Time
+	Definition        model.WorkflowDefinitionInput
+	Limits            model.WorkflowLimits
 }
 type evaluationRunCaseDocument struct {
 	ID         model.EvaluationCaseRevisionID
@@ -26,15 +27,16 @@ type evaluationRunCaseDocument struct {
 	Definition model.EvaluationCaseDefinitionInput
 }
 type evaluationRunInputDocument struct {
-	ID          model.EvaluationRunID
-	TenantID    model.TenantID
-	AuthorID    model.WorkflowAuthorID
-	CreatedAt   time.Time
-	Workflow    evaluationRunWorkflowDocument
-	Cases       []evaluationRunCaseDocument
-	Providers   []model.EvaluationRunProvider
-	Limits      model.WorkflowLimits
-	MaxAttempts int
+	RuntimeContract model.EvaluationRuntimeContract
+	ID              model.EvaluationRunID
+	TenantID        model.TenantID
+	AuthorID        model.WorkflowAuthorID
+	CreatedAt       time.Time
+	Workflow        evaluationRunWorkflowDocument
+	Cases           []evaluationRunCaseDocument
+	Providers       []model.EvaluationRunProvider
+	Limits          model.WorkflowLimits
+	MaxAttempts     int
 }
 type evaluationRunProgressDocument struct {
 	State       model.EvaluationRunState
@@ -56,7 +58,7 @@ func encodeEvaluationRun(run model.EvaluationRun) (string, string, error) {
 	}
 	input := snapshot.Input
 	workflow := input.Workflow.Snapshot()
-	document := evaluationRunInputDocument{ID: input.ID, TenantID: input.TenantID, AuthorID: input.AuthorID, CreatedAt: input.CreatedAt, Providers: input.Providers, Limits: input.Limits, MaxAttempts: input.MaxAttempts, Workflow: evaluationRunWorkflowDocument{ID: workflow.ID, WorkflowID: workflow.WorkflowID, TenantID: workflow.TenantID, AuthorID: workflow.AuthorID, Number: workflow.Number, CreatedAt: workflow.CreatedAt, Definition: workflow.Definition.Settings(), Limits: workflow.Limits}}
+	document := evaluationRunInputDocument{RuntimeContract: input.RuntimeContract, ID: input.ID, TenantID: input.TenantID, AuthorID: input.AuthorID, CreatedAt: input.CreatedAt, Providers: input.Providers, Limits: input.Limits, MaxAttempts: input.MaxAttempts, Workflow: evaluationRunWorkflowDocument{ID: workflow.ID, WorkflowID: workflow.WorkflowID, TenantID: workflow.TenantID, AuthorID: workflow.AuthorID, Number: workflow.Number, CreatedAt: workflow.CreatedAt, Definition: workflow.Definition.Settings(), Limits: workflow.Limits, SettingsMigration: workflow.SettingsMigration}}
 	for _, revision := range input.Cases {
 		v := revision.Snapshot()
 		document.Cases = append(document.Cases, evaluationRunCaseDocument{ID: v.ID, CaseID: v.CaseID, TenantID: v.TenantID, AuthorID: v.AuthorID, Number: v.Number, CreatedAt: v.CreatedAt, Definition: v.Definition.Settings()})
@@ -78,16 +80,35 @@ func decodeEvaluationRun(inputJSON, progressJSON string) (model.EvaluationRun, e
 	if err := json.Unmarshal([]byte(progressJSON), &progress); err != nil {
 		return model.EvaluationRun{}, err
 	}
+	// Convert only the embedded historical workflow representation. Runtime
+	// provenance remains independent, so old evidence cannot be activated.
+	var envelope struct {
+		Workflow json.RawMessage
+		Limits   struct{ Budget struct{ ToolCalls *int } }
+	}
+	if err := json.Unmarshal([]byte(inputJSON), &envelope); err != nil {
+		return model.EvaluationRun{}, err
+	}
+	var settings workflowDefinitionSnapshot
+	if err := json.Unmarshal(envelope.Workflow, &settings); err != nil {
+		return model.EvaluationRun{}, err
+	}
+	document.Workflow.Definition = settings.Definition
+	document.Workflow.Limits = settings.Limits
+	document.Workflow.SettingsMigration = settings.SettingsMigration
+	if settings.SettingsMigration == model.WorkflowSettingsMigrationLegacy && envelope.Limits.Budget.ToolCalls == nil {
+		document.Limits.Budget.ToolCalls = min(6, document.Limits.Budget.ModelCalls)
+	}
 	value := document.Workflow
 	definition, err := model.NewWorkflowDefinition(value.Definition, value.Limits)
 	if err != nil {
 		return model.EvaluationRun{}, err
 	}
-	workflow, err := model.NewWorkflowRevision(model.WorkflowRevisionInput{ID: value.ID, WorkflowID: value.WorkflowID, TenantID: value.TenantID, AuthorID: value.AuthorID, Number: value.Number, CreatedAt: value.CreatedAt, Definition: definition, Limits: value.Limits})
+	workflow, err := model.NewWorkflowRevision(model.WorkflowRevisionInput{ID: value.ID, WorkflowID: value.WorkflowID, TenantID: value.TenantID, AuthorID: value.AuthorID, Number: value.Number, CreatedAt: value.CreatedAt, Definition: definition, Limits: value.Limits, SettingsMigration: value.SettingsMigration})
 	if err != nil {
 		return model.EvaluationRun{}, err
 	}
-	input := model.EvaluationRunInput{ID: document.ID, TenantID: document.TenantID, AuthorID: document.AuthorID, CreatedAt: document.CreatedAt, Workflow: workflow, Providers: document.Providers, Limits: document.Limits, MaxAttempts: document.MaxAttempts}
+	input := model.EvaluationRunInput{RuntimeContract: document.RuntimeContract, ID: document.ID, TenantID: document.TenantID, AuthorID: document.AuthorID, CreatedAt: document.CreatedAt, Workflow: workflow, Providers: document.Providers, Limits: document.Limits, MaxAttempts: document.MaxAttempts}
 	for _, value := range document.Cases {
 		definition, err := model.NewEvaluationCaseDefinition(value.Definition)
 		if err != nil {

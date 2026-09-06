@@ -32,7 +32,7 @@ func evaluationRunInput(t *testing.T) EvaluationRunInput {
 		}
 		cases = append(cases, revision)
 	}
-	return EvaluationRunInput{ID: "run", TenantID: "home", AuthorID: "owner", CreatedAt: now, Workflow: workflow, Cases: cases, Limits: limits, MaxAttempts: 2, Providers: []EvaluationRunProvider{{Step: WorkflowStepInterpret, ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}, {Step: WorkflowStepAssess, ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}, {Step: WorkflowStepRespond, ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}}}
+	return EvaluationRunInput{ID: "run", TenantID: "home", AuthorID: "owner", CreatedAt: now, Workflow: workflow, Cases: cases, Limits: limits, MaxAttempts: 2, Providers: []EvaluationRunProvider{{ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}}}
 }
 
 func TestEvaluationRunPinsSnapshotsAndRejectsInvalidInputs(t *testing.T) {
@@ -44,7 +44,7 @@ func TestEvaluationRunPinsSnapshotsAndRejectsInvalidInputs(t *testing.T) {
 	input.Cases[0] = EvaluationCaseRevision{}
 	input.Providers[0].ProfileID = "changed"
 	snapshot := run.Snapshot()
-	if snapshot.State != EvaluationRunQueued || snapshot.Version != 1 || snapshot.Input.Cases[0].Snapshot().CaseID != "one" || snapshot.Input.Providers[0].ProfileID != "model" {
+	if snapshot.Input.RuntimeContract != CurrentEvaluationRuntimeContract || snapshot.State != EvaluationRunQueued || snapshot.Version != 1 || snapshot.Input.Cases[0].Snapshot().CaseID != "one" || snapshot.Input.Providers[0].ProfileID != "model" {
 		t.Fatal("run did not own queued snapshot")
 	}
 	snapshot.Input.Cases[0] = EvaluationCaseRevision{}
@@ -53,16 +53,22 @@ func TestEvaluationRunPinsSnapshotsAndRejectsInvalidInputs(t *testing.T) {
 		t.Fatal("snapshot mutation reached run")
 	}
 	for name, change := range map[string]func(*EvaluationRunInput){
+		"legacy runtime":          func(v *EvaluationRunInput) { v.RuntimeContract = LegacyEvaluationRuntimeContract },
+		"unknown runtime":         func(v *EvaluationRunInput) { v.RuntimeContract = "unknown-runtime" },
 		"no cases":                func(v *EvaluationRunInput) { v.Cases = nil },
 		"duplicate case":          func(v *EvaluationRunInput) { v.Cases[1] = v.Cases[0] },
 		"wrong tenant":            func(v *EvaluationRunInput) { v.TenantID = "other" },
-		"missing binding":         func(v *EvaluationRunInput) { v.Providers = v.Providers[:2] },
-		"duplicate binding":       func(v *EvaluationRunInput) { v.Providers[1] = v.Providers[0] },
+		"missing binding":         func(v *EvaluationRunInput) { v.Providers = nil },
+		"duplicate binding":       func(v *EvaluationRunInput) { v.Providers = append(v.Providers, v.Providers[0]) },
 		"arbitrary configuration": func(v *EvaluationRunInput) { v.Providers[0].ConfigurationID = "secret" },
 		"no attempts":             func(v *EvaluationRunInput) { v.MaxAttempts = 0 },
-		"inconsistent profile":    func(v *EvaluationRunInput) { v.Providers[1].ConfigurationID = strings.Repeat("b", 64) },
-		"inconsistent default":    func(v *EvaluationRunInput) { v.Providers[1].ProfileID = "other-model" },
-		"invalid limits":          func(v *EvaluationRunInput) { v.Limits.MaxStepAttempts = 0 },
+		"inconsistent profile": func(v *EvaluationRunInput) {
+			v.Providers = append(v.Providers, EvaluationRunProvider{ProfileID: "model", ConfigurationID: strings.Repeat("b", 64)})
+		},
+		"inconsistent default": func(v *EvaluationRunInput) {
+			v.Providers = append(v.Providers, EvaluationRunProvider{ProfileID: "other-model", ConfigurationID: strings.Repeat("a", 64)})
+		},
+		"invalid limits": func(v *EvaluationRunInput) { v.Limits.Budget.ToolCalls = 0 },
 	} {
 		t.Run(name, func(t *testing.T) {
 			input := evaluationRunInput(t)
@@ -222,8 +228,7 @@ func TestEvaluationRunResolvesOnlyRequiredPinnedProviders(t *testing.T) {
 	input := evaluationRunInput(t)
 	revision := input.Workflow.Snapshot()
 	settings := revision.Definition.Settings()
-	settings.Response = WorkflowResponseGrounded
-	settings.Steps[0].ProviderProfileID = "explicit"
+	settings.ProviderProfileID = "explicit"
 	definition, err := NewWorkflowDefinition(settings, input.Limits)
 	if err != nil {
 		t.Fatal(err)
@@ -233,13 +238,12 @@ func TestEvaluationRunResolvesOnlyRequiredPinnedProviders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	input.Providers = input.Providers[:2]
 	if _, err := NewEvaluationRun(input); err == nil {
 		t.Fatal("explicit profile silently substituted")
 	}
 	input.Providers[0].ProfileID = "explicit"
 	if _, err := NewEvaluationRun(input); err != nil {
-		t.Fatalf("grounded response required unused model: %v", err)
+		t.Fatalf("conversation rejected chosen model: %v", err)
 	}
 	caseSnapshot := input.Cases[0].Snapshot()
 	caseSnapshot.TenantID = "other"

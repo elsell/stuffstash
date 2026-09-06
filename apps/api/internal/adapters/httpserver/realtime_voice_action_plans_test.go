@@ -14,7 +14,6 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -29,7 +28,7 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "read-tool-id", "read-audit-id", "plan-id", "command-id", "response-id"},
+		ids:         []string{"voice-session-id", "read-audit-id", "plan-id", "command-id", "response-id"},
 	}, fakeSpeechToText{transcript: "Add a water bottle."}, actionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
 	})
@@ -315,7 +314,7 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 		},
 	}, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Restore the water bottle."}, restoreActionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
-	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
 	if _, err := application.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
@@ -380,22 +379,22 @@ func openRealtimeVoiceReviewSession(t *testing.T) (context.Context, *websocket.C
 	return openRealtimeVoiceReviewSessionWithModel(t, actionPlanProposalLanguageModel{})
 }
 
-func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.LanguageInferenceProvider) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.ConversationModel) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetup(t, languageInference, nil)
 }
 
-func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.LanguageInferenceProvider, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.ConversationModel, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetupAndTranscript(t, languageInference, "Add a water bottle.", setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.ConversationModel, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
-	ids := []string{"voice-session-id", "read-tool-id", "read-audit-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
+	ids := []string{"voice-session-id", "read-audit-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
 	if setup != nil {
 		ids = []string{
 			"location-id", "location-undo-id", "location-audit-id",
@@ -406,27 +405,27 @@ func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, language
 	return openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, languageInference, ids, transcript, setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.ConversationModel, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t, languageInference, ids, setup)
 	return ctx, connection, sessionID, planID
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t *testing.T, languageInference ports.ConversationModel, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, languageInference, ids, "Add a water bottle.", setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t *testing.T, languageInference ports.ConversationModel, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, languageInference, ids, transcript, setup)
 	return ctx, connection, sessionID, planID
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t *testing.T, languageInference ports.ConversationModel, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
 	t.Helper()
 
 	application := newSeededTestAppWithVoice(t, seededState{
@@ -549,36 +548,8 @@ func (d *denyEditAfterProposalAuthorizer) RevokeInventoryEditor(ctx context.Cont
 
 type actionPlanProposalLanguageModel struct{}
 
-func (m actionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "water bottle", NewAssetKind: "item"}
-	return typedVoiceInvestigationTurn(input, intent, nil)
-}
-
 type moveActionPlanProposalLanguageModel struct{}
-
-func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{
-		RequestShape: agentmodel.RequestShapeSingleTarget,
-		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
-		DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
-	}
-	return typedVoiceInvestigationTurn(input, intent, nil)
-}
 
 type archiveActionPlanProposalLanguageModel struct{}
 
-func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	subject := "water bottle"
-	if strings.Contains(strings.ToLower(input.Transcript), "toolbox") {
-		subject = "Toolbox"
-	}
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: subject}
-	return typedVoiceInvestigationTurn(input, intent, nil)
-}
-
 type restoreActionPlanProposalLanguageModel struct{}
-
-func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationRestore, SubjectMention: "water bottle"}
-	return typedVoiceInvestigationTurn(input, intent, nil)
-}

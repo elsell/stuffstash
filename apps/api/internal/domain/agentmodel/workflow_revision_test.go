@@ -29,8 +29,8 @@ func TestWorkflowRevisionPreservesIdentityAndDefinitionSnapshot(t *testing.T) {
 		t.Fatalf("revision identity changed: %+v", result)
 	}
 	settings := result.Definition.Settings()
-	settings.Steps[0].Instructions = "mutated"
-	if revision.Snapshot().Definition.Settings().Steps[0].Instructions != "" {
+	settings.Instructions = "mutated"
+	if revision.Snapshot().Definition.Settings().Instructions != "" {
 		t.Fatal("revision definition mutated")
 	}
 }

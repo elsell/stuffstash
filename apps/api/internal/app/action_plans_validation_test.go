@@ -85,3 +85,19 @@ func TestCreateActionPlanRejectsUnsupportedExecutableCommandArguments(t *testing
 		})
 	}
 }
+
+func TestCreateActionPlanPreservesOrdinaryInventoryText(t *testing.T) {
+	for _, title := range []string{"Credential holder", "Provider Response notes", "Bearer of good news"} {
+		t.Run(title, func(t *testing.T) {
+			application := newActionPlanTestApp(&fakeActionPlanRepository{}, &fakeIDGenerator{ids: []string{"plan-1", "command-1"}}, nil)
+			_, err := application.CreateActionPlan(context.Background(), CreateActionPlanInput{
+				Principal: identity.Principal{ID: identity.PrincipalID("user-1")}, TenantID: tenant.ID("tenant-home"), InventoryID: inventory.InventoryID("inventory-home"),
+				Source: "mobile_voice", ConfirmationSummary: "Add this item?",
+				Commands: []ActionPlanCommandInput{{Kind: actionplan.CommandKindCreateAsset, Summary: "Add item", Arguments: map[string]any{"title": title, "kind": "item"}}},
+			})
+			if err != nil {
+				t.Fatalf("ordinary inventory title rejected: %v", err)
+			}
+		})
+	}
+}

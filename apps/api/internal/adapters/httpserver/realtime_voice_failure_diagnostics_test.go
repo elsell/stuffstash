@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -42,7 +42,7 @@ func TestRealtimeVoiceQueryStreamsSanitizedLanguageFailureDiagnosticBeforeFailur
 		t.Fatalf("expected language failure diagnostic before session.failed, got %+v", events)
 	}
 	detail, _ := events[diagnosticIndex]["detail"].(string)
-	for _, required := range []string{`"phase": "evidence_assessment"`, `"evidenceRound": 1`, `"maxEvidenceRounds": 2`, `"previousRequestCount": 2`, `"toolResultCount": 2`, "search_authorized_assets", "provider_http_status_429"} {
+	for _, required := range []string{`"stage": "conversation"`, `"modelCallCount": 2`, `"toolCallCount": 2`, `"toolResultCount": 2`, "search_authorized_assets", "provider_http_status_429"} {
 		if !strings.Contains(detail, required) {
 			t.Fatalf("expected diagnostic detail to include %q, got %s", required, detail)
 		}
@@ -54,16 +54,14 @@ func TestRealtimeVoiceQueryStreamsSanitizedLanguageFailureDiagnosticBeforeFailur
 
 type lateFailingLanguageModel struct{}
 
-func (lateFailingLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if input.Investigation != nil && input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
-		intent := agentmodel.Intent{
-			RequestShape: agentmodel.RequestShapeSingleTarget,
-			Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
-			DestinationPath: []string{"Kitchen"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
-		}
-		return typedVoiceInvestigationTurn(input, intent, nil)
+func (lateFailingLanguageModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	if len(input.Messages) == 1 {
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{
+			{ID: "find-bottle", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "water bottle"}},
+			{ID: "find-kitchen", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "Kitchen"}},
+		}}, nil
 	}
-	return ports.LanguageInferenceTurn{}, safeHTTPStatusLanguageError{}
+	return ports.ConversationModelTurn{}, safeHTTPStatusLanguageError{}
 }
 
 type safeHTTPStatusLanguageError struct{}

@@ -11,7 +11,7 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -28,7 +28,7 @@ func TestRealtimeVoiceWebSocketRechecksRevokedInventoryAccessBeforeProviderDiscl
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "owner-user"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "owner-user"}},
 		ids:         []string{"voice-session-id"},
-	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers)
 	if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer-user"}, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatalf("grant viewer: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestRealtimeVoiceContinuationRechecksRevokedAccessBeforeDisclosure(t *testi
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "owner-user"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "owner-user"}},
 		ids:         []string{"voice-session-id"},
-	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers)
 	if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer-user"}, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatalf("grant viewer: %v", err)
 	}
@@ -129,12 +129,12 @@ func (p *revocationProbeVoiceProviders) Transcribe(context.Context, ports.Speech
 	return ports.SpeechToTextResult{Transcript: "Where are the secret documents?"}, nil
 }
 
-func (p *revocationProbeVoiceProviders) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (p *revocationProbeVoiceProviders) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	p.languageCalls++
 	if p.allowAnswer {
-		return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "tools"), nil)
+		return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "tools"}, nil)
 	}
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+	return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 }
 
 func (p *revocationProbeVoiceProviders) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {

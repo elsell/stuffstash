@@ -15,15 +15,20 @@ type WorkflowRevisionID string
 
 type WorkflowAuthorID string
 
+type WorkflowSettingsMigration string
+
+const WorkflowSettingsMigrationLegacy WorkflowSettingsMigration = "legacy-investigation-v1"
+
 type WorkflowRevisionInput struct {
-	ID         WorkflowRevisionID
-	WorkflowID WorkflowID
-	TenantID   TenantID
-	AuthorID   WorkflowAuthorID
-	Number     int
-	Definition WorkflowDefinition
-	Limits     WorkflowLimits
-	CreatedAt  time.Time
+	SettingsMigration WorkflowSettingsMigration
+	ID                WorkflowRevisionID
+	WorkflowID        WorkflowID
+	TenantID          TenantID
+	AuthorID          WorkflowAuthorID
+	Number            int
+	Definition        WorkflowDefinition
+	Limits            WorkflowLimits
+	CreatedAt         time.Time
 }
 
 // A revision is immutable. Activation belongs to the workflow repository and
@@ -33,6 +38,9 @@ type WorkflowRevision struct {
 }
 
 func NewWorkflowRevision(input WorkflowRevisionInput) (WorkflowRevision, error) {
+	if input.SettingsMigration != "" && input.SettingsMigration != WorkflowSettingsMigrationLegacy {
+		return WorkflowRevision{}, ErrInvalidWorkflowRevision
+	}
 	for _, id := range []string{string(input.ID), string(input.WorkflowID)} {
 		if !workflowIdentifierValid(id) {
 			return WorkflowRevision{}, ErrInvalidWorkflowRevision

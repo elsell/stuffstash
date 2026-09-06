@@ -42,10 +42,10 @@ func TestEvaluationProviderResolutionUsesPinnedInstances(t *testing.T) {
 		if err != nil || binding.Provider == nil {
 			t.Fatal("pinned provider unavailable")
 		}
-		if !explicit && (bundle.Providers.LanguageInference == nil || bundle.Providers.LanguageInferenceProfileID != "model") {
+		if !explicit && (bundle.Providers.ConversationModel == nil || bundle.Providers.LanguageInferenceProfileID != "model") {
 			t.Fatal("pinned default unavailable")
 		}
-		if explicit && bundle.Providers.LanguageInference != nil {
+		if explicit && bundle.Providers.ConversationModel != nil {
 			t.Fatal("unused default constructed")
 		}
 		for _, input := range []ports.WorkflowLanguageProviderResolutionInput{{TenantID: "outside", ProfileID: "model"}, {TenantID: fixture.TenantID, ProfileID: "other"}} {
@@ -77,7 +77,7 @@ func TestEvaluationProviderResolutionDoesNotReselectDefault(t *testing.T) {
 	}
 }
 
-func TestEvaluationProviderResolutionChecksEntireSetBeforeConstruction(t *testing.T) {
+func TestEvaluationProviderResolutionChecksSelectedModelBeforeConstruction(t *testing.T) {
 	resolver, run, _, factory := evaluationResolutionSetup(t, true)
 	repository := resolver.profiles.(providerResolverProfileRepository)
 	second := repository.profiles[0]
@@ -87,7 +87,7 @@ func TestEvaluationProviderResolutionChecksEntireSetBeforeConstruction(t *testin
 	input := run.Snapshot().Input
 	revision := input.Workflow.Snapshot()
 	settings := revision.Definition.Settings()
-	settings.Steps[1].ProviderProfileID = "second"
+	settings.ProviderProfileID = "second"
 	definition, err := model.NewWorkflowDefinition(settings, revision.Limits)
 	if err != nil {
 		t.Fatal(err)
@@ -108,9 +108,9 @@ func TestEvaluationProviderResolutionChecksEntireSetBeforeConstruction(t *testin
 	repository.profiles[1].ModelName = "changed-model"
 	resolver.profiles = repository
 	if _, err := resolver.ResolveEvaluationRunProviders(context.Background(), fixture.TenantID, run); !errors.Is(err, ports.ErrEvaluationConfigurationChanged) {
-		t.Fatalf("later profile drift: %v", err)
+		t.Fatalf("selected profile drift: %v", err)
 	}
 	if len(factory.configs) != 0 {
-		t.Fatal("earlier provider constructed before later drift check")
+		t.Fatal("provider constructed before model drift check")
 	}
 }

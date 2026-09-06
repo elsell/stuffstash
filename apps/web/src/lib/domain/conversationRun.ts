@@ -18,6 +18,6 @@ export interface RunResult {
 }
 export interface EvaluationRun extends RunHead {
   authorId: string; coverage: 'text_only'; cases: (EvaluationCasePin & { title: string })[];
-  providers: { step: string; profileId: string; configurationId: string }[];
+  providers: { profileId: string; configurationId: string }[];
   results: RunResult[]; startedAt: string | null; finishedAt: string | null; failureCode: string;
 }

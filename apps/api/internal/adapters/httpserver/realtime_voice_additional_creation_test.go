@@ -9,54 +9,47 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"nhooyr.io/websocket"
 )
 
-type additionalItemModel struct {
-	mode  agentmodel.CreationMode
-	quote string
-}
+type additionalItemModel struct{ propose bool }
 
-func (m additionalItemModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "Charger", NewAssetKind: "item", CreationMode: m.mode, CreationEvidence: m.quote}
-	step := agentmodel.InvestigationStep{Intent: intent}
-	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
-		step.Decision = agentmodel.InvestigationDecisionSearch
-		step.SearchRequests = []agentmodel.SearchRequest{{ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets, Mention: "Charger", SearchProbes: []string{"Charger"}}}
-	} else {
-		step.Decision = agentmodel.InvestigationDecisionFinish
-		ids := []string{}
-		for _, observation := range input.Investigation.Observations {
-			ids = append(ids, observation.CandidateID)
-		}
-		status := agentmodel.ResolutionStrong
-		if len(ids) > 1 {
-			status = agentmodel.ResolutionAmbiguous
-		}
-		step.Resolutions = []agentmodel.Resolution{{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: status, CandidateIDs: ids}}
+func (m additionalItemModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	if len(input.Messages) == 0 {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 	}
-	return ports.LanguageInferenceTurn{Investigation: &step}, nil
+	if input.Messages[len(input.Messages)-1].Role == ports.ConversationRoleUser {
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "find-charger", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "Charger"}}}}, nil
+	}
+	ids, err := httpConversationEvidenceIDs(input, "find-charger")
+	if err != nil || ids["charger"] == "" {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
+	}
+	if !m.propose {
+		return ports.ConversationModelTurn{Answer: &ports.ConversationAnswer{Spoken: "Your Charger is already recorded.", Display: "Your Charger is already recorded.", AssetIDs: []string{ids["charger"]}}}, nil
+	}
+	return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "propose-additional", Name: "propose_inventory_change", Arguments: map[string]any{
+		"summary": "Create an additional Charger?", "commands": []any{map[string]any{"id": "create-charger", "kind": "create_asset", "summary": "Create additional Charger", "arguments": map[string]any{"title": "Charger", "kind": "item"}}},
+	}}}}, nil
 }
 
-func TestRealtimeAdditionalItemRequiresUserEvidenceAccessAndApproval(t *testing.T) {
+func TestRealtimeAdditionalItemPreservesExistingIdentityAccessAndApproval(t *testing.T) {
 	for _, scenario := range []struct {
-		name, user, transcript string
-		mode                   agentmodel.CreationMode
-		quote, terminal        string
-		approve                bool
+		name, user, transcript, terminal string
+		propose, approve                 bool
 	}{
-		{"additional owner", "user-1", "I bought another charger", agentmodel.CreationModeAdditional, "I bought another charger", "action.plan.proposed", true},
-		{"ordinary recording", "user-1", "Record my charger", agentmodel.CreationModeRecord, "", "session.completed", false},
-		{"fabricated acquisition", "user-1", "Record my charger", agentmodel.CreationModeAdditional, "I bought another charger", "session.failed", false},
-		{"viewer additional", "viewer", "I bought another charger", agentmodel.CreationModeAdditional, "I bought another charger", "session.failed", false},
+		{"additional owner", "user-1", "I bought another charger", "action.plan.proposed", true, true},
+		{"existing item answer", "user-1", "Record my charger", "session.completed", false, false},
+		{"unwanted model proposal cancelled", "user-1", "Record my charger", "action.plan.proposed", true, false},
+		{"viewer additional", "viewer", "I bought another charger", "session.failed", true, false},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			store := memory.NewStore()
 			authorizer := memory.NewAuthorizer()
-			application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: scenario.transcript}, additionalItemModel{mode: scenario.mode, quote: scenario.quote}, fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+			application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: scenario.transcript}, additionalItemModel{propose: scenario.propose}, fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}})
 			seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Charger", "")
 			if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer"}, "tenant-home", "inventory-home"); err != nil {
 				t.Fatal(err)
@@ -86,13 +79,25 @@ func TestRealtimeAdditionalItemRequiresUserEvidenceAccessAndApproval(t *testing.
 			if err != nil || len(before) != 1 || before[0].ID != original[0].ID {
 				t.Fatal("voice request mutated assets before approval")
 			}
-			if !scenario.approve {
+			if scenario.terminal != "action.plan.proposed" {
 				assertNoRealtimeEventType(t, events, "action.plan.proposed")
+				if scenario.terminal == "session.failed" && findRealtimeEvent(t, events, "session.failed")["code"] != "forbidden" {
+					t.Fatal("viewer proposal did not fail at authorization")
+				}
 				return
 			}
 			proposal := findRealtimeEvent(t, events, "action.plan.proposed")["actionPlan"].(map[string]any)
 			if !strings.Contains(proposal["confirmationSummary"].(string), "additional") {
 				t.Fatalf("approval hides additional intent: %+v", proposal)
+			}
+			if !scenario.approve {
+				writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "action.plan.cancel", "seq": 4, "sessionId": sessionID, "planId": proposal["planId"]})
+				readRealtimeMessagesUntil(t, ctx, connection, "action.plan.cancelled")
+				after, err := store.ListAssetsByInventory(ctx, "tenant-home", "inventory-home", ports.AssetListPageRequest{Limit: 10})
+				if err != nil || len(after) != 1 || after[0].ID != original[0].ID {
+					t.Fatal("cancelled proposal changed existing inventory")
+				}
+				return
 			}
 			writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "action.plan.approve", "seq": 4, "sessionId": sessionID, "planId": proposal["planId"]})
 			readRealtimeMessagesUntil(t, ctx, connection, "action.plan.executed")

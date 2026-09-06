@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -36,7 +37,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 	}{
 		{"owner", "dev:user-1", "tenant-home", "inventory-home", true},
 		{"explicit model owner", "dev:user-1", "tenant-home", "inventory-home", true},
-		{"exhausted workflow owner", "dev:user-1", "tenant-home", "inventory-home", true},
+		{"bounded followup owner", "dev:user-1", "tenant-home", "inventory-home", true},
 		{"outsider", "dev:user-2", "tenant-home", "inventory-home", false},
 		{"wrong inventory", "dev:user-1", "tenant-home", "inventory-other", false},
 		{"cross tenant", "dev:user-1", "tenant-other", "inventory-other", false},
@@ -49,22 +50,21 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 			store := &voiceWorkflowReadStore{Store: memory.NewStore()}
 			authorizer := memory.NewAuthorizer()
 			seedMemoryStore(t, ctx, store.Store, authorizer, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}, {id: "tenant-other", name: "Other", owner: "user-2"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}, {id: "inventory-other", tenantID: "tenant-other", name: "Other", owner: "user-2"}}})
-			limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 1000}
-			application := app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, Audit: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits}).WithRealtimeVoiceProviders(fakeSpeechToText{}, scriptedLanguageModel{}, fakeTextToSpeech{}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
-			revision, err := application.SaveConversationWorkflowRevision(ctx, app.SaveConversationWorkflowInput{Principal: principal("user-1"), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Home", Retrieval: agentmodel.WorkflowRetrievalPreciseFirst, Response: agentmodel.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []agentmodel.WorkflowStep{{Kind: agentmodel.WorkflowStepInterpret, Attempts: 1}, {Kind: agentmodel.WorkflowStepAssess, Attempts: 1}, {Kind: agentmodel.WorkflowStepRespond, Attempts: 1}}}})
+			limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxNameRunes: 100, MaxInstructionRunes: 1000}
+			application := app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, Audit: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits}).WithRealtimeVoiceProviderResolver(nativeBoundaryResolver{model: &nativeBoundaryConversation{}})
+			revision, err := application.SaveConversationWorkflowRevision(ctx, app.SaveConversationWorkflowInput{Principal: principal("user-1"), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Home", Budget: limits.Budget}})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if test.name == "explicit model owner" || test.name == "exhausted workflow owner" {
+			if test.name == "explicit model owner" || test.name == "bounded followup owner" {
 				snapshot := revision.Snapshot()
 				settings := snapshot.Definition.Settings()
-				if test.name == "exhausted workflow owner" {
+				if test.name == "bounded followup owner" {
 					settings.Budget.ModelCalls = 2
+					settings.Budget.FollowUpTurns = 1
 				}
-				for index := range settings.Steps {
-					settings.Steps[index].ProviderProfileID = "explicit-model"
-				}
+				settings.ProviderProfileID = "explicit-model"
 				snapshot.Definition, err = agentmodel.NewWorkflowDefinition(settings, limits)
 				if err != nil {
 					t.Fatal(err)
@@ -116,15 +116,22 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 					if event["type"] != "session.started" {
 						t.Fatalf("authorized workflow session failed: %+v", event)
 					}
-					if test.name == "exhausted workflow owner" {
-						writeRealtimeAudioTurn(t, ctx, connection, event["sessionId"].(string), 2, "budget-turn")
-						events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
-						if findRealtimeEvent(t, events, "session.completed")["followUpAvailable"] != false {
-							t.Fatal("exhausted workflow advertised another recording")
+					if test.name == "bounded followup owner" {
+						for turn := 0; turn < 2; turn++ {
+							writeRealtimeAudioTurn(t, ctx, connection, event["sessionId"].(string), 2+turn*2, fmt.Sprintf("budget-turn-%d", turn))
+							events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+							if findRealtimeEvent(t, events, "session.completed")["followUpAvailable"] != (turn == 0) {
+								t.Fatalf("turn %d did not preserve per-turn budget and session followup limit", turn)
+							}
+							if findRealtimeEvent(t, events, "tool.call.started")["toolLabel"] != "Search inventory" {
+								t.Fatal("followup skipped authorized retrieval")
+							}
+							findRealtimeEvent(t, events, "assistant.response.completed")
 						}
+
 						_, _, closedErr := connection.Read(ctx)
 						if websocket.CloseStatus(closedErr) != websocket.StatusNormalClosure {
-							t.Fatalf("exhausted session not closed normally: %v", closedErr)
+							t.Fatalf("session turn limit not closed normally: %v", closedErr)
 						}
 					}
 
@@ -147,10 +154,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 
 // This controlled resolver has working speech and an explicit model, but no default model.
 type workflowOnlyVoiceResolver struct{}
-type workflowHTTPModel struct {
-	scriptedLanguageModel
-	httpTestVoiceResponseGenerator
-}
+type workflowHTTPModel struct{}
 
 func (workflowOnlyVoiceResolver) ResolveRealtimeVoiceProviders(_ context.Context, input ports.RealtimeVoiceProviderResolutionInput) (ports.RealtimeVoiceProviderSet, error) {
 	if !input.SkipDefaultLanguage {
@@ -163,4 +167,11 @@ func (workflowOnlyVoiceResolver) ResolveWorkflowLanguageProvider(_ context.Conte
 		return ports.WorkflowLanguageProviderBinding{}, ports.ErrInvalidProviderInput
 	}
 	return ports.WorkflowLanguageProviderBinding{ProfileID: input.ProfileID, Provider: workflowHTTPModel{}}, nil
+}
+
+func (workflowHTTPModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	if len(input.Messages) > 0 && input.Messages[len(input.Messages)-1].Role == ports.ConversationRoleUser {
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "find-tools", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "tools"}}}}, nil
+	}
+	return ports.ConversationModelTurn{Text: "I could not find matching tools."}, nil
 }

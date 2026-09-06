@@ -29,7 +29,7 @@ func TestGoogleProviderProfileFactoryBuildsOAuthBackedProviders(t *testing.T) {
 		t.Fatalf("unexpected speech-to-text provider: %#v", stt)
 	}
 	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, options)
-	language, err := factory.LanguageInferenceProvider(context.Background(), config)
+	language, err := factory.ConversationModelProvider(context.Background(), config)
 	if err != nil {
 		t.Fatalf("build language provider: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestGoogleProviderProfileFactoryBuildsAPIKeyBackedGeminiProviders(t *testin
 	t.Parallel()
 
 	factory := GoogleProviderProfileFactory{}
-	language, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
+	language, err := factory.ConversationModelProvider(context.Background(), ProviderProfileProviderConfig{
 		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{}`),
 		CredentialPurpose: ports.ProviderCredentialPurposeAPIKey,
 		Credential:        []byte("api-key"),
@@ -101,7 +101,7 @@ func TestGoogleProviderProfileFactoryBuildsServerADCBackedProviders(t *testing.T
 	}
 
 	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, options)
-	language, err := factory.LanguageInferenceProvider(context.Background(), config)
+	language, err := factory.ConversationModelProvider(context.Background(), config)
 	if err != nil {
 		t.Fatalf("build ADC language provider: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestGoogleProviderProfileFactoryRejectsServerADCProjectOverride(t *testing.
 		ServerADCLocation:     "us-central1",
 		ServerADCQuotaProject: "allowed-project",
 	}
-	_, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
+	_, err := factory.ConversationModelProvider(context.Background(), ProviderProfileProviderConfig{
 		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{"projectId":"other-project","location":"us-central1","quotaProject":"allowed-project"}`),
 		CredentialPurpose: ports.ProviderCredentialPurposeServerADC,
 		Credential:        []byte("server_adc"),
@@ -162,7 +162,7 @@ func TestGoogleProviderProfileFactoryAppliesProfileHTTPTimeout(t *testing.T) {
 	factory := GoogleProviderProfileFactory{}
 
 	config.Profile = googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, options)
-	language, err := factory.LanguageInferenceProvider(context.Background(), config)
+	language, err := factory.ConversationModelProvider(context.Background(), config)
 	if err != nil {
 		t.Fatalf("build language provider: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestGoogleProviderProfileFactoryRejectsMalformedProfileHTTPTimeout(t *testi
 	t.Parallel()
 
 	factory := GoogleProviderProfileFactory{}
-	_, err := factory.LanguageInferenceProvider(context.Background(), ProviderProfileProviderConfig{
+	_, err := factory.ConversationModelProvider(context.Background(), ProviderProfileProviderConfig{
 		Profile:           googleFactoryProfile(t, agentmodel.ProviderCapabilityLanguageInference, `{"projectId":"project","location":"us-central1","httpTimeout":"0s"}`),
 		CredentialPurpose: ports.ProviderCredentialPurposeOAuthBearer,
 		Credential:        []byte("access-token"),

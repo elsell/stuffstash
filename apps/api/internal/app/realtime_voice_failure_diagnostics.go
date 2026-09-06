@@ -3,41 +3,9 @@ package app
 import (
 	"encoding/json"
 	"errors"
-	"strings"
-
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"strings"
 )
-
-func emitRealtimeVoiceLanguageFailureDiagnostic(session RealtimeVoiceSession, input agentmodel.InvestigationInput, toolResults []ports.AgentToolResult, safeCode string, err error, emit RealtimeVoiceEventSink) error {
-	if !session.DeveloperDiagnostics {
-		return nil
-	}
-	payload, marshalErr := json.MarshalIndent(map[string]any{
-		"stage":                     "language_inference",
-		"safeCode":                  strings.TrimSpace(safeCode),
-		"safeError":                 safeRealtimeVoiceProviderDiagnosticError(err),
-		"phase":                     string(input.Phase),
-		"evidenceRound":             input.EvidenceRound,
-		"maxEvidenceRounds":         input.MaxEvidenceRounds,
-		"promptVersion":             safeRealtimeVoiceDiagnosticVersion(input.PromptVersion),
-		"schemaVersion":             safeRealtimeVoiceDiagnosticVersion(input.SchemaVersion),
-		"previousRequestCount":      len(input.PreviousRequests),
-		"observationCount":          len(input.Observations),
-		"readEvidenceCount":         len(input.ReadEvidence),
-		"customAssetTypeCount":      len(input.Vocabulary.CustomAssetTypes),
-		"customFieldCount":          len(input.Vocabulary.CustomFields),
-		"tagCount":                  len(input.Vocabulary.Tags),
-		"vocabularyRequestCount":    len(input.VocabularyRequests),
-		"vocabularyDefinitionCount": len(input.VocabularyDefinitions),
-		"toolResultCount":           len(toolResults),
-		"toolNames":                 realtimeVoiceToolResultNames(toolResults),
-	}, "", "  ")
-	if marshalErr != nil {
-		return emitRealtimeVoiceDiagnostic(session.ID, "Language provider failed", "Language provider failure diagnostic could not be rendered safely.", emit)
-	}
-	return emitRealtimeVoiceDiagnostic(session.ID, "Language provider failed", string(payload), emit)
-}
 
 func emitRealtimeVoiceTextToSpeechFailureDiagnostic(session RealtimeVoiceSession, toolResults []ports.AgentToolResult, safeCode string, err error, emit RealtimeVoiceEventSink) error {
 	if !session.DeveloperDiagnostics {
@@ -54,6 +22,31 @@ func emitRealtimeVoiceTextToSpeechFailureDiagnostic(session RealtimeVoiceSession
 		return emitRealtimeVoiceDiagnostic(session.ID, "Text-to-speech provider failed", "Text-to-speech provider failure diagnostic could not be rendered safely.", emit)
 	}
 	return emitRealtimeVoiceDiagnostic(session.ID, "Text-to-speech provider failed", string(payload), emit)
+}
+
+func emitRealtimeVoiceConversationFailureDiagnostic(session RealtimeVoiceSession, modelCalls, toolCalls int, results []ports.AgentToolResult, err error, emit RealtimeVoiceEventSink) error {
+	if !session.DeveloperDiagnostics {
+		return nil
+	}
+	allowed := map[string]bool{}
+	for _, tool := range realtimeConversationReadTools() {
+		allowed[tool.Name] = true
+	}
+	names := []string{}
+	for _, result := range results {
+		if allowed[result.Name] {
+			names = append(names, result.Name)
+		}
+	}
+	payload, marshalErr := json.MarshalIndent(map[string]any{
+		"stage": "conversation", "safeCode": realtimeVoiceFailureLanguageInference,
+		"safeError":      safeRealtimeVoiceProviderDiagnosticError(err),
+		"modelCallCount": modelCalls, "toolCallCount": toolCalls, "toolResultCount": len(results), "toolNames": names,
+	}, "", "  ")
+	if marshalErr != nil {
+		return marshalErr
+	}
+	return emitRealtimeVoiceDiagnostic(session.ID, "Language provider failed", string(payload), emit)
 }
 
 func realtimeVoiceToolResultNames(toolResults []ports.AgentToolResult) []string {

@@ -1,18 +1,11 @@
-export type WorkflowStepKind = 'interpret' | 'assess' | 'respond';
-export interface WorkflowStep {
-  kind: WorkflowStepKind;
-  providerProfileId: string | null;
-  instructions: string;
-  attempts: number;
-}
 export interface WorkflowDefinition {
   name: string;
-  retrieval: 'precise_first' | 'expanded';
-  response: 'generated_with_grounded_fallback' | 'grounded';
-  budget: { evidenceRounds: number; modelCalls: number; elapsedSeconds: number; followUpTurns: number };
-  steps: WorkflowStep[];
+  providerProfileId: string | null;
+  instructions: string;
+  budget: { toolCalls: number; modelCalls: number; elapsedSeconds: number; followUpTurns: number };
 }
 export interface WorkflowRevision {
+  settingsMigration?: 'legacy-investigation-v1';
   id: string;
   workflowId: string;
   number: number;

@@ -68,7 +68,7 @@ func NewEvaluationCaseDefinition(input EvaluationCaseDefinitionInput) (Evaluatio
 		value := &input.Assets[i]
 		value.Title = strings.TrimSpace(value.Title)
 		value.Description = strings.TrimSpace(value.Description)
-		if !workflowIdentifierValid(value.ID) || !validEvaluationAssetTitle(value.Title) || !workflowTextWithin(value.Description, 2000, true) || !validObservationTagNames(value.TagNames) {
+		if !workflowIdentifierValid(value.ID) || !validEvaluationAssetTitle(value.Title) || !workflowTextWithin(value.Description, 2000, true) || !validEvaluationTagNames(value.TagNames) {
 			return EvaluationCaseDefinition{}, ErrInvalidEvaluationCase
 		}
 		switch value.Kind {

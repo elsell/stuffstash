@@ -15,7 +15,7 @@ type WorkflowLanguageProviderResolutionInput struct {
 type WorkflowLanguageProviderBinding struct {
 	ProfileID      string
 	PromptTemplate string
-	Provider       RealtimeLanguageProvider
+	Provider       ConversationModel
 }
 
 type WorkflowLanguageProviderResolver interface {

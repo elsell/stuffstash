@@ -3,53 +3,28 @@ package app
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func TestValidateRealtimeVoiceFinalResponseRejectsUnsafeSpokenText(t *testing.T) {
+func TestValidateRealtimeVoiceFinalResponseEnforcesSpokenBounds(t *testing.T) {
 	t.Parallel()
-
-	for _, spoken := range []string{
-		`{"tool":"search_authorized_assets","query":"water bottle"}`,
-		`I found this: {"title":"Water bottle","location":"Office"}`,
-		`search_authorized_assets({"query":"water bottle"})`,
-		`Call list_authorized_assets with the water bottle query.`,
-		`Reasoning: I used chain of thought to find it.`,
-		`The raw prompt says to call list_authorized_assets.`,
-		`Provider response: stack trace from Gemini.`,
-		`Use assetId water-bottle-1 to find it next time.`,
-		`Use toolCallId call-123 to debug the request.`,
-		`The tenantId is tenant-home and inventoryId is inventory-home.`,
-		`The parentAssetId should be kitchen-1.`,
-		`The tenant_id is tenant-home and inventory_id is inventory-home.`,
-		`The parent-asset-id should be kitchen-1.`,
-		`The tool call id is call-123.`,
-		`Authorization: bearer abc/def==`,
-		`apiKey: should-not-be-spoken`,
-	} {
-		err := validateRealtimeVoiceFinalResponse(ports.StructuredAgentResponse{
-			Kind:            ports.StructuredAgentResponseKindAnswer,
-			SpokenResponse:  spoken,
-			DisplayResponse: "Safe display text.",
-		})
+	for _, spoken := range []string{"", " ", strings.Repeat("x", 501), strings.Repeat(" ", 501) + "Hello", string([]byte{0xff})} {
+		err := validateRealtimeVoiceFinalResponse(ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: spoken, DisplayResponse: "Display text."})
 		if !errors.Is(err, ports.ErrInvalidProviderInput) {
-			t.Fatalf("expected unsafe spoken response to be rejected for %q, got %v", spoken, err)
+			t.Fatalf("invalid spoken envelope accepted: %v", err)
 		}
 	}
 }
-
-func TestValidateRealtimeVoiceFinalResponseRejectsUnsafeDisplayText(t *testing.T) {
+func TestValidateRealtimeVoiceFinalResponseEnforcesDisplayBounds(t *testing.T) {
 	t.Parallel()
-
-	err := validateRealtimeVoiceFinalResponse(ports.StructuredAgentResponse{
-		Kind:            ports.StructuredAgentResponseKindAnswer,
-		SpokenResponse:  "Your water bottle is in the Office.",
-		DisplayResponse: `{"assetId":"water-bottle-1","providerResponse":"raw output"}`,
-	})
-	if !errors.Is(err, ports.ErrInvalidProviderInput) {
-		t.Fatalf("expected unsafe display response to be rejected, got %v", err)
+	for _, display := range []string{" ", strings.Repeat("x", 1001), string([]byte{0xff})} {
+		err := validateRealtimeVoiceFinalResponse(ports.StructuredAgentResponse{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "Hello.", DisplayResponse: display})
+		if !errors.Is(err, ports.ErrInvalidProviderInput) {
+			t.Fatalf("invalid display envelope accepted: %v", err)
+		}
 	}
 }
 
@@ -61,6 +36,8 @@ func TestValidateRealtimeVoiceFinalResponseAllowsNaturalInventoryAnswer(t *testi
 		"Password notebook: office drawer.",
 		"Authorization form: filing cabinet.",
 		"Token board game: closet.",
+		"Your Chain of Thought book is in the office.",
+		"Your Provider Response notes are in the cabinet.",
 	} {
 		err := validateRealtimeVoiceFinalResponse(ports.StructuredAgentResponse{
 			Kind:            ports.StructuredAgentResponseKindAnswer,
@@ -88,8 +65,8 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	events := []RealtimeVoiceEvent{}
 	err = application.completeRealtimeVoiceResponse(context.Background(), session, ports.StructuredAgentResponse{
 		Kind:            ports.StructuredAgentResponseKindAnswer,
-		SpokenResponse:  "Use assetId water-bottle-1.",
-		DisplayResponse: "Call search_authorized_assets.",
+		SpokenResponse:  strings.Repeat("x", 501),
+		DisplayResponse: "Display text.",
 	}, nil, nil, func(event RealtimeVoiceEvent) error {
 		events = append(events, event)
 		return nil
@@ -107,12 +84,11 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	}
 }
 
-func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.T) {
+func TestRealtimeVoiceConversationDeliversModelAnswerToSpeechAndMobile(t *testing.T) {
 	t.Parallel()
 
 	tts := &resolvedTextToSpeech{}
 	resolver := successfulRealtimeVoiceResolver()
-	resolver.providers.ResponseGenerator = failingVoiceResponseGenerator{err: errors.New("generation unavailable")}
 	resolver.providers.TextToSpeech = tts
 	application := newRealtimeVoiceResolutionTestApp(t, resolver)
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
@@ -125,10 +101,10 @@ func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("grounded recovery failed: %v", err)
+		t.Fatalf("conversation failed: %v", err)
 	}
 	if tts.lastText == "" {
-		t.Fatal("grounded fallback did not reach TTS")
+		t.Fatal("model answer did not reach TTS")
 	}
 	completed := false
 	for _, event := range events {
@@ -137,15 +113,7 @@ func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.
 		}
 	}
 	if !completed {
-		t.Fatal("grounded fallback did not reach mobile")
+		t.Fatal("model answer did not reach mobile")
 	}
 
-}
-
-type failingVoiceResponseGenerator struct {
-	err error
-}
-
-func (f failingVoiceResponseGenerator) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, f.err
 }

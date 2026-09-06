@@ -2,7 +2,6 @@ package agentmodel
 
 import (
 	"context"
-	"sync"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -19,15 +18,11 @@ type PrepareWorkflowInput struct {
 }
 
 // PreparedWorkflow pins immutable configuration and providers before audio is
-// captured. Its shared model budget starts with the first model invocation.
+// captured. The caller applies its budgets separately to each user turn.
 type PreparedWorkflow struct {
-	revision  domain.WorkflowRevision
-	limits    domain.WorkflowLimits
-	clock     ports.Clock
-	bindings  map[domain.WorkflowStepKind]WorkflowModelBinding
-	mu        sync.Mutex
-	execution *WorkflowModelExecution
-	err       error
+	conversation          *workflowConversationModel
+	conversationProfileID string
+	revision              domain.WorkflowRevision
 }
 
 func (s ConversationWorkflowService) Selected(ctx context.Context, principal identity.Principal, tenantID tenant.ID) (*SelectedWorkflow, error) {
@@ -57,30 +52,21 @@ func (s ConversationWorkflowService) Selected(ctx context.Context, principal ide
 		return nil, apperrors.ErrPrecondition
 	}
 	_, err = domain.NewWorkflowDefinition(snapshot.Definition.Settings(), s.deps.Limits)
-	if err != nil || s.deps.Clock == nil {
+	if err != nil {
 		return nil, apperrors.ErrPrecondition
 	}
-	return &SelectedWorkflow{revision: revision, limits: s.deps.Limits, clock: s.deps.Clock}, nil
+	return &SelectedWorkflow{revision: revision}, nil
 }
 
 type SelectedWorkflow struct {
 	revision domain.WorkflowRevision
-	limits   domain.WorkflowLimits
-	clock    ports.Clock
 }
 
 func (selected *SelectedWorkflow) NeedsDefaultLanguage() bool {
 	settings := selected.revision.Snapshot().Definition.Settings()
-	for _, step := range settings.Steps {
-		if step.Kind == domain.WorkflowStepRespond && settings.Response == domain.WorkflowResponseGrounded {
-			continue
-		}
-		if step.ProviderProfileID == "" {
-			return true
-		}
-	}
-	return false
+	return settings.ProviderProfileID == ""
 }
+
 func (s ConversationWorkflowService) PrepareSelected(ctx context.Context, input PrepareWorkflowInput) (*PreparedWorkflow, error) {
 	selected, err := s.Selected(ctx, input.Principal, input.TenantID)
 	if err != nil || selected == nil {
@@ -89,82 +75,31 @@ func (s ConversationWorkflowService) PrepareSelected(ctx context.Context, input 
 	return selected.Prepare(ctx, input.DefaultProviders, input.Resolver)
 }
 func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.RealtimeVoiceProviderSet, resolver ports.WorkflowLanguageProviderResolver) (*PreparedWorkflow, error) {
-	definition := selected.revision.Snapshot().Definition
-	tenantID := tenant.ID(selected.revision.Snapshot().TenantID)
-	cache := map[string]WorkflowModelBinding{}
-	if defaults.LanguageInferenceProfileID != "" {
-		cache[defaults.LanguageInferenceProfileID] = WorkflowModelBinding{ProfileID: defaults.LanguageInferenceProfileID, PromptTemplate: defaults.LanguagePromptTemplate, Language: defaults.LanguageInference, Response: defaults.ResponseGenerator}
-	}
-	bindings := map[domain.WorkflowStepKind]WorkflowModelBinding{}
-	for _, step := range definition.Settings().Steps {
-		if step.Kind == domain.WorkflowStepRespond && definition.Settings().Response == domain.WorkflowResponseGrounded {
-			bindings[step.Kind] = WorkflowModelBinding{ProfileID: step.ProviderProfileID}
-			continue
+	settings := selected.revision.Snapshot().Definition.Settings()
+	model := defaults.ConversationModel
+	profileID, prompt := defaults.LanguageInferenceProfileID, defaults.LanguagePromptTemplate
+	if settings.ProviderProfileID != "" && settings.ProviderProfileID != profileID {
+		if resolver == nil {
+			return nil, apperrors.ErrPrecondition
 		}
-		binding := WorkflowModelBinding{ProfileID: defaults.LanguageInferenceProfileID, PromptTemplate: defaults.LanguagePromptTemplate, Language: defaults.LanguageInference, Response: defaults.ResponseGenerator}
-		if step.ProviderProfileID != "" {
-			var exists bool
-			binding, exists = cache[step.ProviderProfileID]
-			if !exists {
-				if resolver == nil {
-					return nil, apperrors.ErrPrecondition
-				}
-				resolved, resolveErr := resolver.ResolveWorkflowLanguageProvider(ctx, ports.WorkflowLanguageProviderResolutionInput{TenantID: tenantID, ProfileID: step.ProviderProfileID})
-				if resolveErr != nil {
-					return nil, resolveErr
-				}
-				if resolved.ProfileID != step.ProviderProfileID || resolved.Provider == nil {
-					return nil, ports.ErrInvalidProviderInput
-				}
-				binding = WorkflowModelBinding{ProfileID: resolved.ProfileID, PromptTemplate: resolved.PromptTemplate, Language: resolved.Provider, Response: resolved.Provider}
-				cache[step.ProviderProfileID] = binding
-			}
+		binding, err := resolver.ResolveWorkflowLanguageProvider(ctx, ports.WorkflowLanguageProviderResolutionInput{TenantID: tenant.ID(selected.revision.Snapshot().TenantID), ProfileID: settings.ProviderProfileID})
+		if err != nil {
+			return nil, err
 		}
-		bindings[step.Kind] = binding
+		if binding.ProfileID != settings.ProviderProfileID || binding.Provider == nil {
+			return nil, ports.ErrInvalidProviderInput
+		}
+		model = binding.Provider
+		profileID, prompt = binding.ProfileID, binding.PromptTemplate
 	}
-	// Validate dependencies now, without starting the execution retained by the session.
-	if _, err := NewWorkflowModelExecution(definition, selected.limits, selected.clock, bindings); err != nil {
+	if model == nil {
+		return nil, ports.ErrInvalidProviderInput
+	}
+	conversation, err := newWorkflowConversationModel(model, settings, prompt)
+	if err != nil {
 		return nil, err
 	}
-	return &PreparedWorkflow{revision: selected.revision, limits: selected.limits, clock: selected.clock, bindings: bindings}, nil
+	return &PreparedWorkflow{revision: selected.revision, conversation: conversation, conversationProfileID: profileID}, nil
 }
 
 func (p *PreparedWorkflow) Revision() domain.WorkflowRevision { return p.revision }
-func (p *PreparedWorkflow) modelExecution() (*WorkflowModelExecution, error) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.execution == nil && p.err == nil {
-		p.execution, p.err = NewWorkflowModelExecution(p.revision.Snapshot().Definition, p.limits, p.clock, p.bindings)
-	}
-	return p.execution, p.err
-}
-func (p *PreparedWorkflow) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if err := ctx.Err(); err != nil {
-		return ports.LanguageInferenceTurn{}, err
-	}
-	execution, err := p.modelExecution()
-	if err != nil {
-		return ports.LanguageInferenceTurn{}, err
-	}
-	input.PromptTemplate = ""
-	return execution.NextTurn(ctx, input)
-}
-func (p *PreparedWorkflow) GenerateResponse(ctx context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	if err := ctx.Err(); err != nil {
-		return ports.VoiceResponseGenerationResult{}, err
-	}
-	execution, err := p.modelExecution()
-	if err != nil {
-		return ports.VoiceResponseGenerationResult{}, err
-	}
-	return execution.GenerateResponse(ctx, input)
-}
-
-func (p *PreparedWorkflow) CanContinue() bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.err != nil {
-		return false
-	}
-	return p.execution == nil || p.execution.CanContinue()
-}

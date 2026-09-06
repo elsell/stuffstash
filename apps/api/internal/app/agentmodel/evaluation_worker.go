@@ -92,6 +92,9 @@ func (w EvaluationWorker) process(ctx context.Context, ref ports.EvaluationRunRe
 		}
 		return err
 	}
+	if initial.Input.RuntimeContract != model.CurrentEvaluationRuntimeContract {
+		return w.fail(ctx, run, token, model.EvaluationRunFailureConfigurationChanged)
+	}
 	providers, err := w.deps.Providers.ResolveEvaluationRunProviders(ctx, ref.TenantID, run)
 	if err != nil {
 		if errors.Is(err, ports.ErrEvaluationConfigurationChanged) {

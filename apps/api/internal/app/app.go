@@ -16,6 +16,7 @@ import (
 )
 
 type App struct {
+	conversationContextBytes     int
 	observer                     ports.Observer
 	auth                         ports.Authenticator
 	authorizer                   ports.Authorizer
@@ -88,16 +89,13 @@ type App struct {
 	evaluationRunCommands        agentmodelapp.EvaluationRunCommandService
 	evaluationRunQueries         agentmodelapp.EvaluationRunQueryService
 	evaluationWorker             agentmodelapp.EvaluationWorker
-	speechToText                 ports.SpeechToTextProvider
-	languageInference            ports.LanguageInferenceProvider
-	voiceResponseGenerator       ports.VoiceResponseGenerator
-	textToSpeech                 ports.TextToSpeechProvider
 	realtimeVoiceProviders       ports.RealtimeVoiceProviderResolver
 	thumbnailWarmState           *primaryThumbnailWarmState
 	thumbnailGenerationState     *thumbnailGenerationState
 }
 
 type Dependencies struct {
+	ConversationContextBytes         int
 	Observer                         ports.Observer
 	Auth                             ports.Authenticator
 	Authorizer                       ports.Authorizer
@@ -170,8 +168,7 @@ type Dependencies struct {
 	PrimaryThumbnailWarmTimeout      time.Duration
 	RealtimeVoiceToolCallTimeout     time.Duration
 	SpeechToText                     ports.SpeechToTextProvider
-	LanguageInference                ports.LanguageInferenceProvider
-	VoiceResponseGenerator           ports.VoiceResponseGenerator
+	ConversationModel                ports.ConversationModel
 	TextToSpeech                     ports.TextToSpeechProvider
 	RealtimeVoiceProviderResolver    ports.RealtimeVoiceProviderResolver
 }
@@ -197,15 +194,15 @@ func New(deps Dependencies) App {
 		importAttachmentSources, _ = deps.ImportSources.(ports.ImportAttachmentSource)
 	}
 	realtimeVoiceProviders := deps.RealtimeVoiceProviderResolver
-	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.LanguageInference != nil && deps.VoiceResponseGenerator != nil && deps.TextToSpeech != nil {
+	if realtimeVoiceProviders == nil && deps.SpeechToText != nil && deps.ConversationModel != nil && deps.TextToSpeech != nil {
 		realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
 			SpeechToText:      deps.SpeechToText,
-			LanguageInference: deps.LanguageInference,
-			ResponseGenerator: deps.VoiceResponseGenerator,
+			ConversationModel: deps.ConversationModel,
 			TextToSpeech:      deps.TextToSpeech,
 		}}
 	}
 	app := App{
+		conversationContextBytes:     deps.ConversationContextBytes,
 		observer:                     observer,
 		auth:                         deps.Auth,
 		authorizer:                   deps.Authorizer,
@@ -268,10 +265,6 @@ func New(deps Dependencies) App {
 		primaryThumbnailWarmLimit:    normalizePrimaryThumbnailWarmLimit(deps.PrimaryThumbnailWarmLimit),
 		primaryThumbnailWarmTimeout:  normalizePrimaryThumbnailWarmTimeout(deps.PrimaryThumbnailWarmTimeout),
 		realtimeVoiceToolCallTimeout: normalizeRealtimeVoiceToolCallTimeout(deps.RealtimeVoiceToolCallTimeout),
-		speechToText:                 deps.SpeechToText,
-		languageInference:            deps.LanguageInference,
-		voiceResponseGenerator:       deps.VoiceResponseGenerator,
-		textToSpeech:                 deps.TextToSpeech,
 		realtimeVoiceProviders:       realtimeVoiceProviders,
 		thumbnailWarmState:           newPrimaryThumbnailWarmState(primaryThumbnailWarmConcurrency),
 		thumbnailGenerationState:     newThumbnailGenerationState(),

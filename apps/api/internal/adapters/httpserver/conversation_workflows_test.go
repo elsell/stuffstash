@@ -64,7 +64,7 @@ func TestConversationWorkflowDraftHTTPPreservesRevisions(t *testing.T) {
 		t.Fatalf("stale save: %d %s", stale.Code, stale.Body.String())
 	}
 	invalid := workflowDraftRequest()
-	invalid["definition"].(map[string]any)["steps"].([]map[string]any)[0]["providerProfileId"] = "inaccessible-provider"
+	invalid["definition"].(map[string]any)["providerProfileId"] = "inaccessible-provider"
 	invalid["expectedRevision"] = 2
 	rejected := performRequest(server, http.MethodPost, path, "Bearer dev:owner", invalid)
 	if rejected.Code != http.StatusBadRequest {

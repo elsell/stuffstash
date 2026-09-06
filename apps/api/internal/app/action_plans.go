@@ -742,9 +742,6 @@ func (a App) actionPlanCommands(inputs []ActionPlanCommandInput) ([]ports.Action
 		if summary == "" || len(summary) > maxActionPlanSummaryLength {
 			return nil, ErrValidation
 		}
-		if err := validateSafeActionPlanArguments(input.Arguments); err != nil {
-			return nil, err
-		}
 		arguments, err := json.Marshal(input.Arguments)
 		if err != nil || len(arguments) > maxActionPlanArgumentBytes {
 			return nil, ErrValidation

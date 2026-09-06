@@ -29,3 +29,22 @@ func TestMatchAssetMatchesAssignedTagNamesAndKeys(t *testing.T) {
 		t.Fatalf("expected tag key match, got %+v", matches)
 	}
 }
+
+func TestFuzzySearchCombinesTermsAcrossFieldsOnTheSameAsset(t *testing.T) {
+	document := AssetDocument{Title: "3–6 months clothes", Tags: []TagDocument{{Key: "baby", DisplayName: "Baby"}}}
+	for _, query := range []string{"baby clothes", "CLOTHES   baby", "baby baby clothes"} {
+		matches := MatchAsset(document, Query(query), ModeFuzzy)
+		if len(matches) != 3 {
+			t.Fatalf("cross-field evidence lost or duplicated for %q: %+v", query, matches)
+		}
+	}
+	if matches := MatchAsset(document, Query("baby stroller"), ModeFuzzy); len(matches) != 0 {
+		t.Fatalf("partial term match passed: %+v", matches)
+	}
+	if matches := MatchAsset(document, Query("baby clothes"), ModeExact); len(matches) != 0 {
+		t.Fatalf("exact equality became term matching: %+v", matches)
+	}
+	if matches := MatchAsset(AssetDocument{Title: "Baby clothes"}, Query("baby clothes"), ModeExact); len(matches) != 1 {
+		t.Fatal("exact phrase lookup regressed")
+	}
+}

@@ -4,7 +4,7 @@ import { compareConversationRuns } from './conversationRunComparison';
 function run(id: string): EvaluationRun {
   return { id, workflowId: 'workflow', revisionId: id, state: 'succeeded', version: 3, totalCases: 1, completedCases: 1, passedCases: 1, authorId: 'owner',
     createdAt: '', updatedAt: '', startedAt: '', finishedAt: '', failureCode: '', coverage: 'text_only', cases: [{ caseId: 'case', revisionId: 'case-revision', title: 'Baby clothes' }],
-    providers: [{ step: 'interpret', profileId: 'profile', configurationId: 'configuration' }], results: [{ caseRevisionId: 'case-revision', modelCalls: 2, durationMilliseconds: 300,
+    providers: [{ profileId: 'profile', configurationId: 'configuration' }], results: [{ caseRevisionId: 'case-revision', modelCalls: 2, durationMilliseconds: 300,
       completedAt: '', verdict: { passed: true, failures: [] }, observation: { kind: 'answer', referencedAssets: [], locations: [], proposals: [], executedOperations: [] } }] };
 }
 it('compares recorded quality, calls and execution time for identical pinned cases', () => {

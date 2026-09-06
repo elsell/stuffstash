@@ -89,7 +89,7 @@ func TestPostgresStoreSearchAssetsReturnsInventoryScopedResultsAndWritesReadAudi
 		InventoryIDs:   []inventory.InventoryID{inventoryID},
 		Source:         audit.SourceAPI,
 		RequestID:      "search-request-one",
-		Query:          "fertilizer",
+		Query:          "garage fertilizer",
 		LifecycleState: string(ports.AssetLifecycleFilterActive),
 		Mode:           search.ModeFuzzy.String(),
 		CheckoutState:  string(ports.AssetCheckoutStateFilterAny),

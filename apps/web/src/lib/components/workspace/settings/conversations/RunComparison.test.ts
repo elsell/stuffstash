@@ -8,7 +8,7 @@ afterEach(async () => { if (component) await unmount(component); component = und
 it('loads a baseline on demand and refuses changed provider configuration', async () => {
   const current: EvaluationRun = { id: 'current', workflowId: 'workflow', revisionId: 'revision', state: 'succeeded', version: 3, totalCases: 1, completedCases: 1, passedCases: 1,
     createdAt: '2026-09-05T12:00:00Z', updatedAt: '', authorId: 'owner', coverage: 'text_only', startedAt: '', finishedAt: '', failureCode: '',
-    providers: [{ step: 'interpret', profileId: 'model', configurationId: 'current-config' }], cases: [{ caseId: 'case', revisionId: 'case-revision', title: 'Clothes' }],
+    providers: [{ profileId: 'model', configurationId: 'current-config' }], cases: [{ caseId: 'case', revisionId: 'case-revision', title: 'Clothes' }],
     results: [{ caseRevisionId: 'case-revision', verdict: { passed: true, failures: [] }, modelCalls: 1, durationMilliseconds: 100, completedAt: '', observation: { kind: 'answer', referencedAssets: [], locations: [], proposals: [], executedOperations: [] } }] };
   const baseline = { ...current, id: 'baseline', providers: [{ ...current.providers[0], configurationId: 'previous-config' }] };
   let reads = 0; const unsupported = async (): Promise<never> => { throw new Error('Read only'); };

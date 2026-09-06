@@ -31,7 +31,7 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 		ids:         []string{"garage-id", "tools-id", "voice-session-id", "tool-call-id", "response-id"},
 	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Where are my tools?"}, scriptedLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio-1"), []byte("spoken-audio-2")},
-	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Garage", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "container", "Tools", "garage-id")
 
@@ -224,14 +224,15 @@ func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
 	writeRealtimeMessage(t, ctx, connection, map[string]any{
-		"type":                  "session.start",
-		"seq":                   1,
-		"tenantId":              "tenant-home",
-		"inventoryId":           "inventory-home",
-		"source":                "mobile_voice",
-		"requestedCapabilities": []string{"speech_to_text", "language_inference", "text_to_speech"},
-		"inputAudio":            map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
-		"outputAudio":           map[string]any{"mimeTypes": []string{"audio/mpeg"}},
+		"type":                   "session.start",
+		"conversationContinuity": true,
+		"seq":                    1,
+		"tenantId":               "tenant-home",
+		"inventoryId":            "inventory-home",
+		"source":                 "mobile_voice",
+		"requestedCapabilities":  []string{"speech_to_text", "language_inference", "text_to_speech"},
+		"inputAudio":             map[string]any{"mimeType": "audio/mp4", "sampleRate": 44100, "channels": 1},
+		"outputAudio":            map[string]any{"mimeTypes": []string{"audio/mpeg"}},
 	})
 	started := readRealtimeMessage(t, ctx, connection)
 	if started["type"] != "session.started" {
@@ -242,7 +243,7 @@ func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing
 	firstTurn := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 	firstResponse := findRealtimeEvent(t, firstTurn, "assistant.response.completed")
 	firstPayload, _ := firstResponse["response"].(map[string]any)
-	if firstPayload["kind"] != "clarification" {
+	if firstPayload["kind"] != "answer" || firstPayload["spokenResponse"] != "Which item do you mean?" {
 		t.Fatalf("expected first turn to request clarification, got %+v", firstPayload)
 	}
 
@@ -253,25 +254,17 @@ func TestRealtimeVoiceWebSocketAcceptsFollowUpAudioAfterClarification(t *testing
 	if secondPayload["kind"] != "answer" || !strings.Contains(secondPayload["spokenResponse"].(string), "Office") {
 		t.Fatalf("expected follow-up answer on same session, got %+v", secondPayload)
 	}
-	var followUpInput *ports.LanguageInferenceInput
-	for index := range language.inputs {
-		if len(language.inputs[index].ConversationTurns) == 2 {
-			followUpInput = &language.inputs[index]
-			break
-		}
+	if len(language.inputs) < 2 {
+		t.Fatalf("missing follow-up model call: %+v", language.inputs)
 	}
-	if followUpInput == nil {
-		t.Fatalf("expected follow-up language turn to include prior user and assistant context, got %+v", language.inputs)
+	history := language.inputs[1].Messages
+	if len(history) != 3 || history[0].Role != ports.ConversationRoleUser || history[0].Text != "Where should I put it?" || history[1].Role != ports.ConversationRoleAssistant || history[1].Text != "Which item do you mean?" || history[2].Role != ports.ConversationRoleUser {
+		t.Fatalf("prior question and user context missing from follow-up: %+v", history)
 	}
-	if followUpInput.ConversationTurns[0].Role != ports.AgentConversationRoleUser || followUpInput.ConversationTurns[0].Text != "Where should I put it?" {
-		t.Fatalf("unexpected prior user context: %+v", followUpInput.ConversationTurns)
-	}
-	if followUpInput.ConversationTurns[1].Role != ports.AgentConversationRoleAssistant || followUpInput.ConversationTurns[1].Kind != string(ports.StructuredAgentResponseKindClarification) {
-		t.Fatalf("unexpected prior assistant context: %+v", followUpInput.ConversationTurns)
-	}
+
 }
 
-func TestRealtimeVoiceWebSocketFailsSafelyAtClarificationTurnLimit(t *testing.T) {
+func TestRealtimeVoiceWebSocketEndsQuestionsAtConversationTurnLimit(t *testing.T) {
 	t.Parallel()
 
 	application := newSeededTestAppWithVoice(t, seededState{
@@ -299,7 +292,9 @@ func TestRealtimeVoiceWebSocketFailsSafelyAtClarificationTurnLimit(t *testing.T)
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
+	start := realtimeVoiceStartMessage("tenant-home", "inventory-home")
+	start["conversationContinuity"] = true
+	writeRealtimeMessage(t, ctx, connection, start)
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 	for turn := 0; turn < maxRealtimeVoiceTurnsPerSession; turn++ {
@@ -307,13 +302,13 @@ func TestRealtimeVoiceWebSocketFailsSafelyAtClarificationTurnLimit(t *testing.T)
 		events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 		response := findRealtimeEvent(t, events, "assistant.response.completed")
 		payload, _ := response["response"].(map[string]any)
-		if payload["kind"] != "clarification" {
+		if payload["kind"] != "answer" || payload["spokenResponse"] != "Which item do you mean?" {
 			t.Fatalf("expected clarification turn %d, got %+v", turn+1, payload)
 		}
 	}
-	failed := readRealtimeMessage(t, ctx, connection)
-	if failed["type"] != "session.failed" || failed["code"] != "clarification_turn_limit" {
-		t.Fatalf("expected clarification turn limit failure, got %+v", failed)
+	_, _, err = connection.Read(ctx)
+	if websocket.CloseStatus(err) != websocket.StatusNormalClosure {
+		t.Fatalf("conversation limit did not close normally: %v", err)
 	}
 }
 
@@ -628,7 +623,7 @@ func TestRealtimeVoiceQueryCanListVisibleItemsInSelectedInventory(t *testing.T) 
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "You have Laptop and Water bottle." {
+	if response["spokenResponse"] != "I found Laptop in Office. I found Water bottle in Office." {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if !strings.Contains(language.lastToolResult, "Water bottle") || !strings.Contains(language.lastToolResult, "Laptop") {
@@ -652,6 +647,7 @@ func TestRealtimeVoiceQueryReportsSafeProviderStageFailureCode(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
+	assertNoRealtimeEventType(t, events, "agent.diagnostic")
 	failed := findRealtimeEvent(t, events, "session.failed")
 	if failed["code"] != "language_inference_failed" {
 		t.Fatalf("expected language_inference_failed for provider failure, got %+v", failed)

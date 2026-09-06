@@ -30,7 +30,8 @@ func BoundedObservationTagNames(names []string) []string {
 	}
 	return result
 }
-func validObservationTagNames(names []string) bool {
+
+func validEvaluationTagNames(names []string) bool {
 	if len(names) > MaxObservationTagNames {
 		return false
 	}

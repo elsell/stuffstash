@@ -56,7 +56,7 @@ func TestRealtimeVoiceActionPlanCancellationCancelsRealtimeSessionRecord(t *test
 	}
 }
 
-func newRealtimeVoiceReviewTestAppWithStore(t *testing.T, languageInference ports.LanguageInferenceProvider) (app.App, *memory.Store) {
+func newRealtimeVoiceReviewTestAppWithStore(t *testing.T, languageInference ports.ConversationModel) (app.App, *memory.Store) {
 	t.Helper()
 
 	store := memory.NewStore()
@@ -67,7 +67,7 @@ func newRealtimeVoiceReviewTestAppWithStore(t *testing.T, languageInference port
 		ids:         []string{"voice-session-id", "plan-id", "command-id", "response-id"},
 	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Add a water bottle."}, languageInference, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
-	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	})
 	return application, store
 }
 

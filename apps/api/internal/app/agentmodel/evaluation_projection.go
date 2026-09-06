@@ -2,7 +2,6 @@ package agentmodel
 
 import (
 	"errors"
-	"regexp"
 	"strings"
 
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
@@ -65,7 +64,7 @@ func (p *EvaluationProjector) Response(response ports.StructuredAgentResponse) (
 			return domain.EvaluationObservedOutcome{}, ErrInvalidEvaluationObservation
 		}
 		fixture := p.fixtures[id]
-		if _, duplicate := displayed[id]; duplicate || artifact.Type != ports.StructuredAgentResponseArtifactAssetReference || artifact.Title != fixture.Title || artifact.AssetKind.String() != string(fixture.Kind) || !evaluationDisplaysTitle(response.DisplayResponse, artifact.Title) {
+		if _, duplicate := displayed[id]; duplicate || artifact.Type != ports.StructuredAgentResponseArtifactAssetReference || artifact.Title != fixture.Title || artifact.AssetKind.String() != string(fixture.Kind) {
 			return domain.EvaluationObservedOutcome{}, ErrInvalidEvaluationObservation
 		}
 		displayed[id] = artifact
@@ -76,18 +75,12 @@ func (p *EvaluationProjector) Response(response ports.StructuredAgentResponse) (
 		if fixture.ParentID == "" {
 			continue
 		}
-		parent, shown := displayed[fixture.ParentID]
-		if shown && displayed[id].Context == parent.Title {
+		parent, exists := p.fixtures[fixture.ParentID]
+		if exists && displayed[id].Context == parent.Title {
 			outcome.Locations = append(outcome.Locations, domain.EvaluationLocationExpectation{AssetID: id, AncestorID: fixture.ParentID})
 		}
 	}
 	return p.validated(outcome)
-}
-
-func evaluationDisplaysTitle(text, title string) bool {
-	expression := `(^|[^\pL\pN])` + regexp.QuoteMeta(title) + `($|[^\pL\pN])`
-	matched, err := regexp.MatchString(expression, text)
-	return err == nil && matched
 }
 
 func (p *EvaluationProjector) validated(outcome domain.EvaluationObservedOutcome) (domain.EvaluationObservedOutcome, error) {

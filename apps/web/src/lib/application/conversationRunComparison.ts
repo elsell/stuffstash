@@ -8,7 +8,7 @@ export type ConversationRunComparison = { compatible: false; reason: 'same' | 'i
 };
 export const conversationRunHasCompleteResults = (run: EvaluationRun) => (run.state === 'succeeded' || run.state === 'failed') && !run.failureCode && run.totalCases > 0 && run.completedCases === run.totalCases && run.cases.length === run.totalCases && run.results.length === run.totalCases;
 const pins = (run: EvaluationRun) => run.cases.map(pin => JSON.stringify([pin.caseId, pin.revisionId])).sort();
-const providers = (run: EvaluationRun) => run.providers.map(pin => JSON.stringify([pin.step, pin.profileId, pin.configurationId])).sort();
+const providers = (run: EvaluationRun) => run.providers.map(pin => JSON.stringify([pin.profileId, pin.configurationId])).sort();
 const same = (left: string[], right: string[]) => left.length === right.length && left.every((value, index) => value === right[index]);
 const result = (value: RunResult): ComparedCaseResult => ({ passed: value.verdict.passed, modelCalls: value.modelCalls, durationMilliseconds: value.durationMilliseconds });
 function totals(values: ComparedCaseResult[]): ComparedRunTotals {

@@ -31,11 +31,7 @@ func (f GoogleProviderProfileFactory) SpeechToTextProvider(ctx context.Context, 
 	return NewGoogleGeminiSpeechToText(geminiConfig), nil
 }
 
-func (f GoogleProviderProfileFactory) LanguageInferenceProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.LanguageInferenceProvider, error) {
-	return f.RealtimeLanguageProvider(ctx, config)
-}
-
-func (f GoogleProviderProfileFactory) RealtimeLanguageProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.RealtimeLanguageProvider, error) {
+func (f GoogleProviderProfileFactory) ConversationModelProvider(ctx context.Context, config ProviderProfileProviderConfig) (ports.ConversationModel, error) {
 	if config.Profile.Capability != agentmodel.ProviderCapabilityLanguageInference {
 		return nil, ports.ErrInvalidProviderInput
 	}
