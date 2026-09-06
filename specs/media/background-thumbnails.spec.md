@@ -245,3 +245,11 @@ During rollout, finish replacing API instances that predate transactional schedu
 before enabling the initial backfill. Otherwise an old instance could create an
 attachment behind the saved cursor without enqueueing it. Enable backfill in a
 subsequent GitOps change after verifying all API replicas use the new image.
+
+Backfill runtime settings use the same prefix: `BACKFILL_ENABLED` defaults false
+for the staged rollout; `BACKFILL_BATCH_SIZE` defaults 25 (1–1000); and
+`BACKFILL_INTERVAL` defaults 5s (100ms–1h). One API-owned goroutine advances a batch
+per interval, stops at completion, and cancels/joins at shutdown. Each transaction
+has the lease-duration timeout. A failure waits until the next interval and retries
+from the durable cursor. Disabling processing also disables automatic backfill.
+The memory adapter provides the same batch semantics within its store lifetime.

@@ -35,3 +35,23 @@ func TestThumbnailConfigurationRejectsUnsafeValues(t *testing.T) {
 		})
 	}
 }
+
+func TestThumbnailBackfillConfiguration(t *testing.T) {
+	cfg, err := LoadThumbnails()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.BackfillEnabled || cfg.BackfillBatchSize != 25 || cfg.BackfillInterval != 5*time.Second {
+		t.Fatal("unsafe backfill defaults")
+	}
+	t.Setenv("STUFF_STASH_THUMBNAIL_BACKFILL_ENABLED", "true")
+	t.Setenv("STUFF_STASH_THUMBNAIL_BACKFILL_BATCH_SIZE", "1001")
+	if _, err := LoadThumbnails(); err == nil {
+		t.Fatal("unbounded backfill accepted")
+	}
+	t.Setenv("STUFF_STASH_THUMBNAIL_BACKFILL_BATCH_SIZE", "10")
+	cfg, err = LoadThumbnails()
+	if err != nil || !cfg.BackfillEnabled || cfg.BackfillBatchSize != 10 {
+		t.Fatal("backfill setting ignored", err)
+	}
+}
