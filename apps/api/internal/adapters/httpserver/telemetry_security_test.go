@@ -60,6 +60,12 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 	}
 	spans := exporter.GetSpans()
 	requestCount, authenticationCount, authorizationCount := 0, 0, 0
+	requestParents := map[string]string{}
+	for _, span := range spans {
+		if span.Name == "GET /tenants/{tenantId}/inventories/{inventoryId}/assets" {
+			requestParents[span.SpanContext.SpanID().String()] = span.SpanContext.TraceID().String()
+		}
+	}
 	for _, span := range spans {
 		switch span.Name {
 		case "GET /tenants/{tenantId}/inventories/{inventoryId}/assets":
@@ -70,6 +76,9 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 			authorizationCount++
 		default:
 			t.Fatalf("unexpected span %q", span.Name)
+		}
+		if strings.HasPrefix(span.Name, "identity.") && requestParents[span.Parent.SpanID().String()] != span.SpanContext.TraceID().String() {
+			t.Fatal("identity span lost HTTP request parent")
 		}
 		if strings.Contains(span.Name, tenantID) {
 			t.Fatal("tenant ID exposed in span name")
