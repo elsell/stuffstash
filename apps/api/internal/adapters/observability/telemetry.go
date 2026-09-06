@@ -16,10 +16,11 @@ import (
 const instrumentationName = "github.com/stuffstash/stuff-stash"
 
 type Telemetry struct {
-	tracer     trace.Tracer
-	logger     otellog.Logger
-	duration   metric.Float64Histogram
-	thumbnails metric.Int64Counter
+	tracer         trace.Tracer
+	logger         otellog.Logger
+	duration       metric.Float64Histogram
+	thumbnails     metric.Int64Counter
+	clientDuration metric.Float64Histogram
 }
 
 func NewTelemetry(tracer trace.TracerProvider, meter metric.MeterProvider, logger otellog.LoggerProvider) (*Telemetry, error) {
@@ -31,7 +32,11 @@ func NewTelemetry(tracer trace.TracerProvider, meter metric.MeterProvider, logge
 	if err != nil {
 		return nil, err
 	}
-	return &Telemetry{thumbnails: thumbnails, tracer: tracer.Tracer(instrumentationName), logger: logger.Logger(instrumentationName), duration: duration}, nil
+	clientDuration, err := meter.Meter(instrumentationName).Float64Histogram("stuffstash.client.duration", metric.WithUnit("s"), metric.WithExplicitBucketBoundaries(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60), metric.WithDescription("Client-reported request and visible-image loading duration"))
+	if err != nil {
+		return nil, err
+	}
+	return &Telemetry{clientDuration: clientDuration, thumbnails: thumbnails, tracer: tracer.Tracer(instrumentationName), logger: logger.Logger(instrumentationName), duration: duration}, nil
 }
 
 func (t *Telemetry) Start(ctx context.Context, operation ports.Operation) (context.Context, func(error)) {
@@ -55,6 +60,10 @@ func (t *Telemetry) Start(ctx context.Context, operation ports.Operation) (conte
 }
 
 func (t *Telemetry) Record(ctx context.Context, event ports.Event) {
+	if event.Name == ports.EventClientPerformanceObserved {
+		t.recordClientMeasurement(ctx, event.Fields)
+		return
+	}
 	if !event.Name.Known() {
 		return
 	}
