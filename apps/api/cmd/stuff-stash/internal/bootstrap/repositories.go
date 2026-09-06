@@ -113,6 +113,7 @@ func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachm
 			Bucket:         cfg.S3Bucket,
 			Region:         cfg.S3Region,
 			Secure:         cfg.S3Secure,
+			PublicSecure:   &cfg.S3PublicSecure,
 			MaxBytes:       int64(cfg.MaxAttachmentBytes),
 		})
 		if err != nil {

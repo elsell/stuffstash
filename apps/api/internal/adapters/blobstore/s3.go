@@ -21,6 +21,7 @@ type S3Config struct {
 	Bucket         string
 	Region         string
 	Secure         bool
+	PublicSecure   *bool
 	MaxBytes       int64
 }
 
@@ -51,8 +52,16 @@ func NewS3Store(config S3Config) (S3Store, error) {
 		return S3Store{}, err
 	}
 	presignClient := client
-	if publicEndpoint := strings.TrimSpace(config.PublicEndpoint); publicEndpoint != "" && publicEndpoint != endpoint {
-		presignClient, err = minio.New(publicEndpoint, options)
+	publicEndpoint := strings.TrimSpace(config.PublicEndpoint)
+	if publicEndpoint == "" {
+		publicEndpoint = endpoint
+	}
+	publicOptions := *options
+	if config.PublicSecure != nil {
+		publicOptions.Secure = *config.PublicSecure
+	}
+	if publicEndpoint != endpoint || publicOptions.Secure != options.Secure {
+		presignClient, err = minio.New(publicEndpoint, &publicOptions)
 		if err != nil {
 			return S3Store{}, err
 		}

@@ -45,6 +45,7 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	t.Setenv(envS3Bucket, "")
 	t.Setenv(envS3Region, "")
 	t.Setenv(envS3Secure, "")
+	t.Setenv(envS3PublicSecure, "")
 	t.Setenv(envMaxAttachmentBytes, "")
 	t.Setenv(envPrimaryThumbnailWarmLimit, "")
 	t.Setenv(envPrimaryThumbnailWarmConcurrent, "")
