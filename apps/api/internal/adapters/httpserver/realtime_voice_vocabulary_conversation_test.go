@@ -160,6 +160,22 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 				if len(result.Manifest.CustomAssetTypes) != 1 || result.Manifest.CustomAssetTypes[0].Key != "home-type" || len(result.Manifest.CustomFields) != 1 || result.Manifest.CustomFields[0].Key != "home-field" || len(result.Manifest.Tags) != 1 || result.Manifest.Tags[0].Key != "home-tag" {
 					t.Fatalf("scoped vocabulary missing: %s", model.results[0])
 				}
+				records, err := store.ListInventoryAuditRecords(context.Background(), "tenant-home", "inventory-home", ports.AuditRecordPageRequest{Limit: 100})
+				if err != nil {
+					t.Fatal(err)
+				}
+				readActions := map[audit.Action]bool{}
+				for _, record := range records {
+					if record.Source == audit.SourceConversation {
+						readActions[record.Action] = true
+					}
+				}
+				for _, action := range []audit.Action{audit.ActionCustomAssetTypeListed, audit.ActionCustomFieldDefinitionListed, audit.ActionAssetTagListed} {
+					if !readActions[action] {
+						t.Fatalf("missing conversation read audit %s", action)
+					}
+				}
+
 				if tc.name == "targeted field" && (len(result.Definitions) != 1 || result.Definitions[0].Key != "home-field" || len(result.Definitions[0].Applicable) != 1 || result.Definitions[0].Applicable[0] != "home-type") {
 					t.Fatalf("field applicability missing: %s", model.results[0])
 				}

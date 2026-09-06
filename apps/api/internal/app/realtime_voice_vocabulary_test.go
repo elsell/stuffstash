@@ -9,6 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
 	"time"
 )
@@ -17,7 +18,6 @@ func TestRealtimeVoiceVocabularyLoadsActiveScopedManifestAndResolvesRequestedDef
 	t.Parallel()
 	ctx := context.Background()
 	store := memory.NewStore()
-	application := App{customAssetTypes: store, customFields: store, assetTags: store}
 	tenantName, _ := tenant.NewName("Home")
 	if err := store.SaveTenant(ctx, tenant.Tenant{ID: "tenant-home", Name: tenantName}); err != nil {
 		t.Fatalf("save tenant: %v", err)
@@ -61,7 +61,19 @@ func TestRealtimeVoiceVocabularyLoadsActiveScopedManifestAndResolvesRequestedDef
 	seedHiddenVoiceVocabulary(t, ctx, store, "tenant-home", "inventory-private", "private")
 	seedHiddenVoiceVocabulary(t, ctx, store, "tenant-other", "inventory-other", "other")
 
-	manifest, catalog, err := application.loadRealtimeVoiceVocabulary(ctx, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home"))
+	assetTypes, err := store.ListInventoryCustomAssetTypes(ctx, "tenant-home", "inventory-home", ports.CustomAssetTypePageRequest{Limit: agentmodel.MaxVoiceVocabularyAssetTypes, Lifecycle: ports.CustomizationLifecycleActive})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fields, err := store.ListInventoryCustomFieldDefinitions(ctx, "tenant-home", "inventory-home", ports.CustomFieldDefinitionPageRequest{Limit: agentmodel.MaxVoiceVocabularyCustomFields, Lifecycle: ports.CustomizationLifecycleActive})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tags, err := store.ListAssetTags(ctx, "tenant-home", "inventory-home", ports.AssetTagPageRequest{Limit: agentmodel.MaxVoiceVocabularyTags})
+	if err != nil {
+		t.Fatal(err)
+	}
+	manifest, catalog, err := projectRealtimeVoiceVocabulary(assetTypes, fields, tags)
 	if err != nil {
 		t.Fatalf("load vocabulary: %v", err)
 	}
