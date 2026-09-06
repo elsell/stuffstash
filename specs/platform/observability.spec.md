@@ -230,3 +230,8 @@ flush before completion. Credentials are supplied through the host's secret
 manager in process memory, never test artifacts or command arguments. A successful
 probe establishes exporter acceptance; query the four backends separately to
 prove stored data visibility. The probe is not production workload evidence.
+
+The collector probe forces sampling of its isolated root span and verifies that
+it is sampled. Both explicit shutdown and deferred cleanup use bounded contexts.
+Dashboard failure ratios show zero for healthy observed traffic, while retaining
+missing data when no requests are observed.

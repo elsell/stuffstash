@@ -9,6 +9,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestLiveTelemetryCollectorAcceptance(t *testing.T) {
@@ -26,19 +27,32 @@ func TestLiveTelemetryCollectorAcceptance(t *testing.T) {
 	if !cfg.Enabled || !profiles.Enabled || cfg.ServiceName != "stuffstash-observability-probe" || profiles.ServiceName != cfg.ServiceName {
 		t.Fatal("probe requires both signals enabled with isolated service identity")
 	}
+	cfg.SampleRatio = 1
 	ctx := context.Background()
 	telemetry, err := NewRuntime(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer telemetry.Shutdown(ctx)
+	defer func() {
+		cleanup, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		_ = telemetry.Shutdown(cleanup)
+	}()
 	observer := &probeProfileFailures{}
 	profiler, err := NewProfiler(ctx, profiles, observer)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer profiler.Stop(ctx)
+	defer func() {
+		cleanup, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		_ = profiler.Stop(cleanup)
+	}()
 	operation, finish := telemetry.Telemetry.Start(ctx, ports.OperationHTTP)
+	if !trace.SpanContextFromContext(operation).IsSampled() {
+		finish(nil)
+		t.Fatal("probe span was not sampled")
+	}
 	telemetry.Observer.Record(operation, ports.Event{Name: ports.EventHealthChecked})
 	finish(nil)
 	shutdown, cancel := context.WithTimeout(ctx, 30*time.Second)
