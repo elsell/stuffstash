@@ -2427,7 +2427,7 @@ export interface components {
             /** @enum {string} */
             platform: "ios" | "android" | "web";
             /** @enum {string} */
-            surface: "home" | "list" | "detail" | "gallery" | "fullscreen" | "upload";
+            surface: "application" | "home" | "list" | "detail" | "gallery" | "fullscreen" | "upload";
             /** @enum {string} */
             variant: "none" | "small" | "medium" | "large" | "original";
         };
