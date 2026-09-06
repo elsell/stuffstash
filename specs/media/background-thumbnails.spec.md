@@ -121,3 +121,8 @@ lease deadline fencing and acquisition accounting are under validation in
 `34064626334`. These checks do not yet prove an executing worker, PostgreSQL
 cross-process coordination, backfill, production performance or a deployment.
 The background feature remains undeployed until those requirements are verified.
+
+Publication guards receive an injected clock and check lease validity after acquiring
+locks, rather than accepting a timestamp captured before a potentially long wait.
+A guard must reject empty scope, changed source identity, a deleted attachment,
+and an expired or replaced background claim before calling the publisher.
