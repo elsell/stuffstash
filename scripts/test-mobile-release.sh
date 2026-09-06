@@ -130,3 +130,14 @@ PYTHON
 grep -q "info.get('ITSAppUsesNonExemptEncryption') is not False" "$workflow"
 
 echo 'mobile release tests passed'
+
+# A release must never request new signing identities from Apple.
+if grep -q -- '-allowProvisioningUpdates' "$workflow"; then
+  echo 'TestFlight must reuse signing credentials, not create certificates' >&2
+  exit 1
+fi
+for secret in BUILD_CERTIFICATE_BASE64 P12_PASSWORD BUILD_PROVISION_PROFILE_BASE64; do
+  grep -q "$secret" "$workflow"
+  grep -q "$secret" "$repo_root/.github/workflows/release.yml"
+done
+python3 "$repo_root/scripts/test-ios-signing.py"
