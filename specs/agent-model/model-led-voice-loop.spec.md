@@ -95,3 +95,20 @@ The audio runner requires separate `STUFF_STASH_VOICE_BABY_CLOTHES_AUDIO_FILE` a
 Session preparation must reject a provider set that supplies only the retired inference/wording interfaces. It must not start a session, transcribe audio, or silently enter the old investigation path. Selected historical workflows likewise require their chosen interpretation provider to support the conversation port; incompatible providers fail preparation before capture. This is a capability check, not an intent classifier or restriction on model-authored requests.
 
 Relevance guidance distinguishes a lexical search hit from evidence that an object satisfies the request. The model must assess the object itself using its title, tags and description, distinguish members of a requested category from merely related objects, and choose cards to support its answer. Search match fields explain retrieval, not category membership. These are general model instructions; no category-specific filters, examples, prose vetoes or extra classification calls are introduced.
+
+## Intermediate live evidence — 2026-09-05
+
+Ten predeclared alternating-order pairs used the same recorded baby-clothes question, isolated fixture, ADC host, Gemini 2.5 Flash Lite and Google Standard-C TTS. Baseline `26434c69d` contains v0.17.0 production code with the matched measurement fixture; candidate `71a5e8753` uses the model-led JSON tool envelope. These are intermediate results, not release acceptance or physical-device evidence.
+
+| Observation | Baseline | Candidate |
+| --- | ---: | ---: |
+| Successful complete audio outcomes | 8/10 | 9/10 |
+| Median first audio | 5,675.5 ms (10 observed) | 4,444 ms (9 observed) |
+| Nearest-rank p95 first audio | 12,336 ms | 11,839 ms |
+| Median terminal event, including failures | 5,676.5 ms | 4,496 ms |
+| Median inference calls | 3 | 2 |
+| Median measured request bytes | 124,257 | 108,212 |
+
+Baseline runs 1 and 9 spoke a generic failure instead of an answer. Candidate run 2 failed speech recognition after 10,242 ms, before any logged inference HTTP call, with no answer/audio; its missing audio latency is not treated as zero. The nine candidate answers included all three clothing cards and both bins, and their traces used one search plus presentation. Both versions had a slow successful outlier. First-audio medians include baseline failure speech; they are not medians of useful answers alone. Request bytes measure logged STT and language request bodies, excluding OAuth, TTS and transport overhead; a failed unlogged request is not proof that no bytes were sent. Ten observations are insufficient to claim stable tail latency or general accuracy.
+
+The next recorded chemicals preflight (`654c9350f`) failed relevance despite completing speech in 4,347 ms: both chemical records were found, but the model also included a reference book and protective gloves as chemical results. The matched v0.17.0 preflight (`fc4add58a`) failed the same relevance assertions at 5,724 ms. These failures motivated general relevance guidance and must remain in the evidence; chemistry and broader interactions have not yet met release acceptance.
