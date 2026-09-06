@@ -194,3 +194,13 @@ credentials from the Grafana management service account.
 
 Profiling accepts an empty username/password pair for an unauthenticated private
 collector, but rejects a partially populated pair before starting the SDK.
+
+## Runtime metric collection
+
+The OTLP adapter samples Go's `runtime/metrics` at collection time, without a
+polling worker or forced GC. Export heap-object bytes and goroutine count as
+gauges, and cumulative heap allocation bytes and completed GC cycles as monotonic
+counters. These are Go runtime values, not container RSS or operating-system CPU
+usage. Use cluster resource measurements and profiles alongside them. Fixed
+instrument names and units have no request- or user-derived labels. A runtime
+metric unavailable on the pinned toolchain fails instrumentation initialization.
