@@ -27,6 +27,7 @@ describe('parseRuntimeConfig', () => {
       oidcClientId: 'stuff-stash-web-local',
       oidcRedirectUri: 'http://localhost:5173/callback',
       invitationAllowInsecureLocalHTTP: false,
+      performanceTelemetryEnabled: false,
       mediaUploadPolicy: {
         supportedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
         maxBytes: 25 * 1024 * 1024
@@ -108,4 +109,12 @@ describe('parseRuntimeConfig', () => {
       oidcRedirectUri: 'http://web.lan:5173/callback'
     });
   });
+});
+
+
+it('only enables client performance telemetry with an explicit runtime boolean', () => {
+  for (const value of [undefined, false, 'true', 1]) {
+    expect(parseRuntimeConfig({ ...developmentRuntimeConfig, performanceTelemetryEnabled: value }).performanceTelemetryEnabled).toBe(false);
+  }
+  expect(parseRuntimeConfig({ ...developmentRuntimeConfig, performanceTelemetryEnabled: true }).performanceTelemetryEnabled).toBe(true);
 });

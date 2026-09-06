@@ -86,3 +86,16 @@ into measurements. The telemetry sender always receives the undecorated fetch.
 Use `application` for shared API transport requests that have no reliable screen
 context. Do not infer a screen from URLs or label all network requests as a single
 product screen. Mounted image observers use their actual surface and variant.
+
+## Web session integration
+
+`STUFF_STASH_WEB_PERFORMANCE_TELEMETRY_ENABLED` accepts `true` or `false`
+(default false) and produces `performanceTelemetryEnabled` in runtime config.
+The browser accepts only an explicit boolean true. A session-owned web adapter
+wraps product fetch and supplies the local frontend PerformanceObserver port;
+the port contains operation, surface, variant and outcome, with no SDK types.
+The adapter injects the web platform, clock and bounded reporter. Its undecorated
+fetch delivers telemetry. Disabled sessions schedule nothing and preserve fetch
+identity. Dispose aborts active delivery and clears queued data. The page releases
+the session on sign-out, expiry, initialization failure, and unmount, alongside its
+repository. A Svelte context delegates image measurements to the current session.
