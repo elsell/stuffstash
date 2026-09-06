@@ -13,13 +13,16 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/adapters/worklimit"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	mediaapp "github.com/stuffstash/stuff-stash/internal/app/media"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -332,6 +335,17 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 		t.Fatalf("expected missing auth thumbnail status %d, got %d with body %s", http.StatusUnauthorized, missingAuthThumbnail.Code, missingAuthThumbnail.Body.String())
 	}
 	assertSafeError(t, missingAuthThumbnail, "authentication_required", "Authentication required.")
+	for _, path := range []string{
+		"/tenants/other-tenant/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments/" + attachment.Data.ID + "/thumbnail?variant=small",
+		"/tenants/" + tenantID + "/inventories/other-inventory/assets/" + createdAsset.Data.ID + "/attachments/" + attachment.Data.ID + "/thumbnail?variant=small",
+		"/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/other-asset/attachments/" + attachment.Data.ID + "/thumbnail?variant=small",
+	} {
+		denied := performRequest(server, http.MethodGet, path, "Bearer dev:owner", nil)
+		if denied.Code != http.StatusForbidden && denied.Code != http.StatusNotFound {
+			t.Fatalf("scope substitution returned %d", denied.Code)
+		}
+	}
+
 }
 
 func TestAttachmentListIsPaginated(t *testing.T) {
@@ -704,6 +718,25 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		fakeDirectUploads.blobs = store
 	}
 
+	var thumbnailReader ports.ThumbnailReader
+	if batch, ok := imageProcessor.(ports.ImageBatchProcessor); ok {
+		guard, err := memory.NewThumbnailPublicationGuard(store, ports.SystemClock{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		processor, err := mediaapp.NewProcessor(store, store, batch, guard, time.Second)
+		if err != nil {
+			t.Fatal(err)
+		}
+		admission, err := worklimit.New(1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		thumbnailReader, err = mediaapp.NewReader(processor, admission)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 	application := app.New(app.Dependencies{
 		Observer:                  &fakeObserver{},
 		Auth:                      auth.NewLocalDevAuthenticator(),
@@ -732,6 +765,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		Blobs:                     store,
 		DirectUploads:             directUploads,
 		ImageProcessor:            imageProcessor,
+		ThumbnailReader:           thumbnailReader,
 		BlobDeletionOutbox:        store,
 		Audit:                     store,
 		Outbox:                    store,
