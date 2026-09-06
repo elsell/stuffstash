@@ -28,7 +28,7 @@ export function createObservedFetch(
       complete(response.ok ? 'success' : 'failure');
       return response;
     } catch (error) {
-      const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+      const signal = init?.signal !== undefined ? init.signal : (input instanceof Request ? input.signal : undefined);
       complete(signal?.aborted ? 'cancelled' : 'failure');
       throw error;
     }
