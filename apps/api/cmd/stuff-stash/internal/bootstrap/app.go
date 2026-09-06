@@ -116,8 +116,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		PrimaryThumbnailWarmTimeout:      cfg.PrimaryThumbnailWarmTimeout,
 		RealtimeVoiceToolCallTimeout:     cfg.RealtimeVoiceToolCallTimeout,
 		SpeechToText:                     stt,
-		LanguageInference:                languageInference,
-		VoiceResponseGenerator:           languageInference,
+		ConversationModel:                languageInference,
 		TextToSpeech:                     tts,
 		RealtimeVoiceProviderResolver:    realtimeVoiceProviderResolver,
 	})

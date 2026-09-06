@@ -22,11 +22,6 @@ func (m *continuousVoiceModel) Converse(_ context.Context, input ports.Conversat
 	return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "tools"}, nil)
 }
 
-// Removed when the legacy provider injection signature is deleted.
-func (*continuousVoiceModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 func TestRealtimeContinuityRetainsAnswerContextAndEndsAtLimit(t *testing.T) {
 	language := &continuousVoiceModel{}
 	application := newSeededTestAppWithVoice(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}, fakeSpeechToText{transcript: "Where are my tools?"}, language, fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}})

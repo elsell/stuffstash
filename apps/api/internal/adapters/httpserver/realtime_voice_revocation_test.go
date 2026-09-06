@@ -28,7 +28,7 @@ func TestRealtimeVoiceWebSocketRechecksRevokedInventoryAccessBeforeProviderDiscl
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "owner-user"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "owner-user"}},
 		ids:         []string{"voice-session-id"},
-	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers)
 	if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer-user"}, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatalf("grant viewer: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestRealtimeVoiceContinuationRechecksRevokedAccessBeforeDisclosure(t *testi
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "owner-user"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "owner-user"}},
 		ids:         []string{"voice-session-id"},
-	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	}, store, authorizer).WithRealtimeVoiceProviders(providers, providers, providers)
 	if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer-user"}, tenant.ID("tenant-home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatalf("grant viewer: %v", err)
 	}
@@ -135,10 +135,6 @@ func (p *revocationProbeVoiceProviders) Converse(_ context.Context, input ports.
 		return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "tools"}, nil)
 	}
 	return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
-}
-
-func (*revocationProbeVoiceProviders) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 func (p *revocationProbeVoiceProviders) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {

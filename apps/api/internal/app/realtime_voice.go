@@ -19,27 +19,8 @@ func (a App) WithRealtimeVoiceProviderResolver(resolver ports.RealtimeVoiceProvi
 	return a
 }
 
-func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) App {
-	a.speechToText = stt
-	a.languageInference = lm
-	a.textToSpeech = tts
-	conversation, _ := lm.(ports.ConversationModel)
-	a.realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
-		ConversationModel: conversation,
-		SpeechToText:      stt,
-		LanguageInference: lm,
-		ResponseGenerator: a.voiceResponseGenerator,
-		TextToSpeech:      tts,
-	}}
-	return a
-}
-
-func (a App) WithRealtimeVoiceResponseGenerator(generator ports.VoiceResponseGenerator) App {
-	a.voiceResponseGenerator = generator
-	if resolver, ok := a.realtimeVoiceProviders.(staticRealtimeVoiceProviderResolver); ok {
-		resolver.providers.ResponseGenerator = generator
-		a.realtimeVoiceProviders = resolver
-	}
+func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, model ports.ConversationModel, tts ports.TextToSpeechProvider) App {
+	a.realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{SpeechToText: stt, ConversationModel: model, TextToSpeech: tts}}
 	return a
 }
 
@@ -68,9 +49,6 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	})
 	if err != nil {
 		return RealtimeVoiceSession{}, err
-	}
-	if a.voiceResponseGenerator != nil {
-		providers.ResponseGenerator = a.voiceResponseGenerator
 	}
 
 	var workflow *agentmodelapp.PreparedWorkflow

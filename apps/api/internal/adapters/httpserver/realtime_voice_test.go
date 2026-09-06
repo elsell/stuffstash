@@ -31,7 +31,7 @@ func TestRealtimeVoiceQueryWebSocketStreamsTranscriptToolResultAndSpeech(t *test
 		ids:         []string{"garage-id", "tools-id", "voice-session-id", "tool-call-id", "response-id"},
 	}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Where are my tools?"}, scriptedLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio-1"), []byte("spoken-audio-2")},
-	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Garage", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "container", "Tools", "garage-id")
 

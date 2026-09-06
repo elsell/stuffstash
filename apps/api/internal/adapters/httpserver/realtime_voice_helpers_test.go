@@ -23,21 +23,11 @@ type capturingLanguageModel struct {
 	lastToolResult string
 }
 
-func (*capturingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
-func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.SpeechToTextProvider, lm ports.LanguageInferenceProvider, tts ports.TextToSpeechProvider) app.App {
+func newSeededTestAppWithVoice(t *testing.T, state seededState, stt ports.SpeechToTextProvider, lm ports.ConversationModel, tts ports.TextToSpeechProvider) app.App {
 	t.Helper()
 
 	application := newSeededTestApp(t, state)
-	return application.WithRealtimeVoiceProviders(stt, lm, tts).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
-}
-
-type httpTestVoiceResponseGenerator struct{}
-
-func (httpTestVoiceResponseGenerator) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
+	return application.WithRealtimeVoiceProviders(stt, lm, tts)
 }
 
 func seedVoiceAsset(t *testing.T, application app.App, principalID string, tenantID string, inventoryID string, kind string, title string, parentAssetID string) {
@@ -148,24 +138,12 @@ func (s *scriptedSpeechToText) Transcribe(_ context.Context, input ports.SpeechT
 
 type scriptedLanguageModel struct{}
 
-func (scriptedLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type locationAwareLanguageModel struct {
 	lastToolResult string
 }
 
-func (*locationAwareLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type itemListingLanguageModel struct {
 	lastToolResult string
-}
-
-func (*itemListingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 type scriptedFinalLanguageModel struct {
@@ -181,17 +159,8 @@ func (m *scriptedFinalLanguageModel) Converse(_ context.Context, input ports.Con
 	return ports.ConversationModelTurn{Text: "Which item do you mean?"}, nil
 }
 
-// Removed with the legacy provider injection signature.
-func (*scriptedFinalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type failingLanguageModel struct {
 	err error
-}
-
-func (m failingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, m.err
 }
 
 type fakeTextToSpeech struct {

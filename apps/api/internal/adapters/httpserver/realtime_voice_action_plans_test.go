@@ -314,7 +314,7 @@ func TestRealtimeVoiceActionPlanRestoreApprovalDeniedSafelyWithoutMutation(t *te
 		},
 	}, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: "Restore the water bottle."}, restoreActionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
-	}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+	})
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "location", "Office", "")
 	seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Water bottle", "")
 	if _, err := application.ArchiveAssetWithOperation(context.Background(), app.UpdateAssetLifecycleInput{
@@ -379,19 +379,19 @@ func openRealtimeVoiceReviewSession(t *testing.T) (context.Context, *websocket.C
 	return openRealtimeVoiceReviewSessionWithModel(t, actionPlanProposalLanguageModel{})
 }
 
-func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.LanguageInferenceProvider) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithModel(t *testing.T, languageInference ports.ConversationModel) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetup(t, languageInference, nil)
 }
 
-func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.LanguageInferenceProvider, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference ports.ConversationModel, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetupAndTranscript(t, languageInference, "Add a water bottle.", setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.ConversationModel, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	ids := []string{"voice-session-id", "read-audit-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
@@ -405,27 +405,27 @@ func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, language
 	return openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t, languageInference, ids, transcript, setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDs(t *testing.T, languageInference ports.ConversationModel, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t, languageInference, ids, setup)
 	return ctx, connection, sessionID, planID
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndProposal(t *testing.T, languageInference ports.ConversationModel, ids []string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
 	t.Helper()
 
 	return openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, languageInference, ids, "Add a water bottle.", setup)
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscript(t *testing.T, languageInference ports.ConversationModel, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
 	ctx, connection, sessionID, planID, _ := openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t, languageInference, ids, transcript, setup)
 	return ctx, connection, sessionID, planID
 }
 
-func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t *testing.T, languageInference ports.LanguageInferenceProvider, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
+func openRealtimeVoiceReviewSessionWithSetupAndIDsAndTranscriptAndProposal(t *testing.T, languageInference ports.ConversationModel, ids []string, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string, map[string]any) {
 	t.Helper()
 
 	application := newSeededTestAppWithVoice(t, seededState{
@@ -548,28 +548,8 @@ func (d *denyEditAfterProposalAuthorizer) RevokeInventoryEditor(ctx context.Cont
 
 type actionPlanProposalLanguageModel struct{}
 
-// Removed with the legacy provider injection signature.
-func (actionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type moveActionPlanProposalLanguageModel struct{}
-
-// Removed with the legacy provider injection signature.
-func (moveActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
 
 type archiveActionPlanProposalLanguageModel struct{}
 
-// Removed with the legacy provider injection signature.
-func (archiveActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type restoreActionPlanProposalLanguageModel struct{}
-
-// Removed with the legacy provider injection signature.
-func (restoreActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}

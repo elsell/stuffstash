@@ -43,8 +43,3 @@ type malformedConversationModel struct{ turn ports.ConversationModelTurn }
 func (m malformedConversationModel) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	return m.turn, nil
 }
-
-// Removed with the legacy provider injection signature.
-func (malformedConversationModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}

@@ -36,11 +36,6 @@ func (m additionalItemModel) Converse(_ context.Context, input ports.Conversatio
 	}}}}, nil
 }
 
-// Removed with the legacy provider injection signature.
-func (additionalItemModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 func TestRealtimeAdditionalItemPreservesExistingIdentityAccessAndApproval(t *testing.T) {
 	for _, scenario := range []struct {
 		name, user, transcript, terminal string
@@ -54,7 +49,7 @@ func TestRealtimeAdditionalItemPreservesExistingIdentityAccessAndApproval(t *tes
 		t.Run(scenario.name, func(t *testing.T) {
 			store := memory.NewStore()
 			authorizer := memory.NewAuthorizer()
-			application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: scenario.transcript}, additionalItemModel{propose: scenario.propose}, fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}}).WithRealtimeVoiceResponseGenerator(httpTestVoiceResponseGenerator{})
+			application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}, store, authorizer).WithRealtimeVoiceProviders(fakeSpeechToText{transcript: scenario.transcript}, additionalItemModel{propose: scenario.propose}, fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}})
 			seedVoiceAsset(t, application, "user-1", "tenant-home", "inventory-home", "item", "Charger", "")
 			if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer"}, "tenant-home", "inventory-home"); err != nil {
 				t.Fatal(err)

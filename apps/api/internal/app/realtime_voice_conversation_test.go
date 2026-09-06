@@ -136,18 +136,12 @@ func TestRealtimeConversationRecoversFromReadFailure(t *testing.T) {
 	}
 }
 
-type injectedNativeConversation struct {
-	*resolvedLanguageInference
-	*inventoryConversationModel
-}
-
 func TestDirectlyInjectedNativeProviderUsesConversationLoop(t *testing.T) {
 	resolver := successfulRealtimeVoiceResolver()
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
 	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("acetone", "Acetone", asset.KindItem, ""), "audit-acetone")
 	native := &inventoryConversationModel{}
-	model := injectedNativeConversation{resolvedLanguageInference: &resolvedLanguageInference{}, inventoryConversationModel: native}
-	application = application.WithRealtimeVoiceProviders(resolver.providers.SpeechToText, model, resolver.providers.TextToSpeech)
+	application = application.WithRealtimeVoiceProviders(resolver.providers.SpeechToText, native, resolver.providers.TextToSpeech)
 	response := realtimeVoiceInvestigationCompletedResponse(runRealtimeVoiceProductionEntrypoint(t, application))
 	if response == nil || native.calls != 2 || response.SpokenResponse != "Yes, you have chemicals, including Acetone." {
 		t.Fatalf("direct injection used obsolete inference: %+v calls=%d", response, native.calls)

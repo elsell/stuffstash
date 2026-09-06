@@ -65,7 +65,7 @@ func runGoogleLiveRealtimeAudio(t *testing.T, audioFileKey string, seed liveAudi
 	config := voice.GoogleGeminiConfig{ProjectID: project, Location: location, Model: model, QuotaProject: project, TokenSource: tokenSource, HTTPTimeout: 45 * time.Second, HTTPClient: &http.Client{Transport: liveVoiceTraceTransport{t: t, next: http.DefaultTransport}}}
 	language := voice.NewGoogleGeminiLanguageInference(config)
 	speech := voice.NewGoogleTextToSpeech(voice.GoogleTextToSpeechConfig{LanguageCode: required("STUFF_STASH_GOOGLE_TTS_LANGUAGE"), VoiceName: required("STUFF_STASH_GOOGLE_TTS_VOICE"), QuotaProject: project, TokenSource: tokenSource, HTTPTimeout: 45 * time.Second})
-	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviders(voice.NewGoogleGeminiSpeechToText(config), language, speech).WithRealtimeVoiceResponseGenerator(language)
+	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviders(voice.NewGoogleGeminiSpeechToText(config), language, speech)
 	fixture := seed(t, ctx, application)
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	defer server.Close()

@@ -2,8 +2,8 @@ package voice
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -18,56 +18,50 @@ func (DevFakeSpeechToText) Transcribe(_ context.Context, input ports.SpeechToTex
 
 type DevFakeLanguageInference struct{}
 
-func (DevFakeLanguageInference) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if input.Investigation == nil || input.Investigation.Validate() != nil {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+// Converse is the fixed development demonstration, never a fallback model.
+func (DevFakeLanguageInference) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	if err := ctx.Err(); err != nil {
+		return ports.ConversationModelTurn{}, err
 	}
-	if input.Investigation.Phase == agentmodel.InvestigationPhaseInitial {
-		return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{
-			Decision: agentmodel.InvestigationDecisionSearch,
-			Intent:   agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindRead, Operation: agentmodel.OperationLocate, SubjectMention: "tools"},
-			SearchRequests: []agentmodel.SearchRequest{{
-				ReferenceKey: agentmodel.SemanticReferenceSubject, ReadKind: agentmodel.InvestigationReadSearchAssets,
-				Mention: "tools", SearchProbes: []string{"tools"}, LifecycleScope: agentmodel.LifecycleScopeActive,
-			}},
-			Rationale: "Gather visible candidates.",
-		}}, nil
+	if len(input.Messages) == 0 {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 	}
-	resolution := agentmodel.Resolution{ReferenceKey: agentmodel.SemanticReferenceSubject, Status: agentmodel.ResolutionAbsent, Evidence: "No visible candidate matched."}
-	if len(input.Investigation.Observations) > 0 {
-		resolution.Status = agentmodel.ResolutionPlausible
-		resolution.CandidateIDs = []string{input.Investigation.Observations[0].CandidateID}
-		resolution.Evidence = "A visible candidate matched."
+	last := input.Messages[len(input.Messages)-1]
+	if last.Role == ports.ConversationRoleUser {
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "dev-tools", Name: "search_authorized_assets", Arguments: map[string]any{"query": "tools"}}}}, nil
 	}
-	return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{
-		Decision:    agentmodel.InvestigationDecisionFinish,
-		Intent:      *input.Investigation.CanonicalIntent,
-		Resolutions: []agentmodel.Resolution{resolution},
-		Rationale:   "Resolve from authorized evidence.",
-	}}, nil
+	if len(last.ToolResults) != 1 || last.ToolResults[0].CallID != "dev-tools" || last.ToolResults[0].Name != "search_authorized_assets" {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
+	}
+	var evidence struct {
+		Error json.RawMessage `json:"error"`
+		Items []struct {
+			AssetID     string `json:"assetId"`
+			Title       string `json:"title"`
+			ParentTitle string `json:"parentTitle"`
+		} `json:"items"`
+	}
+	if json.Unmarshal([]byte(last.ToolResults[0].Content), &evidence) != nil || len(evidence.Error) != 0 {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
+	}
+	text := "I couldn't find matching tools in this inventory."
+	var ids []string
+	if len(evidence.Items) > 0 {
+		item := evidence.Items[0]
+		if item.AssetID == "" || item.Title == "" {
+			return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
+		}
+		text = "I found " + item.Title
+		if item.ParentTitle != "" {
+			text += " in " + item.ParentTitle
+		}
+		text += "."
+		ids = []string{item.AssetID}
+	}
+	return ports.ConversationModelTurn{Answer: &ports.ConversationAnswer{Spoken: text, Display: text, AssetIDs: ids}}, nil
 }
 
 func (DevFakeLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
-
-func (DevFakeLanguageInference) GenerateResponse(_ context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	if input.Brief.Validate() != nil {
-		return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
-	}
-	text := "I couldn't find that in this inventory."
-	if len(input.Brief.Findings) > 0 {
-		finding := input.Brief.Findings[0]
-		location := finding.Title
-		if len(finding.ContainmentPath) > 0 {
-			location = finding.ContainmentPath[len(finding.ContainmentPath)-1]
-		}
-		prefix := "I found it"
-		if input.Brief.Confidence == agentmodel.ResponseConfidencePlausible {
-			prefix = "I think it's"
-		}
-		text = prefix + " in " + location + "."
-	}
-	return ports.VoiceResponseGenerationResult{SpokenResponse: text, DisplayResponse: text}, nil
-}
 
 type DevFakeTextToSpeech struct{}
 

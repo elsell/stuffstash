@@ -301,14 +301,4 @@ func assertMixedMoveCommandResults(t *testing.T, executed map[string]any) {
 
 type createNestedItemActionPlanProposalLanguageModel struct{}
 
-// Removed with the legacy provider injection signature.
-func (createNestedItemActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type moveToMissingLocationActionPlanProposalLanguageModel struct{}
-
-// Removed with the legacy provider injection signature.
-func (moveToMissingLocationActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}

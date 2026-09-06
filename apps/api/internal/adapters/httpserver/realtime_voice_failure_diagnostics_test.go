@@ -64,11 +64,6 @@ func (lateFailingLanguageModel) Converse(_ context.Context, input ports.Conversa
 	return ports.ConversationModelTurn{}, safeHTTPStatusLanguageError{}
 }
 
-// Removed with the legacy provider injection signature.
-func (lateFailingLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
 type safeHTTPStatusLanguageError struct{}
 
 func (e safeHTTPStatusLanguageError) Error() string {
