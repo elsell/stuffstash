@@ -42,10 +42,10 @@ func TestEvaluationProviderResolutionUsesPinnedInstances(t *testing.T) {
 		if err != nil || binding.Provider == nil {
 			t.Fatal("pinned provider unavailable")
 		}
-		if !explicit && (bundle.Providers.LanguageInference == nil || bundle.Providers.LanguageInferenceProfileID != "model") {
+		if !explicit && (bundle.Providers.ConversationModel == nil || bundle.Providers.LanguageInferenceProfileID != "model") {
 			t.Fatal("pinned default unavailable")
 		}
-		if explicit && bundle.Providers.LanguageInference != nil {
+		if explicit && bundle.Providers.ConversationModel != nil {
 			t.Fatal("unused default constructed")
 		}
 		for _, input := range []ports.WorkflowLanguageProviderResolutionInput{{TenantID: "outside", ProfileID: "model"}, {TenantID: fixture.TenantID, ProfileID: "other"}} {
