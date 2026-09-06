@@ -7,6 +7,7 @@ oidc_client_id="${STUFF_STASH_WEB_OIDC_CLIENT_ID:-${STUFF_STASH_OIDC_CLIENT_ID:-
 oidc_redirect_uri="${STUFF_STASH_WEB_OIDC_REDIRECT_URI:-${STUFF_STASH_WEB_ORIGIN:-http://localhost:8081}/callback}"
 media_max_bytes="${STUFF_STASH_WEB_MEDIA_MAX_BYTES:-${STUFF_STASH_MAX_ATTACHMENT_BYTES:-26214400}}"
 s3_endpoint="${STUFF_STASH_S3_PUBLIC_ENDPOINT:-localhost:3900}"
+performance_telemetry_enabled="${STUFF_STASH_WEB_PERFORMANCE_TELEMETRY_ENABLED:-false}"
 s3_secure="${STUFF_STASH_S3_SECURE:-false}"
 
 require_safe_value() {
@@ -61,6 +62,11 @@ require_safe_value STUFF_STASH_WEB_OIDC_CLIENT_ID "$oidc_client_id"
 require_safe_value STUFF_STASH_WEB_OIDC_REDIRECT_URI "$oidc_redirect_uri"
 require_safe_value STUFF_STASH_S3_PUBLIC_ENDPOINT "$s3_endpoint"
 
+case "$performance_telemetry_enabled" in
+  true|false) ;;
+  *) echo "STUFF_STASH_WEB_PERFORMANCE_TELEMETRY_ENABLED must be true or false" >&2; exit 1 ;;
+esac
+
 case "$media_max_bytes" in
   ''|*[!0-9]*)
     echo "STUFF_STASH_WEB_MEDIA_MAX_BYTES must be a positive integer" >&2
@@ -78,6 +84,7 @@ cat > /tmp/stuffstash-config.json <<EOF
   "oidcIssuer": "$(json_escape "$oidc_issuer")",
   "oidcClientId": "$(json_escape "$oidc_client_id")",
   "oidcRedirectUri": "$(json_escape "$oidc_redirect_uri")",
+  "performanceTelemetryEnabled": $performance_telemetry_enabled,
   "mediaUploadPolicy": {
     "supportedContentTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"],
     "maxBytes": $media_max_bytes
