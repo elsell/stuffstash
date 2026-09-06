@@ -177,6 +177,7 @@ type RealtimeVoiceProviderResolutionInput struct {
 }
 
 type RealtimeVoiceProviderSet struct {
+	ConversationModel          ConversationModel
 	SpeechToTextProfileID      string
 	LanguageInferenceProfileID string
 	TextToSpeechProfileID      string
