@@ -129,6 +129,11 @@ func TestThumbnailQueueRejectsWrongAttachmentScope(t *testing.T) {
 func thumbnailQueueFixture(t *testing.T, ctx context.Context) (Store, media.Attachment, audit.Record, media.ThumbnailJob) {
 	t.Helper()
 	store := newTestStore(t, ctx)
+	return thumbnailQueueFixtureInStore(t, ctx, store)
+}
+
+func thumbnailQueueFixtureInStore(t *testing.T, ctx context.Context, store Store) (Store, media.Attachment, audit.Record, media.ThumbnailJob) {
+	t.Helper()
 	tenantID := tenant.ID("thumbnail-tenant")
 	inventoryID := inventory.InventoryID("thumbnail-inventory")
 	saveTenant(t, ctx, store, tenantID, "Home")

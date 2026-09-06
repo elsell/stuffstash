@@ -205,3 +205,9 @@ true; `CONCURRENCY` defaults 1 and accepts 1–8; `POLL_INTERVAL` defaults 1s (1
 Lease duration must exceed processing timeout, publication timeout must be less
 than processing timeout, and retry maximum must be at least its base. The final
 production concurrency remains subject to the measured comparison.
+
+SQLite publication acquires its database writer lock with a scoped no-op attachment
+ID update before reading authoritative state. This avoids relying on unsupported
+row-lock clauses and holds deletion behind publication even in WAL mode. The update
+only acquires transaction ownership and does not change attachment identity or
+business state. A file-backed WAL concurrency test must verify the ordering.
