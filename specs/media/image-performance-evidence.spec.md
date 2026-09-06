@@ -165,3 +165,28 @@ the same runner, Go 1.25.8, GOMAXPROCS=4, three repetitions of five operations p
 variant. Enable CPU/allocation profiles on both. Preserve raw samples, profiles,
 source hashes, CPU description and runtime version. This isolates codec cost;
 production HTTP and physical-device conclusions still require separate evidence.
+
+## Paired codec results — candidate 85d5361ff
+
+Run `34059380384` completed both benchmarks on the same AMD EPYC 9V74 runner,
+Go 1.25.8, GOMAXPROCS=4. Reference is the deployed source `319dd138a`. Three
+five-operation repetitions per variant; table values average their ns/op and B/op.
+
+| Variant | Reference ms/op | Candidate ms/op | Time reduction | Reference MB/op | Candidate MB/op | Allocation reduction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| small | 586.0 | 386.9 | 34.0% | 43.78 | 37.73 | 13.8% |
+| medium | 624.0 | 411.1 | 34.1% | 95.45 | 54.64 | 42.8% |
+| large | 716.7 | 516.2 | 28.0% | 183.51 | 118.08 | 35.7% |
+
+MB are decimal allocated bytes, not peak RSS. These are synthetic codec averages,
+not HTTP/device latency or p95. The corpus limitation from the original benchmark
+still applies. Output bytes changed: small 1401→1395; medium 151429→145276;
+large 882305→873982. Do not claim visual equivalence from size alone.
+
+The initial 64 MiB resize-only regression budget was below the retained filter's
+required buffers; corrected to a specified 100 MiB from the buffer calculation.
+Run `34059408867` passed blobstore correctness/memory tests and the API/telemetry
+race suite. Its deferred client-telemetry job failed; this does not pass a full
+frontend release gate. Candidate image processing is not deployed. Raw paired
+benchmarks/profiles are retained in the `media-codec-measurements` CI artifact and
+downloaded to the private measurement workspace.
