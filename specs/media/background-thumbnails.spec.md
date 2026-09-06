@@ -211,3 +211,7 @@ ID update before reading authoritative state. This avoids relying on unsupported
 row-lock clauses and holds deletion behind publication even in WAL mode. The update
 only acquires transaction ownership and does not change attachment identity or
 business state. A file-backed WAL concurrency test must verify the ordering.
+
+Batch processing retains the existing thumbnail-generation telemetry operation.
+That span includes incremental publication; nested blob spans distinguish storage
+latency from image work. Publication errors propagate to the operation result.

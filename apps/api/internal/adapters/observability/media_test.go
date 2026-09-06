@@ -3,6 +3,7 @@ package observability
 import (
 	"bytes"
 	"context"
+	"errors"
 	"image"
 	"image/png"
 	"testing"
@@ -60,4 +61,18 @@ type recordingOperations struct {
 func (r *recordingOperations) Start(ctx context.Context, op ports.Operation) (context.Context, func(error)) {
 	r.operations = append(r.operations, op)
 	return ctx, func(err error) { r.results = append(r.results, err) }
+}
+
+func TestBatchImageTelemetryPreservesPublicationFailure(t *testing.T) {
+	telemetry := &recordingOperations{}
+	processor := ObserveImageBatch(blobstore.StandardImageProcessor{}, telemetry)
+	var source bytes.Buffer
+	if err := png.Encode(&source, image.NewRGBA(image.Rect(0, 0, 8, 8))); err != nil {
+		t.Fatal(err)
+	}
+	failure := errors.New("publication failed")
+	err := processor.CreateThumbnails(context.Background(), ports.ImageDerivativesRequest{Content: source.Bytes(), ContentType: media.ContentTypePNG, Variants: []media.ThumbnailVariant{media.ThumbnailVariantSmall}}, func(media.ThumbnailVariant, ports.ImageDerivative) error { return failure })
+	if !errors.Is(err, failure) || len(telemetry.operations) != 1 || telemetry.operations[0] != ports.OperationThumbnailGenerate || len(telemetry.results) != 1 || !errors.Is(telemetry.results[0], failure) {
+		t.Fatal("batch telemetry lost processing failure", err)
+	}
 }
