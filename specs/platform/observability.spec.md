@@ -218,3 +218,15 @@ identity ports. Record only fixed operation names and success/failure. Do not
 record tokens, principal IDs, permissions supplied by callers, or resource IDs.
 Forward the derived context and all arguments unchanged. Wire the same decorators
 in API bootstrap and verify legitimate and denied requests through the HTTP boundary.
+
+## Opt-in collector acceptance probe
+
+An integration test compiled in CI may run on the authorized deployment host with
+explicit `STUFF_STASH_TEST_LIVE_TELEMETRY=true`. It uses the real configured OTLP
+and profiling adapters, an explicitly separate `stuffstash-observability-probe`
+service identity, and a harmless health event inside an operation span. It must
+reject disabled signals, fail on recorded export/profile delivery failures, and
+flush before completion. Credentials are supplied through the host's secret
+manager in process memory, never test artifacts or command arguments. A successful
+probe establishes exporter acceptance; query the four backends separately to
+prove stored data visibility. The probe is not production workload evidence.
