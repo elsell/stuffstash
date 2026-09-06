@@ -62,3 +62,24 @@ Continuous profiling configuration red tests were committed at `a692225fd`; the
 profiling adapter and runtime wiring are not implemented yet. Local `go tool pprof`
 also attempted compilation and ran out of disk; profile summarization is now in
 the CI benchmark workflow. No thumbnail behavior has changed.
+
+## Cluster and ingestion readiness (2026-09-06)
+
+- Read-only access through `paul` and `~/.kube/configs/local-don` succeeded for
+  namespace `stuffstash`; API health returned healthy. Flux reported applied
+  revision `30efb8086d39e012ecc67634ddfd73e99bc15f53`.
+- API image observed at inspection:
+  `ghcr.io/elsell/stuffstash@sha256:ddec2c47dcb084296715847dac0ea4f7c4837b83969c905062734ade6eefcc4d`.
+  An idle pod snapshot was 3 millicores and 13 MiB; this is not workload evidence.
+- OTLP empty protobuf requests from `paul` with Infisical-synced credentials returned
+  traces 200, metrics 200, logs 204. This verifies connectivity/authentication, not
+  emitted application data, query visibility, or complete signal delivery.
+- Profiling endpoint/username are populated, but the synced password is empty;
+  the operator has been asked to supply it. An authenticated test inventory is
+  still needed for the deployed image workload.
+- Go runtime metrics passed race CI `34055169957`; cache response counters passed
+  `34055259781`; identity boundary instrumentation passed `34055413925`.
+- The observability work was rebased onto main `31ef6edce` to preserve current
+  release fixes. No image scheduling behavior has changed yet. The original
+  deterministic codec measurements remain synthetic evidence at their recorded
+  revision, not a measured production comparison.
