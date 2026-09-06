@@ -1,6 +1,12 @@
 package agentmodel
 
-import "strings"
+import (
+	"errors"
+	"strings"
+	"unicode/utf8"
+)
+
+var ErrInvalidVoiceVocabulary = errors.New("invalid voice vocabulary")
 
 const (
 	MaxVoiceVocabularyAssetTypes   = 32
@@ -29,8 +35,8 @@ type VoiceVocabularyAssetType struct {
 }
 
 func (value VoiceVocabularyAssetType) Validate() error {
-	if !validVoiceVocabularyKey(value.Key) || !bounded(value.DisplayName, 120, false) || !bounded(value.Description, 500, true) {
-		return ErrInvalidVoiceInvestigation
+	if !validVoiceVocabularyKey(value.Key) || !boundedVocabularyText(value.DisplayName, 120, false) || !boundedVocabularyText(value.Description, 500, true) {
+		return ErrInvalidVoiceVocabulary
 	}
 	return nil
 }
@@ -43,8 +49,8 @@ type VoiceVocabularyFieldSummary struct {
 }
 
 func (value VoiceVocabularyFieldSummary) Validate() error {
-	if !validVoiceVocabularyKey(value.Key) || !bounded(value.DisplayName, 120, false) || !validVoiceVocabularyFieldType(value.FieldType) || !validVoiceVocabularyApplicability(value.Applicability) {
-		return ErrInvalidVoiceInvestigation
+	if !validVoiceVocabularyKey(value.Key) || !boundedVocabularyText(value.DisplayName, 120, false) || !validVoiceVocabularyFieldType(value.FieldType) || !validVoiceVocabularyApplicability(value.Applicability) {
+		return ErrInvalidVoiceVocabulary
 	}
 	return nil
 }
@@ -55,8 +61,8 @@ type VoiceVocabularyTag struct {
 }
 
 func (value VoiceVocabularyTag) Validate() error {
-	if !validVoiceVocabularyTagKey(value.Key) || !bounded(value.DisplayName, 80, false) {
-		return ErrInvalidVoiceInvestigation
+	if !validVoiceVocabularyTagKey(value.Key) || !boundedVocabularyText(value.DisplayName, 80, false) {
+		return ErrInvalidVoiceVocabulary
 	}
 	return nil
 }
@@ -75,7 +81,7 @@ func (manifest VoiceVocabularyManifest) Validate() error {
 		!validUniqueVoiceVocabulary(manifest.CustomAssetTypes, func(value VoiceVocabularyAssetType) (string, error) { return value.Key, value.Validate() }) ||
 		!validUniqueVoiceVocabulary(manifest.CustomFields, func(value VoiceVocabularyFieldSummary) (string, error) { return value.Key, value.Validate() }) ||
 		!validUniqueVoiceVocabulary(manifest.Tags, func(value VoiceVocabularyTag) (string, error) { return value.Key, value.Validate() }) {
-		return ErrInvalidVoiceInvestigation
+		return ErrInvalidVoiceVocabulary
 	}
 	return nil
 }
@@ -87,7 +93,7 @@ type VoiceVocabularyRequest struct {
 
 func (request VoiceVocabularyRequest) Validate() error {
 	if !request.Kind.Valid() || (request.Kind == VoiceVocabularyKindTag && !validVoiceVocabularyTagKey(request.Key)) || (request.Kind != VoiceVocabularyKindTag && !validVoiceVocabularyKey(request.Key)) {
-		return ErrInvalidVoiceInvestigation
+		return ErrInvalidVoiceVocabulary
 	}
 	return nil
 }
@@ -106,22 +112,22 @@ type VoiceVocabularyDefinition struct {
 }
 
 func (definition VoiceVocabularyDefinition) Validate() error {
-	if !definition.Kind.Valid() || (definition.Kind == VoiceVocabularyKindTag && !validVoiceVocabularyTagKey(definition.Key)) || (definition.Kind != VoiceVocabularyKindTag && !validVoiceVocabularyKey(definition.Key)) || !bounded(definition.DisplayName, 120, false) || !bounded(definition.Description, 500, true) ||
+	if !definition.Kind.Valid() || (definition.Kind == VoiceVocabularyKindTag && !validVoiceVocabularyTagKey(definition.Key)) || (definition.Kind != VoiceVocabularyKindTag && !validVoiceVocabularyKey(definition.Key)) || !boundedVocabularyText(definition.DisplayName, 120, false) || !boundedVocabularyText(definition.Description, 500, true) ||
 		len(definition.EnumOptions) > MaxVoiceVocabularyEnumOptions || len(definition.ApplicableCustomAssetTypeKeys) > MaxVoiceVocabularyAssetTypes ||
 		!validUniqueVocabularyKeys(definition.EnumOptions) || !validUniqueVocabularyKeys(definition.ApplicableCustomAssetTypeKeys) {
-		return ErrInvalidVoiceInvestigation
+		return ErrInvalidVoiceVocabulary
 	}
 	switch definition.Kind {
 	case VoiceVocabularyKindCustomAssetType, VoiceVocabularyKindTag:
 		if definition.FieldType != "" || definition.Applicability != "" || len(definition.EnumOptions) != 0 || definition.EnumOptionsTruncated || len(definition.ApplicableCustomAssetTypeKeys) != 0 || definition.ApplicabilityTargetsTruncated {
-			return ErrInvalidVoiceInvestigation
+			return ErrInvalidVoiceVocabulary
 		}
 	case VoiceVocabularyKindCustomField:
 		if !validVoiceVocabularyFieldType(definition.FieldType) || !validVoiceVocabularyApplicability(definition.Applicability) ||
 			(definition.FieldType == "enum" && len(definition.EnumOptions) == 0) || (definition.FieldType != "enum" && len(definition.EnumOptions) != 0) ||
 			(definition.Applicability == "all_assets" && (len(definition.ApplicableCustomAssetTypeKeys) != 0 || definition.ApplicabilityTargetsTruncated)) ||
 			(definition.Applicability == "custom_asset_types" && len(definition.ApplicableCustomAssetTypeKeys) == 0 && !definition.ApplicabilityTargetsTruncated) {
-			return ErrInvalidVoiceInvestigation
+			return ErrInvalidVoiceVocabulary
 		}
 	}
 	return nil
@@ -195,4 +201,12 @@ func validUniqueVoiceVocabulary[T any](values []T, validate func(T) (string, err
 		seen[key] = struct{}{}
 	}
 	return true
+}
+
+func boundedVocabularyText(value string, limit int, optional bool) bool {
+	trimmed := strings.TrimSpace(value)
+	if !optional && trimmed == "" {
+		return false
+	}
+	return utf8.RuneCountInString(trimmed) <= limit
 }

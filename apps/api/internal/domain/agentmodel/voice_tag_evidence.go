@@ -30,18 +30,3 @@ func BoundedObservationTagNames(names []string) []string {
 	}
 	return result
 }
-func validObservationTagNames(names []string) bool {
-	if len(names) > MaxObservationTagNames {
-		return false
-	}
-	normalized := BoundedObservationTagNames(names)
-	if len(normalized) != len(names) {
-		return false
-	}
-	for i := range names {
-		if names[i] != normalized[i] {
-			return false
-		}
-	}
-	return true
-}

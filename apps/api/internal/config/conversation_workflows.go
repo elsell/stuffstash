@@ -56,7 +56,7 @@ func loadWorkflowConfiguration() WorkflowConfiguration {
 		}
 		*entry.target = value
 	}
-	if result.limits.Budget.EvidenceRounds > agentmodel.MaxEvidenceRounds {
+	if result.limits.Budget.EvidenceRounds > agentmodel.MaxLegacyWorkflowEvidenceRounds {
 		result.err = fmt.Errorf("STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS exceeds the supported investigation ceiling")
 	}
 	return result

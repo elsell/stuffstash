@@ -2,6 +2,8 @@ package agentmodel
 
 import "strings"
 
+const MaxEvaluationProposalDetailRunes = 500
+
 type EvaluationProposal struct {
 	Operation     Operation
 	TargetID      string
@@ -12,7 +14,7 @@ type EvaluationProposal struct {
 }
 
 func validEvaluationProposal(value EvaluationProposal, assets map[string]EvaluationFixtureAsset) bool {
-	if !workflowTextWithin(value.Details, MaxInvestigationDetailRunes, true) || strings.TrimSpace(value.Details) != value.Details {
+	if !workflowTextWithin(value.Details, MaxEvaluationProposalDetailRunes, true) || strings.TrimSpace(value.Details) != value.Details {
 		return false
 	}
 	if value.Details != "" && value.Operation != OperationCheckout && value.Operation != OperationReturn {

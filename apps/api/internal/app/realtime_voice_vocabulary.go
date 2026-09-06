@@ -22,15 +22,15 @@ func (catalog realtimeVoiceVocabularyCatalog) resolve(requests []agentmodel.Voic
 	seen := map[string]struct{}{}
 	for _, request := range requests {
 		if request.Validate() != nil {
-			return nil, agentmodel.ErrInvalidVoiceInvestigation
+			return nil, agentmodel.ErrInvalidVoiceVocabulary
 		}
 		key := realtimeVoiceVocabularyCatalogKey(request.Kind, request.Key)
 		if _, exists := seen[key]; exists {
-			return nil, agentmodel.ErrInvalidVoiceInvestigation
+			return nil, agentmodel.ErrInvalidVoiceVocabulary
 		}
 		definition, exists := catalog.definitions[key]
 		if !exists {
-			return nil, agentmodel.ErrInvalidVoiceInvestigation
+			return nil, agentmodel.ErrInvalidVoiceVocabulary
 		}
 		seen[key] = struct{}{}
 		definitions = append(definitions, definition)
@@ -104,7 +104,7 @@ func (a App) loadRealtimeVoiceVocabulary(ctx context.Context, tenantID tenant.ID
 		catalog.definitions[realtimeVoiceVocabularyCatalogKey(agentmodel.VoiceVocabularyKindTag, key)] = agentmodel.VoiceVocabularyDefinition{Kind: agentmodel.VoiceVocabularyKindTag, Key: key, DisplayName: tag.DisplayName.String()}
 	}
 	if manifest.Validate() != nil {
-		return agentmodel.VoiceVocabularyManifest{}, realtimeVoiceVocabularyCatalog{}, agentmodel.ErrInvalidVoiceInvestigation
+		return agentmodel.VoiceVocabularyManifest{}, realtimeVoiceVocabularyCatalog{}, agentmodel.ErrInvalidVoiceVocabulary
 	}
 	return manifest, catalog, nil
 }
@@ -176,12 +176,12 @@ func mergeRealtimeVoiceVocabularyResolution(catalog realtimeVoiceVocabularyCatal
 	}
 	for _, request := range additions {
 		if _, exists := seen[realtimeVoiceVocabularyCatalogKey(request.Kind, request.Key)]; exists {
-			return nil, nil, agentmodel.ErrInvalidVoiceInvestigation
+			return nil, nil, agentmodel.ErrInvalidVoiceVocabulary
 		}
 	}
 	resolved, err := catalog.resolve(additions)
 	if err != nil || len(requests)+len(additions) > agentmodel.MaxVoiceVocabularyRequests {
-		return nil, nil, agentmodel.ErrInvalidVoiceInvestigation
+		return nil, nil, agentmodel.ErrInvalidVoiceVocabulary
 	}
 	return append(requests, additions...), append(definitions, resolved...), nil
 }

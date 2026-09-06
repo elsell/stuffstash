@@ -28,37 +28,3 @@ func TestVoiceVocabularyManifestAndTargetedDefinitionsValidateWithoutInternalIDs
 		}
 	}
 }
-
-func TestInvestigationStepBoundsAndDeduplicatesVocabularyRequests(t *testing.T) {
-	t.Parallel()
-	intent := Intent{RequestShape: RequestShapeSingleTarget, Kind: IntentKindRead, Operation: OperationLocate, SubjectMention: "camp medicine"}
-	read := SearchRequest{ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Mention: "camp medicine", SearchProbes: []string{"camp medicine"}}
-	step := InvestigationStep{Decision: InvestigationDecisionSearch, Intent: intent, SearchRequests: []SearchRequest{read}, VocabularyRequests: []VoiceVocabularyRequest{{Kind: VoiceVocabularyKindCustomAssetType, Key: "medicine"}, {Kind: VoiceVocabularyKindCustomField, Key: "expiration-date"}}}
-	if err := step.Validate(); err != nil {
-		t.Fatalf("expected valid requests: %v", err)
-	}
-	step.VocabularyRequests = []VoiceVocabularyRequest{{Kind: VoiceVocabularyKindTag, Key: "camping"}, {Kind: VoiceVocabularyKindTag, Key: "camping"}}
-	if step.Validate() == nil {
-		t.Fatal("expected duplicate request to fail")
-	}
-	step = InvestigationStep{Decision: InvestigationDecisionFinish, Intent: intent, Resolutions: []Resolution{{ReferenceKey: SemanticReferenceSubject, Status: ResolutionAbsent}}, VocabularyRequests: []VoiceVocabularyRequest{{Kind: VoiceVocabularyKindTag, Key: "camping"}}}
-	if step.Validate() == nil {
-		t.Fatal("expected finish decision with vocabulary requests to fail")
-	}
-}
-
-func TestSearchRequestLifecycleScopeDefaultsActiveAndRejectsUnknown(t *testing.T) {
-	t.Parallel()
-	request := SearchRequest{ReferenceKey: SemanticReferenceSubject, ReadKind: InvestigationReadSearchAssets, Mention: "archived drill", SearchProbes: []string{"archived drill"}}
-	if request.Validate() != nil || request.LifecycleScope.Effective() != LifecycleScopeActive {
-		t.Fatalf("expected omitted lifecycle to default active: %+v", request)
-	}
-	request.LifecycleScope = LifecycleScopeArchived
-	if request.Validate() != nil || request.LifecycleScope.Effective() != LifecycleScopeArchived {
-		t.Fatalf("expected archived lifecycle scope: %+v", request)
-	}
-	request.LifecycleScope = "deleted"
-	if request.Validate() == nil {
-		t.Fatal("expected unknown lifecycle scope to fail")
-	}
-}

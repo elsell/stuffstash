@@ -10,6 +10,10 @@ import (
 
 var ErrInvalidWorkflowDefinition = errors.New("invalid conversation workflow definition")
 
+// MaxLegacyWorkflowEvidenceRounds bounds stored pre-conversation workflow settings.
+// The model-led runtime does not execute evidence rounds.
+const MaxLegacyWorkflowEvidenceRounds = 8
+
 type WorkflowStepKind string
 
 const (
@@ -69,7 +73,7 @@ type WorkflowDefinition struct {
 }
 
 func NewWorkflowDefinition(input WorkflowDefinitionInput, limits WorkflowLimits) (WorkflowDefinition, error) {
-	if !limits.valid() || !input.Budget.within(limits.Budget) || input.Budget.EvidenceRounds > MaxEvidenceRounds {
+	if !limits.valid() || !input.Budget.within(limits.Budget) || input.Budget.EvidenceRounds > MaxLegacyWorkflowEvidenceRounds {
 		return WorkflowDefinition{}, ErrInvalidWorkflowDefinition
 	}
 	input.Name = strings.TrimSpace(input.Name)
