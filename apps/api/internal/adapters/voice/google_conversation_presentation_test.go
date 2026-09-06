@@ -77,3 +77,52 @@ func TestGoogleConversationWithoutResponseToolKeepsNativeTextChoice(t *testing.T
 		t.Fatal("native text/tool choice changed")
 	}
 }
+
+func TestGoogleEnvelopeSchemaBindsNamesToArgumentShapes(t *testing.T) {
+	request, err := googleConversationRequest(ports.ConversationModelInput{Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Find clothes"}}, Tools: responseCatalog()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, _ := json.Marshal(request)
+	var wire struct {
+		GenerationConfig struct {
+			ResponseJSONSchema struct {
+				Properties map[string]struct {
+					Items struct {
+						AnyOf []struct {
+							Properties map[string]json.RawMessage `json:"properties"`
+						} `json:"anyOf"`
+					} `json:"items"`
+				} `json:"properties"`
+			} `json:"responseJsonSchema"`
+		} `json:"generationConfig"`
+	}
+	if json.Unmarshal(encoded, &wire) != nil {
+		t.Fatal("invalid JSON schema")
+	}
+	choices := wire.GenerationConfig.ResponseJSONSchema.Properties["toolCalls"].Items.AnyOf
+	if len(choices) != 2 {
+		t.Fatalf("expected distinct tool schemas, got %d", len(choices))
+	}
+	expected := map[string]string{"search": "query", "deliver": "speech"}
+	for _, choice := range choices {
+		var name struct {
+			Enum []string `json:"enum"`
+		}
+		var args struct {
+			Properties map[string]any `json:"properties"`
+			Required   []string       `json:"required"`
+		}
+		if json.Unmarshal(choice.Properties["name"], &name) != nil || len(name.Enum) != 1 || json.Unmarshal(choice.Properties["arguments"], &args) != nil {
+			t.Fatal("invalid tool alternative")
+		}
+		field, ok := expected[name.Enum[0]]
+		if !ok || len(args.Properties) != 1 || args.Properties[field] == nil || len(args.Required) != 1 || args.Required[0] != field {
+			t.Fatalf("tool name not bound to its arguments: %s %+v", name.Enum[0], args)
+		}
+		delete(expected, name.Enum[0])
+	}
+	if len(expected) != 0 {
+		t.Fatal("tool schema missing")
+	}
+}
