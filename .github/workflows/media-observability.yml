@@ -1,6 +1,8 @@
 name: Media observability validation
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/media-observability]
 permissions:
   contents: read
 jobs:
