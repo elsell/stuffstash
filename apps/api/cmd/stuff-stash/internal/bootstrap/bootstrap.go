@@ -94,6 +94,11 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	defer stopThumbnails()
 	stopBackfill := startThumbnailBackfill(ctx, repositories.thumbnailBackfill, ports.SystemClock{}, observer, thumbnailConfig)
 	defer stopBackfill()
+	stopCleanup, err := startBlobDeletionRechecks(ctx, repositories, observer, thumbnailConfig)
+	if err != nil {
+		return err
+	}
+	defer stopCleanup()
 
 	errCh := make(chan error, 1)
 	go func() {

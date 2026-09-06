@@ -55,8 +55,9 @@ func TestCleanupRemovesLateWritesAndAttemptsEveryKey(t *testing.T) {
 }
 
 type cleanupQueue struct {
-	now   time.Time
-	event ports.BlobDeletionEvent
+	now        time.Time
+	event      ports.BlobDeletionEvent
+	afterClaim func()
 }
 
 func (q *cleanupQueue) Now() time.Time { return q.now }
@@ -69,6 +70,9 @@ func (q *cleanupQueue) ClaimBlobDeletionRechecks(ctx context.Context, id string,
 	}
 	q.event.ClaimID = id
 	q.event.ClaimedUntil = until
+	if q.afterClaim != nil {
+		q.afterClaim()
+	}
 	return []ports.BlobDeletionEvent{q.event}, nil
 }
 func (q *cleanupQueue) ResolveBlobDeletionRecheck(ctx context.Context, event ports.BlobDeletionEvent, now time.Time, failed bool) error {
@@ -86,14 +90,85 @@ func (q *cleanupQueue) ResolveBlobDeletionRecheck(ctx context.Context, event por
 
 type cleanupBlobs struct {
 	ports.BlobStorage
-	deleted      []domain.StorageKey
-	failOriginal bool
+	deleted         []domain.StorageKey
+	failOriginal    bool
+	onDelete        func()
+	stallOriginal   bool
+	liveDerivatives int
 }
 
 func (b *cleanupBlobs) DeleteBlob(ctx context.Context, key domain.StorageKey) error {
+	if b.onDelete != nil {
+		b.onDelete()
+	}
 	b.deleted = append(b.deleted, key)
+	if key == "original" && b.stallOriginal {
+		<-ctx.Done()
+		return ctx.Err()
+	}
+	if key != "original" && ctx.Err() == nil {
+		b.liveDerivatives++
+	}
 	if b.failOriginal && key == "original" {
 		return errors.New("controlled deletion failure")
 	}
 	return b.BlobStorage.DeleteBlob(ctx, key)
+}
+
+func TestCleanupCancellationLeavesRecoverableLease(t *testing.T) {
+	now := time.Date(2026, 9, 6, 22, 0, 0, 0, time.UTC)
+	queue := &cleanupQueue{now: now, event: ports.BlobDeletionEvent{ID: "deleted", StorageKey: "original", ProcessedAt: now.Add(-2 * time.Hour)}}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	blobs := &cleanupBlobs{BlobStorage: memory.NewStore(), onDelete: cancel}
+	worker, err := NewCleanupWorker(queue, blobs, queue, workerIDs{}, workerObserver{}, time.Hour, time.Minute, 30*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := worker.Drain(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatal("cleanup ignored cancellation", err)
+	}
+	if !queue.event.RecheckedAt.IsZero() || queue.event.ClaimID == "" {
+		t.Fatal("cancelled cleanup acknowledged its lease")
+	}
+}
+
+func TestCleanupStalledOriginalLeavesTimeForDerivatives(t *testing.T) {
+	now := time.Date(2026, 9, 6, 22, 0, 0, 0, time.UTC)
+	queue := &cleanupQueue{now: now, event: ports.BlobDeletionEvent{ID: "deleted", StorageKey: "original", ProcessedAt: now.Add(-2 * time.Hour)}}
+	blobs := &cleanupBlobs{BlobStorage: memory.NewStore(), stallOriginal: true}
+	key, _ := ThumbnailCacheKey("original", domain.ThumbnailVariantSmall)
+	if err := blobs.PutBlob(context.Background(), key, domain.ContentTypeJPEG, []byte("late")); err != nil {
+		t.Fatal(err)
+	}
+	worker, err := NewCleanupWorker(queue, blobs, queue, workerIDs{}, workerObserver{}, time.Hour, time.Second, 80*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := worker.Drain(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if blobs.liveDerivatives != 6 {
+		t.Fatal("stalled original consumed derivative deadlines", blobs.liveDerivatives)
+	}
+	if _, err := blobs.GetBlob(context.Background(), key); !errors.Is(err, ports.ErrBlobNotFound) {
+		t.Fatal("late derivative survived stalled original", err)
+	}
+}
+
+func TestCleanupDoesNotProcessExpiredClaim(t *testing.T) {
+	now := time.Date(2026, 9, 6, 22, 0, 0, 0, time.UTC)
+	queue := &cleanupQueue{now: now, event: ports.BlobDeletionEvent{ID: "deleted", StorageKey: "original", ProcessedAt: now.Add(-2 * time.Hour)}}
+	queue.afterClaim = func() { queue.now = now.Add(2 * time.Minute) }
+	blobs := &cleanupBlobs{BlobStorage: memory.NewStore()}
+	worker, err := NewCleanupWorker(queue, blobs, queue, workerIDs{}, workerObserver{}, time.Hour, time.Minute, 30*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := worker.Drain(context.Background()); !errors.Is(err, ports.ErrOutboxClaimLost) {
+		t.Fatal("expired claim processed", err)
+	}
+	if len(blobs.deleted) != 0 {
+		t.Fatal("expired claim touched blob storage")
+	}
 }

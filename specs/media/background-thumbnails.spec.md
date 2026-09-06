@@ -304,3 +304,8 @@ acquire image admission because it neither downloads nor decodes image contents.
 A cancelled process leaves its lease recoverable. Each resolved recheck emits
 `blob_deletion.rechecked` with a safe outcome. Original blob deletion remains on
 the existing outbox path; this loop supplies ongoing late-write reconciliation.
+
+Within a recheck, allocate each key at most one eighth of the image cleanup budget,
+leaving one share for scheduling and resolution overhead. The overall processing
+deadline still applies. A stalled original delete must not consume all derivative
+deadlines; verify this with storage that waits until its per-key context expires.

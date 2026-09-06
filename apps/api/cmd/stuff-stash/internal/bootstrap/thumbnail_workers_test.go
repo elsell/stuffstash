@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
@@ -179,5 +180,37 @@ func TestThumbnailBackfillRetriesFailedBatch(t *testing.T) {
 		case <-time.After(time.Second):
 			t.Fatal("failed backfill was not retried")
 		}
+	}
+}
+
+type observedCleanupQueue struct{ entered chan struct{} }
+
+func (q observedCleanupQueue) ClaimBlobDeletionRechecks(ctx context.Context, _ string, _ int, _, _ time.Time, _ time.Duration) ([]ports.BlobDeletionEvent, error) {
+	select {
+	case q.entered <- struct{}{}:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	return nil, nil
+}
+func (observedCleanupQueue) ResolveBlobDeletionRecheck(context.Context, ports.BlobDeletionEvent, time.Time, bool) error {
+	return errors.New("no cleanup claim was returned")
+}
+func TestCleanupRunsWhenThumbnailGenerationDisabled(t *testing.T) {
+	cfg, err := config.LoadThumbnails()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.WorkerEnabled = false
+	entered := make(chan struct{}, 1)
+	stop, err := startBlobDeletionRechecks(context.Background(), repositories{blobs: memory.NewStore(), blobDeletionRechecks: observedCleanupQueue{entered: entered}}, thumbnailTestObserver{}, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stop()
+	select {
+	case <-entered:
+	case <-time.After(time.Second):
+		t.Fatal("cleanup was disabled with thumbnail generation")
 	}
 }
