@@ -108,7 +108,9 @@ jobs:
         run: pod install --deployment
 
       - name: Configure app target for manual signing
-        run: ruby scripts/configure-ios-signing.rb
+        run: |
+          ruby scripts/test-configure-ios-signing.rb
+          ruby scripts/configure-ios-signing.rb
 
       - name: Materialize App Store Connect key
         env:
@@ -188,13 +190,4 @@ jobs:
         if: always()
         env:
           KEY_PATH: ${{ runner.temp }}/private_keys/AuthKey.p8
-        run: |
-          rm -f "$KEY_PATH"
-          signing_directory="$RUNNER_TEMP/stuffstash-signing"
-          if [ -f "$signing_directory/installed-profile-path" ]; then
-            rm -f "$(cat "$signing_directory/installed-profile-path")"
-          fi
-          if [ -f "$signing_directory/signing.keychain-db" ]; then
-            security delete-keychain "$signing_directory/signing.keychain-db"
-          fi
-          rm -rf "$signing_directory"
+        run: bash scripts/cleanup-ios-signing.sh

@@ -141,3 +141,5 @@ for secret in BUILD_CERTIFICATE_BASE64 P12_PASSWORD BUILD_PROVISION_PROFILE_BASE
   grep -q "$secret" "$repo_root/.github/workflows/release.yml"
 done
 python3 "$repo_root/scripts/test-ios-signing.py"
+
+bash "$repo_root/scripts/test-cleanup-ios-signing.sh"
