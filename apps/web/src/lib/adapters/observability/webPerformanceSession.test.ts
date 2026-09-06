@@ -43,7 +43,8 @@ it('sends product latency with authentication and disposes without recursive del
   await delivery;
   session.dispose();
   expect(requests).toHaveLength(2);
-  expect(time.tasks.some(task => task.active)).toBe(false);
+  expect(requests[1].signal.aborted).toBe(true);
+  await expect.poll(() => time.tasks.some(task => task.active)).toBe(false);
 });
 
 it('disabled sessions preserve fetch identity and never schedule image delivery', () => {

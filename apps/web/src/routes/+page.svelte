@@ -83,7 +83,7 @@
             nextWorkspace = await provisionPersonalWorkspace(nextRepository, nextWorkspace.context.principal);
           }
           if (!mounted) return;
-          conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null);
+          conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
           repository = nextRepository;
           workspaceData = nextWorkspace;
         }
