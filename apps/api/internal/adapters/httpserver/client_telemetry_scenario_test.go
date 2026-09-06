@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"encoding/json"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"net/http"
 	"testing"
 )
@@ -19,8 +20,8 @@ func coverClientTelemetryScenarios(t *testing.T, coverage executedScenarioCovera
 		map[string]any{"platform": "web", "operation": "image", "surface": "gallery", "variant": "medium", "outcome": "success", "durationMs": 125.5},
 	}}, status)
 	if adversarial {
-		if len(observer.events) != 0 {
-			t.Fatal("unauthorized telemetry emitted events")
+		if len(observer.events) != 1 || observer.events[0].Name != ports.EventAuthenticationFailed {
+			t.Fatal("unauthorized telemetry must emit only authentication failure")
 		}
 		return
 	}
