@@ -99,3 +99,14 @@ fetch delivers telemetry. Disabled sessions schedule nothing and preserve fetch
 identity. Dispose aborts active delivery and clears queued data. The page releases
 the session on sign-out, expiry, initialization failure, and unmount, alongside its
 repository. A Svelte context delegates image measurements to the current session.
+
+## Mobile session integration
+
+`EXPO_PUBLIC_STUFF_STASH_PERFORMANCE_TELEMETRY_ENABLED` controls mobile
+collection and defaults false. Parse it through the existing Expo environment/extra
+configuration boundary. A session-owned adapter injects the native platform
+(`ios` or `android`; Expo web uses `web`) into the shared bounded reporter.
+Application/UI consumers use a local PerformanceObserver port. Product requests
+retain their existing timeout and authentication callbacks; telemetry uses a
+separate undecorated transport. Session provider replacement or unmount disposes
+reporting, and sign-out/server-change actions dispose before credential changes.
