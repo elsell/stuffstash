@@ -1,7 +1,7 @@
 export interface PerformanceContext {
   platform: 'ios' | 'android' | 'web';
   operation: 'request' | 'image';
-  surface: 'home' | 'list' | 'detail' | 'gallery' | 'fullscreen' | 'upload';
+  surface: 'application' | 'home' | 'list' | 'detail' | 'gallery' | 'fullscreen' | 'upload';
   variant: 'none' | 'small' | 'medium' | 'large' | 'original';
 }
 export type PerformanceOutcome = 'success' | 'failure' | 'cancelled';
@@ -121,7 +121,7 @@ export class PerformanceReporter {
 function valid(value: PerformanceMeasurement): boolean {
   return Number.isFinite(value.durationMs) && value.durationMs >= 0 && value.durationMs <= 60000 &&
     ['ios', 'android', 'web'].includes(value.platform) && ['request', 'image'].includes(value.operation) &&
-    ['home', 'list', 'detail', 'gallery', 'fullscreen', 'upload'].includes(value.surface) &&
+    ['application', 'home', 'list', 'detail', 'gallery', 'fullscreen', 'upload'].includes(value.surface) &&
     ['none', 'small', 'medium', 'large', 'original'].includes(value.variant) &&
     ['success', 'failure', 'cancelled'].includes(value.outcome);
 }
