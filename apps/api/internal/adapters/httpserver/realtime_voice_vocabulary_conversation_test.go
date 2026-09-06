@@ -82,13 +82,18 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 		name              string
 		arguments         map[string]any
 		wantError, revoke bool
+		missing           int
 	}{
 		{name: "viewer manifest", arguments: map[string]any{}},
 		{name: "targeted field", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "custom_field", "key": "home-field"}}}},
 		{name: "cross tenant scope injection", arguments: map[string]any{"tenantId": "tenant-other"}, wantError: true},
 		{name: "sibling inventory scope injection", arguments: map[string]any{"inventoryId": "inventory-private"}, wantError: true},
-		{name: "hidden definition", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "custom_field", "key": "private-field"}}}, wantError: true},
-		{name: "cross tenant definition", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "custom_field", "key": "other-field"}}}, wantError: true},
+		{name: "hidden definition", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "custom_field", "key": "private-field"}}}, missing: 1},
+		{name: "cross tenant definition", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "custom_field", "key": "other-field"}}}, missing: 1},
+		{name: "unknown definition", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "tag", "key": "unknown"}}}, missing: 1},
+		{name: "mixed definition lookup", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "custom_field", "key": "home-field"}, map[string]any{"kind": "tag", "key": "unknown"}}}, missing: 1},
+		{name: "invalid kind", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "invalid", "key": "home-field"}}}, wantError: true},
+		{name: "duplicate definitions", arguments: map[string]any{"definitions": []any{map[string]any{"kind": "tag", "key": "home-tag"}, map[string]any{"kind": "tag", "key": "home-tag"}}}, wantError: true},
 		{name: "revoked before read", arguments: map[string]any{}, revoke: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -128,8 +133,9 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 				t.Fatalf("vocabulary unavailable to model: %+v", model)
 			}
 			var result struct {
-				Error    string `json:"error"`
-				Manifest struct {
+				Error                      string `json:"error"`
+				UnavailableDefinitionCount int    `json:"unavailableDefinitionCount"`
+				Manifest                   struct {
 					CustomAssetTypes []struct {
 						Key string `json:"key"`
 					} `json:"customAssetTypes"`
@@ -150,6 +156,9 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 			}
 			if (result.Error != "") != tc.wantError {
 				t.Fatalf("unexpected tool outcome: %s", model.results[0])
+			}
+			if result.UnavailableDefinitionCount != tc.missing {
+				t.Fatalf("unexpected unavailable count: %s", model.results[0])
 			}
 			for _, hidden := range []string{"private-field", "other-field", "private-type", "other-type", "private-tag", "other-tag", "home-type-id", "home-field-id", "home-tag-id"} {
 				if strings.Contains(model.results[0], hidden) {
@@ -176,7 +185,7 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 					}
 				}
 
-				if tc.name == "targeted field" && (len(result.Definitions) != 1 || result.Definitions[0].Key != "home-field" || len(result.Definitions[0].Applicable) != 1 || result.Definitions[0].Applicable[0] != "home-type") {
+				if (tc.name == "targeted field" || tc.name == "mixed definition lookup") && (len(result.Definitions) != 1 || result.Definitions[0].Key != "home-field" || len(result.Definitions[0].Applicable) != 1 || result.Definitions[0].Applicable[0] != "home-type") {
 					t.Fatalf("field applicability missing: %s", model.results[0])
 				}
 			}
