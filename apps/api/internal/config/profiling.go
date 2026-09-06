@@ -62,6 +62,9 @@ func (c ProfilingConfig) Validate() error {
 	if _, present := os.LookupEnv("PYROSCOPE_ADHOC_SERVER_ADDRESS"); present {
 		return errors.New("profiling endpoint override is unsupported")
 	}
+	if (c.Username == "") != (c.Password == "") {
+		return errors.New("incomplete profiling credentials")
+	}
 	if !validTelemetryEndpoint(c.Endpoint) {
 		return errors.New("invalid profiling endpoint")
 	}

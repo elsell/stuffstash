@@ -19,6 +19,11 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	}
 	defer stopTelemetry()
 	observer = combinedObserver
+	stopProfiling, err := startProfiling(ctx, observer)
+	if err != nil {
+		return err
+	}
+	defer stopProfiling()
 	authenticator, err := buildAuthenticator(ctx, cfg)
 	if err != nil {
 		return err
