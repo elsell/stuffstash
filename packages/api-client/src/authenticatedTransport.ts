@@ -11,9 +11,9 @@ export function createAuthenticatedTransport(options: StuffStashClientOptions): 
       if (requestOptions.baseUrl.replace(/\/+$/, '') !== baseUrl) {
         throw new Error('API destination overrides are not permitted.');
       }
-      request.signal.throwIfAborted();
+      throwIfAborted(request.signal);
       const token = await resolveSessionToken(options.tokenProvider, request.signal);
-      request.signal.throwIfAborted();
+      throwIfAborted(request.signal);
       request.headers.delete('Authorization');
       if (token) request.headers.set('Authorization', `Bearer ${token}`);
       return new Request(request, { redirect: 'error' });
@@ -23,18 +23,27 @@ export function createAuthenticatedTransport(options: StuffStashClientOptions): 
 }
 
 function resolveSessionToken(
-  provider: StuffStashClientOptions['tokenProvider'], signal: AbortSignal
+  provider: StuffStashClientOptions['tokenProvider'], signal?: AbortSignal
 ): Promise<string | null> {
+  if (!signal) return Promise.resolve().then(provider);
   return new Promise((resolve, reject) => {
-    const abort = () => reject(signal.reason);
+    const abort = () => reject(cancellationReason(signal));
     signal.addEventListener('abort', abort, { once: true });
     // Recheck after subscription so cancellation cannot fall between the checks.
     if (signal.aborted) { abort(); signal.removeEventListener('abort', abort); return; }
     Promise.resolve().then(() => {
-      signal.throwIfAborted();
+      throwIfAborted(signal);
       return provider();
     }).then(resolve, reject).finally(() => {
       signal.removeEventListener('abort', abort);
     });
   });
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw cancellationReason(signal);
+}
+
+function cancellationReason(signal: AbortSignal): unknown {
+  return signal.reason ?? Object.assign(new Error('Request cancelled'), { name: 'AbortError' });
 }
