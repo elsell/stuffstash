@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -302,23 +301,14 @@ func assertMixedMoveCommandResults(t *testing.T, executed map[string]any) {
 
 type createNestedItemActionPlanProposalLanguageModel struct{}
 
-func (m createNestedItemActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{
-		RequestShape: agentmodel.RequestShapeSingleTarget,
-		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "diaper genie refills", NewAssetKind: "item",
-		DestinationPath:  []string{"Henry's room", "closet"},
-		DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation, agentmodel.DestinationKindContainer},
-	}
-	return typedVoiceInvestigationTurn(input, intent, nil)
+// Removed with the legacy provider injection signature.
+func (createNestedItemActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 type moveToMissingLocationActionPlanProposalLanguageModel struct{}
 
-func (m moveToMissingLocationActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{
-		RequestShape: agentmodel.RequestShapeSingleTarget,
-		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
-		DestinationPath: []string{"Kitchen"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
-	}
-	return typedVoiceInvestigationTurn(input, intent, nil)
+// Removed with the legacy provider injection signature.
+func (moveToMissingLocationActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }

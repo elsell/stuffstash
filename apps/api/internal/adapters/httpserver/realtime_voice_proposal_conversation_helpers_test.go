@@ -45,22 +45,13 @@ func httpConversationProposal(in ports.ConversationModelInput, kind, subject, de
 		}
 		return ports.ConversationModelTurn{ToolCalls: calls}, nil
 	}
-	ids := map[string]string{}
-	for _, message := range in.Messages {
-		for _, result := range message.ToolResults {
-			var output struct {
-				Items []struct {
-					AssetID string `json:"assetId"`
-					Title   string `json:"title"`
-				} `json:"items"`
-			}
-			if json.Unmarshal([]byte(result.Content), &output) != nil {
-				return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
-			}
-			for _, item := range output.Items {
-				ids[strings.ToLower(item.Title)] = item.AssetID
-			}
-		}
+	expectedReads := []string{"find-subject"}
+	if destination != "" {
+		expectedReads = append(expectedReads, "find-parent")
+	}
+	ids, err := httpConversationEvidenceIDs(in, expectedReads...)
+	if err != nil {
+		return ports.ConversationModelTurn{}, err
 	}
 	arguments := map[string]any{}
 	verb := "Create"
@@ -96,4 +87,34 @@ func httpConversationProposal(in ports.ConversationModelInput, kind, subject, de
 	return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "propose-change", Name: "propose_inventory_change", Arguments: map[string]any{
 		"summary": summary + "?", "commands": []any{map[string]any{"id": id, "kind": kind, "summary": summary, "arguments": arguments}},
 	}}}}, nil
+}
+
+func httpConversationEvidenceIDs(in ports.ConversationModelInput, expectedReads ...string) (map[string]string, error) {
+	ids := map[string]string{}
+	completed := map[string]bool{}
+	for _, message := range in.Messages {
+		for _, result := range message.ToolResults {
+			var output struct {
+				Tool  string          `json:"tool"`
+				Error json.RawMessage `json:"error"`
+				Items []struct {
+					AssetID string `json:"assetId"`
+					Title   string `json:"title"`
+				} `json:"items"`
+			}
+			if json.Unmarshal([]byte(result.Content), &output) != nil || len(output.Error) != 0 || output.Tool != app.RealtimeVoiceToolSearchAuthorizedAssets {
+				return nil, ports.ErrInvalidProviderInput
+			}
+			completed[result.CallID] = true
+			for _, item := range output.Items {
+				ids[strings.ToLower(item.Title)] = item.AssetID
+			}
+		}
+	}
+	for _, id := range expectedReads {
+		if !completed[id] {
+			return nil, ports.ErrInvalidProviderInput
+		}
+	}
+	return ids, nil
 }
