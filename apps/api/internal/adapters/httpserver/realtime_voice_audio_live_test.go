@@ -12,10 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/oauth2/google"
 	"nhooyr.io/websocket"
 
-	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
 )
 
@@ -41,31 +39,14 @@ func runGoogleLiveRealtimeAudio(t *testing.T, audioFileKey string, seed liveAudi
 	if os.Getenv("STUFF_STASH_GOOGLE_LIVE_TESTS") != "1" {
 		t.Skip("explicit live Google opt-in required")
 	}
-	required := func(key string) string {
-		t.Helper()
-		value := strings.TrimSpace(os.Getenv(key))
-		if value == "" {
-			t.Fatalf("%s is required for the enabled live test", key)
-		}
-		return value
-	}
-	project := required("STUFF_STASH_GOOGLE_CLOUD_PROJECT")
-	model := required("STUFF_STASH_GOOGLE_GEMINI_MODEL")
-	location := required("STUFF_STASH_GOOGLE_CLOUD_LOCATION")
-	inputAudio, err := os.ReadFile(required(audioFileKey))
+	inputAudio, err := os.ReadFile(liveVoiceRequired(t, audioFileKey))
 	if err != nil || len(inputAudio) == 0 {
 		t.Fatalf("read recorded MP4 input: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		t.Fatal("ADC unavailable")
-	}
-	config := voice.GoogleGeminiConfig{ProjectID: project, Location: location, Model: model, QuotaProject: project, TokenSource: tokenSource, HTTPTimeout: 45 * time.Second, HTTPClient: &http.Client{Transport: liveVoiceTraceTransport{t: t, next: http.DefaultTransport}}}
-	language := voice.NewGoogleGeminiLanguageInference(config)
-	speech := voice.NewGoogleTextToSpeech(voice.GoogleTextToSpeechConfig{LanguageCode: required("STUFF_STASH_GOOGLE_TTS_LANGUAGE"), VoiceName: required("STUFF_STASH_GOOGLE_TTS_VOICE"), QuotaProject: project, TokenSource: tokenSource, HTTPTimeout: 45 * time.Second})
-	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviders(voice.NewGoogleGeminiSpeechToText(config), language, speech)
+	providers := liveGoogleVoiceProviders(t, ctx)
+	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviders(providers.SpeechToText, providers.ConversationModel, providers.TextToSpeech)
 	fixture := seed(t, ctx, application)
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	defer server.Close()
