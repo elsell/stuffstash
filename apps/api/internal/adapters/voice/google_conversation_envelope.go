@@ -30,7 +30,11 @@ func googleConversationEnvelopeRequest(input ports.ConversationModelInput) (goog
 		if strings.TrimSpace(tool.Name) == "" || !json.Valid(tool.Parameters) {
 			return request, ports.ErrInvalidProviderInput
 		}
-		choices = append(choices, map[string]any{"type": "object", "properties": map[string]any{"name": map[string]any{"type": "string", "enum": []string{tool.Name}}, "arguments": tool.Parameters}, "required": []string{"name", "arguments"}, "additionalProperties": false})
+		parameters, err := googleConversationEnvelopeParameters(tool.Parameters)
+		if err != nil {
+			return request, err
+		}
+		choices = append(choices, map[string]any{"type": "object", "properties": map[string]any{"name": map[string]any{"type": "string", "enum": []string{tool.Name}}, "arguments": parameters}, "required": []string{"name", "arguments"}, "additionalProperties": false})
 		catalog = append(catalog, map[string]any{"name": tool.Name, "description": tool.Description, "finishesAnswer": tool.ResponseTool})
 	}
 	schema, err := json.Marshal(map[string]any{"type": "object", "properties": map[string]any{"toolCalls": map[string]any{"type": "array", "minItems": 1, "items": map[string]any{"anyOf": choices}}}, "required": []string{"toolCalls"}, "additionalProperties": false})
