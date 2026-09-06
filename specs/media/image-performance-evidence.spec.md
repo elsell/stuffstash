@@ -110,3 +110,10 @@ local measurement state. Existing inventory contents were not modified. No image
 fixtures have been uploaded yet. This resolves the prior sign-in/test-scope input
 gap. Full CI `34055010819` ended cancelled after a stalled browser runner; its
 other five jobs passed. Fresh full validation is running as `34055943177`.
+
+Full validation `34055943177` passed all six jobs at `e0415f472`, including
+browser, iOS lock, self-host, web image, PostgreSQL and required checks. Audit
+instrumentation passed targeted race CI `34056370172`. Client ingestion, whole-
+batch validation, private duration/log mapping and adversarial API scenarios
+passed targeted race CI `34056817154`; full contract regeneration is running in
+`34056816783`. No deployed image scheduling changes or baseline comparison yet.
