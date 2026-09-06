@@ -1,6 +1,9 @@
 package observability
 
 import (
+	"bufio"
+	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -20,11 +23,12 @@ func (t *Telemetry) WrapHTTP(next http.Handler) http.Handler {
 		ctx, span := t.tracer.Start(ctx, string(ports.OperationHTTP), trace.WithSpanKind(trace.SpanKindServer))
 		request := r.WithContext(ctx)
 		started := time.Now()
-		captured := httpsnoop.Metrics{Code: http.StatusOK}
+		status := 0
+		hijacked := false
 		completed := false
 		defer func() {
-			if !completed {
-				captured.Code = http.StatusInternalServerError
+			if completed && status == 0 && !hijacked {
+				status = http.StatusOK
 			}
 			method := boundedHTTPMethod(r.Method)
 			route := request.Pattern
@@ -35,17 +39,55 @@ func (t *Telemetry) WrapHTTP(next http.Handler) http.Handler {
 				route = "/unmatched"
 			}
 			outcome := "success"
-			if captured.Code >= 400 {
+			if status >= 400 {
 				outcome = "failure"
 				span.SetStatus(codes.Error, "")
 			}
-			attrs := []attribute.KeyValue{attribute.String("operation", string(ports.OperationHTTP)), attribute.String("outcome", outcome), attribute.String("http.request.method", method), attribute.String("http.route", route), attribute.Int("http.response.status_code", captured.Code)}
+			if !completed {
+				outcome = "interrupted"
+				span.SetStatus(codes.Error, "")
+			}
+			attrs := []attribute.KeyValue{attribute.String("operation", string(ports.OperationHTTP)), attribute.String("outcome", outcome), attribute.String("http.request.method", method), attribute.String("http.route", route)}
+			if status != 0 {
+				attrs = append(attrs, attribute.Int("http.response.status_code", status))
+			}
 			span.SetName(method + " " + route)
 			span.SetAttributes(attrs...)
 			t.duration.Record(ctx, time.Since(started).Seconds(), metric.WithAttributes(attrs...))
 			span.End()
 		}()
-		captured.CaptureMetrics(w, func(writer http.ResponseWriter) { next.ServeHTTP(writer, request) })
+		implicitStatus := func() {
+			if status == 0 {
+				status = http.StatusOK
+			}
+		}
+		writer := httpsnoop.Wrap(w, httpsnoop.Hooks{
+			WriteHeader: func(next httpsnoop.WriteHeaderFunc) httpsnoop.WriteHeaderFunc {
+				return func(code int) {
+					next(code)
+					if status == 0 && (code >= 200 || code == 101) {
+						status = code
+					}
+				}
+			},
+			Write: func(next httpsnoop.WriteFunc) httpsnoop.WriteFunc {
+				return func(p []byte) (int, error) { implicitStatus(); return next(p) }
+			},
+			ReadFrom: func(next httpsnoop.ReadFromFunc) httpsnoop.ReadFromFunc {
+				return func(r io.Reader) (int64, error) { implicitStatus(); return next(r) }
+			},
+			Flush: func(next httpsnoop.FlushFunc) httpsnoop.FlushFunc { return func() { implicitStatus(); next() } },
+			Hijack: func(next httpsnoop.HijackFunc) httpsnoop.HijackFunc {
+				return func() (net.Conn, *bufio.ReadWriter, error) {
+					conn, buffer, err := next()
+					if err == nil {
+						hijacked = true
+					}
+					return conn, buffer, err
+				}
+			},
+		})
+		next.ServeHTTP(writer, request)
 		completed = true
 	})
 }
