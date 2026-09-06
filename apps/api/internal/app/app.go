@@ -44,6 +44,7 @@ type App struct {
 	blobs                        ports.BlobStorage
 	directUploads                ports.DirectAttachmentUploader
 	imageProcessor               ports.ImageProcessor
+	thumbnailReader              ports.ThumbnailReader
 	blobDeletionOutbox           ports.BlobDeletionOutbox
 	audit                        ports.AuditRepository
 	outbox                       ports.AuthorizationOutbox
@@ -123,6 +124,7 @@ type Dependencies struct {
 	Blobs                            ports.BlobStorage
 	DirectUploads                    ports.DirectAttachmentUploader
 	ImageProcessor                   ports.ImageProcessor
+	ThumbnailReader                  ports.ThumbnailReader
 	BlobDeletionOutbox               ports.BlobDeletionOutbox
 	Audit                            ports.AuditRepository
 	Outbox                           ports.AuthorizationOutbox
@@ -230,6 +232,7 @@ func New(deps Dependencies) App {
 		blobs:                        deps.Blobs,
 		directUploads:                deps.DirectUploads,
 		imageProcessor:               deps.ImageProcessor,
+		thumbnailReader:              deps.ThumbnailReader,
 		blobDeletionOutbox:           deps.BlobDeletionOutbox,
 		audit:                        deps.Audit,
 		outbox:                       deps.Outbox,
