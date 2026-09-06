@@ -623,7 +623,7 @@ func TestRealtimeVoiceQueryCanListVisibleItemsInSelectedInventory(t *testing.T) 
 	if !ok {
 		t.Fatalf("expected structured response, got %+v", final)
 	}
-	if response["spokenResponse"] != "You have Laptop and Water bottle." {
+	if response["spokenResponse"] != "I found Laptop in Office. I found Water bottle in Office." {
 		t.Fatalf("unexpected spoken response: %+v", response)
 	}
 	if !strings.Contains(language.lastToolResult, "Water bottle") || !strings.Contains(language.lastToolResult, "Laptop") {
