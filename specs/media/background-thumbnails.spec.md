@@ -218,3 +218,16 @@ latency from image work. Publication errors propagate to the operation result.
 
 A queue-drain error emits `thumbnail_worker.failed` without resource IDs or raw
 storage errors. It must not emit a job-resolution event unless resolution persisted.
+
+## Backfill persistence
+
+An operational backfill port advances one bounded batch of attachment IDs in lexical
+order. Persist one cursor and completion flag per derivative revision. In a single
+transaction, lock that cursor, inspect at most the configured batch size, enqueue
+image jobs with backfill priority using attachment/revision conflict-ignore, and
+advance the cursor. Existing new-upload jobs keep their priority and state. Scan
+non-images as cursor entries without enqueueing them. A batch failure rolls back
+both jobs and cursor. New uploads behind a finished cursor are already covered by
+the attachment transaction. Concurrent backfill callers serialize on cursor state.
+No tenant tokens or blob data enter the cursor. This is an operational cross-tenant
+scan behind a repository port, never a user-facing resource discovery endpoint.
