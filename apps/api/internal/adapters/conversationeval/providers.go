@@ -18,6 +18,12 @@ func (p textProviders) ResolveRealtimeVoiceProviders(context.Context, ports.Real
 	result := p.providers
 	result.SpeechToText = transcriptBridge{p.transcript}
 	result.TextToSpeech = discardSpeech{}
+	if result.ConversationModel == nil {
+		result.ConversationModel, _ = result.LanguageInference.(ports.ConversationModel)
+	}
+	if result.ConversationModel != nil {
+		result.ConversationModel = countedConversation{provider: result.ConversationModel, calls: p.calls}
+	}
 	if result.LanguageInference != nil {
 		result.LanguageInference = countedLanguage{provider: result.LanguageInference, calls: p.calls}
 	}
@@ -35,9 +41,29 @@ func (p textProviders) ResolveWorkflowLanguageProvider(ctx context.Context, inpu
 		return ports.WorkflowLanguageProviderBinding{}, err
 	}
 	if resolved.Provider != nil {
-		resolved.Provider = countedModel{LanguageInferenceProvider: countedLanguage{provider: resolved.Provider, calls: p.calls}, VoiceResponseGenerator: countedResponse{provider: resolved.Provider, calls: p.calls}}
+		counted := countedModel{LanguageInferenceProvider: countedLanguage{provider: resolved.Provider, calls: p.calls}, VoiceResponseGenerator: countedResponse{provider: resolved.Provider, calls: p.calls}}
+		if native, ok := resolved.Provider.(ports.ConversationModel); ok {
+			resolved.Provider = countedNativeModel{countedModel: counted, countedConversation: countedConversation{provider: native, calls: p.calls}}
+		} else {
+			resolved.Provider = counted
+		}
 	}
 	return resolved, nil
+}
+
+type countedConversation struct {
+	provider ports.ConversationModel
+	calls    *atomic.Int64
+}
+
+func (p countedConversation) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	p.calls.Add(1)
+	return p.provider.Converse(ctx, input)
+}
+
+type countedNativeModel struct {
+	countedModel
+	countedConversation
 }
 
 type countedModel struct {
