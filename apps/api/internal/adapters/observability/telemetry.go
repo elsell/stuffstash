@@ -16,9 +16,10 @@ import (
 const instrumentationName = "github.com/stuffstash/stuff-stash"
 
 type Telemetry struct {
-	tracer   trace.Tracer
-	logger   otellog.Logger
-	duration metric.Float64Histogram
+	tracer     trace.Tracer
+	logger     otellog.Logger
+	duration   metric.Float64Histogram
+	thumbnails metric.Int64Counter
 }
 
 func NewTelemetry(tracer trace.TracerProvider, meter metric.MeterProvider, logger otellog.LoggerProvider) (*Telemetry, error) {
@@ -26,7 +27,11 @@ func NewTelemetry(tracer trace.TracerProvider, meter metric.MeterProvider, logge
 	if err != nil {
 		return nil, err
 	}
-	return &Telemetry{tracer: tracer.Tracer(instrumentationName), logger: logger.Logger(instrumentationName), duration: duration}, nil
+	thumbnails, err := meter.Meter(instrumentationName).Int64Counter("stuffstash.media.thumbnail.served", metric.WithUnit("{response}"), metric.WithDescription("Successful thumbnail responses by derivative source"))
+	if err != nil {
+		return nil, err
+	}
+	return &Telemetry{thumbnails: thumbnails, tracer: tracer.Tracer(instrumentationName), logger: logger.Logger(instrumentationName), duration: duration}, nil
 }
 
 func (t *Telemetry) Start(ctx context.Context, operation ports.Operation) (context.Context, func(error)) {
@@ -52,6 +57,9 @@ func (t *Telemetry) Start(ctx context.Context, operation ports.Operation) (conte
 func (t *Telemetry) Record(ctx context.Context, event ports.Event) {
 	if !event.Name.Known() {
 		return
+	}
+	if event.Name == ports.EventAttachmentThumbnailGenerated && safeTelemetryField("variant", event.Fields["variant"]) && safeTelemetryField("source", event.Fields["source"]) {
+		t.thumbnails.Add(ctx, 1, metric.WithAttributes(attribute.String("variant", event.Fields["variant"]), attribute.String("source", event.Fields["source"])))
 	}
 	var record otellog.Record
 	record.SetTimestamp(time.Now())
