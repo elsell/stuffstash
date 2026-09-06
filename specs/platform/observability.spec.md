@@ -95,3 +95,19 @@ These are hypotheses to measure, not quantified performance results.
   construction uses asynchronous OTLP HTTP exporters and environment configuration.
 - A manually dispatched media observability CI workflow runs focused Go race tests
   without requiring local compilation; broader CI remains required for delivery.
+
+## Runtime configuration contract
+
+- `STUFF_STASH_TELEMETRY_ENABLED` defaults to false. Disabled mode requires no
+  endpoint or credential and starts no exporter workers.
+- `OTEL_SERVICE_NAME` defaults to `stuffstash-api`; `OTEL_SERVICE_VERSION` and
+  `STUFF_STASH_DEPLOYMENT_ENVIRONMENT` provide non-secret resource identity.
+- `OTEL_EXPORTER_OTLP_ENDPOINT` is a validated HTTP(S) base endpoint. Reject URL
+  userinfo, query strings, and fragments. `OTEL_EXPORTER_OTLP_HEADERS` contains
+  comma-separated URL-escaped key/value pairs; reject malformed or duplicate keys
+  and CR/LF without echoing the input in errors.
+- `STUFF_STASH_TELEMETRY_SAMPLE_RATIO` defaults to 0.1 and must be finite in [0,1].
+  `STUFF_STASH_TELEMETRY_EXPORT_TIMEOUT` defaults to 5s, batch interval to 5s,
+  metric interval to 30s, queue capacity to 2048 and batch size to 256. Durations
+  and sizes must be positive and batch size must not exceed queue capacity.
+- Runtime configuration validation returns fixed messages without secrets.

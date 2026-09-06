@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"go.opentelemetry.io/otel/codes"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
@@ -34,13 +35,24 @@ func TestTelemetryCorrelatesSafeEventsAndOperationMetrics(t *testing.T) {
 		Message: "private photo name and bearer credential",
 		Fields:  map[string]string{"variant": "small", "source": "generated", "file_name": "private.jpg", "authorization": "Bearer secret", "tenant_id": "private-tenant"},
 	})
+	telemetry.Record(ctx, ports.Event{Name: ports.EventName("Bearer private-secret")})
+	telemetry.Record(ctx, ports.Event{Name: ports.EventAttachmentThumbnailGenerated, Fields: map[string]string{"variant": "private-secret", "source": "private-secret"}})
 	finish(errors.New("provider endpoint with secret credential"))
 	spans := traces.GetSpans()
 	if len(spans) != 1 || spans[0].Name != string(ports.OperationThumbnailGenerate) {
 		t.Fatalf("unexpected spans: %d", len(spans))
 	}
-	if len(logs.records) != 1 || logs.records[0].TraceID() != spans[0].SpanContext.TraceID() {
+	if len(logs.records) != 2 || logs.records[0].TraceID() != spans[0].SpanContext.TraceID() {
 		t.Fatal("event must correlate with its operation trace")
+	}
+	if logs.records[1].AttributesLen() != 0 {
+		t.Fatal("unsafe values passed allowlist")
+	}
+	if logs.records[0].SpanID() != spans[0].SpanContext.SpanID() {
+		t.Fatal("span correlation missing")
+	}
+	if spans[0].Status.Code != codes.Error {
+		t.Fatal("error status missing")
 	}
 	record := logs.records[0]
 	if strings.Contains(record.Body().AsString(), "private") {
@@ -68,6 +80,9 @@ func TestTelemetryCorrelatesSafeEventsAndOperationMetrics(t *testing.T) {
 			}
 			if len(histogram.DataPoints) != 1 || histogram.DataPoints[0].Count != 1 {
 				t.Fatal("operation completion must record one duration")
+			}
+			if len(histogram.DataPoints[0].Bounds) < 3 || histogram.DataPoints[0].Bounds[0] != 0.001 {
+				t.Fatal("missing subsecond latency buckets")
 			}
 			found = true
 		}
