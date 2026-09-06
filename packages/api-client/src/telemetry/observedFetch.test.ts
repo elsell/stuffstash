@@ -60,3 +60,17 @@ it.each(['start', 'finish'] as const)('isolates observer %s failure from request
   const reason = new Error('original request failure');
   await expect(createObservedFetch(async () => { throw reason; }, observer, context)('https://api.example.test')).rejects.toBe(reason);
 });
+
+it('honors an explicitly detached request signal when classifying a failure', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  const request = new Request('https://api.example.test', { signal: controller.signal });
+  const reason = new Error('independent transport failure');
+  const outcomes: PerformanceOutcome[] = [];
+  const observed = createObservedFetch(async (_input, init) => {
+    expect(init?.signal).toBeNull();
+    throw reason;
+  }, { start: () => outcome => { outcomes.push(outcome); } }, context);
+  await expect(observed(request, { signal: null })).rejects.toBe(reason);
+  expect(outcomes).toEqual(['failure']);
+});
