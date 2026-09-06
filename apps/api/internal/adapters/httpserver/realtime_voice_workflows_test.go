@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -36,7 +37,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 	}{
 		{"owner", "dev:user-1", "tenant-home", "inventory-home", true},
 		{"explicit model owner", "dev:user-1", "tenant-home", "inventory-home", true},
-		{"exhausted workflow owner", "dev:user-1", "tenant-home", "inventory-home", true},
+		{"bounded followup owner", "dev:user-1", "tenant-home", "inventory-home", true},
 		{"outsider", "dev:user-2", "tenant-home", "inventory-home", false},
 		{"wrong inventory", "dev:user-1", "tenant-home", "inventory-other", false},
 		{"cross tenant", "dev:user-1", "tenant-other", "inventory-other", false},
@@ -56,11 +57,12 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 				t.Fatal(err)
 			}
 
-			if test.name == "explicit model owner" || test.name == "exhausted workflow owner" {
+			if test.name == "explicit model owner" || test.name == "bounded followup owner" {
 				snapshot := revision.Snapshot()
 				settings := snapshot.Definition.Settings()
-				if test.name == "exhausted workflow owner" {
+				if test.name == "bounded followup owner" {
 					settings.Budget.ModelCalls = 2
+					settings.Budget.FollowUpTurns = 1
 				}
 				settings.ProviderProfileID = "explicit-model"
 				snapshot.Definition, err = agentmodel.NewWorkflowDefinition(settings, limits)
@@ -114,15 +116,22 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 					if event["type"] != "session.started" {
 						t.Fatalf("authorized workflow session failed: %+v", event)
 					}
-					if test.name == "exhausted workflow owner" {
-						writeRealtimeAudioTurn(t, ctx, connection, event["sessionId"].(string), 2, "budget-turn")
-						events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
-						if findRealtimeEvent(t, events, "session.completed")["followUpAvailable"] != false {
-							t.Fatal("exhausted workflow advertised another recording")
+					if test.name == "bounded followup owner" {
+						for turn := 0; turn < 2; turn++ {
+							writeRealtimeAudioTurn(t, ctx, connection, event["sessionId"].(string), 2+turn*2, fmt.Sprintf("budget-turn-%d", turn))
+							events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
+							if findRealtimeEvent(t, events, "session.completed")["followUpAvailable"] != (turn == 0) {
+								t.Fatalf("turn %d did not preserve per-turn budget and session followup limit", turn)
+							}
+							if findRealtimeEvent(t, events, "tool.call.started")["toolLabel"] != "Search inventory" {
+								t.Fatal("followup skipped authorized retrieval")
+							}
+							findRealtimeEvent(t, events, "assistant.response.completed")
 						}
+
 						_, _, closedErr := connection.Read(ctx)
 						if websocket.CloseStatus(closedErr) != websocket.StatusNormalClosure {
-							t.Fatalf("exhausted session not closed normally: %v", closedErr)
+							t.Fatalf("session turn limit not closed normally: %v", closedErr)
 						}
 					}
 
@@ -161,7 +170,7 @@ func (workflowOnlyVoiceResolver) ResolveWorkflowLanguageProvider(_ context.Conte
 }
 
 func (workflowHTTPModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
-	if len(input.Messages) == 1 {
+	if len(input.Messages) > 0 && input.Messages[len(input.Messages)-1].Role == ports.ConversationRoleUser {
 		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "find-tools", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "tools"}}}}, nil
 	}
 	return ports.ConversationModelTurn{Text: "I could not find matching tools."}, nil
