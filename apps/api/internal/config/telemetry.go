@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -83,8 +82,7 @@ func (c TelemetryConfig) Validate() error {
 	if !c.Enabled {
 		return nil
 	}
-	endpoint, err := url.Parse(c.Endpoint)
-	if err != nil || endpoint.Host == "" || (endpoint.Scheme != "http" && endpoint.Scheme != "https") || endpoint.User != nil || endpoint.RawQuery != "" || endpoint.Fragment != "" {
+	if !validTelemetryEndpoint(c.Endpoint) {
 		return errors.New("invalid telemetry endpoint")
 	}
 	if strings.TrimSpace(c.ServiceName) == "" || len(c.ServiceName) > 128 || len(c.ServiceVersion) > 128 || len(c.Environment) > 128 {

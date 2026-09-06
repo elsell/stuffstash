@@ -127,3 +127,15 @@ with fixed errors. This prevents SDK environment parsers logging raw invalid
 values. Supported variables are the base endpoint, headers, service name/version;
 project variables own sampling, batching, and timeouts. Validate ambient base
 endpoint/headers even when runtime configuration is constructed programmatically.
+
+## HTTP and media adapter instrumentation
+
+Runtime wiring must wrap the API handler with W3C trace-context extraction (without
+baggage), preserve response streaming and WebSocket upgrades, and record normalized
+route template, bounded method, response status and duration. Never record concrete
+paths, query strings, header values or request/response bodies. The existing
+console observer includes trace and span IDs when present. Blob/image processor
+port decorators measure actual read, write, delete and processing work without
+changing cache behavior, authorization or media contents. Wire decorators through
+bootstrap, including direct-upload adapters, so the baseline includes both original
+reads performed during upload verification.
