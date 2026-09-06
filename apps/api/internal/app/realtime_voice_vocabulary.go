@@ -13,25 +13,27 @@ type realtimeVoiceVocabularyCatalog struct {
 	definitions map[string]agentmodel.VoiceVocabularyDefinition
 }
 
-func (catalog realtimeVoiceVocabularyCatalog) resolve(requests []agentmodel.VoiceVocabularyRequest) ([]agentmodel.VoiceVocabularyDefinition, error) {
+func (catalog realtimeVoiceVocabularyCatalog) resolve(requests []agentmodel.VoiceVocabularyRequest) ([]agentmodel.VoiceVocabularyDefinition, int, error) {
 	definitions := make([]agentmodel.VoiceVocabularyDefinition, 0, len(requests))
 	seen := map[string]struct{}{}
+	unavailable := 0
 	for _, request := range requests {
 		if request.Validate() != nil {
-			return nil, agentmodel.ErrInvalidVoiceVocabulary
+			return nil, 0, agentmodel.ErrInvalidVoiceVocabulary
 		}
 		key := realtimeVoiceVocabularyCatalogKey(request.Kind, request.Key)
 		if _, exists := seen[key]; exists {
-			return nil, agentmodel.ErrInvalidVoiceVocabulary
-		}
-		definition, exists := catalog.definitions[key]
-		if !exists {
-			return nil, agentmodel.ErrInvalidVoiceVocabulary
+			return nil, 0, agentmodel.ErrInvalidVoiceVocabulary
 		}
 		seen[key] = struct{}{}
+		definition, exists := catalog.definitions[key]
+		if !exists {
+			unavailable++
+			continue
+		}
 		definitions = append(definitions, definition)
 	}
-	return definitions, nil
+	return definitions, unavailable, nil
 }
 
 func projectRealtimeVoiceVocabulary(assetTypes []customfield.AssetType, fields []customfield.Definition, tags []assettag.Tag) (agentmodel.VoiceVocabularyManifest, realtimeVoiceVocabularyCatalog, error) {
