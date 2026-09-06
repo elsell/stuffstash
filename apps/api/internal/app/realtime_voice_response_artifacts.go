@@ -1,41 +1,12 @@
 package app
 
 import (
-	"regexp"
-	"strings"
-
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"strings"
 )
 
 const maxRealtimeVoiceResponseArtifacts = 16
-
-func realtimeVoiceDisplayedResponseArtifacts(displayResponse string, bindings []ports.StructuredAgentResponseArtifact) []ports.StructuredAgentResponseArtifact {
-	artifacts := make([]ports.StructuredAgentResponseArtifact, 0, min(len(bindings), maxRealtimeVoiceResponseArtifacts))
-	seen := map[asset.ID]struct{}{}
-	for _, binding := range bindings {
-		if len(artifacts) >= maxRealtimeVoiceResponseArtifacts || !containsExactRealtimeVoiceEntityTitle(displayResponse, binding.Title) {
-			continue
-		}
-		if _, duplicate := seen[binding.AssetID]; duplicate {
-			continue
-		}
-		seen[binding.AssetID] = struct{}{}
-		artifacts = append(artifacts, binding)
-	}
-	return artifacts
-}
-
-func containsExactRealtimeVoiceEntityTitle(value, title string) bool {
-	value = strings.TrimSpace(value)
-	title = strings.TrimSpace(title)
-	if value == "" || title == "" {
-		return false
-	}
-	pattern := `(^|[^\pL\pN])` + regexp.QuoteMeta(title) + `($|[^\pL\pN])`
-	matched, err := regexp.MatchString(pattern, value)
-	return err == nil && matched
-}
 
 func validateRealtimeVoiceResponseArtifacts(displayResponse string, artifacts []ports.StructuredAgentResponseArtifact) error {
 	if len(artifacts) > maxRealtimeVoiceResponseArtifacts {

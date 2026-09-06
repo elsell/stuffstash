@@ -12,8 +12,8 @@ import (
 )
 
 func TestRealtimeSessionPinsWorkflowAndUsesSharedModelPolicy(t *testing.T) {
-	language := &resolvedLanguageInference{}
-	resolver := &fakeRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{LanguageInferenceProfileID: "lm-profile", SpeechToText: resolvedSpeechToText{transcript: "Where are my tools?"}, LanguageInference: language, ResponseGenerator: language, TextToSpeech: &resolvedTextToSpeech{}}}
+	language := &resolvedConversationModel{inventoryConversationModel: inventoryConversationModel{query: "tools"}}
+	resolver := &fakeRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{LanguageInferenceProfileID: "lm-profile", SpeechToText: resolvedSpeechToText{transcript: "Where are my tools?"}, ConversationModel: language, TextToSpeech: &resolvedTextToSpeech{}}}
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
 	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 1000}
 	application.conversationWorkflowService = appmodel.NewConversationWorkflowService(appmodel.ConversationWorkflowDependencies{Authorizer: application.authorizer, Repository: store, Profiles: store, IDs: application.ids, Clock: application.clock, Limits: limits})
@@ -38,7 +38,7 @@ func TestRealtimeSessionPinsWorkflowAndUsesSharedModelPolicy(t *testing.T) {
 		t.Fatalf("existing session was redirected: %v", err)
 	}
 	if language.calls != 2 {
-		t.Fatalf("expected interpretation and assessment: %d", language.calls)
+		t.Fatalf("expected model search and answer: %d", language.calls)
 	}
 	newer, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {

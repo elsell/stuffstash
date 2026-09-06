@@ -9,6 +9,8 @@ func TestRealtimeVoiceRejectsRetiredInferenceOnlyProviderBeforeStartingSession(t
 	t.Parallel()
 	resolver := successfulRealtimeVoiceResolver()
 	resolver.providers.ConversationModel = nil
+	resolver.providers.LanguageInference = &resolvedLanguageInference{}
+	resolver.providers.ResponseGenerator = &resolvedLanguageInference{}
 	repository := newFakeRealtimeSessionRepository()
 	application := newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, repository)
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())

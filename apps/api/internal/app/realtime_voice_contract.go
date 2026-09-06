@@ -86,8 +86,6 @@ type RealtimeVoiceSession struct {
 	DeveloperDiagnostics       bool
 	workflow                   *agentmodelapp.PreparedWorkflow
 	speechToText               ports.SpeechToTextProvider
-	languageInference          ports.LanguageInferenceProvider
-	responseGenerator          ports.VoiceResponseGenerator
 	textToSpeech               ports.TextToSpeechProvider
 }
 

@@ -84,7 +84,7 @@ func TestCompleteRealtimeVoiceResponseValidatesBeforeMobileOrTTS(t *testing.T) {
 	}
 }
 
-func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.T) {
+func TestRealtimeVoiceConversationDoesNotInvokeRetiredWordingProvider(t *testing.T) {
 	t.Parallel()
 
 	tts := &resolvedTextToSpeech{}
@@ -102,10 +102,10 @@ func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("grounded recovery failed: %v", err)
+		t.Fatalf("conversation failed: %v", err)
 	}
 	if tts.lastText == "" {
-		t.Fatal("grounded fallback did not reach TTS")
+		t.Fatal("model answer did not reach TTS")
 	}
 	completed := false
 	for _, event := range events {
@@ -114,7 +114,7 @@ func TestRealtimeVoiceResponseGenerationFailureReturnsGroundedAnswer(t *testing.
 		}
 	}
 	if !completed {
-		t.Fatal("grounded fallback did not reach mobile")
+		t.Fatal("model answer did not reach mobile")
 	}
 
 }

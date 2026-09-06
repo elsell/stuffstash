@@ -2,12 +2,10 @@ package app
 
 import (
 	"errors"
-	"regexp"
-	"strings"
-	"unicode/utf8"
-
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"strings"
+	"unicode/utf8"
 )
 
 var errRealtimeVoiceToolCallTimedOut = errors.New("realtime voice tool call timed out")
@@ -39,55 +37,6 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 
 func safeRealtimeVoiceFinalText(value string, limit int) bool {
 	return strings.TrimSpace(value) != "" && len(value) <= limit && utf8.ValidString(value)
-}
-
-func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
-	normalized := strings.ToLower(strings.TrimSpace(value))
-	if strings.HasPrefix(normalized, "{") || strings.HasPrefix(normalized, "[") || realtimeVoiceFinalJSONFragmentPattern.MatchString(value) {
-		return true
-	}
-	for _, token := range []string{
-		"```",
-		"search_authorized_assets",
-		"list_authorized_assets",
-		"get_asset_detail",
-		"list_asset_audit_history",
-		"list_asset_checkout_history",
-		"list_checked_out_assets",
-		"chain of thought",
-		"reasoning:",
-		"raw prompt",
-		"provider response",
-		"provider session",
-		"stack trace",
-		"raw transcript",
-		"raw audio",
-		"tool_call",
-		"functioncall",
-	} {
-		if strings.Contains(normalized, token) {
-			return true
-		}
-	}
-	collapsed := realtimeVoiceFinalCollapsedText(normalized)
-	for _, token := range []string{"assetid", "parentassetid", "inventoryid", "tenantid", "toolcallid"} {
-		if strings.Contains(collapsed, token) {
-			return true
-		}
-	}
-	return realtimeVoiceFinalSecretPattern.MatchString(value)
-}
-
-var (
-	realtimeVoiceFinalJSONFragmentPattern = regexp.MustCompile(`["']?[a-zA-Z][a-zA-Z0-9_-]*["']?\s*:\s*["'{\[]`)
-	realtimeVoiceFinalSecretPattern       = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?(bearer\s+)?[a-z0-9._~+/=-]{16,}|bearer\s+[^"',\s}\]\)]+`)
-)
-
-func realtimeVoiceFinalCollapsedText(value string) string {
-	value = strings.ReplaceAll(value, "_", "")
-	value = strings.ReplaceAll(value, "-", "")
-	value = strings.ReplaceAll(value, " ", "")
-	return value
 }
 
 func realtimeVoiceErrorCode(err error) string {

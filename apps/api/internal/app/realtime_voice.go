@@ -80,19 +80,11 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		if err != nil {
 			return RealtimeVoiceSession{}, err
 		}
-		if model := workflow.ConversationModel(); model != nil {
-			providers.ConversationModel = model
-			providers.LanguageInferenceProfileID = workflow.ConversationProfileID()
-			providers.LanguagePromptTemplate = ""
-		} else {
-			if providers.ConversationModel != nil {
-				return RealtimeVoiceSession{}, ports.ErrInvalidProviderInput
-			}
-			providers.LanguageInference = workflow
-			providers.ResponseGenerator = workflow
-		}
+		providers.ConversationModel = workflow.ConversationModel()
+		providers.LanguageInferenceProfileID = workflow.ConversationProfileID()
+		providers.LanguagePromptTemplate = ""
 	}
-	if providers.SpeechToText == nil || providers.TextToSpeech == nil || (providers.ConversationModel == nil && (providers.LanguageInference == nil || providers.ResponseGenerator == nil)) {
+	if providers.SpeechToText == nil || providers.TextToSpeech == nil || providers.ConversationModel == nil {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
 
@@ -116,8 +108,6 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		LanguagePromptTemplate:     providers.LanguagePromptTemplate,
 		DeveloperDiagnostics:       input.DeveloperDiagnostics,
 		speechToText:               providers.SpeechToText,
-		languageInference:          providers.LanguageInference,
-		responseGenerator:          providers.ResponseGenerator,
 		textToSpeech:               providers.TextToSpeech,
 	}
 	if workflow != nil {
@@ -181,7 +171,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 		return ports.ErrInvalidProviderInput
 	}
 
-	if input.Session.speechToText == nil || input.Session.textToSpeech == nil || (input.Session.conversationModel == nil && (input.Session.languageInference == nil || input.Session.responseGenerator == nil)) {
+	if input.Session.speechToText == nil || input.Session.textToSpeech == nil || input.Session.conversationModel == nil {
 		return apperrors.ErrInvalidInput
 	}
 	if err := a.ensureRealtimeVoiceAccess(ctx, input.Session.Principal, input.Session.TenantID, input.Session.InventoryID); err != nil {
@@ -204,20 +194,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTranscriptFinal, SessionID: input.Session.ID, Text: transcript}); err != nil {
 		return err
 	}
-	if input.Session.conversationModel != nil {
-		return a.runRealtimeVoiceConversation(ctx, input.Session, transcript, input.ConversationTurns, emit)
-	}
-	effectiveTranscript := realtimeVoiceEffectiveTranscript(transcript, input.ConversationTurns)
-	if err := emitRealtimeVoiceProgress(input.Session, realtimeVoiceProgressUnderstanding, "Understanding your request.", emit); err != nil {
-		return err
-	}
-	if response, ok := realtimeVoiceUnsafeUnsupportedTranscriptResponse(effectiveTranscript); ok {
-		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, nil, emit, input.ContinueAfterClarification)
-	}
-	if response, ok := realtimeVoiceAmbiguousDestinationTranscriptResponse(effectiveTranscript); ok {
-		return a.completeRealtimeVoiceResponse(ctx, input.Session, response, nil, nil, emit, input.ContinueAfterClarification)
-	}
-	return a.runRealtimeVoiceInvestigationLoop(ctx, input.Session, effectiveTranscript, input.ConversationTurns, input.ContinueAfterClarification, emit)
+	return a.runRealtimeVoiceConversation(ctx, input.Session, transcript, input.ConversationTurns, emit)
 }
 
 func (a App) ensureRealtimeVoiceAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
