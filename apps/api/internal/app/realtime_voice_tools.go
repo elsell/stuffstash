@@ -275,7 +275,7 @@ func (a App) realtimeVoiceAncestors(ctx context.Context, session RealtimeVoiceSe
 
 func realtimeVoiceToolResult(call ports.AgentToolCall, output realtimeVoiceAssetToolOutput) (ports.AgentToolResult, error) {
 	if output.Count == 0 {
-		output.Note = "No visible assets matched this request's terms and filters. This observation does not cover differently named items or related categories."
+		output.Note = "No visible assets were returned within this request's scope; hasMore indicates incomplete coverage."
 	}
 	payload, err := json.Marshal(output)
 	if err != nil {
