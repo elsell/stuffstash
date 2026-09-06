@@ -69,3 +69,38 @@ it('aborts a stalled delivery and clears queued events on dispose', async () => 
   await reporter.flush();
   expect(scheduler.tasks.filter(task => task.active)).toHaveLength(0);
 });
+
+it('disposes during active delivery and joins concurrent flushes', async () => {
+  const scheduler = new Scheduler();
+  let signal: AbortSignal | undefined;
+  let sends = 0;
+  const reporter = new PerformanceReporter({ clock: { now: () => 0 }, scheduler, send: async (_batch, value) => {
+    signal = value; sends++; return new Promise<void>(() => {});
+  } });
+  reporter.record(measurement);
+  const first = reporter.flush();
+  expect(reporter.flush()).toBe(first);
+  await Promise.resolve();
+  reporter.record(measurement);
+  reporter.dispose();
+  await first;
+  await reporter.flush();
+  expect(signal?.aborted).toBe(true);
+  expect(sends).toBe(1);
+  expect(scheduler.tasks.filter(task => task.active)).toHaveLength(0);
+});
+
+it('automatically flushes remaining batches without concurrent sends', async () => {
+  const scheduler = new Scheduler();
+  const batches: PerformanceMeasurement[][] = [];
+  const reporter = new PerformanceReporter({ clock: { now: () => 0 }, scheduler, capacity: 3, batchSize: 2,
+    send: async batch => { batches.push([...batch]); } });
+  for (const durationMs of [1, 2, 3]) reporter.record({ ...measurement, durationMs });
+  scheduler.fire(5000);
+  await reporter.flush();
+  scheduler.fire(5000);
+  await reporter.flush();
+  expect(batches.map(batch => batch.map(item => item.durationMs))).toEqual([[1, 2], [3]]);
+  expect(scheduler.tasks.filter(task => task.active)).toHaveLength(0);
+  reporter.dispose();
+});
