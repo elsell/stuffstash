@@ -94,3 +94,30 @@ resolve replacement work. Canonicalize claim times to UTC microseconds to match
 PostgreSQL timestamp precision. Count attempts at acquisition, including work lost
 to a crash; explicit failure resolution must not increment that count again.
 The worker must not start processing once the configured attempt budget is exceeded.
+
+## Publication coordination
+
+Use an injectable publication guard shared by foreground and background paths.
+The PostgreSQL adapter locks the authoritative attachment row during final blob
+and metadata publication, after checking scope and source identity. Background
+publication also verifies and locks its current job lease, using attachment-then-job
+lock order. Do not hold database locks during decoding or resizing. Apply a bounded
+publication deadline and keep network I/O on the internal storage route.
+
+A deletion transaction must acquire the same attachment lock (including through
+foreign-key cascade) before it can commit attachment removal and its blob cleanup
+outbox. Consequently cleanup cannot become visible until any prior publisher has
+finished. A publisher arriving after deletion fails the authoritative lookup and
+writes nothing. Verify this ordering against real PostgreSQL with independent
+connections, including attachment, asset and inventory deletion. Failed partial
+publications remain eligible for the same deletion cleanup.
+
+## Implementation evidence so far
+
+Shared admission behavioral/race tests passed API CI `34064006179`. Initial
+transactional enqueue and claim/retry tests passed API CI `34064419806`. Regression
+CI `34064490160` demonstrated missing crash attempt accounting before its fix;
+lease deadline fencing and acquisition accounting are under validation in
+`34064626334`. These checks do not yet prove an executing worker, PostgreSQL
+cross-process coordination, backfill, production performance or a deployment.
+The background feature remains undeployed until those requirements are verified.
