@@ -51,7 +51,7 @@ jobs:
           go-version: '1.25.8'
           cache-dependency-path: apps/api/go.sum
       - name: Test telemetry behavior
-        run: go test -race -count=1 ./apps/api/internal/domain/media ./apps/api/internal/adapters/gormstore ./apps/api/internal/adapters/memory ./apps/api/internal/adapters/worklimit ./apps/api/internal/adapters/blobstore ./apps/api/internal/app/clienttelemetry ./apps/api/internal/adapters/observability ./apps/api/internal/config ./apps/api/internal/adapters/httpserver ./apps/api/cmd/stuff-stash/internal/bootstrap
+        run: go test -race -count=1 ./apps/api/internal/domain/media ./apps/api/internal/app/media ./apps/api/internal/adapters/gormstore ./apps/api/internal/adapters/memory ./apps/api/internal/adapters/worklimit ./apps/api/internal/adapters/blobstore ./apps/api/internal/app/clienttelemetry ./apps/api/internal/adapters/observability ./apps/api/internal/config ./apps/api/internal/adapters/httpserver ./apps/api/cmd/stuff-stash/internal/bootstrap
   collector-probe:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04

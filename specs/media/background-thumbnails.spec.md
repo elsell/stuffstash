@@ -137,3 +137,13 @@ write is still unwinding. Transport errors can leave remotely accepted writes
 ambiguous even after the callback exits; durable eventual cleanup for those writes
 must be resolved and verified before deployment, rather than claiming that a database
 lock alone fences object-storage completion.
+
+## Worker execution
+
+One drain acquires background admission, claims at most one image with a fresh ID,
+and processes it under a timeout shorter than its lease. It releases admission on
+every exit. Successful processing acknowledges completion; failures retry with
+capped exponential backoff until exhaustion. A reclaimed job already beyond the
+attempt budget is exhausted without processing. Shutdown cancellation leaves the
+claim recoverable instead of acknowledging success. The worker emits a safe
+`thumbnail_job.resolved` event after a resolution is persisted.
