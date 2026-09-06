@@ -66,11 +66,22 @@ func (transport liveVoiceTraceTransport) logNativeParts(body []byte) {
 	if json.Unmarshal(body, &payload) != nil {
 		return
 	}
-	// Outgoing requests expose only function responses, never prompts/audio.
+	// Outgoing requests expose only tool responses, never prompts/audio.
 	for _, content := range payload.Contents {
 		for _, part := range content.Parts {
+			if part.Thought {
+				continue
+			}
 			if len(part.FunctionResponse) > 0 {
 				transport.t.Logf("VOICE_TOOL_RESULT %s", part.FunctionResponse)
+			}
+			var envelope struct {
+				ToolResults []json.RawMessage `json:"toolResults"`
+			}
+			if part.Text != "" && json.Unmarshal([]byte(part.Text), &envelope) == nil {
+				for _, result := range envelope.ToolResults {
+					transport.t.Logf("VOICE_TOOL_RESULT %s", result)
+				}
 			}
 		}
 	}
