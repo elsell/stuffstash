@@ -101,7 +101,7 @@ func (g *processorGuard) Publish(ctx context.Context, a domain.Attachment, claim
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if g.source.missing || claim == nil || !claim.Job.Matches(a) || !claim.Job.Matches(g.source.attachment) {
+	if g.source.missing || (claim != nil && (!claim.Job.Matches(a) || !claim.Job.Matches(g.source.attachment))) {
 		return ports.ErrOutboxClaimLost
 	}
 	g.writes++

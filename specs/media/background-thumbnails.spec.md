@@ -178,3 +178,13 @@ publication/deletion ordering without deadlocking blob callbacks. Its lifecycle
 mutex wait is not cancellable; it checks cancellation again before publication.
 Use PostgreSQL integration tests, not this adapter, to verify bounded lock waiting
 and production shutdown behavior.
+
+## Foreground thumbnail reader
+
+A media application reader accepts an already-authorized scoped attachment and
+variant. It checks the shared cache before admission, acquires foreground priority
+only on a miss, then checks the cache again in case a worker completed while it
+waited. Missing output uses the same batch codec, cache conventions and bounded
+publication guard as queued processing, with no background claim. Return generated
+bytes directly after successful publication without downloading them again. REST
+access checks and read audit remain in the existing authorized application facade.
