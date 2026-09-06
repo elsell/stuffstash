@@ -68,3 +68,9 @@ type ThumbnailJobQueue interface {
 	ClaimThumbnailJobs(ctx context.Context, claimID string, limit int, now, leaseUntil time.Time) ([]ClaimedThumbnailJob, error)
 	ResolveThumbnailJob(ctx context.Context, claim ClaimedThumbnailJob, resolution ThumbnailJobResolution) error
 }
+
+// ThumbnailJobProcessor processes one claimed image under already-held admission.
+// Success means all required derivatives have been durably published.
+type ThumbnailJobProcessor interface {
+	ProcessThumbnailJob(context.Context, ClaimedThumbnailJob) error
+}

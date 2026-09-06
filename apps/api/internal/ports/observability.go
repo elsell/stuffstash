@@ -5,6 +5,7 @@ import "context"
 type EventName string
 
 const (
+	EventThumbnailJobResolved                      EventName = "thumbnail_job.resolved"
 	EventClientPerformanceObserved                 EventName = "client.performance.observed"
 	EventProfilingDeliveryFailed                   EventName = "profiling.delivery_failed"
 	EventTelemetryBatchesDropped                   EventName = "telemetry.batches_dropped"
