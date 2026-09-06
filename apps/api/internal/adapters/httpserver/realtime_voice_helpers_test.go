@@ -210,25 +210,22 @@ func (m *itemListingLanguageModel) NextTurn(_ context.Context, input ports.Langu
 	return typedVoiceInvestigationTurn(input, intent, &m.lastToolResult)
 }
 
-type finalResponseLanguageModel struct {
-	final ports.StructuredAgentResponse
-}
-
-func (m finalResponseLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{Investigation: &agentmodel.InvestigationStep{}}, nil
-}
-
 type scriptedFinalLanguageModel struct {
-	inputs          []ports.LanguageInferenceInput
+	inputs          []ports.ConversationModelInput
 	alwaysAmbiguous bool
 }
 
-func (m *scriptedFinalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (m *scriptedFinalLanguageModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	m.inputs = append(m.inputs, input)
-	if !m.alwaysAmbiguous && len(input.ConversationTurns) > 0 {
-		return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "Office"), nil)
+	if !m.alwaysAmbiguous && len(input.Messages) > 1 {
+		return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "Office"}, nil)
 	}
-	return typedAmbiguousItemInvestigationTurn(input)
+	return ports.ConversationModelTurn{Text: "Which item do you mean?"}, nil
+}
+
+// Removed with the legacy provider injection signature.
+func (*scriptedFinalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 type failingLanguageModel struct {

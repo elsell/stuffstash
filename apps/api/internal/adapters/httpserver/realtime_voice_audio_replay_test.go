@@ -11,7 +11,7 @@ import (
 	"nhooyr.io/websocket"
 )
 
-func TestRealtimeVoiceWebSocketRejectsReplayedAudioChunkAcrossClarificationTurns(t *testing.T) {
+func TestRealtimeVoiceWebSocketRejectsReplayedAudioChunkAcrossConversationTurns(t *testing.T) {
 	t.Parallel()
 
 	language := &scriptedFinalLanguageModel{}
@@ -40,14 +40,16 @@ func TestRealtimeVoiceWebSocketRejectsReplayedAudioChunkAcrossClarificationTurns
 	}
 	t.Cleanup(func() { _ = connection.Close(websocket.StatusNormalClosure, "") })
 
-	writeRealtimeMessage(t, ctx, connection, realtimeVoiceStartMessage("tenant-home", "inventory-home"))
+	start := realtimeVoiceStartMessage("tenant-home", "inventory-home")
+	start["conversationContinuity"] = true
+	writeRealtimeMessage(t, ctx, connection, start)
 	started := readRealtimeMessage(t, ctx, connection)
 	sessionID, _ := started["sessionId"].(string)
 	writeRealtimeAudioTurn(t, ctx, connection, sessionID, 2, "replayed-chunk")
 	firstTurn := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 	firstResponse := findRealtimeEvent(t, firstTurn, "assistant.response.completed")
 	firstPayload, _ := firstResponse["response"].(map[string]any)
-	if firstPayload["kind"] != "clarification" {
+	if firstPayload["kind"] != "answer" || firstPayload["spokenResponse"] != "Which item do you mean?" {
 		t.Fatalf("expected first turn clarification, got %+v", firstPayload)
 	}
 

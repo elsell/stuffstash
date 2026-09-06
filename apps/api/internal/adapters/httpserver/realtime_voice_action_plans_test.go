@@ -28,7 +28,7 @@ func TestRealtimeVoiceQueryStreamsActionPlanProposalForReview(t *testing.T) {
 	application := newSeededTestAppWithVoice(t, seededState{
 		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}},
 		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home inventory", owner: "user-1"}},
-		ids:         []string{"voice-session-id", "read-tool-id", "read-audit-id", "plan-id", "command-id", "response-id"},
+		ids:         []string{"voice-session-id", "read-audit-id", "plan-id", "command-id", "response-id"},
 	}, fakeSpeechToText{transcript: "Add a water bottle."}, actionPlanProposalLanguageModel{}, fakeTextToSpeech{
 		chunks: [][]byte{[]byte("spoken-audio")},
 	})
@@ -394,7 +394,7 @@ func openRealtimeVoiceReviewSessionWithSetup(t *testing.T, languageInference por
 func openRealtimeVoiceReviewSessionWithSetupAndTranscript(t *testing.T, languageInference ports.LanguageInferenceProvider, transcript string, setup func(app.App)) (context.Context, *websocket.Conn, string, string) {
 	t.Helper()
 
-	ids := []string{"voice-session-id", "read-tool-id", "read-audit-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
+	ids := []string{"voice-session-id", "read-audit-id", "plan-id", "command-id", "response-id", "asset-id", "undo-id", "audit-id"}
 	if setup != nil {
 		ids = []string{
 			"location-id", "location-undo-id", "location-audit-id",
