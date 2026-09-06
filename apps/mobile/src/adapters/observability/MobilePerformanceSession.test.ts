@@ -1,3 +1,4 @@
+import { createTimeoutFetch } from '../network/TimeoutFetch';
 import { expect, it } from 'vitest';
 import { createMobilePerformanceSession } from './MobilePerformanceSession';
 
@@ -65,4 +66,37 @@ it('clears pending images on session disposal and ignores late image completions
   session.dispose();
   late('success');
   expect(time.tasks.some(task => task.active)).toBe(false);
+});
+
+
+it('survives synchronous effect replay, then clears the final released session', async () => {
+  const time = runtime();
+  const session = createMobilePerformanceSession({ platform: 'android', enabled: true, baseUrl: 'https://api.example.test', tokenProvider: () => null, fetch: async () => new Response(), ...time });
+  const release = session.acquire(); release();
+  const releaseAgain = session.acquire();
+  await Promise.resolve();
+  session.observer.start({ operation: 'image', surface: 'detail', variant: 'large' })('success');
+  expect(time.tasks.some(task => task.active)).toBe(true);
+  releaseAgain();
+  await Promise.resolve();
+  expect(time.tasks.some(task => task.active)).toBe(false);
+});
+
+it('aborts delivery through the native timeout transport on disposal', async () => {
+  const time = runtime();
+  let signal: AbortSignal | null | undefined;
+  let started!: () => void;
+  const sending = new Promise<void>(resolve => { started = resolve; });
+  const session = createMobilePerformanceSession({ platform: 'ios', enabled: true, baseUrl: 'https://api.example.test', tokenProvider: () => 'session', ...time,
+    fetch: createTimeoutFetch(8000, async (_input, init) => {
+      signal = init?.signal; started();
+      return new Promise<Response>((_resolve, reject) => signal?.addEventListener('abort', () => reject(signal?.reason), { once: true }));
+    })
+  });
+  session.observer.start({ operation: 'image', surface: 'detail', variant: 'large' })('success');
+  time.fire(5000);
+  await sending;
+  session.dispose();
+  expect(signal?.aborted).toBe(true);
+  await expect.poll(() => time.tasks.some(task => task.active)).toBe(false);
 });

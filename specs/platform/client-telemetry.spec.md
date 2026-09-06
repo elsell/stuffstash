@@ -110,3 +110,10 @@ Application/UI consumers use a local PerformanceObserver port. Product requests
 retain their existing timeout and authentication callbacks; telemetry uses a
 separate undecorated transport. Session provider replacement or unmount disposes
 reporting, and sign-out/server-change actions dispose before credential changes.
+
+Mobile provider effects acquire a reporting lease and release it during cleanup.
+Defer final lease disposal by one microtask so synchronous React effect replay can
+reacquire the same reporter. Explicit sign-out/auth disposal remains immediate.
+The mobile timeout fetch must preserve Request-carried cancellation, including
+explicit `init.signal: null` detachment, so disposing delivery aborts its network
+request as well as the reporter's wait.
