@@ -111,3 +111,18 @@ func TestNativeWorkflowBudgetDoesNotSpendOnCancellationAndExpiresAcrossUtterance
 		t.Fatalf("elapsed budget was reset or bypassed: %v calls=%d", err, provider.calls)
 	}
 }
+
+func TestSelectedWorkflowRejectsRetiredOnlyModelBeforeCapture(t *testing.T) {
+	clock := &workflowExecutionClock{now: time.Date(2026, 9, 5, 12, 0, 0, 0, time.UTC)}
+	service := NewConversationWorkflowService(ConversationWorkflowDependencies{Authorizer: workflowViewAuthorizer{}, Repository: newWorkflowFakeRepository(), Profiles: newFakeProviderProfileRepository(), IDs: &workflowSequenceIDs{}, Clock: clock, Limits: workflowServiceLimits()})
+	revision, err := service.SaveRevision(context.Background(), workflowServiceInput())
+	if err != nil {
+		t.Fatal(err)
+	}
+	selected := &SelectedWorkflow{revision: revision, limits: workflowServiceLimits(), clock: clock}
+	retired := &workflowExecutionProvider{}
+	prepared, err := selected.Prepare(context.Background(), ports.RealtimeVoiceProviderSet{LanguageInference: retired, ResponseGenerator: retired}, nil)
+	if err == nil || prepared != nil {
+		t.Fatal("retired-only provider activated the old workflow execution path")
+	}
+}
