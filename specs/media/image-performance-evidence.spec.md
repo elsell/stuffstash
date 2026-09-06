@@ -6,6 +6,26 @@ This is an incomplete investigation. Production/device baselines, full runtime
 instrumentation, image pipeline changes, and the final comparison remain pending.
 Follow `../platform/observability.spec.md` for the delivery contract.
 
+## Immediate delivery priority — user direction, 2026-09-06
+
+Prioritize measured image-loading improvement. Deploy the existing API instrumentation
+through GitOps, capture a reproducible cold/warm HTTP baseline, implement the
+highest-impact evidenced fix, then repeat the workload. Do not gate that sequence
+on further frontend telemetry, database spans, dashboards or observability breadth.
+Keep production web/mobile versions unchanged during the first API comparison.
+
+A manual CI image-publishing option builds the API revision after its telemetry/API
+race suite passes, pushes a commit-specific GHCR image, and retains its immutable
+digest as an artifact. Deploy that digest through the infra GitOps repository;
+never patch the live Deployment. No general release or mobile distribution is
+required for the controlled measurement deployment.
+
+Deferred until after the comparison: complete web/mobile visible-image telemetry,
+further database/unit-of-work and blob-byte instrumentation, dashboard expansion,
+and comprehensive instrumentation overhead characterization. Existing unfinished
+frontend work remains on the branch but is not deployed for the API comparison.
+The final report must state these deferrals and any missing physical-device proof.
+
 ## Synthetic codec baseline — 2026-09-06
 
 Revision: `dc9df5c90` (image processor unchanged from `cd6de4bbf`).
