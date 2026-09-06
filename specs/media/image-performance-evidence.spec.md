@@ -156,3 +156,12 @@ passed targeted race CI `34056817154`; full contract regeneration is running in
 - Deferred frontend code has outstanding native test validation and is excluded
   from this deployment. Buildx default BuildKit/SBOM component pinning is also
   not yet captured for a fully reproducible build environment.
+
+## Candidate codec comparison protocol
+
+Run the unchanged `BenchmarkCameraPhotoThumbnail` for deployed source
+`319dd138a706002a1d4f84efd2a3ab44cec76718` and the candidate in one CI job on
+the same runner, Go 1.25.8, GOMAXPROCS=4, three repetitions of five operations per
+variant. Enable CPU/allocation profiles on both. Preserve raw samples, profiles,
+source hashes, CPU description and runtime version. This isolates codec cost;
+production HTTP and physical-device conclusions still require separate evidence.

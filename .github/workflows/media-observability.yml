@@ -77,13 +77,25 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.benchmark
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      GOMAXPROCS: 4
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
         with:
           go-version: '1.25.8'
           cache-dependency-path: apps/api/go.sum
-      - name: Measure unchanged camera-photo codec
+      - name: Measure deployed reference codec on this runner
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/measurements/reference"
+          git worktree add "$RUNNER_TEMP/codec-reference" 319dd138a706002a1d4f84efd2a3ab44cec76718
+          cd "$RUNNER_TEMP/codec-reference"
+          git rev-parse HEAD > "$GITHUB_WORKSPACE/measurements/reference/revision.txt"
+          set -o pipefail
+          go test ./apps/api/internal/adapters/blobstore -run '^$' -bench '^BenchmarkCameraPhotoThumbnail$' -benchtime=5x -count=3 -benchmem -cpuprofile="$GITHUB_WORKSPACE/measurements/reference/cpu.pprof" -memprofile="$GITHUB_WORKSPACE/measurements/reference/heap.pprof" -o "$GITHUB_WORKSPACE/measurements/reference/blobstore.test" | tee "$GITHUB_WORKSPACE/measurements/reference/codec.txt"
+      - name: Measure candidate camera-photo codec
         run: |
           mkdir -p measurements
           git rev-parse HEAD > measurements/revision.txt
