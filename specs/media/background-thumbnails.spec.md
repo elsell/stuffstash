@@ -188,3 +188,20 @@ waited. Missing output uses the same batch codec, cache conventions and bounded
 publication guard as queued processing, with no background claim. Return generated
 bytes directly after successful publication without downloading them again. REST
 access checks and read audit remain in the existing authorized application facade.
+
+## Runtime configuration and ownership
+
+The API always constructs and injects the shared foreground reader, even when
+background execution is disabled. Worker goroutines start and stop with the API;
+cancel and join them before closing repositories. Each loop drains one image at a
+time, continues while work is available, and polls on idle or failure. A drain has
+a lease-duration timeout. Invalid settings fail startup.
+
+Environment settings (prefix `STUFF_STASH_THUMBNAIL_`): `WORKER_ENABLED` defaults
+true; `CONCURRENCY` defaults 1 and accepts 1–8; `POLL_INTERVAL` defaults 1s (100ms–1m);
+`LEASE_DURATION` defaults 90s (2s–10m); `PROCESSING_TIMEOUT` defaults 60s (1s–5m);
+`PUBLICATION_TIMEOUT` defaults 15s (100ms–1m); `MAX_ATTEMPTS` defaults 5 (1–100);
+`RETRY_BASE` defaults 5s (100ms–1h); and `RETRY_MAX` defaults 5m (100ms–24h).
+Lease duration must exceed processing timeout, publication timeout must be less
+than processing timeout, and retry maximum must be at least its base. The final
+production concurrency remains subject to the measured comparison.
