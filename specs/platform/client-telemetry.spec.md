@@ -71,3 +71,14 @@ sender. Permit smaller buffer/batch limits for controlled tests, never limits ab
 100 pending or 50 per batch. Each send has a 10-second abort deadline, including
 senders that fail to settle after cancellation. Dispose clears pending measurements
 and aborts active delivery. Reconstruct outbound values from the six known fields.
+
+## Request measurement adapter
+
+A shared fetch decorator accepts a fixed performance context from the frontend
+adapter and an injected observer. It measures until response headers arrive,
+without reading, cloning or consuming the response body. Visible-image timing
+separately includes image transfer and display. Forward the exact input and init,
+return the original response, and rethrow the original transport error. Classify
+HTTP errors as failures and aborted requests as cancelled. Observer failures must
+not change request behavior. Do not extract URLs, headers, bodies or identifiers
+into measurements. The telemetry sender always receives the undecorated fetch.
