@@ -117,3 +117,8 @@ reacquire the same reporter. Explicit sign-out/auth disposal remains immediate.
 The mobile timeout fetch must preserve Request-carried cancellation, including
 explicit `init.signal: null` detachment, so disposing delivery aborts its network
 request as well as the reporter's wait.
+
+Shared delivery must support React Native's pinned AbortController implementation,
+which provides `aborted` and abort events but does not require newer methods such
+as `throwIfAborted` or custom abort reasons. Native transport tests use that real
+pinned implementation.

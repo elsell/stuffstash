@@ -62,7 +62,6 @@ it('preserves cancellation carried on a generated Request', async () => {
     downstream = init?.signal;
     caller.abort(reason);
     expect(downstream?.aborted).toBe(true);
-    expect(downstream?.reason).toBe(reason);
     throw reason;
   });
   await expect(fetchWithTimeout(request)).rejects.toBe(reason);
