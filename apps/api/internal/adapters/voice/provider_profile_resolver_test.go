@@ -37,6 +37,9 @@ func TestProviderProfileResolverBuildsProvidersFromEnabledConfiguredProfiles(t *
 	if set.SpeechToTextProfileID != "stt-profile" || set.LanguageInferenceProfileID != "lm-profile" || set.TextToSpeechProfileID != "tts-profile" {
 		t.Fatalf("unexpected selected profile IDs: %+v", set)
 	}
+	if set.ConversationModel == nil {
+		t.Fatal("configured model is unavailable to the native conversation loop")
+	}
 	if set.LanguagePromptTemplate != "Prefer concise spoken answers." {
 		t.Fatalf("expected language prompt template from selected language profile, got %q", set.LanguagePromptTemplate)
 	}
@@ -372,4 +375,8 @@ type providerResolverTextToSpeech struct{}
 
 func (providerResolverTextToSpeech) Synthesize(context.Context, ports.TextToSpeechInput) (ports.TextToSpeechResult, error) {
 	return ports.TextToSpeechResult{MimeType: "audio/mpeg", Chunks: [][]byte{[]byte("speech")}}, nil
+}
+
+func (providerResolverLanguageInference) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	return ports.ConversationModelTurn{Text: "A natural answer."}, nil
 }
