@@ -37,7 +37,7 @@ func NewSlogObserver(logger *slog.Logger) SlogObserver {
 	return SlogObserver{logger: logger}
 }
 
-func (s SlogObserver) Record(_ context.Context, event ports.Event) {
+func (s SlogObserver) Record(ctx context.Context, event ports.Event) {
 	attrs := []any{
 		slog.String("event", string(event.Name)),
 	}
