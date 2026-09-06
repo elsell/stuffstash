@@ -190,3 +190,17 @@ race suite. Its deferred client-telemetry job failed; this does not pass a full
 frontend release gate. Candidate image processing is not deployed. Raw paired
 benchmarks/profiles are retained in the `media-codec-measurements` CI artifact and
 downloaded to the private measurement workspace.
+
+## Authenticated HTTP measurement runner
+
+A standard-library Python runner reads explicit thumbnail paths from a private
+manifest and a bearer token from `STUFF_STASH_BENCHMARK_ID_TOKEN`. Require HTTPS,
+relative tenant/inventory/asset/attachment thumbnail paths, and a known variant;
+never follow redirects or write credentials, paths, response bodies or exception
+messages into results. Run the same manifest, repetition count and concurrency
+(one or two) for both API revisions. Emit per-request time to headers, total body
+latency, status, bytes, body hash, ordinal and a generated trace ID; aggregate
+nearest-rank p50/p95 for first and repeat requests separately. First request does
+not imply a cold cache: verify cache/generated source from API telemetry before
+labeling it cold. Use a new private result file and retain raw samples. Fail the
+run if any response fails. This is HTTP evidence, not device rendering evidence.
