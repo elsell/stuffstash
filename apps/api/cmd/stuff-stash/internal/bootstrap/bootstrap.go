@@ -92,6 +92,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	startOutboxWorkers(ctx, application, observer, cfg)
 	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
 	defer stopThumbnails()
+	stopBackfill := startThumbnailBackfill(ctx, repositories.thumbnailBackfill, ports.SystemClock{}, observer, thumbnailConfig)
+	defer stopBackfill()
 
 	errCh := make(chan error, 1)
 	go func() {

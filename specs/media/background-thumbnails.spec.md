@@ -253,3 +253,7 @@ per interval, stops at completion, and cancels/joins at shutdown. Each transacti
 has the lease-duration timeout. A failure waits until the next interval and retries
 from the durable cursor. Disabling processing also disables automatic backfill.
 The memory adapter provides the same batch semantics within its store lifetime.
+
+The feature CI runs the Go structural hook over changes since the deployed
+`0d84c2da9` reference in addition to race tests and PostgreSQL integration tests.
+Local compilation remains deferred to CI because workstation disk space is limited.

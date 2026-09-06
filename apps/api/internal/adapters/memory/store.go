@@ -38,6 +38,7 @@ type Store struct {
 	undoables               map[string]ports.UndoableOperation
 	attachments             map[media.ID]media.Attachment
 	thumbnailJobs           map[thumbnailJobKey]thumbnailJobRecord
+	thumbnailBackfill       ports.ThumbnailBackfillProgress
 	providerProfiles        map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
 	voiceConfigs            map[tenant.ID]ports.VoiceProviderConfigurationRecord
 	providerCreds           map[string]ports.ProviderCredentialRecord

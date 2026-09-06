@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
@@ -106,5 +107,77 @@ func TestThumbnailBackfillStopsAtCompletion(t *testing.T) {
 	case <-backfill.calls:
 		t.Fatal("completed backfill kept scanning")
 	case <-time.After(250 * time.Millisecond):
+	}
+}
+
+type thumbnailControlledBackfill struct {
+	calls     chan struct{}
+	cancelled chan struct{}
+	finish    chan struct{}
+	failFirst bool
+}
+
+func (b *thumbnailControlledBackfill) BackfillThumbnailJobs(ctx context.Context, _ int, _ time.Time) (ports.ThumbnailBackfillProgress, error) {
+	b.calls <- struct{}{}
+	if b.failFirst {
+		b.failFirst = false
+		return ports.ThumbnailBackfillProgress{}, errors.New("controlled failure")
+	}
+	if b.cancelled != nil {
+		<-ctx.Done()
+		close(b.cancelled)
+		<-b.finish
+		return ports.ThumbnailBackfillProgress{}, ctx.Err()
+	}
+	return ports.ThumbnailBackfillProgress{Complete: true}, nil
+}
+func TestThumbnailBackfillShutdownWaitsForCancelledBatch(t *testing.T) {
+	cfg, err := config.LoadThumbnails()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.BackfillEnabled = true
+	backfill := &thumbnailControlledBackfill{calls: make(chan struct{}, 2), cancelled: make(chan struct{}), finish: make(chan struct{})}
+	stop := startThumbnailBackfill(context.Background(), backfill, ports.SystemClock{}, thumbnailTestObserver{}, cfg)
+	select {
+	case <-backfill.calls:
+	case <-time.After(time.Second):
+		t.Fatal("batch did not enter")
+	}
+	done := make(chan struct{})
+	go func() { stop(); close(done) }()
+	select {
+	case <-backfill.cancelled:
+	case <-time.After(time.Second):
+		t.Fatal("batch not cancelled")
+	}
+	select {
+	case <-done:
+		t.Fatal("shutdown returned before batch unwound")
+	default:
+	}
+	close(backfill.finish)
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("shutdown did not join batch")
+	}
+}
+func TestThumbnailBackfillRetriesFailedBatch(t *testing.T) {
+	cfg, err := config.LoadThumbnails()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.BackfillEnabled = true
+	cfg.BackfillInterval = 100 * time.Millisecond
+	backfill := &thumbnailControlledBackfill{calls: make(chan struct{}, 2), failFirst: true}
+	stop := startThumbnailBackfill(context.Background(), backfill, ports.SystemClock{}, thumbnailTestObserver{}, cfg)
+	defer stop()
+	for range 2 {
+		select {
+		case <-backfill.calls:
+		case <-time.After(time.Second):
+			t.Fatal("failed backfill was not retried")
+		}
 	}
 }
