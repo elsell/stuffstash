@@ -17,3 +17,26 @@ jobs:
           cache-dependency-path: apps/api/go.sum
       - name: Test telemetry behavior
         run: go test -race -count=1 ./apps/api/internal/adapters/observability ./apps/api/internal/config
+  codec-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: apps/api/go.sum
+      - name: Measure unchanged camera-photo codec
+        run: |
+          mkdir -p measurements
+          git rev-parse HEAD > measurements/revision.txt
+          go version > measurements/runtime.txt
+          lscpu > measurements/cpu.txt
+          set -o pipefail
+          go test ./apps/api/internal/adapters/blobstore -run '^$' -bench '^BenchmarkCameraPhotoThumbnail$' -benchtime=5x -count=3 -benchmem -cpuprofile=measurements/cpu.pprof -memprofile=measurements/heap.pprof -o measurements/blobstore.test | tee measurements/codec.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: media-codec-measurements
+          path: measurements/
+          retention-days: 14
