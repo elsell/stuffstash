@@ -12,7 +12,6 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
@@ -138,11 +137,7 @@ func (p *revocationProbeVoiceProviders) Converse(_ context.Context, input ports.
 	return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 }
 
-func (p *revocationProbeVoiceProviders) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	p.languageCalls++
-	if p.allowAnswer {
-		return typedVoiceInvestigationTurn(input, voiceReadIntent(agentmodel.OperationLocate, "tools"), nil)
-	}
+func (*revocationProbeVoiceProviders) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
 	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
