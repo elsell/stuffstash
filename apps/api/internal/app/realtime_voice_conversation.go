@@ -42,7 +42,7 @@ func (a App) runRealtimeVoiceConversation(ctx context.Context, session RealtimeV
 			}
 		}
 	}
-	result, err := agentmodelapp.RunConversation(ctx, session.conversationModel, executor, ports.ConversationModelInput{
+	result, err := agentmodelapp.RunConversation(ctx, realtimeConversationProvider{model: session.conversationModel}, executor, ports.ConversationModelInput{
 		Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID,
 		Instructions: realtimeConversationInstructions + "\nTenant guidance:\n" + session.LanguagePromptTemplate,
 		Messages:     messages, Tools: append(realtimeConversationReadTools(), realtimeConversationProposalTool(), realtimeConversationPresentationTool()),
