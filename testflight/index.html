@@ -87,9 +87,11 @@ individual key cannot satisfy this signing path.</li>
 <li>Download the <code dir="auto">AuthKey_&#x3C;KEY_ID>.p8</code> private key. Apple allows this download
 only once. Keep the original in a secure credential store; never commit it.</li>
 </ol>
-<p>Xcode creates or reuses an Apple cloud-managed distribution certificate during
-the first signed archive. See Apple’s notes on
-<a href="https://developer.apple.com/help/account/certificates/cloud-managed-certificates/">cloud-managed certificates</a>.</p>
+<p>Signing uses one reusable <strong>Apple Distribution</strong> certificate and its private
+key, exported together as a password-protected <code dir="auto">.p12</code>. Create an <strong>App Store
+Connect</strong> provisioning profile for <code dir="auto">org.stuffstash.mobile</code> selecting that
+certificate. Download the profile. CI imports these credentials into a temporary
+keychain and uses manual signing; it does not create certificates on each run.</p>
 <p>If this key is exposed, revoke it in App Store Connect immediately and replace
 all three GitHub secrets.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="add-the-github-secrets">Add The GitHub Secrets</h2><a class="sl-anchor-link" href="#add-the-github-secrets"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Add The GitHub Secrets”</span></a></div>
@@ -116,10 +118,22 @@ repository secrets:</p>
 
 
 
-<table><thead><tr><th>Secret</th><th>Value</th></tr></thead><tbody><tr><td><code dir="auto">APP_STORE_CONNECT_API_KEY_BASE64</code></td><td>Base64-encoded contents of the downloaded <code dir="auto">.p8</code> file</td></tr><tr><td><code dir="auto">APP_STORE_CONNECT_KEY_ID</code></td><td>Key ID shown beside the team API key</td></tr><tr><td><code dir="auto">APP_STORE_CONNECT_ISSUER_ID</code></td><td>Issuer ID shown on the App Store Connect API page</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Secret</th><th>Value</th></tr></thead><tbody><tr><td><code dir="auto">APP_STORE_CONNECT_API_KEY_BASE64</code></td><td>Base64-encoded contents of the downloaded <code dir="auto">.p8</code> file</td></tr><tr><td><code dir="auto">APP_STORE_CONNECT_KEY_ID</code></td><td>Key ID shown beside the team API key</td></tr><tr><td><code dir="auto">APP_STORE_CONNECT_ISSUER_ID</code></td><td>Issuer ID shown on the App Store Connect API page</td></tr><tr><td><code dir="auto">BUILD_CERTIFICATE_BASE64</code></td><td>Base64-encoded Apple Distribution <code dir="auto">.p12</code>, including its private key</td></tr><tr><td><code dir="auto">P12_PASSWORD</code></td><td>Password used when exporting the <code dir="auto">.p12</code></td></tr><tr><td><code dir="auto">BUILD_PROVISION_PROFILE_BASE64</code></td><td>Base64-encoded App Store Connect <code dir="auto">.mobileprovision</code></td></tr></tbody></table>
 <p>GitHub documents the same UI under
 <a href="https://docs.github.com/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository">Creating secrets for a repository</a>.</p>
-<p>The trusted Release workflow passes these three secrets explicitly to the
+<p>The trusted Release workflow passes these six secrets explicitly to the
 reusable TestFlight workflow. The TestFlight workflow does not inherit the
 repository’s other secrets.</p>
 <p>Encode the <code dir="auto">.p8</code> without printing it or creating another credential file. If
@@ -132,6 +146,13 @@ GitHub secret form, and clear the clipboard afterward:</p>
 log, or repository file. The release job decodes it into the runner’s temporary
 directory, restricts its file permissions, and removes it even if the job
 fails.</p>
+<p>Before the certificate or profile expires, replace the corresponding signing
+secrets with a renewed certificate/private key and matching profile. Revocation
+also requires replacement. A release fails if the profile is expired, belongs
+to another app or team, or has no matching valid distribution identity. It
+never falls back to automatic certificate creation. Local signing setup checks
+are covered by script tests; a successful CI archive and upload validates the
+actual Apple credentials.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="server-setup-happens-in-the-app">Server Setup Happens In The App</h2><a class="sl-anchor-link" href="#server-setup-happens-in-the-app"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Server Setup Happens In The App”</span></a></div>
 <p>The general TestFlight build contains no Stuff Stash API URL, tenant hint, or
 invitation origin. On first launch, the user enters the URL of their Stuff
