@@ -150,7 +150,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   return (
     <MobileServerStateProvider
       client={mobileComposition.queryClient}
-      disposePerformance={mobileComposition.disposePerformance}
+      acquirePerformance={mobileComposition.acquirePerformance}
       connectivitySource={mobileComposition.connectivitySource}
       loadInventoryScope={(request) => mobileComposition.currentInventoryScopeQuery.execute(request)}
       scopeId={mobileComposition.serviceScopeId}

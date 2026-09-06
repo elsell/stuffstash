@@ -35,7 +35,7 @@ jobs:
           pnpm --dir apps/web check
       - name: Test mobile performance session and lifecycle
         run: |
-          pnpm --dir apps/mobile test src/adapters/observability/MobilePerformanceSession.test.ts src/config/mobileRuntimeConfig.test.ts src/ui/navigation/MobileServerStateProvider.behavior.test.tsx src/bootstrap/mobileComposition.test.ts app.config.test.ts
+          pnpm --dir apps/mobile test src/adapters/observability/MobilePerformanceSession.test.ts src/config/mobileRuntimeConfig.test.ts src/ui/navigation/MobileServerStateProvider.behavior.test.tsx src/bootstrap/mobileComposition.test.ts src/bootstrap/mobileComposition.fetch.test.ts app.config.test.ts
           pnpm --dir apps/mobile check
   telemetry:
     runs-on: ubuntu-24.04

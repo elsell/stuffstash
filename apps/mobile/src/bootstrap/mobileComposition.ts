@@ -105,6 +105,7 @@ import { createTimeoutFetch } from '../adapters/network/TimeoutFetch';
 export type MobileComposition = {
   readonly performanceObserver: PerformanceObserver;
   readonly disposePerformance: () => void;
+  readonly acquirePerformance: () => () => void;
   readonly serviceScopeId: string;
   readonly queryClient: QueryClient;
   readonly connectivitySource: ConnectivitySource;
@@ -264,6 +265,7 @@ export function createMobileComposition(
     serviceScopeId,
     performanceObserver: performanceSession.observer,
     disposePerformance: performanceSession.dispose,
+    acquirePerformance: performanceSession.acquire,
     queryClient,
     connectivitySource: new ExpoConnectivitySource(Network),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),

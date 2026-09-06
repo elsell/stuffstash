@@ -63,9 +63,9 @@ it('disposes performance collection on session replacement and unmount', async (
   const h = new MobileRenderHarness();
   const first = createMobileQueryClient(); const second = createMobileQueryClient();
   const disposed: string[] = [];
-  const releaseFirst = () => { disposed.push('first'); };
-  const releaseSecond = () => { disposed.push('second'); };
-  const view = (next: boolean) => <MobileServerStateProvider client={next ? second : first} scopeId={next ? 'second' : 'first'} disposePerformance={next ? releaseSecond : releaseFirst} loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><Text>Ready</Text></MobileServerStateProvider>;
+  const releaseFirst = () => () => { disposed.push('first'); };
+  const releaseSecond = () => () => { disposed.push('second'); };
+  const view = (next: boolean) => <MobileServerStateProvider client={next ? second : first} scopeId={next ? 'second' : 'first'} acquirePerformance={next ? releaseSecond : releaseFirst} loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><Text>Ready</Text></MobileServerStateProvider>;
   await h.render(view(false));
   await h.render(view(true));
   expect(disposed).toEqual(['first']);

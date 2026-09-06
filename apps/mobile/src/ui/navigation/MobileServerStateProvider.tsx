@@ -10,7 +10,7 @@ type MobileServerStateProviderProps = {
   readonly children: ReactNode;
   readonly connectivitySource?: ConnectivitySource;
   readonly client: QueryClient;
-  readonly disposePerformance?: () => void;
+  readonly acquirePerformance?: () => () => void;
   readonly scopeId: string;
   readonly loadInventoryScope: (request?: ReadRequest) => Promise<CurrentInventoryScope>;
 };
@@ -22,8 +22,8 @@ export type MobileServerStateScope = {
 
 const MobileServerStateScopeContext = createContext<MobileServerStateScope | undefined>(undefined);
 
-export function MobileServerStateProvider({ children, client, loadInventoryScope, scopeId, connectivitySource, disposePerformance }: MobileServerStateProviderProps) {
-  useEffect(() => () => disposePerformance?.(), [disposePerformance]);
+export function MobileServerStateProvider({ children, client, loadInventoryScope, scopeId, connectivitySource, acquirePerformance }: MobileServerStateProviderProps) {
+  useEffect(() => acquirePerformance?.(), [acquirePerformance]);
 
   useEffect(() => {
     focusManager.setFocused(AppState.currentState === 'active');
