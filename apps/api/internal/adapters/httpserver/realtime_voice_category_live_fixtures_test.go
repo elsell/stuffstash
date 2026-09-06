@@ -35,5 +35,5 @@ func seedLiveChemicalsWithoutLiteralMatches(t *testing.T, ctx context.Context, a
 	sealant := create("item", "Silicone sealant", cabinet, []string{adhesives})
 	brush := create("item", "Cleaning brush", garage, []string{cleaning})
 	caps := create("item", "Caulk caps", garage, []string{adhesives})
-	return liveAudioFixture{expectedIDs: []string{acetone, sealant}, excludedIDs: []string{brush, caps}, spokenLocations: []string{"Cabinet A"}}
+	return liveAudioFixture{expectedIDs: []string{acetone, sealant}, excludedIDs: []string{brush, caps}, artifactLocations: map[string]string{acetone: "Cabinet A", sealant: "Cabinet A"}}
 }

@@ -32,9 +32,10 @@ func TestGoogleLiveRealtimeAudioFindsChemicalsWithoutLiteralMatches(t *testing.T
 }
 
 type liveAudioFixture struct {
-	expectedIDs     []string
-	excludedIDs     []string
-	spokenLocations []string
+	expectedIDs       []string
+	excludedIDs       []string
+	spokenLocations   []string
+	artifactLocations map[string]string
 }
 
 type liveAudioSeeder func(*testing.T, context.Context, app.App) liveAudioFixture
@@ -129,6 +130,9 @@ func runGoogleLiveRealtimeAudio(t *testing.T, audioFileKey string, seed liveAudi
 		item, _ := raw.(map[string]any)
 		id, _ := item["assetId"].(string)
 		seen[id] = true
+		if expected, ok := fixture.artifactLocations[id]; ok && item["context"] != expected {
+			t.Errorf("asset %s omits recorded card location %q: %v", id, expected, item["context"])
+		}
 	}
 	for _, id := range fixture.expectedIDs {
 		if !seen[id] {
