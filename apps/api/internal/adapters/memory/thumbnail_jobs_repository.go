@@ -37,6 +37,8 @@ func (s *Store) enqueueThumbnailJob(job *media.ThumbnailJob) {
 }
 
 func (s *Store) ClaimThumbnailJobs(ctx context.Context, claimID string, limit int, now, leaseUntil time.Time) ([]ports.ClaimedThumbnailJob, error) {
+	now = now.UTC().Truncate(time.Microsecond)
+	leaseUntil = leaseUntil.UTC().Truncate(time.Microsecond)
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -72,6 +74,7 @@ func (s *Store) ClaimThumbnailJobs(ctx context.Context, claimID string, limit in
 	}
 	result := make([]ports.ClaimedThumbnailJob, 0, len(candidates))
 	for _, record := range candidates {
+		record.claim.Attempts++
 		record.claim.ClaimID = claimID
 		record.claim.ClaimedUntil = leaseUntil
 		s.thumbnailJobs[thumbnailKey(record.claim.Job)] = record
@@ -92,7 +95,7 @@ func (s *Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThum
 	key := thumbnailKey(claim.Job)
 	record, exists := s.thumbnailJobs[key]
 	attachment, attachmentExists := s.attachments[claim.Job.AttachmentID]
-	if !exists || !attachmentExists || claim.ClaimID == "" || record.claim.ClaimID != claim.ClaimID || !record.claim.ClaimedUntil.After(resolution.At) || !claim.Job.Matches(attachment) {
+	if !exists || !attachmentExists || claim.ClaimID == "" || record.claim.ClaimID != claim.ClaimID || !record.claim.ClaimedUntil.Equal(claim.ClaimedUntil) || !record.claim.ClaimedUntil.After(resolution.At) || !claim.Job.Matches(attachment) {
 		return ports.ErrOutboxClaimLost
 	}
 	record.status = resolution.Status
@@ -100,9 +103,6 @@ func (s *Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThum
 	record.nextAttemptAt = resolution.NextAttemptAt
 	record.claim.ClaimID = ""
 	record.claim.ClaimedUntil = time.Time{}
-	if resolution.Status != ports.ThumbnailJobCompleted {
-		record.claim.Attempts++
-	}
 	s.thumbnailJobs[key] = record
 	return nil
 }

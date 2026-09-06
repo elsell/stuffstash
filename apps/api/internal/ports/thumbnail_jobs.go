@@ -62,6 +62,8 @@ func (r ThumbnailJobResolution) Validate() error {
 
 // ThumbnailJobQueue is an operational work stream, not a user-facing discovery API.
 // Claiming is atomic across processes; resolutions fence expired and replaced claims.
+// Supply a fresh token per acquisition and retain the returned UTC-microsecond lease.
+// Attempts count acquisitions, including claims lost to crashes.
 type ThumbnailJobQueue interface {
 	ClaimThumbnailJobs(ctx context.Context, claimID string, limit int, now, leaseUntil time.Time) ([]ClaimedThumbnailJob, error)
 	ResolveThumbnailJob(ctx context.Context, claim ClaimedThumbnailJob, resolution ThumbnailJobResolution) error

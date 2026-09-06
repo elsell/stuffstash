@@ -23,6 +23,8 @@ func enqueueThumbnailJob(tx *gorm.DB, attachment media.Attachment, job *media.Th
 }
 
 func (s Store) ClaimThumbnailJobs(ctx context.Context, claimID string, limit int, now, leaseUntil time.Time) ([]ports.ClaimedThumbnailJob, error) {
+	now = now.UTC().Truncate(time.Microsecond)
+	leaseUntil = leaseUntil.UTC().Truncate(time.Microsecond)
 	if claimID == "" || limit <= 0 || now.IsZero() || !leaseUntil.After(now) {
 		return nil, errors.New("invalid thumbnail claim settings")
 	}
@@ -44,9 +46,11 @@ func (s Store) ClaimThumbnailJobs(ctx context.Context, claimID string, limit int
 				return err
 			}
 			for _, model := range models {
-				if err := tx.Model(&model).Updates(map[string]any{"claim_id": claimID, "claimed_until": leaseUntil, "updated_at": now}).Error; err != nil {
+				attempts := model.Attempts + 1
+				if err := tx.Model(&model).Updates(map[string]any{"claim_id": claimID, "claimed_until": leaseUntil, "updated_at": now, "attempts": attempts}).Error; err != nil {
 					return err
 				}
+				model.Attempts = attempts
 				model.ClaimID = claimID
 				model.ClaimedUntil = &leaseUntil
 				claimed = append(claimed, model.claim())
@@ -78,16 +82,12 @@ func (s Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThumb
 		if err != nil {
 			return err
 		}
-		if model.Revision != int(job.Revision) || model.ClaimedUntil == nil || !model.ClaimedUntil.After(resolution.At) || !model.claim().Job.Matches(media.Attachment{ID: job.AttachmentID, TenantID: job.TenantID, InventoryID: job.InventoryID, AssetID: job.AssetID, StorageKey: job.StorageKey, SHA256: job.SHA256}) {
+		if model.Revision != int(job.Revision) || model.ClaimedUntil == nil || !model.ClaimedUntil.Equal(claim.ClaimedUntil) || !model.ClaimedUntil.After(resolution.At) || !model.claim().Job.Matches(media.Attachment{ID: job.AttachmentID, TenantID: job.TenantID, InventoryID: job.InventoryID, AssetID: job.AssetID, StorageKey: job.StorageKey, SHA256: job.SHA256}) {
 			return ports.ErrOutboxClaimLost
-		}
-		attempts := model.Attempts
-		if resolution.Status != ports.ThumbnailJobCompleted {
-			attempts++
 		}
 		return tx.Model(&model).Updates(map[string]any{
 			"status": string(resolution.Status), "claim_id": "", "claimed_until": nil,
-			"attempts": attempts, "failure": string(resolution.Failure),
+			"failure":         string(resolution.Failure),
 			"next_attempt_at": resolution.NextAttemptAt, "updated_at": resolution.At,
 		}).Error
 	})
