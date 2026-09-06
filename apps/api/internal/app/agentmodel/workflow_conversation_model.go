@@ -2,6 +2,7 @@ package agentmodel
 
 import (
 	"context"
+	"errors"
 	"math"
 	"strings"
 	"sync"
@@ -10,6 +11,8 @@ import (
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
+
+var ErrWorkflowBudgetExhausted = errors.New("conversation workflow budget exhausted")
 
 // workflowConversationModel supplies tenant guidance and one shared, lazy
 // session budget. Each call invokes the selected native model exactly once.

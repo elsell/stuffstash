@@ -126,3 +126,17 @@ func TestSelectedWorkflowRejectsRetiredOnlyModelBeforeCapture(t *testing.T) {
 		t.Fatal("retired-only provider activated the old workflow execution path")
 	}
 }
+
+// A retired-only implementation is retained solely to prove it is rejected.
+type workflowExecutionProvider struct{}
+
+func (*workflowExecutionProvider) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
+}
+func (*workflowExecutionProvider) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
+}
+
+type workflowExecutionClock struct{ now time.Time }
+
+func (c *workflowExecutionClock) Now() time.Time { return c.now }
