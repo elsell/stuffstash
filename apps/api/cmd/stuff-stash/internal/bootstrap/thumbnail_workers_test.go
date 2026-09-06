@@ -63,3 +63,20 @@ func TestDisabledThumbnailWorkersDoNotDrain(t *testing.T) {
 		t.Fatal("disabled worker drained")
 	}
 }
+
+func TestThumbnailRuntimeKeepsForegroundReaderWhenWorkersDisabled(t *testing.T) {
+	cfg, err := config.LoadThumbnails()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.WorkerEnabled = false
+	repositories, closeStore, err := buildRepositories(context.Background(), config.Config{RepositoryMode: "memory"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer closeStore()
+	reader, worker, err := buildThumbnailRuntime(repositories, cfg, thumbnailTestObserver{})
+	if err != nil || reader == nil || worker == nil {
+		t.Fatal("disabled background configuration lost foreground admission", err)
+	}
+}
