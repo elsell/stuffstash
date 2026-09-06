@@ -59,7 +59,7 @@ func (c ProfilingConfig) Validate() error {
 	if !c.Enabled {
 		return nil
 	}
-	if os.Getenv("PYROSCOPE_ADHOC_SERVER_ADDRESS") != "" {
+	if _, present := os.LookupEnv("PYROSCOPE_ADHOC_SERVER_ADDRESS"); present {
 		return errors.New("profiling endpoint override is unsupported")
 	}
 	if !validTelemetryEndpoint(c.Endpoint) {
