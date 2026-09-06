@@ -139,3 +139,6 @@ port decorators measure actual read, write, delete and processing work without
 changing cache behavior, authorization or media contents. Wire decorators through
 bootstrap, including direct-upload adapters, so the baseline includes both original
 reads performed during upload verification.
+
+HTTP response instrumentation uses pinned `github.com/felixge/httpsnoop v1.0.4`
+to preserve the underlying ResponseWriter's optional streaming/upgrade interfaces.
