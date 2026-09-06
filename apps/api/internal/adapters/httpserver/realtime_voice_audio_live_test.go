@@ -73,7 +73,8 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 	bin58 := create("container", "Bin 58", closet, nil)
 	bin106 := create("container", "Bin 106", closet, nil)
 	first := create("item", "3–6 months clothes", bin58, tags)
-	second := create("item", "6–9 months clothes", bin106, tags)
+	second := create("item", "6–9 months", bin106, tags)
+	exact := create("item", "Baby clothes", bin58, nil)
 	create("item", "Adult winter jacket", closet, nil)
 	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
 	defer server.Close()
@@ -153,7 +154,7 @@ func TestGoogleLiveRealtimeAudioLocatesBabyClothes(t *testing.T) {
 		id, _ := item["assetId"].(string)
 		seen[id] = true
 	}
-	if !seen[first] || !seen[second] {
-		t.Error("answer must ground both tagged clothing items")
+	if !seen[first] || !seen[second] || !seen[exact] {
+		t.Error("answer must ground exact-title and both tagged clothing items")
 	}
 }
