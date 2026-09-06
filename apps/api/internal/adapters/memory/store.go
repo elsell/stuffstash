@@ -23,6 +23,7 @@ type Store struct {
 	workflowHeads           map[workflowKey]ports.WorkflowHeadRecord
 	workflowRevisions       map[workflowRevisionKey]agentmodel.WorkflowRevision
 	mu                      sync.RWMutex
+	blobMu                  sync.RWMutex
 	users                   map[identity.PrincipalID]identity.User
 	tenants                 map[tenant.ID]tenant.Tenant
 	inventories             map[inventory.InventoryID]inventory.Inventory

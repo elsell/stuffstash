@@ -172,3 +172,9 @@ metadata. It downloads the original only when a variant is missing, requests onl
 missing sizes from the batch adapter, and publishes each via the lifecycle guard.
 It propagates cache read/write failures so the worker retries rather than marking
 partial storage work complete. Publication uses a configured bounded context.
+
+The in-memory adapter uses a lifecycle mutex and a separate blob mutex to reproduce
+publication/deletion ordering without deadlocking blob callbacks. Its lifecycle
+mutex wait is not cancellable; it checks cancellation again before publication.
+Use PostgreSQL integration tests, not this adapter, to verify bounded lock waiting
+and production shutdown behavior.
