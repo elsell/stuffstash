@@ -647,6 +647,7 @@ func TestRealtimeVoiceQueryReportsSafeProviderStageFailureCode(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
+	assertNoRealtimeEventType(t, events, "agent.diagnostic")
 	failed := findRealtimeEvent(t, events, "session.failed")
 	if failed["code"] != "language_inference_failed" {
 		t.Fatalf("expected language_inference_failed for provider failure, got %+v", failed)

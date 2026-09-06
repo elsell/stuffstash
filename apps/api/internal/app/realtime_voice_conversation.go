@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -49,6 +50,12 @@ func (a App) runRealtimeVoiceConversation(ctx context.Context, session RealtimeV
 	}, agentmodelapp.ConversationLimits{ContextBytes: a.conversationContextBytes, ModelCalls: realtimeVoiceToolTurnBudget, ToolCalls: realtimeVoiceToolTurnBudget})
 	contextErr := session.conversationMemory.Commit(result.Messages)
 	if err != nil {
+		var providerErr realtimeVoiceProviderStageError
+		if errors.As(err, &providerErr) && providerErr.code == realtimeVoiceFailureLanguageInference {
+			if diagnosticErr := emitRealtimeVoiceConversationFailureDiagnostic(session, result.ModelCalls, result.ToolCalls, executor.results, err, emit); diagnosticErr != nil {
+				return diagnosticErr
+			}
+		}
 		return err
 	}
 	if result.ApprovalPlanID == "" && contextErr != nil {
