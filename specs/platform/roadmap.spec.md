@@ -23,7 +23,18 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-User priority is now the minimum API instrumentation deployment, reproducible image baseline, highest-impact fix, and paired measurements; defer observability expansion not required for that comparison. The image-performance workstream follows `specs/platform/observability.spec.md`: instrument traces, metrics, logs, and profiling; capture the unchanged baseline; implement measured media/mobile/web improvements; report a like-for-like comparison. Work is isolated on `codex/media-observability`. API/OTLP/media instrumentation and adversarial boundary race tests passed CI `34054029170`; continuous profiling is under real-collector CI validation. Grafana management access is verified. The target is `api.stuffstash.jsksell.com`, reachable from `paul`; deployment must use the infra GitOps repository. All four signals are verified queryable in Grafana from isolated remote probes. Web sign-in works and a dedicated Media Performance Test inventory was created. Runtime metrics, cache response counters, identity and audit dependency spans have passed targeted race CI. Authenticated client measurement ingestion and private OTLP mapping passed targeted race CI `34056817154`; the generated contract, bounded delivery buffer and authenticated sender are implemented, with shared client/Go validation passing `34057269441`. Web request collection is wired to inventory and conversation transports with session cleanup and a default-off runtime switch; shared client tests, web session/config tests, web type checks, and Go race tests passed CI `34058271222`. Mounted-image collection and mobile session wiring remain next under `specs/platform/client-telemetry.spec.md`. Full pre-ingestion CI `34055943177` passed all six jobs. A portable Grafana dashboard is provisioned; runtime/duration metric mappings are verified, while thumbnail traffic and deployed measurements remain outstanding. Local disk space is insufficient for builds, so preserve CI/remote validation.
+The prioritized image-performance comparison is complete on `codex/media-observability`.
+Existing API tracing, metrics, logs and profiling were deployed through infra GitOps.
+Staged resizing and direct internal Garage traffic reduced controlled cold HTTP
+median from 6.85 to 3.72 seconds and p95 from 11.15 to 7.96 seconds; 90/90 requests
+succeeded per run. See `docs/reports/image-performance-2026-09-06.md` and
+`specs/media/image-performance-evidence.spec.md` for sources and small-corpus limits.
+Cold large thumbnails still take seconds. Durable upload-time generation and
+physical-device verification are follow-up work. Web/mobile observability rollout,
+broader dependency instrumentation, alerts/SLOs and extended profiling are explicitly
+deferred; the undeployed frontend telemetry branch still has a mobile test type-check
+failure. API race checks and image publication passed CI `34061597496`; this is not
+a full frontend release gate. Keep builds in CI on the disk-constrained host.
 
 The next milestone is a successful real voice conversation through the intended production flow. Pause additional configuration features. Exercise recorded audio over the authenticated mobile WebSocket protocol against configured providers, inspect transcription and authorized retrieval, and require a grounded spoken answer for the baby-clothes location question. Fix only blockers exposed by this path before broadening the workspace. Follow `specs/agent-model/voice-conversation-quality.spec.md`; preserve the configurable workflow work already completed. All builds remain in CI. Release and Kubernetes changes still use TestFlight and the infra GitOps repository.
 
@@ -162,7 +173,7 @@ The web audit and Browse parity work needs a production-shaped path through:
 
 ## Known Gaps
 
-- Changing custom field type, removing custom field enum options or targets, durable thumbnail caching, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
+- Changing custom field type, removing custom field enum options or targets, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
 - Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
 - The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md` and has been promoted into `apps/web` with frontend domain, port, API adapter, seeded adapter, and focused workspace components.

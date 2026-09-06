@@ -151,8 +151,9 @@ passed targeted race CI `34056817154`; full contract regeneration is running in
 - Prior API container was OOMKilled (exit 137) at 2026-09-06 20:32:59 UTC. This
   is evidence of memory pressure, not proof of which operation caused it.
 - Production image behavior remains unchanged. Web/mobile builds are not deployed.
-- Authenticated HTTP workload awaits a short-lived test ID token in Infisical
-  prod `/`, named `STUFF_STASH_BENCHMARK_ID_TOKEN`; never store it in evidence.
+- Authentication was subsequently obtained from production Dex using authorization
+  code with PKCE. No Infisical benchmark token or additional user action is needed.
+  Keep the short-lived session only in private measurement state.
 - Deferred frontend code has outstanding native test validation and is excluded
   from this deployment. Buildx default BuildKit/SBOM component pinning is also
   not yet captured for a fully reproducible build environment.
@@ -187,7 +188,7 @@ The initial 64 MiB resize-only regression budget was below the retained filter's
 required buffers; corrected to a specified 100 MiB from the buffer calculation.
 Run `34059408867` passed blobstore correctness/memory tests and the API/telemetry
 race suite. Its deferred client-telemetry job failed; this does not pass a full
-frontend release gate. Candidate image processing is not deployed. Raw paired
+frontend release gate. The candidate was subsequently deployed for the HTTP comparison below. Raw paired
 benchmarks/profiles are retained in the `media-codec-measurements` CI artifact and
 downloaded to the private measurement workspace.
 
@@ -204,3 +205,21 @@ nearest-rank p50/p95 for first and repeat requests separately. First request doe
 not imply a cold cache: verify cache/generated source from API telemetry before
 labeling it cold. Use a new private result file and retain raw samples. Fail the
 run if any response fails. This is HTTP evidence, not device rendering evidence.
+
+
+## Completed production HTTP comparison — 2026-09-06
+
+The final comparison and limits are recorded in
+`docs/reports/image-performance-2026-09-06.md`. Baseline source `319dd138a`,
+resize-only `f9a50585d`, and final internal-route source `0d84c2da9` each returned
+90/90 successful requests. Trace-correlated logs verified 18 generated and 72
+cached responses per run. Final cold p50/p95 were 3719/7964 ms versus baseline
+6849/11146 ms; cached p50/p95 were 69/118 ms versus 77/130 ms. This small sequential
+HTTP corpus does not establish device rendering performance, a stable production
+p95, or safety under concurrent cold-generation load.
+
+Final API race validation and image publication passed CI `34061597496`.
+The workflow's deferred frontend job still fails mobile test type checking.
+GitOps `0f374fb` deployed the compared image; `ddf8c4d` restores the specified
+0.1 trace sample ratio after the paired runs. No further observability expansion
+or background-worker implementation is part of this completed comparison.
