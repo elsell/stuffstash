@@ -60,3 +60,14 @@ and malformed-token denial, and the absence of tenant/resource mutation. Use rea
 HTTP boundaries and fake observers. Test frontend batching, overflow, failure
 isolation, session cleanup, and visible-image outcomes before wiring them. Generate
 the OpenAPI client contract in CI and retain the ordinary security regression suite.
+
+## Shared delivery adapter
+
+Keep the framework-free bounded delivery buffer in the API-client infrastructure
+package so mobile and web adapters can reuse it without another runtime dependency.
+Frontend application/UI ports remain local, transport-independent interfaces; UI
+components do not import the SDK. Inject a monotonic clock, scheduler and batch
+sender. Permit smaller buffer/batch limits for controlled tests, never limits above
+100 pending or 50 per batch. Each send has a 10-second abort deadline, including
+senders that fail to settle after cancellation. Dispose clears pending measurements
+and aborts active delivery. Reconstruct outbound values from the six known fields.
