@@ -53,3 +53,9 @@ The native Google conversation adapter bounds each response body to 1 MiB and ea
 ## Application integration acceptance
 
 A native conversation session requires configured STT, conversation model and TTS providers; it must not require a legacy investigation or wording provider. Resolve and authorize the session before invoking any provider. At the real WebSocket boundary, verify legitimate sessions complete and unauthenticated, malformed-token, outsider, cross-tenant and wrong-inventory attempts cannot invoke the model. Resource cards may be selected only from scoped observed records and need not repeat their titles in display prose. Preserve legitimate inventory titles even when they resemble implementation vocabulary. Ordinary read outages become safe tool feedback that can support another model-directed attempt; do not expose raw repository/provider error details. Auth failures and cancellation stop the loop.
+
+## Model-authored proposals
+
+The proposal tool accepts a bounded summary, risks and ordered domain command objects (ID, command kind, summary, typed arguments). It has no approval, execution, principal or scope arguments. Existing resource references must come from scoped tool evidence and be reauthorized before preparing review; dependent command references must refer to valid earlier commands. Creating a proposal never changes inventory, and later tool calls in the same model batch must not execute after it. Persisted proposal IDs are application-owned. A read-only session cannot propose a write.
+
+Keep domain command type/argument validation and dependency validation. Do not ban ordinary inventory titles or descriptions because their text resembles provider or credential terminology; unexpected fields are rejected by typed argument validation. Only explicit approval through the existing authorized decision boundary may execute the plan.
