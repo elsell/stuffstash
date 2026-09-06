@@ -68,6 +68,7 @@ type RealtimeVoiceOutputAudio struct {
 }
 
 type RealtimeVoiceSession struct {
+	conversationModel          ports.ConversationModel
 	ConversationContinuity     bool
 	ID                         string
 	TenantID                   tenant.ID

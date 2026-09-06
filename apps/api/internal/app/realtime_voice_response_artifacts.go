@@ -53,8 +53,7 @@ func validateRealtimeVoiceResponseArtifacts(displayResponse string, artifacts []
 		}
 		if artifact.Type != ports.StructuredAgentResponseArtifactAssetReference || !validID || id != artifact.AssetID ||
 			!validTitle || title.String() != strings.TrimSpace(artifact.Title) || !validKind || kind != artifact.AssetKind ||
-			!validContext || context != artifact.Context ||
-			!containsExactRealtimeVoiceEntityTitle(displayResponse, artifact.Title) {
+			!validContext || context != artifact.Context {
 			return ports.ErrInvalidProviderInput
 		}
 		if _, duplicate := seen[artifact.AssetID]; duplicate {

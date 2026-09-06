@@ -3,6 +3,9 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -10,8 +13,9 @@ import (
 )
 
 type inventoryConversationModel struct {
-	calls     int
-	seenScope bool
+	query, answer string
+	calls         int
+	seenScope     bool
 }
 
 func (m *inventoryConversationModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
@@ -19,7 +23,14 @@ func (m *inventoryConversationModel) Converse(_ context.Context, input ports.Con
 	m.seenScope = input.TenantID == "tenant-home" && input.InventoryID == "inventory-home" && input.Principal.ID == "user-1"
 	last := input.Messages[len(input.Messages)-1]
 	if last.Role == ports.ConversationRoleUser {
-		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "category-search", Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "Acetone"}}}}, nil
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "category-search", Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": m.searchQuery()}}}}, nil
+	}
+	if len(last.ToolResults) > 0 {
+		var failure map[string]any
+		_ = json.Unmarshal([]byte(last.ToolResults[0].Content), &failure)
+		if failure["error"] != nil && m.calls == 2 {
+			return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "category-retry", Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": m.searchQuery()}}}}, nil
+		}
 	}
 	var result realtimeVoiceAssetToolOutput
 	if len(last.ToolResults) > 0 {
@@ -28,7 +39,11 @@ func (m *inventoryConversationModel) Converse(_ context.Context, input ports.Con
 	if len(result.Items) == 0 {
 		return ports.ConversationModelTurn{Text: "I couldn't find any matching chemicals."}, nil
 	}
-	return ports.ConversationModelTurn{Answer: &ports.ConversationAnswer{Spoken: "Yes, you have chemicals, including Acetone.", Display: "Acetone is recorded in your inventory.", AssetIDs: []string{result.Items[0].AssetID}}}, nil
+	spoken := m.answer
+	if spoken == "" {
+		spoken = "Yes, you have chemicals, including Acetone."
+	}
+	return ports.ConversationModelTurn{Answer: &ports.ConversationAnswer{Spoken: spoken, Display: "Matching belongings are shown below.", AssetIDs: []string{result.Items[0].AssetID}}}, nil
 }
 func TestRealtimeVoiceUsesModelLedToolsAndNaturalAnswer(t *testing.T) {
 	resolver := successfulRealtimeVoiceResolver()
@@ -75,5 +90,48 @@ func TestRealtimeVoiceModelCannotPublishUnobservedReference(t *testing.T) {
 	}
 	if resolver.providers.TextToSpeech.(*resolvedTextToSpeech).lastText != "" {
 		t.Fatal("unvalidated reference reached speech")
+	}
+}
+
+func (m *inventoryConversationModel) searchQuery() string {
+	if m.query != "" {
+		return m.query
+	}
+	return "Acetone"
+}
+func TestRealtimeConversationAcceptsNaturalTitleWithoutPhraseVeto(t *testing.T) {
+	resolver := successfulRealtimeVoiceResolver()
+	model := &inventoryConversationModel{query: "Chain of Thought", answer: "I found your Chain of Thought book."}
+	resolver.providers.ConversationModel = model
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("book-id", "Chain of Thought", asset.KindItem, ""), "audit-book")
+	response := realtimeVoiceInvestigationCompletedResponse(runRealtimeVoiceProductionEntrypoint(t, application))
+	if response == nil || response.SpokenResponse != model.answer || len(response.Artifacts) != 1 {
+		t.Fatalf("natural title or independent card rejected: %+v", response)
+	}
+}
+
+type interruptedConversationSearch struct {
+	ports.AssetSearchRepository
+	failed bool
+}
+
+func (s *interruptedConversationSearch) SearchAssets(ctx context.Context, t tenant.ID, i []inventory.InventoryID, p ports.AssetSearchPageRequest) ([]ports.AssetSearchResult, error) {
+	if !s.failed {
+		s.failed = true
+		return nil, errors.New("temporary database failure with private diagnostic details")
+	}
+	return s.AssetSearchRepository.SearchAssets(ctx, t, i, p)
+}
+func TestRealtimeConversationRecoversFromReadFailure(t *testing.T) {
+	resolver := successfulRealtimeVoiceResolver()
+	model := &inventoryConversationModel{}
+	resolver.providers.ConversationModel = model
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("chemical-id", "Acetone", asset.KindItem, ""), "audit-chemical-retry")
+	application.search = &interruptedConversationSearch{AssetSearchRepository: application.search}
+	response := realtimeVoiceInvestigationCompletedResponse(runRealtimeVoiceProductionEntrypoint(t, application))
+	if response == nil || model.calls != 3 || len(response.Artifacts) != 1 {
+		t.Fatalf("model could not recover after read error: calls=%d response=%+v", model.calls, response)
 	}
 }

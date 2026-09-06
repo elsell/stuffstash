@@ -4,6 +4,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -38,7 +39,7 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 
 func safeRealtimeVoiceFinalText(value string, limit int) bool {
 	value = strings.TrimSpace(value)
-	return value != "" && len(value) <= limit && !realtimeVoiceFinalTextLooksUnsafe(value)
+	return value != "" && len(value) <= limit && utf8.ValidString(value)
 }
 
 func realtimeVoiceFinalTextLooksUnsafe(value string) bool {

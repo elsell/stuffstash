@@ -1,0 +1,73 @@
+package app
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+type realtimeConversationTools struct {
+	application App
+	session     RealtimeVoiceSession
+	emit        RealtimeVoiceEventSink
+	visible     map[string]struct{}
+	items       map[string]realtimeVoiceAssetToolItem
+	callIDs     []string
+	results     []ports.AgentToolResult
+}
+
+func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context, call ports.AgentToolCall) (ports.ConversationToolOutcome, error) {
+	if err := e.application.ensureRealtimeVoiceAccess(ctx, e.session.Principal, e.session.TenantID, e.session.InventoryID); err != nil {
+		return ports.ConversationToolOutcome{}, err
+	}
+	label := realtimeVoiceToolLabel(call.Name)
+	if err := e.emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: e.session.ID, ToolCallID: call.ID, ToolLabel: label}); err != nil {
+		return ports.ConversationToolOutcome{}, err
+	}
+	result, err := e.application.executeRealtimeVoiceTool(ctx, e.session, call, e.visible)
+	if err != nil {
+		if ctx.Err() != nil {
+			return ports.ConversationToolOutcome{}, ctx.Err()
+		}
+		if errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrUnauthenticated) || errors.Is(err, context.Canceled) {
+			return ports.ConversationToolOutcome{}, err
+		}
+		content := `{"error":"This read is temporarily unavailable. You may retry within the remaining budget or explain the limitation using existing evidence."}`
+		if errors.Is(err, ports.ErrInvalidProviderInput) || errors.Is(err, apperrors.ErrInvalidInput) {
+			content = `{"error":"Invalid tool arguments or unavailable tool. Check the tool definition and correct the request."}`
+		}
+		result = ports.AgentToolResult{CallID: call.ID, Name: call.Name, Call: call, Content: content}
+	} else {
+		var output realtimeVoiceAssetToolOutput
+		if json.Unmarshal([]byte(result.Content), &output) == nil {
+			for _, item := range output.Items {
+				if item.AssetID == "" {
+					continue
+				}
+				e.visible[item.AssetID] = struct{}{}
+				e.items[item.AssetID] = item
+			}
+		}
+	}
+	e.callIDs = append(e.callIDs, call.ID)
+	e.results = append(e.results, result)
+	eventType, status := RealtimeVoiceEventToolCallCompleted, realtimeVoiceToolCompletionStatus(result)
+	if err != nil {
+		eventType, status = RealtimeVoiceEventToolCallFailed, "failed"
+	}
+	if err := e.emit(RealtimeVoiceEvent{Type: eventType, SessionID: e.session.ID, ToolCallID: call.ID, ToolLabel: label, Status: status}); err != nil {
+		return ports.ConversationToolOutcome{}, err
+	}
+	return ports.ConversationToolOutcome{Result: result}, nil
+}
+
+func realtimeConversationReadTools() []ports.ConversationToolDefinition {
+	return []ports.ConversationToolDefinition{
+		{Name: RealtimeVoiceToolSearchAuthorizedAssets, Description: "Search authorized inventory names, descriptions and tags. Results include match evidence and recorded locations. Use distinct category synonyms when useful; relevance must be assessed from the results.", Parameters: json.RawMessage(`{"type":"object","properties":{"query":{"type":"string"},"lifecycleState":{"type":"string","enum":["active","archived","all"]},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["query"],"additionalProperties":false}`)},
+		{Name: RealtimeVoiceToolGetAssetDetail, Description: "Inspect an asset returned by a prior authorized read, using its exact assetId.", Parameters: json.RawMessage(`{"type":"object","properties":{"assetId":{"type":"string"}},"required":["assetId"],"additionalProperties":false}`)},
+		{Name: RealtimeVoiceToolListAuthorizedAssets, Description: "List inventory or the contents of a known container. This is not a semantic category search. hasMore means results are incomplete.", Parameters: json.RawMessage(`{"type":"object","properties":{"kind":{"type":"string","enum":["item","container","location"]},"parentAssetId":{"type":"string"},"lifecycleState":{"type":"string","enum":["active","archived","all"]},"limit":{"type":"integer","minimum":1,"maximum":20}},"additionalProperties":false}`)},
+	}
+}
