@@ -11,9 +11,10 @@ import (
 // WorkflowConfiguration captures environment-backed limits before application construction.
 // Its zero value provides the documented defaults for programmatic callers.
 type WorkflowConfiguration struct {
-	limits   agentmodel.WorkflowLimits
-	captured bool
-	err      error
+	contextBytes int
+	limits       agentmodel.WorkflowLimits
+	captured     bool
+	err          error
 }
 
 func defaultWorkflowLimits() agentmodel.WorkflowLimits {
@@ -29,11 +30,12 @@ func (c WorkflowConfiguration) Limits() (agentmodel.WorkflowLimits, error) {
 	return c.limits, nil
 }
 func loadWorkflowConfiguration() WorkflowConfiguration {
-	result := WorkflowConfiguration{limits: defaultWorkflowLimits(), captured: true}
+	result := WorkflowConfiguration{limits: defaultWorkflowLimits(), contextBytes: 2 * 1024 * 1024, captured: true}
 	entries := []struct {
 		name   string
 		target *int
 	}{
+		{"STUFF_STASH_CONVERSATION_MAX_CONTEXT_BYTES", &result.contextBytes},
 		{"STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS", &result.limits.Budget.EvidenceRounds},
 		{"STUFF_STASH_WORKFLOW_MAX_MODEL_CALLS", &result.limits.Budget.ModelCalls},
 		{"STUFF_STASH_WORKFLOW_MAX_ELAPSED_SECONDS", &result.limits.Budget.ElapsedSeconds},
@@ -58,4 +60,14 @@ func loadWorkflowConfiguration() WorkflowConfiguration {
 		result.err = fmt.Errorf("STUFF_STASH_WORKFLOW_MAX_EVIDENCE_ROUNDS exceeds the supported investigation ceiling")
 	}
 	return result
+}
+
+func (c WorkflowConfiguration) ContextBytes() (int, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	if !c.captured {
+		return 2 * 1024 * 1024, nil
+	}
+	return c.contextBytes, nil
 }

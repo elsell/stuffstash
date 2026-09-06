@@ -10,7 +10,7 @@ import (
 
 var ErrConversationBudgetExhausted = errors.New("conversation call budget exhausted")
 
-type ConversationLimits struct{ ModelCalls, ToolCalls int }
+type ConversationLimits struct{ ModelCalls, ToolCalls, ContextBytes int }
 type ConversationResult struct {
 	Answer         *ports.ConversationAnswer
 	Messages       []ports.ConversationMessage
@@ -33,6 +33,9 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 	seenCalls := map[string]struct{}{}
 	for result.ModelCalls < limits.ModelCalls {
 		if err := ctx.Err(); err != nil {
+			return result, err
+		}
+		if err := checkConversationContext(result.Messages, limits.ContextBytes); err != nil {
 			return result, err
 		}
 		input.Messages = result.Messages

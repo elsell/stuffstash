@@ -16,6 +16,7 @@ import (
 )
 
 type App struct {
+	conversationContextBytes     int
 	observer                     ports.Observer
 	auth                         ports.Authenticator
 	authorizer                   ports.Authorizer
@@ -98,6 +99,7 @@ type App struct {
 }
 
 type Dependencies struct {
+	ConversationContextBytes         int
 	Observer                         ports.Observer
 	Auth                             ports.Authenticator
 	Authorizer                       ports.Authorizer
@@ -206,6 +208,7 @@ func New(deps Dependencies) App {
 		}}
 	}
 	app := App{
+		conversationContextBytes:     deps.ConversationContextBytes,
 		observer:                     observer,
 		auth:                         deps.Auth,
 		authorizer:                   deps.Authorizer,

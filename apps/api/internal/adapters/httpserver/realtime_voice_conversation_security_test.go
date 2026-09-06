@@ -23,10 +23,17 @@ func (m *nativeBoundaryConversation) Converse(context.Context, ports.Conversatio
 	return ports.ConversationModelTurn{Text: "I can help you find and organize your belongings."}, nil
 }
 
-type nativeBoundaryResolver struct{ model ports.ConversationModel }
+type nativeBoundaryResolver struct {
+	model  ports.ConversationModel
+	speech ports.SpeechToTextProvider
+}
 
 func (r nativeBoundaryResolver) ResolveRealtimeVoiceProviders(context.Context, ports.RealtimeVoiceProviderResolutionInput) (ports.RealtimeVoiceProviderSet, error) {
-	return ports.RealtimeVoiceProviderSet{ConversationModel: r.model, SpeechToText: fakeSpeechToText{transcript: "What can you help me with?"}, TextToSpeech: fakeTextToSpeech{chunks: [][]byte{[]byte("speech")}}}, nil
+	speech := r.speech
+	if speech == nil {
+		speech = fakeSpeechToText{transcript: "What can you help me with?"}
+	}
+	return ports.RealtimeVoiceProviderSet{ConversationModel: r.model, SpeechToText: speech, TextToSpeech: fakeTextToSpeech{chunks: [][]byte{[]byte("speech")}}}, nil
 }
 func TestModelLedConversationWebSocketAuthorization(t *testing.T) {
 	for _, tc := range []struct {

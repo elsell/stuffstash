@@ -113,6 +113,9 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		session.WorkflowRevisionID = string(workflow.Revision().Snapshot().ID)
 		session.workflow = workflow
 	}
+	if session.conversationModel != nil {
+		session.conversationMemory = agentmodelapp.NewConversationMemory(realtimeConversationScope(session), a.conversationContextBytes)
+	}
 	now := a.clock.Now()
 	if err := a.realtimeSessions.SaveRealtimeSession(ctx, ports.RealtimeSessionRecord{
 		ID:                         session.ID,
@@ -133,6 +136,9 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 }
 
 func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
+	if input.Session.conversationModel != nil && !input.Session.conversationMemory.Matches(realtimeConversationScope(input.Session)) {
+		return ports.ErrForbidden
+	}
 	defer func() {
 		if err != nil && strings.TrimSpace(input.Session.ID) != "" {
 			if errors.Is(err, context.Canceled) {

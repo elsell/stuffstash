@@ -87,14 +87,23 @@ func TestModelLedHistoryCannotBeReboundToAnotherSession(t *testing.T) {
 	resolver := successfulRealtimeVoiceResolver()
 	model := &rememberingConversationModel{}
 	resolver.providers.ConversationModel = model
-	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	sessions := newFakeRealtimeSessionRepository()
+	application := newRealtimeVoiceResolutionTestAppWithSessions(t, resolver, sessions)
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
 	if err != nil {
 		t.Fatal(err)
 	}
-	session.ID = "different-session"
+	other, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatal(err)
+	}
+	session.ID = other.ID
 	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error { return nil })
 	if err == nil || model.calls != 0 {
 		t.Fatalf("session state was rebound: calls=%d err=%v", model.calls, err)
+	}
+	record, found, err := sessions.RealtimeSessionByID(context.Background(), other.TenantID, other.InventoryID, other.ID)
+	if err != nil || !found || record.State != ports.RealtimeSessionStateStarted {
+		t.Fatalf("rebound request altered the other session: %+v err=%v", record, err)
 	}
 }

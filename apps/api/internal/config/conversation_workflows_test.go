@@ -48,3 +48,19 @@ func TestWorkflowEvidenceBudgetRejectsStructuralOverflow(t *testing.T) {
 		t.Fatalf("unsupported evidence bound: %v", err)
 	}
 }
+
+func TestConversationContextLimitCapturesOperatorSetting(t *testing.T) {
+	t.Setenv("STUFF_STASH_CONVERSATION_MAX_CONTEXT_BYTES", "4096")
+	captured := Load()
+	t.Setenv("STUFF_STASH_CONVERSATION_MAX_CONTEXT_BYTES", "8192")
+	limit, err := captured.ConversationWorkflows.ContextBytes()
+	if err != nil || limit != 4096 {
+		t.Fatalf("context setting was not captured: limit=%d err=%v", limit, err)
+	}
+	for _, invalid := range []string{"0", "-1", "unbounded"} {
+		t.Setenv("STUFF_STASH_CONVERSATION_MAX_CONTEXT_BYTES", invalid)
+		if _, err := Load().ConversationWorkflows.ContextBytes(); err == nil {
+			t.Fatalf("accepted invalid context cap %q", invalid)
+		}
+	}
+}
