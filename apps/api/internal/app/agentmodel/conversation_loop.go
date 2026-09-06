@@ -89,10 +89,14 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 			outcome.Result.CallID, outcome.Result.Name, outcome.Result.Call = call.ID, call.Name, call
 			result.Messages = append(result.Messages, ports.ConversationMessage{Role: ports.ConversationRoleTool, ToolResults: []ports.AgentToolResult{outcome.Result}})
 			result.ApprovalPlanID = outcome.ApprovalPlanID
+			result.Answer = outcome.Answer
+			if result.Answer != nil && (result.ApprovalPlanID != "" || strings.TrimSpace(result.Answer.Spoken) == "" || strings.TrimSpace(result.Answer.Display) == "") {
+				return result, ports.ErrInvalidProviderInput
+			}
 			if err := ctx.Err(); err != nil {
 				return result, err
 			}
-			if result.ApprovalPlanID != "" {
+			if result.ApprovalPlanID != "" || result.Answer != nil {
 				return result, nil
 			}
 		}

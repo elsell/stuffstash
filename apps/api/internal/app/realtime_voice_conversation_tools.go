@@ -27,6 +27,8 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 	label := realtimeVoiceToolLabel(call.Name)
 	if call.Name == realtimeConversationProposeTool {
 		label = "Prepare changes"
+	} else if call.Name == realtimeConversationPresentTool {
+		label = "Prepare answer"
 	}
 	if err := e.emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: e.session.ID, ToolCallID: call.ID, ToolLabel: label}); err != nil {
 		return ports.ConversationToolOutcome{}, err
@@ -36,6 +38,9 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 	var err error
 	if call.Name == realtimeConversationProposeTool {
 		outcome, err = e.propose(ctx, call)
+		result = outcome.Result
+	} else if call.Name == realtimeConversationPresentTool {
+		outcome, err = e.present(call)
 		result = outcome.Result
 	} else {
 		result, err = e.application.executeRealtimeVoiceTool(ctx, e.session, call, e.visible)
@@ -64,6 +69,7 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 			}
 		}
 	}
+	result.CallID, result.Name, result.Call = call.ID, call.Name, call
 	e.callIDs = append(e.callIDs, call.ID)
 	e.results = append(e.results, result)
 	eventType, status := RealtimeVoiceEventToolCallCompleted, realtimeVoiceToolCompletionStatus(result)
