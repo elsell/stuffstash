@@ -178,3 +178,11 @@ with collection enabled before choosing sampling settings.
 
 The adapters are tested against local collectors in CI, including authentication
 and redirect handling. End-to-end Grafana Cloud delivery is not yet verified.
+
+A reusable dashboard is available at
+`deploy/observability/image-performance-dashboard.json`. Import it in Grafana,
+select the Prometheus data source, then select the API service. It shows request
+and dependency latency, cache response rates, runtime resources, and failed
+export batches. It assumes the standard OTLP-to-Prometheus metric-name mapping;
+that mapping still needs verification against a live collector. Use Tempo, Loki,
+and Profiles to inspect the corresponding service and time window.
