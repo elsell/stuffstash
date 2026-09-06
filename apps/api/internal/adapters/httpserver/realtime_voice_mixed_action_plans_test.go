@@ -10,7 +10,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
-	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 func TestRealtimeVoiceActionPlanApprovalCreatesMissingLocationThenMovesAsset(t *testing.T) {
