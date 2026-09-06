@@ -186,3 +186,23 @@ The Google JSON-envelope adapter therefore omits `maxItems` only on arrays whose
 ## Search coverage guidance
 
 The `a5d31b9db` recorded corpus passes all five interaction cases with Flash. Flash Lite passes creation, dependent moves and follow-ups but proposes one of two screwdrivers after requesting `limit: 1` and receiving `hasMore: true`. The search tool must explain that its optional limit defaults to 20, a low limit can conceal competing matches, and `hasMore` means the returned candidates cannot establish uniqueness. The model can raise the limit, narrow its search or ask a question; the server must not classify ambiguity or automatically reject a proposal merely because a prior search was truncated. Use the existing real-audio ambiguity failure as the regression case, then repeat both model trials without weakening the expected question and selected target.
+
+## Recorded acceptance and matched performance, September 6, 2026
+
+Candidate `9add6bf5d` passed the complete CI suite (manual run `34014082604`) and three consecutive real ADC runs of all five recorded interaction cases with Gemini 2.5 Flash: 15/15 scenario passes. Review of actual speech and typed proposals confirms existing-item moves, additional-item creation, dependent toolbox creation/move, an Office-versus-Kitchen screwdriver question followed by the correct Kitchen move, and location/color continuity. These tests pause at proposal review and never approve inventory mutations. They use controlled inventory and synthetic recorded audio through the authenticated WebSocket, not a physical device.
+
+Three recorded chemicals trials with the same candidate and Flash passed. All spoke “Yes, you have Sodium carbonate and Acetone. Both are in Cabinet A in the Garage.” Cards referenced those two chemical records only. First audio arrived at 4,784/5,160/5,301 ms. The book, protective gloves and unrelated household object were excluded by the model; no category filter or factual response template ran.
+
+Ten alternating-order baby-clothes pairs compared candidate `9add6bf5d` with the CI-built v0.17.0 measurement baseline `fc4add58a`. Both used the same recording, fixture, ADC host, Gemini 2.5 Flash for transcription/inference and Google Standard-C TTS. Candidate passed 10/10; baseline passed 9/10, with its sixth trial failing transcription at 10,211 ms. Every successful candidate answer identified all three clothes records and the two recorded bins in Hall Closet.
+
+| Measurement | v0.17.0 baseline | Model-led candidate |
+| --- | ---: | ---: |
+| Median first audio, observed successful trials | 11,161 ms (9 trials) | 5,834.5 ms (10 trials) |
+| Slowest observed successful first audio | 14,722 ms | 7,245 ms |
+| Median model calls | 3 | 2 |
+| Median measured request bytes | 124,585 | 122,780 |
+| Median measured response bytes | 5,636 | 3,369 |
+
+Request/response byte measurements cover successful traced transcription and inference HTTP bodies, excluding OAuth, TTS traffic and transport overhead. Missing I/O during the failed baseline transcription is not proof of zero network use. These small samples demonstrate improvement for this workload; they do not establish universal latency or reliability. Keep failed trials in the evidence. Metrics and safe traces are retained with the controlled evaluation artifacts; do not merge the baseline measurement branch.
+
+Flash Lite remains a quality limitation: at `9add6bf5d`, it passed existing moves, additional creation and color follow-ups but invented references repeatedly for a dependent move and selected one of two visible screwdrivers without asking. Application validation rejected invented IDs, and all proposals remained subject to approval. Do not claim that the same quality has been established for smaller/local models. Production model configuration has not been silently changed. Physical device acceptance, TestFlight availability and the GitOps deployment are separate release requirements.
