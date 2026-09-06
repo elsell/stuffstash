@@ -54,6 +54,10 @@ func NewRuntime(ctx context.Context, cfg config.TelemetryConfig) (*Runtime, erro
 	}
 	meter := sdkmetric.NewMeterProvider(sdkmetric.WithResource(res), sdkmetric.WithReader(sdkmetric.NewPeriodicReader(privateMetricExporter{metricExporter, &runtime.failures.metrics}, sdkmetric.WithInterval(cfg.MetricInterval), sdkmetric.WithTimeout(cfg.ExportTimeout))))
 	runtime.shutdown = append(runtime.shutdown, meter.Shutdown)
+	if err := registerRuntimeMetrics(meter.Meter(instrumentationName)); err != nil {
+		_ = runtime.Shutdown(ctx)
+		return nil, err
+	}
 	if _, err := meter.Meter(instrumentationName).Int64ObservableCounter("stuffstash.telemetry.dropped_batches", metric.WithInt64Callback(func(_ context.Context, o metric.Int64Observer) error {
 		for signal, count := range runtime.DroppedBatches() {
 			o.Observe(count, metric.WithAttributes(attribute.String("signal", signal)))
