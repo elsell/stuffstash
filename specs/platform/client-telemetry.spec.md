@@ -18,7 +18,7 @@ Each measurement contains only these bounded fields:
 
 - `platform`: `ios`, `android`, `web`.
 - `operation`: `request`, `image`.
-- `surface`: `home`, `list`, `detail`, `gallery`, `fullscreen`, `upload`.
+- `surface`: `application`, `home`, `list`, `detail`, `gallery`, `fullscreen`, `upload`.
 - `variant`: `none`, `small`, `medium`, `large`, `original`.
 - `outcome`: `success`, `failure`, `cancelled`.
 - `durationMs`: finite number from 0 through 60000.
@@ -82,3 +82,7 @@ return the original response, and rethrow the original transport error. Classify
 HTTP errors as failures and aborted requests as cancelled. Observer failures must
 not change request behavior. Do not extract URLs, headers, bodies or identifiers
 into measurements. The telemetry sender always receives the undecorated fetch.
+
+Use `application` for shared API transport requests that have no reliable screen
+context. Do not infer a screen from URLs or label all network requests as a single
+product screen. Mounted image observers use their actual surface and variant.

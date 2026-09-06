@@ -18,6 +18,7 @@ func TestClientTelemetryAuthenticationAndValidation(t *testing.T) {
 		measurements        any
 		want                int
 	}{
+		{"application transport", "Bearer dev:owner", []any{map[string]any{"platform": "web", "operation": "request", "surface": "application", "variant": "none", "outcome": "success", "durationMs": 12}}, 200},
 		{"authenticated", "Bearer dev:owner", []any{valid}, 200},
 		{"other authenticated principal", "Bearer dev:other", []any{valid}, 200},
 		{"oversized", "Bearer dev:owner", oversized, 422},

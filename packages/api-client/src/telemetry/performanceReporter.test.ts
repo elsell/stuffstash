@@ -104,3 +104,13 @@ it('automatically flushes remaining batches without concurrent sends', async () 
   expect(scheduler.tasks.filter(task => task.active)).toHaveLength(0);
   reporter.dispose();
 });
+
+
+it('reports application transport measurements without fabricating a screen context', async () => {
+  const batches: PerformanceMeasurement[][] = [];
+  const reporter = new PerformanceReporter({ clock: { now: () => 0 }, scheduler: new Scheduler(), send: async batch => { batches.push([...batch]); } });
+  reporter.record({ ...measurement, operation: 'request', surface: 'application', variant: 'none' });
+  await reporter.flush();
+  expect(batches).toEqual([[{ ...measurement, operation: 'request', surface: 'application', variant: 'none' }]]);
+  reporter.dispose();
+});
