@@ -11,7 +11,7 @@ import (
 )
 
 func realtimeConversationVocabularyTool() ports.ConversationToolDefinition {
-	return ports.ConversationToolDefinition{Name: RealtimeVoiceToolGetInventoryVocabulary, Description: "Discover this inventory's active custom item types, custom fields and tags when their vocabulary would help. No arguments returns a bounded manifest with truncation flags. Optional definitions requests use kind and stable key from the manifest to read field types, enum options and applicability. This is optional context, not a required step before searching or answering.", Parameters: json.RawMessage(`{"type":"object","properties":{"definitions":{"type":"array","maxItems":12,"items":{"type":"object","properties":{"kind":{"type":"string","enum":["custom_asset_type","custom_field","tag"]},"key":{"type":"string","maxLength":80}},"required":["kind","key"],"additionalProperties":false}}},"additionalProperties":false}`)}
+	return ports.ConversationToolDefinition{Name: RealtimeVoiceToolGetInventoryVocabulary, Description: "Discover the actual tags, item types and fields used to organize this inventory. Helpful when the user's concept differs from stored names or searches find nothing: the manifest lets you choose related local terms instead of guessing labels. No arguments returns a bounded manifest with truncation flags. Optional definitions requests use kind and stable key from the manifest to read field types, enum options and applicability. Unavailable keys are counted without discarding the manifest; they may be absent or outside its bounded coverage.", Parameters: json.RawMessage(`{"type":"object","properties":{"definitions":{"type":"array","maxItems":12,"items":{"type":"object","properties":{"kind":{"type":"string","enum":["custom_asset_type","custom_field","tag"]},"key":{"type":"string","maxLength":80}},"required":["kind","key"],"additionalProperties":false}}},"additionalProperties":false}`)}
 }
 
 func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
@@ -51,7 +51,7 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 	manifest.CustomAssetTypesTruncated = manifest.CustomAssetTypesTruncated || types.HasMore
 	manifest.CustomFieldsTruncated = manifest.CustomFieldsTruncated || fields.HasMore
 	manifest.TagsTruncated = manifest.TagsTruncated || tags.HasMore
-	definitions, err := catalog.resolve(args.Definitions)
+	definitions, unavailable, err := catalog.resolve(args.Definitions)
 	if err != nil {
 		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}
@@ -59,9 +59,10 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 		return ports.AgentToolResult{}, err
 	}
 	content, err := json.Marshal(struct {
-		Manifest    agentmodel.VoiceVocabularyManifest     `json:"manifest"`
-		Definitions []agentmodel.VoiceVocabularyDefinition `json:"definitions,omitempty"`
-	}{Manifest: manifest, Definitions: definitions})
+		Manifest                   agentmodel.VoiceVocabularyManifest     `json:"manifest"`
+		Definitions                []agentmodel.VoiceVocabularyDefinition `json:"definitions,omitempty"`
+		UnavailableDefinitionCount int                                    `json:"unavailableDefinitionCount,omitempty"`
+	}{Manifest: manifest, Definitions: definitions, UnavailableDefinitionCount: unavailable})
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}

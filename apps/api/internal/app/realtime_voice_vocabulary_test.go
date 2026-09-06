@@ -80,8 +80,8 @@ func TestRealtimeVoiceVocabularyLoadsActiveScopedManifestAndResolvesRequestedDef
 	if len(manifest.CustomAssetTypes) != 1 || manifest.CustomAssetTypes[0].Key != "medicine" || len(manifest.CustomFields) != 1 || len(manifest.Tags) != 1 {
 		t.Fatalf("unexpected manifest: %+v", manifest)
 	}
-	definitions, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: "expiration-date"}})
-	if err != nil || len(definitions) != 1 {
+	definitions, unavailable, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: "expiration-date"}})
+	if err != nil || unavailable != 0 || len(definitions) != 1 {
 		t.Fatalf("resolve field definition: %+v, %v", definitions, err)
 	}
 	if got := definitions[0].ApplicableCustomAssetTypeKeys; len(got) != 1 || got[0] != "medicine" {
@@ -90,12 +90,10 @@ func TestRealtimeVoiceVocabularyLoadsActiveScopedManifestAndResolvesRequestedDef
 	if definitions[0].Key == expires.ID.String() || definitions[0].ApplicableCustomAssetTypeKeys[0] == medicine.ID.String() {
 		t.Fatalf("model vocabulary must not expose internal IDs: %+v", definitions[0])
 	}
-	if _, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: "not-in-manifest"}}); err == nil {
-		t.Fatal("expected an unscoped or invented vocabulary key to fail")
-	}
-	for _, hidden := range []string{"private-field", "other-field"} {
-		if _, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: hidden}}); err == nil {
-			t.Fatalf("expected hidden key %q to remain unavailable", hidden)
+	for _, missing := range []string{"not-in-manifest", "private-field", "other-field"} {
+		definitions, unavailable, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: missing}})
+		if err != nil || unavailable != 1 || len(definitions) != 0 {
+			t.Fatalf("key %q must remain unavailable without disclosing its existence: %+v, %d, %v", missing, definitions, unavailable, err)
 		}
 	}
 }
