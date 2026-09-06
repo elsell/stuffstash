@@ -6,6 +6,8 @@ import "context"
 type Operation string
 
 const (
+	OperationModelImagePrepare Operation = "media.model_image.prepare"
+	OperationUploadInitiate    Operation = "media.upload.initiate"
 	OperationThumbnailGenerate Operation = "media.thumbnail.generate"
 	OperationBlobRead          Operation = "media.blob.read"
 	OperationBlobWrite         Operation = "media.blob.write"
@@ -17,7 +19,7 @@ const (
 
 func (o Operation) Bounded() Operation {
 	switch o {
-	case OperationThumbnailGenerate, OperationBlobRead, OperationBlobWrite, OperationBlobDelete, OperationUploadVerify, OperationHTTP:
+	case OperationModelImagePrepare, OperationUploadInitiate, OperationThumbnailGenerate, OperationBlobRead, OperationBlobWrite, OperationBlobDelete, OperationUploadVerify, OperationHTTP:
 		return o
 	default:
 		return OperationOther

@@ -142,3 +142,8 @@ reads performed during upload verification.
 
 HTTP response instrumentation uses pinned `github.com/felixge/httpsnoop v1.0.4`
 to preserve the underlying ResponseWriter's optional streaming/upgrade interfaces.
+
+An interrupted HTTP handler records `outcome=interrupted` and the response status
+only when known; it must not claim a 500 that was never sent. A WebSocket upgrade
+records 101. Media operation vocabulary includes upload initiation/verification
+and model-image preparation separately from thumbnail generation.
