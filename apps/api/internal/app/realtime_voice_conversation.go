@@ -22,10 +22,19 @@ func (a App) runRealtimeVoiceConversation(ctx context.Context, session RealtimeV
 	result, err := agentmodelapp.RunConversation(ctx, session.conversationModel, executor, ports.ConversationModelInput{
 		Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID,
 		Instructions: realtimeConversationInstructions + "\nTenant guidance:\n" + session.LanguagePromptTemplate,
-		Messages:     messages, Tools: realtimeConversationReadTools(),
+		Messages:     messages, Tools: append(realtimeConversationReadTools(), realtimeConversationProposalTool()),
 	}, agentmodelapp.ConversationLimits{ModelCalls: realtimeVoiceToolTurnBudget, ToolCalls: realtimeVoiceToolTurnBudget})
 	if err != nil {
 		return err
+	}
+	if result.ApprovalPlanID != "" {
+		if executor.proposal == nil || executor.proposal.PlanID != result.ApprovalPlanID {
+			return ports.ErrInvalidProviderInput
+		}
+		if err := emitRealtimeVoiceProgress(session, realtimeVoiceProgressReviewing, "Review the proposed changes.", emit); err != nil {
+			return err
+		}
+		return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventActionPlanProposed, SessionID: session.ID, ActionPlan: executor.proposal})
 	}
 	if result.Answer == nil {
 		return ports.ErrInvalidProviderInput

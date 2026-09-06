@@ -3,6 +3,9 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -99,5 +102,40 @@ func TestModelLedMoveProposesExistingItemWithoutExecuting(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// Domain reads retain the working service repository; the review projection
+// encounters a storage outage while resolving its display metadata.
+type unavailableProposalReviewAssets struct {
+	ports.AssetRepository
+	calls int
+}
+
+func (r *unavailableProposalReviewAssets) AssetByID(context.Context, tenant.ID, inventory.InventoryID, asset.ID) (asset.Asset, bool, error) {
+	r.calls++
+	return asset.Asset{}, false, errors.New("review read unavailable")
+}
+func TestModelLedProposalReviewFailureDoesNotLeaveRetryableSavedDraft(t *testing.T) {
+	resolver := successfulRealtimeVoiceResolver()
+	model := &moveConversationModel{}
+	resolver.providers.ConversationModel = model
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("existing-drill", "Drill", asset.KindItem, ""), "audit-drill")
+	seedRealtimeVoiceLoopAsset(t, store, realtimeVoiceInvestigationAsset("existing-garage", "Garage", asset.KindLocation, ""), "audit-garage")
+	plans := &fakeActionPlanRepository{}
+	application.actionPlans = plans
+	review := &unavailableProposalReviewAssets{AssetRepository: application.assets}
+	application.assets = review
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error { return nil })
+	if len(plans.saved) != 0 {
+		t.Fatalf("model retried after saving an undisplayed draft: saved=%d calls=%d", len(plans.saved), model.calls)
+	}
+	if err != nil || review.calls == 0 || model.calls != 3 {
+		t.Fatalf("expected review outage followed by a model explanation: reads=%d calls=%d err=%v", review.calls, model.calls, err)
 	}
 }

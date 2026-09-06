@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"nhooyr.io/websocket"
 )
@@ -122,5 +124,31 @@ func TestModelLedProposalPreservesOrdinaryTitleAtWebSocketBoundary(t *testing.T)
 	}
 	if hasRealtimeEvent(events, "action.plan.executed") {
 		t.Fatal("proposal executed without approval")
+	}
+}
+
+func TestModelLedViewerCannotProposeInventoryChanges(t *testing.T) {
+	store := memory.NewStore()
+	authorizer := memory.NewAuthorizer()
+	application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{
+		tenants:     []seedTenant{{id: "tenant-home", name: "Home", owner: "owner"}},
+		inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "owner"}},
+		ids:         []string{"session-id", "unexpected-plan-id"},
+	}, store, authorizer).WithRealtimeVoiceProviderResolver(nativeBoundaryResolver{model: nativeTitleProposalModel{}})
+	if err := authorizer.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer"}, "tenant-home", "inventory-home"); err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	defer server.Close()
+	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "viewer", "session.failed")
+	failed := findRealtimeEvent(t, events, "session.failed")
+	if failed["code"] != "forbidden" {
+		t.Fatalf("expected write permission denial: %+v", failed)
+	}
+	if hasRealtimeEvent(events, "action.plan.proposed") || hasRealtimeEvent(events, "action.plan.executed") {
+		t.Fatal("viewer proposed or executed changes")
+	}
+	if _, found, err := store.ActionPlanByID(context.Background(), "tenant-home", "inventory-home", "unexpected-plan-id"); err != nil || found {
+		t.Fatalf("unauthorized draft persisted: found=%v err=%v", found, err)
 	}
 }

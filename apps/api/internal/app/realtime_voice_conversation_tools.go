@@ -10,6 +10,7 @@ import (
 )
 
 type realtimeConversationTools struct {
+	proposal    *RealtimeVoiceActionPlanProposal
 	application App
 	session     RealtimeVoiceSession
 	emit        RealtimeVoiceEventSink
@@ -24,10 +25,21 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 		return ports.ConversationToolOutcome{}, err
 	}
 	label := realtimeVoiceToolLabel(call.Name)
+	if call.Name == realtimeConversationProposeTool {
+		label = "Prepare changes"
+	}
 	if err := e.emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventToolCallStarted, SessionID: e.session.ID, ToolCallID: call.ID, ToolLabel: label}); err != nil {
 		return ports.ConversationToolOutcome{}, err
 	}
-	result, err := e.application.executeRealtimeVoiceTool(ctx, e.session, call, e.visible)
+	var outcome ports.ConversationToolOutcome
+	var result ports.AgentToolResult
+	var err error
+	if call.Name == realtimeConversationProposeTool {
+		outcome, err = e.propose(ctx, call)
+		result = outcome.Result
+	} else {
+		result, err = e.application.executeRealtimeVoiceTool(ctx, e.session, call, e.visible)
+	}
 	if err != nil {
 		if ctx.Err() != nil {
 			return ports.ConversationToolOutcome{}, ctx.Err()
@@ -35,7 +47,7 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 		if errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrUnauthenticated) || errors.Is(err, context.Canceled) {
 			return ports.ConversationToolOutcome{}, err
 		}
-		content := `{"error":"This read is temporarily unavailable. You may retry within the remaining budget or explain the limitation using existing evidence."}`
+		content := `{"error":"This operation is temporarily unavailable. You may retry within the remaining budget or explain the limitation using existing evidence."}`
 		if errors.Is(err, ports.ErrInvalidProviderInput) || errors.Is(err, apperrors.ErrInvalidInput) {
 			content = `{"error":"Invalid tool arguments or unavailable tool. Check the tool definition and correct the request."}`
 		}
@@ -61,7 +73,8 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 	if err := e.emit(RealtimeVoiceEvent{Type: eventType, SessionID: e.session.ID, ToolCallID: call.ID, ToolLabel: label, Status: status}); err != nil {
 		return ports.ConversationToolOutcome{}, err
 	}
-	return ports.ConversationToolOutcome{Result: result}, nil
+	outcome.Result = result
+	return outcome, nil
 }
 
 func realtimeConversationReadTools() []ports.ConversationToolDefinition {
