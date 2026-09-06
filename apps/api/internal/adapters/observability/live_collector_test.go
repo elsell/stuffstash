@@ -2,6 +2,7 @@ package observability
 
 import (
 	"context"
+	"crypto/sha256"
 	"os"
 	"sync/atomic"
 	"testing"
@@ -48,6 +49,18 @@ func TestLiveTelemetryCollectorAcceptance(t *testing.T) {
 		defer cancel()
 		_ = profiler.Stop(cleanup)
 	}()
+	// Keep the CPU sampler active long enough to observe real work. This is a
+	// fixed-input collector check, not an image-processing benchmark.
+	payload := make([]byte, 256*1024)
+	until := time.Now().Add(time.Second)
+	var digest [32]byte
+	for time.Now().Before(until) {
+		digest = sha256.Sum256(payload)
+		payload[0] = digest[0]
+	}
+	if digest == [32]byte{} {
+		t.Fatal("CPU probe did not execute")
+	}
 	operation, finish := telemetry.Telemetry.Start(ctx, ports.OperationHTTP)
 	if !trace.SpanContextFromContext(operation).IsSampled() {
 		finish(nil)

@@ -177,12 +177,15 @@ shutdown alone does not prove delivery. Measure workload latency and resource us
 with collection enabled before choosing sampling settings.
 
 The adapters are tested against local collectors in CI, including authentication
-and redirect handling. End-to-end Grafana Cloud delivery is not yet verified.
+and redirect handling. An isolated remote probe has also verified stored metrics, logs, traces, and
+runtime profiles in Grafana Cloud. This does not establish deployed API or
+physical-device performance.
 
 A reusable dashboard is available at
 `deploy/observability/image-performance-dashboard.json`. Import it in Grafana,
 select the Prometheus data source, then select the API service. It shows request
 and dependency latency, cache response rates, runtime resources, and failed
 export batches. It assumes the standard OTLP-to-Prometheus metric-name mapping;
-that mapping still needs verification against a live collector. Use Tempo, Loki,
+runtime and duration metric mappings have been verified against Grafana Cloud.
+The thumbnail counter mapping awaits an authenticated image workload. Use Tempo, Loki,
 and Profiles to inspect the corresponding service and time window.

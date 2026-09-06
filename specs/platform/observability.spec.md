@@ -235,3 +235,8 @@ The collector probe forces sampling of its isolated root span and verifies that
 it is sampled. Both explicit shutdown and deferred cleanup use bounded contexts.
 Dashboard failure ratios show zero for healthy observed traffic, while retaining
 missing data when no requests are observed.
+
+The live probe performs one second of fixed-input CPU work so CPU samples can be
+verified in storage; an almost-idle smoke test may legitimately produce no CPU
+profile. This workload is solely ingestion acceptance and must not be reported
+as image performance or instrumentation overhead.
