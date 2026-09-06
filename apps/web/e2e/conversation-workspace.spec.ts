@@ -6,6 +6,12 @@ test('edits cases, runs pinned revisions and activates only after review', async
   resetWorkspaceApiState(page); await installAuthenticatedWorkspace(page); const state = await installConversationFixture(page);
   await page.goto(path);
   await page.getByRole('button', { name: /Household voice · Revision 1/ }).click();
+  await expect(page.locator('#provider-model')).toBeVisible();
+  await expect(page.locator('#provider-respond')).toHaveCount(0);
+  await page.getByLabel('Additional instructions').fill('Prefer our household tags when names differ.');
+  await page.getByText('Conversation limits', { exact: true }).click();
+  await page.getByLabel('Tool calls per turn', { exact: true }).fill('4');
+  await page.screenshot({ path: testInfo.outputPath('workflow-editor.png'), fullPage: true });
   await page.getByLabel('Workflow name').fill('Household voice tuned');
   await page.getByRole('button', { name: 'Save draft', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Draft revision 2 saved' })).toBeVisible();

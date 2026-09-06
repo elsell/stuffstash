@@ -31,11 +31,8 @@
     queryFn: ({ signal }) => providers.list(session.scope.tenantId, signal) }), () => session.client);
   function startNew() {
     if (busy) return;
-    editor = { key: 'new', revision: null, definition: { name: '', retrieval: 'precise_first', response: 'generated_with_grounded_fallback',
-      budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 }, steps: [
-        { kind: 'interpret', attempts: 1, instructions: '', providerProfileId: null },
-        { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null },
-        { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }] } };
+    editor = { key: 'new', revision: null, definition: { name: '', providerProfileId: null, instructions: '',
+      budget: { toolCalls: 6, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } } };
     message = ''; comparison = null;
   }
   async function load(workflowId: string, compare = false) {
@@ -75,6 +72,7 @@
     {:else if selection.isPending}<p role="status">Loading active workflow…</p>
     {:else}<p>{selection.data ? `Active workflow: ${heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? 'Saved workflow'}` : 'Using the default conversation workflow.'}</p>{/if}
     {#if editor}
+      {#if editor.revision?.settingsMigration}<p role="status">This revision was converted from the previous workflow format. Its selected model and general guidance were retained; stage-specific rules were removed. Review the settings and run your test cases before activating a new revision.</p>{/if}
       <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>Close editor and discard unsaved edits</Button.Root>
       {#if models.isPending}<p role="status">Loading configured models…</p>
       {:else if models.isError}<p role="alert">Could not load configured models. <Button.Root onclick={() => models.refetch()}>Retry models</Button.Root></p>
@@ -84,12 +82,10 @@
       {/if}
       {#if comparison}
         <aside aria-label="Latest revision comparison"><h3>Latest saved revision {comparison.number}</h3><p>{comparison.definition.name}</p>
-          <dl><dt>Search</dt><dd>{comparison.definition.retrieval === 'precise_first' ? 'Precise matches first' : 'Broader discovery'}</dd>
-            <dt>Answer style</dt><dd>{comparison.definition.response === 'grounded' ? 'Grounded facts' : 'Model answer with grounded recovery'}</dd>
-            <dt>Shared limits</dt><dd>{comparison.definition.budget.evidenceRounds} searches · {comparison.definition.budget.modelCalls} model calls · {comparison.definition.budget.elapsedSeconds} seconds · {comparison.definition.budget.followUpTurns} follow-ups</dd></dl>
-          {#each comparison.definition.steps as step}<section><h4>{step.kind === 'interpret' ? 'Understand' : step.kind === 'assess' ? 'Look up and assess' : 'Respond'}</h4>
-            <p>{models.data?.find(model => model.id === step.providerProfileId)?.name ?? (step.providerProfileId ? 'Saved model profile' : 'Tenant default model')} · {step.attempts} attempts</p>
-            <p class="instructions">{step.instructions || 'No additional instructions'}</p></section>{/each}
+          <dl><dt>Model</dt><dd>{models.data?.find(model => model.id === comparison?.definition.providerProfileId)?.name ?? (comparison.definition.providerProfileId ? 'Saved model profile' : 'Tenant default model')}</dd>
+            <dt>Per-turn limits</dt><dd>{comparison.definition.budget.toolCalls} tool calls · {comparison.definition.budget.modelCalls} model calls · {comparison.definition.budget.elapsedSeconds} seconds</dd>
+            <dt>Follow-ups</dt><dd>{comparison.definition.budget.followUpTurns}</dd></dl>
+          <p class="instructions">{comparison.definition.instructions || 'No additional instructions'}</p>
           <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>Replace my edits with this revision</Button.Root>
         </aside>
       {/if}

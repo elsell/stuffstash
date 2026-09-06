@@ -54,7 +54,7 @@ func TestSelectedWorkflowUsesOneNativeModelAndPreservesGuidanceAndBudgets(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	selected := &SelectedWorkflow{revision: revision, limits: workflowServiceLimits(), clock: clock}
+	selected := &SelectedWorkflow{revision: revision}
 	provider := &workflowConversationProvider{}
 	resolver := &workflowConversationResolver{provider: provider}
 	prepared, err := selected.Prepare(context.Background(), ports.RealtimeVoiceProviderSet{}, resolver)
@@ -78,15 +78,13 @@ func TestSelectedWorkflowUsesOneNativeModelAndPreservesGuidanceAndBudgets(t *tes
 	if resolver.calls != 1 || provider.calls != 2 || !strings.Contains(provider.instructions, "Speak concisely.") || !strings.Contains(provider.instructions, "Use assigned tags.") || !strings.Contains(provider.instructions, "Use authorized inventory tools.") {
 		t.Fatalf("primary model or guidance lost: resolutions=%d provider=%+v", resolver.calls, provider)
 	}
-	if _, err := model.Converse(context.Background(), ports.ConversationModelInput{}); !errors.Is(err, ErrWorkflowBudgetExhausted) || provider.calls != 2 {
-		t.Fatalf("configured call budget reset or bypassed: calls=%d err=%v", provider.calls, err)
-	}
+
 }
 
-func TestNativeWorkflowBudgetDoesNotSpendOnCancellationAndExpiresAcrossUtterances(t *testing.T) {
+func TestNativeWorkflowGuidanceHonorsCancellationWithoutSessionTimer(t *testing.T) {
 	clock := &workflowExecutionClock{now: time.Date(2026, 9, 5, 12, 0, 0, 0, time.UTC)}
 	provider := &workflowConversationProvider{}
-	model, err := newWorkflowConversationModel(provider, clock, workflowServiceInput().Definition, "Be concise.")
+	model, err := newWorkflowConversationModel(provider, workflowServiceInput().Definition, "Be concise.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,12 +98,10 @@ func TestNativeWorkflowBudgetDoesNotSpendOnCancellationAndExpiresAcrossUtterance
 		t.Fatalf("cancelled invocation started elapsed budget: %v", err)
 	}
 	clock.now = clock.now.Add(time.Minute)
-	if model.CanContinue() {
-		t.Fatal("expired session advertised more capacity")
+	if _, err := model.Converse(context.Background(), ports.ConversationModelInput{}); err != nil || provider.calls != 2 {
+		t.Fatalf("user pause incorrectly exhausted processing: %v calls=%d", err, provider.calls)
 	}
-	if _, err := model.Converse(context.Background(), ports.ConversationModelInput{}); !errors.Is(err, ErrWorkflowBudgetExhausted) || provider.calls != 1 {
-		t.Fatalf("elapsed budget was reset or bypassed: %v calls=%d", err, provider.calls)
-	}
+
 }
 
 func TestSelectedWorkflowRejectsMissingModelBeforeCapture(t *testing.T) {
@@ -115,7 +111,7 @@ func TestSelectedWorkflowRejectsMissingModelBeforeCapture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	selected := &SelectedWorkflow{revision: revision, limits: workflowServiceLimits(), clock: clock}
+	selected := &SelectedWorkflow{revision: revision}
 	prepared, err := selected.Prepare(context.Background(), ports.RealtimeVoiceProviderSet{}, nil)
 	if err == nil || prepared != nil {
 		t.Fatal("retired-only provider activated the old workflow execution path")

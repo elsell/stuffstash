@@ -22,5 +22,5 @@ func RealtimeVoiceSessionTurnLimit(session RealtimeVoiceSession) int {
 }
 
 func RealtimeVoiceCanContinue(session RealtimeVoiceSession) bool {
-	return session.workflow == nil || session.workflow.CanContinue()
+	return session.conversationModel != nil
 }

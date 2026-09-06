@@ -98,7 +98,7 @@ type realtimeConversationProvider struct{ model ports.ConversationModel }
 
 func (p realtimeConversationProvider) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	turn, err := p.model.Converse(ctx, input)
-	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrUnauthenticated) || errors.Is(err, agentmodelapp.ErrWorkflowBudgetExhausted) || errors.Is(err, agentmodelapp.ErrConversationBudgetExhausted) {
+	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, ports.ErrForbidden) || errors.Is(err, ports.ErrUnauthenticated) || errors.Is(err, agentmodelapp.ErrConversationBudgetExhausted) {
 		return turn, err
 	}
 	return turn, realtimeVoiceProviderStageError{code: realtimeVoiceFailureLanguageInference, err: err}

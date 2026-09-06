@@ -10,8 +10,7 @@ afterEach(async () => { if (component) await unmount(component); component = und
 it('queues exactly the selected saved workflow and case revisions', async () => {
   const requests: RunQueue[] = [];
   const revision: WorkflowRevision = { id: 'workflow-revision', workflowId: 'workflow', number: 1, authorId: 'owner', createdAt: '', definition: {
-    name: 'Household', retrieval: 'precise_first', response: 'grounded', budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 }, steps: [
-      { kind: 'interpret', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }] } };
+    name: 'Household', providerProfileId: null, instructions: '', budget: { toolCalls: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } } };
   const pagination = { limit: 20, hasMore: false, nextCursor: null };
   const unsupported = async (): Promise<never> => { throw new Error('Unsupported fake operation'); };
   const ports: ConversationWorkspaceRepositories = { apiIdentity: 'api', providers: { list: async () => [] },

@@ -37,8 +37,7 @@ it('removes every section when case access is revoked', async () => {
 it('refreshes run setup after saving a revision in the workflow section', async () => {
   const ports = repositories();
   let revision: WorkflowRevision = { id: 'revision-1', workflowId: 'workflow', number: 1, authorId: 'owner', createdAt: '', definition: {
-    name: 'Household', retrieval: 'precise_first', response: 'grounded', budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 }, steps: [
-      { kind: 'interpret', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }] } };
+    name: 'Household', providerProfileId: null, instructions: '', budget: { toolCalls: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } } };
   ports.workflows.list = async () => ({ ...page, items: [{ id: 'workflow', name: 'Household', latestRevision: revision.number, latestRevisionId: revision.id, activeRevisionId: null, createdAt: '', updatedAt: '' }] });
   ports.workflows.get = async () => structuredClone(revision);
   let historyReads = 0; ports.workflows.history = async () => { historyReads++; return { ...page, items: [structuredClone(revision)] }; };

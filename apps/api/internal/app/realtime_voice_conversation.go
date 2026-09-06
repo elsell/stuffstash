@@ -43,11 +43,16 @@ func (a App) runRealtimeVoiceConversation(ctx context.Context, session RealtimeV
 			}
 		}
 	}
+	limits := agentmodelapp.ConversationLimits{ContextBytes: a.conversationContextBytes, ModelCalls: realtimeVoiceToolTurnBudget, ToolCalls: realtimeVoiceToolTurnBudget}
+	if session.workflow != nil {
+		budget := session.workflow.Revision().Snapshot().Definition.Settings().Budget
+		limits.ModelCalls, limits.ToolCalls = budget.ModelCalls, budget.ToolCalls
+	}
 	result, err := agentmodelapp.RunConversation(ctx, realtimeConversationProvider{model: session.conversationModel}, executor, ports.ConversationModelInput{
 		Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID,
 		Instructions: realtimeConversationInstructions + "\nTenant guidance:\n" + session.LanguagePromptTemplate,
 		Messages:     messages, Tools: append(realtimeConversationReadTools(), realtimeConversationProposalTool(), realtimeConversationPresentationTool()),
-	}, agentmodelapp.ConversationLimits{ContextBytes: a.conversationContextBytes, ModelCalls: realtimeVoiceToolTurnBudget, ToolCalls: realtimeVoiceToolTurnBudget})
+	}, limits)
 	contextErr := session.conversationMemory.Commit(result.Messages)
 	if err != nil {
 		var providerErr realtimeVoiceProviderStageError

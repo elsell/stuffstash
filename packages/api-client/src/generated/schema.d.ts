@@ -1683,11 +1683,11 @@ export interface components {
             /** Format: int64 */
             elapsedSeconds: number;
             /** Format: int64 */
-            evidenceRounds: number;
-            /** Format: int64 */
             followUpTurns: number;
             /** Format: int64 */
             modelCalls: number;
+            /** Format: int64 */
+            toolCalls: number;
         };
         CheckedOutAssetResponse: {
             asset: components["schemas"]["AssetResponse"];
@@ -1890,10 +1890,9 @@ export interface components {
         };
         Definition: {
             budget: components["schemas"]["Budget"];
+            instructions?: string;
             name: string;
-            response: string;
-            retrieval: string;
-            steps: components["schemas"]["Step"][] | null;
+            providerProfileId?: string;
         };
         DefinitionResponse: {
             applicability: string;
@@ -2094,7 +2093,6 @@ export interface components {
         EvaluationRunProvider: {
             configurationId: string;
             profileId: string;
-            step: string;
         };
         EvaluationRunQueueBody: {
             /**
@@ -2509,6 +2507,7 @@ export interface components {
             id: string;
             /** Format: int64 */
             number: number;
+            settingsMigration?: string;
             workflowId: string;
         };
         SearchAncestor: {
@@ -2529,13 +2528,6 @@ export interface components {
         SearchMatch: {
             field: string;
             value: string;
-        };
-        Step: {
-            /** Format: int64 */
-            attempts: number;
-            instructions?: string;
-            kind: string;
-            providerProfileId?: string;
         };
         SuccessEnvelopeAssetCheckoutResponse: {
             /**

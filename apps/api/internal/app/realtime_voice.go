@@ -5,6 +5,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"time"
 
 	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
@@ -115,13 +116,21 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 }
 
 func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
+	if input.Session.workflow != nil {
+		duration := time.Duration(input.Session.workflow.Revision().Snapshot().Definition.Settings().Budget.ElapsedSeconds) * time.Second
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, duration)
+		defer cancel()
+	}
 	if input.Session.conversationModel != nil && !input.Session.conversationMemory.Matches(realtimeConversationScope(input.Session)) {
 		return ports.ErrForbidden
 	}
 	defer func() {
 		if err != nil && strings.TrimSpace(input.Session.ID) != "" {
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), a.realtimeVoiceToolCallTimeout)
+			defer cancel()
 			if errors.Is(err, context.Canceled) {
-				_ = a.markRealtimeVoiceSessionOutcome(context.Background(), input.Session, ports.RealtimeSessionStateCancelled, "")
+				_ = a.markRealtimeVoiceSessionOutcome(cleanupCtx, input.Session, ports.RealtimeSessionStateCancelled, "")
 				return
 			}
 			safeCode := realtimeVoiceErrorCode(err)
@@ -139,7 +148,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 					},
 				})
 			}
-			_ = a.markRealtimeVoiceSessionOutcome(ctx, input.Session, ports.RealtimeSessionStateFailed, safeCode)
+			_ = a.markRealtimeVoiceSessionOutcome(cleanupCtx, input.Session, ports.RealtimeSessionStateFailed, safeCode)
 		}
 	}()
 	if err := a.ensureRealtimeVoiceDependencies(); err != nil {

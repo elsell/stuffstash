@@ -11,7 +11,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func TestRealtimeSessionPinsWorkflowAndUsesSharedModelPolicy(t *testing.T) {
+func TestRealtimeSessionPinsWorkflowAndEnforcesPerTurnModelLimit(t *testing.T) {
 	language := &resolvedConversationModel{inventoryConversationModel: inventoryConversationModel{query: "tools"}}
 	resolver := &fakeRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{LanguageInferenceProfileID: "lm-profile", SpeechToText: resolvedSpeechToText{transcript: "Where are my tools?"}, ConversationModel: language, TextToSpeech: &resolvedTextToSpeech{}}}
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
@@ -25,7 +25,7 @@ func TestRealtimeSessionPinsWorkflowAndUsesSharedModelPolicy(t *testing.T) {
 	if session.WorkflowRevisionID != string(revision.Snapshot().ID) {
 		t.Fatalf("selected workflow not pinned: %+v", session)
 	}
-	// A new selected revision must not change the session's remaining call allowance.
+	// A new selected revision must not change the session's per-turn call allowance.
 	input := SaveConversationWorkflowInput{Principal: session.Principal, TenantID: session.TenantID, Source: audit.SourceAPI, WorkflowID: revision.Snapshot().WorkflowID, ExpectedRevision: 1, Definition: revision.Snapshot().Definition.Settings()}
 	input.Definition.Budget.ModelCalls = 1
 	updated, err := application.SaveConversationWorkflowRevision(context.Background(), input)

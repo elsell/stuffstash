@@ -9,7 +9,7 @@ import type { ConversationWorkflowRepository } from '$lib/ports/conversationWork
 import RunActivation from './RunActivation.svelte';
 let component: ReturnType<typeof mount> | undefined; let session: ConversationSession;
 afterEach(async () => { if (component) await unmount(component); component = undefined; await session?.dispose(); document.body.innerHTML = ''; });
-const revision: WorkflowRevision = { id: 'revision', workflowId: 'workflow', number: 2, authorId: 'owner', createdAt: '', definition: { name: 'Household', retrieval: 'precise_first', response: 'grounded', steps: [], budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } } };
+const revision: WorkflowRevision = { id: 'revision', workflowId: 'workflow', number: 2, authorId: 'owner', createdAt: '', definition: { name: 'Household', providerProfileId: null, instructions: '', budget: { toolCalls: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } } };
 const run: EvaluationRun = { id: 'run', workflowId: 'workflow', revisionId: 'revision', state: 'succeeded', version: 3, totalCases: 1, completedCases: 1, passedCases: 1,
   createdAt: '', updatedAt: '', authorId: 'owner', coverage: 'text_only', cases: [{ caseId: 'case', revisionId: 'case-revision', title: 'Baby clothes' }], providers: [],
   results: [{ caseRevisionId: 'case-revision', modelCalls: 1, durationMilliseconds: 100, completedAt: '', observation: { kind: 'answer', referencedAssets: [], locations: [], proposals: [], executedOperations: [] }, verdict: { passed: true, failures: [] } }], startedAt: '', finishedAt: '', failureCode: '' };

@@ -6,8 +6,7 @@ import type { EvaluationRun, RunQueue } from '../src/lib/domain/conversationRun'
 export async function installConversationFixture(page: Page) {
   const timestamp = '2026-09-05T12:00:00Z';
   let workflow: WorkflowRevision = { id: 'workflow-revision-1', workflowId: 'workflow', number: 1, authorId: 'owner', createdAt: timestamp, definition: {
-    name: 'Household voice', retrieval: 'precise_first', response: 'grounded', budget: { evidenceRounds: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 }, steps: [
-      { kind: 'interpret', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'assess', attempts: 1, instructions: '', providerProfileId: null }, { kind: 'respond', attempts: 1, instructions: '', providerProfileId: null }] } };
+    name: 'Household voice', providerProfileId: null, instructions: '', budget: { toolCalls: 3, modelCalls: 8, elapsedSeconds: 45, followUpTurns: 3 } } };
   let savedCase: CaseRevision = { id: 'case-revision-1', caseId: 'case', number: 1, authorId: 'owner', createdAt: timestamp, definition: {
     title: 'Find baby clothes', utterance: 'Where are my baby clothes?', assets: [
       { id: 'attic', title: 'Attic', kind: 'location', parentId: '', description: '', tagNames: [] },

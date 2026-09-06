@@ -4,7 +4,7 @@ const run = {
   id: 'run', state: 'succeeded', version: 4, workflowId: 'workflow', revisionId: 'revision', totalCases: 1, completedCases: 1, passedCases: 1,
   createdAt: '2026-09-05T12:00:00Z', updatedAt: '2026-09-05T12:01:00Z', authorId: 'owner', coverage: 'text_only',
   cases: [{ caseId: 'case', revisionId: 'case-revision', title: 'Find baby clothes' }],
-  providers: [{ step: 'interpret', profileId: 'local', configurationId: 'fingerprint' }],
+  providers: [{ profileId: 'local', configurationId: 'fingerprint' }],
   startedAt: '2026-09-05T12:00:01Z', finishedAt: '2026-09-05T12:01:00Z',
   results: [{ caseRevisionId: 'case-revision', modelCalls: 2, durationMilliseconds: 1532.5, completedAt: '2026-09-05T12:01:00Z',
     observation: { kind: 'answer', referencedAssets: ['clothes'], locations: [{ assetId: 'clothes', ancestorId: 'loft' }], proposals: null, executedOperations: null },

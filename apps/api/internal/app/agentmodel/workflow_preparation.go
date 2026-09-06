@@ -18,7 +18,7 @@ type PrepareWorkflowInput struct {
 }
 
 // PreparedWorkflow pins immutable configuration and providers before audio is
-// captured. Its shared model budget starts with the first model invocation.
+// captured. The caller applies its budgets separately to each user turn.
 type PreparedWorkflow struct {
 	conversation          *workflowConversationModel
 	conversationProfileID string
@@ -52,16 +52,14 @@ func (s ConversationWorkflowService) Selected(ctx context.Context, principal ide
 		return nil, apperrors.ErrPrecondition
 	}
 	_, err = domain.NewWorkflowDefinition(snapshot.Definition.Settings(), s.deps.Limits)
-	if err != nil || s.deps.Clock == nil {
+	if err != nil {
 		return nil, apperrors.ErrPrecondition
 	}
-	return &SelectedWorkflow{revision: revision, limits: s.deps.Limits, clock: s.deps.Clock}, nil
+	return &SelectedWorkflow{revision: revision}, nil
 }
 
 type SelectedWorkflow struct {
 	revision domain.WorkflowRevision
-	limits   domain.WorkflowLimits
-	clock    ports.Clock
 }
 
 func (selected *SelectedWorkflow) NeedsDefaultLanguage() bool {
@@ -97,7 +95,7 @@ func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.Re
 	if model == nil {
 		return nil, ports.ErrInvalidProviderInput
 	}
-	conversation, err := newWorkflowConversationModel(model, selected.clock, settings, prompt)
+	conversation, err := newWorkflowConversationModel(model, settings, prompt)
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +103,3 @@ func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.Re
 }
 
 func (p *PreparedWorkflow) Revision() domain.WorkflowRevision { return p.revision }
-func (p *PreparedWorkflow) CanContinue() bool {
-	return p.conversation != nil && p.conversation.CanContinue()
-}
