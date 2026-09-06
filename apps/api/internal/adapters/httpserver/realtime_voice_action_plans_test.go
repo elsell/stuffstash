@@ -14,7 +14,6 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -549,36 +548,28 @@ func (d *denyEditAfterProposalAuthorizer) RevokeInventoryEditor(ctx context.Cont
 
 type actionPlanProposalLanguageModel struct{}
 
-func (m actionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationCreate, SubjectMention: "water bottle", NewAssetKind: "item"}
-	return typedVoiceInvestigationTurn(input, intent, nil)
+// Removed with the legacy provider injection signature.
+func (actionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 type moveActionPlanProposalLanguageModel struct{}
 
-func (m moveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{
-		RequestShape: agentmodel.RequestShapeSingleTarget,
-		Kind:         agentmodel.IntentKindChange, Operation: agentmodel.OperationMove, SubjectMention: "water bottle",
-		DestinationPath: []string{"Office"}, DestinationKinds: []agentmodel.DestinationKind{agentmodel.DestinationKindLocation},
-	}
-	return typedVoiceInvestigationTurn(input, intent, nil)
+// Removed with the legacy provider injection signature.
+func (moveActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 type archiveActionPlanProposalLanguageModel struct{}
 
-func (m archiveActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	subject := "water bottle"
-	if strings.Contains(strings.ToLower(input.Transcript), "toolbox") {
-		subject = "Toolbox"
-	}
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationArchive, SubjectMention: subject}
-	return typedVoiceInvestigationTurn(input, intent, nil)
+// Removed with the legacy provider injection signature.
+func (archiveActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
 
 type restoreActionPlanProposalLanguageModel struct{}
 
-func (m restoreActionPlanProposalLanguageModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := agentmodel.Intent{RequestShape: agentmodel.RequestShapeSingleTarget, Kind: agentmodel.IntentKindChange, Operation: agentmodel.OperationRestore, SubjectMention: "water bottle"}
-	return typedVoiceInvestigationTurn(input, intent, nil)
+// Removed with the legacy provider injection signature.
+func (restoreActionPlanProposalLanguageModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
