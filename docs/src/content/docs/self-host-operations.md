@@ -133,3 +133,48 @@ After making any needed backup, remove containers and all named volumes:
 docker compose -f compose.selfhost.yaml down -v
 ```
 :::
+
+## Send API Telemetry To A Collector
+
+The API can send traces, metrics, and structured events over OTLP/HTTP, and push
+Go runtime profiles to a Pyroscope-compatible server. Both are off by default.
+Store authentication values in your deployment's secret manager.
+
+For OTLP, configure:
+
+| Variable | Value |
+| --- | --- |
+| `STUFF_STASH_TELEMETRY_ENABLED` | `true` |
+| `OTEL_SERVICE_NAME` | `stuffstash-api` |
+| `OTEL_SERVICE_VERSION` | Your deployed release version |
+| `STUFF_STASH_DEPLOYMENT_ENVIRONMENT` | Your environment name |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector base URL, before `/v1/traces` or `/v1/metrics` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Collector authentication, such as `Authorization=Basic%20…` |
+
+For Grafana Cloud, copy the OTLP endpoint and authentication header from the stack's
+OpenTelemetry connection instructions. Use an access-policy token with
+`traces:write`, `metrics:write`, and `logs:write`. A Grafana service-account token
+used to manage dashboards is a different credential.
+
+To enable profiling, also configure:
+
+| Variable | Value |
+| --- | --- |
+| `STUFF_STASH_PROFILING_ENABLED` | `true` |
+| `STUFF_STASH_PROFILING_ENDPOINT` | Profiles server URL from your collector |
+| `STUFF_STASH_PROFILING_USERNAME` | Grafana Cloud Profiles instance ID |
+| `STUFF_STASH_PROFILING_PASSWORD` | Access-policy token with `profiles:write` |
+
+Profiling uses the same service/version/environment identity. It pushes CPU,
+allocation, heap, goroutine, mutex, and blocking profiles; it does not open a
+public profiling endpoint. The default upload interval is 15 seconds. See
+[Configuration](../configuration/) and `.env.example` for optional settings.
+
+After deploying, exercise an authenticated API request and confirm all four
+signals arrive under the expected service and release. Check local logs for
+`telemetry.batches_dropped` or `profiling.delivery_failed`. Successful startup or
+shutdown alone does not prove delivery. Measure workload latency and resource use
+with collection enabled before choosing sampling settings.
+
+The adapters are tested against local collectors in CI, including authentication
+and redirect handling. End-to-end Grafana Cloud delivery is not yet verified.
