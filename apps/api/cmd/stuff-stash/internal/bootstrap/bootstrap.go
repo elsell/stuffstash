@@ -33,6 +33,10 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	defer recordCloseFailure(observer, closeAuthorizer)
+	if telemetryEnabled {
+		authenticator = observability.ObserveAuthenticator(authenticator, telemetry.Telemetry)
+		authorizer = observability.ObserveAuthorizer(authorizer, telemetry.Telemetry)
+	}
 
 	repositories, closeRepositories, err := buildRepositories(ctx, cfg)
 	if err != nil {
