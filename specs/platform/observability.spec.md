@@ -147,3 +147,25 @@ An interrupted HTTP handler records `outcome=interrupted` and the response statu
 only when known; it must not claim a 500 that was never sent. A WebSocket upgrade
 records 101. Media operation vocabulary includes upload initiation/verification
 and model-image preparation separately from thumbnail generation.
+
+## Profiling adapter contract
+
+- Pin `github.com/grafana/pyroscope-go v1.2.8` behind a profiling adapter. Its
+  process-wide CPU sampling is an infrastructure constraint, not domain state.
+- `STUFF_STASH_PROFILING_ENABLED` defaults to false. When enabled, require a
+  validated `STUFF_STASH_PROFILING_ENDPOINT`; user/password credentials come from
+  `STUFF_STASH_PROFILING_USERNAME` and `STUFF_STASH_PROFILING_PASSWORD`.
+- Use the same service/version/environment identity as other signals. Export CPU,
+  in-use/allocated objects and bytes, goroutines, mutex and blocking profiles.
+  Upload interval, request timeout, mutex fraction and block sampling rate are
+  environment-configured and validated. Sampling overhead must be measured.
+- Do not expose a profiling HTTP endpoint on the application listener. Push over
+  a bounded HTTP client with redirects disabled; the profiler's diagnostics are
+  mapped to fixed local observability categories without formatting raw arguments.
+- Reject the SDK's ambient adhoc-server override so credentials cannot silently be
+  sent to a different endpoint. Runtime stop is bounded and reports incomplete
+  shutdown safely; profiling is not implicitly activated by tracing configuration.
+
+Profiling defaults are upload interval 15s, request timeout 5s, mutex profile
+fraction 5, and block profile rate 1,000,000 ns. Fractions/rates must be nonnegative
+and durations positive. Zero disables the corresponding contention sample type.
