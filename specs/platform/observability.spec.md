@@ -240,3 +240,12 @@ The live probe performs one second of fixed-input CPU work so CPU samples can be
 verified in storage; an almost-idle smoke test may legitimately produce no CPU
 profile. This workload is solely ingestion acceptance and must not be reported
 as image performance or instrumentation overhead.
+
+## Audit dependency spans
+
+Wrap audit repository reads and standalone writes with fixed `audit.read` and
+`audit.write` operation spans. Preserve records, scoped query arguments, ordering,
+errors, and the derived context. Audit metadata never becomes telemetry attributes.
+This observes standalone read-audit persistence; transactional command audit
+writes remain part of their unit-of-work and are not represented as separate
+repository writes by this decorator.
