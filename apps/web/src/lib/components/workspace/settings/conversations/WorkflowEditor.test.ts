@@ -11,6 +11,16 @@ const definition: WorkflowDefinition = { name: 'Home', retrieval: 'expanded', re
 function input(name: string) { return document.querySelector<HTMLInputElement>(`[name="${name}"]`)!; }
 async function submit() { document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); await Promise.resolve(); flushSync(); }
 describe('workflow editor', () => {
+  it('offers one conversation model and guidance without retired stage controls', () => {
+    component = mount(WorkflowEditor, { target: document.body, props: { initial: definition, providers: [], onSave: async () => {} } });
+    expect(document.querySelector('#provider-model')).not.toBeNull();
+    expect(document.querySelector('[name="instructions"]')).not.toBeNull();
+    expect(document.querySelector('[name="toolCalls"]')).not.toBeNull();
+    expect(document.querySelector('#provider-respond')).toBeNull();
+    expect(document.querySelector('#retrieval')).toBeNull();
+    expect(document.querySelector('#response')).toBeNull();
+    expect(document.querySelector('[name="attempts-interpret"]')).toBeNull();
+  });
   it('focuses validation feedback while keeping the draft', async () => {
     component = mount(WorkflowEditor, { target: document.body, props: { initial: definition, providers: [],
       onSave: async () => { throw new ConversationFailure('invalid'); } } });
