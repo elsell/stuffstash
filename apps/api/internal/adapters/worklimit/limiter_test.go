@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 
@@ -55,10 +56,12 @@ func TestWaitingForegroundHasPriorityAndEachClassIsFIFO(t *testing.T) {
 	defer cancel()
 	background := acquireAsync(limiter, ctx, ports.ImageWorkBackground)
 	awaitWaiters(t, limiter, 0, 1)
+	backgroundTwo := acquireAsync(limiter, ctx, ports.ImageWorkBackground)
+	awaitWaiters(t, limiter, 0, 2)
 	foregroundOne := acquireAsync(limiter, ctx, ports.ImageWorkForeground)
-	awaitWaiters(t, limiter, 1, 1)
+	awaitWaiters(t, limiter, 1, 2)
 	foregroundTwo := acquireAsync(limiter, ctx, ports.ImageWorkForeground)
-	awaitWaiters(t, limiter, 2, 1)
+	awaitWaiters(t, limiter, 2, 2)
 	active()
 	first := awaitPermit(t, foregroundOne)
 	select {
@@ -69,6 +72,7 @@ func TestWaitingForegroundHasPriorityAndEachClassIsFIFO(t *testing.T) {
 	first()
 	awaitPermit(t, foregroundTwo)()
 	awaitPermit(t, background)()
+	awaitPermit(t, backgroundTwo)()
 }
 
 func TestCancellationDoesNotLeakCapacity(t *testing.T) {
@@ -159,4 +163,40 @@ func awaitWaiters(t *testing.T, limiter *Limiter, foreground, background int) {
 		runtime.Gosched()
 	}
 	t.Fatal("contenders did not reach admission queue")
+}
+
+func TestConcurrentCancellationAndGrantPreserveCapacity(t *testing.T) {
+	for range 100 {
+		limiter, _ := New(1)
+		active, _ := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			release, _ := limiter.Acquire(ctx, ports.ImageWorkForeground)
+			if release != nil {
+				release()
+			}
+		}()
+		awaitWaiters(t, limiter, 1, 0)
+		start := make(chan struct{})
+		var racers sync.WaitGroup
+		racers.Add(2)
+		go func() { defer racers.Done(); <-start; cancel() }()
+		go func() { defer racers.Done(); <-start; active() }()
+		close(start)
+		racers.Wait()
+		select {
+		case <-done:
+		case <-time.After(time.Second):
+			t.Fatal("cancellation/grant left work stuck")
+		}
+		check, stop := context.WithTimeout(context.Background(), time.Second)
+		release, err := limiter.Acquire(check, ports.ImageWorkBackground)
+		stop()
+		if err != nil {
+			t.Fatalf("cancellation/grant leaked capacity: %v", err)
+		}
+		release()
+	}
 }
