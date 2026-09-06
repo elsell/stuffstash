@@ -105,7 +105,9 @@ func (r ProviderProfileResolver) ResolveRealtimeVoiceProviders(ctx context.Conte
 	if stt == nil || (!input.SkipDefaultLanguage && language == nil) || tts == nil {
 		return ports.RealtimeVoiceProviderSet{}, ports.ErrInvalidProviderInput
 	}
+	conversation, _ := language.(ports.ConversationModel)
 	return ports.RealtimeVoiceProviderSet{
+		ConversationModel:          conversation,
 		SpeechToTextProfileID:      sttProfile.ID.String(),
 		LanguageInferenceProfileID: languageProfile.ID.String(),
 		TextToSpeechProfileID:      ttsProfile.ID.String(),

@@ -86,3 +86,28 @@ func TestSelectedWorkflowUsesOneNativeModelAndPreservesGuidanceAndBudgets(t *tes
 		t.Fatalf("configured call budget reset or bypassed: calls=%d err=%v", provider.calls, err)
 	}
 }
+
+func TestNativeWorkflowBudgetDoesNotSpendOnCancellationAndExpiresAcrossUtterances(t *testing.T) {
+	clock := &workflowExecutionClock{now: time.Date(2026, 9, 5, 12, 0, 0, 0, time.UTC)}
+	provider := &workflowConversationProvider{}
+	model, err := newWorkflowConversationModel(provider, clock, workflowServiceInput().Definition, "Be concise.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := model.Converse(ctx, ports.ConversationModelInput{}); !errors.Is(err, context.Canceled) || provider.calls != 0 {
+		t.Fatalf("cancelled invocation reached provider: %v calls=%d", err, provider.calls)
+	}
+	clock.now = clock.now.Add(time.Hour)
+	if _, err := model.Converse(context.Background(), ports.ConversationModelInput{}); err != nil {
+		t.Fatalf("cancelled invocation started elapsed budget: %v", err)
+	}
+	clock.now = clock.now.Add(time.Minute)
+	if model.CanContinue() {
+		t.Fatal("expired session advertised more capacity")
+	}
+	if _, err := model.Converse(context.Background(), ports.ConversationModelInput{}); !errors.Is(err, ErrWorkflowBudgetExhausted) || provider.calls != 1 {
+		t.Fatalf("elapsed budget was reset or bypassed: %v calls=%d", err, provider.calls)
+	}
+}

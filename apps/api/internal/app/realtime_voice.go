@@ -23,7 +23,9 @@ func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, lm ports
 	a.speechToText = stt
 	a.languageInference = lm
 	a.textToSpeech = tts
+	conversation, _ := lm.(ports.ConversationModel)
 	a.realtimeVoiceProviders = staticRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{
+		ConversationModel: conversation,
 		SpeechToText:      stt,
 		LanguageInference: lm,
 		ResponseGenerator: a.voiceResponseGenerator,
@@ -78,8 +80,17 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 		if err != nil {
 			return RealtimeVoiceSession{}, err
 		}
-		providers.LanguageInference = workflow
-		providers.ResponseGenerator = workflow
+		if model := workflow.ConversationModel(); model != nil {
+			providers.ConversationModel = model
+			providers.LanguageInferenceProfileID = workflow.ConversationProfileID()
+			providers.LanguagePromptTemplate = ""
+		} else {
+			if providers.ConversationModel != nil {
+				return RealtimeVoiceSession{}, ports.ErrInvalidProviderInput
+			}
+			providers.LanguageInference = workflow
+			providers.ResponseGenerator = workflow
+		}
 	}
 	if providers.SpeechToText == nil || providers.TextToSpeech == nil || (providers.ConversationModel == nil && (providers.LanguageInference == nil || providers.ResponseGenerator == nil)) {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput

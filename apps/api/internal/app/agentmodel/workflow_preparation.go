@@ -21,13 +21,15 @@ type PrepareWorkflowInput struct {
 // PreparedWorkflow pins immutable configuration and providers before audio is
 // captured. Its shared model budget starts with the first model invocation.
 type PreparedWorkflow struct {
-	revision  domain.WorkflowRevision
-	limits    domain.WorkflowLimits
-	clock     ports.Clock
-	bindings  map[domain.WorkflowStepKind]WorkflowModelBinding
-	mu        sync.Mutex
-	execution *WorkflowModelExecution
-	err       error
+	conversation          *workflowConversationModel
+	conversationProfileID string
+	revision              domain.WorkflowRevision
+	limits                domain.WorkflowLimits
+	clock                 ports.Clock
+	bindings              map[domain.WorkflowStepKind]WorkflowModelBinding
+	mu                    sync.Mutex
+	execution             *WorkflowModelExecution
+	err                   error
 }
 
 func (s ConversationWorkflowService) Selected(ctx context.Context, principal identity.Principal, tenantID tenant.ID) (*SelectedWorkflow, error) {
@@ -71,16 +73,9 @@ type SelectedWorkflow struct {
 
 func (selected *SelectedWorkflow) NeedsDefaultLanguage() bool {
 	settings := selected.revision.Snapshot().Definition.Settings()
-	for _, step := range settings.Steps {
-		if step.Kind == domain.WorkflowStepRespond && settings.Response == domain.WorkflowResponseGrounded {
-			continue
-		}
-		if step.ProviderProfileID == "" {
-			return true
-		}
-	}
-	return false
+	return len(settings.Steps) == 0 || settings.Steps[0].ProviderProfileID == ""
 }
+
 func (s ConversationWorkflowService) PrepareSelected(ctx context.Context, input PrepareWorkflowInput) (*PreparedWorkflow, error) {
 	selected, err := s.Selected(ctx, input.Principal, input.TenantID)
 	if err != nil || selected == nil {
@@ -118,6 +113,19 @@ func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.Re
 				}
 				binding = WorkflowModelBinding{ProfileID: resolved.ProfileID, PromptTemplate: resolved.PromptTemplate, Language: resolved.Provider, Response: resolved.Provider}
 				cache[step.ProviderProfileID] = binding
+			}
+		}
+		if step.Kind == domain.WorkflowStepInterpret {
+			native, _ := binding.Language.(ports.ConversationModel)
+			if native == nil && (step.ProviderProfileID == "" || step.ProviderProfileID == defaults.LanguageInferenceProfileID) {
+				native = defaults.ConversationModel
+			}
+			if native != nil {
+				conversation, err := newWorkflowConversationModel(native, selected.clock, definition.Settings(), binding.PromptTemplate)
+				if err != nil {
+					return nil, err
+				}
+				return &PreparedWorkflow{revision: selected.revision, limits: selected.limits, clock: selected.clock, conversation: conversation, conversationProfileID: binding.ProfileID}, nil
 			}
 		}
 		bindings[step.Kind] = binding
@@ -161,6 +169,9 @@ func (p *PreparedWorkflow) GenerateResponse(ctx context.Context, input ports.Voi
 }
 
 func (p *PreparedWorkflow) CanContinue() bool {
+	if p.conversation != nil {
+		return p.conversation.CanContinue()
+	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if p.err != nil {
