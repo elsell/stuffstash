@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -106,4 +107,47 @@ func (p *profileEvents) Record(_ context.Context, event ports.Event) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.events = append(p.events, event)
+}
+
+func TestProfilerOwnsSamplingUntilConcurrentStopsComplete(t *testing.T) {
+	collector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = io.Copy(io.Discard, r.Body) }))
+	defer collector.Close()
+	previous := runtime.SetMutexProfileFraction(7)
+	defer runtime.SetMutexProfileFraction(previous)
+	cfg := profileTestConfig(collector.URL)
+	cfg.MutexFraction = 3
+	session, err := NewProfiler(context.Background(), cfg, discardObserver{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer session.Stop(context.Background())
+	if got := runtime.SetMutexProfileFraction(-1); got != 3 {
+		t.Fatalf("active fraction = %d", got)
+	}
+	if _, err := NewProfiler(context.Background(), cfg, discardObserver{}); err == nil {
+		t.Fatal("duplicate profiler accepted")
+	}
+	var workers sync.WaitGroup
+	for range 3 {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := session.Stop(ctx); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	workers.Wait()
+	if got := runtime.SetMutexProfileFraction(-1); got != 7 {
+		t.Fatalf("restored fraction = %d", got)
+	}
+	next, err := NewProfiler(context.Background(), cfg, discardObserver{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := next.Stop(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 }
