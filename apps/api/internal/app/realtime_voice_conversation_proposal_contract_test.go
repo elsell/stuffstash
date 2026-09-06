@@ -13,7 +13,7 @@ func TestConversationProposalCatalogDescribesCommandArgumentFamilies(t *testing.
 	type schema struct {
 		Properties           map[string]json.RawMessage `json:"properties"`
 		Required             []string                   `json:"required"`
-		AdditionalProperties bool                       `json:"additionalProperties"`
+		AdditionalProperties *bool                      `json:"additionalProperties"`
 		Items                json.RawMessage            `json:"items"`
 		AnyOf                []json.RawMessage          `json:"anyOf"`
 		Enum                 []string                   `json:"enum"`
@@ -55,7 +55,7 @@ func TestConversationProposalCatalogDescribesCommandArgumentFamilies(t *testing.
 				}
 				found = true
 				args := decode(command.Properties["arguments"])
-				if args.AdditionalProperties {
+				if args.AdditionalProperties == nil || *args.AdditionalProperties {
 					t.Fatal("undeclared arguments allowed")
 				}
 				if len(args.Properties) != len(tc.fields) {
