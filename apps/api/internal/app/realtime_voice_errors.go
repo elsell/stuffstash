@@ -28,7 +28,7 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 	if !safeRealtimeVoiceFinalText(response.SpokenResponse, 500) {
 		return ports.ErrInvalidProviderInput
 	}
-	if strings.TrimSpace(response.DisplayResponse) != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
+	if response.DisplayResponse != "" && !safeRealtimeVoiceFinalText(response.DisplayResponse, 1000) {
 		return ports.ErrInvalidProviderInput
 	}
 	if err := validateRealtimeVoiceResponseArtifacts(response.DisplayResponse, response.Artifacts); err != nil {
@@ -38,8 +38,7 @@ func validateRealtimeVoiceFinalResponse(response ports.StructuredAgentResponse) 
 }
 
 func safeRealtimeVoiceFinalText(value string, limit int) bool {
-	value = strings.TrimSpace(value)
-	return value != "" && len(value) <= limit && utf8.ValidString(value)
+	return strings.TrimSpace(value) != "" && len(value) <= limit && utf8.ValidString(value)
 }
 
 func realtimeVoiceFinalTextLooksUnsafe(value string) bool {
