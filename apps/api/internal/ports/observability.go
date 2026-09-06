@@ -5,6 +5,7 @@ import "context"
 type EventName string
 
 const (
+	EventTelemetryBatchesDropped                   EventName = "telemetry.batches_dropped"
 	EventHealthChecked                             EventName = "health.checked"
 	EventHTTPServerStartFailed                     EventName = "http.server.start_failed"
 	EventHTTPServerShutdownFailed                  EventName = "http.server.shutdown_failed"

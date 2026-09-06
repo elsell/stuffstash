@@ -3,7 +3,7 @@ package ports
 // Known restricts exported event names to the reviewed domain vocabulary.
 func (name EventName) Known() bool {
 	switch name {
-	case EventHealthChecked,
+	case EventTelemetryBatchesDropped, EventHealthChecked,
 		EventHTTPServerStartFailed,
 		EventHTTPServerShutdownFailed,
 		EventApplicationStartupFailed,

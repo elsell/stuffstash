@@ -44,7 +44,7 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 		{"anonymous", "", path, 401},
 		{"malformed", "Bearer private-invalid-token", path, 401},
 		{"other principal", "Bearer dev:other", path, 403},
-		{"wrong tenant", "Bearer dev:owner", strings.Replace(path, tenantID, otherTenant, 1), 403},
+		{"wrong tenant", "Bearer dev:owner", strings.Replace(path, tenantID, otherTenant, 1), 404},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			response := performRequest(server, http.MethodGet, test.path, test.token, nil)

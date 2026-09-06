@@ -13,6 +13,12 @@ import (
 )
 
 func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error {
+	telemetry, combinedObserver, stopTelemetry, telemetryEnabled, err := startObservability(ctx, observer)
+	if err != nil {
+		return err
+	}
+	defer stopTelemetry()
+	observer = combinedObserver
 	authenticator, err := buildAuthenticator(ctx, cfg)
 	if err != nil {
 		return err
@@ -28,6 +34,9 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	defer recordCloseFailure(observer, closeRepositories)
+	if telemetryEnabled {
+		repositories = observeMediaRepositories(repositories, telemetry.Telemetry)
+	}
 
 	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories)
 	if err != nil {
@@ -56,6 +65,7 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		IdleTimeout:              cfg.HTTPIdleTimeout,
 		RealtimeVoiceIdleTimeout: cfg.RealtimeVoiceIdleTimeout,
 	})
+	server.Handler = telemetry.WrapHTTP(server.Handler)
 	stopEvaluations, err := startEvaluationWorker(ctx, application, observer, cfg)
 	if err != nil {
 		return err

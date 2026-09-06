@@ -40,6 +40,10 @@ jobs:
           lscpu > measurements/cpu.txt
           set -o pipefail
           go test ./apps/api/internal/adapters/blobstore -run '^$' -bench '^BenchmarkCameraPhotoThumbnail$' -benchtime=5x -count=3 -benchmem -cpuprofile=measurements/cpu.pprof -memprofile=measurements/heap.pprof -o measurements/blobstore.test | tee measurements/codec.txt
+      - name: Summarize profiles
+        run: |
+          go tool pprof -top -nodecount=20 measurements/blobstore.test measurements/cpu.pprof > measurements/cpu-top.txt
+          go tool pprof -top -alloc_space -nodecount=20 measurements/blobstore.test measurements/heap.pprof > measurements/alloc-top.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
