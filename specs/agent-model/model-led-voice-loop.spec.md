@@ -61,3 +61,7 @@ The proposal tool accepts a bounded summary, risks and ordered domain command ob
 Keep domain command type/argument validation and dependency validation. Do not ban ordinary inventory titles or descriptions because their text resembles provider or credential terminology; unexpected fields are rejected by typed argument validation. Only explicit approval through the existing authorized decision boundary may execute the plan.
 
 Resolve fallible review metadata before saving a proposal. A retryable read failure must leave no draft behind; successful persistence must immediately pause the loop. Explicit valid command IDs keep dependent review and execution references stable.
+
+## Active conversation continuity
+
+An active voice session retains project-owned messages, tool results, authorized reference metadata and opaque native provider continuation between utterances. Keep this state private to the server-side session, scoped to its original principal, tenant, inventory and session ID; never accept it from client payloads or expose it in events. Serialize turns on that session and reject scope changes. A new session starts empty. Session closure releases this state; reconnect persistence is not required for this milestone. Retain partial completed tool history after a failed turn so the next turn does not invent a result or repeat a change blindly. Reauthorize references before new mutations and validate current access on every utterance. Bound retained context by configurable limits without silently dropping native call/response pairs.
