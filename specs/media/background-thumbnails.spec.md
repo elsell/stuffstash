@@ -152,3 +152,13 @@ After claiming, recalculate remaining lease time using the injected clock. Never
 process an expired claim. Reserve the configured lease-minus-processing interval
 for resolution and reduce processing time when acquisition used part of the lease.
 The attempt budget accepts 1–100 acquisitions; exponential backoff is capped.
+
+## Batch image processing
+
+The image adapter exposes batch derivative generation through a port. Validate the
+whole requested variant set before work, decode the original once, and publish each
+requested variant in small/medium/large order. Keep the existing JPEG settings and
+filter. Stop on cancellation or publication failure before producing another
+variant. Single-thumbnail generation uses the same implementation, so foreground
+and background output remain equivalent. Never require all derivative byte buffers
+to remain resident together merely to publish a batch.
