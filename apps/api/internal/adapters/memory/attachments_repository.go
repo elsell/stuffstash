@@ -33,6 +33,10 @@ func (s *Store) SaveAttachment(_ context.Context, attachment media.Attachment, a
 	if err := media.ValidatePlannedThumbnailJob(attachment, thumbnailJob); err != nil {
 		return err
 	}
+	if _, exists := s.mediaBlobKeys[attachment.StorageKey]; exists {
+		return ports.ErrConflict
+	}
+	s.mediaBlobKeys[attachment.StorageKey] = struct{}{}
 	s.enqueueThumbnailJob(thumbnailJob)
 	s.attachments[attachment.ID] = attachment
 	if item.UpdatedAt.Before(attachment.CreatedAt) {
@@ -79,6 +83,11 @@ func (s *Store) DeleteAttachmentAndEnqueueBlobDeletion(_ context.Context, eventI
 		StorageKey: attachment.StorageKey,
 	}
 	delete(s.attachments, attachmentID)
+	for key := range s.thumbnailJobs {
+		if key.AttachmentID == attachmentID {
+			delete(s.thumbnailJobs, key)
+		}
+	}
 	return attachment, true, nil
 }
 

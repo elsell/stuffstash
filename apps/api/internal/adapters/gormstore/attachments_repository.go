@@ -17,7 +17,7 @@ import (
 func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, thumbnailJob *media.ThumbnailJob) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var item assetModel
-		err := tx.Where(&assetModel{
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 			ID:          attachment.AssetID.String(),
 			TenantID:    attachment.TenantID.String(),
 			InventoryID: attachment.InventoryID.String(),
@@ -30,6 +30,9 @@ func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, 
 		}
 		if item.LifecycleState != asset.LifecycleStateActive.String() {
 			return ports.ErrForbidden
+		}
+		if err := reserveMediaBlobKey(tx, attachment.StorageKey); err != nil {
+			return err
 		}
 		if err := tx.Create(&attachmentModel{
 			ID:             attachment.ID.String(),
@@ -88,7 +91,7 @@ func (s Store) DeleteAttachmentAndEnqueueBlobDeletion(ctx context.Context, event
 	found := false
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing attachmentModel
-		err := tx.Where(&attachmentModel{ID: attachmentID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: assetID.String()}).First(&existing).Error
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&attachmentModel{ID: attachmentID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String(), AssetID: assetID.String()}).First(&existing).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		}
@@ -108,7 +111,7 @@ func (s Store) DeleteAttachmentAndEnqueueBlobDeletion(ctx context.Context, event
 		}).Error; err != nil {
 			return err
 		}
-		if err := tx.Delete(&existing).Error; err != nil {
+		if err := deleteAttachmentRows(tx, existing); err != nil {
 			return err
 		}
 		deleted = item

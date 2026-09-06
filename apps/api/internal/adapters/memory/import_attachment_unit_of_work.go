@@ -43,6 +43,10 @@ func (s *Store) CreateImportedAttachment(_ context.Context, attachment media.Att
 	if err := media.ValidatePlannedThumbnailJob(attachment, thumbnailJob); err != nil {
 		return err
 	}
+	if _, exists := s.mediaBlobKeys[attachment.StorageKey]; exists {
+		return ports.ErrConflict
+	}
+	s.mediaBlobKeys[attachment.StorageKey] = struct{}{}
 	s.enqueueThumbnailJob(thumbnailJob)
 	s.attachments[attachment.ID] = attachment
 	s.auditRecords[auditRecord.ID] = auditRecord

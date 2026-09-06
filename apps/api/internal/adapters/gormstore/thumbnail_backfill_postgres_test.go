@@ -121,6 +121,10 @@ func postgresBackfillFixture(t *testing.T) (Store, time.Time) {
 	now := time.Date(2026, 9, 6, 22, 0, 0, 0, time.UTC)
 	for _, id := range []string{"backfill-image-a", "backfill-image-b"} {
 		attachment := testAttachment(t, id, item, "photo.jpg", media.ContentTypeJPEG, now)
+		if err := store.db.Delete(&mediaBlobKeyModel{StorageKey: attachment.StorageKey.String()}).Error; err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = store.db.Delete(&mediaBlobKeyModel{StorageKey: attachment.StorageKey.String()}).Error })
 		if err := store.SaveAttachment(ctx, attachment, postgresAuditRecord(t, id+"-audit", tenantID, inventoryID, audit.ActionAttachmentCreated), plannedThumbnailJob(t, attachment)); err != nil {
 			t.Fatal(err)
 		}

@@ -16,6 +16,7 @@ import (
 )
 
 type Store struct {
+	mediaBlobKeys           map[media.StorageKey]struct{}
 	evaluationRuns          map[evaluationRunKey]agentmodel.EvaluationRun
 	evaluationCaseHeads     map[evaluationCaseKey]ports.EvaluationCaseHeadRecord
 	evaluationCaseRevisions map[evaluationCaseRevisionKey]agentmodel.EvaluationCaseRevision
@@ -56,6 +57,7 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
+		mediaBlobKeys:    map[media.StorageKey]struct{}{},
 		users:            map[identity.PrincipalID]identity.User{},
 		tenants:          map[tenant.ID]tenant.Tenant{},
 		inventories:      map[inventory.InventoryID]inventory.Inventory{},

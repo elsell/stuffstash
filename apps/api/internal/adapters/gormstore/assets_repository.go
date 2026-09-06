@@ -332,6 +332,14 @@ func updateAssetLifecycleInTx(tx *gorm.DB, expectedCurrent asset.Asset, item ass
 
 func (s Store) DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, auditRecord audit.Record) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var parent assetModel
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{ID: assetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).First(&parent).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ports.ErrForbidden
+			}
+			return err
+		}
+
 		hasActiveChildren, err := assetHasActiveChildren(tx, asset.TenantID(tenantID.String()), asset.InventoryID(inventoryID.String()), assetID)
 		if err != nil {
 			return err
@@ -363,6 +371,10 @@ func (s Store) DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID 
 		if err := createAuditRecord(tx, auditRecord); err != nil {
 			return err
 		}
+		if err := deleteAssetAttachments(tx, tenantID, inventoryID, assetID, auditRecord.OccurredAt); err != nil {
+			return err
+		}
+
 		result := tx.Where(&assetModel{ID: assetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).Delete(&assetModel{})
 		if result.Error != nil {
 			return result.Error
