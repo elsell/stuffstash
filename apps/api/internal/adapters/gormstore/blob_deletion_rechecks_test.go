@@ -3,6 +3,7 @@ package gormstore
 import (
 	"context"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
 	"time"
@@ -21,6 +22,13 @@ func TestBlobDeletionRechecksAreFairAndLeaseFenced(t *testing.T) {
 	first, err := store.ClaimBlobDeletionRechecks(ctx, "claim", 1, now, now.Add(time.Minute), time.Hour)
 	if err != nil || len(first) != 1 || first[0].ID != "cleanup-a" {
 		t.Fatal("initial recheck failed", first, err)
+	}
+	for _, key := range []media.StorageKey{"", "wrong"} {
+		changed := first[0]
+		changed.StorageKey = key
+		if err := store.ResolveBlobDeletionRecheck(ctx, changed, now, false); !errors.Is(err, ports.ErrOutboxClaimLost) {
+			t.Fatal("changed cleanup identity resolved", err)
+		}
 	}
 	if err := store.ResolveBlobDeletionRecheck(ctx, first[0], now, true); err != nil {
 		t.Fatal(err)

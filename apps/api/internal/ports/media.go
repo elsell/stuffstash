@@ -125,6 +125,8 @@ type BlobDeletionEvent struct {
 	ClaimID          string
 	ClaimedUntil     time.Time
 	ProcessedAt      time.Time
+	RecheckedAt      time.Time
+	RecheckFailed    bool
 	DeadLetteredAt   time.Time
 	DeadLetterReason string
 	CreatedAt        time.Time

@@ -15,6 +15,8 @@ type blobDeletionEventModel struct {
 	ClaimID          string `gorm:"not null;default:'';size:26;index"`
 	ClaimedUntil     *time.Time
 	ProcessedAt      *time.Time
+	RecheckedAt      *time.Time `gorm:"index"`
+	RecheckFailed    bool       `gorm:"not null;default:false"`
 	DeadLetteredAt   *time.Time `gorm:"index"`
 	DeadLetterReason string     `gorm:"not null;default:''"`
 	CreatedAt        time.Time
@@ -34,12 +36,16 @@ func (m blobDeletionEventModel) toPort() ports.BlobDeletionEvent {
 		ClaimID:          m.ClaimID,
 		DeadLetterReason: m.DeadLetterReason,
 		CreatedAt:        m.CreatedAt,
+		RecheckFailed:    m.RecheckFailed,
 	}
 	if m.ClaimedUntil != nil {
 		event.ClaimedUntil = *m.ClaimedUntil
 	}
 	if m.ProcessedAt != nil {
 		event.ProcessedAt = *m.ProcessedAt
+	}
+	if m.RecheckedAt != nil {
+		event.RecheckedAt = *m.RecheckedAt
 	}
 	if m.DeadLetteredAt != nil {
 		event.DeadLetteredAt = *m.DeadLetteredAt
