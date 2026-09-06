@@ -120,6 +120,14 @@ func resizeImage(source image.Image, maxDimension int) image.Image {
 	}
 	targetWidth := max(1, int(float64(width)*scale))
 	targetHeight := max(1, int(float64(height)*scale))
+	// Bound the final separable filter's scratch space by reducing in filtered halves.
+	for source.Bounds().Dx() > 2*targetWidth || source.Bounds().Dy() > 2*targetHeight {
+		current := source.Bounds()
+		next := image.NewRGBA(image.Rect(0, 0, max(1, current.Dx()/2), max(1, current.Dy()/2)))
+		draw.ApproxBiLinear.Scale(next, next.Bounds(), source, current, draw.Src, nil)
+		source = next
+	}
+	bounds = source.Bounds()
 	target := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
 	draw.CatmullRom.Scale(target, target.Bounds(), source, bounds, draw.Over, nil)
 	return target
