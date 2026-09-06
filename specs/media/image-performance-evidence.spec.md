@@ -137,3 +137,22 @@ instrumentation passed targeted race CI `34056370172`. Client ingestion, whole-
 batch validation, private duration/log mapping and adversarial API scenarios
 passed targeted race CI `34056817154`; full contract regeneration is running in
 `34056816783`. No deployed image scheduling changes or baseline comparison yet.
+
+## Production measurement deployment — 2026-09-06
+
+- API source `319dd138a706002a1d4f84efd2a3ab44cec76718`; image build run
+  `34058839560`, gated by successful API/telemetry race tests.
+- Image `ghcr.io/elsell/stuffstash@sha256:cade551aba9baa2bb451da425c54ce8668d05463b3a64e49e1bb1fc7fbaa6442`.
+- Infra GitOps commit `6cfef7fc100c33913650c6d0f4762f4c821e9429` applied by Flux;
+  Stuff Stash Kustomization Ready=True, Deployment rollout succeeded, `/healthz`
+  returned healthy. The production API has existing OTLP and profiling enabled.
+- CPU request/limit remain 100m/500m; memory request/limit remain 128Mi/512Mi.
+  Trace sample ratio is 1 for both controlled comparison runs.
+- Prior API container was OOMKilled (exit 137) at 2026-09-06 20:32:59 UTC. This
+  is evidence of memory pressure, not proof of which operation caused it.
+- Production image behavior remains unchanged. Web/mobile builds are not deployed.
+- Authenticated HTTP workload awaits a short-lived test ID token in Infisical
+  prod `/`, named `STUFF_STASH_BENCHMARK_ID_TOKEN`; never store it in evidence.
+- Deferred frontend code has outstanding native test validation and is excluded
+  from this deployment. Buildx default BuildKit/SBOM component pinning is also
+  not yet captured for a fully reproducible build environment.
