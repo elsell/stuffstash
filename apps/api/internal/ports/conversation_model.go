@@ -60,6 +60,7 @@ type ConversationModel interface {
 // The executor is bound to an authorized session by the application. A pause is
 // produced only by a validated proposal; the model cannot authorize execution.
 type ConversationToolOutcome struct {
+	Answer         *ConversationAnswer
 	Result         AgentToolResult
 	ApprovalPlanID string
 }

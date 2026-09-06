@@ -153,3 +153,34 @@ func TestDirectlyInjectedNativeProviderUsesConversationLoop(t *testing.T) {
 		t.Fatalf("direct injection used obsolete inference: %+v calls=%d", response, native.calls)
 	}
 }
+
+type presentingConversationModel struct{ inventoryConversationModel }
+
+func (m *presentingConversationModel) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	turn, err := m.inventoryConversationModel.Converse(ctx, input)
+	if err != nil || turn.Answer == nil {
+		return turn, err
+	}
+	return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{
+		{ID: "present", Name: "present_answer", Arguments: map[string]any{"spoken": turn.Answer.Spoken, "display": turn.Answer.Display, "assetIds": turn.Answer.AssetIDs}},
+		{ID: "must-not-follow-answer", Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "unrelated"}},
+	}}, nil
+}
+func TestModelCanFinishWithNaturalSpeechAndIndependentCardsThroughTool(t *testing.T) {
+	resolver := successfulRealtimeVoiceResolver()
+	model := &presentingConversationModel{}
+	resolver.providers.ConversationModel = model
+	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
+	item := realtimeVoiceInvestigationAsset("acetone", "Acetone", asset.KindItem, "")
+	seedRealtimeVoiceLoopAsset(t, store, item, "audit-acetone")
+	events := runRealtimeVoiceProductionEntrypoint(t, application)
+	response := realtimeVoiceInvestigationCompletedResponse(events)
+	if response == nil || response.SpokenResponse != "Yes, you have chemicals, including Acetone." || model.calls != 2 || len(response.Artifacts) != 1 || response.Artifacts[0].AssetID != item.ID {
+		t.Fatalf("native presentation did not finish with evidence: %+v calls=%d", response, model.calls)
+	}
+	for _, event := range events {
+		if event.ToolCallID == "must-not-follow-answer" {
+			t.Fatal("answer did not stop remaining tool work")
+		}
+	}
+}
