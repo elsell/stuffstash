@@ -1,3 +1,4 @@
+import { createMobilePerformanceSession } from '../../adapters/observability/MobilePerformanceSession';
 import React from 'react';
 import { Pressable, Text } from 'react-native';
 import { onlineManager } from '@tanstack/react-query';
@@ -71,4 +72,24 @@ it('disposes performance collection on session replacement and unmount', async (
   expect(disposed).toEqual(['first']);
   await h.unmount();
   expect(disposed).toEqual(['first', 'second']);
+});
+
+
+it('keeps measurement active across StrictMode effect replay and stops after unmount', async () => {
+  const h = new MobileRenderHarness();
+  const client = createMobileQueryClient();
+  const active = new Set<() => void>();
+  const session = createMobilePerformanceSession({ platform: 'ios', enabled: true, baseUrl: 'https://api.example.test', tokenProvider: () => null,
+    fetch: async () => new Response(), clock: { now: () => 0 },
+    scheduler: { schedule(callback) { active.add(callback); return () => { active.delete(callback); }; } }
+  });
+  let acquisitions = 0;
+  const acquire = () => { acquisitions++; return session.acquire(); };
+  try {
+    await h.render(<React.StrictMode><MobileServerStateProvider client={client} scopeId="session" acquirePerformance={acquire} loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><Text>Ready</Text></MobileServerStateProvider></React.StrictMode>);
+    expect(acquisitions).toBeGreaterThan(1);
+    session.observer.start({ operation: 'image', surface: 'detail', variant: 'large' })('success');
+    expect(active.size).toBe(1);
+  } finally { await h.unmount(); }
+  expect(active.size).toBe(0);
 });
