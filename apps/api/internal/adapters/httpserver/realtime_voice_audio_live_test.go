@@ -27,6 +27,10 @@ func TestGoogleLiveRealtimeAudioFindsChemicals(t *testing.T) {
 	runGoogleLiveRealtimeAudio(t, "STUFF_STASH_VOICE_CHEMICALS_AUDIO_FILE", seedLiveChemicals)
 }
 
+func TestGoogleLiveRealtimeAudioFindsChemicalsWithoutLiteralMatches(t *testing.T) {
+	runGoogleLiveRealtimeAudio(t, "STUFF_STASH_VOICE_CHEMICALS_AUDIO_FILE", seedLiveChemicalsWithoutLiteralMatches)
+}
+
 type liveAudioFixture struct {
 	expectedIDs     []string
 	excludedIDs     []string
