@@ -24,12 +24,7 @@ func (p textProviders) ResolveRealtimeVoiceProviders(context.Context, ports.Real
 	if result.ConversationModel != nil {
 		result.ConversationModel = countedConversation{provider: result.ConversationModel, calls: p.calls}
 	}
-	if result.LanguageInference != nil {
-		result.LanguageInference = countedLanguage{provider: result.LanguageInference, calls: p.calls}
-	}
-	if result.ResponseGenerator != nil {
-		result.ResponseGenerator = countedResponse{provider: result.ResponseGenerator, calls: p.calls}
-	}
+
 	return result, nil
 }
 func (p textProviders) ResolveWorkflowLanguageProvider(ctx context.Context, input ports.WorkflowLanguageProviderResolutionInput) (ports.WorkflowLanguageProviderBinding, error) {
@@ -40,14 +35,11 @@ func (p textProviders) ResolveWorkflowLanguageProvider(ctx context.Context, inpu
 	if err != nil {
 		return ports.WorkflowLanguageProviderBinding{}, err
 	}
-	if resolved.Provider != nil {
-		counted := countedModel{LanguageInferenceProvider: countedLanguage{provider: resolved.Provider, calls: p.calls}, VoiceResponseGenerator: countedResponse{provider: resolved.Provider, calls: p.calls}}
-		if native, ok := resolved.Provider.(ports.ConversationModel); ok {
-			resolved.Provider = countedNativeModel{countedModel: counted, countedConversation: countedConversation{provider: native, calls: p.calls}}
-		} else {
-			resolved.Provider = counted
-		}
+	native, ok := resolved.Provider.(ports.ConversationModel)
+	if !ok || native == nil {
+		return ports.WorkflowLanguageProviderBinding{}, ErrInvalidExecution
 	}
+	resolved.Provider = countedNativeModel{RealtimeLanguageProvider: resolved.Provider, countedConversation: countedConversation{provider: native, calls: p.calls}}
 	return resolved, nil
 }
 
@@ -62,32 +54,8 @@ func (p countedConversation) Converse(ctx context.Context, input ports.Conversat
 }
 
 type countedNativeModel struct {
-	countedModel
+	ports.RealtimeLanguageProvider
 	countedConversation
-}
-
-type countedModel struct {
-	ports.LanguageInferenceProvider
-	ports.VoiceResponseGenerator
-}
-type countedLanguage struct {
-	provider ports.LanguageInferenceProvider
-	calls    *atomic.Int64
-}
-
-func (p countedLanguage) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	p.calls.Add(1)
-	return p.provider.NextTurn(ctx, input)
-}
-
-type countedResponse struct {
-	provider ports.VoiceResponseGenerator
-	calls    *atomic.Int64
-}
-
-func (p countedResponse) GenerateResponse(ctx context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	p.calls.Add(1)
-	return p.provider.GenerateResponse(ctx, input)
 }
 
 // Text-only evaluation deliberately substitutes these two boundaries. No audio

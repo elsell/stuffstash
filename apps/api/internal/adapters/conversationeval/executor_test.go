@@ -2,6 +2,7 @@ package conversationeval
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/app"
-	modelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	domain "github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -33,36 +33,49 @@ type taggedClothesModel struct {
 	entered  chan struct{}
 }
 
-func (model *taggedClothesModel) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+func (model *taggedClothesModel) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	model.calls++
 	if model.cancel {
 		if model.entered != nil {
 			close(model.entered)
 		}
 		<-ctx.Done()
-		return ports.LanguageInferenceTurn{}, ctx.Err()
+		return ports.ConversationModelTurn{}, ctx.Err()
 	}
-	intent := domain.Intent{RequestShape: domain.RequestShapeSingleTarget, Kind: domain.IntentKindRead, Operation: domain.OperationLocate, SubjectMention: "baby clothes"}
-	step := domain.InvestigationStep{Intent: intent, Decision: domain.InvestigationDecisionSearch, SearchRequests: []domain.SearchRequest{{ReferenceKey: domain.SemanticReferenceSubject, ReadKind: domain.InvestigationReadSearchAssets, Mention: "baby clothes", SearchProbes: []string{"baby"}}}}
-	if input.Investigation.Phase != domain.InvestigationPhaseInitial {
-		ids := []string{}
-		for _, candidate := range input.Investigation.Observations {
-			if slices.Contains(candidate.TagNames, "baby") && slices.Contains(candidate.TagNames, "clothes") {
-				model.seenTags = true
-				ids = append(ids, candidate.CandidateID)
-			}
+	last := input.Messages[len(input.Messages)-1]
+	if last.Role == ports.ConversationRoleUser {
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "search-clothes", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "baby clothes"}}}}, nil
+	}
+	var result struct {
+		Items []struct {
+			AssetID     string   `json:"assetId"`
+			TagNames    []string `json:"tagNames"`
+			ParentTitle string   `json:"parentTitle"`
+		} `json:"items"`
+	}
+	if len(last.ToolResults) != 1 || json.Unmarshal([]byte(last.ToolResults[0].Content), &result) != nil {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
+	}
+	ids := []string{}
+	location := ""
+	for _, item := range result.Items {
+		if slices.Contains(item.TagNames, "baby") && slices.Contains(item.TagNames, "clothes") {
+			model.seenTags = true
+			ids = append(ids, item.AssetID)
+			location = item.ParentTitle
 		}
-		step.Decision = domain.InvestigationDecisionFinish
-		step.SearchRequests = nil
-		step.Resolutions = []domain.Resolution{{ReferenceKey: domain.SemanticReferenceSubject, Status: domain.ResolutionCollection, CandidateIDs: ids}}
 	}
-	return ports.LanguageInferenceTurn{Investigation: &step}, nil
+	return ports.ConversationModelTurn{Answer: &ports.ConversationAnswer{Spoken: "They are in " + location + ".", Display: "Matching clothes are shown below.", AssetIDs: ids}}, nil
 }
-func (*taggedClothesModel) GenerateResponse(_ context.Context, input ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	spoken, err := modelapp.RenderGroundedVoiceResponse(input.Brief, 2000)
-	return ports.VoiceResponseGenerationResult{SpokenResponse: spoken, DisplayResponse: spoken}, err
+
+// Compatibility methods are never invoked by the evaluation path.
+func (*taggedClothesModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
+	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
 }
-func testInput(t *testing.T, model ports.RealtimeLanguageProvider) ports.ConversationEvaluationInput {
+func (*taggedClothesModel) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
+	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
+}
+func testInput(t *testing.T, model ports.ConversationModel) ports.ConversationEvaluationInput {
 	t.Helper()
 	limits := domain.WorkflowLimits{Budget: domain.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 2}, MaxStepAttempts: 1, MaxNameRunes: 100, MaxInstructionRunes: 1000}
 	definition, err := domain.NewWorkflowDefinition(domain.WorkflowDefinitionInput{Name: "Test", Retrieval: domain.WorkflowRetrievalExpanded, Response: domain.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []domain.WorkflowStep{{Kind: domain.WorkflowStepInterpret, Attempts: 1}, {Kind: domain.WorkflowStepAssess, Attempts: 1}, {Kind: domain.WorkflowStepRespond, Attempts: 1}}}, limits)
@@ -77,7 +90,7 @@ func testInput(t *testing.T, model ports.RealtimeLanguageProvider) ports.Convers
 	if err != nil {
 		t.Fatal(err)
 	}
-	return ports.ConversationEvaluationInput{Case: caseDefinition, Revision: revision, Limits: limits, Principal: identity.Principal{ID: "owner"}, Providers: ports.RealtimeVoiceProviderSet{LanguageInferenceProfileID: "configured", LanguageInference: model, ResponseGenerator: model}}
+	return ports.ConversationEvaluationInput{Case: caseDefinition, Revision: revision, Limits: limits, Principal: identity.Principal{ID: "owner"}, Providers: ports.RealtimeVoiceProviderSet{LanguageInferenceProfileID: "configured", ConversationModel: model}}
 }
 func TestTextEvaluationUsesProductionLoopWithIsolatedTaggedFixtures(t *testing.T) {
 	model := &taggedClothesModel{}
@@ -134,19 +147,11 @@ func TestInvalidEvaluationDoesNotCallProvider(t *testing.T) {
 
 type additionalClothesModel struct{ taggedClothesModel }
 
-func (*additionalClothesModel) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	intent := domain.Intent{RequestShape: domain.RequestShapeSingleTarget, Kind: domain.IntentKindChange, Operation: domain.OperationCreate, SubjectMention: "3 to 6 months", NewAssetKind: "item", CreationMode: domain.CreationModeAdditional, CreationEvidence: "I bought another pack of clothes"}
-	step := domain.InvestigationStep{Intent: intent, Decision: domain.InvestigationDecisionSearch, SearchRequests: []domain.SearchRequest{{ReferenceKey: domain.SemanticReferenceSubject, ReadKind: domain.InvestigationReadSearchAssets, Mention: "3 to 6 months", SearchProbes: []string{"3 to 6 months"}}}}
-	if input.Investigation.Phase != domain.InvestigationPhaseInitial {
-		ids := []string{}
-		for _, candidate := range input.Investigation.Observations {
-			ids = append(ids, candidate.CandidateID)
-		}
-		step.Decision = domain.InvestigationDecisionFinish
-		step.SearchRequests = nil
-		step.Resolutions = []domain.Resolution{{ReferenceKey: domain.SemanticReferenceSubject, Status: domain.ResolutionStrong, CandidateIDs: ids}}
+func (*additionalClothesModel) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	if input.Messages[len(input.Messages)-1].Role == ports.ConversationRoleUser {
+		return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "find-existing", Name: app.RealtimeVoiceToolSearchAuthorizedAssets, Arguments: map[string]any{"query": "3 to 6 months"}}}}, nil
 	}
-	return ports.LanguageInferenceTurn{Investigation: &step}, nil
+	return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "proposal", Name: "propose_inventory_change", Arguments: map[string]any{"summary": "Record the additional clothes.", "commands": []any{map[string]any{"id": "create-clothes", "kind": "create_asset", "summary": "Record additional clothes.", "arguments": map[string]any{"kind": "item", "title": "3 to 6 months"}}}}}}}, nil
 }
 func TestTextEvaluationCapturesUnapprovedAdditionalCreation(t *testing.T) {
 	input := testInput(t, &additionalClothesModel{})
@@ -234,8 +239,8 @@ type failingModel struct {
 	failure error
 }
 
-func (model failingModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, model.failure
+func (model failingModel) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	return ports.ConversationModelTurn{}, model.failure
 }
 func TestEvaluationDistinguishesProviderFailureFromInvalidEvidence(t *testing.T) {
 	for _, scenario := range []struct {
