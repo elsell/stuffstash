@@ -41,12 +41,12 @@ func TestPostgresThumbnailCancellationRetainsPublicationLock(t *testing.T) {
 	saveTenant(t, ctx, store, tenantID, "Home")
 	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Photos")
 	item := assetItem("thumbnail-publication-item", tenantID.String(), inventoryID.String(), asset.KindItem, "")
-	if err := createAsset(t, ctx, store, item); err != nil {
+	if err := store.CreateAsset(ctx, item, postgresAuditRecord(t, "thumbnail-create-asset", tenantID, inventoryID, audit.ActionAssetCreated), nil); err != nil {
 		t.Fatal(err)
 	}
 	now := time.Date(2026, 9, 6, 22, 0, 0, 0, time.UTC)
 	attachment := testAttachment(t, "thumbnail-publication-img", item, "photo.jpg", media.ContentTypeJPEG, now)
-	if err := store.SaveAttachment(ctx, attachment, auditRecord(t, "thumbnail-publish-create", tenantID, inventoryID, audit.ActionAttachmentCreated), plannedThumbnailJob(t, attachment)); err != nil {
+	if err := store.SaveAttachment(ctx, attachment, postgresAuditRecord(t, "thumbnail-publish-create", tenantID, inventoryID, audit.ActionAttachmentCreated), plannedThumbnailJob(t, attachment)); err != nil {
 		t.Fatal(err)
 	}
 	guard, err := NewThumbnailPublicationGuard(store, &publicationClock{now: now})
@@ -83,7 +83,7 @@ func TestPostgresThumbnailCancellationRetainsPublicationLock(t *testing.T) {
 	// A separate connection must remain unable to delete while the cancelled
 	// publisher is deliberately still unwinding its in-flight write.
 	deleting, stopDelete := context.WithTimeout(ctx, 200*time.Millisecond)
-	_, _, deleteErr := store.DeleteAttachmentAndEnqueueBlobDeletion(deleting, "thumbnail-publish-delete", tenantID, inventoryID, item.ID, attachment.ID, auditRecord(t, "thumbnail-publish-audit", tenantID, inventoryID, audit.ActionAttachmentDeleted))
+	_, _, deleteErr := store.DeleteAttachmentAndEnqueueBlobDeletion(deleting, "thumbnail-publish-delete", tenantID, inventoryID, item.ID, attachment.ID, postgresAuditRecord(t, "thumbnail-publish-audit", tenantID, inventoryID, audit.ActionAttachmentDeleted))
 	deadlineReached := errors.Is(deleting.Err(), context.DeadlineExceeded)
 	stopDelete()
 	close(finish)
@@ -98,7 +98,7 @@ func TestPostgresThumbnailCancellationRetainsPublicationLock(t *testing.T) {
 	case <-ctx.Done():
 		t.Fatal("publisher failed to unwind")
 	}
-	_, found, err := store.DeleteAttachmentAndEnqueueBlobDeletion(ctx, "thumbnail-publish-delete", tenantID, inventoryID, item.ID, attachment.ID, auditRecord(t, "thumbnail-publish-audit", tenantID, inventoryID, audit.ActionAttachmentDeleted))
+	_, found, err := store.DeleteAttachmentAndEnqueueBlobDeletion(ctx, "thumbnail-publish-delete", tenantID, inventoryID, item.ID, attachment.ID, postgresAuditRecord(t, "thumbnail-publish-audit", tenantID, inventoryID, audit.ActionAttachmentDeleted))
 	if err != nil || !found {
 		t.Fatalf("deletion did not proceed after publication returned: %v", err)
 	}
