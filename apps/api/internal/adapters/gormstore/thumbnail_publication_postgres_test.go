@@ -2,6 +2,7 @@ package gormstore
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -83,9 +84,10 @@ func TestPostgresThumbnailCancellationRetainsPublicationLock(t *testing.T) {
 	// publisher is deliberately still unwinding its in-flight write.
 	deleting, stopDelete := context.WithTimeout(ctx, 200*time.Millisecond)
 	_, _, deleteErr := store.DeleteAttachmentAndEnqueueBlobDeletion(deleting, "thumbnail-publish-delete", tenantID, inventoryID, item.ID, attachment.ID, auditRecord(t, "thumbnail-publish-audit", tenantID, inventoryID, audit.ActionAttachmentDeleted))
+	deadlineReached := errors.Is(deleting.Err(), context.DeadlineExceeded)
 	stopDelete()
 	close(finish)
-	if deleteErr == nil {
+	if deleteErr == nil || !deadlineReached {
 		t.Fatal("deletion overtook a cancelled publisher still writing")
 	}
 	select {

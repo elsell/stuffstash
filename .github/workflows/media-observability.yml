@@ -116,7 +116,7 @@ jobs:
 
   publish-api:
     if: github.event_name == 'workflow_dispatch' && inputs.publish_api
-    needs: telemetry
+    needs: [telemetry, thumbnail-postgres]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
