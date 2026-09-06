@@ -11,6 +11,23 @@ on:
 permissions:
   contents: read
 jobs:
+  client-telemetry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.17.0'
+      - name: Install pinned workspace dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.0.7 --activate
+          pnpm install --frozen-lockfile
+      - name: Test shared client delivery
+        run: |
+          pnpm --dir packages/api-client test
+          pnpm --dir packages/api-client check
   telemetry:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
