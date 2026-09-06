@@ -25,7 +25,7 @@ func (run EvaluationRun) ValidateActivation(candidate WorkflowActivationCandidat
 	evidenceWorkflow, candidateWorkflow := value.Input.Workflow.Snapshot(), candidate.Workflow.Snapshot()
 	evidenceWorkflow.CreatedAt = evidenceWorkflow.CreatedAt.UTC()
 	candidateWorkflow.CreatedAt = candidateWorkflow.CreatedAt.UTC()
-	if value.State != EvaluationRunSucceeded || !reflect.DeepEqual(evidenceWorkflow, candidateWorkflow) {
+	if value.Input.RuntimeContract != CurrentEvaluationRuntimeContract || value.State != EvaluationRunSucceeded || !reflect.DeepEqual(evidenceWorkflow, candidateWorkflow) {
 		return ErrWorkflowActivationEvidence
 	}
 	if _, err := NewWorkflowDefinition(candidate.Workflow.Snapshot().Definition.Settings(), candidate.Limits); err != nil {

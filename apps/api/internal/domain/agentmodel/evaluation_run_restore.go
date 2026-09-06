@@ -5,7 +5,10 @@ import "slices"
 // RestoreEvaluationRun validates persistence data as rigorously as new input.
 // Observed outcomes determine verdicts; stored pass flags are never authoritative.
 func RestoreEvaluationRun(snapshot EvaluationRunSnapshot) (EvaluationRun, error) {
-	queued, err := NewEvaluationRun(snapshot.Input)
+	if snapshot.Input.RuntimeContract == "" {
+		snapshot.Input.RuntimeContract = LegacyEvaluationRuntimeContract
+	}
+	queued, err := validatedEvaluationRun(snapshot.Input)
 	if err != nil {
 		return EvaluationRun{}, ErrInvalidEvaluationRun
 	}

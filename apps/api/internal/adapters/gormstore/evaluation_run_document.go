@@ -26,15 +26,16 @@ type evaluationRunCaseDocument struct {
 	Definition model.EvaluationCaseDefinitionInput
 }
 type evaluationRunInputDocument struct {
-	ID          model.EvaluationRunID
-	TenantID    model.TenantID
-	AuthorID    model.WorkflowAuthorID
-	CreatedAt   time.Time
-	Workflow    evaluationRunWorkflowDocument
-	Cases       []evaluationRunCaseDocument
-	Providers   []model.EvaluationRunProvider
-	Limits      model.WorkflowLimits
-	MaxAttempts int
+	RuntimeContract model.EvaluationRuntimeContract
+	ID              model.EvaluationRunID
+	TenantID        model.TenantID
+	AuthorID        model.WorkflowAuthorID
+	CreatedAt       time.Time
+	Workflow        evaluationRunWorkflowDocument
+	Cases           []evaluationRunCaseDocument
+	Providers       []model.EvaluationRunProvider
+	Limits          model.WorkflowLimits
+	MaxAttempts     int
 }
 type evaluationRunProgressDocument struct {
 	State       model.EvaluationRunState
@@ -56,7 +57,7 @@ func encodeEvaluationRun(run model.EvaluationRun) (string, string, error) {
 	}
 	input := snapshot.Input
 	workflow := input.Workflow.Snapshot()
-	document := evaluationRunInputDocument{ID: input.ID, TenantID: input.TenantID, AuthorID: input.AuthorID, CreatedAt: input.CreatedAt, Providers: input.Providers, Limits: input.Limits, MaxAttempts: input.MaxAttempts, Workflow: evaluationRunWorkflowDocument{ID: workflow.ID, WorkflowID: workflow.WorkflowID, TenantID: workflow.TenantID, AuthorID: workflow.AuthorID, Number: workflow.Number, CreatedAt: workflow.CreatedAt, Definition: workflow.Definition.Settings(), Limits: workflow.Limits}}
+	document := evaluationRunInputDocument{RuntimeContract: input.RuntimeContract, ID: input.ID, TenantID: input.TenantID, AuthorID: input.AuthorID, CreatedAt: input.CreatedAt, Providers: input.Providers, Limits: input.Limits, MaxAttempts: input.MaxAttempts, Workflow: evaluationRunWorkflowDocument{ID: workflow.ID, WorkflowID: workflow.WorkflowID, TenantID: workflow.TenantID, AuthorID: workflow.AuthorID, Number: workflow.Number, CreatedAt: workflow.CreatedAt, Definition: workflow.Definition.Settings(), Limits: workflow.Limits}}
 	for _, revision := range input.Cases {
 		v := revision.Snapshot()
 		document.Cases = append(document.Cases, evaluationRunCaseDocument{ID: v.ID, CaseID: v.CaseID, TenantID: v.TenantID, AuthorID: v.AuthorID, Number: v.Number, CreatedAt: v.CreatedAt, Definition: v.Definition.Settings()})
@@ -87,7 +88,7 @@ func decodeEvaluationRun(inputJSON, progressJSON string) (model.EvaluationRun, e
 	if err != nil {
 		return model.EvaluationRun{}, err
 	}
-	input := model.EvaluationRunInput{ID: document.ID, TenantID: document.TenantID, AuthorID: document.AuthorID, CreatedAt: document.CreatedAt, Workflow: workflow, Providers: document.Providers, Limits: document.Limits, MaxAttempts: document.MaxAttempts}
+	input := model.EvaluationRunInput{RuntimeContract: document.RuntimeContract, ID: document.ID, TenantID: document.TenantID, AuthorID: document.AuthorID, CreatedAt: document.CreatedAt, Workflow: workflow, Providers: document.Providers, Limits: document.Limits, MaxAttempts: document.MaxAttempts}
 	for _, value := range document.Cases {
 		definition, err := model.NewEvaluationCaseDefinition(value.Definition)
 		if err != nil {

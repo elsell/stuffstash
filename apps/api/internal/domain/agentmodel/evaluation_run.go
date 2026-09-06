@@ -14,6 +14,13 @@ var ErrEvaluationRunTransition = errors.New("evaluation run transition rejected"
 const MaxEvaluationRunCases = 100
 const MaxEvaluationRunAttempts = 10
 
+type EvaluationRuntimeContract string
+
+const (
+	CurrentEvaluationRuntimeContract EvaluationRuntimeContract = "conversation-tools-v1"
+	LegacyEvaluationRuntimeContract  EvaluationRuntimeContract = "legacy-investigation-v1"
+)
+
 type EvaluationRunID string
 type EvaluationRunState string
 
@@ -40,15 +47,16 @@ type EvaluationRunProvider struct {
 	ConfigurationID string
 }
 type EvaluationRunInput struct {
-	ID          EvaluationRunID
-	TenantID    TenantID
-	AuthorID    WorkflowAuthorID
-	CreatedAt   time.Time
-	Workflow    WorkflowRevision
-	Cases       []EvaluationCaseRevision
-	Limits      WorkflowLimits
-	MaxAttempts int
-	Providers   []EvaluationRunProvider
+	RuntimeContract EvaluationRuntimeContract
+	ID              EvaluationRunID
+	TenantID        TenantID
+	AuthorID        WorkflowAuthorID
+	CreatedAt       time.Time
+	Workflow        WorkflowRevision
+	Cases           []EvaluationCaseRevision
+	Limits          WorkflowLimits
+	MaxAttempts     int
+	Providers       []EvaluationRunProvider
 }
 type EvaluationRunCaseResult struct {
 	CaseRevisionID EvaluationCaseRevisionID
@@ -77,6 +85,20 @@ type EvaluationRunSnapshot struct {
 type EvaluationRun struct{ snapshot EvaluationRunSnapshot }
 
 func NewEvaluationRun(input EvaluationRunInput) (EvaluationRun, error) {
+	if input.RuntimeContract == "" {
+		input.RuntimeContract = CurrentEvaluationRuntimeContract
+	}
+	if input.RuntimeContract != CurrentEvaluationRuntimeContract {
+		return EvaluationRun{}, ErrInvalidEvaluationRun
+	}
+	return validatedEvaluationRun(input)
+}
+
+// Historical snapshots remain readable without endorsing their quality evidence.
+func validatedEvaluationRun(input EvaluationRunInput) (EvaluationRun, error) {
+	if input.RuntimeContract != CurrentEvaluationRuntimeContract && input.RuntimeContract != LegacyEvaluationRuntimeContract {
+		return EvaluationRun{}, ErrInvalidEvaluationRun
+	}
 	if !workflowIdentifierValid(string(input.ID)) || !workflowAuthorValid(string(input.AuthorID)) || strings.TrimSpace(string(input.TenantID)) == "" || input.CreatedAt.IsZero() || len(input.Cases) == 0 || len(input.Cases) > MaxEvaluationRunCases || input.MaxAttempts < 1 || input.MaxAttempts > MaxEvaluationRunAttempts {
 		return EvaluationRun{}, ErrInvalidEvaluationRun
 	}

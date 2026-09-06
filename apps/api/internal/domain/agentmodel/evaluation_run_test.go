@@ -44,7 +44,7 @@ func TestEvaluationRunPinsSnapshotsAndRejectsInvalidInputs(t *testing.T) {
 	input.Cases[0] = EvaluationCaseRevision{}
 	input.Providers[0].ProfileID = "changed"
 	snapshot := run.Snapshot()
-	if snapshot.State != EvaluationRunQueued || snapshot.Version != 1 || snapshot.Input.Cases[0].Snapshot().CaseID != "one" || snapshot.Input.Providers[0].ProfileID != "model" {
+	if snapshot.Input.RuntimeContract != CurrentEvaluationRuntimeContract || snapshot.State != EvaluationRunQueued || snapshot.Version != 1 || snapshot.Input.Cases[0].Snapshot().CaseID != "one" || snapshot.Input.Providers[0].ProfileID != "model" {
 		t.Fatal("run did not own queued snapshot")
 	}
 	snapshot.Input.Cases[0] = EvaluationCaseRevision{}
@@ -53,6 +53,8 @@ func TestEvaluationRunPinsSnapshotsAndRejectsInvalidInputs(t *testing.T) {
 		t.Fatal("snapshot mutation reached run")
 	}
 	for name, change := range map[string]func(*EvaluationRunInput){
+		"legacy runtime":          func(v *EvaluationRunInput) { v.RuntimeContract = LegacyEvaluationRuntimeContract },
+		"unknown runtime":         func(v *EvaluationRunInput) { v.RuntimeContract = "unknown-runtime" },
 		"no cases":                func(v *EvaluationRunInput) { v.Cases = nil },
 		"duplicate case":          func(v *EvaluationRunInput) { v.Cases[1] = v.Cases[0] },
 		"wrong tenant":            func(v *EvaluationRunInput) { v.TenantID = "other" },
