@@ -147,3 +147,8 @@ capped exponential backoff until exhaustion. A reclaimed job already beyond the
 attempt budget is exhausted without processing. Shutdown cancellation leaves the
 claim recoverable instead of acknowledging success. The worker emits a safe
 `thumbnail_job.resolved` event after a resolution is persisted.
+
+After claiming, recalculate remaining lease time using the injected clock. Never
+process an expired claim. Reserve the configured lease-minus-processing interval
+for resolution and reduce processing time when acquisition used part of the lease.
+The attempt budget accepts 1–100 acquisitions; exponential backoff is capped.

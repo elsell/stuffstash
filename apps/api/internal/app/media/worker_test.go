@@ -82,18 +82,27 @@ func TestWorkerCannotBypassForegroundCapacity(t *testing.T) {
 }
 
 type workerQueue struct {
-	now      time.Time
-	attempts int
-	claimed  bool
-	result   ports.ThumbnailJobResolution
+	advance              time.Duration
+	claimErr, resolveErr error
+	now                  time.Time
+	attempts             int
+	claimed              bool
+	result               ports.ThumbnailJobResolution
 }
 
 func (q *workerQueue) Now() time.Time { return q.now }
 func (q *workerQueue) ClaimThumbnailJobs(_ context.Context, token string, _ int, _ time.Time, until time.Time) ([]ports.ClaimedThumbnailJob, error) {
+	if q.claimErr != nil {
+		return nil, q.claimErr
+	}
+	q.now = q.now.Add(q.advance)
 	q.claimed = true
 	return []ports.ClaimedThumbnailJob{{Job: domain.ThumbnailJob{AttachmentID: "image"}, ClaimID: token, ClaimedUntil: until, Attempts: q.attempts}}, nil
 }
 func (q *workerQueue) ResolveThumbnailJob(_ context.Context, _ ports.ClaimedThumbnailJob, result ports.ThumbnailJobResolution) error {
+	if q.resolveErr != nil {
+		return q.resolveErr
+	}
 	q.result = result
 	return result.Validate()
 }
@@ -107,11 +116,20 @@ type workerObserver struct{}
 func (workerObserver) Record(context.Context, ports.Event) {}
 
 type workerProcessor struct {
+	waitForTimeout   bool
+	remaining        time.Duration
 	prepared, failed bool
 	cancel           context.CancelFunc
 }
 
 func (p *workerProcessor) ProcessThumbnailJob(ctx context.Context, _ ports.ClaimedThumbnailJob) error {
+	if deadline, ok := ctx.Deadline(); ok {
+		p.remaining = time.Until(deadline)
+	}
+	if p.waitForTimeout {
+		<-ctx.Done()
+		return nil
+	}
 	if p.cancel != nil {
 		p.cancel()
 		return ctx.Err()
@@ -132,4 +150,78 @@ func workerFixture(t *testing.T) (*Worker, *workerQueue, *workerProcessor, *work
 		t.Fatal(err)
 	}
 	return worker, queue, processor, admission
+}
+
+func TestWorkerDoesNotProcessExpiredClaim(t *testing.T) {
+	worker, queue, processor, _ := workerFixture(t)
+	queue.advance = 2 * time.Minute
+	if _, err := worker.Drain(context.Background()); !errors.Is(err, ports.ErrOutboxClaimLost) {
+		t.Fatalf("expired claim: %v", err)
+	}
+	if processor.prepared {
+		t.Fatal("expired claim performed processing")
+	}
+}
+
+func TestWorkerReducesProcessingBudgetAfterSlowClaim(t *testing.T) {
+	worker, queue, processor, _ := workerFixture(t)
+	queue.advance = 15 * time.Second
+	if _, err := worker.Drain(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if processor.remaining <= 0 || processor.remaining > 15*time.Second {
+		t.Fatalf("processing budget ignored acquisition delay: %v", processor.remaining)
+	}
+}
+
+func TestWorkerLateNilProcessingResultIsRetried(t *testing.T) {
+	worker, queue, processor, _ := workerFixture(t)
+	worker.config.ProcessingTimeout = 5 * time.Millisecond
+	processor.waitForTimeout = true
+	if _, err := worker.Drain(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if queue.result.Status != ports.ThumbnailJobPending {
+		t.Fatal("timed-out processor was acknowledged")
+	}
+}
+
+func TestWorkerBackoffIsExponentialAndCapped(t *testing.T) {
+	worker, queue, processor, _ := workerFixture(t)
+	worker.config.MaxAttempts = 20
+	processor.failed = true
+	for _, test := range []struct {
+		attempt int
+		delay   time.Duration
+	}{{1, time.Second}, {2, 2 * time.Second}, {10, time.Minute}} {
+		queue.attempts = test.attempt
+		if _, err := worker.Drain(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		if queue.result.NextAttemptAt.Sub(queue.now) != test.delay {
+			t.Fatal("unexpected retry delay")
+		}
+	}
+}
+
+func TestWorkerQueueFailuresReleaseAdmission(t *testing.T) {
+	for _, resolutionFailure := range []bool{false, true} {
+		worker, queue, _, admission := workerFixture(t)
+		sentinel := errors.New("controlled queue failure")
+		if resolutionFailure {
+			queue.resolveErr = sentinel
+		} else {
+			queue.claimErr = sentinel
+		}
+		if _, err := worker.Drain(context.Background()); !errors.Is(err, sentinel) {
+			t.Fatalf("queue failure hidden: %v", err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		release, err := admission.Acquire(ctx, ports.ImageWorkForeground)
+		cancel()
+		if err != nil {
+			t.Fatal("queue failure leaked capacity")
+		}
+		release()
+	}
 }
