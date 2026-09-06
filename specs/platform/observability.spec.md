@@ -204,3 +204,8 @@ counters. These are Go runtime values, not container RSS or operating-system CPU
 usage. Use cluster resource measurements and profiles alongside them. Fixed
 instrument names and units have no request- or user-derived labels. A runtime
 metric unavailable on the pinned toolchain fails instrumentation initialization.
+
+The existing thumbnail-served application event also increments
+`stuffstash.media.thumbnail.served` with validated variant and source (`cache` or
+`generated`). Count successful responses, including singleflight followers; this
+is not a unique codec-invocation count. Invalid or missing dimensions are excluded.

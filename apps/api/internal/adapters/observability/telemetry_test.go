@@ -69,8 +69,16 @@ func TestTelemetryCorrelatesSafeEventsAndOperationMetrics(t *testing.T) {
 		t.Fatal(err)
 	}
 	found := false
+	foundServed := false
 	for _, scope := range data.ScopeMetrics {
 		for _, metric := range scope.Metrics {
+			if metric.Name == "stuffstash.media.thumbnail.served" {
+				sum, ok := metric.Data.(metricdata.Sum[int64])
+				if !ok || !sum.IsMonotonic || len(sum.DataPoints) != 1 || sum.DataPoints[0].Value != 1 || sum.DataPoints[0].Attributes.Len() != 2 {
+					t.Fatal("thumbnail response counter must include only safe complete dimensions")
+				}
+				foundServed = true
+			}
 			if metric.Name != "stuffstash.operation.duration" {
 				continue
 			}
@@ -86,6 +94,9 @@ func TestTelemetryCorrelatesSafeEventsAndOperationMetrics(t *testing.T) {
 			}
 			found = true
 		}
+	}
+	if !foundServed {
+		t.Fatal("missing thumbnail response counter")
 	}
 	if !found {
 		t.Fatal("missing duration metric")
