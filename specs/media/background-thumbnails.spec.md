@@ -277,3 +277,14 @@ transport error and initial cleanup. It depends on continued rechecks; it does n
 claim to prevent late object creation immediately. Blob storage keys must never be
 reused for live attachments after deletion; enforce that creation invariant through
 persistence, including imports and direct-upload completion, before enabling rechecks.
+
+A permanent storage-key reservation table enforces non-reuse with a unique key.
+Reserve the original key in each attachment/import creation transaction; roll the
+reservation back if creation fails and retain it after deletion. Seed reservations
+from existing attachments and deletion events in the migration. A failed reserve
+must fail creation before any metadata or job commits. This avoids a check-then-insert
+race against deletion. The in-memory adapter retains equivalent reservations.
+Attachment creation and asset deletion both lock the parent asset before checking
+or changing its attachments. Asset deletion snapshots and locks those attachments,
+enqueues cleanup using each attachment ID as its deterministic event ID, then deletes
+the parent. Preserve the existing explicit attachment-deletion audit behavior.
