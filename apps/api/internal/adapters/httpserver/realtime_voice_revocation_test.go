@@ -11,6 +11,7 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -127,6 +128,14 @@ type revocationProbeVoiceProviders struct {
 func (p *revocationProbeVoiceProviders) Transcribe(context.Context, ports.SpeechToTextInput) (ports.SpeechToTextResult, error) {
 	p.sttCalls++
 	return ports.SpeechToTextResult{Transcript: "Where are the secret documents?"}, nil
+}
+
+func (p *revocationProbeVoiceProviders) Converse(_ context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	p.languageCalls++
+	if p.allowAnswer {
+		return httpConversationRead(input, app.RealtimeVoiceToolSearchAuthorizedAssets, map[string]any{"query": "tools"}, nil)
+	}
+	return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 }
 
 func (p *revocationProbeVoiceProviders) NextTurn(_ context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
