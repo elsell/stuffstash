@@ -6,18 +6,10 @@ import (
 )
 
 func DefinitionToDomain(value dto.Definition) agentmodel.WorkflowDefinitionInput {
-	steps := make([]agentmodel.WorkflowStep, len(value.Steps))
-	for i, step := range value.Steps {
-		steps[i] = agentmodel.WorkflowStep{Kind: agentmodel.WorkflowStepKind(step.Kind), ProviderProfileID: step.ProviderProfileID, Instructions: step.Instructions, Attempts: step.Attempts}
-	}
-	return agentmodel.WorkflowDefinitionInput{Name: value.Name, Retrieval: agentmodel.WorkflowRetrievalStrategy(value.Retrieval), Response: agentmodel.WorkflowResponseMode(value.Response), Budget: agentmodel.WorkflowBudget{EvidenceRounds: value.Budget.EvidenceRounds, ModelCalls: value.Budget.ModelCalls, ElapsedSeconds: value.Budget.ElapsedSeconds, FollowUpTurns: value.Budget.FollowUpTurns}, Steps: steps}
+	return agentmodel.WorkflowDefinitionInput{Name: value.Name, ProviderProfileID: value.ProviderProfileID, Instructions: value.Instructions, Budget: agentmodel.WorkflowBudget{ToolCalls: value.Budget.ToolCalls, ModelCalls: value.Budget.ModelCalls, ElapsedSeconds: value.Budget.ElapsedSeconds, FollowUpTurns: value.Budget.FollowUpTurns}}
 }
 func RevisionToResponse(revision agentmodel.WorkflowRevision) dto.Revision {
 	value := revision.Snapshot()
 	definition := value.Definition.Settings()
-	steps := make([]dto.Step, len(definition.Steps))
-	for i, step := range definition.Steps {
-		steps[i] = dto.Step{Kind: string(step.Kind), ProviderProfileID: step.ProviderProfileID, Instructions: step.Instructions, Attempts: step.Attempts}
-	}
-	return dto.Revision{ID: string(value.ID), WorkflowID: string(value.WorkflowID), Number: value.Number, AuthorID: string(value.AuthorID), CreatedAt: value.CreatedAt, Definition: dto.Definition{Name: definition.Name, Retrieval: string(definition.Retrieval), Response: string(definition.Response), Budget: dto.Budget{EvidenceRounds: definition.Budget.EvidenceRounds, ModelCalls: definition.Budget.ModelCalls, ElapsedSeconds: definition.Budget.ElapsedSeconds, FollowUpTurns: definition.Budget.FollowUpTurns}, Steps: steps}}
+	return dto.Revision{ID: string(value.ID), WorkflowID: string(value.WorkflowID), Number: value.Number, AuthorID: string(value.AuthorID), CreatedAt: value.CreatedAt, SettingsMigration: string(value.SettingsMigration), Definition: dto.Definition{Name: definition.Name, ProviderProfileID: definition.ProviderProfileID, Instructions: definition.Instructions, Budget: dto.Budget{ToolCalls: definition.Budget.ToolCalls, ModelCalls: definition.Budget.ModelCalls, ElapsedSeconds: definition.Budget.ElapsedSeconds, FollowUpTurns: definition.Budget.FollowUpTurns}}}
 }

@@ -20,7 +20,7 @@ func RunToResponse(run model.EvaluationRun) dto.EvaluationRun {
 		result.Cases = append(result.Cases, dto.EvaluationRunPinnedCase{EvaluationRunCaseReference: dto.EvaluationRunCaseReference{CaseID: string(pinned.CaseID), RevisionID: string(pinned.ID)}, Title: pinned.Definition.Settings().Title})
 	}
 	for _, provider := range value.Input.Providers {
-		result.Providers = append(result.Providers, dto.EvaluationRunProvider{Step: string(provider.Step), ProfileID: string(provider.ProfileID), ConfigurationID: provider.ConfigurationID})
+		result.Providers = append(result.Providers, dto.EvaluationRunProvider{ProfileID: string(provider.ProfileID), ConfigurationID: provider.ConfigurationID})
 	}
 	for _, observed := range value.Results {
 		if observed.Verdict.Passed {

@@ -15,8 +15,8 @@ var Now = time.Date(2026, 9, 5, 12, 0, 0, 0, time.UTC)
 
 func Run(t *testing.T, id string) model.EvaluationRun {
 	t.Helper()
-	limits := model.WorkflowLimits{Budget: model.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 8, ElapsedSeconds: 60, FollowUpTurns: 2}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 4000}
-	definition, err := model.NewWorkflowDefinition(model.WorkflowDefinitionInput{Name: "Household", Retrieval: model.WorkflowRetrievalExpanded, Response: model.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []model.WorkflowStep{{Kind: model.WorkflowStepInterpret, Attempts: 1}, {Kind: model.WorkflowStepAssess, Attempts: 1}, {Kind: model.WorkflowStepRespond, Attempts: 1}}}, limits)
+	limits := model.WorkflowLimits{Budget: model.WorkflowBudget{ToolCalls: 2, ModelCalls: 8, ElapsedSeconds: 60, FollowUpTurns: 2}, MaxNameRunes: 100, MaxInstructionRunes: 4000}
+	definition, err := model.NewWorkflowDefinition(model.WorkflowDefinitionInput{Name: "Household", Budget: limits.Budget}, limits)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func Run(t *testing.T, id string) model.EvaluationRun {
 		}
 		cases = append(cases, revision)
 	}
-	run, err := model.NewEvaluationRun(model.EvaluationRunInput{ID: model.EvaluationRunID(id), TenantID: TenantID, AuthorID: "owner", CreatedAt: Now, Workflow: workflow, Cases: cases, Limits: limits, MaxAttempts: 2, Providers: []model.EvaluationRunProvider{{Step: model.WorkflowStepInterpret, ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}, {Step: model.WorkflowStepAssess, ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}}})
+	run, err := model.NewEvaluationRun(model.EvaluationRunInput{ID: model.EvaluationRunID(id), TenantID: TenantID, AuthorID: "owner", CreatedAt: Now, Workflow: workflow, Cases: cases, Limits: limits, MaxAttempts: 2, Providers: []model.EvaluationRunProvider{{ProfileID: "model", ConfigurationID: strings.Repeat("a", 64)}}})
 	if err != nil {
 		t.Fatal(err)
 	}

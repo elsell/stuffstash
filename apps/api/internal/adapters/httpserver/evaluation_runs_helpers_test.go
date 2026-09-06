@@ -15,18 +15,11 @@ type evaluationHTTPSnapshotResolver struct{}
 
 func (evaluationHTTPSnapshotResolver) SnapshotEvaluationProviders(_ context.Context, scope tenant.ID, revision agentmodel.WorkflowRevision) ([]agentmodel.EvaluationRunProvider, error) {
 	definition := revision.Snapshot().Definition.Settings()
-	values := []agentmodel.EvaluationRunProvider{}
-	for _, step := range definition.Steps {
-		if step.Kind == agentmodel.WorkflowStepRespond && definition.Response == agentmodel.WorkflowResponseGrounded {
-			continue
-		}
-		profile := agentmodel.ProviderProfileID(step.ProviderProfileID)
-		if profile == "" {
-			profile = agentmodel.ProviderProfileID(scope.String() + "-language")
-		}
-		values = append(values, agentmodel.EvaluationRunProvider{Step: step.Kind, ProfileID: profile, ConfigurationID: strings.Repeat("a", 64)})
+	profile := agentmodel.ProviderProfileID(definition.ProviderProfileID)
+	if profile == "" {
+		profile = agentmodel.ProviderProfileID(scope.String() + "-language")
 	}
-	return values, nil
+	return []agentmodel.EvaluationRunProvider{{ProfileID: profile, ConfigurationID: strings.Repeat("a", 64)}}, nil
 }
 func evaluationRunRequest(t *testing.T, server *http.Server) map[string]any {
 	t.Helper()

@@ -29,10 +29,10 @@ type workflowConversationModel struct {
 }
 
 func newWorkflowConversationModel(model ports.ConversationModel, clock ports.Clock, settings domain.WorkflowDefinitionInput, prompt string) (*workflowConversationModel, error) {
-	if model == nil || clock == nil || len(settings.Steps) == 0 || settings.Budget.ModelCalls <= 0 || settings.Budget.ElapsedSeconds <= 0 || int64(settings.Budget.ElapsedSeconds) > math.MaxInt64/int64(time.Second) {
+	if model == nil || clock == nil || settings.Budget.ModelCalls <= 0 || settings.Budget.ElapsedSeconds <= 0 || int64(settings.Budget.ElapsedSeconds) > math.MaxInt64/int64(time.Second) {
 		return nil, ports.ErrInvalidProviderInput
 	}
-	return &workflowConversationModel{model: model, clock: clock, budget: settings.Budget, instructions: strings.TrimSpace(prompt + "\n" + settings.Steps[0].Instructions)}, nil
+	return &workflowConversationModel{model: model, clock: clock, budget: settings.Budget, instructions: strings.TrimSpace(prompt + "\n" + settings.Instructions)}, nil
 }
 func (m *workflowConversationModel) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	if err := ctx.Err(); err != nil {

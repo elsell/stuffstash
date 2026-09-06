@@ -48,25 +48,20 @@ func newWorkflowHTTPTestRuntime(t *testing.T) (app.App, gormstore.Store) {
 	if err := authorizer.GrantInventoryViewer(ctx, principal("viewer"), tenant.ID("home"), inventory.InventoryID("inventory-home")); err != nil {
 		t.Fatal(err)
 	}
-	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}
+	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxNameRunes: 100, MaxInstructionRunes: 2000}
 	ids := idgen.NewULIDGenerator()
 	commands := modelapp.NewEvaluationRunCommandService(modelapp.EvaluationRunCommandDependencies{Authorizer: authorizer, Runs: repository, Workflows: repository, Cases: repository, Providers: evaluationHTTPSnapshotResolver{}, IDs: ids, Clock: ports.SystemClock{}, Limits: limits, MaxAttempts: 2})
 	queries := modelapp.NewEvaluationRunQueryService(modelapp.EvaluationRunQueryDependencies{Authorizer: authorizer, Runs: repository, Audit: repository, IDs: ids, Clock: ports.SystemClock{}})
 	activation := modelapp.NewWorkflowActivationService(modelapp.WorkflowActivationDependencies{Authorizer: authorizer, Workflows: repository, Runs: repository, Providers: evaluationHTTPSnapshotResolver{}, IDs: ids, Clock: ports.SystemClock{}, Limits: limits})
-	return app.New(app.Dependencies{WorkflowActivation: activation, EvaluationRunCommands: commands, EvaluationRunQueries: queries, Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, ProviderProfiles: store, ConversationWorkflows: repository, WorkflowDiscovery: repository, EvaluationCases: repository, Audit: repository, ConversationWorkflowLimits: agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxStepAttempts: 3, MaxNameRunes: 100, MaxInstructionRunes: 2000}}), repository
+	return app.New(app.Dependencies{WorkflowActivation: activation, EvaluationRunCommands: commands, EvaluationRunQueries: queries, Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, ProviderProfiles: store, ConversationWorkflows: repository, WorkflowDiscovery: repository, EvaluationCases: repository, Audit: repository, ConversationWorkflowLimits: agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 5, ModelCalls: 10, ElapsedSeconds: 120, FollowUpTurns: 5}, MaxNameRunes: 100, MaxInstructionRunes: 2000}}), repository
 }
 
 func workflowDraftRequest() map[string]any {
 	return map[string]any{
 		"expectedRevision": 1,
 		"definition": map[string]any{
-			"name": "Home voice", "retrieval": "expanded", "response": "grounded",
-			"budget": map[string]any{"evidenceRounds": 2, "modelCalls": 4, "elapsedSeconds": 30, "followUpTurns": 2},
-			"steps": []map[string]any{
-				{"kind": "interpret", "attempts": 1, "instructions": "Resolve existing items first."},
-				{"kind": "assess", "attempts": 1},
-				{"kind": "respond", "attempts": 1},
-			},
+			"name": "Home voice", "instructions": "Resolve existing items first.",
+			"budget": map[string]any{"toolCalls": 2, "modelCalls": 4, "elapsedSeconds": 30, "followUpTurns": 2},
 		},
 	}
 }

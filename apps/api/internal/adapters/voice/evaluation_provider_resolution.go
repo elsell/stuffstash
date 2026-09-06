@@ -14,7 +14,7 @@ func (r ProviderProfileResolver) ResolveEvaluationRunProviders(ctx context.Conte
 		return ports.EvaluationExecutionProviders{}, err
 	}
 	snapshot := run.Snapshot()
-	if snapshot.Input.TenantID != model.TenantID(tenantID) {
+	if snapshot.Input.TenantID != model.TenantID(tenantID) || snapshot.Input.RuntimeContract != model.CurrentEvaluationRuntimeContract {
 		return ports.EvaluationExecutionProviders{}, ports.ErrEvaluationConfigurationChanged
 	}
 	if _, err := model.RestoreEvaluationRun(snapshot); err != nil {
@@ -69,23 +69,11 @@ func (r ProviderProfileResolver) ResolveEvaluationRunProviders(ctx context.Conte
 		bindings[id.String()] = ports.WorkflowLanguageProviderBinding{ProfileID: id.String(), PromptTemplate: config.Profile.PromptTemplate.String(), Provider: provider}
 	}
 	result := ports.EvaluationExecutionProviders{WorkflowProviders: pinnedEvaluationProviderResolver{tenantID: tenantID, bindings: bindings}}
-	byStep := map[model.WorkflowStepKind]model.ProviderProfileID{}
-	for _, pin := range snapshot.Input.Providers {
-		byStep[pin.Step] = pin.ProfileID
-	}
-	for _, step := range snapshot.Input.Workflow.Snapshot().Definition.Settings().Steps {
-		if step.ProviderProfileID != "" {
-			continue
-		}
-		id, used := byStep[step.Kind]
-		if !used {
-			continue
-		}
-		binding := bindings[id.String()]
+	if snapshot.Input.Workflow.Snapshot().Definition.Settings().ProviderProfileID == "" {
+		binding := bindings[snapshot.Input.Providers[0].ProfileID.String()]
 		result.Providers.LanguageInferenceProfileID = binding.ProfileID
 		result.Providers.LanguagePromptTemplate = binding.PromptTemplate
 		result.Providers.ConversationModel = binding.Provider
-		break
 	}
 	return result, nil
 }

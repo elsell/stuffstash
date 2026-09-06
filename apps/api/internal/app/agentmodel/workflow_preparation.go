@@ -66,7 +66,7 @@ type SelectedWorkflow struct {
 
 func (selected *SelectedWorkflow) NeedsDefaultLanguage() bool {
 	settings := selected.revision.Snapshot().Definition.Settings()
-	return len(settings.Steps) == 0 || settings.Steps[0].ProviderProfileID == ""
+	return settings.ProviderProfileID == ""
 }
 
 func (s ConversationWorkflowService) PrepareSelected(ctx context.Context, input PrepareWorkflowInput) (*PreparedWorkflow, error) {
@@ -78,21 +78,17 @@ func (s ConversationWorkflowService) PrepareSelected(ctx context.Context, input 
 }
 func (selected *SelectedWorkflow) Prepare(ctx context.Context, defaults ports.RealtimeVoiceProviderSet, resolver ports.WorkflowLanguageProviderResolver) (*PreparedWorkflow, error) {
 	settings := selected.revision.Snapshot().Definition.Settings()
-	if len(settings.Steps) == 0 {
-		return nil, ports.ErrInvalidProviderInput
-	}
-	step := settings.Steps[0]
 	model := defaults.ConversationModel
 	profileID, prompt := defaults.LanguageInferenceProfileID, defaults.LanguagePromptTemplate
-	if step.ProviderProfileID != "" && step.ProviderProfileID != profileID {
+	if settings.ProviderProfileID != "" && settings.ProviderProfileID != profileID {
 		if resolver == nil {
 			return nil, apperrors.ErrPrecondition
 		}
-		binding, err := resolver.ResolveWorkflowLanguageProvider(ctx, ports.WorkflowLanguageProviderResolutionInput{TenantID: tenant.ID(selected.revision.Snapshot().TenantID), ProfileID: step.ProviderProfileID})
+		binding, err := resolver.ResolveWorkflowLanguageProvider(ctx, ports.WorkflowLanguageProviderResolutionInput{TenantID: tenant.ID(selected.revision.Snapshot().TenantID), ProfileID: settings.ProviderProfileID})
 		if err != nil {
 			return nil, err
 		}
-		if binding.ProfileID != step.ProviderProfileID || binding.Provider == nil {
+		if binding.ProfileID != settings.ProviderProfileID || binding.Provider == nil {
 			return nil, ports.ErrInvalidProviderInput
 		}
 		model = binding.Provider

@@ -70,8 +70,8 @@ func (model *taggedClothesModel) Converse(ctx context.Context, input ports.Conve
 
 func testInput(t *testing.T, model ports.ConversationModel) ports.ConversationEvaluationInput {
 	t.Helper()
-	limits := domain.WorkflowLimits{Budget: domain.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 2}, MaxStepAttempts: 1, MaxNameRunes: 100, MaxInstructionRunes: 1000}
-	definition, err := domain.NewWorkflowDefinition(domain.WorkflowDefinitionInput{Name: "Test", Retrieval: domain.WorkflowRetrievalExpanded, Response: domain.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []domain.WorkflowStep{{Kind: domain.WorkflowStepInterpret, Attempts: 1}, {Kind: domain.WorkflowStepAssess, Attempts: 1}, {Kind: domain.WorkflowStepRespond, Attempts: 1}}}, limits)
+	limits := domain.WorkflowLimits{Budget: domain.WorkflowBudget{ToolCalls: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 2}, MaxNameRunes: 100, MaxInstructionRunes: 1000}
+	definition, err := domain.NewWorkflowDefinition(domain.WorkflowDefinitionInput{Name: "Test", Budget: limits.Budget}, limits)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -31,9 +31,7 @@ func evaluationSnapshotWorkflow(t *testing.T, explicit bool) model.WorkflowRevis
 	input := fixture.Run(t, "template").Snapshot().Input.Workflow.Snapshot()
 	settings := input.Definition.Settings()
 	if explicit {
-		for i := range settings.Steps {
-			settings.Steps[i].ProviderProfileID = "model"
-		}
+		settings.ProviderProfileID = "model"
 	}
 	definition, err := model.NewWorkflowDefinition(settings, input.Limits)
 	if err != nil {
@@ -55,10 +53,10 @@ func TestEvaluationProviderSnapshotsReuseVersionWithoutModelCalls(t *testing.T) 
 		resolver := NewProviderProfileResolver(providerResolverProfileRepository{profiles: []model.ProviderProfile{profile}}, nil, vault, factory)
 		workflow := evaluationSnapshotWorkflow(t, explicit)
 		pins, err := resolver.SnapshotEvaluationProviders(context.Background(), fixture.TenantID, workflow)
-		if err != nil || len(pins) != 2 || vault.reads != 1 {
+		if err != nil || len(pins) != 1 || vault.reads != 1 {
 			t.Fatalf("snapshot: count=%d reads=%d error=%v", len(pins), vault.reads, err)
 		}
-		if pins[0].ProfileID != "model" || pins[0].ConfigurationID != pins[1].ConfigurationID || pins[0].Step != model.WorkflowStepInterpret || pins[1].Step != model.WorkflowStepAssess {
+		if pins[0].ProfileID != "model" || !validProviderConfigurationID(pins[0].ConfigurationID) {
 			t.Fatal("bindings did not match workflow")
 		}
 		if len(factory.configs) != 0 {
@@ -115,7 +113,7 @@ func TestEvaluationProviderSnapshotsHonorConfiguredDefaultWithoutFallback(t *tes
 	configuration := providerResolverVoiceConfigurationRepository{found: true, record: ports.VoiceProviderConfigurationRecord{TenantID: fixture.TenantID, LanguageInferenceProfileID: "selected"}}
 	resolver := NewProviderProfileResolver(profiles, configuration, &evaluationSnapshotVault{version: "one"}, &evaluationSnapshotFactory{})
 	pins, err := resolver.SnapshotEvaluationProviders(context.Background(), fixture.TenantID, evaluationSnapshotWorkflow(t, false))
-	if err != nil || pins[0].ProfileID != "selected" || pins[1].ProfileID != "selected" {
+	if err != nil || pins[0].ProfileID != "selected" {
 		t.Fatal("configured default ignored")
 	}
 	configuration.record.LanguageInferenceProfileID = "missing"

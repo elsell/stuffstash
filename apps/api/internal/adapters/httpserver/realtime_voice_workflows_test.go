@@ -49,9 +49,9 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 			store := &voiceWorkflowReadStore{Store: memory.NewStore()}
 			authorizer := memory.NewAuthorizer()
 			seedMemoryStore(t, ctx, store.Store, authorizer, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}, {id: "tenant-other", name: "Other", owner: "user-2"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}, {id: "inventory-other", tenantID: "tenant-other", name: "Other", owner: "user-2"}}})
-			limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 1000}
+			limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxNameRunes: 100, MaxInstructionRunes: 1000}
 			application := app.New(app.Dependencies{Auth: auth.NewLocalDevAuthenticator(), Authorizer: authorizer, Users: store, Tenants: store, Inventories: store, Assets: store, Search: store, Audit: store, RealtimeSessions: store, ProviderProfiles: store, ConversationWorkflows: store, ConversationWorkflowLimits: limits}).WithRealtimeVoiceProviderResolver(nativeBoundaryResolver{model: &nativeBoundaryConversation{}})
-			revision, err := application.SaveConversationWorkflowRevision(ctx, app.SaveConversationWorkflowInput{Principal: principal("user-1"), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Home", Retrieval: agentmodel.WorkflowRetrievalPreciseFirst, Response: agentmodel.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []agentmodel.WorkflowStep{{Kind: agentmodel.WorkflowStepInterpret, Attempts: 1}, {Kind: agentmodel.WorkflowStepAssess, Attempts: 1}, {Kind: agentmodel.WorkflowStepRespond, Attempts: 1}}}})
+			revision, err := application.SaveConversationWorkflowRevision(ctx, app.SaveConversationWorkflowInput{Principal: principal("user-1"), TenantID: "tenant-home", Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Home", Budget: limits.Budget}})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -62,9 +62,7 @@ func TestRealtimeWorkflowSelectionRemainsBehindWebSocketAuthorization(t *testing
 				if test.name == "exhausted workflow owner" {
 					settings.Budget.ModelCalls = 2
 				}
-				for index := range settings.Steps {
-					settings.Steps[index].ProviderProfileID = "explicit-model"
-				}
+				settings.ProviderProfileID = "explicit-model"
 				snapshot.Definition, err = agentmodel.NewWorkflowDefinition(settings, limits)
 				if err != nil {
 					t.Fatal(err)

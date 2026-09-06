@@ -62,9 +62,9 @@ func TestWorkflowActivationRequiresExactSuccessfulEvidence(t *testing.T) {
 			case "changed provider":
 				altered.Providers[0].ProfileID = "other"
 			case "missing provider":
-				altered.Providers = altered.Providers[:1]
+				altered.Providers = nil
 			case "duplicate provider":
-				altered.Providers[1] = altered.Providers[0]
+				altered.Providers = append(altered.Providers, altered.Providers[0])
 			case "changed timestamp":
 				value := pinned.Workflow.Snapshot()
 				value.CreatedAt = value.CreatedAt.Add(time.Nanosecond)
@@ -84,7 +84,6 @@ func TestWorkflowActivationRequiresExactSuccessfulEvidence(t *testing.T) {
 		t.Fatalf("equivalent timestamp rejected: %v", err)
 	}
 	candidate.Cases[0], candidate.Cases[1] = candidate.Cases[1], candidate.Cases[0]
-	candidate.Providers[0], candidate.Providers[1] = candidate.Providers[1], candidate.Providers[0]
 	if err := run.ValidateActivation(candidate); err != nil {
 		t.Fatalf("ordering should not change evidence: %v", err)
 	}

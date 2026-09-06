@@ -57,7 +57,6 @@ type EvaluationRunPinnedCase struct {
 	Title string `json:"title"`
 }
 type EvaluationRunProvider struct {
-	Step            string `json:"step"`
 	ProfileID       string `json:"profileId"`
 	ConfigurationID string `json:"configurationId"`
 }

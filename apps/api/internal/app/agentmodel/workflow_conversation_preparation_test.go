@@ -44,11 +44,8 @@ func TestSelectedWorkflowUsesOneNativeModelAndPreservesGuidanceAndBudgets(t *tes
 	snapshot := revision.Snapshot()
 	settings := snapshot.Definition.Settings()
 	settings.Budget.ModelCalls = 2
-	settings.Response = domain.WorkflowResponseGrounded
-	settings.Steps[0].ProviderProfileID = "primary-model"
-	settings.Steps[0].Instructions = "Use assigned tags."
-	settings.Steps[1].ProviderProfileID = "retired-assessment-model"
-	settings.Steps[2].ProviderProfileID = "retired-response-model"
+	settings.ProviderProfileID = "primary-model"
+	settings.Instructions = "Use assigned tags."
 	snapshot.Definition, err = domain.NewWorkflowDefinition(settings, workflowServiceLimits())
 	if err != nil {
 		t.Fatal(err)

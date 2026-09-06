@@ -103,23 +103,16 @@ func (s ConversationWorkflowService) SaveRevision(ctx context.Context, input Sav
 }
 
 func (s ConversationWorkflowService) validateWorkflowProviders(ctx context.Context, tenantID tenant.ID, definition domain.WorkflowDefinition) error {
-	checked := map[domain.ProviderProfileID]struct{}{}
-	for _, step := range definition.Settings().Steps {
-		if step.ProviderProfileID == "" {
-			continue
-		}
-		id := domain.ProviderProfileID(step.ProviderProfileID)
-		if _, ok := checked[id]; ok {
-			continue
-		}
-		profile, found, err := s.deps.Profiles.ProviderProfileByID(ctx, tenantID, id)
-		if err != nil {
-			return err
-		}
-		if !found || profile.TenantID.String() != tenantID.String() || profile.Capability != domain.ProviderCapabilityLanguageInference || profile.LifecycleState == domain.ProviderProfileArchived {
-			return apperrors.ErrValidation
-		}
-		checked[id] = struct{}{}
+	id := domain.ProviderProfileID(definition.Settings().ProviderProfileID)
+	if id == "" {
+		return nil
+	}
+	profile, found, err := s.deps.Profiles.ProviderProfileByID(ctx, tenantID, id)
+	if err != nil {
+		return err
+	}
+	if !found || profile.ID != id || profile.TenantID.String() != tenantID.String() || profile.Capability != domain.ProviderCapabilityLanguageInference || profile.LifecycleState == domain.ProviderProfileArchived {
+		return apperrors.ErrValidation
 	}
 	return nil
 }

@@ -15,7 +15,7 @@ func TestRealtimeSessionPinsWorkflowAndUsesSharedModelPolicy(t *testing.T) {
 	language := &resolvedConversationModel{inventoryConversationModel: inventoryConversationModel{query: "tools"}}
 	resolver := &fakeRealtimeVoiceProviderResolver{providers: ports.RealtimeVoiceProviderSet{LanguageInferenceProfileID: "lm-profile", SpeechToText: resolvedSpeechToText{transcript: "Where are my tools?"}, ConversationModel: language, TextToSpeech: &resolvedTextToSpeech{}}}
 	application, store := newRealtimeVoiceResolutionTestAppWithStore(t, resolver)
-	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxStepAttempts: 2, MaxNameRunes: 100, MaxInstructionRunes: 1000}
+	limits := agentmodel.WorkflowLimits{Budget: agentmodel.WorkflowBudget{ToolCalls: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 4}, MaxNameRunes: 100, MaxInstructionRunes: 1000}
 	application.conversationWorkflowService = appmodel.NewConversationWorkflowService(appmodel.ConversationWorkflowDependencies{Authorizer: application.authorizer, Repository: store, Profiles: store, IDs: application.ids, Clock: application.clock, Limits: limits})
 	revision := seedSessionWorkflow(t, application, store, limits)
 	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
@@ -56,7 +56,7 @@ func TestRealtimeSessionPinsWorkflowAndUsesSharedModelPolicy(t *testing.T) {
 func seedSessionWorkflow(t *testing.T, application App, store *memory.Store, limits agentmodel.WorkflowLimits) agentmodel.WorkflowRevision {
 	t.Helper()
 	session := defaultRealtimeVoiceSessionInput()
-	revision, err := application.SaveConversationWorkflowRevision(context.Background(), SaveConversationWorkflowInput{Principal: session.Principal, TenantID: session.TenantID, Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Voice", Retrieval: agentmodel.WorkflowRetrievalPreciseFirst, Response: agentmodel.WorkflowResponseGrounded, Budget: limits.Budget, Steps: []agentmodel.WorkflowStep{{Kind: agentmodel.WorkflowStepInterpret, Attempts: 1}, {Kind: agentmodel.WorkflowStepAssess, Attempts: 1}, {Kind: agentmodel.WorkflowStepRespond, Attempts: 1}}}})
+	revision, err := application.SaveConversationWorkflowRevision(context.Background(), SaveConversationWorkflowInput{Principal: session.Principal, TenantID: session.TenantID, Source: audit.SourceAPI, Definition: agentmodel.WorkflowDefinitionInput{Name: "Voice", Budget: limits.Budget}})
 	if err != nil {
 		t.Fatal(err)
 	}
