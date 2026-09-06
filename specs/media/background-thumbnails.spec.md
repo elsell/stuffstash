@@ -84,3 +84,13 @@ immediate opening and first opening after readiness separately. Choose two only
 if the measurements justify the tradeoff. Deploy exclusively through infra GitOps,
 verify health, run the production comparison and report limitations. Code critic
 review and relevant CI/structural checks are required before final deployment.
+
+
+## Claim fencing and attempt accounting
+
+Each acquisition uses a fresh claim token. Resolutions also match the returned
+lease deadline, so even accidental token reuse cannot let an expired claimant
+resolve replacement work. Canonicalize claim times to UTC microseconds to match
+PostgreSQL timestamp precision. Count attempts at acquisition, including work lost
+to a crash; explicit failure resolution must not increment that count again.
+The worker must not start processing once the configured attempt budget is exceeded.

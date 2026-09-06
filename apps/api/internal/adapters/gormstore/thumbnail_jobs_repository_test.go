@@ -59,14 +59,17 @@ func TestThumbnailClaimRecoveryAndStaleAcknowledgement(t *testing.T) {
 	if err := store.SaveAttachment(ctx, attachment, record, &job); err != nil {
 		t.Fatal(err)
 	}
-	first, err := store.ClaimThumbnailJobs(ctx, "old-worker", 1, job.CreatedAt, job.CreatedAt.Add(time.Minute))
+	first, err := store.ClaimThumbnailJobs(ctx, "worker", 1, job.CreatedAt, job.CreatedAt.Add(time.Minute))
 	if err != nil || len(first) != 1 {
 		t.Fatal("initial claim failed")
 	}
 	now := job.CreatedAt.Add(2 * time.Minute)
-	second, err := store.ClaimThumbnailJobs(ctx, "new-worker", 1, now, now.Add(time.Minute))
+	second, err := store.ClaimThumbnailJobs(ctx, "worker", 1, now, now.Add(time.Minute))
 	if err != nil || len(second) != 1 {
 		t.Fatal("expired work was not recovered")
+	}
+	if first[0].Attempts != 1 || second[0].Attempts != 2 {
+		t.Fatal("crashed attempt was not counted")
 	}
 	done := ports.ThumbnailJobResolution{Status: ports.ThumbnailJobCompleted, At: now}
 	if err := store.ResolveThumbnailJob(ctx, first[0], done); !errors.Is(err, ports.ErrOutboxClaimLost) {
@@ -101,7 +104,7 @@ func TestThumbnailRetryEligibilityAndExhaustion(t *testing.T) {
 		t.Fatal("backoff ignored")
 	}
 	claims, err = store.ClaimThumbnailJobs(ctx, "retry", 1, retryAt, retryAt.Add(time.Minute))
-	if err != nil || len(claims) != 1 || claims[0].Attempts != 1 {
+	if err != nil || len(claims) != 1 || claims[0].Attempts != 2 {
 		t.Fatal("retry state was not durable")
 	}
 	failure := ports.ThumbnailJobResolution{Status: ports.ThumbnailJobFailed, At: retryAt, Failure: ports.ThumbnailFailureProcessing}
