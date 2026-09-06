@@ -6,6 +6,8 @@ import "context"
 type Operation string
 
 const (
+	OperationAuditRead         Operation = "audit.read"
+	OperationAuditWrite        Operation = "audit.write"
 	OperationAuthenticate      Operation = "identity.authenticate"
 	OperationAuthorize         Operation = "identity.authorize"
 	OperationVisibility        Operation = "identity.visibility"
@@ -23,7 +25,7 @@ const (
 
 func (o Operation) Bounded() Operation {
 	switch o {
-	case OperationAuthenticate, OperationAuthorize, OperationVisibility, OperationAccessChange, OperationModelImagePrepare, OperationUploadInitiate, OperationThumbnailGenerate, OperationBlobRead, OperationBlobWrite, OperationBlobDelete, OperationUploadVerify, OperationHTTP:
+	case OperationAuditRead, OperationAuditWrite, OperationAuthenticate, OperationAuthorize, OperationVisibility, OperationAccessChange, OperationModelImagePrepare, OperationUploadInitiate, OperationThumbnailGenerate, OperationBlobRead, OperationBlobWrite, OperationBlobDelete, OperationUploadVerify, OperationHTTP:
 		return o
 	default:
 		return OperationOther

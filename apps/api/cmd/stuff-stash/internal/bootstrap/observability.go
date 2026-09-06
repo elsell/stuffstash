@@ -36,7 +36,8 @@ func startObservability(ctx context.Context, local ports.Observer) (*observabili
 	return runtime, combined, stop, cfg.Enabled, nil
 }
 
-func observeMediaRepositories(value repositories, telemetry ports.Telemetry) repositories {
+func observeRepositories(value repositories, telemetry ports.Telemetry) repositories {
+	value.audit = observability.ObserveAudit(value.audit, telemetry)
 	value.blobs = observability.ObserveBlobs(value.blobs, telemetry)
 	value.imageProcessor = observability.ObserveImages(value.imageProcessor, telemetry)
 	value.directUploads = observability.ObserveUploads(value.directUploads, telemetry)

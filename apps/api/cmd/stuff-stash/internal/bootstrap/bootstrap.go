@@ -44,7 +44,7 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	}
 	defer recordCloseFailure(observer, closeRepositories)
 	if telemetryEnabled {
-		repositories = observeMediaRepositories(repositories, telemetry.Telemetry)
+		repositories = observeRepositories(repositories, telemetry.Telemetry)
 	}
 
 	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories)
