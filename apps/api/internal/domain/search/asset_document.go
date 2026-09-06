@@ -27,6 +27,24 @@ type AttachmentDocument struct {
 
 func MatchAsset(document AssetDocument, query Query, mode Mode) []Match {
 	matches := []Match{}
+	seen := map[Match]bool{}
+	for _, term := range query.Terms(mode) {
+		evidence := matchAssetValue(document, Query(term), mode)
+		if len(evidence) == 0 {
+			return nil
+		}
+		for _, match := range evidence {
+			if !seen[match] {
+				seen[match] = true
+				matches = append(matches, match)
+			}
+		}
+	}
+	return matches
+}
+
+func matchAssetValue(document AssetDocument, query Query, mode Mode) []Match {
+	matches := []Match{}
 	if valueMatches(document.Title, query, mode) {
 		matches = append(matches, Match{Field: MatchFieldTitle, Value: document.Title})
 	}

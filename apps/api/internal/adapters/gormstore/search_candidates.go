@@ -24,6 +24,14 @@ func (s Store) postgresSearchCandidates(ctx context.Context, query *gorm.DB, ten
 			return query
 		}
 	}
+	// Every domain match contains every term, so one indexed term is a safe
+	// superset. Prefer the longest without multiplying metadata subqueries.
+	text = ""
+	for _, term := range page.Query.Terms(page.Mode) {
+		if len(term) > len(text) {
+			text = term
+		}
+	}
 	pattern := "%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(text) + "%"
 	scoped := func(model any) *gorm.DB {
 		return s.db.WithContext(ctx).Model(model).Where(map[string]any{"tenant_id": tenantID.String(), "inventory_id": inventories})

@@ -14,6 +14,9 @@ func realtimeVoiceEvidenceRoundLimit(session RealtimeVoiceSession) int {
 }
 
 func realtimeVoiceSearchModes(session RealtimeVoiceSession) []search.Mode {
+	if session.conversationModel != nil {
+		return []search.Mode{search.ModeFuzzy}
+	}
 	if session.workflow != nil && session.workflow.Revision().Snapshot().Definition.Settings().Retrieval == agentmodel.WorkflowRetrievalPreciseFirst {
 		return []search.Mode{search.ModeExact, search.ModeFuzzy}
 	}
