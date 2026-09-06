@@ -26,9 +26,11 @@ type ConversationMessage struct {
 }
 
 type ConversationToolDefinition struct {
-	Name        string
-	Description string
-	Parameters  json.RawMessage
+	// ResponseTool can finish with any natural answer, even without record cards.
+	ResponseTool bool
+	Name         string
+	Description  string
+	Parameters   json.RawMessage
 }
 
 type ConversationModelInput struct {

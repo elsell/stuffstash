@@ -157,6 +157,15 @@ func TestDirectlyInjectedNativeProviderUsesConversationLoop(t *testing.T) {
 type presentingConversationModel struct{ inventoryConversationModel }
 
 func (m *presentingConversationModel) Converse(ctx context.Context, input ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	canAnswer := false
+	for _, tool := range input.Tools {
+		if tool.Name == "present_answer" && tool.ResponseTool {
+			canAnswer = true
+		}
+	}
+	if !canAnswer {
+		return ports.ConversationModelTurn{}, errors.New("no declared response tool for structured provider output")
+	}
 	turn, err := m.inventoryConversationModel.Converse(ctx, input)
 	if err != nil || turn.Answer == nil {
 		return turn, err
