@@ -309,3 +309,16 @@ Within a recheck, allocate each key at most one eighth of the image cleanup budg
 leaving one share for scheduling and resolution overhead. The overall processing
 deadline still applies. A stalled original delete must not consume all derivative
 deadlines; verify this with storage that waits until its per-key context expires.
+
+## Operator queue commands
+
+Provide `stuff-stash thumbnail-jobs status` and `stuff-stash thumbnail-jobs retry-failed
+--limit N` through an operational port. These local commands require the deployment's
+database configuration and privileges, not a public HTTP endpoint. Reject malformed
+commands and limits before connecting. Status returns JSON counts for pending,
+leased, failed and completed jobs, oldest pending age, and backfill completion; it
+must not expose attachment IDs, filenames, tokens or storage keys. Read counts from
+a consistent database snapshot. Retry accepts 1–1000 jobs (default 100), locks a
+bounded set of failed jobs, clears failure/attempt accounting, and makes them pending
+at the injected current time. It leaves pending, leased and completed jobs unchanged.
+Emit a safe `thumbnail_jobs.retried` operational event with the retried count.
