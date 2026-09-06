@@ -36,6 +36,7 @@ type Store struct {
 	checkouts               map[asset.CheckoutID]asset.Checkout
 	undoables               map[string]ports.UndoableOperation
 	attachments             map[media.ID]media.Attachment
+	thumbnailJobs           map[thumbnailJobKey]thumbnailJobRecord
 	providerProfiles        map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
 	voiceConfigs            map[tenant.ID]ports.VoiceProviderConfigurationRecord
 	providerCreds           map[string]ports.ProviderCredentialRecord
@@ -66,6 +67,7 @@ func NewStore() *Store {
 		checkouts:        map[asset.CheckoutID]asset.Checkout{},
 		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},
+		thumbnailJobs:    map[thumbnailJobKey]thumbnailJobRecord{},
 		providerProfiles: map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile{},
 		voiceConfigs:     map[tenant.ID]ports.VoiceProviderConfigurationRecord{},
 		providerCreds:    map[string]ports.ProviderCredentialRecord{},

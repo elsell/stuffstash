@@ -89,10 +89,11 @@ type AttachmentContentResult struct {
 }
 
 type preparedAttachment struct {
-	Attachment  media.Attachment
-	AuditRecord audit.Record
-	StorageKey  media.StorageKey
-	ContentType media.ContentType
+	ThumbnailJob *media.ThumbnailJob
+	Attachment   media.Attachment
+	AuditRecord  audit.Record
+	StorageKey   media.StorageKey
+	ContentType  media.ContentType
 }
 
 func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) (media.Attachment, error) {
@@ -107,7 +108,7 @@ func (a App) CreateAttachment(ctx context.Context, input CreateAttachmentInput) 
 		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
 		return media.Attachment{}, err
 	}
-	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, prepared.Attachment, prepared.AuditRecord); err != nil {
+	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, prepared.Attachment, prepared.AuditRecord, prepared.ThumbnailJob); err != nil {
 		if deleteErr := a.blobs.DeleteBlob(ctx, prepared.StorageKey); deleteErr != nil {
 			a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob cleanup failed"})
 		}
@@ -190,7 +191,11 @@ func (a App) prepareAttachment(ctx context.Context, input CreateAttachmentInput)
 	if err != nil {
 		return preparedAttachment{}, err
 	}
-	return preparedAttachment{Attachment: attachment, AuditRecord: auditRecord, StorageKey: storageKey, ContentType: contentType}, nil
+	thumbnailJob, err := media.PlanThumbnailJob(attachment)
+	if err != nil {
+		return preparedAttachment{}, ErrInvalidInput
+	}
+	return preparedAttachment{ThumbnailJob: thumbnailJob, Attachment: attachment, AuditRecord: auditRecord, StorageKey: storageKey, ContentType: contentType}, nil
 }
 
 func (a App) recordAttachmentCreated(ctx context.Context, input CreateAttachmentInput, attachment media.Attachment) {

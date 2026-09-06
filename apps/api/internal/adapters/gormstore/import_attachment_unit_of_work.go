@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s Store) CreateImportedAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, link ports.ImportSourceLink, record ports.ImportJobResource) error {
+func (s Store) CreateImportedAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, link ports.ImportSourceLink, record ports.ImportJobResource, thumbnailJob *media.ThumbnailJob) error {
 	if err := validateImportSourceLink(link); err != nil {
 		return err
 	}
@@ -47,6 +47,9 @@ func (s Store) CreateImportedAttachment(ctx context.Context, attachment media.At
 			LifecycleState: lifecycleStateOrActive(attachment.LifecycleState.String()),
 			CreatedAt:      attachment.CreatedAt,
 		}).Error; err != nil {
+			return err
+		}
+		if err := enqueueThumbnailJob(tx, attachment, thumbnailJob); err != nil {
 			return err
 		}
 		if err := createAuditRecord(tx, auditRecord); err != nil {

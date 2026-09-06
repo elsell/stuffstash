@@ -393,7 +393,7 @@ func saveSearchAttachmentWithAuditID(t *testing.T, ctx context.Context, store St
 	if !ok {
 		t.Fatalf("expected valid attachment")
 	}
-	if err := store.SaveAttachment(ctx, attachment, auditRecord(t, auditID, tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAttachmentCreated)); err != nil {
+	if err := store.SaveAttachment(ctx, attachment, auditRecord(t, auditID, tenant.ID(item.TenantID.String()), inventory.InventoryID(item.InventoryID.String()), audit.ActionAttachmentCreated), plannedThumbnailJob(t, attachment)); err != nil {
 		t.Fatalf("save attachment: %v", err)
 	}
 }

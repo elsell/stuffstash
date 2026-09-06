@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error {
+func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, thumbnailJob *media.ThumbnailJob) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var item assetModel
 		err := tx.Where(&assetModel{
@@ -50,6 +50,9 @@ func (s Store) SaveAttachment(ctx context.Context, attachment media.Attachment, 
 			if err := tx.Model(&item).Update("updated_at", attachment.CreatedAt).Error; err != nil {
 				return err
 			}
+		}
+		if err := enqueueThumbnailJob(tx, attachment, thumbnailJob); err != nil {
+			return err
 		}
 		return createAuditRecord(tx, auditRecord)
 	})

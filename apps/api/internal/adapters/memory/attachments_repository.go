@@ -13,7 +13,7 @@ import (
 	"sort"
 )
 
-func (s *Store) SaveAttachment(_ context.Context, attachment media.Attachment, auditRecord audit.Record) error {
+func (s *Store) SaveAttachment(_ context.Context, attachment media.Attachment, auditRecord audit.Record, thumbnailJob *media.ThumbnailJob) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -30,6 +30,10 @@ func (s *Store) SaveAttachment(_ context.Context, attachment media.Attachment, a
 	if attachment.LifecycleState.String() == "" {
 		attachment.LifecycleState = media.LifecycleStateActive
 	}
+	if err := media.ValidatePlannedThumbnailJob(attachment, thumbnailJob); err != nil {
+		return err
+	}
+	s.enqueueThumbnailJob(thumbnailJob)
 	s.attachments[attachment.ID] = attachment
 	if item.UpdatedAt.Before(attachment.CreatedAt) {
 		item.UpdatedAt = attachment.CreatedAt

@@ -143,3 +143,12 @@ func thumbnailQueueFixture(t *testing.T, ctx context.Context) (Store, media.Atta
 	}
 	return store, attachment, record, job
 }
+
+func plannedThumbnailJob(t *testing.T, attachment media.Attachment) *media.ThumbnailJob {
+	t.Helper()
+	job, err := media.PlanThumbnailJob(attachment)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return job
+}

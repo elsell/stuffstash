@@ -540,7 +540,7 @@ func (a App) createImportedAttachment(ctx context.Context, command ports.ImportJ
 		a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob storage failed"})
 		return media.Attachment{}, importAttachmentStorageError{}
 	}
-	if err := a.importAttachmentUnitOfWork.CreateImportedAttachment(ctx, prepared.Attachment, prepared.AuditRecord, link, record); err != nil {
+	if err := a.importAttachmentUnitOfWork.CreateImportedAttachment(ctx, prepared.Attachment, prepared.AuditRecord, link, record, prepared.ThumbnailJob); err != nil {
 		if deleteErr := a.blobs.DeleteBlob(ctx, prepared.StorageKey); deleteErr != nil {
 			a.observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "blob cleanup failed"})
 		}

@@ -18,7 +18,7 @@ type AttachmentRepository interface {
 }
 
 type AttachmentUnitOfWork interface {
-	SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
+	SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, thumbnailJob *media.ThumbnailJob) error
 	UpdateAttachmentLifecycle(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
 	DeleteAttachmentAndEnqueueBlobDeletion(ctx context.Context, eventID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error)
 }
