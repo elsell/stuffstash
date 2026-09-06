@@ -6,6 +6,7 @@ type EventName string
 
 const (
 	EventThumbnailJobResolved                      EventName = "thumbnail_job.resolved"
+	EventThumbnailWorkerFailed                     EventName = "thumbnail_worker.failed"
 	EventClientPerformanceObserved                 EventName = "client.performance.observed"
 	EventProfilingDeliveryFailed                   EventName = "profiling.delivery_failed"
 	EventTelemetryBatchesDropped                   EventName = "telemetry.batches_dropped"

@@ -40,6 +40,7 @@ func observeRepositories(value repositories, telemetry ports.Telemetry) reposito
 	value.audit = observability.ObserveAudit(value.audit, telemetry)
 	value.blobs = observability.ObserveBlobs(value.blobs, telemetry)
 	value.imageProcessor = observability.ObserveImages(value.imageProcessor, telemetry)
+	value.imageBatch = observability.ObserveImageBatch(value.imageBatch, telemetry)
 	value.directUploads = observability.ObserveUploads(value.directUploads, telemetry)
 	return value
 }

@@ -46,6 +46,10 @@ type repositories struct {
 	blobDeletionOutbox         ports.BlobDeletionOutbox
 	directUploads              ports.DirectAttachmentUploader
 	imageProcessor             ports.ImageProcessor
+	imageBatch                 ports.ImageBatchProcessor
+	thumbnailQueue             ports.ThumbnailJobQueue
+	thumbnailGuard             ports.ThumbnailPublicationGuard
+	thumbnailReader            ports.ThumbnailReader
 	audit                      ports.AuditRepository
 	outbox                     ports.AuthorizationOutbox
 	providerProfiles           ports.ProviderProfileRepository
@@ -66,7 +70,11 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 	switch strings.ToLower(strings.TrimSpace(cfg.RepositoryMode)) {
 	case "memory":
 		store := memory.NewStore()
-		return repositories{workflowDiscovery: store, evaluationRuns: store, evaluationCases: store, conversationWorkflows: store, tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetTags: store, assetUnitOfWork: store, assetTagUnitOfWork: store, assetEditUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, directUploads: blobstore.NewLocalDirectAttachmentUploader(store), imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, func() error { return nil }, nil
+		guard, err := memory.NewThumbnailPublicationGuard(store, ports.SystemClock{})
+		if err != nil {
+			return repositories{}, nil, err
+		}
+		return repositories{workflowDiscovery: store, evaluationRuns: store, evaluationCases: store, conversationWorkflows: store, tenants: store, tenantUnitOfWork: store, inventories: store, inventoryUnitOfWork: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetTags: store, assetUnitOfWork: store, assetTagUnitOfWork: store, assetEditUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: store, blobDeletionOutbox: store, directUploads: blobstore.NewLocalDirectAttachmentUploader(store), imageProcessor: blobstore.StandardImageProcessor{}, imageBatch: blobstore.StandardImageProcessor{}, thumbnailQueue: store, thumbnailGuard: guard, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, func() error { return nil }, nil
 	case "postgres":
 		if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 			return repositories{}, nil, errors.New("database dsn is required")
@@ -91,12 +99,17 @@ func buildRepositories(ctx context.Context, cfg config.Config) (repositories, fu
 }
 
 func repositoriesFromGORMStore(cfg config.Config, store gormstore.Store, closeStore func() error) (repositories, func() error, error) {
+	guard, err := gormstore.NewThumbnailPublicationGuard(store, ports.SystemClock{})
+	if err != nil {
+		_ = closeStore()
+		return repositories{}, nil, err
+	}
 	blobs, directUploads, err := buildBlobStorage(cfg)
 	if err != nil {
 		_ = closeStore()
 		return repositories{}, nil, err
 	}
-	return repositories{workflowDiscovery: store, evaluationRuns: store, evaluationCases: store, conversationWorkflows: store, tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetTags: store, assetUnitOfWork: store, assetTagUnitOfWork: store, assetEditUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
+	return repositories{workflowDiscovery: store, evaluationRuns: store, evaluationCases: store, conversationWorkflows: store, tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetTags: store, assetUnitOfWork: store, assetTagUnitOfWork: store, assetEditUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, imageBatch: blobstore.StandardImageProcessor{}, thumbnailQueue: store, thumbnailGuard: guard, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
 }
 
 func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {

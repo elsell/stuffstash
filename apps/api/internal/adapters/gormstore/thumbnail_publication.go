@@ -32,6 +32,16 @@ func (g *ThumbnailPublicationGuard) Publish(ctx context.Context, expected media.
 	// itself must outlive cancellation until the publisher has actually returned.
 	return g.store.db.WithContext(ctx).Connection(func(connection *gorm.DB) error {
 		return connection.WithContext(context.WithoutCancel(ctx)).Transaction(func(tx *gorm.DB) error {
+			if tx.Dialector.Name() == "sqlite" {
+				// SQLite ignores FOR UPDATE. A no-op identity write acquires its writer
+				// lock without changing domain state, including when WAL is enabled.
+				err := tx.WithContext(ctx).Model(&attachmentModel{}).Where(&attachmentModel{
+					ID: expected.ID.String(), TenantID: expected.TenantID.String(), InventoryID: expected.InventoryID.String(), AssetID: expected.AssetID.String(),
+				}).UpdateColumn("id", expected.ID.String()).Error
+				if err != nil {
+					return err
+				}
+			}
 			var model attachmentModel
 			err := tx.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where(&attachmentModel{
 				ID: expected.ID.String(), TenantID: expected.TenantID.String(),

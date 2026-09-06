@@ -47,6 +47,15 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		repositories = observeRepositories(repositories, telemetry.Telemetry)
 	}
 
+	thumbnailConfig, err := config.LoadThumbnails()
+	if err != nil {
+		return err
+	}
+	reader, thumbnailWorker, err := buildThumbnailRuntime(repositories, thumbnailConfig, observer)
+	if err != nil {
+		return err
+	}
+	repositories.thumbnailReader = reader
 	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories)
 	if err != nil {
 		return err
@@ -81,6 +90,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	}
 	defer stopEvaluations()
 	startOutboxWorkers(ctx, application, observer, cfg)
+	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
+	defer stopThumbnails()
 
 	errCh := make(chan error, 1)
 	go func() {

@@ -215,3 +215,6 @@ business state. A file-backed WAL concurrency test must verify the ordering.
 Batch processing retains the existing thumbnail-generation telemetry operation.
 That span includes incremental publication; nested blob spans distinguish storage
 latency from image work. Publication errors propagate to the operation result.
+
+A queue-drain error emits `thumbnail_worker.failed` without resource IDs or raw
+storage errors. It must not emit a job-resolution event unless resolution persisted.

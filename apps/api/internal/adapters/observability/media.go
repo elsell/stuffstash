@@ -86,3 +86,23 @@ func (u observedUploads) CompleteDirectAttachmentUpload(ctx context.Context, id 
 	defer func() { finish(err) }()
 	return u.delegate.CompleteDirectAttachmentUpload(ctx, id)
 }
+
+type observedImageBatch struct {
+	delegate  ports.ImageBatchProcessor
+	telemetry ports.Telemetry
+}
+
+func ObserveImageBatch(delegate ports.ImageBatchProcessor, telemetry ports.Telemetry) ports.ImageBatchProcessor {
+	if delegate == nil {
+		return nil
+	}
+	if telemetry == nil {
+		telemetry = ports.NoopTelemetry{}
+	}
+	return observedImageBatch{delegate, telemetry}
+}
+func (p observedImageBatch) CreateThumbnails(ctx context.Context, request ports.ImageDerivativesRequest, publish func(media.ThumbnailVariant, ports.ImageDerivative) error) (err error) {
+	ctx, finish := p.telemetry.Start(ctx, ports.OperationThumbnailGenerate)
+	defer func() { finish(err) }()
+	return p.delegate.CreateThumbnails(ctx, request, publish)
+}
