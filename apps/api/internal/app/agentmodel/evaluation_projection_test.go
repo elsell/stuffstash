@@ -43,13 +43,20 @@ func TestEvaluationResponseProjectionRequiresDisplayedEvidence(t *testing.T) {
 	if err != nil || !definition.Evaluate(outcome).Passed {
 		t.Fatalf("grounded displayed location lost: %+v %v", outcome, err)
 	}
-	if len(outcome.Locations) != 1 {
-		t.Fatalf("undisplayed attic inferred: %+v", outcome.Locations)
+	if len(outcome.Locations) != 2 {
+		t.Fatalf("displayed card contexts lost: %+v", outcome.Locations)
 	}
 	response.Artifacts = response.Artifacts[:1]
+	response.SpokenResponse = "They're in the baby box."
+	response.DisplayResponse = "Here are your matching clothes."
+	outcome, err = projector.Response(response)
+	if err != nil || !definition.Evaluate(outcome).Passed {
+		t.Fatalf("independent card and recorded context rejected: %+v %v", outcome, err)
+	}
+	response.Artifacts[0].Context = ""
 	outcome, err = projector.Response(response)
 	if err != nil || definition.Evaluate(outcome).Passed {
-		t.Fatalf("fixture graph supplied missing parent evidence: %+v %v", outcome, err)
+		t.Fatalf("fixture graph supplied absent context: %+v %v", outcome, err)
 	}
 	response.Artifacts[0].AssetID = "outside-fixture"
 	if _, err := projector.Response(response); err == nil {
@@ -93,7 +100,6 @@ func TestEvaluationProjectionCannotTreatInvalidEvidenceAsExpectedFailure(t *test
 		{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: " ", DisplayResponse: "I could not finish."},
 		{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: "I could not finish.", DisplayResponse: " \n"},
 		{Kind: ports.StructuredAgentResponseKindSafeFailure, SpokenResponse: "I could not finish.", DisplayResponse: "3 to 6 months", Artifacts: []ports.StructuredAgentResponseArtifact{{Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: "outside", Title: "3 to 6 months", AssetKind: "item"}}},
-		{Kind: ports.StructuredAgentResponseKindAnswer, SpokenResponse: "No items found.", DisplayResponse: "No items found.", Artifacts: []ports.StructuredAgentResponseArtifact{{Type: ports.StructuredAgentResponseArtifactAssetReference, AssetID: "runtime-clothes", Title: "3 to 6 months", AssetKind: "item"}}},
 	} {
 		if _, err := projector.Response(response); err == nil {
 			t.Fatal("malformed response could satisfy an expected failure")
