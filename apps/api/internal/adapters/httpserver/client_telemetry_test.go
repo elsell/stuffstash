@@ -9,12 +9,19 @@ import (
 
 func TestClientTelemetryAuthenticationAndValidation(t *testing.T) {
 	valid := map[string]any{"platform": "web", "operation": "image", "surface": "gallery", "variant": "medium", "outcome": "success", "durationMs": 125.5}
+	oversized := make([]any, 51)
+	for i := range oversized {
+		oversized[i] = valid
+	}
 	for _, test := range []struct {
 		name, authorization string
 		measurements        any
 		want                int
 	}{
 		{"authenticated", "Bearer dev:owner", []any{valid}, 200},
+		{"other authenticated principal", "Bearer dev:other", []any{valid}, 200},
+		{"oversized", "Bearer dev:owner", oversized, 422},
+		{"mixed invalid", "Bearer dev:owner", []any{valid, map[string]any{"platform": "private"}}, 422},
 		{"anonymous", "", []any{valid}, 401},
 		{"malformed token", "Bearer private-invalid-token", []any{valid}, 401},
 		{"empty", "Bearer dev:owner", []any{}, 422},
