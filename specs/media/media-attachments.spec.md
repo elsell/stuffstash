@@ -286,3 +286,13 @@ The 4032×3024 RGBA-to-1600×1200 resize regression budget is 100 MiB allocated
 2016×1512 RGBA intermediate, 1600×1512×32-byte Catmull-Rom scratch, and output.
 This retains final-filter quality; further reducing below the output resolution
 just to meet a smaller allocation budget is not acceptable.
+
+## Internal and public S3 transport
+
+API blob traffic may use a cluster-internal endpoint while presigned browser/mobile
+uploads use the public HTTPS endpoint. `STUFF_STASH_S3_SECURE` controls API-to-S3
+TLS; `STUFF_STASH_S3_PUBLIC_SECURE` independently controls presigned upload TLS
+and defaults to the internal setting for compatibility. Preserve signed upload
+authorization and bounds. In the cluster deployment, use the Garage service for
+API reads/writes and retain HTTPS for public upload URLs. Compare the same image
+workload before claiming any effect on storage tail latency.
