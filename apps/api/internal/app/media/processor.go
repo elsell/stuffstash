@@ -57,6 +57,10 @@ func (p *Processor) ProcessThumbnailJob(ctx context.Context, claim ports.Claimed
 	if len(variants) == 0 {
 		return nil
 	}
+	return p.generate(ctx, attachment, &claim, variants, nil)
+}
+
+func (p *Processor) generate(ctx context.Context, attachment domain.Attachment, claim *ports.ClaimedThumbnailJob, variants []domain.ThumbnailVariant, ready func(ports.ImageDerivative)) error {
 	content, err := p.blobs.GetBlob(ctx, attachment.StorageKey)
 	if err != nil {
 		return err
@@ -71,11 +75,18 @@ func (p *Processor) ProcessThumbnailJob(ctx context.Context, claim ports.Claimed
 		}
 		publishing, cancel := context.WithTimeout(ctx, p.publicationTimeout)
 		defer cancel()
-		return p.guard.Publish(publishing, attachment, &claim, func(writeCtx context.Context) error {
+		err = p.guard.Publish(publishing, attachment, claim, func(writeCtx context.Context) error {
 			if err := p.blobs.PutBlob(writeCtx, key, derivative.ContentType, derivative.Content); err != nil {
 				return err
 			}
 			return p.blobs.PutBlob(writeCtx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte(derivative.ContentType.String()))
 		})
+		if err != nil {
+			return err
+		}
+		if ready != nil {
+			ready(derivative)
+		}
+		return nil
 	})
 }

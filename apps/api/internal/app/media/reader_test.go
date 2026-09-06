@@ -73,3 +73,59 @@ func TestReaderGuardRejectsAttachmentDeletedAfterAuthorization(t *testing.T) {
 		t.Fatal("deleted derivative recreated")
 	}
 }
+
+func TestReaderRechecksCacheAfterWaitingForWorker(t *testing.T) {
+	processor, source, blobs, guard, claim := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	waiting := make(chan struct{})
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		output, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		if err == nil && (!cached || len(output.Content) == 0) {
+			err = errors.New("reader did not reuse worker output")
+		}
+		done <- err
+	}()
+	select {
+	case <-waiting:
+	case <-ctx.Done():
+		t.Fatal("reader never requested admission")
+	}
+	if err := processor.ProcessThumbnailJob(ctx, claim); err != nil {
+		t.Fatal(err)
+	}
+	if err := blobs.DeleteBlob(ctx, source.attachment.StorageKey); err != nil {
+		t.Fatal(err)
+	}
+	release()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if guard.writes != 3 {
+		t.Fatal("reader regenerated worker output")
+	}
+}
+
+type readerAdmissionSignal struct {
+	ports.ImageWorkAdmission
+	waiting chan struct{}
+}
+
+func (a readerAdmissionSignal) Acquire(ctx context.Context, priority ports.ImageWorkPriority) (func(), error) {
+	close(a.waiting)
+	return a.ImageWorkAdmission.Acquire(ctx, priority)
+}
