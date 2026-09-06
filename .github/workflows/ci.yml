@@ -237,6 +237,9 @@ jobs:
           test "$(pod --version)" = "1.17.0"
           pod install --no-repo-update
 
+      - name: Verify manual signing target isolation
+        run: ruby scripts/test-configure-ios-signing.rb
+
       - name: Verify committed lockfile
         run: git diff --exit-code -- apps/mobile/ios/Podfile.lock
 

@@ -43,9 +43,11 @@ key and store it only in GitHub and your password manager.
 5. Download the `AuthKey_<KEY_ID>.p8` private key. Apple allows this download
    only once. Keep the original in a secure credential store; never commit it.
 
-Xcode creates or reuses an Apple cloud-managed distribution certificate during
-the first signed archive. See Apple's notes on
-[cloud-managed certificates](https://developer.apple.com/help/account/certificates/cloud-managed-certificates/).
+Signing uses one reusable **Apple Distribution** certificate and its private
+key, exported together as a password-protected `.p12`. Create an **App Store
+Connect** provisioning profile for `org.stuffstash.mobile` selecting that
+certificate. Download the profile. CI imports these credentials into a temporary
+keychain and uses manual signing; it does not create certificates on each run.
 
 If this key is exposed, revoke it in App Store Connect immediately and replace
 all three GitHub secrets.
@@ -60,11 +62,14 @@ repository secrets:
 | `APP_STORE_CONNECT_API_KEY_BASE64` | Base64-encoded contents of the downloaded `.p8` file |
 | `APP_STORE_CONNECT_KEY_ID` | Key ID shown beside the team API key |
 | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID shown on the App Store Connect API page |
+| `BUILD_CERTIFICATE_BASE64` | Base64-encoded Apple Distribution `.p12`, including its private key |
+| `P12_PASSWORD` | Password used when exporting the `.p12` |
+| `BUILD_PROVISION_PROFILE_BASE64` | Base64-encoded App Store Connect `.mobileprovision` |
 
 GitHub documents the same UI under
 [Creating secrets for a repository](https://docs.github.com/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository).
 
-The trusted Release workflow passes these three secrets explicitly to the
+The trusted Release workflow passes these six secrets explicitly to the
 reusable TestFlight workflow. The TestFlight workflow does not inherit the
 repository's other secrets.
 
@@ -90,6 +95,14 @@ Do not paste the key into a shell argument, terminal output, issue, workflow
 log, or repository file. The release job decodes it into the runner's temporary
 directory, restricts its file permissions, and removes it even if the job
 fails.
+
+Before the certificate or profile expires, replace the corresponding signing
+secrets with a renewed certificate/private key and matching profile. Revocation
+also requires replacement. A release fails if the profile is expired, belongs
+to another app or team, or has no matching valid distribution identity. It
+never falls back to automatic certificate creation. Local signing setup checks
+are covered by script tests; a successful CI archive and upload validates the
+actual Apple credentials.
 
 ## Server Setup Happens In The App
 

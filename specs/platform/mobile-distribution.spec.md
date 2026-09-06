@@ -89,7 +89,17 @@ distribution, or automatic promotion from TestFlight to the public App Store.
 - The production build must disable developer diagnostics and local direct
   upload targets.
 - Xcode must archive and export-upload the exact archive created by that
-  workflow, using automatic cloud signing without Fastlane or EAS.
+  workflow, using a persistent Apple Distribution identity and manual signing
+  without Fastlane or EAS. Automatic provisioning updates are forbidden.
+- Required secrets `BUILD_CERTIFICATE_BASE64`, `P12_PASSWORD`, and
+  `BUILD_PROVISION_PROFILE_BASE64` supply the certificate/private key and App
+  Store Connect profile. Import them into an isolated temporary keychain; never
+  create certificates during a release. Cleanup must run even after failures.
+- Before compilation, reject expired profiles, development/ad-hoc profiles,
+  wrong team or bundle IDs, and identities absent from the profile. Configure
+  only the application Release target, leaving CocoaPods targets unaffected.
+- Export must select the same certificate and profile as the archive. Certificate
+  expiry or revocation requires deliberate secret rotation; no signing fallback.
 - The App Store Connect API private key, key ID, and issuer ID must be supplied
   as GitHub Actions secrets and validated before compilation. The private key
   may exist only in the runner's temporary directory and must be removed by an
