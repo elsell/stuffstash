@@ -103,7 +103,7 @@ export class PerformanceReporter {
         if (signal.aborted) abort();
       });
       const sent = Promise.resolve().then(() => {
-        signal.throwIfAborted();
+        if (signal.aborted) throw new Error('Performance delivery cancelled');
         return this.options.send(batch, signal);
       });
       await Promise.race([sent, aborted]);
