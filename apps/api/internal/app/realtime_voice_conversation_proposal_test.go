@@ -90,7 +90,7 @@ func TestModelLedMoveProposesExistingItemWithoutExecuting(t *testing.T) {
 			if tc.nested && last.ParentCommandID != "create-box" {
 				t.Fatal("dependent destination lost")
 			}
-			if last.Title != drill.Title || (!tc.nested && last.ParentAssetID != garage.ID.String()) {
+			if last.Title != drill.Title.String() || (!tc.nested && last.ParentAssetID != garage.ID.String()) {
 				t.Fatalf("wrong move references: %+v", proposal.Commands)
 			}
 			for _, event := range events {

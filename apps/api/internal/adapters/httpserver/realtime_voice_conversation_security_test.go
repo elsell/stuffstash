@@ -92,3 +92,35 @@ func TestModelLedConversationWebSocketAuthorization(t *testing.T) {
 		})
 	}
 }
+
+// This model proposes a normal inventory title that happens to contain a word
+// also used in provider configuration. Typed command fields remain the boundary.
+type nativeTitleProposalModel struct{}
+
+func (nativeTitleProposalModel) Converse(context.Context, ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
+	return ports.ConversationModelTurn{ToolCalls: []ports.AgentToolCall{{ID: "proposal", Name: "propose_inventory_change", Arguments: map[string]any{
+		"summary": "Add the credential holder?", "commands": []any{map[string]any{"id": "create-holder", "kind": "create_asset", "summary": "Add holder", "arguments": map[string]any{"title": "Credential holder", "kind": "item"}}},
+	}}}}, nil
+}
+func TestModelLedProposalPreservesOrdinaryTitleAtWebSocketBoundary(t *testing.T) {
+	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}).WithRealtimeVoiceProviderResolver(nativeBoundaryResolver{model: nativeTitleProposalModel{}})
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	defer server.Close()
+	events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "action.plan.proposed")
+	proposed := findRealtimeEvent(t, events, "action.plan.proposed")
+	plan, ok := proposed["actionPlan"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing review: %+v", proposed)
+	}
+	commands, ok := plan["commands"].([]any)
+	if !ok || len(commands) != 1 {
+		t.Fatalf("invalid review: %+v", plan)
+	}
+	command, ok := commands[0].(map[string]any)
+	if !ok || command["title"] != "Credential holder" {
+		t.Fatalf("ordinary title lost: %+v", commands)
+	}
+	if hasRealtimeEvent(events, "action.plan.executed") {
+		t.Fatal("proposal executed without approval")
+	}
+}
