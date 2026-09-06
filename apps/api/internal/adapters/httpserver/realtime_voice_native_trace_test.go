@@ -19,7 +19,7 @@ func TestNativeVoiceTraceRetainsToolEvidenceWithoutThoughtsOrCredentials(t *test
 		_, _ = io.WriteString(w, `{"candidates":[{"content":{"parts":[{"thought":true,"text":"private-reasoning","thoughtSignature":"private-signature"},{"functionCall":{"name":"search","args":{"query":"baby clothes"}}},{"text":"A useful answer."}]}}]}`)
 	}))
 	defer server.Close()
-	body := `{"contents":[{"parts":[{"functionResponse":{"name":"search","response":{"output":{"count":2}}}}]}]}`
+	body := `{"contents":[{"parts":[{"functionResponse":{"name":"search","response":{"output":{"count":2}}}},{"text":"{\"toolResults\":[{\"callId\":\"search-2\",\"name\":\"search\",\"output\":{\"count\":3}}]}"},{"thought":true,"text":"{\"toolResults\":[\"private-reasoning\"]}"},{"text":"private-prompt"}]}]}`
 	request, err := http.NewRequest(http.MethodPost, server.URL, strings.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -37,12 +37,12 @@ func TestNativeVoiceTraceRetainsToolEvidenceWithoutThoughtsOrCredentials(t *test
 		t.Fatal("tracing damaged the provider response")
 	}
 	logs := strings.Join(recorder.lines, "\n")
-	for _, secret := range []string{"private-reasoning", "private-signature", "private-token"} {
+	for _, secret := range []string{"private-reasoning", "private-signature", "private-token", "private-prompt"} {
 		if strings.Contains(logs, secret) {
 			t.Fatalf("private provider material logged: %s", secret)
 		}
 	}
-	for _, evidence := range []string{"baby clothes", `"count":2`, "A useful answer.", "requestBytes", "responseBytes"} {
+	for _, evidence := range []string{"baby clothes", `"count":2`, `"count":3`, "search-2", "A useful answer.", "requestBytes", "responseBytes"} {
 		if !strings.Contains(logs, evidence) {
 			t.Fatalf("missing trace evidence %q", evidence)
 		}
