@@ -231,3 +231,11 @@ both jobs and cursor. New uploads behind a finished cursor are already covered b
 the attachment transaction. Concurrent backfill callers serialize on cursor state.
 No tenant tokens or blob data enter the cursor. This is an operational cross-tenant
 scan behind a repository port, never a user-facing resource discovery endpoint.
+
+Runtime integration (API-owned worker goroutines, shared reader/admission, validated
+configuration and batch telemetry) passed API race and PostgreSQL jobs in CI
+`34066855351`. The same run passed the SQLite WAL publication regression. This is
+implementation evidence, not production deployment or performance evidence.
+Backfill, ambiguous-write cleanup, operational retry and production comparison
+remain required. The follow-up code-critic review was temporarily unavailable due
+to account usage limits; that final review remains outstanding.
