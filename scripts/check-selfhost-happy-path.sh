@@ -81,6 +81,18 @@ grep -q '^STUFF_STASH_API_IMAGE=ghcr.io/.*/stuffstash@sha256:' .env.example ||
 grep -q '^STUFF_STASH_WEB_IMAGE=ghcr.io/.*/stuffstash-web@sha256:' .env.example ||
   fail "self-host web image must default to a published digest-pinned image"
 
+grep -qx 'STUFF_STASH_MAX_ATTACHMENT_BYTES=26214400' .env.example ||
+  fail "self-host attachment limit must match the specified 25 MiB default"
+
+grep -Fq 'STUFF_STASH_MAX_ATTACHMENT_BYTES: ${STUFF_STASH_MAX_ATTACHMENT_BYTES:-26214400}' compose.yaml ||
+  fail "local Compose attachment limit must match the specified 25 MiB default"
+
+grep -Fq 'STUFF_STASH_WEB_MEDIA_MAX_BYTES: ${STUFF_STASH_MAX_ATTACHMENT_BYTES:-26214400}' "$compose_file" ||
+  fail "self-host web upload policy must match the specified 25 MiB default"
+
+grep -Fq 'STUFF_STASH_MAX_ATTACHMENT_BYTES:-26214400' deploy/web/start-web-runtime.sh ||
+  fail "web runtime attachment fallback must match the specified 25 MiB default"
+
 if awk '
   /^[[:space:]]+migration:$/ { in_target=1; target="migration"; next }
   /^[[:space:]]+app:$/ { in_target=1; target="app"; next }

@@ -48,6 +48,8 @@ export class MobileAuthenticationRequiredError extends Error {
 }
 
 export class MobileAuthSessionController {
+  private sessionGeneration = 0;
+  private storageWrites: Promise<void> = Promise.resolve();
   private refreshInFlight: { readonly key: string; readonly promise: Promise<MobileAuthSession> } | undefined;
 
   constructor(
@@ -84,16 +86,24 @@ export class MobileAuthSessionController {
   }
 
   async signIn(apiBaseUrl: string): Promise<MobileAuthSession> {
+    const generation = ++this.sessionGeneration;
     const metadata = await this.metadataGateway.load(apiBaseUrl);
+    this.requireCurrentSession(generation);
     const tokens = await this.oidcClient.signIn(metadata);
+    this.requireCurrentSession(generation);
     const session = sessionFromTokens(apiBaseUrl, metadata, tokens);
-    await this.store.save(session);
+    await this.writeStorage(async () => {
+      this.requireCurrentSession(generation);
+      await this.store.save(session);
+    });
+    this.requireCurrentSession(generation);
     return session;
   }
 
   async signOut(): Promise<void> {
+    this.sessionGeneration++;
     this.refreshInFlight = undefined;
-    await this.store.clear();
+    await this.writeStorage(() => this.store.clear());
   }
 
   async validIdToken(apiBaseUrl: string): Promise<string> {
@@ -110,7 +120,7 @@ export class MobileAuthSessionController {
       return session;
     }
     if (!session.refreshToken) {
-      await this.store.clear();
+      await this.clearMatchingSession(session);
       throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
     }
     const key = refreshKey(session);
@@ -125,13 +135,34 @@ export class MobileAuthSessionController {
     return this.refreshInFlight.promise;
   }
 
+  private clearMatchingSession(session: MobileAuthSession) {
+    const generation = this.sessionGeneration;
+    return this.writeStorage(async () => {
+      const current = await this.store.load();
+      if (generation === this.sessionGeneration && current && refreshKey(current) === refreshKey(session)) {
+        await this.store.clear();
+      }
+    });
+  }
+
+  private writeStorage(action: () => Promise<void>) {
+    const result = this.storageWrites.then(action);
+    this.storageWrites = result.catch(() => {});
+    return result;
+  }
+
+  private requireCurrentSession(generation: number) {
+    if (generation !== this.sessionGeneration) throw new MobileAuthenticationRequiredError();
+  }
+
   private shouldRefresh(session: MobileAuthSession): boolean {
     return session.expiresAt - this.now() <= this.refreshSkewMs;
   }
 
   private async refreshSession(session: MobileAuthSession): Promise<MobileAuthSession> {
+    const generation = this.sessionGeneration;
     if (!session.refreshToken) {
-      await this.store.clear();
+      await this.clearMatchingSession(session);
       throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
     }
 
@@ -142,20 +173,25 @@ export class MobileAuthSessionController {
         ...tokens,
         refreshToken: tokens.refreshToken ?? session.refreshToken
       });
-      const current = await this.store.load();
-      if (!current || refreshKey(current) !== refreshKey(session)) {
-        throw new RefreshSessionSupersededError();
-      }
-      await this.store.save(refreshed);
+      await this.writeStorage(async () => {
+        const current = await this.store.load();
+        if (generation !== this.sessionGeneration || !current || refreshKey(current) !== refreshKey(session)) {
+          throw new RefreshSessionSupersededError();
+        }
+        await this.store.save(refreshed);
+      });
+      this.requireCurrentSession(generation);
       return refreshed;
     } catch (error) {
       if (error instanceof RefreshSessionSupersededError) {
         throw new MobileAuthenticationRequiredError();
       }
-      const current = await this.store.load();
-      if (current && refreshKey(current) === refreshKey(session)) {
-        await this.store.clear();
-      }
+      await this.writeStorage(async () => {
+        const current = await this.store.load();
+        if (generation === this.sessionGeneration && current && refreshKey(current) === refreshKey(session)) {
+          await this.store.clear();
+        }
+      });
       if (error instanceof MobileAuthenticationRequiredError) {
         throw error;
       }

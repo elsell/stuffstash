@@ -272,3 +272,67 @@ class FakeOidcClient implements NativeOidcClient {
     return this.result;
   }
 }
+
+it('does not restore a session when browser sign-in completes after sign-out', async () => {
+  const store = new FakeSessionStore();
+  let release!: (tokens: MobileAuthTokenResult) => void;
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  const pending = new Promise<MobileAuthTokenResult>(resolve => { release = resolve; });
+  const native: NativeOidcClient = {
+    async signIn() { started(); return pending; },
+    async refresh() { throw new Error('Not used'); }
+  };
+  const controller = new MobileAuthSessionController(store, new FakeMetadataGateway(metadata), native, () => 1_000);
+  const signIn = controller.signIn('https://api.example.test');
+  const rejected = expect(signIn).rejects.toBeInstanceOf(MobileAuthenticationRequiredError);
+  await entered;
+  await controller.signOut();
+  release({ idToken: 'late-token', refreshToken: 'late-refresh', expiresAt: 200_000 });
+  await rejected;
+  expect(await store.load()).toBeUndefined();
+});
+
+it('orders sign-out after a secure-store save already in progress', async () => {
+  let saved: MobileAuthSession | undefined;
+  let release!: () => void;
+  let started!: () => void;
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  const blocked = new Promise<void>(resolve => { release = resolve; });
+  const store: MobileAuthSessionStore = {
+    async load() { return saved; },
+    async save(session) { started(); await blocked; saved = session; },
+    async clear() { saved = undefined; }
+  };
+  const controller = new MobileAuthSessionController(store, new FakeMetadataGateway(metadata), new FakeOidcClient({
+    idToken: 'test-token', refreshToken: 'test-refresh', expiresAt: 200_000
+  }), () => 1_000);
+  const signingIn = controller.signIn('https://api.example.test').catch(() => undefined);
+  await entered;
+  const signingOut = controller.signOut();
+  release();
+  await Promise.all([signingIn, signingOut]);
+  expect(saved).toBeUndefined();
+});
+
+it('finishes a stale-session clear before storing a newer sign-in', async () => {
+  let stored: MobileAuthSession | undefined = { ...freshSession(), expiresAt: 1, refreshToken: undefined };
+  let release!: () => void;
+  let entered!: () => void;
+  const clearing = new Promise<void>(resolve => { entered = resolve; });
+  const blocked = new Promise<void>(resolve => { release = resolve; });
+  const store: MobileAuthSessionStore = {
+    async load() { return stored; },
+    async save(session) { stored = session; },
+    async clear() { entered(); await blocked; stored = undefined; }
+  };
+  const controller = new MobileAuthSessionController(store, new FakeMetadataGateway(metadata), new FakeOidcClient({
+    idToken: 'new-token', refreshToken: 'new-refresh', expiresAt: 200_000
+  }), () => 1_000);
+  const expired = controller.validSession('https://api.example.test').catch(() => undefined);
+  await clearing;
+  const newSignIn = controller.signIn('https://api.example.test');
+  release();
+  await Promise.all([expired, newSignIn]);
+  expect(stored?.idToken).toBe('new-token');
+});
