@@ -162,3 +162,6 @@ filter. Stop on cancellation or publication failure before producing another
 variant. Single-thumbnail generation uses the same implementation, so foreground
 and background output remain equivalent. Never require all derivative byte buffers
 to remain resident together merely to publish a batch.
+
+Single-thumbnail calls retain the domain convention that an empty variant means
+small. Unknown variants are invalid; batch requests require explicit unique sizes.

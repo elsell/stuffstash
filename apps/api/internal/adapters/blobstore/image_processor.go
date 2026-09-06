@@ -27,26 +27,17 @@ const (
 
 type StandardImageProcessor struct{}
 
-func (StandardImageProcessor) CreateThumbnail(_ context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
-	if !request.ContentType.IsImage() || len(request.Content) == 0 {
-		return ports.ImageDerivative{}, errors.New("thumbnail source must be an image")
+func (processor StandardImageProcessor) CreateThumbnail(ctx context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
+	variant, valid := media.NewThumbnailVariant(request.Variant.String())
+	if !valid {
+		return ports.ImageDerivative{}, errors.New("invalid thumbnail variant")
 	}
-	if err := validateImageBounds(request.Content); err != nil {
-		return ports.ImageDerivative{}, err
-	}
-	source, _, err := image.Decode(bytes.NewReader(request.Content))
-	if err != nil {
-		return ports.ImageDerivative{}, err
-	}
-	thumbnail := resizeImage(source, thumbnailMaxDimension(request.Variant))
-	output := bytes.Buffer{}
-	if err := jpeg.Encode(&output, thumbnail, &jpeg.Options{Quality: thumbnailJPEGQuality}); err != nil {
-		return ports.ImageDerivative{}, err
-	}
-	return ports.ImageDerivative{
-		ContentType: media.ContentTypeJPEG,
-		Content:     output.Bytes(),
-	}, nil
+	var result ports.ImageDerivative
+	err := processor.CreateThumbnails(ctx, ports.ImageDerivativesRequest{Attachment: request.Attachment, ContentType: request.ContentType, Content: request.Content, Variants: []media.ThumbnailVariant{variant}}, func(_ media.ThumbnailVariant, derivative ports.ImageDerivative) error {
+		result = derivative
+		return nil
+	})
+	return result, err
 }
 
 func (StandardImageProcessor) PrepareImageForModelUse(_ context.Context, request ports.ModelImageRequest) (ports.ModelImage, error) {
