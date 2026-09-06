@@ -55,3 +55,17 @@ func TestThumbnailBackfillConfiguration(t *testing.T) {
 		t.Fatal("backfill setting ignored", err)
 	}
 }
+
+func TestCleanupRecheckIntervalBounds(t *testing.T) {
+	cfg, err := LoadThumbnails()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.CleanupRecheckInterval != time.Hour {
+		t.Fatal("unexpected cleanup interval")
+	}
+	t.Setenv("STUFF_STASH_THUMBNAIL_CLEANUP_RECHECK_INTERVAL", "1s")
+	if _, err := LoadThumbnails(); err == nil {
+		t.Fatal("too frequent recheck accepted")
+	}
+}
