@@ -209,3 +209,12 @@ The existing thumbnail-served application event also increments
 `stuffstash.media.thumbnail.served` with validated variant and source (`cache` or
 `generated`). Count successful responses, including singleflight followers; this
 is not a unique codec-invocation count. Invalid or missing dimensions are excluded.
+
+## Identity dependency spans
+
+Authentication, tenant/inventory permission checks, candidate visibility lookup,
+and access relationship writes are measured through decorators of the existing
+identity ports. Record only fixed operation names and success/failure. Do not
+record tokens, principal IDs, permissions supplied by callers, or resource IDs.
+Forward the derived context and all arguments unchanged. Wire the same decorators
+in API bootstrap and verify legitimate and denied requests through the HTTP boundary.

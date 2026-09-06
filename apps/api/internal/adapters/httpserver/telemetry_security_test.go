@@ -6,6 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
+	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
+	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/adapters/observability"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -17,10 +20,7 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
 	const otherTenant = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
-	server := NewServer(":0", newSeededTestApp(t, seededState{
-		tenants:     []seedTenant{{id: tenantID, name: "Home", owner: "owner"}, {id: otherTenant, name: "Other", owner: "other"}},
-		inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "Home", owner: "owner"}},
-	}))
+
 	exporter := tracetest.NewInMemoryExporter()
 	tracer := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 	meter := sdkmetric.NewMeterProvider()
@@ -34,6 +34,11 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	server := NewServer(":0", newSeededTestAppWithBlobAuthorizerAndImportSource(t, seededState{
+		tenants:     []seedTenant{{id: tenantID, name: "Home", owner: "owner"}, {id: otherTenant, name: "Other", owner: "other"}},
+		inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "Home", owner: "owner"}},
+	}, nil, observability.ObserveAuthorizer(memory.NewAuthorizer(), telemetry), homebox.NewLegacyImporter(nil), observability.ObserveAuthenticator(auth.NewLocalDevAuthenticator(), telemetry)))
+	exporter.Reset()
 	server.Handler = telemetry.WrapHTTP(server.Handler)
 	path := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets"
 	for _, test := range []struct {
@@ -54,12 +59,17 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 		})
 	}
 	spans := exporter.GetSpans()
-	if len(spans) != 5 {
-		t.Fatalf("expected five request spans, got %d", len(spans))
-	}
+	requestCount, authenticationCount, authorizationCount := 0, 0, 0
 	for _, span := range spans {
-		if span.Name != "GET /tenants/{tenantId}/inventories/{inventoryId}/assets" {
-			t.Fatalf("unexpected route template %q", span.Name)
+		switch span.Name {
+		case "GET /tenants/{tenantId}/inventories/{inventoryId}/assets":
+			requestCount++
+		case "identity.authenticate":
+			authenticationCount++
+		case "identity.authorize", "identity.visibility":
+			authorizationCount++
+		default:
+			t.Fatalf("unexpected span %q", span.Name)
 		}
 		if strings.Contains(span.Name, tenantID) {
 			t.Fatal("tenant ID exposed in span name")
@@ -69,5 +79,8 @@ func TestTelemetryPreservesInventorySecurityBoundary(t *testing.T) {
 				t.Fatal("private request information exposed")
 			}
 		}
+	}
+	if requestCount != 5 || authenticationCount != 5 || authorizationCount == 0 {
+		t.Fatalf("missing boundary spans: requests %d authentication %d authorization %d", requestCount, authenticationCount, authorizationCount)
 	}
 }
