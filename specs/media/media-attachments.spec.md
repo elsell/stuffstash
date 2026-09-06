@@ -268,3 +268,15 @@ When a browser client cannot use an advertised direct-upload target because the 
 - Are attachments versioned?
 - Are thumbnails persisted durably, cached opportunistically, or always generated lazily?
 - What virus scanning or content safety workflow is required before arbitrary file uploads?
+
+## Bounded resize working memory
+
+For large reductions, halve image dimensions with filtered bilinear scaling until
+the intermediate image is no more than twice the requested output dimensions,
+then apply the existing Catmull-Rom final filter. Calculate the final dimensions
+from the original aspect ratio. Keep JPEG quality, size variants, authorization,
+storage keys and original attachments unchanged. This reduces the large temporary
+buffer required by a single full-resolution separable filter. Verify high-frequency
+patterns average rather than alias, preserve alpha/geometry, and compare CPU and
+allocated bytes against the previous codec on the same runner. Do not deploy the
+candidate until the production HTTP baseline is recorded.
