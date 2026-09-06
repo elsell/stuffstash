@@ -356,14 +356,6 @@ func (providerResolverSpeechToText) Transcribe(context.Context, ports.SpeechToTe
 
 type providerResolverLanguageInference struct{}
 
-func (providerResolverLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
-func (providerResolverLanguageInference) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{SpokenResponse: "response", DisplayResponse: "response"}, nil
-}
-
 func (providerResolverLanguageInference) ProbeLanguageInference(context.Context) error { return nil }
 
 type providerResolverTextToSpeech struct{}

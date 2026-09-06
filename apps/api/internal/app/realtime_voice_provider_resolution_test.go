@@ -190,14 +190,6 @@ func (r resolvedSpeechToText) Transcribe(context.Context, ports.SpeechToTextInpu
 }
 
 // Retired-only implementation verifies compatibility cannot silently reactivate it.
-type resolvedLanguageInference struct{}
-
-func (*resolvedLanguageInference) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-func (*resolvedLanguageInference) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
-}
 
 type resolvedConversationModel struct {
 	inventoryConversationModel

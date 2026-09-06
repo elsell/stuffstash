@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -122,28 +121,18 @@ func TestGoogleGeminiLanguageInferenceUsesAPIKeyBackend(t *testing.T) {
 		if r.URL.Path != "/v1beta/models/gemini-test:generateContent" {
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}
-		_ = json.NewEncoder(w).Encode(geminiTextResponse(`{
-          "decision":"search",
-          "intent":{"requestShape":"single_target","kind":"read","operation":"locate","subjectMention":"tools","newAssetKind":"","destinationPath":[],"destinationKinds":[],"details":""},
-          "searchRequests":[{"referenceKey":"subject","readKind":"search_assets","mention":"tools","kindHint":"","visibleAssetId":"","searchProbes":["tools"],"lifecycleScope":"active"}],
-          "vocabularyRequests":[],"resolutions":[],"rationale":"Gather candidates."
-        }`))
+		_ = json.NewEncoder(w).Encode(geminiTextResponse("I can help you find your tools."))
 	}))
 	t.Cleanup(server.Close)
 
 	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{
 		Model: "gemini-test", BaseURL: server.URL, APIKey: "test-api-key", HTTPClient: server.Client(),
 	})
-	turn, err := provider.NextTurn(context.Background(), ports.LanguageInferenceInput{
-		Transcript: "Where are my tools?",
-		Investigation: &agentmodel.InvestigationInput{
-			Phase: agentmodel.InvestigationPhaseInitial, PromptVersion: "voice-investigation-v1", SchemaVersion: "voice-investigation-v1",
-			Transcript: "Where are my tools?", MaxEvidenceRounds: agentmodel.MaxEvidenceRounds,
-		},
-	})
-	if err != nil || turn.Investigation == nil {
-		t.Fatalf("language inference with API key: turn=%+v err=%v", turn, err)
+	turn, err := provider.Converse(context.Background(), googleConversationTestInput("Where are my tools?"))
+	if err != nil || turn.Text != "I can help you find your tools." {
+		t.Fatalf("conversation with API key: turn=%+v err=%v", turn, err)
 	}
+
 }
 
 func TestGoogleGeminiLanguageInferenceProbeUsesSeparateTextDiagnostic(t *testing.T) {
@@ -238,5 +227,5 @@ func TestGoogleTextToSpeechProbeSynthesizesSafeDiagnosticPhrase(t *testing.T) {
 }
 
 func geminiTextResponse(text string) map[string]any {
-	return map[string]any{"candidates": []map[string]any{{"content": map[string]any{"parts": []map[string]any{{"text": text}}}}}}
+	return map[string]any{"candidates": []map[string]any{{"finishReason": "STOP", "content": map[string]any{"role": "model", "parts": []map[string]any{{"text": text}}}}}}
 }

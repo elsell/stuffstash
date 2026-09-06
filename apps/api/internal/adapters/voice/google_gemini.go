@@ -98,59 +98,7 @@ func NewGoogleGeminiLanguageInference(cfg GoogleGeminiConfig) GoogleGeminiLangua
 	}
 }
 
-// NextTurn accepts only the project-owned structured investigation contract.
-// Gemini never receives provider-callable inventory tools and cannot author a
-// final response, executable command, or action plan through this adapter.
-func (p GoogleGeminiLanguageInference) NextTurn(ctx context.Context, input ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	if input.Investigation == nil || input.Investigation.Validate() != nil {
-		return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-	}
-	prompt := geminiInvestigationPrompt(input)
-	request := geminiGenerateContentRequest{
-		Contents: []geminiContent{{Role: "user", Parts: []geminiPart{{Text: prompt}}}},
-		GenerationConfig: &geminiGenerationConfig{
-			Temperature:        0,
-			ResponseMimeType:   "application/json",
-			ResponseJSONSchema: geminiInvestigationResponseSchema(*input.Investigation),
-		},
-	}
-	var lastErr error
-	for attempt := 0; attempt < googleStructuredInferenceAttempts; attempt++ {
-		var response geminiGenerateContentResponse
-		if err := p.client.postJSON(ctx, p.path, request, &response); err != nil {
-			lastErr = err
-			if !retryableGoogleLanguageInferenceError(err) || attempt+1 >= googleStructuredInferenceAttempts {
-				return ports.LanguageInferenceTurn{}, err
-			}
-			if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
-				return ports.LanguageInferenceTurn{}, err
-			}
-			continue
-		}
-
-		rawText := firstGeminiText(response)
-		turn, err := parseGeminiInvestigationTurn(rawText)
-		if err != nil {
-			lastErr = err
-			if attempt+1 >= googleStructuredInferenceAttempts {
-				return ports.LanguageInferenceTurn{}, err
-			}
-			if err := sleepGoogleLanguageRetry(ctx, attempt, err); err != nil {
-				return ports.LanguageInferenceTurn{}, err
-			}
-			continue
-		}
-		return turn, nil
-	}
-	if lastErr != nil {
-		return ports.LanguageInferenceTurn{}, lastErr
-	}
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-
-// ProbeLanguageInference is deliberately separate from NextTurn. Provider
-// readiness does not need, and must not reopen, a legacy final-response mode in
-// the production language-inference port.
+// ProbeLanguageInference checks provider readiness separately from a conversation.
 func (p GoogleGeminiLanguageInference) ProbeLanguageInference(ctx context.Context) error {
 	request := geminiGenerateContentRequest{
 		Contents: []geminiContent{{

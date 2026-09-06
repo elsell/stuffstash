@@ -68,13 +68,6 @@ func (model *taggedClothesModel) Converse(ctx context.Context, input ports.Conve
 	return ports.ConversationModelTurn{Answer: &ports.ConversationAnswer{Spoken: "They are in " + location + ".", Display: "Matching clothes are shown below.", AssetIDs: ids}}, nil
 }
 
-// Compatibility methods are never invoked by the evaluation path.
-func (*taggedClothesModel) NextTurn(context.Context, ports.LanguageInferenceInput) (ports.LanguageInferenceTurn, error) {
-	return ports.LanguageInferenceTurn{}, ports.ErrInvalidProviderInput
-}
-func (*taggedClothesModel) GenerateResponse(context.Context, ports.VoiceResponseGenerationInput) (ports.VoiceResponseGenerationResult, error) {
-	return ports.VoiceResponseGenerationResult{}, ports.ErrInvalidProviderInput
-}
 func testInput(t *testing.T, model ports.ConversationModel) ports.ConversationEvaluationInput {
 	t.Helper()
 	limits := domain.WorkflowLimits{Budget: domain.WorkflowBudget{EvidenceRounds: 2, ModelCalls: 4, ElapsedSeconds: 60, FollowUpTurns: 2}, MaxStepAttempts: 1, MaxNameRunes: 100, MaxInstructionRunes: 1000}
