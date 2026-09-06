@@ -176,3 +176,18 @@ stop (Go exposes no block-rate getter). Reject an adhoc endpoint override even w
 its value is empty, because the SDK treats its presence as an override. Shutdown
 flushes non-CPU profiles explicitly before stopping the SDK and keeps a single
 bounded-lifetime shutdown worker; repeated Stop calls join the same work.
+
+Bootstrap validates and starts profiling before constructing authentication or
+storage services. Shutdown stops profiling before telemetry, using a fresh bounded
+context, and records a fixed application shutdown failure if the stop times out.
+`profiling.delivery_failed` identifies sanitized SDK error diagnostics.
+
+## Deployed measurement environment
+
+The authorized target is `https://api.stuffstash.jsksell.com`, reachable from SSH
+host `paul` with namespace `stuffstash` through `~/.kube/configs/local-don`.
+All deployment changes go through the `~/code/infra` GitOps repository; direct
+Deployment patches are prohibited. Ingestion secrets are supplied by the operator
+in the existing Infisical production environment, root path, synced to
+`stuffstash/stuffstash-secrets`. Do not commit credentials or derive ingestion
+credentials from the Grafana management service account.
