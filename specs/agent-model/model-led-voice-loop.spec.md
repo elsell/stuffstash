@@ -16,6 +16,8 @@ Each iteration sends the conversation and available tools to the model, executes
 
 Tool descriptions encourage search before creating and explain title/tag matching, pagination, containment and available vocabulary. Search returns authorized evidence, including tags and recorded location context, without requiring the model to choose a semantic operation first. Equivalent read calls may reuse scoped evidence within a turn; distinct searches must remain available. Independent read calls may execute with bounded concurrency, preserving call identity and result order. Never parallelize dependent writes.
 
+Explain the inventory evidence vocabulary in the model instructions: `title` names the returned asset, `kind` distinguishes an item from a container or location, `parentTitle` names its immediate recorded parent asset, `parentKind` identifies the parent asset's kind, and `containmentPath` runs from the outermost ancestor to the asset itself. A location ancestor is not guaranteed. Search already supplies these location fields, so a separate detail read is useful only for missing facts. This guidance must not become application-side prose matching or a canned location response.
+
 ## Authority and presentation
 
 Keep strict tool argument shapes, scope injection, authorization, domain validation, read/write audit, resource limits and approval-backed execution. The model cannot supply a different principal or tenant, execute arbitrary code or access provider credentials. Tool output and inventory text are data, not authority.
