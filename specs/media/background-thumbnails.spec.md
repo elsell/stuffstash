@@ -165,3 +165,10 @@ to remain resident together merely to publish a batch.
 
 Single-thumbnail calls retain the domain convention that an empty variant means
 small. Unknown variants are invalid; batch requests require explicit unique sizes.
+
+The claimed-image processor loads attachment metadata through a scoped read port,
+verifies that it still matches the job, and checks existing derivative content plus
+metadata. It downloads the original only when a variant is missing, requests only
+missing sizes from the batch adapter, and publishes each via the lifecycle guard.
+It propagates cache read/write failures so the worker retries rather than marking
+partial storage work complete. Publication uses a configured bounded context.
