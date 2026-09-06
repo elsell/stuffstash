@@ -257,3 +257,23 @@ The memory adapter provides the same batch semantics within its store lifetime.
 The feature CI runs the Go structural hook over changes since the deployed
 `0d84c2da9` reference in addition to race tests and PostgreSQL integration tests.
 Local compilation remains deferred to CI because workstation disk space is limited.
+
+## Deletion cleanup and late remote writes
+
+Asset deletion must enqueue blob cleanup for its attachments in the same transaction
+as the asset deletion and audit, before attachment rows cascade away. Lock the parent
+and attachment rows in a consistent order so concurrent attachment creation cannot
+escape the deletion snapshot. The memory adapter removes the same metadata and jobs.
+Inventory deletion continues to reject any inventory containing assets; do not expand
+that product behavior to bulk deletion merely for this feature.
+
+Retain processed blob-deletion outbox records as durable deletion tombstones. Add
+bounded, fairly scheduled, leased periodic rechecks of all original and derivative
+keys, including metadata. Fenced resolution records the last recheck time without
+removing the tombstone or resetting the original processed status. Attempt every
+key even if one delete fails. Failures must not starve other due tombstones.
+This provides eventual cleanup of remotely accepted writes that finish after a
+transport error and initial cleanup. It depends on continued rechecks; it does not
+claim to prevent late object creation immediately. Blob storage keys must never be
+reused for live attachments after deletion; enforce that creation invariant through
+persistence, including imports and direct-upload completion, before enabling rechecks.
