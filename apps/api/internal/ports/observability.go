@@ -5,6 +5,7 @@ import "context"
 type EventName string
 
 const (
+	EventThumbnailJobsRetried                      EventName = "thumbnail_jobs.retried"
 	EventBlobDeletionRechecked                     EventName = "blob_deletion.rechecked"
 	EventThumbnailJobResolved                      EventName = "thumbnail_job.resolved"
 	EventThumbnailWorkerFailed                     EventName = "thumbnail_worker.failed"

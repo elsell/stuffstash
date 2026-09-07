@@ -322,3 +322,8 @@ a consistent database snapshot. Retry accepts 1–1000 jobs (default 100), locks
 bounded set of failed jobs, clears failure/attempt accounting, and makes them pending
 at the injected current time. It leaves pending, leased and completed jobs unchanged.
 Emit a safe `thumbnail_jobs.retried` operational event with the retried count.
+
+Operator command logs go to stderr; stdout contains exactly one JSON result. Verify
+this through the actual command entrypoint, not only an injected test observer.
+SQLite status/retry opens an existing file in read-write mode without automatically
+creating a database or running migrations. Schema setup remains an explicit operation.
