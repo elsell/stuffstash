@@ -13,6 +13,8 @@ import (
 )
 
 type Processor struct {
+	admission          ports.ImageWorkAdmission
+	flights            ports.ThumbnailFlights
 	readiness          ports.ThumbnailReadiness
 	attachments        ports.AttachmentReader
 	blobs              ports.BlobStorage
@@ -23,11 +25,11 @@ type Processor struct {
 
 var _ ports.ThumbnailJobProcessor = (*Processor)(nil)
 
-func NewProcessor(attachments ports.AttachmentReader, blobs ports.BlobStorage, images ports.ImageBatchProcessor, guard ports.ThumbnailPublicationGuard, readiness ports.ThumbnailReadiness, publicationTimeout time.Duration) (*Processor, error) {
-	if attachments == nil || blobs == nil || images == nil || guard == nil || readiness == nil || publicationTimeout <= 0 {
+func NewProcessor(attachments ports.AttachmentReader, blobs ports.BlobStorage, images ports.ImageBatchProcessor, guard ports.ThumbnailPublicationGuard, readiness ports.ThumbnailReadiness, admission ports.ImageWorkAdmission, flights ports.ThumbnailFlights, publicationTimeout time.Duration) (*Processor, error) {
+	if attachments == nil || blobs == nil || images == nil || guard == nil || readiness == nil || admission == nil || flights == nil || publicationTimeout <= 0 {
 		return nil, errors.New("thumbnail processor dependencies and publication timeout are required")
 	}
-	return &Processor{readiness: readiness, attachments: attachments, blobs: blobs, images: images, guard: guard, publicationTimeout: publicationTimeout}, nil
+	return &Processor{admission: admission, flights: flights, readiness: readiness, attachments: attachments, blobs: blobs, images: images, guard: guard, publicationTimeout: publicationTimeout}, nil
 }
 
 // ProcessThumbnailJob is called with shared image admission already held by Worker.
@@ -36,6 +38,11 @@ func (p *Processor) ProcessThumbnailJob(ctx context.Context, claim ports.Claimed
 	if job.AttachmentID == "" || job.TenantID == "" || job.InventoryID == "" || job.AssetID == "" || job.Revision != domain.CurrentThumbnailRevision || claim.ClaimID == "" {
 		return ports.ErrOutboxClaimLost
 	}
+	release, _, owned := p.flights.TryStart(job.StorageKey)
+	if !owned {
+		return ports.ErrThumbnailYielded
+	}
+	defer release()
 	attachment, found, err := p.attachments.AttachmentByID(ctx, tenant.ID(job.TenantID), inventory.InventoryID(job.InventoryID), asset.ID(job.AssetID), job.AttachmentID)
 	if err != nil {
 		return err
@@ -88,6 +95,9 @@ func (p *Processor) generate(ctx context.Context, attachment domain.Attachment, 
 		p.readiness.Published(key)
 		if ready != nil {
 			ready(derivative)
+		}
+		if claim != nil && variant != variants[len(variants)-1] && p.admission.ForegroundWaiting() {
+			return ports.ErrThumbnailYielded
 		}
 		return nil
 	})

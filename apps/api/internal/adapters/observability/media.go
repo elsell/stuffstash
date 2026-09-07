@@ -2,6 +2,7 @@ package observability
 
 import (
 	"context"
+	"errors"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -103,6 +104,12 @@ func ObserveImageBatch(delegate ports.ImageBatchProcessor, telemetry ports.Telem
 }
 func (p observedImageBatch) CreateThumbnails(ctx context.Context, request ports.ImageDerivativesRequest, publish func(media.ThumbnailVariant, ports.ImageDerivative) error) (err error) {
 	ctx, finish := p.telemetry.Start(ctx, ports.OperationThumbnailGenerate)
-	defer func() { finish(err) }()
+	defer func() {
+		if errors.Is(err, ports.ErrThumbnailYielded) {
+			finish(nil)
+			return
+		}
+		finish(err)
+	}()
 	return p.delegate.CreateThumbnails(ctx, request, publish)
 }

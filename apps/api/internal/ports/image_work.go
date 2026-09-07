@@ -15,4 +15,6 @@ const (
 // Callers must acquire before loading an original and release on every exit.
 type ImageWorkAdmission interface {
 	Acquire(context.Context, ImageWorkPriority) (release func(), err error)
+	// ForegroundWaiting reports queued demand, for cooperative background checkpoints.
+	ForegroundWaiting() bool
 }

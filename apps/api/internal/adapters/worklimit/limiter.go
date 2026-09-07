@@ -22,6 +22,12 @@ type Limiter struct {
 
 var _ ports.ImageWorkAdmission = (*Limiter)(nil)
 
+func (l *Limiter) ForegroundWaiting() bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return len(l.foreground) > 0
+}
+
 func New(capacity int) (*Limiter, error) {
 	if capacity <= 0 {
 		return nil, errors.New("image work capacity must be positive")

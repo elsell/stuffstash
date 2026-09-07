@@ -125,7 +125,8 @@ func processorFixture(t *testing.T) (*Processor, *processorSource, *memory.Store
 		t.Fatal(err)
 	}
 	guard := &processorGuard{source: source}
-	processor, err := NewProcessor(source, blobs, blobstore.StandardImageProcessor{}, guard, worklimit.NewThumbnailReadiness(), time.Second)
+	admission, _ := worklimit.New(1)
+	processor, err := NewProcessor(source, blobs, blobstore.StandardImageProcessor{}, guard, worklimit.NewThumbnailReadiness(), admission, worklimit.NewThumbnailFlights(), time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

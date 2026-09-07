@@ -85,11 +85,18 @@ func (s Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThumb
 		if !validThumbnailClaim(model, claim, resolution.At) {
 			return ports.ErrOutboxClaimLost
 		}
-		return tx.Model(&model).Updates(map[string]any{
+		updates := map[string]any{
 			"status": string(resolution.Status), "claim_id": "", "claimed_until": nil,
 			"failure":         string(resolution.Failure),
 			"next_attempt_at": resolution.NextAttemptAt, "updated_at": resolution.At,
-		}).Error
+		}
+		if resolution.Yielded {
+			if model.Attempts < 1 {
+				return ports.ErrOutboxClaimLost
+			}
+			updates["attempts"] = model.Attempts - 1
+		}
+		return tx.Model(&model).Updates(updates).Error
 	})
 }
 

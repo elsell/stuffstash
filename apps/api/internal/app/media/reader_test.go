@@ -77,22 +77,29 @@ func TestReaderGuardRejectsAttachmentDeletedAfterAuthorization(t *testing.T) {
 
 func TestReaderRechecksCacheAfterWaitingForWorker(t *testing.T) {
 	processor, source, blobs, guard, claim := processorFixture(t)
-	limiter, err := worklimit.New(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	limiter, _ := worklimit.New(1)
+	processor.admission = limiter
 	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer release()
-	waiting := make(chan struct{})
-	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
+	entered, proceed, waiting := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	processor.images = readerBlockedBatch{ImageBatchProcessor: processor.images, entered: entered, proceed: proceed}
+	processor.flights = readerObservedFlights{ThumbnailFlights: processor.flights, waiting: waiting}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	workerDone := make(chan error, 1)
+	go func() { workerDone <- processor.ProcessThumbnailJob(ctx, claim) }()
+	select {
+	case <-entered:
+	case <-ctx.Done():
+		t.Fatal("worker never started")
+	}
+	reader, err := NewReader(processor, limiter)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
 	done := make(chan error, 1)
 	go func() {
 		output, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
@@ -104,21 +111,53 @@ func TestReaderRechecksCacheAfterWaitingForWorker(t *testing.T) {
 	select {
 	case <-waiting:
 	case <-ctx.Done():
-		t.Fatal("reader never requested admission")
+		t.Fatal("reader did not join flight")
 	}
-	if err := processor.ProcessThumbnailJob(ctx, claim); err != nil {
+	close(proceed)
+	if err := <-workerDone; err != nil {
 		t.Fatal(err)
 	}
 	if err := blobs.DeleteBlob(ctx, source.attachment.StorageKey); err != nil {
 		t.Fatal(err)
 	}
-	release()
 	if err := <-done; err != nil {
 		t.Fatal(err)
 	}
 	if guard.writes != 3 {
 		t.Fatal("reader regenerated worker output")
 	}
+}
+
+type readerObservedFlights struct {
+	ports.ThumbnailFlights
+	waiting chan struct{}
+}
+
+func (f readerObservedFlights) TryStart(key domain.StorageKey) (func(), <-chan struct{}, bool) {
+	release, done, owned := f.ThumbnailFlights.TryStart(key)
+	if !owned {
+		select {
+		case <-f.waiting:
+		default:
+			close(f.waiting)
+		}
+	}
+	return release, done, owned
+}
+
+type readerBlockedBatch struct {
+	ports.ImageBatchProcessor
+	entered, proceed chan struct{}
+}
+
+func (b readerBlockedBatch) CreateThumbnails(ctx context.Context, request ports.ImageDerivativesRequest, publish func(domain.ThumbnailVariant, ports.ImageDerivative) error) error {
+	close(b.entered)
+	select {
+	case <-b.proceed:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	return b.ImageBatchProcessor.CreateThumbnails(ctx, request, publish)
 }
 
 type readerAdmissionSignal struct {

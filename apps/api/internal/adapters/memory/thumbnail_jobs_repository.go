@@ -98,6 +98,12 @@ func (s *Store) ResolveThumbnailJob(ctx context.Context, claim ports.ClaimedThum
 	if !exists || !attachmentExists || claim.ClaimID == "" || record.claim.ClaimID != claim.ClaimID || !record.claim.ClaimedUntil.Equal(claim.ClaimedUntil) || !record.claim.ClaimedUntil.After(resolution.At) || !claim.Job.Matches(attachment) {
 		return ports.ErrOutboxClaimLost
 	}
+	if resolution.Yielded {
+		if record.claim.Attempts < 1 {
+			return ports.ErrOutboxClaimLost
+		}
+		record.claim.Attempts--
+	}
 	record.status = resolution.Status
 	record.failure = resolution.Failure
 	record.nextAttemptAt = resolution.NextAttemptAt

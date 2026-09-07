@@ -30,7 +30,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		if err != nil {
 			t.Fatal(err)
 		}
-		processor, err := mediaapp.NewProcessor(store, store, batch, guard, worklimit.NewThumbnailReadiness(), time.Second)
+		processor, err := mediaapp.NewProcessor(store, store, batch, guard, worklimit.NewThumbnailReadiness(), admission, worklimit.NewThumbnailFlights(), time.Second)
 		if err != nil {
 			t.Fatal(err)
 		}

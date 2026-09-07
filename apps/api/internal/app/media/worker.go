@@ -74,7 +74,7 @@ func (w *Worker) Drain(ctx context.Context) (bool, error) {
 		processing, cancel := context.WithTimeout(ctx, budget)
 		processErr = w.processor.ProcessThumbnailJob(processing, claim)
 		// A late nil result must not acknowledge work after its processing deadline.
-		if processErr == nil {
+		if processing.Err() != nil {
 			processErr = processing.Err()
 		}
 		cancel()
@@ -84,7 +84,11 @@ func (w *Worker) Drain(ctx context.Context) (bool, error) {
 		return true, err
 	}
 	resolution := ports.ThumbnailJobResolution{Status: ports.ThumbnailJobCompleted, At: w.clock.Now()}
-	if processErr != nil {
+	if errors.Is(processErr, ports.ErrThumbnailYielded) {
+		resolution.Status = ports.ThumbnailJobPending
+		resolution.Yielded = true
+		resolution.NextAttemptAt = resolution.At.Add(w.config.RetryBase)
+	} else if processErr != nil {
 		resolution.Failure = ports.ThumbnailFailureProcessing
 		if claim.Attempts >= w.config.MaxAttempts {
 			resolution.Status = ports.ThumbnailJobFailed
@@ -100,7 +104,11 @@ func (w *Worker) resolve(ctx context.Context, claim ports.ClaimedThumbnailJob, r
 	if err := w.queue.ResolveThumbnailJob(ctx, claim, resolution); err != nil {
 		return err
 	}
-	w.observer.Record(ctx, ports.Event{Name: ports.EventThumbnailJobResolved, Message: "thumbnail work resolved", Fields: map[string]string{"outcome": string(resolution.Status), "reason": string(resolution.Failure)}})
+	fields := map[string]string{"outcome": string(resolution.Status), "reason": string(resolution.Failure)}
+	if resolution.Yielded {
+		fields["yielded"] = "true"
+	}
+	w.observer.Record(ctx, ports.Event{Name: ports.EventThumbnailJobResolved, Message: "thumbnail work resolved", Fields: fields})
 	return nil
 }
 

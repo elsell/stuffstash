@@ -31,6 +31,7 @@ type ClaimedThumbnailJob struct {
 }
 
 type ThumbnailJobResolution struct {
+	Yielded       bool
 	Status        ThumbnailJobStatus
 	At            time.Time
 	NextAttemptAt time.Time
@@ -40,6 +41,12 @@ type ThumbnailJobResolution struct {
 func (r ThumbnailJobResolution) Validate() error {
 	if r.At.IsZero() {
 		return errors.New("thumbnail job resolution time is required")
+	}
+	if r.Yielded {
+		if r.Status == ThumbnailJobPending && r.Failure == "" && r.NextAttemptAt.After(r.At) {
+			return nil
+		}
+		return errors.New("invalid thumbnail yield resolution")
 	}
 	switch r.Status {
 	case ThumbnailJobCompleted:
@@ -59,6 +66,9 @@ func (r ThumbnailJobResolution) Validate() error {
 	}
 	return errors.New("invalid thumbnail job resolution")
 }
+
+// ErrThumbnailYielded preserves durable partial progress without consuming retries.
+var ErrThumbnailYielded = errors.New("thumbnail work yielded to interactive demand")
 
 // ThumbnailJobQueue is an operational work stream, not a user-facing discovery API.
 // Claiming is atomic across processes; resolutions fence expired and replaced claims.
