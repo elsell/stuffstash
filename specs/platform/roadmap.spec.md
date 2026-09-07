@@ -33,6 +33,12 @@ The final production comparison selects one worker at 500m CPU/512Mi through
 GitOps `1156b0d`: fixed-delay thumbnail median improved 7.489 to 0.329 seconds,
 but immediate-open latency regressed and intermittent blob-storage stalls remain.
 Two workers improved batch delivery but worsened foreground p95 and memory.
+Follow-up experiments reproduced admission interference between photos and
+paired API/direct-Garage storage stalls. Idle warm p95 recovered near baseline;
+the earlier 18-sample p95 was dominated by one outlier. The application scheduling
+mechanism is identified; underlying storage/NFS diagnosis awaits read-only node
+or storage-server diagnostics. See
+`docs/reports/thumbnail-regression-diagnosis-2026-09-07.md`.
 Prioritize those remaining latency problems before expanding observability.
 See `docs/reports/background-thumbnail-performance-2026-09-06.md` for evidence,
 failed attempts, measurement limits and deferred observability.

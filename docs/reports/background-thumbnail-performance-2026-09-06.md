@@ -1,5 +1,9 @@
 # Background thumbnail production comparison
 
+Follow-up: [regression diagnosis](thumbnail-regression-diagnosis-2026-09-07.md)
+separates scheduling interference from storage-path stalls and explains why the
+18-sample warm p95 should not be read as a general ninefold slowdown.
+
 Background generation is deployed. Keep **one worker** at the current API limit of
 500m CPU and 512Mi memory. Two workers delivered batches faster but worsened ordinary
 API latency, immediate-open latency, and memory usage. Concurrency remains configurable.
