@@ -46,7 +46,8 @@ two, then select the measured default. The capacity counts active images, not
 variants or goroutines. Do not spawn unbounded claim batches or decoded buffers.
 
 Waiting foreground work has priority over waiting background work; each priority
-is FIFO. Work already running is not preempted. Context cancellation removes a
+is FIFO. A resize or publication already running is not interrupted; background
+work checkpoints between successfully published variants as specified below. Context cancellation removes a
 waiter or releases a concurrently granted permit without leaking capacity.
 Releasing a permit twice must be harmless. A waiting worker must stop at shutdown.
 Foreground requests retain the existing authenticated on-demand fallback. Share
@@ -380,3 +381,45 @@ object-store readiness traffic. Correlate successful thumbnail requests with the
 cache/generated events and report request latency. A cache event may follow waiting
 for a worker, so it does not establish readiness at request start. Preserve aborted
 probe experiments as incomplete evidence; do not include them as completed runs.
+
+## Cooperative scheduling and per-photo coordination
+
+Background processing must stop between successfully published variants when a
+foreground admission waiter exists. It must unwind decoded data before releasing
+capacity, rather than retain a suspended original while another image is admitted.
+Uninterrupted processing still downloads/decodes once; after a cooperative yield,
+a later attempt reuses persisted variants and may download/decode the original
+again for the remaining sizes. Bounded memory and foreground latency take priority
+over decode-once across interruptions. The last variant completes normally.
+
+The admission port exposes a synchronized foreground-demand query. A yield is a
+typed operational outcome, not a processing failure. The worker releases its claim
+with pending status, no failure, and the configured retry-base cooldown to avoid
+reclaim spinning. Fenced persistence refunds that claim's attempt increment exactly
+once; real failures and abandoned/crashed leases continue consuming retry budget.
+No schema change is needed. Publication/deletion guards remain unchanged.
+
+An injected in-process thumbnail-flight port serializes generation by permanently
+reserved original storage key, across all variants and both caller classes. It
+provides nonblocking ownership acquisition and a completion signal for existing
+ownership, with idempotent release and no historical key retention. Only the owner
+may download/decode/generate. Authorization still precedes the reader; coordination
+provides neither resource discovery nor authorization.
+
+Foreground readers acquire photo ownership before waiting for global admission;
+nonowners wait for requested-variant publication or ownership completion without
+holding capacity, then recheck the cache and retry ownership. Subscription precedes
+the cache read on every retry to avoid lost publication signals. Cancellation
+unsubscribes/releases ownership and joins any admission attempt.
+
+Workers still acquire global capacity before claiming jobs, then try photo ownership
+without blocking. A busy photo causes a cooperative deferred resolution, releasing
+capacity so its foreground owner can run; workers must never wait for ownership
+while holding capacity. Ownership is released on success, failure, cancellation and
+yield. Foreground requests need not generate variants they did not request.
+
+Tests must prove inter-photo yielding, persisted small reuse on resume, no refunded
+failure/crash attempts, fenced/idempotent yield resolution, same-photo suppression
+at concurrency two, cancellation/retry wakeups, and unchanged authorized read and
+delete boundaries. Repeat the paced/back-to-back production experiment after CI
+and code-critic review; record storage failures separately from scheduling latency.
