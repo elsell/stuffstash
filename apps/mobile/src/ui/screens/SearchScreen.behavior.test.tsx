@@ -7,7 +7,6 @@ import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverS
 import { SearchAssetsQuery } from '../../application/search/SearchAssetsQuery';
 import { toAssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { assetId, type AssetSummary } from '../../domain/assets/AssetSummary';
-import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import type { AssetBrowsePage } from '../../application/home/InventorySummaryRepository';
 
 function deferred<T>() {
@@ -28,14 +27,6 @@ function propsFor(overrides: Partial<React.ComponentProps<typeof SearchScreen>>)
     inventoryAssetTagsQuery: { execute: async () => [] },
     locationsQuery: { execute: async () => ({ inventoryName: 'Home', tenantName: 'Tenant', canAdd: true, locations: [] }) },
     inventoryMapQuery: { execute: async () => { throw new Error('Map must not be loaded by List'); } },
-    assetCoreQuery: { execute: async () => { throw new Error('No detail selected'); } },
-    assetContentsQuery: { execute: async () => { throw new Error('No detail selected'); } },
-    assetPhotosQuery: { execute: async () => [] },
-    assetCheckoutCommand: { execute: async () => { throw new Error('No checkout selected'); } },
-    assetLifecycleCommand: { execute: async () => undefined },
-    addAssetPhotosCommand: { execute: async () => ({ attachedCount: 0, failedCount: 0, failedPhotos: [], canRetry: false, message: '' }) },
-    deleteAssetPhotoCommand: { execute: async () => ({ message: '' }) },
-    photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] }),
     ...overrides
   };
 }
