@@ -18,6 +18,7 @@ REQUIRE_PATTERN = re.compile(
 NAMESPACE_REQUIRE_PATTERN = re.compile(
     r"\b(?:const|let|var)\s+(?P<name>[A-Za-z_$][\w$]*)\s*=\s*require\(['\"]react-native['\"]\)",
 )
+RAW_PRODUCT_MODAL_PATTERN = re.compile(r"<Modal\b|\bModal\s*,|\bModal\s*\(")
 FRAMEWORK_IMPORT_PATTERN = re.compile(
     r"^[ \t]*import(?:\s+type)?\s+.*?\s+from\s+['\"](?P<module>[^'\"]+)['\"]\s*;",
     re.DOTALL | re.MULTILINE,
@@ -45,6 +46,11 @@ def line_number(source: str, offset: int) -> int:
 def violations(path: Path) -> list[tuple[int, str]]:
     source = path.read_text(encoding="utf-8")
     findings: list[tuple[int, str]] = []
+
+    if path.name != "FullScreenPhotoViewer.tsx":
+        match = RAW_PRODUCT_MODAL_PATTERN.search(source)
+        if match:
+            findings.append((line_number(source, match.start()), "uses a raw React Native Modal for product UI; use a native route or an in-context surface"))
 
     for match in re.finditer(r"\.\s*throwIfAborted\s*\(", source):
         findings.append((line_number(source, match.start()), "uses AbortSignal.throwIfAborted unavailable in React Native; use assertReadActive"))
