@@ -42,6 +42,7 @@ All 12 after-run immediate opens and 494 warm-image reads returned HTTP 200.
 Application events matched all 506 image requests: 12 generated and 494 cache hits.
 All 494 ordinary reads succeeded. Peak sampled API memory was 341 MiB with no
 container restart; increasing memory was unnecessary for this configuration.
+Worker logs recorded three cooperative yields and 12 completed jobs.
 The queue drained without failed jobs and all four experiment-owned assets were
 deleted after measurement.
 
@@ -63,7 +64,9 @@ The 13.767-second open spent 9.986 seconds waiting, then 3.389 seconds generatin
 Its trace is `e2dae25b2e3c8398b28685f7d5daa07e`. Background root traces were sampled
 at 10%, and the holding operation was not captured. An already-running resize or
 storage operation cannot yield until its next successful publication checkpoint;
-the exact cause of that remaining wait is unresolved.
+the exact cause of that remaining wait is unresolved. The worker completion log
+aligns with the end of the wait (10.251 seconds after request start); it did not
+yield during that final running portion of the job.
 
 Independent warm outliers still spent seconds in blob reads with no resizing,
 including 12.764 seconds of a 12.896-second request. The earlier direct-Garage
@@ -82,8 +85,18 @@ Full PR checks passed in
 [CI 34080576863](https://github.com/elsell/stuffstash/actions/runs/34080576863), including
 repeated PostgreSQL search tests, web image, iOS lock, self-host runtime and browser
 journey. Builds and tests ran in CI because the local host is disk constrained.
-Release and final released-image deployment are tracked in
-[PR 66](https://github.com/elsell/stuffstash/pull/66).
+Final PR checks passed in
+[CI 34080988756](https://github.com/elsell/stuffstash/actions/runs/34080988756).
+[PR 66](https://github.com/elsell/stuffstash/pull/66) merged as `095e5ede9`.
+[v0.20.0](https://github.com/elsell/stuffstash/releases/tag/v0.20.0) published signed
+API/web images and the self-host bundle. GitOps `8b7b185` deployed API digest
+`sha256:63824716a0a0aa2fd4b4e568d93cbd480649d396613710bfbba4763d3fd381c1`
+and web digest `sha256:afce9606fc7db23d3fe75c17af547fc34e7258f7c1b8b89e98394977497be66d`.
+Both deployments became healthy. The released API runtime source matches the
+measured candidate; only tests and documentation changed after measurement.
+All 18 released-image thumbnail variants returned 200 and matched reference hashes;
+an unauthenticated thumbnail read returned 401. The queue had zero pending,
+leased and failed jobs. Private verification is `scheduling-release-smoke.jsonl`.
 
 ## Deferred work
 
