@@ -34,6 +34,12 @@ render time. JSON/base64 upload timing does not substitute for a direct-upload t
 measurement. Automated boundary tests cover direct-upload completion and imports.
 The small, fixed corpus cannot establish performance for every phone image size.
 
+The first candidate comparison runs while the existing-image queue remains nonempty.
+This is a sustained-load check, not a quiet-queue comparison: both worker settings
+process the same new-upload corpus while older jobs consume spare capacity. The
+older images differ as backfill progresses, so these runs cannot isolate concurrency
+as precisely as repeating the corpus after backfill drains. Report them separately.
+
 ## Results
 
 The baseline completed with no request failures. No derivative readiness was
@@ -64,3 +70,31 @@ the explicit scale-down stage resolved field ownership before startup.
 Web and mobile telemetry rollout, physical-device rendering measurements, broader
 dependency instrumentation, alerts/SLO dashboards, and extended profiling remain
 deferred. Existing API traces, metrics, logs and profiling support this experiment.
+
+## Loaded preliminary runs
+
+At the original 500m CPU/512Mi limit, the first candidate completed the one-worker
+run with no request failures. Fixed-delay thumbnail median/p95 were 2.378/25.045 s,
+but immediate small reads were 7.759/45.142 s. Ordinary asset-list median/p95 were
+91/712 ms, and observed working set reached 330 MiB without a restart. Only 22 of
+54 derivatives were observed ready before reads began.
+
+The two-worker run stopped during its third upload batch with HTTP 502. Its storage
+readiness probes also timed out, so readiness counts are incomplete. The failed
+request trace recorded 30.452 s in `media.blob.write` and 35.534 s in the HTTP
+operation, exceeding the configured 30-second HTTP write timeout. The API recorded
+attachment creation and did not restart. A response delivery timeout is the likely
+explanation, not a proven storage root cause. This run cannot select two as the
+production default. Its completed 36 thumbnail reads had median/p95 0.802/13.375 s;
+ordinary requests had 132/1,388 ms, with one failed upload among 15 attempts.
+
+Review confirmed that a reader could wait for the entire background job even after
+its requested small derivative was published. Regression CI `34070335781` failed
+on that behavior. Correction `d43a1ba86` passed race/PostgreSQL checks and code review,
+and image publication passed CI `34070804283`. Readers now retain one admission
+waiter while checking for their requested cached derivative, with bounded probes
+and cancellation that joins and releases a late permit.
+
+GitOps `d2dd84a` deploys that correction and temporarily uses two CPUs for one-time
+backfill catch-up, with memory still limited to 512Mi. Catch-up is excluded from
+performance comparisons. Restore 500m CPU before final measurements.

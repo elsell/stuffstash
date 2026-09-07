@@ -359,3 +359,8 @@ permit granted concurrently. Request cancellation must also join and release it.
 This improves same-image publication waits; it cannot accelerate an ungenerated
 image waiting behind unrelated work. Verify early publication, late grant cleanup,
 and cancellation through real admission and blob-storage fakes.
+
+Operational catch-up may temporarily increase API CPU using verified spare node
+capacity, through GitOps. Restore the reference resource limits before measured
+comparisons; do not attribute catch-up performance to the application change or
+use it to select the normal worker-concurrency default.
