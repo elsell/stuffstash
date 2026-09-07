@@ -5,18 +5,10 @@ import { SearchScreen } from '../../ui/screens/SearchScreen';
 
 export default function SearchRoute() {
   const {
-    addAssetPhotosCommand,
-    assetCheckoutCommand,
-    assetCoreQuery,
-    assetContentsQuery,
-    assetPhotosQuery,
-    assetLifecycleCommand,
-    deleteAssetPhotoCommand,
     inventoryMapQuery,
     inventoryContextQuery,
     inventoryAssetTagsQuery,
     locationsQuery,
-    photoSelectionQuery,
     searchAssetsQuery
   } = useAppServices();
   const params = useLocalSearchParams();
@@ -25,18 +17,10 @@ export default function SearchRoute() {
   return (
     <SearchScreen
       {...initialBrowseState}
-      addAssetPhotosCommand={addAssetPhotosCommand}
-      assetCheckoutCommand={assetCheckoutCommand}
-      assetCoreQuery={assetCoreQuery}
-      assetContentsQuery={assetContentsQuery}
-      assetPhotosQuery={assetPhotosQuery}
-      assetLifecycleCommand={assetLifecycleCommand}
-      deleteAssetPhotoCommand={deleteAssetPhotoCommand}
       inventoryMapQuery={inventoryMapQuery}
       inventoryContextQuery={inventoryContextQuery}
       inventoryAssetTagsQuery={inventoryAssetTagsQuery}
       locationsQuery={locationsQuery}
-      photoSelectionQuery={photoSelectionQuery}
       searchAssetsQuery={searchAssetsQuery}
     />
   );

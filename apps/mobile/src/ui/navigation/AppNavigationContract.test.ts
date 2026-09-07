@@ -6,6 +6,10 @@ import homeScreenSource from '../screens/HomeScreen.tsx?raw';
 import browseScreenSource from '../screens/SearchScreen.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import voiceScreenSource from '../screens/VoiceSessionSheetScreen.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import mapScreenSource from '../screens/InventoryMapScreen.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import addScreenSource from '../screens/AddAssetScreen.tsx?raw';
 
 // @ts-expect-error Vitest's Vite transform provides the app route manifest to structural tests.
 const appSources = import.meta.glob('../../app/**/*.tsx', {
@@ -39,6 +43,8 @@ describe('mobile navigation contract', () => {
     expect(appSources).toHaveProperty('../../app/add.tsx');
     expect(appSources).not.toHaveProperty('../../app/(tabs)/add.tsx');
     expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']add["']/);
+    expect(addScreenSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(addScreenSource).toContain('accessibilityRole="header"');
   });
 
   it('keeps Settings as a non-tab stack route', () => {
@@ -57,7 +63,18 @@ describe('mobile navigation contract', () => {
   it('opens grounded voice response entities through the asset detail route', () => {
     expect(voiceScreenSource).toContain("import { assetDetailHref } from './AssetDetailNavigation'");
     expect(voiceScreenSource).toContain('router.push(assetDetailHref(artifact.assetId))');
+    expect(voiceScreenSource).toMatch(/router\.dismiss\(\);\s*router\.push\(assetDetailHref\(artifact\.assetId\)\)/s);
     expect(voiceScreenSource).not.toMatch(/artifact\.(?:href|url|route)/);
+  });
+
+  it('does not allow transient Voice or Map surfaces to own product navigation', () => {
+    expect(voiceScreenSource).toContain('router.dismiss()');
+    expect(voiceScreenSource).not.toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*router\.push/);
+    expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
+    expect(voiceScreenSource).toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*\{\s*router\.dismiss\(\);\s*router\.push\('\/settings\/voice'\);/s);
+    expect(voiceScreenSource).not.toContain('<Modal');
+    expect(mapScreenSource).not.toContain('InventoryMapInfoSheet');
+    expect(mapScreenSource).toContain('router.push(assetDetailHref(asset.id))');
   });
 
   it('keeps invitation acceptance outside the tab hierarchy', () => {
