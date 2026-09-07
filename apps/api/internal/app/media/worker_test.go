@@ -116,6 +116,7 @@ type workerObserver struct{}
 func (workerObserver) Record(context.Context, ports.Event) {}
 
 type workerProcessor struct {
+	yield            bool
 	waitForTimeout   bool
 	remaining        time.Duration
 	prepared, failed bool
@@ -123,6 +124,9 @@ type workerProcessor struct {
 }
 
 func (p *workerProcessor) ProcessThumbnailJob(ctx context.Context, _ ports.ClaimedThumbnailJob) error {
+	if p.yield {
+		return ports.ErrThumbnailYielded
+	}
 	if deadline, ok := ctx.Deadline(); ok {
 		p.remaining = time.Until(deadline)
 	}
@@ -139,6 +143,24 @@ func (p *workerProcessor) ProcessThumbnailJob(ctx context.Context, _ ports.Claim
 	}
 	p.prepared = true
 	return nil
+}
+
+func TestWorkerDefersCooperativeYieldWithoutRecordingFailure(t *testing.T) {
+	worker, queue, processor, admission := workerFixture(t)
+	processor.yield = true
+	if worked, err := worker.Drain(context.Background()); err != nil || !worked {
+		t.Fatal(worked, err)
+	}
+	if !queue.result.Yielded || queue.result.Status != ports.ThumbnailJobPending || queue.result.Failure != "" || !queue.result.NextAttemptAt.Equal(queue.now.Add(time.Second)) {
+		t.Fatal("yield treated as failure", queue.result)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	release, err := admission.Acquire(ctx, ports.ImageWorkForeground)
+	if err != nil {
+		t.Fatal("yield retained admission", err)
+	}
+	release()
 }
 func workerFixture(t *testing.T) (*Worker, *workerQueue, *workerProcessor, *worklimit.Limiter) {
 	t.Helper()

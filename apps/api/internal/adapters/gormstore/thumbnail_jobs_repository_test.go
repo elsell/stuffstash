@@ -14,6 +14,40 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
+func TestThumbnailYieldRefundIsFencedAndFailuresStillCount(t *testing.T) {
+	ctx := context.Background()
+	store, attachment, record, job := thumbnailQueueFixture(t, ctx)
+	if err := store.SaveAttachment(ctx, attachment, record, &job); err != nil {
+		t.Fatal(err)
+	}
+	now := job.CreatedAt
+	claims, err := store.ClaimThumbnailJobs(ctx, "first", 1, now, now.Add(time.Minute))
+	if err != nil || len(claims) != 1 {
+		t.Fatal(err)
+	}
+	yield := ports.ThumbnailJobResolution{Status: ports.ThumbnailJobPending, At: now, NextAttemptAt: now.Add(time.Second), Yielded: true}
+	if err := store.ResolveThumbnailJob(ctx, claims[0], yield); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.ResolveThumbnailJob(ctx, claims[0], yield); !errors.Is(err, ports.ErrOutboxClaimLost) {
+		t.Fatal("yield refunded twice", err)
+	}
+	now = now.Add(time.Second)
+	claims, err = store.ClaimThumbnailJobs(ctx, "second", 1, now, now.Add(time.Minute))
+	if err != nil || len(claims) != 1 || claims[0].Attempts != 1 {
+		t.Fatal("yield consumed retry budget", claims, err)
+	}
+	failed := ports.ThumbnailJobResolution{Status: ports.ThumbnailJobPending, At: now, NextAttemptAt: now.Add(time.Second), Failure: ports.ThumbnailFailureProcessing}
+	if err := store.ResolveThumbnailJob(ctx, claims[0], failed); err != nil {
+		t.Fatal(err)
+	}
+	now = now.Add(time.Second)
+	claims, err = store.ClaimThumbnailJobs(ctx, "third", 1, now, now.Add(time.Minute))
+	if err != nil || len(claims) != 1 || claims[0].Attempts != 2 {
+		t.Fatal("failure refunded retry budget", claims, err)
+	}
+}
+
 func TestAttachmentAndThumbnailJobCommitTogether(t *testing.T) {
 	ctx := context.Background()
 	store, attachment, record, job := thumbnailQueueFixture(t, ctx)
