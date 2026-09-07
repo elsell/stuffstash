@@ -27,26 +27,17 @@ const (
 
 type StandardImageProcessor struct{}
 
-func (StandardImageProcessor) CreateThumbnail(_ context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
-	if !request.ContentType.IsImage() || len(request.Content) == 0 {
-		return ports.ImageDerivative{}, errors.New("thumbnail source must be an image")
+func (processor StandardImageProcessor) CreateThumbnail(ctx context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
+	variant, valid := media.NewThumbnailVariant(request.Variant.String())
+	if !valid {
+		return ports.ImageDerivative{}, errors.New("invalid thumbnail variant")
 	}
-	if err := validateImageBounds(request.Content); err != nil {
-		return ports.ImageDerivative{}, err
-	}
-	source, _, err := image.Decode(bytes.NewReader(request.Content))
-	if err != nil {
-		return ports.ImageDerivative{}, err
-	}
-	thumbnail := resizeImage(source, thumbnailMaxDimension(request.Variant))
-	output := bytes.Buffer{}
-	if err := jpeg.Encode(&output, thumbnail, &jpeg.Options{Quality: thumbnailJPEGQuality}); err != nil {
-		return ports.ImageDerivative{}, err
-	}
-	return ports.ImageDerivative{
-		ContentType: media.ContentTypeJPEG,
-		Content:     output.Bytes(),
-	}, nil
+	var result ports.ImageDerivative
+	err := processor.CreateThumbnails(ctx, ports.ImageDerivativesRequest{Attachment: request.Attachment, ContentType: request.ContentType, Content: request.Content, Variants: []media.ThumbnailVariant{variant}}, func(_ media.ThumbnailVariant, derivative ports.ImageDerivative) error {
+		result = derivative
+		return nil
+	})
+	return result, err
 }
 
 func (StandardImageProcessor) PrepareImageForModelUse(_ context.Context, request ports.ModelImageRequest) (ports.ModelImage, error) {
@@ -120,6 +111,14 @@ func resizeImage(source image.Image, maxDimension int) image.Image {
 	}
 	targetWidth := max(1, int(float64(width)*scale))
 	targetHeight := max(1, int(float64(height)*scale))
+	// Bound the final separable filter's scratch space by reducing in filtered halves.
+	for source.Bounds().Dx() > 2*targetWidth || source.Bounds().Dy() > 2*targetHeight {
+		current := source.Bounds()
+		next := image.NewRGBA(image.Rect(0, 0, max(1, current.Dx()/2), max(1, current.Dy()/2)))
+		draw.ApproxBiLinear.Scale(next, next.Bounds(), source, current, draw.Src, nil)
+		source = next
+	}
+	bounds = source.Bounds()
 	target := image.NewRGBA(image.Rect(0, 0, targetWidth, targetHeight))
 	draw.CatmullRom.Scale(target, target.Bounds(), source, bounds, draw.Over, nil)
 	return target

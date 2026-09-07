@@ -1,0 +1,124 @@
+# Client Performance Telemetry
+
+## Purpose
+
+Measure mobile and web request and visible-image loading latency separately from
+server work, without shipping Grafana credentials to clients.
+
+## Contract and trust boundary
+
+`POST /client-telemetry` accepts an authenticated batch of 1–50 measurements.
+It is an operational, resource-free endpoint: it neither selects nor modifies a
+tenant, inventory, asset, or access relationship. All authenticated principals may
+report; there is no anonymous ingestion. Existing HTTP body and rate limits apply.
+Do not create domain audit records for telemetry ingestion (which would feed back
+into the operation being observed). Authentication still uses the normal port.
+
+Each measurement contains only these bounded fields:
+
+- `platform`: `ios`, `android`, `web`.
+- `operation`: `request`, `image`.
+- `surface`: `application`, `home`, `list`, `detail`, `gallery`, `fullscreen`, `upload`.
+- `variant`: `none`, `small`, `medium`, `large`, `original`.
+- `outcome`: `success`, `failure`, `cancelled`.
+- `durationMs`: finite number from 0 through 60000.
+
+Reject the entire batch if any measurement is invalid. No arbitrary fields,
+identifiers, URLs, filenames, tokens, messages, or client-supplied event names are
+exported. The authenticated principal is not attached to telemetry. Measurements
+are untrusted client reports, not authoritative security or billing records.
+Return the normal success envelope with the accepted count.
+
+## Ports and adapters
+
+A focused application package validates batches and records typed operational
+events through the existing Observer port; the App facade only delegates. The
+HTTP DTO and mapper remain separate from routes. The OTLP adapter maps validated
+performance events to a seconds histogram and safe structured logs, with only
+platform, operation, surface, variant and outcome as metric dimensions. Backend
+request traces correlate ingestion logs; client durations remain distinct metrics.
+
+Clients use injected performance observers and clocks. Their adapters send bounded
+best-effort batches through the generated authenticated API client. Maximum pending
+capacity is 100, batch size 20, flush interval 5s. No persistent/offline queue;
+drop on transport failure and clear on session or server change. Never observe the
+telemetry delivery request itself. A full buffer drops oldest events. Observers
+must never delay or fail product requests, image display, or session shutdown.
+Runtime configuration can disable client export; collection is enabled alongside
+API observability for the measurement deployment. No backend credentials appear
+in frontend configuration or bundles.
+
+Record request duration at client adapter boundaries and image duration from
+load-start to load/error in mounted visible surfaces. Do not count a component
+unmount as success. Attribute cancellations distinctly and bound durations. Use
+separate ios/android/web dimensions; browser tests are not physical-device proof.
+
+## Verification
+
+Test batch validation, bounded privacy fields, authenticated acceptance, anonymous
+and malformed-token denial, and the absence of tenant/resource mutation. Use real
+HTTP boundaries and fake observers. Test frontend batching, overflow, failure
+isolation, session cleanup, and visible-image outcomes before wiring them. Generate
+the OpenAPI client contract in CI and retain the ordinary security regression suite.
+
+## Shared delivery adapter
+
+Keep the framework-free bounded delivery buffer in the API-client infrastructure
+package so mobile and web adapters can reuse it without another runtime dependency.
+Frontend application/UI ports remain local, transport-independent interfaces; UI
+components do not import the SDK. Inject a monotonic clock, scheduler and batch
+sender. Permit smaller buffer/batch limits for controlled tests, never limits above
+100 pending or 50 per batch. Each send has a 10-second abort deadline, including
+senders that fail to settle after cancellation. Dispose clears pending measurements
+and aborts active delivery. Reconstruct outbound values from the six known fields.
+
+## Request measurement adapter
+
+A shared fetch decorator accepts a fixed performance context from the frontend
+adapter and an injected observer. It measures until response headers arrive,
+without reading, cloning or consuming the response body. Visible-image timing
+separately includes image transfer and display. Forward the exact input and init,
+return the original response, and rethrow the original transport error. Classify
+HTTP errors as failures and aborted requests as cancelled. Observer failures must
+not change request behavior. Do not extract URLs, headers, bodies or identifiers
+into measurements. The telemetry sender always receives the undecorated fetch.
+
+Use `application` for shared API transport requests that have no reliable screen
+context. Do not infer a screen from URLs or label all network requests as a single
+product screen. Mounted image observers use their actual surface and variant.
+
+## Web session integration
+
+`STUFF_STASH_WEB_PERFORMANCE_TELEMETRY_ENABLED` accepts `true` or `false`
+(default false) and produces `performanceTelemetryEnabled` in runtime config.
+The browser accepts only an explicit boolean true. A session-owned web adapter
+wraps product fetch and supplies the local frontend PerformanceObserver port;
+the port contains operation, surface, variant and outcome, with no SDK types.
+The adapter injects the web platform, clock and bounded reporter. Its undecorated
+fetch delivers telemetry. Disabled sessions schedule nothing and preserve fetch
+identity. Dispose aborts active delivery and clears queued data. The page releases
+the session on sign-out, expiry, initialization failure, and unmount, alongside its
+repository. A Svelte context delegates image measurements to the current session.
+
+## Mobile session integration
+
+`EXPO_PUBLIC_STUFF_STASH_PERFORMANCE_TELEMETRY_ENABLED` controls mobile
+collection and defaults false. Parse it through the existing Expo environment/extra
+configuration boundary. A session-owned adapter injects the native platform
+(`ios` or `android`; Expo web uses `web`) into the shared bounded reporter.
+Application/UI consumers use a local PerformanceObserver port. Product requests
+retain their existing timeout and authentication callbacks; telemetry uses a
+separate undecorated transport. Session provider replacement or unmount disposes
+reporting, and sign-out/server-change actions dispose before credential changes.
+
+Mobile provider effects acquire a reporting lease and release it during cleanup.
+Defer final lease disposal by one microtask so synchronous React effect replay can
+reacquire the same reporter. Explicit sign-out/auth disposal remains immediate.
+The mobile timeout fetch must preserve Request-carried cancellation, including
+explicit `init.signal: null` detachment, so disposing delivery aborts its network
+request as well as the reporter's wait.
+
+Shared delivery must support React Native's pinned AbortController implementation,
+which provides `aborted` and abort events but does not require newer methods such
+as `throwIfAborted` or custom abort reasons. Native transport tests use that real
+pinned implementation.

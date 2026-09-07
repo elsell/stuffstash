@@ -51,3 +51,28 @@ function delayedAbortablePendingFetch(rejectionDelayMs: number): typeof fetch {
     }, { once: true });
   })) as typeof fetch;
 }
+
+
+it('preserves cancellation carried on a generated Request', async () => {
+  const caller = new AbortController();
+  const reason = new DOMException('Caller cancelled', 'AbortError');
+  const request = new Request('https://api.example.test', { signal: caller.signal });
+  let downstream: AbortSignal | null | undefined;
+  const fetchWithTimeout = createTimeoutFetch(1000, async (_input, init) => {
+    downstream = init?.signal;
+    caller.abort(reason);
+    expect(downstream?.aborted).toBe(true);
+    throw reason;
+  });
+  await expect(fetchWithTimeout(request)).rejects.toBe(reason);
+});
+
+it('allows an explicitly detached Request signal', async () => {
+  const caller = new AbortController(); caller.abort();
+  const response = new Response();
+  const fetchWithTimeout = createTimeoutFetch(1000, async (_input, init) => {
+    expect(init?.signal?.aborted).toBe(false);
+    return response;
+  });
+  expect(await fetchWithTimeout(new Request('https://api.example.test', { signal: caller.signal }), { signal: null })).toBe(response);
+});

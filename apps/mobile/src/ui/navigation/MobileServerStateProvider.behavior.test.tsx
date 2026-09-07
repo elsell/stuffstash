@@ -1,3 +1,4 @@
+import { createMobilePerformanceSession } from '../../adapters/observability/MobilePerformanceSession';
 import React from 'react';
 import { Pressable, Text } from 'react-native';
 import { onlineManager } from '@tanstack/react-query';
@@ -56,4 +57,39 @@ it('recovers shared resource reads by retrying denied discovery before the resou
     denied = false; await h.press(h.byLabel('Try again')); await settle(h); await settle(h);
     expect(h.allText()).toEqual(['Restored inventory']); expect(reads).toBe(1);
   } finally { await h.unmount(); }
+});
+
+
+it('disposes performance collection on session replacement and unmount', async () => {
+  const h = new MobileRenderHarness();
+  const first = createMobileQueryClient(); const second = createMobileQueryClient();
+  const disposed: string[] = [];
+  const releaseFirst = () => () => { disposed.push('first'); };
+  const releaseSecond = () => () => { disposed.push('second'); };
+  const view = (next: boolean) => <MobileServerStateProvider client={next ? second : first} scopeId={next ? 'second' : 'first'} acquirePerformance={next ? releaseSecond : releaseFirst} loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><Text>Ready</Text></MobileServerStateProvider>;
+  await h.render(view(false));
+  await h.render(view(true));
+  expect(disposed).toEqual(['first']);
+  await h.unmount();
+  expect(disposed).toEqual(['first', 'second']);
+});
+
+
+it('keeps measurement active across StrictMode effect replay and stops after unmount', async () => {
+  const h = new MobileRenderHarness();
+  const client = createMobileQueryClient();
+  const active = new Set<() => void>();
+  const session = createMobilePerformanceSession({ platform: 'ios', enabled: true, baseUrl: 'https://api.example.test', tokenProvider: () => null,
+    fetch: async () => new Response(), clock: { now: () => 0 },
+    scheduler: { schedule(callback) { active.add(callback); return () => { active.delete(callback); }; } }
+  });
+  let acquisitions = 0;
+  const acquire = () => { acquisitions++; return session.acquire(); };
+  try {
+    await h.render(<React.StrictMode><MobileServerStateProvider client={client} scopeId="session" acquirePerformance={acquire} loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><Text>Ready</Text></MobileServerStateProvider></React.StrictMode>);
+    expect(acquisitions).toBeGreaterThan(1);
+    session.observer.start({ operation: 'image', surface: 'detail', variant: 'large' })('success');
+    expect(active.size).toBe(1);
+  } finally { await h.unmount(); }
+  expect(active.size).toBe(0);
 });

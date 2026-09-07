@@ -14,7 +14,11 @@ import (
 
 func main() {
 	cfg := config.Load()
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logOutput := os.Stdout
+	if len(os.Args) > 1 && os.Args[1] == "thumbnail-jobs" {
+		logOutput = os.Stderr
+	}
+	logger := slog.New(slog.NewJSONHandler(logOutput, nil))
 	observer := observability.NewFanOut(observability.NewSlogObserver(logger))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -23,6 +27,8 @@ func main() {
 	var err error
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
 		err = bootstrap.RunMigrationCommand(ctx, cfg, os.Args[2:], os.Stdout)
+	} else if len(os.Args) > 1 && os.Args[1] == "thumbnail-jobs" {
+		err = bootstrap.RunThumbnailJobsCommand(ctx, cfg, os.Args[2:], os.Stdout, observer)
 	} else {
 		err = bootstrap.Run(ctx, cfg, observer)
 	}

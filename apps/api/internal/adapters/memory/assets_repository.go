@@ -277,6 +277,25 @@ func (s *Store) DeleteAsset(_ context.Context, tenantID tenant.ID, inventoryID i
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
 	}
+	for _, attachment := range s.attachments {
+		if attachment.TenantID.String() == tenantID.String() && attachment.InventoryID.String() == inventoryID.String() && attachment.AssetID.String() == assetID.String() {
+			if _, exists := s.blobDeletions[attachment.ID.String()]; exists {
+				return ports.ErrConflict
+			}
+		}
+	}
+	for id, attachment := range s.attachments {
+		if attachment.TenantID.String() == tenantID.String() && attachment.InventoryID.String() == inventoryID.String() && attachment.AssetID.String() == assetID.String() {
+			s.blobDeletions[id.String()] = ports.BlobDeletionEvent{ID: id.String(), StorageKey: attachment.StorageKey, CreatedAt: auditRecord.OccurredAt}
+			delete(s.attachments, id)
+			for key := range s.thumbnailJobs {
+				if key.AttachmentID == id {
+					delete(s.thumbnailJobs, key)
+				}
+			}
+		}
+	}
+
 	s.auditRecords[auditRecord.ID] = auditRecord
 	delete(s.assets, assetID)
 	for checkoutID, checkout := range s.checkouts {

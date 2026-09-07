@@ -520,10 +520,10 @@ func newBlockingWarmImageProcessor(content []byte) *blockingWarmImageProcessor {
 }
 
 func (p *blockingWarmImageProcessor) CreateThumbnail(ctx context.Context, request ports.ImageDerivativeRequest) (ports.ImageDerivative, error) {
-	p.startOnce.Do(func() { close(p.started) })
 	p.mu.Lock()
 	p.thumbnailCalls++
 	p.mu.Unlock()
+	p.startOnce.Do(func() { close(p.started) })
 	select {
 	case <-p.release:
 	case <-ctx.Done():

@@ -29,6 +29,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	t.Helper()
 
 	coverage := newExecutedScenarioCoverage("real use")
+	coverClientTelemetryScenarios(t, coverage, false)
 	coverWorkflowDraftScenarios(t, coverage, false)
 	coverWorkflowReadScenarios(t, coverage, false)
 	coverWorkflowActivationScenarios(t, coverage, false)
@@ -232,6 +233,7 @@ func adversarialScenarioOperations(t *testing.T) executedScenarioCoverage {
 
 	setup := realUseAdversarialFixture(t)
 	coverage := newExecutedScenarioCoverage("adversarial")
+	coverClientTelemetryScenarios(t, coverage, true)
 	coverWorkflowDraftScenarios(t, coverage, true)
 	coverWorkflowReadScenarios(t, coverage, true)
 	coverWorkflowActivationScenarios(t, coverage, true)

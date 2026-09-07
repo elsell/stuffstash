@@ -77,6 +77,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		Blobs:                            repositories.blobs,
 		DirectUploads:                    repositories.directUploads,
 		ImageProcessor:                   repositories.imageProcessor,
+		ThumbnailReader:                  repositories.thumbnailReader,
 		BlobDeletionOutbox:               repositories.blobDeletionOutbox,
 		Audit:                            repositories.audit,
 		Outbox:                           repositories.outbox,

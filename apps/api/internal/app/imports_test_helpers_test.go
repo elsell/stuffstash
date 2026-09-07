@@ -569,7 +569,7 @@ type failingImportAttachmentUnitOfWork struct {
 	err error
 }
 
-func (u failingImportAttachmentUnitOfWork) CreateImportedAttachment(context.Context, media.Attachment, audit.Record, ports.ImportSourceLink, ports.ImportJobResource) error {
+func (u failingImportAttachmentUnitOfWork) CreateImportedAttachment(context.Context, media.Attachment, audit.Record, ports.ImportSourceLink, ports.ImportJobResource, *media.ThumbnailJob) error {
 	return u.err
 }
 

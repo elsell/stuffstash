@@ -10,6 +10,7 @@ type MobileServerStateProviderProps = {
   readonly children: ReactNode;
   readonly connectivitySource?: ConnectivitySource;
   readonly client: QueryClient;
+  readonly acquirePerformance?: () => () => void;
   readonly scopeId: string;
   readonly loadInventoryScope: (request?: ReadRequest) => Promise<CurrentInventoryScope>;
 };
@@ -21,7 +22,9 @@ export type MobileServerStateScope = {
 
 const MobileServerStateScopeContext = createContext<MobileServerStateScope | undefined>(undefined);
 
-export function MobileServerStateProvider({ children, client, loadInventoryScope, scopeId, connectivitySource }: MobileServerStateProviderProps) {
+export function MobileServerStateProvider({ children, client, loadInventoryScope, scopeId, connectivitySource, acquirePerformance }: MobileServerStateProviderProps) {
+  useEffect(() => acquirePerformance?.(), [acquirePerformance]);
+
   useEffect(() => {
     focusManager.setFocused(AppState.currentState === 'active');
     const subscription = AppState.addEventListener('change', (state) => {

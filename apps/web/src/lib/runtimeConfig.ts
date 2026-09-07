@@ -1,6 +1,7 @@
 import { defaultMediaUploadPolicy, type AttachmentContentType, type MediaUploadPolicy } from '$lib/domain/inventory';
 
 export interface RuntimeConfig {
+  performanceTelemetryEnabled?: boolean;
   apiBaseUrl: string;
   oidcIssuer: string;
   oidcClientId: string;
@@ -40,6 +41,7 @@ export function parseRuntimeConfig(value: unknown): RuntimeConfig {
     oidcClientId: record.oidcClientId as string,
     oidcRedirectUri: record.oidcRedirectUri as string,
     invitationAllowInsecureLocalHTTP: record.invitationAllowInsecureLocalHTTP === true,
+    performanceTelemetryEnabled: record.performanceTelemetryEnabled === true,
     mediaUploadPolicy: parseMediaUploadPolicy(record.mediaUploadPolicy)
   };
 }

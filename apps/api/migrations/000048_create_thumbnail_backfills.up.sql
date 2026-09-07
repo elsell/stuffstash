@@ -1,0 +1,6 @@
+CREATE TABLE thumbnail_backfills (
+ revision INTEGER PRIMARY KEY,
+ cursor VARCHAR(26) NOT NULL DEFAULT '',
+ complete BOOLEAN NOT NULL DEFAULT FALSE,
+ updated_at TIMESTAMPTZ NOT NULL
+);

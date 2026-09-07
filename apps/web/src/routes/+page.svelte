@@ -1,7 +1,9 @@
 <script lang="ts">
   import { conversationWorkspaceRepositories } from '$lib/adapters/api/conversations/workspaceRepositories';
   import type { ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
-  import { onMount } from 'svelte';
+  import { onMount, setContext } from 'svelte';
+  import { createWebPerformanceSession, type WebPerformanceSession } from '$lib/adapters/observability/webPerformanceSession';
+  import { noopPerformanceObserver, performanceObserverContext, type PerformanceObserver } from '$lib/ports/performanceObserver';
   import { getStoredSession, signOut, startSignIn, type AuthSession } from '$lib/auth';
   import { loadRuntimeConfig, type RuntimeConfig } from '$lib/runtimeConfig';
   import AuthSignInScreen from '$lib/components/auth/AuthSignInScreen.svelte';
@@ -41,6 +43,10 @@
   let authNotice = $state<Exclude<SignInState, 'default'> | null>(null);
   let authObserver: AuthObserver | null = null;
   const workspaceObserver = new InMemoryWorkspaceObserver();
+  let ownedPerformance: WebPerformanceSession | null = null;
+  setContext<PerformanceObserver>(performanceObserverContext, {
+    start: context => (ownedPerformance?.observer ?? noopPerformanceObserver).start(context)
+  });
   let ownedRepository: WorkspaceRepository | null = null;
 
   onMount(() => {
@@ -60,10 +66,16 @@
         config = loadedConfig;
         session = getStoredSession();
         if (session) {
+          ownedPerformance = createWebPerformanceSession({
+            enabled: loadedConfig.performanceTelemetryEnabled === true,
+            baseUrl: loadedConfig.apiBaseUrl,
+            tokenProvider: () => getStoredSession()?.idToken ?? null
+          });
           const nextRepository = new StuffStashInventoryRepository(
             loadedConfig,
             () => getStoredSession()?.idToken ?? null,
-            workspaceObserver
+            workspaceObserver,
+            ownedPerformance.fetch
           );
           ownedRepository = nextRepository;
           let nextWorkspace = await nextRepository.loadWorkspace();
@@ -71,7 +83,7 @@
             nextWorkspace = await provisionPersonalWorkspace(nextRepository, nextWorkspace.context.principal);
           }
           if (!mounted) return;
-          conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null);
+          conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
           repository = nextRepository;
           workspaceData = nextWorkspace;
         }
@@ -94,6 +106,8 @@
   });
 
   function releaseOwnedRepository(): void {
+    ownedPerformance?.dispose();
+    ownedPerformance = null;
     ownedRepository?.dispose();
     ownedRepository = null;
   }

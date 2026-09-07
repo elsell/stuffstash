@@ -1,0 +1,178 @@
+name: Media observability validation
+on:
+  workflow_dispatch:
+    inputs:
+      publish_api:
+        description: Publish measured API revision for GitOps deployment
+        type: boolean
+        default: false
+      benchmark:
+        description: Run codec benchmark and collect profiles
+        type: boolean
+        default: false
+  push:
+    branches: [codex/media-observability]
+permissions:
+  contents: read
+jobs:
+  client-telemetry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.17.0'
+      - name: Install pinned workspace dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.0.7 --activate
+          pnpm install --frozen-lockfile
+      - name: Test shared client delivery
+        run: |
+          pnpm --dir packages/api-client test
+          pnpm --dir packages/api-client check
+      - name: Test web performance session and runtime configuration
+        run: |
+          pnpm --dir apps/web exec svelte-kit sync
+          pnpm --dir apps/web test src/lib/adapters/observability/webPerformanceSession.test.ts src/lib/runtimeConfig.test.ts
+          pnpm --dir apps/web check
+      - name: Test mobile performance session and lifecycle
+        run: |
+          pnpm --dir apps/mobile test src/adapters/observability/MobilePerformanceSession.test.ts src/adapters/observability/MobileNativePerformanceTransport.test.ts src/config/mobileRuntimeConfig.test.ts src/ui/navigation/MobileServerStateProvider.behavior.test.tsx src/bootstrap/mobileComposition.test.ts src/bootstrap/mobileComposition.fetch.test.ts app.config.test.ts
+          pnpm --dir apps/mobile check
+  telemetry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: apps/api/go.sum
+      - name: Check changed Go structure
+        shell: bash
+        run: |
+          mapfile -d '' changed < <(git diff --name-only -z --diff-filter=ACMR 0d84c2da9e9e6dcde66988f749dbc8f4ba8c429e -- '*.go')
+          if ((${#changed[@]})); then scripts/check-go-structural-rules.sh "${changed[@]}"; fi
+      - name: Test telemetry behavior
+        run: go test -race -count=1 ./apps/api/cmd/stuff-stash ./apps/api/internal/domain/media ./apps/api/internal/app/... ./apps/api/internal/adapters/gormstore ./apps/api/internal/adapters/memory ./apps/api/internal/adapters/worklimit ./apps/api/internal/adapters/blobstore ./apps/api/internal/app/clienttelemetry ./apps/api/internal/adapters/observability ./apps/api/internal/config ./apps/api/internal/adapters/httpserver ./apps/api/cmd/stuff-stash/internal/bootstrap
+  collector-probe:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: apps/api/go.sum
+      - name: Compile opt-in collector probe for remote validation
+        run: |
+          mkdir -p collector-probe
+          go test -c ./apps/api/internal/adapters/observability -o collector-probe/observability.test
+          git rev-parse HEAD > collector-probe/revision.txt
+          sha256sum collector-probe/observability.test > collector-probe/sha256.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: collector-probe
+          path: collector-probe/
+          retention-days: 3
+  codec-baseline:
+    if: github.event_name == 'workflow_dispatch' && inputs.benchmark
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GOMAXPROCS: 4
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: apps/api/go.sum
+      - name: Measure deployed reference codec on this runner
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/measurements/reference"
+          git worktree add "$RUNNER_TEMP/codec-reference" 319dd138a706002a1d4f84efd2a3ab44cec76718
+          cd "$RUNNER_TEMP/codec-reference"
+          git rev-parse HEAD > "$GITHUB_WORKSPACE/measurements/reference/revision.txt"
+          set -o pipefail
+          go test ./apps/api/internal/adapters/blobstore -run '^$' -bench '^BenchmarkCameraPhotoThumbnail$' -benchtime=5x -count=3 -benchmem -cpuprofile="$GITHUB_WORKSPACE/measurements/reference/cpu.pprof" -memprofile="$GITHUB_WORKSPACE/measurements/reference/heap.pprof" -o "$GITHUB_WORKSPACE/measurements/reference/blobstore.test" | tee "$GITHUB_WORKSPACE/measurements/reference/codec.txt"
+      - name: Measure candidate camera-photo codec
+        run: |
+          mkdir -p measurements
+          git rev-parse HEAD > measurements/revision.txt
+          go version > measurements/runtime.txt
+          lscpu > measurements/cpu.txt
+          set -o pipefail
+          go test ./apps/api/internal/adapters/blobstore -run '^$' -bench '^BenchmarkCameraPhotoThumbnail$' -benchtime=5x -count=3 -benchmem -cpuprofile=measurements/cpu.pprof -memprofile=measurements/heap.pprof -o measurements/blobstore.test | tee measurements/codec.txt
+      - name: Summarize profiles
+        run: |
+          go tool pprof -top -nodecount=20 measurements/blobstore.test measurements/cpu.pprof > measurements/cpu-top.txt
+          go tool pprof -top -alloc_space -nodecount=20 measurements/blobstore.test measurements/heap.pprof > measurements/alloc-top.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: media-codec-measurements
+          path: measurements/
+          retention-days: 14
+
+  publish-api:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_api
+    needs: [telemetry, thumbnail-postgres]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - name: Authenticate image publisher
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Build and publish measurement API
+        run: |
+          owner="$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          docker buildx build --push --platform linux/amd64 --provenance=mode=max --sbom=true \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag "ghcr.io/$owner/stuffstash:measurement-$GITHUB_SHA" \
+            --metadata-file api-image-metadata.json .
+          git rev-parse HEAD > api-image-revision.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: measurement-api-image
+          path: |
+            api-image-metadata.json
+            api-image-revision.txt
+          retention-days: 14
+  thumbnail-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:18.1-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
+        env:
+          POSTGRES_USER: benchmark
+          POSTGRES_PASSWORD: benchmark
+          POSTGRES_DB: thumbnail_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U benchmark -d thumbnail_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: apps/api/go.sum
+      - name: Verify PostgreSQL thumbnail coordination
+        env:
+          STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/thumbnail_test?sslmode=disable&statement_timeout=5000
+        run: go test -race -count=1 -timeout=3m ./apps/api/internal/adapters/gormstore -run '^TestPostgresThumbnail'

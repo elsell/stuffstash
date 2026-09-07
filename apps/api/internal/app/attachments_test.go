@@ -471,7 +471,7 @@ func (attachmentAssetRepository) ListAssetsByInventory(context.Context, tenant.I
 
 type failingAttachmentRepository struct{}
 
-func (failingAttachmentRepository) SaveAttachment(context.Context, media.Attachment, audit.Record) error {
+func (failingAttachmentRepository) SaveAttachment(context.Context, media.Attachment, audit.Record, *media.ThumbnailJob) error {
 	return ports.ErrConflict
 }
 
@@ -501,7 +501,7 @@ type recordingAttachmentRepository struct {
 	saved      bool
 }
 
-func (r *recordingAttachmentRepository) SaveAttachment(_ context.Context, attachment media.Attachment, _ audit.Record) error {
+func (r *recordingAttachmentRepository) SaveAttachment(_ context.Context, attachment media.Attachment, _ audit.Record, _ *media.ThumbnailJob) error {
 	r.attachment = attachment
 	r.found = true
 	r.saved = true

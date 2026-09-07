@@ -11,14 +11,18 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 )
 
-type AttachmentRepository interface {
+type AttachmentReader interface {
 	AttachmentByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID) (media.Attachment, bool, error)
+}
+
+type AttachmentRepository interface {
+	AttachmentReader
 	ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page AttachmentListPageRequest) ([]media.Attachment, error)
 	FirstImageAttachmentsByAssets(ctx context.Context, tenantID tenant.ID, assets []AttachmentAssetReference) (map[AttachmentAssetReference]media.Attachment, error)
 }
 
 type AttachmentUnitOfWork interface {
-	SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
+	SaveAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, thumbnailJob *media.ThumbnailJob) error
 	UpdateAttachmentLifecycle(ctx context.Context, attachment media.Attachment, auditRecord audit.Record) error
 	DeleteAttachmentAndEnqueueBlobDeletion(ctx context.Context, eventID string, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, attachmentID media.ID, auditRecord audit.Record) (media.Attachment, bool, error)
 }
@@ -121,6 +125,8 @@ type BlobDeletionEvent struct {
 	ClaimID          string
 	ClaimedUntil     time.Time
 	ProcessedAt      time.Time
+	RecheckedAt      time.Time
+	RecheckFailed    bool
 	DeadLetteredAt   time.Time
 	DeadLetterReason string
 	CreatedAt        time.Time

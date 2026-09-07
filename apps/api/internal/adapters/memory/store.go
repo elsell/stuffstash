@@ -16,6 +16,7 @@ import (
 )
 
 type Store struct {
+	mediaBlobKeys           map[media.StorageKey]struct{}
 	evaluationRuns          map[evaluationRunKey]agentmodel.EvaluationRun
 	evaluationCaseHeads     map[evaluationCaseKey]ports.EvaluationCaseHeadRecord
 	evaluationCaseRevisions map[evaluationCaseRevisionKey]agentmodel.EvaluationCaseRevision
@@ -23,6 +24,7 @@ type Store struct {
 	workflowHeads           map[workflowKey]ports.WorkflowHeadRecord
 	workflowRevisions       map[workflowRevisionKey]agentmodel.WorkflowRevision
 	mu                      sync.RWMutex
+	blobMu                  sync.RWMutex
 	users                   map[identity.PrincipalID]identity.User
 	tenants                 map[tenant.ID]tenant.Tenant
 	inventories             map[inventory.InventoryID]inventory.Inventory
@@ -36,6 +38,8 @@ type Store struct {
 	checkouts               map[asset.CheckoutID]asset.Checkout
 	undoables               map[string]ports.UndoableOperation
 	attachments             map[media.ID]media.Attachment
+	thumbnailJobs           map[thumbnailJobKey]thumbnailJobRecord
+	thumbnailBackfill       ports.ThumbnailBackfillProgress
 	providerProfiles        map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile
 	voiceConfigs            map[tenant.ID]ports.VoiceProviderConfigurationRecord
 	providerCreds           map[string]ports.ProviderCredentialRecord
@@ -53,6 +57,7 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
+		mediaBlobKeys:    map[media.StorageKey]struct{}{},
 		users:            map[identity.PrincipalID]identity.User{},
 		tenants:          map[tenant.ID]tenant.Tenant{},
 		inventories:      map[inventory.InventoryID]inventory.Inventory{},
@@ -66,6 +71,7 @@ func NewStore() *Store {
 		checkouts:        map[asset.CheckoutID]asset.Checkout{},
 		undoables:        map[string]ports.UndoableOperation{},
 		attachments:      map[media.ID]media.Attachment{},
+		thumbnailJobs:    map[thumbnailJobKey]thumbnailJobRecord{},
 		providerProfiles: map[agentmodel.ProviderProfileID]agentmodel.ProviderProfile{},
 		voiceConfigs:     map[tenant.ID]ports.VoiceProviderConfigurationRecord{},
 		providerCreds:    map[string]ports.ProviderCredentialRecord{},

@@ -234,7 +234,11 @@ func (a App) persistVerifiedAttachment(ctx context.Context, input verifiedAttach
 	if err != nil {
 		return media.Attachment{}, err
 	}
-	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, attachment, auditRecord); err != nil {
+	thumbnailJob, err := media.PlanThumbnailJob(attachment)
+	if err != nil {
+		return media.Attachment{}, ErrInvalidInput
+	}
+	if err := a.attachmentUnitOfWork.SaveAttachment(ctx, attachment, auditRecord, thumbnailJob); err != nil {
 		return media.Attachment{}, err
 	}
 	a.observer.Record(ctx, ports.Event{

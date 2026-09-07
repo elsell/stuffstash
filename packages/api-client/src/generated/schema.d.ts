@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/client-telemetry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post client telemetry */
+        post: operations["post-client-telemetry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -1517,6 +1534,10 @@ export interface components {
             /** @description One-time invite acceptance token */
             acceptanceToken: string;
         };
+        Accepted: {
+            /** Format: int64 */
+            accepted: number;
+        };
         AccessResponse: {
             permissions: string[] | null;
             relationship: string;
@@ -2396,6 +2417,20 @@ export interface components {
             status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
             tenantId: string;
         };
+        Measurement: {
+            /** Format: double */
+            durationMs: number;
+            /** @enum {string} */
+            operation: "request" | "image";
+            /** @enum {string} */
+            outcome: "success" | "failure" | "cancelled";
+            /** @enum {string} */
+            platform: "ios" | "android" | "web";
+            /** @enum {string} */
+            surface: "application" | "home" | "list" | "detail" | "gallery" | "fullscreen" | "upload";
+            /** @enum {string} */
+            variant: "none" | "small" | "medium" | "large" | "original";
+        };
         Meta: {
             pagination?: components["schemas"]["PaginationMeta"];
             requestId?: string;
@@ -2459,6 +2494,15 @@ export interface components {
             lifecycleState: string;
             modelName: string;
             providerKind: string;
+        };
+        RecordInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RecordInputBody.json
+             */
+            readonly $schema?: string;
+            measurements: components["schemas"]["Measurement"][] | null;
         };
         RecordResponse: {
             action: string;
@@ -2528,6 +2572,16 @@ export interface components {
         SearchMatch: {
             field: string;
             value: string;
+        };
+        SuccessEnvelopeAccepted: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeAccepted.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Accepted"];
+            meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeAssetCheckoutResponse: {
             /**
@@ -3185,6 +3239,41 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "post-client-telemetry": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeAccepted"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-me": {
         parameters: {
             query?: never;

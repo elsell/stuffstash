@@ -13,6 +13,17 @@ import (
 )
 
 func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error {
+	telemetry, combinedObserver, stopTelemetry, telemetryEnabled, err := startObservability(ctx, observer)
+	if err != nil {
+		return err
+	}
+	defer stopTelemetry()
+	observer = combinedObserver
+	stopProfiling, err := startProfiling(ctx, observer)
+	if err != nil {
+		return err
+	}
+	defer stopProfiling()
 	authenticator, err := buildAuthenticator(ctx, cfg)
 	if err != nil {
 		return err
@@ -22,13 +33,29 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	defer recordCloseFailure(observer, closeAuthorizer)
+	if telemetryEnabled {
+		authenticator = observability.ObserveAuthenticator(authenticator, telemetry.Telemetry)
+		authorizer = observability.ObserveAuthorizer(authorizer, telemetry.Telemetry)
+	}
 
 	repositories, closeRepositories, err := buildRepositories(ctx, cfg)
 	if err != nil {
 		return err
 	}
 	defer recordCloseFailure(observer, closeRepositories)
+	if telemetryEnabled {
+		repositories = observeRepositories(repositories, telemetry.Telemetry)
+	}
 
+	thumbnailConfig, err := config.LoadThumbnails()
+	if err != nil {
+		return err
+	}
+	reader, thumbnailWorker, err := buildThumbnailRuntime(repositories, thumbnailConfig, observer)
+	if err != nil {
+		return err
+	}
+	repositories.thumbnailReader = reader
 	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories)
 	if err != nil {
 		return err
@@ -56,12 +83,22 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		IdleTimeout:              cfg.HTTPIdleTimeout,
 		RealtimeVoiceIdleTimeout: cfg.RealtimeVoiceIdleTimeout,
 	})
+	server.Handler = telemetry.WrapHTTP(server.Handler)
 	stopEvaluations, err := startEvaluationWorker(ctx, application, observer, cfg)
 	if err != nil {
 		return err
 	}
 	defer stopEvaluations()
 	startOutboxWorkers(ctx, application, observer, cfg)
+	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
+	defer stopThumbnails()
+	stopBackfill := startThumbnailBackfill(ctx, repositories.thumbnailBackfill, ports.SystemClock{}, observer, thumbnailConfig)
+	defer stopBackfill()
+	stopCleanup, err := startBlobDeletionRechecks(ctx, repositories, observer, thumbnailConfig)
+	if err != nil {
+		return err
+	}
+	defer stopCleanup()
 
 	errCh := make(chan error, 1)
 	go func() {

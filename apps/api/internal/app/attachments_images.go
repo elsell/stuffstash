@@ -94,7 +94,7 @@ type AttachmentThumbnailResult struct {
 }
 
 func (a App) DownloadAttachmentThumbnail(ctx context.Context, input DownloadAttachmentThumbnailInput) (AttachmentThumbnailResult, error) {
-	if a.imageProcessor == nil {
+	if a.imageProcessor == nil && a.thumbnailReader == nil {
 		return AttachmentThumbnailResult{}, ErrInvalidInput
 	}
 	variant, ok := media.NewThumbnailVariant(input.Variant)
@@ -212,6 +212,10 @@ func (a App) recordAttachmentThumbnailServed(ctx context.Context, input Download
 }
 
 func (a App) warmPrimarySmallThumbnails(ctx context.Context, attachments []media.Attachment) {
+	// Durable upload scheduling and backfill replace read-triggered warming.
+	if a.thumbnailReader != nil {
+		return
+	}
 	if a.blobs == nil || a.imageProcessor == nil || a.thumbnailWarmState == nil || len(attachments) == 0 {
 		return
 	}
@@ -245,6 +249,18 @@ func (a App) warmPrimarySmallThumbnail(ctx context.Context, attachment media.Att
 }
 
 func (a App) getOrGenerateThumbnail(ctx context.Context, attachment media.Attachment, variant media.ThumbnailVariant) (thumbnailGenerationResult, error) {
+	if a.thumbnailReader != nil {
+		derivative, cached, err := a.thumbnailReader.ReadThumbnail(ctx, attachment, variant)
+		if err != nil {
+			return thumbnailGenerationResult{}, err
+		}
+		source := "generated"
+		if cached {
+			source = "cache"
+		}
+		return thumbnailGenerationResult{contentType: derivative.ContentType, content: derivative.Content, source: source}, nil
+	}
+
 	cacheKey, ok := thumbnailStorageKey(attachment, variant)
 	if !ok {
 		return thumbnailGenerationResult{}, ErrInvalidInput

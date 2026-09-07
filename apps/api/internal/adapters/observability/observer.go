@@ -2,6 +2,7 @@ package observability
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/trace"
 	"log/slog"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -36,9 +37,12 @@ func NewSlogObserver(logger *slog.Logger) SlogObserver {
 	return SlogObserver{logger: logger}
 }
 
-func (s SlogObserver) Record(_ context.Context, event ports.Event) {
+func (s SlogObserver) Record(ctx context.Context, event ports.Event) {
 	attrs := []any{
 		slog.String("event", string(event.Name)),
+	}
+	if span := trace.SpanContextFromContext(ctx); span.IsValid() {
+		attrs = append(attrs, slog.String("trace_id", span.TraceID().String()), slog.String("span_id", span.SpanID().String()))
 	}
 	if event.Message != "" {
 		attrs = append(attrs, slog.String("message", event.Message))

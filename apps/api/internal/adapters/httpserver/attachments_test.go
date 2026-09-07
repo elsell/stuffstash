@@ -14,11 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
-	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
-	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
-	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -332,6 +328,31 @@ func TestAttachmentRealImageUploadDownloadAndThumbnailFlow(t *testing.T) {
 		t.Fatalf("expected missing auth thumbnail status %d, got %d with body %s", http.StatusUnauthorized, missingAuthThumbnail.Code, missingAuthThumbnail.Body.String())
 	}
 	assertSafeError(t, missingAuthThumbnail, "authentication_required", "Authentication required.")
+	for _, path := range []string{
+		"/tenants/other-tenant/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID + "/attachments/" + attachment.Data.ID + "/thumbnail?variant=small",
+		"/tenants/" + tenantID + "/inventories/other-inventory/assets/" + createdAsset.Data.ID + "/attachments/" + attachment.Data.ID + "/thumbnail?variant=small",
+		"/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/other-asset/attachments/" + attachment.Data.ID + "/thumbnail?variant=small",
+	} {
+		denied := performRequest(server, http.MethodGet, path, "Bearer dev:owner", nil)
+		if denied.Code != http.StatusForbidden && denied.Code != http.StatusNotFound {
+			t.Fatalf("scope substitution returned %d", denied.Code)
+		}
+	}
+
+	assetURL := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/assets/" + createdAsset.Data.ID
+	deniedDelete := performRequest(server, http.MethodDelete, assetURL, "Bearer dev:viewer", nil)
+	if deniedDelete.Code != http.StatusForbidden {
+		t.Fatalf("viewer deleted image-owning asset: %d", deniedDelete.Code)
+	}
+	deleted := performRequest(server, http.MethodDelete, assetURL, "Bearer dev:owner", nil)
+	if deleted.Code != http.StatusOK && deleted.Code != http.StatusNoContent {
+		t.Fatalf("owner could not delete asset: %d %s", deleted.Code, deleted.Body.String())
+	}
+	afterDelete := performRequest(server, http.MethodGet, assetURL+"/attachments/"+attachment.Data.ID+"/thumbnail?variant=small", "Bearer dev:owner", nil)
+	if afterDelete.Code != http.StatusNotFound {
+		t.Fatalf("deleted asset exposed cached thumbnail: %d", afterDelete.Code)
+	}
+
 }
 
 func TestAttachmentListIsPaginated(t *testing.T) {
@@ -692,63 +713,6 @@ func realPNGAttachmentContent(t *testing.T) []byte {
 		t.Fatalf("encode png fixture: %v", err)
 	}
 	return buffer.Bytes()
-}
-
-func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.DirectAttachmentUploader, imageProcessor ports.ImageProcessor) app.App {
-	t.Helper()
-
-	store := memory.NewStore()
-	authorizer := memory.NewAuthorizer()
-	seedMemoryStore(t, context.Background(), store, authorizer, state)
-	if fakeDirectUploads, ok := directUploads.(*httpFakeDirectAttachmentUploader); ok {
-		fakeDirectUploads.blobs = store
-	}
-
-	application := app.New(app.Dependencies{
-		Observer:                  &fakeObserver{},
-		Auth:                      auth.NewLocalDevAuthenticator(),
-		InvitationPublicBaseURL:   "https://stash.example.test/invitations/accept",
-		Authorizer:                authorizer,
-		Users:                     store,
-		Tenants:                   store,
-		TenantUnitOfWork:          store,
-		Inventories:               store,
-		InventoryUnitOfWork:       store,
-		InventoryAccess:           store,
-		InventoryAccessUnitOfWork: store,
-		CustomAssetTypes:          store,
-		CustomAssetTypeUnitOfWork: store,
-		CustomFields:              store,
-		CustomFieldUnitOfWork:     store,
-		Assets:                    store,
-		AssetTags:                 store,
-		Checkouts:                 store,
-		AssetUnitOfWork:           store,
-		AssetTagUnitOfWork:        store,
-		Undoables:                 store,
-		Search:                    store,
-		Attachments:               store,
-		AttachmentUnitOfWork:      store,
-		Blobs:                     store,
-		DirectUploads:             directUploads,
-		ImageProcessor:            imageProcessor,
-		BlobDeletionOutbox:        store,
-		Audit:                     store,
-		Outbox:                    store,
-		ProviderProfiles:          store,
-		ProviderProfileUnitOfWork: store,
-		VoiceProviderConfigs:      store,
-		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
-		ProviderProfileTester:     httpTestProviderProfileTester{},
-		RealtimeSessions:          store,
-		ImportSources:             homebox.NewLegacyImporter(nil),
-		ImportJobs:                store,
-		ImportSourceVault:         newHTTPTestImportSourceVault(store),
-		ImportLinks:               store,
-		ImportAssetUnitOfWork:     store,
-		IDs:                       &fakeIDGenerator{ids: state.ids},
-	})
-	return application.WithImportWorker(importworker.NewInProcess(application, nil))
 }
 
 type httpFakeImageProcessor struct {

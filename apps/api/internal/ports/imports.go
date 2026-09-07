@@ -206,7 +206,7 @@ type ImportAssetUnitOfWork interface {
 }
 
 type ImportAttachmentUnitOfWork interface {
-	CreateImportedAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, link ImportSourceLink, record ImportJobResource) error
+	CreateImportedAttachment(ctx context.Context, attachment media.Attachment, auditRecord audit.Record, link ImportSourceLink, record ImportJobResource, thumbnailJob *media.ThumbnailJob) error
 }
 
 type ImportSourceUserError struct {

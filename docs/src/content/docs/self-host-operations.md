@@ -133,3 +133,110 @@ After making any needed backup, remove containers and all named volumes:
 docker compose -f compose.selfhost.yaml down -v
 ```
 :::
+
+## Send API Telemetry To A Collector
+
+The API can send traces, metrics, and structured events over OTLP/HTTP, and push
+Go runtime profiles to a Pyroscope-compatible server. Both are off by default.
+Store authentication values in your deployment's secret manager.
+
+For OTLP, configure:
+
+| Variable | Value |
+| --- | --- |
+| `STUFF_STASH_TELEMETRY_ENABLED` | `true` |
+| `OTEL_SERVICE_NAME` | `stuffstash-api` |
+| `OTEL_SERVICE_VERSION` | Your deployed release version |
+| `STUFF_STASH_DEPLOYMENT_ENVIRONMENT` | Your environment name |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector base URL, before `/v1/traces` or `/v1/metrics` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Collector authentication, such as `Authorization=Basic%20…` |
+
+For Grafana Cloud, copy the OTLP endpoint and authentication header from the stack's
+OpenTelemetry connection instructions. Use an access-policy token with
+`traces:write`, `metrics:write`, and `logs:write`. A Grafana service-account token
+used to manage dashboards is a different credential.
+
+To enable profiling, also configure:
+
+| Variable | Value |
+| --- | --- |
+| `STUFF_STASH_PROFILING_ENABLED` | `true` |
+| `STUFF_STASH_PROFILING_ENDPOINT` | Profiles server URL from your collector |
+| `STUFF_STASH_PROFILING_USERNAME` | Grafana Cloud Profiles instance ID |
+| `STUFF_STASH_PROFILING_PASSWORD` | Access-policy token with `profiles:write` |
+
+Profiling uses the same service/version/environment identity. It pushes CPU,
+allocation, heap, goroutine, mutex, and blocking profiles; it does not open a
+public profiling endpoint. The default upload interval is 15 seconds. See
+[Configuration](../configuration/) and `.env.example` for optional settings.
+
+After deploying, exercise an authenticated API request and confirm all four
+signals arrive under the expected service and release. Check local logs for
+`telemetry.batches_dropped` or `profiling.delivery_failed`. Successful startup or
+shutdown alone does not prove delivery. Measure workload latency and resource use
+with collection enabled before choosing sampling settings.
+
+The adapters are tested against local collectors in CI, including authentication
+and redirect handling. An isolated remote probe has also verified stored metrics, logs, traces, and
+runtime profiles in Grafana Cloud. This does not establish deployed API or
+physical-device performance.
+
+A reusable dashboard is available at
+`deploy/observability/image-performance-dashboard.json`. Import it in Grafana,
+select the Prometheus data source, then select the API service. It shows request
+and dependency latency, cache response rates, runtime resources, and failed
+export batches. It assumes the standard OTLP-to-Prometheus metric-name mapping;
+runtime and duration metric mappings have been verified against Grafana Cloud.
+The thumbnail counter mapping awaits an authenticated image workload. Use Tempo, Loki,
+and Profiles to inspect the corresponding service and time window.
+
+## Background Thumbnails
+
+The API prepares small, medium, and large thumbnails after an image upload or import.
+Uploads finish before thumbnail processing. Until a thumbnail is ready, opening it
+can still require processing; subsequent reads use the stored result. Original
+images and authenticated image URLs stay the same.
+
+Workers run inside the API and keep their queue in the database. Restarting the API
+does not lose pending work. Start with the default concurrency of one; increase it
+to two only after checking memory use and API response times with your own photos.
+Foreground generation and background workers share this limit within each API
+process. Large camera photos can use much more memory than their compressed files.
+
+Set these environment variables on the API (in `.env` for the self-host Compose setup):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_THUMBNAIL_CONCURRENCY` | `1` | Concurrent image jobs per API process; accepts 1–8. |
+| `STUFF_STASH_THUMBNAIL_WORKER_ENABLED` | `true` | Process queued images in the background. |
+| `STUFF_STASH_THUMBNAIL_BACKFILL_ENABLED` | `false` | Queue images uploaded before this feature. |
+| `STUFF_STASH_THUMBNAIL_BACKFILL_BATCH_SIZE` | `25` | Attachment records scanned per batch. |
+| `STUFF_STASH_THUMBNAIL_BACKFILL_INTERVAL` | `5s` | Pause between scan batches. |
+| `STUFF_STASH_THUMBNAIL_MAX_ATTEMPTS` | `5` | Attempts before a job is marked failed. |
+
+For the initial upgrade to background thumbnails, stop every old API instance before
+running migrations and starting the new API, keeping backfill disabled. This requires
+a brief interruption so older processes cannot write during migration. Then enable
+backfill and restart the API through your normal deployment
+process. The scan saves its progress and stops when complete. Newly uploaded images
+are processed ahead of backfill jobs. Disabling the worker pauses queued processing;
+it does not disable foreground generation or periodic blob cleanup.
+
+Inspect the queue from the running container:
+
+```sh
+docker compose -f compose.selfhost.yaml exec app /app/stuff-stash thumbnail-jobs status
+```
+
+The JSON result reports pending, leased, failed and completed counts, the oldest
+pending age in seconds, and whether backfill has completed. It contains no image
+identifiers. After resolving a storage or processing problem, retry a bounded batch:
+
+```sh
+docker compose -f compose.selfhost.yaml exec app /app/stuff-stash thumbnail-jobs retry-failed --limit 100
+```
+
+Retry accepts 1–1000 failed jobs and resets their attempt count. It leaves active and
+completed jobs alone. These commands use the container's database credentials and
+write operational logs to stderr. The command entrypoint is covered by CI; the
+Compose examples have not yet been exercised against a released image.

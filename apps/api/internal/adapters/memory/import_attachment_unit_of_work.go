@@ -9,7 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (s *Store) CreateImportedAttachment(_ context.Context, attachment media.Attachment, auditRecord audit.Record, link ports.ImportSourceLink, record ports.ImportJobResource) error {
+func (s *Store) CreateImportedAttachment(_ context.Context, attachment media.Attachment, auditRecord audit.Record, link ports.ImportSourceLink, record ports.ImportJobResource, thumbnailJob *media.ThumbnailJob) error {
 	if err := validateImportSourceLink(link); err != nil {
 		return err
 	}
@@ -40,6 +40,14 @@ func (s *Store) CreateImportedAttachment(_ context.Context, attachment media.Att
 	if attachment.LifecycleState.String() == "" {
 		attachment.LifecycleState = media.LifecycleStateActive
 	}
+	if err := media.ValidatePlannedThumbnailJob(attachment, thumbnailJob); err != nil {
+		return err
+	}
+	if _, exists := s.mediaBlobKeys[attachment.StorageKey]; exists {
+		return ports.ErrConflict
+	}
+	s.mediaBlobKeys[attachment.StorageKey] = struct{}{}
+	s.enqueueThumbnailJob(thumbnailJob)
 	s.attachments[attachment.ID] = attachment
 	s.auditRecords[auditRecord.ID] = auditRecord
 	s.importLinks[linkKey] = link

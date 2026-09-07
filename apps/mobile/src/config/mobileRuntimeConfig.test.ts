@@ -11,6 +11,7 @@ describe('mobileRuntimeConfig', () => {
     ).toEqual({
       apiBaseUrl: 'http://192.168.1.97:8080',
       tenantId: 'tenant-home',
+      performanceTelemetryEnabled: false,
       voiceDeveloperDiagnosticsEnabled: false,
       directUploadLocalDevelopmentTargetsEnabled: false,
       invitationOrigin: undefined,
@@ -148,4 +149,14 @@ describe('mobileRuntimeConfig', () => {
       invitationAllowInsecureLocalHTTP: 'true'
     });
   });
+});
+
+
+it('validates performance telemetry configuration and source precedence', () => {
+  const base = { apiBaseUrl: 'https://api.example.test', tenantId: 'tenant' };
+  expect(parseMobileRuntimeConfig(base).performanceTelemetryEnabled).toBe(false);
+  expect(parseMobileRuntimeConfig({ ...base, performanceTelemetryEnabled: 'true' }).performanceTelemetryEnabled).toBe(true);
+  expect(() => parseMobileRuntimeConfig({ ...base, performanceTelemetryEnabled: 'invalid' })).toThrow('EXPO_PUBLIC_STUFF_STASH_PERFORMANCE_TELEMETRY_ENABLED');
+  const merged = mergeMobileRuntimeConfigSources({ ...base, performanceTelemetryEnabled: true }, { performanceTelemetryEnabled: false });
+  expect(parseMobileRuntimeConfig(merged).performanceTelemetryEnabled).toBe(false);
 });

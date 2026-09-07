@@ -1,3 +1,6 @@
+import { Platform } from 'react-native';
+import { createMobilePerformanceSession } from '../adapters/observability/MobilePerformanceSession';
+import type { PerformanceObserver } from '../application/observability/PerformanceObserver';
 import * as Network from 'expo-network';
 import type { ConnectivitySource } from '../application/shared/ConnectivitySource';
 import { ExpoConnectivitySource } from '../adapters/serverState/ExpoConnectivitySource';
@@ -100,6 +103,9 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly performanceObserver: PerformanceObserver;
+  readonly disposePerformance: () => void;
+  readonly acquirePerformance: () => () => void;
   readonly serviceScopeId: string;
   readonly queryClient: QueryClient;
   readonly connectivitySource: ConnectivitySource;
@@ -204,7 +210,21 @@ export function createMobileComposition(
   profile: ConnectionProfile,
   options: MobileCompositionOptions = {}
 ): MobileComposition {
-  const client = createStuffStashClient(profile, options);
+  const sessionOptions: MobileCompositionOptions = {
+    ...options,
+    onAuthenticationRequired: () => {
+      performanceSession.dispose();
+      options.onAuthenticationRequired?.();
+    }
+  };
+  const performanceSession = createMobilePerformanceSession({
+    enabled: runtimeSeed.performanceTelemetryEnabled === true,
+    platform: Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web',
+    baseUrl: profile.apiBaseUrl,
+    tokenProvider: () => validIdTokenForProfile(profile, sessionOptions),
+    fetch: createTimeoutFetch(8000)
+  });
+  const client = createStuffStashClient(profile, sessionOptions, performanceSession.fetch);
   const serviceScopeId = createServiceScopeId();
   const queryClient = createMobileQueryClient();
   const config = toRuntimeConfig(profile);
@@ -243,6 +263,9 @@ export function createMobileComposition(
 
   return {
     serviceScopeId,
+    performanceObserver: performanceSession.observer,
+    disposePerformance: performanceSession.dispose,
+    acquirePerformance: performanceSession.acquire,
     queryClient,
     connectivitySource: new ExpoConnectivitySource(Network),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
@@ -327,11 +350,12 @@ function createOnboardingGateway(profile: ConnectionProfile): ApiOnboardingGatew
 
 function createStuffStashClient(
   profile: ConnectionProfile,
-  options: MobileCompositionOptions = {}
+  options: MobileCompositionOptions = {},
+  fetchImpl: typeof fetch = createTimeoutFetch(8000)
 ): StuffStashClient {
   return new StuffStashClient({
     baseUrl: profile.apiBaseUrl,
-    fetch: createAuthenticatedFetch(createTimeoutFetch(8000), options),
+    fetch: createAuthenticatedFetch(fetchImpl, options),
     tokenProvider: () => validIdTokenForProfile(profile, options)
   });
 }

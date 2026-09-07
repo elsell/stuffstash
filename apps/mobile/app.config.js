@@ -135,6 +135,7 @@ module.exports = {
       stuffStash: {
         apiBaseUrl,
         tenantId,
+        performanceTelemetryEnabled: process.env.EXPO_PUBLIC_STUFF_STASH_PERFORMANCE_TELEMETRY_ENABLED ?? '',
         voiceDeveloperDiagnosticsEnabled:
           process.env.EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED ?? '',
         directUploadLocalDevelopmentTargetsEnabled:

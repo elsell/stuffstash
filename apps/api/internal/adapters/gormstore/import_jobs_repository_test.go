@@ -356,7 +356,7 @@ func TestCreateImportedAttachmentRollsBackOnSourceLinkConflict(t *testing.T) {
 		SourceEntityID:    link.Key.SourceEntityID,
 		CreatedAt:         now,
 	}
-	err := store.CreateImportedAttachment(ctx, attachment, auditRecord(t, "audit-attachment", tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), audit.ActionAttachmentCreated), link, resource)
+	err := store.CreateImportedAttachment(ctx, attachment, auditRecord(t, "audit-attachment", tenant.ID(job.TenantID.String()), inventory.InventoryID(job.InventoryID.String()), audit.ActionAttachmentCreated), link, resource, plannedThumbnailJob(t, attachment))
 	if !errors.Is(err, ports.ErrConflict) {
 		t.Fatalf("expected source link conflict, got %v", err)
 	}

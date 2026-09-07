@@ -57,6 +57,7 @@ const (
 	envS3SecretKey                        = "STUFF_STASH_S3_SECRET_KEY"
 	envS3Bucket                           = "STUFF_STASH_S3_BUCKET"
 	envS3Region                           = "STUFF_STASH_S3_REGION"
+	envS3PublicSecure                     = "STUFF_STASH_S3_PUBLIC_SECURE"
 	envS3Secure                           = "STUFF_STASH_S3_SECURE"
 	envMaxAttachmentBytes                 = "STUFF_STASH_MAX_ATTACHMENT_BYTES"
 	envPrimaryThumbnailWarmLimit          = "STUFF_STASH_PRIMARY_THUMBNAIL_WARM_LIMIT"
@@ -186,6 +187,8 @@ type Config struct {
 	S3Bucket                         string
 	S3Region                         string
 	S3Secure                         bool
+	S3PublicSecure                   bool
+	s3PublicSecureRaw                string
 	MaxAttachmentBytes               int
 	PrimaryThumbnailWarmLimit        int
 	PrimaryThumbnailWarmConcurrency  int
@@ -261,6 +264,8 @@ func Load() Config {
 		S3Bucket:                         os.Getenv(envS3Bucket),
 		S3Region:                         envOrDefault(envS3Region, defaultS3Region),
 		S3Secure:                         boolEnvOrDefault(envS3Secure, defaultS3Secure),
+		s3PublicSecureRaw:                os.Getenv(envS3PublicSecure),
+		S3PublicSecure:                   boolEnvOrDefault(envS3PublicSecure, boolEnvOrDefault(envS3Secure, defaultS3Secure)),
 		MaxAttachmentBytes:               intEnvOrDefault(envMaxAttachmentBytes, defaultMaxAttachmentBytes),
 		PrimaryThumbnailWarmLimit:        intEnvOrDefault(envPrimaryThumbnailWarmLimit, defaultPrimaryThumbnailWarmLimit),
 		PrimaryThumbnailWarmConcurrency:  intEnvOrDefault(envPrimaryThumbnailWarmConcurrent, defaultPrimaryThumbnailWarmConcurrent),

@@ -1,16 +1,17 @@
 export function createTimeoutFetch(timeoutMs: number, fetchImpl: typeof fetch = fetch): typeof fetch {
   return async (input, init) => {
+    const callerSignal = init?.signal !== undefined ? init.signal : (input instanceof Request ? input.signal : undefined);
     const requestController = new AbortController();
     let abortCause: 'caller' | 'timeout' | undefined;
     const abortFromCaller = () => {
       if (abortCause) return;
       abortCause = 'caller';
-      requestController.abort(init?.signal?.reason);
+      requestController.abort(callerSignal?.reason);
     };
-    if (init?.signal?.aborted) {
+    if (callerSignal?.aborted) {
       abortFromCaller();
     } else {
-      init?.signal?.addEventListener('abort', abortFromCaller, { once: true });
+      callerSignal?.addEventListener('abort', abortFromCaller, { once: true });
     }
     const timeout = setTimeout(() => {
       if (abortCause) return;
@@ -30,7 +31,7 @@ export function createTimeoutFetch(timeoutMs: number, fetchImpl: typeof fetch = 
       throw error;
     } finally {
       clearTimeout(timeout);
-      init?.signal?.removeEventListener('abort', abortFromCaller);
+      callerSignal?.removeEventListener('abort', abortFromCaller);
     }
   };
 }

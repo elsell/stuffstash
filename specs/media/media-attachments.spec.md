@@ -268,3 +268,34 @@ When a browser client cannot use an advertised direct-upload target because the 
 - Are attachments versioned?
 - Are thumbnails persisted durably, cached opportunistically, or always generated lazily?
 - What virus scanning or content safety workflow is required before arbitrary file uploads?
+
+## Bounded resize working memory
+
+For large reductions, halve image dimensions with filtered bilinear scaling until
+the intermediate image is no more than twice the requested output dimensions,
+then apply the existing Catmull-Rom final filter. Calculate the final dimensions
+from the original aspect ratio. Keep JPEG quality, size variants, authorization,
+storage keys and original attachments unchanged. This reduces the large temporary
+buffer required by a single full-resolution separable filter. Verify high-frequency
+patterns average rather than alias, preserve alpha/geometry, and compare CPU and
+allocated bytes against the previous codec on the same runner. Do not deploy the
+candidate until the production HTTP baseline is recorded.
+
+The 4032×3024 RGBA-to-1600×1200 resize regression budget is 100 MiB allocated
+(excluding caller-owned input and decoding). Its expected buffers total 92.8 MiB:
+2016×1512 RGBA intermediate, 1600×1512×32-byte Catmull-Rom scratch, and output.
+This retains final-filter quality; further reducing below the output resolution
+just to meet a smaller allocation budget is not acceptable.
+
+## Internal and public S3 transport
+
+API blob traffic may use a cluster-internal endpoint while presigned browser/mobile
+uploads use the public HTTPS endpoint. `STUFF_STASH_S3_SECURE` controls API-to-S3
+TLS; `STUFF_STASH_S3_PUBLIC_SECURE` independently controls presigned upload TLS
+and defaults to the internal setting for compatibility. Preserve signed upload
+authorization and bounds. In the cluster deployment, use the Garage service for
+API reads/writes and retain HTTPS for public upload URLs. Compare the same image
+workload before claiming any effect on storage tail latency.
+
+An invalid nonempty public TLS setting must fail S3 startup with a safe configuration
+error; it must never silently fall back to HTTP. An unset value inherits internal TLS.

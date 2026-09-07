@@ -1,0 +1,327 @@
+package media
+
+import (
+	"context"
+	"errors"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/stuffstash/stuff-stash/internal/adapters/worklimit"
+	domain "github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+func TestReaderUsesForegroundAdmissionAndServesCacheWithoutCapacity(t *testing.T) {
+	processor, source, _, guard, _ := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader, err := NewReader(processor, limiter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+	if _, _, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal("cold read bypassed shared admission", err)
+	}
+	if guard.writes != 0 {
+		t.Fatal("blocked reader published")
+	}
+	release()
+	first, cached, err := reader.ReadThumbnail(context.Background(), source.attachment, domain.ThumbnailVariantSmall)
+	if err != nil || cached || len(first.Content) == 0 {
+		t.Fatal("cold read failed", err)
+	}
+	release, err = limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
+	defer cancel2()
+	second, cached, err := reader.ReadThumbnail(ctx2, source.attachment, domain.ThumbnailVariantSmall)
+	if err != nil || !cached || len(second.Content) == 0 {
+		t.Fatal("cache hit waited for admission", err)
+	}
+	if guard.writes != 1 {
+		t.Fatal("cache hit generated again")
+	}
+}
+
+func TestReaderGuardRejectsAttachmentDeletedAfterAuthorization(t *testing.T) {
+	processor, source, blobs, guard, _ := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader, err := NewReader(processor, limiter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	guard.before = func() { source.missing = true }
+	if _, _, err := reader.ReadThumbnail(context.Background(), source.attachment, domain.ThumbnailVariantSmall); err == nil {
+		t.Fatal("deleted attachment published")
+	}
+	key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	if _, err := blobs.GetBlob(context.Background(), key); !errors.Is(err, ports.ErrBlobNotFound) {
+		t.Fatal("deleted derivative recreated")
+	}
+}
+
+func TestReaderRechecksCacheAfterWaitingForWorker(t *testing.T) {
+	processor, source, blobs, guard, claim := processorFixture(t)
+	limiter, _ := worklimit.New(1)
+	processor.admission = limiter
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	entered, proceed, waiting := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	processor.images = readerBlockedBatch{ImageBatchProcessor: processor.images, entered: entered, proceed: proceed}
+	processor.flights = readerObservedFlights{ThumbnailFlights: processor.flights, waiting: waiting}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	workerDone := make(chan error, 1)
+	go func() { workerDone <- processor.ProcessThumbnailJob(ctx, claim) }()
+	select {
+	case <-entered:
+	case <-ctx.Done():
+		t.Fatal("worker never started")
+	}
+	reader, err := NewReader(processor, limiter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		output, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		if err == nil && (!cached || len(output.Content) == 0) {
+			err = errors.New("reader did not reuse worker output")
+		}
+		done <- err
+	}()
+	select {
+	case <-waiting:
+	case <-ctx.Done():
+		t.Fatal("reader did not join flight")
+	}
+	close(proceed)
+	if err := <-workerDone; err != nil {
+		t.Fatal(err)
+	}
+	if err := blobs.DeleteBlob(ctx, source.attachment.StorageKey); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if guard.writes != 3 {
+		t.Fatal("reader regenerated worker output")
+	}
+}
+
+type readerObservedFlights struct {
+	ports.ThumbnailFlights
+	waiting chan struct{}
+}
+
+func (f readerObservedFlights) TryStart(key domain.StorageKey) (func(), <-chan struct{}, bool) {
+	release, done, owned := f.ThumbnailFlights.TryStart(key)
+	if !owned {
+		select {
+		case <-f.waiting:
+		default:
+			close(f.waiting)
+		}
+	}
+	return release, done, owned
+}
+
+type readerBlockedBatch struct {
+	ports.ImageBatchProcessor
+	entered, proceed chan struct{}
+}
+
+func (b readerBlockedBatch) CreateThumbnails(ctx context.Context, request ports.ImageDerivativesRequest, publish func(domain.ThumbnailVariant, ports.ImageDerivative) error) error {
+	close(b.entered)
+	select {
+	case <-b.proceed:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	return b.ImageBatchProcessor.CreateThumbnails(ctx, request, publish)
+}
+
+type readerAdmissionSignal struct {
+	ports.ImageWorkAdmission
+	waiting chan struct{}
+}
+
+func (a readerAdmissionSignal) Acquire(ctx context.Context, priority ports.ImageWorkPriority) (func(), error) {
+	close(a.waiting)
+	return a.ImageWorkAdmission.Acquire(ctx, priority)
+}
+
+func TestReaderServesPublishedSmallBeforeBackgroundReleasesCapacity(t *testing.T) {
+	processor, source, blobs, _, _ := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	waiting := make(chan struct{})
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		value, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		if err == nil && (!cached || string(value.Content) != "ready-small") {
+			err = errors.New("published small was not served")
+		}
+		done <- err
+	}()
+	select {
+	case <-waiting:
+	case <-ctx.Done():
+		t.Fatal("reader did not wait")
+	}
+	key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	if err := blobs.PutBlob(ctx, key, domain.ContentType("image/jpeg"), []byte("ready-small")); err != nil {
+		t.Fatal(err)
+	}
+	if err := blobs.PutBlob(ctx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte("image/jpeg")); err != nil {
+		t.Fatal(err)
+	}
+	processor.readiness.Published(key)
+	if err := <-done; err != nil {
+		t.Fatal("small waited for remaining background variants", err)
+	}
+	blocked, stop := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer stop()
+	if accidentalRelease, err := limiter.Acquire(blocked, ports.ImageWorkForeground); err == nil {
+		accidentalRelease()
+		t.Fatal("reader released background capacity")
+	}
+	release()
+	available, stopAvailable := context.WithTimeout(context.Background(), time.Second)
+	defer stopAvailable()
+	permit, err := limiter.Acquire(available, ports.ImageWorkForeground)
+	if err != nil {
+		t.Fatal("reader leaked capacity", err)
+	}
+	permit()
+}
+
+func TestReaderReleasesAdmissionGrantedDuringCacheCancellation(t *testing.T) {
+	processor, source, blobs, _, _ := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	granted := make(chan struct{})
+	reader, err := NewReader(processor, readerDelayedGrant{ImageWorkAdmission: limiter, granted: granted})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		_, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		if err == nil && (!cached || ctx.Err() != nil) {
+			err = errors.New("cache readiness did not cancel queued admission")
+		}
+		done <- err
+	}()
+	select {
+	case <-granted:
+	case <-ctx.Done():
+		t.Fatal("admission was not granted")
+	}
+	key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	if err := blobs.PutBlob(ctx, key, domain.ContentType("image/jpeg"), []byte("ready")); err != nil {
+		t.Fatal(err)
+	}
+	if err := blobs.PutBlob(ctx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte("image/jpeg")); err != nil {
+		t.Fatal(err)
+	}
+	processor.readiness.Published(key)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	available, stop := context.WithTimeout(context.Background(), time.Second)
+	defer stop()
+	permit, err := limiter.Acquire(available, ports.ImageWorkForeground)
+	if err != nil {
+		t.Fatal("late grant leaked", err)
+	}
+	permit()
+}
+
+type readerDelayedGrant struct {
+	ports.ImageWorkAdmission
+	granted chan struct{}
+}
+
+func (a readerDelayedGrant) Acquire(ctx context.Context, priority ports.ImageWorkPriority) (func(), error) {
+	release, err := a.ImageWorkAdmission.Acquire(ctx, priority)
+	if err != nil {
+		return nil, err
+	}
+	close(a.granted)
+	<-ctx.Done()
+	return release, nil
+}
+
+func TestReaderDoesNotPollStorageWhileWaiting(t *testing.T) {
+	processor, source, blobs, _, _ := processorFixture(t)
+	counted := &readerCountingBlobs{BlobStorage: blobs}
+	processor.blobs = counted
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	reader, err := NewReader(processor, limiter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Millisecond)
+	defer cancel()
+	if _, _, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal(err)
+	}
+	if got := counted.reads.Load(); got != 1 {
+		t.Fatalf("waiting performed %d storage reads; want only initial cache lookup", got)
+	}
+}
+
+type readerCountingBlobs struct {
+	ports.BlobStorage
+	reads atomic.Int64
+}
+
+func (b *readerCountingBlobs) GetBlob(ctx context.Context, key domain.StorageKey) ([]byte, error) {
+	b.reads.Add(1)
+	return b.BlobStorage.GetBlob(ctx, key)
+}

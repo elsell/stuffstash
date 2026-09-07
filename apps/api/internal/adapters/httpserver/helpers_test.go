@@ -100,7 +100,7 @@ func newSeededTestAppWithImportSource(t *testing.T, state seededState, importSou
 	return newSeededTestAppWithBlobAuthorizerAndImportSource(t, state, nil, memory.NewAuthorizer(), importSource)
 }
 
-func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seededState, blobStorage ports.BlobStorage, authorizer ports.Authorizer, importSource ports.ImportSourceReader) app.App {
+func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seededState, blobStorage ports.BlobStorage, authorizer ports.Authorizer, importSource ports.ImportSourceReader, authenticators ...ports.Authenticator) app.App {
 	t.Helper()
 
 	ctx := context.Background()
@@ -111,9 +111,14 @@ func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seede
 		blobStorage = store
 	}
 
+	authenticator := ports.Authenticator(auth.NewLocalDevAuthenticator())
+	if len(authenticators) > 0 {
+		authenticator = authenticators[0]
+	}
+
 	application := app.New(app.Dependencies{
 		Observer:                   &fakeObserver{},
-		Auth:                       auth.NewLocalDevAuthenticator(),
+		Auth:                       authenticator,
 		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",
 		Authorizer:                 authorizer,
 		Users:                      store,

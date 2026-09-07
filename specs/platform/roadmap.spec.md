@@ -23,6 +23,23 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+Durable background thumbnail generation and cooperative scheduling are implemented
+behind ports with an in-process worker, PostgreSQL queue, fenced publication and
+per-photo ownership. The controlled one-worker 500m/512Mi comparison reduced
+back-to-back immediate-open median from 8.04 to 4.82 seconds, but the slowest of six
+samples increased from 12.50 to 13.77 seconds. Peak memory was 341 MiB. Preserve
+this limit and worker count; the evidence does not justify more memory yet.
+Scheduler validation `34080191156` and full PR CI `34080576863` passed; code critic
+review found no blocker. Complete PR 66, the release pipeline and released-image
+GitOps deployment. See `docs/reports/thumbnail-scheduling-2026-09-07.md` for
+reproduction, trace evidence and the unresolved long-wait counterexample.
+
+Storage-path stalls persist independently of image scheduling. Read-only node or
+storage-server diagnostics remain needed; do not attribute them to a physical
+cause without evidence. Web/mobile telemetry activation, physical-device rendering,
+broader instrumentation, alerts/SLOs and extended profiling are deferred. Frontend
+telemetry type checks now pass. Keep builds in CI on the disk-constrained host.
+
 The next milestone is a successful real voice conversation through the intended production flow. Pause additional configuration features. Exercise recorded audio over the authenticated mobile WebSocket protocol against configured providers, inspect transcription and authorized retrieval, and require a grounded spoken answer for the baby-clothes location question. Fix only blockers exposed by this path before broadening the workspace. Follow `specs/agent-model/voice-conversation-quality.spec.md`; preserve the configurable workflow work already completed. All builds remain in CI. Release and Kubernetes changes still use TestFlight and the infra GitOps repository.
 
 The deployed baseline reproduced the reported failure on 2026-09-05: “Where are my baby clothes?” was transcribed correctly at 1.7 seconds, four search calls finished by 4.5 seconds, then `language_inference_failed` terminated the session at 7.5 seconds without speech. Session `01M1SNQ5KG3JXH7MJ6MBEVF070` is a failing live acceptance baseline, not evidence that the un-deployed branch fixes it. Keep sanitized event traces and measure the same path after correction. Synthetic recorded input exercises audio services but does not establish phone microphone/playback acceptance.
@@ -160,7 +177,7 @@ The web audit and Browse parity work needs a production-shaped path through:
 
 ## Known Gaps
 
-- Changing custom field type, removing custom field enum options or targets, durable thumbnail caching, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
+- Changing custom field type, removing custom field enum options or targets, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
 - Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
 - Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
 - The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md` and has been promoted into `apps/web` with frontend domain, port, API adapter, seeded adapter, and focused workspace components.

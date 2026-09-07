@@ -73,7 +73,7 @@ func TestSaveAttachmentAdvancesOwningAssetUpdatedAt(t *testing.T) {
 	}
 	attachment := testAttachment(t, "01ARZ3NDEKTSV4RRFFQ69G5FC3", item, "photo.jpg", media.ContentTypeJPEG, attachmentCreatedAt)
 
-	if err := store.SaveAttachment(ctx, attachment, auditRecord(t, "audit-photo-create", tenantID, inventoryID, audit.ActionAttachmentCreated)); err != nil {
+	if err := store.SaveAttachment(ctx, attachment, auditRecord(t, "audit-photo-create", tenantID, inventoryID, audit.ActionAttachmentCreated), plannedThumbnailJob(t, attachment)); err != nil {
 		t.Fatalf("save attachment: %v", err)
 	}
 	updated, found, err := store.AssetByID(ctx, tenantID, inventoryID, item.ID)

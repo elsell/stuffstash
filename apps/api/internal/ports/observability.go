@@ -5,6 +5,13 @@ import "context"
 type EventName string
 
 const (
+	EventThumbnailJobsRetried                      EventName = "thumbnail_jobs.retried"
+	EventBlobDeletionRechecked                     EventName = "blob_deletion.rechecked"
+	EventThumbnailJobResolved                      EventName = "thumbnail_job.resolved"
+	EventThumbnailWorkerFailed                     EventName = "thumbnail_worker.failed"
+	EventClientPerformanceObserved                 EventName = "client.performance.observed"
+	EventProfilingDeliveryFailed                   EventName = "profiling.delivery_failed"
+	EventTelemetryBatchesDropped                   EventName = "telemetry.batches_dropped"
 	EventHealthChecked                             EventName = "health.checked"
 	EventHTTPServerStartFailed                     EventName = "http.server.start_failed"
 	EventHTTPServerShutdownFailed                  EventName = "http.server.shutdown_failed"
