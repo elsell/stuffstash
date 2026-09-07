@@ -322,6 +322,7 @@ describe('AssetCard', () => {
 
     expect(styleValue(card.props?.style, 'flex')).toBe(1);
     expect(styleValue(card.props?.style, 'width')).toBeUndefined();
+    expect(styleValue(card.props?.style, 'minHeight')).toBeUndefined();
   });
 
   it('owns the compact footer action used by checked-out Home cards', () => {

@@ -228,11 +228,9 @@ function createStyles(colors: MobileColorPalette) {
     overflow: 'hidden'
   },
   standardCard: {
-    flex: 1,
-    minHeight: 286
+    flex: 1
   },
   compactCard: {
-    minHeight: 210,
     width: 164
   },
   rowCard: {
