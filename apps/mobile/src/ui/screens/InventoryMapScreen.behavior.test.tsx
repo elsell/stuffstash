@@ -37,7 +37,10 @@ describe('Map server state', () => {
       expect(harness.allText()).toContain('Tent');
       expect(calls).toBe(1);
       await harness.press(harness.byLabel('Show details for Tent'));
-      expect(dispatchedActions().at(-1)).toMatchObject({ type: 'push', href: '/assets/tent' });
+      expect(dispatchedActions().at(-1)).toMatchObject({
+        type: 'push',
+        href: { pathname: '/assets/[assetId]', params: { assetId: 'tent' } }
+      });
     } finally { await harness.unmount(); }
   });
 
