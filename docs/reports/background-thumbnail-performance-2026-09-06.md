@@ -5,8 +5,9 @@ Status: experiment in progress; no improvement conclusion yet.
 ## Method
 
 The reference is API revision `0d84c2da9`, which already includes staged resizing and
-internal Garage traffic. The candidate is `392891d17`, adding the durable queue and
-in-process workers. Both use the same single API deployment, 500m CPU/512Mi memory
+internal Garage traffic. The initial candidate was `392891d17`, adding the durable queue and
+in-process workers. Final measurements will use `f66f2d965`, which also notifies
+waiting readers as each derivative is published. Both use the same single API deployment, 500m CPU/512Mi memory
 limits, blob storage, authentication and existing telemetry configuration. Candidate
 concurrency one and two are separate GitOps configurations of the same image.
 
@@ -101,14 +102,34 @@ ordinary requests had 132/1,388 ms, with one failed upload among 15 attempts.
 Review confirmed that a reader could wait for the entire background job even after
 its requested small derivative was published. Regression CI `34070335781` failed
 on that behavior. Correction `d43a1ba86` passed race/PostgreSQL checks and code review,
-and image publication passed CI `34070804283`. Readers now retain one admission
-waiter while checking for their requested cached derivative, with bounded probes
-and cancellation that joins and releases a late permit.
+and image publication passed CI `34070804283`. That correction retained one admission waiter and polled for the requested
+cached derivative. A subsequent production run exposed excessive storage reads
+from polling, so it is being replaced before the final comparison.
 
-GitOps `d2dd84a` deploys that correction and temporarily uses two CPUs for one-time
-backfill catch-up, with memory still limited to 512Mi. Catch-up is excluded from
-performance comparisons. Restore 500m CPU before final measurements.
+GitOps `d2dd84a` temporarily used two CPUs for one-time backfill catch-up,
+with memory still limited to 512Mi. All 277 existing-image jobs completed, with
+zero pending, leased or failed jobs. Revision `97dcef3` restored 500m CPU before
+measurements; catch-up is excluded from performance comparisons.
 
 The Garage StatefulSet and live PVC both use `nfs-csi` for `/var/lib/garage`. This
 is a concrete lead for investigating write latency, not proof that NFS caused the
 observed stall. Storage layout and HTTP timeout settings remain unchanged.
+
+## Publication notification correction
+
+A complete one-worker run of `d43a1ba86` without external readiness probes measured
+fixed-delay median/p95 of 0.285/8.613 s, but immediate small thumbnails remained
+8.012/51.920 s. Traces showed repeated cache reads hitting the 250 ms polling
+timeout. These results are intermediate, not the final concurrency decision.
+
+Regression CI `34073300611` reproduced seven storage reads while waiting instead
+of one. Revision `f66f2d965` replaces polling with an injected publication-hint
+port and an in-process adapter. Readers subscribe before their initial lookup;
+successful guarded publication wakes them for one cache lookup. Admission remains
+queued, cancellation releases late grants, and the adapter retains only active
+subscriptions. Code critic review found no blocking issue. Backend race tests, PostgreSQL
+coordination checks, structural checks and API image publication passed CI
+`34073917277`. GitOps `12c5f93` deployed the notification image with one worker.
+The new production comparison is running. The separate client-telemetry job still
+fails on the known mobile TypeScript `node:module` resolution issue; no frontend
+telemetry release is included.

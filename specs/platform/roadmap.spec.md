@@ -29,9 +29,11 @@ admission. Follow `specs/media/background-thumbnails.spec.md`; benchmark concurr
 one versus two before choosing the deployment default. Queue, workers, guarded
 publication, resumable backfill, deletion rechecks and operator commands are
 implemented. Broader application race tests and PostgreSQL checks passed CI
-`34068976618`; API `392891d17` is deployed through GitOps with concurrency one.
-The stop-writers/migrate/start sequence succeeded and existing-image backfill is
-running. The new baseline is captured; concurrency comparison remains pending.
+`34073917277`; publication notifications in API `f66f2d965` replace cache polling
+after production traces exposed repeated storage timeouts. GitOps `12c5f93` starts
+the final comparison with one worker at 500m CPU/512Mi. All 277 existing-image
+backfill jobs completed without failed jobs. The baseline is captured; final
+concurrency comparison remains pending.
 See `docs/reports/background-thumbnail-performance-2026-09-06.md`.
 
 The prioritized image-performance comparison is complete on `codex/media-observability`.
