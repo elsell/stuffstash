@@ -23,18 +23,19 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The approved next image-performance work is durable background thumbnail generation
-with an in-process Go worker, a database queue and shared foreground-priority
-admission. Follow `specs/media/background-thumbnails.spec.md`; benchmark concurrency
-one versus two before choosing the deployment default. Queue, workers, guarded
-publication, resumable backfill, deletion rechecks and operator commands are
-implemented. Broader application race tests and PostgreSQL checks passed CI
-`34073917277`; publication notifications in API `f66f2d965` replace cache polling
-after production traces exposed repeated storage timeouts. GitOps `12c5f93` starts
-the final comparison with one worker at 500m CPU/512Mi. All 277 existing-image
-backfill jobs completed without failed jobs. The baseline is captured; final
-concurrency comparison remains pending.
-See `docs/reports/background-thumbnail-performance-2026-09-06.md`.
+Durable background thumbnail generation is deployed with an in-process Go worker,
+a database queue and shared foreground-priority admission. Uploads/imports,
+resumable backfill, guarded publication, deletion rechecks and operator commands
+follow `specs/media/background-thumbnails.spec.md`. All 277 existing-image jobs
+completed without failed jobs. API `f66f2d965` passed backend race, PostgreSQL and
+structural CI checks in `34073917277`; code critic review found no blocking issue.
+The final production comparison selects one worker at 500m CPU/512Mi through
+GitOps `1156b0d`: fixed-delay thumbnail median improved 7.489 to 0.329 seconds,
+but immediate-open latency regressed and intermittent blob-storage stalls remain.
+Two workers improved batch delivery but worsened foreground p95 and memory.
+Prioritize those remaining latency problems before expanding observability.
+See `docs/reports/background-thumbnail-performance-2026-09-06.md` for evidence,
+failed attempts, measurement limits and deferred observability.
 
 The prioritized image-performance comparison is complete on `codex/media-observability`.
 Existing API tracing, metrics, logs and profiling were deployed through infra GitOps.

@@ -1,135 +1,151 @@
 # Background thumbnail production comparison
 
-Status: experiment in progress; no improvement conclusion yet.
+Background generation is deployed. Keep **one worker** at the current API limit of
+500m CPU and 512Mi memory. Two workers delivered batches faster but worsened ordinary
+API latency, immediate-open latency, and memory usage. Concurrency remains configurable.
 
-## Method
+Images opened after a fixed preparation window now have a much faster median.
+Freshly uploaded images remain a regression; this is not a claim that every image
+loading path improved. Intermittent blob-storage stalls also remain unresolved.
 
-The reference is API revision `0d84c2da9`, which already includes staged resizing and
-internal Garage traffic. The initial candidate was `392891d17`, adding the durable queue and
-in-process workers. Final measurements will use `f66f2d965`, which also notifies
-waiting readers as each derivative is published. Both use the same single API deployment, 500m CPU/512Mi memory
-limits, blob storage, authentication and existing telemetry configuration. Candidate
-concurrency one and two are separate GitOps configurations of the same image.
+## Final results
 
-The experiment runs from `paul` against the public authenticated API. It copies the
-same six JPEG originals into dedicated experiment assets in the benchmark inventory.
-The originals are unchanged. Photo sizes are 3,755,993, 2,859,202, 2,790,703,
-2,170,153, 2,086,071 and 2,058,024 bytes; private evidence records SHA-256 hashes.
+Times below are median / p95, using nearest-rank quantiles. Each completed run has
+54 fixed-delay thumbnail reads, 18 warm reads, and six immediate small-thumbnail
+reads. The reference is `0d84c2da9`; both worker settings use `f66f2d965`.
 
-Each configuration receives three batches of six sequential JSON/base64 uploads.
-After the final upload in each batch, the driver waits 30 seconds before requesting
-all three thumbnail sizes with HTTP concurrency two. Preliminary runs used read-only object metadata probes for readiness. Those probes
-proved unreliable, including through a local Kubernetes tunnel, and added storage
-traffic. Final runs omit them and correlate request trace IDs with existing API
-cache/generated events instead. A cache event can follow waiting for a worker; it
-does not establish readiness at request start.
-A separate six-image cohort requests the small thumbnail immediately after each
-upload. Warm small-thumbnail reads follow the fixed-delay cohort. An authenticated
-asset-list request runs roughly once per second throughout the experiment.
-
-The driver records each request's duration, status and trace ID, upload confirmation,
-cohort boundaries, and cache-source events. Kubernetes resource metrics and restart
-status are sampled alongside it. Preliminary readiness observations are incomplete where probes failed. Kubernetes metrics are sampled working-set values,
-not proof of the instantaneous peak allocation.
-
-The mobile adapter selects small, medium and large authenticated thumbnail references;
-the web repository fetches small thumbnails for attachment and primary-photo views.
-Both use the existing API thumbnail contract, so background preparation applies to
-both without a frontend release.
-
-This measures API-visible image loading and background preparation, not mobile UI
-render time. JSON/base64 upload timing does not substitute for a direct-upload timing
-measurement. Automated boundary tests cover direct-upload completion and imports.
-The small, fixed corpus cannot establish performance for every phone image size.
-Baseline uploads had concurrent readiness probes; final uploads do not, so upload
-timing differences are diagnostic rather than an isolated before/after claim.
-Thumbnail reads in both protocols start after a 30-second post-upload wait.
-
-The first candidate comparison runs while the existing-image queue remains nonempty.
-This is a sustained-load check, not a quiet-queue comparison: both worker settings
-process the same new-upload corpus while older jobs consume spare capacity. The
-older images differ as backfill progresses, so these runs cannot isolate concurrency
-as precisely as repeating the corpus after backfill drains. Report them separately.
-
-## Results
-
-The baseline completed with no request failures. No derivative readiness was
-observed before the fixed-delay reads. Candidate results remain pending.
-
-| Baseline operation | Requests | Median | p95 |
+| Operation | Reference, on-demand | One worker, selected | Two workers |
 | --- | ---: | ---: | ---: |
-| Upload confirmation, fixed-delay cohort | 18 | 2.969 s | 10.165 s |
-| Thumbnails after fixed delay | 54 | 7.489 s | 23.189 s |
-| Warm small thumbnails | 18 | 61 ms | 95 ms |
-| Immediate small thumbnails | 6 | 3.401 s | 8.456 s |
-| Ordinary asset list, whole run | 346 | 102 ms | 878 ms |
+| Thumbnails after 30-second preparation window | 7.489 / 23.189 s | **0.329 / 20.491 s** | 0.334 / 11.784 s |
+| Warm small thumbnails | 61 / 95 ms | 60 / 918 ms | 59 / 198 ms |
+| Small thumbnail immediately after upload | 3.401 / 8.456 s | 8.116 / 22.723 s | 11.068 / 35.543 s |
+| Ordinary authenticated asset list | 102 / 878 ms | 95 / 715 ms | 111 / 1,200 ms |
+| Peak sampled API working set | 329 MiB | 335 MiB | 401 MiB |
+| API restarts during completed run | 0 | 0 | 0 |
 
-Quantiles use nearest rank. The asset-list distribution includes idle waiting and
-active image work; it is not an isolated saturation test. Raw private evidence is
-`background-baseline-0d84c2da9.jsonl` and the associated resource samples.
+The selected one-worker run reduced fixed-delay median latency by **95.6%** and
+p95 by **11.6%** relative to the reference. Its warm-read median was unchanged,
+but the warm-read tail and immediate-open latency worsened. Ordinary-request counts
+were 346, 392 and 303 respectively; those distributions include both active image
+work and idle preparation windows, rather than a separate saturation test.
 
-Candidate image publication passed backend race tests, PostgreSQL coordination
-checks, and build in CI run `34068976618`. GitOps revision `836f05b` stopped old writers; `f7d15df` started the candidate
-with concurrency one and backfill disabled. Migration and the production queue
-status command succeeded. Revision `d2646da` then enabled existing-image backfill.
-The final recreate strategy avoids overlapping API workers. Two initial attempts
-to change deployment strategy were rejected by Flux without replacing the old API;
-the explicit scale-down stage resolved field ownership before startup.
+For each batch of 18 thumbnail responses, total delivery times were:
+
+| Configuration | Batch 1 | Batch 2 | Batch 3 | Aggregate delivery rate |
+| --- | ---: | ---: | ---: | ---: |
+| Reference | 72.621 s | 78.861 s | 93.092 s | 0.221 thumbnails/s |
+| One worker | 16.569 s | 31.143 s | 59.404 s | 0.504 thumbnails/s |
+| Two workers | 17.712 s | 3.326 s | 24.221 s | 1.193 thumbnails/s |
+
+Delivery rate is 54 responses divided by the sum of the three read-phase durations;
+it is not isolated background-job throughput. Two workers improved this rate but
+raised ordinary-request p95 by 68% and immediate-open p95 by 56% compared with one.
+That fails the agreed condition for adopting two without hurting foreground requests.
+Sampled CPU peaks were about 480m and 502m; both settings approached the same CPU cap.
+
+Both final runs completed with no request failures. All **156** thumbnail response
+hashes matched the reference outputs and had valid JPEG signatures. The first
+notification-image one-worker attempt did fail on an upload, as detailed below;
+the completed repeat must not be read as proof that storage failures are resolved.
+
+## Method and practical limits
+
+The authenticated experiment ran from `paul` against `api.stuffstash.jsksell.com`,
+using the same six JPEG originals copied into dedicated experiment assets. Sizes
+were 3,755,993; 2,859,202; 2,790,703; 2,170,153; 2,086,071; and 2,058,024 bytes.
+Private evidence records original and response SHA-256 hashes. User originals were
+unchanged; each run deleted its own experiment assets.
+
+Each configuration received three batches of six sequential JSON/base64 uploads.
+After the last upload, the driver waited 30 seconds, then requested small, medium
+and large thumbnails with HTTP concurrency two. Warm small reads followed. A
+separate six-image cohort requested small thumbnails immediately after upload.
+An authenticated asset-list request ran roughly once per second throughout.
+
+Both final worker runs used the same driver, image, telemetry, single deployment,
+CPU/memory limits and storage. Existing-image backfill was drained first: all 277
+jobs completed, with none pending, leased or failed. One worker ran before two;
+shared production storage and time-of-run variation are not controlled. The
+small fixed corpus and three batches do not establish broad statistical certainty.
+Kubernetes working-set samples are not instantaneous allocation peaks.
+
+Baseline uploads included external readiness probes. Those probes were removed
+from final runs after timing out and adding storage traffic; they stopped before
+baseline thumbnail reads. Consequently upload timing is diagnostic, not an isolated
+before/after claim. Fixed-delay upload median/p95 was 2.969/10.165 s for the reference,
+5.897/20.113 s with one worker and 6.267/16.505 s with two.
+
+Final reads were correlated with existing API cache-source events. All 78 request
+trace IDs matched in each run: one worker produced 57 cache / 21 generated events;
+two produced 72 cache / 7 generated events, including one duplicated request trace.
+Events are not assumed to be one per request. A cache event may follow waiting for
+publication and does not prove the image was ready at request start.
+
+This measures API-visible loading, not physical mobile UI rendering. Mobile uses
+authenticated small/medium/large references; web attachment and primary-photo views
+use small references. Both benefit through the unchanged API contract without a
+frontend release. JSON uploads do not substitute for direct-upload timing tests;
+automated boundary tests cover direct-upload completion and imports.
+
+## Implementation and verification
+
+Uploads and imports durably enqueue work with attachment creation. An in-process Go
+worker claims the database queue, downloads/decodes once, and publishes small,
+medium and large derivatives incrementally. Existing images use a resumable backfill.
+The shared admission port limits foreground and background processing and gives
+foreground waiters priority. Leases, bounded retries, guarded publication, permanent
+storage-key reservations and deletion rechecks protect restart and deletion races.
+
+Readers subscribe through a publication-notification port before their first cache
+lookup. Successful publication wakes waiting readers for one lookup; they retain
+one cancellable admission attempt for on-demand fallback. The in-process notification
+adapter holds only active subscriptions and can be replaced behind the port.
+
+An intermediate polling implementation was rejected after production traces showed
+repeated 250 ms storage timeouts. Regression CI `34073300611` reproduced seven reads
+while waiting instead of one. Backend race tests, real PostgreSQL coordination tests,
+structural checks and API publication passed [CI 34073917277](https://github.com/elsell/stuffstash/actions/runs/34073917277).
+Code critic review found no blocking issue. Local builds/hooks were not run because
+of disk constraints; the relevant Go structural and test checks ran in CI.
+The separate client-telemetry job still fails on the known mobile TypeScript
+`node:module` resolution issue. No frontend telemetry release is included.
+
+The deployed image is
+`ghcr.io/elsell/stuffstash@sha256:9ea5c73cb635f826008dab4fc66f63b4d2ea50eb1a3161df2f9971b84ed7de7a`.
+GitOps `12c5f93` deployed it with one worker, `729b365` activated two for comparison,
+and `1156b0d` restores one. The single-replica deployment uses Recreate; no Deployment
+was manually patched. A prematurely started two-worker experiment was stopped when
+the old process still reported one, cleaned up and excluded. Configuration checksum
+and explicit concurrency annotation now agree with the selected setting.
+
+## Failures and remaining work
+
+The first notification-image one-worker attempt stopped in batch two on upload
+HTTP 502 after 30.571 s. Its trace recorded 27.292 s in original blob write and
+30.552 s in the HTTP operation, exceeding the configured 30-second write timeout.
+Its 24 completed thumbnail responses matched reference hashes. The owned asset was
+removed before the unchanged-protocol repeat.
+
+An earlier two-worker test during backfill also stopped on upload HTTP 502, with
+30.452 s in blob write. A prior one-worker run during backfill completed but had
+immediate-open p95 of 45.142 s. These loaded runs are not the final controlled
+comparison because older jobs differed as backfill progressed. Temporary two-CPU
+catch-up was excluded; 500m was restored before final measurements.
+
+Garage uses `nfs-csi` storage for `/var/lib/garage`. That is an investigation lead,
+not proof that NFS caused the stalls. Storage layout and HTTP timeout settings were
+not changed. Immediate-open contention and blob-storage latency need follow-up;
+raising concurrency at the current CPU limit is not supported by these results.
 
 ## Deferred observability
 
-Web and mobile telemetry rollout, physical-device rendering measurements, broader
-dependency instrumentation, alerts/SLO dashboards, and extended profiling remain
-deferred. Existing API traces, metrics, logs and profiling support this experiment.
+Web/mobile telemetry rollout, physical-device rendering measurements, broader
+dependency instrumentation, alerts and SLO dashboards, and extended profiling are
+deferred. Existing API traces, metrics, logs and profiling were sufficient to identify
+the polling issue and verify this comparison.
 
-## Loaded preliminary runs
-
-At the original 500m CPU/512Mi limit, the first candidate completed the one-worker
-run with no request failures. Fixed-delay thumbnail median/p95 were 2.378/25.045 s,
-but immediate small reads were 7.759/45.142 s. Ordinary asset-list median/p95 were
-91/712 ms, and observed working set reached 330 MiB without a restart. Only 22 of
-54 derivatives were observed ready before reads began.
-
-The two-worker run stopped during its third upload batch with HTTP 502. Its storage
-readiness probes also timed out, so readiness counts are incomplete. The failed
-request trace recorded 30.452 s in `media.blob.write` and 35.534 s in the HTTP
-operation, exceeding the configured 30-second HTTP write timeout. The API recorded
-attachment creation and did not restart. A response delivery timeout is the likely
-explanation, not a proven storage root cause. This run cannot select two as the
-production default. Its completed 36 thumbnail reads had median/p95 0.802/13.375 s;
-ordinary requests had 132/1,388 ms, with one failed upload among 15 attempts.
-
-Review confirmed that a reader could wait for the entire background job even after
-its requested small derivative was published. Regression CI `34070335781` failed
-on that behavior. Correction `d43a1ba86` passed race/PostgreSQL checks and code review,
-and image publication passed CI `34070804283`. That correction retained one admission waiter and polled for the requested
-cached derivative. A subsequent production run exposed excessive storage reads
-from polling, so it is being replaced before the final comparison.
-
-GitOps `d2dd84a` temporarily used two CPUs for one-time backfill catch-up,
-with memory still limited to 512Mi. All 277 existing-image jobs completed, with
-zero pending, leased or failed jobs. Revision `97dcef3` restored 500m CPU before
-measurements; catch-up is excluded from performance comparisons.
-
-The Garage StatefulSet and live PVC both use `nfs-csi` for `/var/lib/garage`. This
-is a concrete lead for investigating write latency, not proof that NFS caused the
-observed stall. Storage layout and HTTP timeout settings remain unchanged.
-
-## Publication notification correction
-
-A complete one-worker run of `d43a1ba86` without external readiness probes measured
-fixed-delay median/p95 of 0.285/8.613 s, but immediate small thumbnails remained
-8.012/51.920 s. Traces showed repeated cache reads hitting the 250 ms polling
-timeout. These results are intermediate, not the final concurrency decision.
-
-Regression CI `34073300611` reproduced seven storage reads while waiting instead
-of one. Revision `f66f2d965` replaces polling with an injected publication-hint
-port and an in-process adapter. Readers subscribe before their initial lookup;
-successful guarded publication wakes them for one cache lookup. Admission remains
-queued, cancellation releases late grants, and the adapter retains only active
-subscriptions. Code critic review found no blocking issue. Backend race tests, PostgreSQL
-coordination checks, structural checks and API image publication passed CI
-`34073917277`. GitOps `12c5f93` deployed the notification image with one worker.
-The new production comparison is running. The separate client-telemetry job still
-fails on the known mobile TypeScript `node:module` resolution issue; no frontend
-telemetry release is included.
+Private reproducibility evidence is under the operator's measurement directory:
+`background-baseline-0d84c2da9.jsonl`,
+`background-notify-one-repeat-f66f2d965.jsonl`, and
+`background-notify-two-confirmed-f66f2d965.jsonl`, with resource samples, cache events,
+corpus hashes and the unchanged driver. Failed and excluded attempts are retained.
