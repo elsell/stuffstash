@@ -341,7 +341,6 @@ function DashboardHeader({
           </View>
         </View>
       ) : null}
-
       <ReturnDetailsSheet
         pendingReturn={pendingReturn}
         onCancel={() => void cancelReturn()}
@@ -352,7 +351,6 @@ function DashboardHeader({
         }}
         onSave={() => void saveReturnDetails()}
       />
-
     </View>
   );
 }
