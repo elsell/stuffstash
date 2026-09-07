@@ -67,7 +67,7 @@ describe('mobile navigation contract', () => {
   it('opens grounded voice response entities through the asset detail route', () => {
     expect(voiceScreenSource).toContain("import { assetDetailHref } from './AssetDetailNavigation'");
     expect(voiceScreenSource).toContain('router.push(assetDetailHref(artifact.assetId))');
-    expect(voiceScreenSource).toMatch(/router\.dismiss\(\);\s*router\.push\(assetDetailHref\(artifact\.assetId\)\)/s);
+    expect(voiceScreenSource).toContain('navigateAfterTransientDismissal');
     expect(voiceScreenSource).not.toMatch(/artifact\.(?:href|url|route)/);
   });
 
@@ -75,7 +75,7 @@ describe('mobile navigation contract', () => {
     expect(voiceScreenSource).toContain('router.dismiss()');
     expect(voiceScreenSource).not.toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*router\.push/);
     expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
-    expect(voiceScreenSource).toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*\{\s*router\.dismiss\(\);\s*router\.push\('\/settings\/voice'\);/s);
+    expect(voiceScreenSource).toContain("() => router.push('/settings/voice')");
     expect(voiceScreenSource).not.toContain('<Modal');
     expect(homeScreenSource).not.toContain('<Modal');
     expect(browseScreenSource).not.toContain('<Modal');

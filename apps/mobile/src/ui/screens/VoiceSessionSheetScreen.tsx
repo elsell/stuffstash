@@ -32,6 +32,7 @@ import type { ParentLookupResult } from '../../application/add/ParentLookupQuery
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import type { VoiceSessionActionPlanCommand } from '../navigation/VoiceSessionPresentation';
 import { assetDetailHref } from './AssetDetailNavigation';
+import { navigateAfterTransientDismissal } from '../navigation/TransientNavigation';
 import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
   voicePlanCommandEdits,
@@ -184,12 +185,16 @@ export function VoiceSessionSheetScreen() {
         setCommandDraftState({ drafts: {} });
       }}
       onOpenProviderProfiles={() => {
-        router.dismiss();
-        router.push('/settings/voice');
+        navigateAfterTransientDismissal(
+          () => router.dismiss(),
+          () => router.push('/settings/voice')
+        );
       }}
       onOpenResponseArtifact={(artifact) => {
-        router.dismiss();
-        router.push(assetDetailHref(artifact.assetId));
+        navigateAfterTransientDismissal(
+          () => router.dismiss(),
+          () => router.push(assetDetailHref(artifact.assetId))
+        );
       }}
       onSessionMic={() => {
         void handleSessionMic();
