@@ -9,7 +9,6 @@ import (
 )
 
 type ThumbnailConfig struct {
-	ForegroundCachePollInterval                                                             time.Duration
 	CleanupRecheckInterval                                                                  time.Duration
 	BackfillEnabled                                                                         bool
 	BackfillBatchSize                                                                       int
@@ -20,7 +19,7 @@ type ThumbnailConfig struct {
 }
 
 func LoadThumbnails() (ThumbnailConfig, error) {
-	cfg := ThumbnailConfig{ForegroundCachePollInterval: 250 * time.Millisecond, CleanupRecheckInterval: time.Hour, BackfillBatchSize: 25, BackfillInterval: 5 * time.Second, WorkerEnabled: true, Concurrency: 1, MaxAttempts: 5, PollInterval: time.Second, LeaseDuration: 90 * time.Second, ProcessingTimeout: time.Minute, PublicationTimeout: 15 * time.Second, RetryBase: 5 * time.Second, RetryMax: 5 * time.Minute}
+	cfg := ThumbnailConfig{CleanupRecheckInterval: time.Hour, BackfillBatchSize: 25, BackfillInterval: 5 * time.Second, WorkerEnabled: true, Concurrency: 1, MaxAttempts: 5, PollInterval: time.Second, LeaseDuration: 90 * time.Second, ProcessingTimeout: time.Minute, PublicationTimeout: 15 * time.Second, RetryBase: 5 * time.Second, RetryMax: 5 * time.Minute}
 	for _, field := range []struct {
 		name   string
 		target *bool
@@ -50,7 +49,7 @@ func LoadThumbnails() (ThumbnailConfig, error) {
 		name   string
 		target *time.Duration
 	}{
-		{"FOREGROUND_CACHE_POLL_INTERVAL", &cfg.ForegroundCachePollInterval}, {"CLEANUP_RECHECK_INTERVAL", &cfg.CleanupRecheckInterval}, {"BACKFILL_INTERVAL", &cfg.BackfillInterval}, {"POLL_INTERVAL", &cfg.PollInterval}, {"LEASE_DURATION", &cfg.LeaseDuration}, {"PROCESSING_TIMEOUT", &cfg.ProcessingTimeout},
+		{"CLEANUP_RECHECK_INTERVAL", &cfg.CleanupRecheckInterval}, {"BACKFILL_INTERVAL", &cfg.BackfillInterval}, {"POLL_INTERVAL", &cfg.PollInterval}, {"LEASE_DURATION", &cfg.LeaseDuration}, {"PROCESSING_TIMEOUT", &cfg.ProcessingTimeout},
 		{"PUBLICATION_TIMEOUT", &cfg.PublicationTimeout}, {"RETRY_BASE", &cfg.RetryBase}, {"RETRY_MAX", &cfg.RetryMax},
 	} {
 		if value, exists := os.LookupEnv("STUFF_STASH_THUMBNAIL_" + field.name); exists {
@@ -75,7 +74,6 @@ func (c ThumbnailConfig) Validate() error {
 		name            string
 		value, min, max time.Duration
 	}{
-		{"FOREGROUND_CACHE_POLL_INTERVAL", c.ForegroundCachePollInterval, 100 * time.Millisecond, 5 * time.Second},
 		{"CLEANUP_RECHECK_INTERVAL", c.CleanupRecheckInterval, time.Minute, 30 * 24 * time.Hour},
 		{"BACKFILL_INTERVAL", c.BackfillInterval, 100 * time.Millisecond, time.Hour},
 		{"POLL_INTERVAL", c.PollInterval, 100 * time.Millisecond, time.Minute},

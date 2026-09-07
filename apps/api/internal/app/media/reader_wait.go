@@ -3,7 +3,6 @@ package media
 import (
 	"context"
 	"errors"
-	"time"
 
 	domain "github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -16,7 +15,7 @@ type readerAdmissionResult struct {
 
 // Keep one foreground waiter queued while observing incremental publication.
 // Cache checks never download the original or consume image-processing capacity.
-func (r *Reader) waitForThumbnail(ctx context.Context, key domain.StorageKey) (func(), *ports.ImageDerivative, error) {
+func (r *Reader) waitForThumbnail(ctx context.Context, key domain.StorageKey, published <-chan struct{}) (func(), *ports.ImageDerivative, error) {
 	waiting, cancel := context.WithCancel(ctx)
 	admitted := make(chan readerAdmissionResult, 1)
 	go func() {
@@ -33,8 +32,6 @@ func (r *Reader) waitForThumbnail(ctx context.Context, key domain.StorageKey) (f
 			}
 		}
 	}()
-	ticker := time.NewTicker(r.cachePollInterval)
-	defer ticker.Stop()
 	for {
 		select {
 		case result := <-admitted:
@@ -51,19 +48,16 @@ func (r *Reader) waitForThumbnail(ctx context.Context, key domain.StorageKey) (f
 			return result.release, nil, nil
 		case <-ctx.Done():
 			return nil, nil, ctx.Err()
-		case <-ticker.C:
-			// A slow storage probe must not hold a concurrently granted permit
-			// indefinitely. A probe timeout is inconclusive, not a read failure.
-			probe, stop := context.WithTimeout(ctx, r.cachePollInterval)
-			cached, err := readCachedThumbnail(probe, r.processor.blobs, key)
-			stop()
+		case <-published:
+			published = nil // One hint; a deleted cache must not cause a busy loop.
+			cached, err := readCachedThumbnail(ctx, r.processor.blobs, key)
 			if ctx.Err() != nil {
 				return nil, nil, ctx.Err()
 			}
 			if err == nil {
 				return nil, &cached, nil
 			}
-			if !errors.Is(err, ports.ErrBlobNotFound) && !errors.Is(err, context.DeadlineExceeded) {
+			if !errors.Is(err, ports.ErrBlobNotFound) {
 				return nil, nil, err
 			}
 		}

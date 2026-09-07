@@ -18,7 +18,7 @@ func TestReaderUsesForegroundAdmissionAndServesCacheWithoutCapacity(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader, err := NewReader(processor, limiter, 10*time.Millisecond)
+	reader, err := NewReader(processor, limiter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestReaderGuardRejectsAttachmentDeletedAfterAuthorization(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader, err := NewReader(processor, limiter, 10*time.Millisecond)
+	reader, err := NewReader(processor, limiter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestReaderRechecksCacheAfterWaitingForWorker(t *testing.T) {
 	}
 	defer release()
 	waiting := make(chan struct{})
-	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting}, 10*time.Millisecond)
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestReaderServesPublishedSmallBeforeBackgroundReleasesCapacity(t *testing.T
 	}
 	defer release()
 	waiting := make(chan struct{})
-	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting}, 10*time.Millisecond)
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,6 +169,7 @@ func TestReaderServesPublishedSmallBeforeBackgroundReleasesCapacity(t *testing.T
 	if err := blobs.PutBlob(ctx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte("image/jpeg")); err != nil {
 		t.Fatal(err)
 	}
+	processor.readiness.Published(key)
 	if err := <-done; err != nil {
 		t.Fatal("small waited for remaining background variants", err)
 	}
@@ -195,7 +196,7 @@ func TestReaderReleasesAdmissionGrantedDuringCacheCancellation(t *testing.T) {
 		t.Fatal(err)
 	}
 	granted := make(chan struct{})
-	reader, err := NewReader(processor, readerDelayedGrant{ImageWorkAdmission: limiter, granted: granted}, 10*time.Millisecond)
+	reader, err := NewReader(processor, readerDelayedGrant{ImageWorkAdmission: limiter, granted: granted})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,6 +222,7 @@ func TestReaderReleasesAdmissionGrantedDuringCacheCancellation(t *testing.T) {
 	if err := blobs.PutBlob(ctx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte("image/jpeg")); err != nil {
 		t.Fatal(err)
 	}
+	processor.readiness.Published(key)
 	if err := <-done; err != nil {
 		t.Fatal(err)
 	}
@@ -261,7 +263,7 @@ func TestReaderDoesNotPollStorageWhileWaiting(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer release()
-	reader, err := NewReader(processor, limiter, 10*time.Millisecond)
+	reader, err := NewReader(processor, limiter)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -213,7 +213,6 @@ Set these environment variables on the API (in `.env` for the self-host Compose 
 | `STUFF_STASH_THUMBNAIL_BACKFILL_BATCH_SIZE` | `25` | Attachment records scanned per batch. |
 | `STUFF_STASH_THUMBNAIL_BACKFILL_INTERVAL` | `5s` | Pause between scan batches. |
 | `STUFF_STASH_THUMBNAIL_MAX_ATTEMPTS` | `5` | Attempts before a job is marked failed. |
-| `STUFF_STASH_THUMBNAIL_FOREGROUND_CACHE_POLL_INTERVAL` | `250ms` | How often a waiting image read checks for a newly published thumbnail; accepts 100ms–5s. |
 
 For the initial upgrade to background thumbnails, stop every old API instance before
 running migrations and starting the new API, keeping backfill disabled. This requires

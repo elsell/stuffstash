@@ -69,24 +69,3 @@ func TestCleanupRecheckIntervalBounds(t *testing.T) {
 		t.Fatal("too frequent recheck accepted")
 	}
 }
-
-func TestForegroundCachePollingConfiguration(t *testing.T) {
-	cfg, err := LoadThumbnails()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if cfg.ForegroundCachePollInterval != 250*time.Millisecond {
-		t.Fatal("unexpected cache polling default")
-	}
-	for _, value := range []string{"0s", "99ms", "6s", "bad"} {
-		t.Setenv("STUFF_STASH_THUMBNAIL_FOREGROUND_CACHE_POLL_INTERVAL", value)
-		if _, err := LoadThumbnails(); err == nil {
-			t.Fatal("unsafe cache polling accepted", value)
-		}
-	}
-	t.Setenv("STUFF_STASH_THUMBNAIL_FOREGROUND_CACHE_POLL_INTERVAL", "500ms")
-	cfg, err = LoadThumbnails()
-	if err != nil || cfg.ForegroundCachePollInterval != 500*time.Millisecond {
-		t.Fatal("cache polling setting ignored", err)
-	}
-}

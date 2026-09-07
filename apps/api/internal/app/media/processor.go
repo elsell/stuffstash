@@ -13,6 +13,7 @@ import (
 )
 
 type Processor struct {
+	readiness          ports.ThumbnailReadiness
 	attachments        ports.AttachmentReader
 	blobs              ports.BlobStorage
 	images             ports.ImageBatchProcessor
@@ -22,11 +23,11 @@ type Processor struct {
 
 var _ ports.ThumbnailJobProcessor = (*Processor)(nil)
 
-func NewProcessor(attachments ports.AttachmentReader, blobs ports.BlobStorage, images ports.ImageBatchProcessor, guard ports.ThumbnailPublicationGuard, publicationTimeout time.Duration) (*Processor, error) {
-	if attachments == nil || blobs == nil || images == nil || guard == nil || publicationTimeout <= 0 {
+func NewProcessor(attachments ports.AttachmentReader, blobs ports.BlobStorage, images ports.ImageBatchProcessor, guard ports.ThumbnailPublicationGuard, readiness ports.ThumbnailReadiness, publicationTimeout time.Duration) (*Processor, error) {
+	if attachments == nil || blobs == nil || images == nil || guard == nil || readiness == nil || publicationTimeout <= 0 {
 		return nil, errors.New("thumbnail processor dependencies and publication timeout are required")
 	}
-	return &Processor{attachments: attachments, blobs: blobs, images: images, guard: guard, publicationTimeout: publicationTimeout}, nil
+	return &Processor{readiness: readiness, attachments: attachments, blobs: blobs, images: images, guard: guard, publicationTimeout: publicationTimeout}, nil
 }
 
 // ProcessThumbnailJob is called with shared image admission already held by Worker.
@@ -84,6 +85,7 @@ func (p *Processor) generate(ctx context.Context, attachment domain.Attachment, 
 		if err != nil {
 			return err
 		}
+		p.readiness.Published(key)
 		if ready != nil {
 			ready(derivative)
 		}

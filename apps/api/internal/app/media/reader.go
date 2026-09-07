@@ -3,25 +3,23 @@ package media
 import (
 	"context"
 	"errors"
-	"time"
 
 	domain "github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type Reader struct {
-	processor         *Processor
-	admission         ports.ImageWorkAdmission
-	cachePollInterval time.Duration
+	processor *Processor
+	admission ports.ImageWorkAdmission
 }
 
 var _ ports.ThumbnailReader = (*Reader)(nil)
 
-func NewReader(processor *Processor, admission ports.ImageWorkAdmission, cachePollInterval time.Duration) (*Reader, error) {
-	if processor == nil || admission == nil || cachePollInterval <= 0 {
+func NewReader(processor *Processor, admission ports.ImageWorkAdmission) (*Reader, error) {
+	if processor == nil || admission == nil {
 		return nil, errors.New("thumbnail reader requires processor and shared admission")
 	}
-	return &Reader{processor: processor, admission: admission, cachePollInterval: cachePollInterval}, nil
+	return &Reader{processor: processor, admission: admission}, nil
 }
 
 func (r *Reader) ReadThumbnail(ctx context.Context, attachment domain.Attachment, variant domain.ThumbnailVariant) (ports.ImageDerivative, bool, error) {
@@ -36,12 +34,14 @@ func (r *Reader) ReadThumbnail(ctx context.Context, attachment domain.Attachment
 	if err != nil {
 		return ports.ImageDerivative{}, false, err
 	}
+	published, unsubscribe := r.processor.readiness.Watch(key)
+	defer unsubscribe()
 	if cached, err := readCachedThumbnail(ctx, r.processor.blobs, key); err == nil {
 		return cached, true, nil
 	} else if !errors.Is(err, ports.ErrBlobNotFound) {
 		return ports.ImageDerivative{}, false, err
 	}
-	release, cached, err := r.waitForThumbnail(ctx, key)
+	release, cached, err := r.waitForThumbnail(ctx, key, published)
 	if err != nil {
 		return ports.ImageDerivative{}, false, err
 	}

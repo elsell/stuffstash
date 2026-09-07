@@ -16,11 +16,11 @@ func buildThumbnailRuntime(repositories repositories, cfg config.ThumbnailConfig
 	if err != nil {
 		return nil, nil, err
 	}
-	processor, err := mediaapp.NewProcessor(repositories.attachments, repositories.blobs, repositories.imageBatch, repositories.thumbnailGuard, cfg.PublicationTimeout)
+	processor, err := mediaapp.NewProcessor(repositories.attachments, repositories.blobs, repositories.imageBatch, repositories.thumbnailGuard, worklimit.NewThumbnailReadiness(), cfg.PublicationTimeout)
 	if err != nil {
 		return nil, nil, err
 	}
-	reader, err := mediaapp.NewReader(processor, admission, cfg.ForegroundCachePollInterval)
+	reader, err := mediaapp.NewReader(processor, admission)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/adapters/worklimit"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	domain "github.com/stuffstash/stuff-stash/internal/domain/media"
@@ -124,7 +125,7 @@ func processorFixture(t *testing.T) (*Processor, *processorSource, *memory.Store
 		t.Fatal(err)
 	}
 	guard := &processorGuard{source: source}
-	processor, err := NewProcessor(source, blobs, blobstore.StandardImageProcessor{}, guard, time.Second)
+	processor, err := NewProcessor(source, blobs, blobstore.StandardImageProcessor{}, guard, worklimit.NewThumbnailReadiness(), time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,4 +196,37 @@ func (b *processorFailingBlobs) PutBlob(ctx context.Context, key domain.StorageK
 		return errors.New("controlled metadata storage failure")
 	}
 	return b.BlobStorage.PutBlob(ctx, key, kind, data)
+}
+
+func TestProcessorNotifiesOnlySuccessfullyPublishedVariants(t *testing.T) {
+	processor, source, _, guard, claim := processorFixture(t)
+	smallKey, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	mediumKey, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantMedium)
+	small, stopSmall := processor.readiness.Watch(smallKey)
+	defer stopSmall()
+	medium, stopMedium := processor.readiness.Watch(mediumKey)
+	defer stopMedium()
+	guard.failAt = 2
+	if err := processor.ProcessThumbnailJob(context.Background(), claim); err == nil {
+		t.Fatal("publication failure hidden")
+	}
+	select {
+	case <-small:
+	default:
+		t.Fatal("published small did not notify")
+	}
+	select {
+	case <-medium:
+		t.Fatal("failed publication notified")
+	default:
+	}
+	guard.failAt = 0
+	if err := processor.ProcessThumbnailJob(context.Background(), claim); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-medium:
+	default:
+		t.Fatal("repaired publication did not notify")
+	}
 }
