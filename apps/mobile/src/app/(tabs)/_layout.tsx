@@ -3,7 +3,7 @@ import { VoiceBottomAccessory } from '../../ui/navigation/VoiceBottomAccessory';
 
 export default function TabLayout() {
   return (
-    <NativeTabs minimizeBehavior="onScrollDown">
+    <NativeTabs>
       <NativeTabs.BottomAccessory>
         <VoiceBottomAccessory />
       </NativeTabs.BottomAccessory>

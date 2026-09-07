@@ -43,6 +43,7 @@ describe('mobile navigation contract', () => {
     expect(tabLayoutSource).toContain('<NativeTabs.BottomAccessory>');
     expect(tabLayoutSource).toContain('<VoiceBottomAccessory />');
     expect(tabLayoutSource).toContain('</NativeTabs.BottomAccessory>');
+    expect(tabLayoutSource).not.toContain('minimizeBehavior');
   });
 
   it('owns Add as a non-tab stack route', () => {
