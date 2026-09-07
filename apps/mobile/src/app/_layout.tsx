@@ -102,7 +102,7 @@ function ThemedApp() {
             contentStyle: { backgroundColor: palette.background },
             headerShown: false,
             presentation: 'formSheet',
-            sheetAllowedDetents: [0.92],
+            sheetAllowedDetents: 'fitToContents',
             sheetCornerRadius: 24,
             sheetGrabberVisible: true
           }}

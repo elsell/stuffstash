@@ -50,7 +50,11 @@ describe('mobile navigation contract', () => {
     expect(appSources).toHaveProperty('../../app/add.tsx');
     expect(appSources).not.toHaveProperty('../../app/(tabs)/add.tsx');
     expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']add["']/);
+    expect(rootLayoutSource).toContain("sheetAllowedDetents: 'fitToContents'");
     expect(addScreenSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(addScreenSource).toContain('nestedScrollEnabled');
+    expect(addScreenSource).toContain('parentMenuResults');
+    expect(addScreenSource).toContain('onSearchFocus');
     expect(addScreenSource).toContain('accessibilityRole="header"');
   });
 
