@@ -77,6 +77,8 @@ describe('mobile navigation contract', () => {
     expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
     expect(voiceScreenSource).toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*\{\s*router\.dismiss\(\);\s*router\.push\('\/settings\/voice'\);/s);
     expect(voiceScreenSource).not.toContain('<Modal');
+    expect(homeScreenSource).not.toContain('<Modal');
+    expect(browseScreenSource).not.toContain('<Modal');
     expect(tagColorPickerSource).not.toContain('<Modal');
     expect(customizationFieldsSource).not.toContain('<Modal');
     expect(mapScreenSource).not.toContain('InventoryMapInfoSheet');

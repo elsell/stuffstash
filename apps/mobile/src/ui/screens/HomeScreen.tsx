@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { ChevronDown, Plus, UserCircle } from 'lucide-react-native';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -372,14 +371,8 @@ function ReturnDetailsSheet({
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
   return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onCancel}
-      presentationStyle="pageSheet"
-      transparent={false}
-      visible={pendingReturn !== undefined}
-    >
-      <SafeAreaView style={styles.returnSheet} edges={['top', 'left', 'right', 'bottom']}>
+    pendingReturn ? (
+      <View style={styles.returnSheet}>
         <View style={styles.returnSheetHeader}>
           <Text style={styles.returnSheetTitle}>Return details</Text>
           <Text style={styles.returnSheetSubtitle} numberOfLines={2}>
@@ -416,7 +409,7 @@ function ReturnDetailsSheet({
             <Text style={styles.returnSheetSaveText}>{pendingReturn?.isSaving ? 'Saving...' : 'Save'}</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
-    </Modal>
+      </View>
+    ) : null
   );
 }

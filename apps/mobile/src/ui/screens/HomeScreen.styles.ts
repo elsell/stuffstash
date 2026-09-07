@@ -126,8 +126,11 @@ export function createHomeScreenStyles(colors: MobileColorPalette) {
     },
     returnSheet: {
       backgroundColor: colors.background,
-      flex: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      borderWidth: 1,
       gap: spacing.md,
+      marginTop: spacing.lg,
       padding: spacing.lg
     },
     returnSheetHeader: {
@@ -149,7 +152,6 @@ export function createHomeScreenStyles(colors: MobileColorPalette) {
       borderRadius: radius.md,
       borderWidth: 1,
       color: colors.text,
-      flex: 1,
       fontSize: 16,
       minHeight: 160,
       padding: spacing.md
