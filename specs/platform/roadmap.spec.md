@@ -29,9 +29,11 @@ per-photo ownership. The controlled one-worker 500m/512Mi comparison reduced
 back-to-back immediate-open median from 8.04 to 4.82 seconds, but the slowest of six
 samples increased from 12.50 to 13.77 seconds. Peak memory was 341 MiB. Preserve
 this limit and worker count; the evidence does not justify more memory yet.
-Scheduler validation `34080191156` and full PR CI `34080576863` passed; code critic
-review found no blocker. Complete PR 66, the release pipeline and released-image
-GitOps deployment. See `docs/reports/thumbnail-scheduling-2026-09-07.md` for
+Scheduler validation `34080191156` and final PR CI `34080988756` passed; code critic
+review found no blocker. PR 66 merged as `095e5ede9`; v0.20.0 is published and its
+API/web digests are deployed through GitOps `8b7b185`. All 18 released-image
+thumbnail variants matched reference hashes; unauthenticated access returned 401,
+and the queue had no pending, leased or failed jobs. See `docs/reports/thumbnail-scheduling-2026-09-07.md` for
 reproduction, trace evidence and the unresolved long-wait counterexample.
 
 Storage-path stalls persist independently of image scheduling. Read-only node or
