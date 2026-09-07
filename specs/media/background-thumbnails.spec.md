@@ -364,3 +364,9 @@ Operational catch-up may temporarily increase API CPU using verified spare node
 capacity, through GitOps. Restore the reference resource limits before measured
 comparisons; do not attribute catch-up performance to the application change or
 use it to select the normal worker-concurrency default.
+
+For production comparisons, prefer existing API cache-source events over additional
+object-store readiness traffic. Correlate successful thumbnail requests with their
+cache/generated events and report request latency. A cache event may follow waiting
+for a worker, so it does not establish readiness at request start. Preserve aborted
+probe experiments as incomplete evidence; do not include them as completed runs.

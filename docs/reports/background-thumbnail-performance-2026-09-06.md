@@ -17,16 +17,18 @@ The originals are unchanged. Photo sizes are 3,755,993, 2,859,202, 2,790,703,
 
 Each configuration receives three batches of six sequential JSON/base64 uploads.
 After the final upload in each batch, the driver waits 30 seconds before requesting
-all three thumbnail sizes with HTTP concurrency two. A read-only object metadata
-probe observes derivative readiness without triggering foreground image generation.
+all three thumbnail sizes with HTTP concurrency two. Preliminary runs used read-only object metadata probes for readiness. Those probes
+proved unreliable, including through a local Kubernetes tunnel, and added storage
+traffic. Final runs omit them and correlate request trace IDs with existing API
+cache/generated events instead. A cache event can follow waiting for a worker; it
+does not establish readiness at request start.
 A separate six-image cohort requests the small thumbnail immediately after each
 upload. Warm small-thumbnail reads follow the fixed-delay cohort. An authenticated
 asset-list request runs roughly once per second throughout the experiment.
 
 The driver records each request's duration, status and trace ID, upload confirmation,
-observed readiness, and cohort boundaries. Kubernetes resource metrics and restart
-status are sampled alongside it. Readiness is an upper bound affected by the probe
-interval and object HEAD latency. Kubernetes metrics are sampled working-set values,
+cohort boundaries, and cache-source events. Kubernetes resource metrics and restart
+status are sampled alongside it. Preliminary readiness observations are incomplete where probes failed. Kubernetes metrics are sampled working-set values,
 not proof of the instantaneous peak allocation.
 
 The mobile adapter selects small, medium and large authenticated thumbnail references;
@@ -38,6 +40,9 @@ This measures API-visible image loading and background preparation, not mobile U
 render time. JSON/base64 upload timing does not substitute for a direct-upload timing
 measurement. Automated boundary tests cover direct-upload completion and imports.
 The small, fixed corpus cannot establish performance for every phone image size.
+Baseline uploads had concurrent readiness probes; final uploads do not, so upload
+timing differences are diagnostic rather than an isolated before/after claim.
+Thumbnail reads in both protocols start after a 30-second post-upload wait.
 
 The first candidate comparison runs while the existing-image queue remains nonempty.
 This is a sustained-load check, not a quiet-queue comparison: both worker settings
@@ -103,3 +108,7 @@ and cancellation that joins and releases a late permit.
 GitOps `d2dd84a` deploys that correction and temporarily uses two CPUs for one-time
 backfill catch-up, with memory still limited to 512Mi. Catch-up is excluded from
 performance comparisons. Restore 500m CPU before final measurements.
+
+The Garage StatefulSet and live PVC both use `nfs-csi` for `/var/lib/garage`. This
+is a concrete lead for investigating write latency, not proof that NFS caused the
+observed stall. Storage layout and HTTP timeout settings remain unchanged.
