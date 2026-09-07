@@ -189,3 +189,52 @@ export batches. It assumes the standard OTLP-to-Prometheus metric-name mapping;
 runtime and duration metric mappings have been verified against Grafana Cloud.
 The thumbnail counter mapping awaits an authenticated image workload. Use Tempo, Loki,
 and Profiles to inspect the corresponding service and time window.
+
+## Background Thumbnails
+
+The API prepares small, medium, and large thumbnails after an image upload or import.
+Uploads finish before thumbnail processing. Until a thumbnail is ready, opening it
+can still require processing; subsequent reads use the stored result. Original
+images and authenticated image URLs stay the same.
+
+Workers run inside the API and keep their queue in the database. Restarting the API
+does not lose pending work. Start with the default concurrency of one; increase it
+to two only after checking memory use and API response times with your own photos.
+Foreground generation and background workers share this limit within each API
+process. Large camera photos can use much more memory than their compressed files.
+
+Set these environment variables on the API (in `.env` for the self-host Compose setup):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_THUMBNAIL_CONCURRENCY` | `1` | Concurrent image jobs per API process; accepts 1–8. |
+| `STUFF_STASH_THUMBNAIL_WORKER_ENABLED` | `true` | Process queued images in the background. |
+| `STUFF_STASH_THUMBNAIL_BACKFILL_ENABLED` | `false` | Queue images uploaded before this feature. |
+| `STUFF_STASH_THUMBNAIL_BACKFILL_BATCH_SIZE` | `25` | Attachment records scanned per batch. |
+| `STUFF_STASH_THUMBNAIL_BACKFILL_INTERVAL` | `5s` | Pause between scan batches. |
+| `STUFF_STASH_THUMBNAIL_MAX_ATTEMPTS` | `5` | Attempts before a job is marked failed. |
+
+For an upgrade, run migrations and replace every API instance first, keeping backfill
+disabled. Then enable backfill and restart the API through your normal deployment
+process. The scan saves its progress and stops when complete. Newly uploaded images
+are processed ahead of backfill jobs. Disabling the worker pauses queued processing;
+it does not disable foreground generation or periodic blob cleanup.
+
+Inspect the queue from the running container:
+
+```sh
+docker compose -f compose.selfhost.yaml exec app /app/stuff-stash thumbnail-jobs status
+```
+
+The JSON result reports pending, leased, failed and completed counts, the oldest
+pending age in seconds, and whether backfill has completed. It contains no image
+identifiers. After resolving a storage or processing problem, retry a bounded batch:
+
+```sh
+docker compose -f compose.selfhost.yaml exec app /app/stuff-stash thumbnail-jobs retry-failed --limit 100
+```
+
+Retry accepts 1–1000 failed jobs and resets their attempt count. It leaves active and
+completed jobs alone. These commands use the container's database credentials and
+write operational logs to stderr. The command entrypoint is covered by CI; the
+Compose examples have not yet been exercised against a released image.

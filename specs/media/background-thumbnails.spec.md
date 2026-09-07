@@ -327,3 +327,14 @@ Operator command logs go to stderr; stdout contains exactly one JSON result. Ver
 this through the actual command entrypoint, not only an injected test observer.
 SQLite status/retry opens an existing file in read-write mode without automatically
 creating a database or running migrations. Schema setup remains an explicit operation.
+
+## Release validation
+
+The API image publication gate runs race tests for all application packages, the
+command entrypoint, media domain, affected adapters and bootstrap, plus PostgreSQL
+coordination tests. This covers attachment creation and asset deletion outside the
+media application package. Deploy with backfill disabled until all API replicas use
+the queue-aware revision; then enable the resumable scan in a separate GitOps change.
+Compare concurrency one and two against the same image corpus and resource limits,
+recording upload confirmation, thumbnail readiness, ordinary API latency, memory
+and restarts. Record immediate-open and already-ready reads separately.

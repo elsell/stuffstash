@@ -58,7 +58,7 @@ jobs:
           mapfile -d '' changed < <(git diff --name-only -z --diff-filter=ACMR 0d84c2da9e9e6dcde66988f749dbc8f4ba8c429e -- '*.go')
           if ((${#changed[@]})); then scripts/check-go-structural-rules.sh "${changed[@]}"; fi
       - name: Test telemetry behavior
-        run: go test -race -count=1 ./apps/api/cmd/stuff-stash ./apps/api/internal/domain/media ./apps/api/internal/app/media ./apps/api/internal/adapters/gormstore ./apps/api/internal/adapters/memory ./apps/api/internal/adapters/worklimit ./apps/api/internal/adapters/blobstore ./apps/api/internal/app/clienttelemetry ./apps/api/internal/adapters/observability ./apps/api/internal/config ./apps/api/internal/adapters/httpserver ./apps/api/cmd/stuff-stash/internal/bootstrap
+        run: go test -race -count=1 ./apps/api/cmd/stuff-stash ./apps/api/internal/domain/media ./apps/api/internal/app/... ./apps/api/internal/adapters/gormstore ./apps/api/internal/adapters/memory ./apps/api/internal/adapters/worklimit ./apps/api/internal/adapters/blobstore ./apps/api/internal/app/clienttelemetry ./apps/api/internal/adapters/observability ./apps/api/internal/config ./apps/api/internal/adapters/httpserver ./apps/api/cmd/stuff-stash/internal/bootstrap
   collector-probe:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04

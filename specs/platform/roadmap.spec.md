@@ -26,7 +26,10 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 The approved next image-performance work is durable background thumbnail generation
 with an in-process Go worker, a database queue and shared foreground-priority
 admission. Follow `specs/media/background-thumbnails.spec.md`; benchmark concurrency
-one versus two before choosing the deployment default. Implementation is in progress.
+one versus two before choosing the deployment default. Queue, workers, guarded
+publication, resumable backfill, deletion rechecks and operator commands are
+implemented. API race and PostgreSQL checks passed CI `34068507871`; broader
+application validation, GitOps rollout and production comparison remain pending.
 
 The prioritized image-performance comparison is complete on `codex/media-observability`.
 Existing API tracing, metrics, logs and profiling were deployed through infra GitOps.
