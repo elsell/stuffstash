@@ -50,6 +50,7 @@ import {
 import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapColumnViewModel } from './InventoryMapPresentation';
 import { addHereRouteParams } from './AddAssetInitialParent';
+import { assetDetailHref } from './AssetDetailNavigation';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
