@@ -112,6 +112,7 @@ function ScopedAddAssetScreen({
   const feedback = useAppFeedback();
   const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
+  const formScrollRef = useRef<ScrollView>(null);
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [draftContext, setDraftContext] = useState<AddAssetDraftContext | undefined>();
   const [title, setTitle] = useState(emptyDraft.title);
@@ -462,6 +463,7 @@ function ScopedAddAssetScreen({
         </Pressable>
       </View>
       <ScrollView
+        ref={formScrollRef}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: safeAreaInsets.bottom + spacing.lg }
@@ -543,6 +545,9 @@ function ScopedAddAssetScreen({
                     setParentAssetId(undefined);
                     setCreatedParent(undefined);
                     setIsParentMenuOpen(true);
+                  }}
+                  onSearchFocus={() => {
+                    setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 0);
                   }}
                   onCreateParent={createParent}
                   onOpenChange={setIsParentMenuOpen}
@@ -894,6 +899,7 @@ function ParentPicker({
   readonly onChangeQuery: (value: string) => void;
   readonly onCreateParent: () => void;
   readonly onOpenChange: (isOpen: boolean) => void;
+  readonly onSearchFocus: () => void;
   readonly onSelectParent: (parent: ParentSelection | undefined) => void;
   readonly parentAssetId: string | undefined;
   readonly query: string;
@@ -937,56 +943,67 @@ function ParentPicker({
             accessibilityLabel="Search parent"
             autoFocus
             onChangeText={onChangeQuery}
+            onFocus={onSearchFocus}
             placeholder="Search or type new place"
             placeholderTextColor={colors.textMuted}
             style={styles.input}
             value={query}
           />
-          {canCreateParent ? (
-            <Pressable
-              accessibilityRole="button"
-              disabled={isCreatingParent}
-              onPress={onCreateParent}
-              style={[styles.createParentButton, isCreatingParent ? styles.disabledButton : null]}
-            >
-              {isCreatingParent ? (
-                <ActivityIndicator color={colors.action} />
-              ) : (
-                <Text style={styles.createParentText}>Create "{query.trim()}" as a place</Text>
-              )}
-            </Pressable>
-          ) : null}
-          {createdParent ? (
+          <ScrollView
+            automaticallyAdjustKeyboardInsets
+            contentContainerStyle={styles.parentMenuResultsContent}
+            keyboardDismissMode={appKeyboardDismissMode()}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
+            style={styles.parentMenuResults}
+          >
+            {canCreateParent ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={isCreatingParent}
+                onPress={onCreateParent}
+                style={[styles.createParentButton, isCreatingParent ? styles.disabledButton : null]}
+              >
+                {isCreatingParent ? (
+                  <ActivityIndicator color={colors.action} />
+                ) : (
+                  <Text style={styles.createParentText}>Create "{query.trim()}" as a place</Text>
+                )}
+              </Pressable>
+            ) : null}
+            {createdParent ? (
+              <ParentOption
+                isSelected
+                label={createdParent.title}
+                leading="created"
+                meta="Place created"
+                onPress={() => onSelectParent(createdParent)}
+              />
+            ) : null}
             <ParentOption
-              isSelected
-              label={createdParent.title}
-              leading="created"
-              meta="Place created"
-              onPress={() => onSelectParent(createdParent)}
+              identityKind="inventory"
+              isSelected={parentAssetId === undefined && query.trim().length === 0}
+              label="No parent"
+              meta="Top level in this inventory"
+              onPress={() => onSelectParent(undefined)}
             />
-          ) : null}
-          <ParentOption
-            identityKind="inventory"
-            isSelected={parentAssetId === undefined && query.trim().length === 0}
-            label="No parent"
-            meta="Top level in this inventory"
-            onPress={() => onSelectParent(undefined)}
-          />
-          {matches.filter((parent) => parent.id !== createdParentId).map((parent) => (
-            <ParentOption
-              disabled={parent.canSelectAsParent === false}
-              isSelected={parentAssetId === parent.id}
-              key={parent.id}
-              label={parent.title}
-              meta={parent.disabledReason ?? `${parent.selectionHint} · ${parent.subtitle}`}
-              onPress={() => {
-                if (parent.canSelectAsParent === false) {
-                  return;
-                }
-                onSelectParent(parent);
-              }}
-            />
-          ))}
+            {matches.filter((parent) => parent.id !== createdParentId).map((parent) => (
+              <ParentOption
+                disabled={parent.canSelectAsParent === false}
+                isSelected={parentAssetId === parent.id}
+                key={parent.id}
+                label={parent.title}
+                meta={parent.disabledReason ?? `${parent.selectionHint} · ${parent.subtitle}`}
+                onPress={() => {
+                  if (parent.canSelectAsParent === false) {
+                    return;
+                  }
+                  onSelectParent(parent);
+                }}
+              />
+            ))}
+          </ScrollView>
         </View>
       ) : null}
       {selectedParent?.willPromoteToContainer ? (
@@ -1407,9 +1424,18 @@ function createStyles(colors: MobileColorPalette) {
   },
   parentMenu: {
     backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderWidth: 1,
     borderRadius: radius.md,
     marginTop: spacing.xs,
+    maxHeight: 340,
     padding: spacing.xs
+  },
+  parentMenuResults: {
+    maxHeight: 260
+  },
+  parentMenuResultsContent: {
+    paddingBottom: spacing.xs
   },
   parentOption: {
     alignItems: 'center',

@@ -91,6 +91,14 @@ gesture-driven containment exploration.
   location root.
 - Add and edit forms must keep their primary commit action visible above the
   keyboard and must use keyboard-aware scrolling to the focused field.
+- The Add form's parent picker must keep its search field visible while typing
+  and provide an independently scrollable results area when the keyboard
+  reduces the available sheet height. Creating a new parent must remain
+  reachable without relying on content hidden behind the keyboard.
+- The Add form must use the available form-sheet height intentionally: its
+  header, context, photo affordance, name, parent, details, and commit action
+  should read as one compact task rather than a sparse stack surrounded by
+  unexplained blank space.
 - Every interactive control must have a 44-point minimum target and a
   non-color selected, disabled, loading, and error state.
 - Every transient surface must provide an explicit title, dismissal action,
