@@ -992,7 +992,7 @@ describe('asset edit presentation helpers', () => {
     })).toEqual({
       kindLabel: 'Container',
       customTypeLabel: 'Documents',
-      helperText: 'Kind and type changes need a future conversion flow.'
+      helperText: 'Kind and type are fixed after creation.'
     });
   });
 });

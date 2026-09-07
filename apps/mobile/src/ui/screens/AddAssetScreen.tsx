@@ -520,7 +520,7 @@ function ScopedAddAssetScreen({
                   photos={selectedPhotos}
                 />
 
-                <Text style={styles.fieldLabel}>What is it?</Text>
+                <Text style={styles.fieldLabel}>Name</Text>
                 <AppTextInput
                   accessibilityLabel="Asset name"
                   onChangeText={setTitle}

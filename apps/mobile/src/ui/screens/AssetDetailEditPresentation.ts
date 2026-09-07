@@ -95,6 +95,6 @@ export function assetEditContext(
   return {
     kindLabel: asset.kindLabel,
     customTypeLabel: asset.customTypeLabel,
-    helperText: 'Kind and type changes need a future conversion flow.'
+    helperText: 'Kind and type are fixed after creation.'
   };
 }
