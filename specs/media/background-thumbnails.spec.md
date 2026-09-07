@@ -344,3 +344,18 @@ running migrations and starting the queue-aware API. A rolling overlap allows ol
 writes after reservation seeding; thumbnail backfill alone cannot repair this gap.
 The single-deployment production rollout uses `Recreate`, accepting a brief API
 interruption. Keep backfill disabled through this migration/startup step.
+
+## Foreground reads during incremental publication
+
+A foreground reader waiting for shared image capacity must be able to serve its
+requested derivative as soon as the stored derivative and metadata are readable,
+even if a background job still holds capacity for the remaining variants. Keep one
+cancellable admission attempt queued to preserve foreground FIFO order; recheck
+only the requested derivative while waiting. Do not download or decode the original
+without admission. Bound rechecks with environment-backed
+`STUFF_STASH_THUMBNAIL_FOREGROUND_CACHE_POLL_INTERVAL` (default 250ms, 100ms–5s).
+When cache readiness wins, cancel and join the admission attempt and release any
+permit granted concurrently. Request cancellation must also join and release it.
+This improves same-image publication waits; it cannot accelerate an ungenerated
+image waiting behind unrelated work. Verify early publication, late grant cleanup,
+and cancellation through real admission and blob-storage fakes.

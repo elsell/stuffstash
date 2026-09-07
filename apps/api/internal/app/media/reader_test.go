@@ -129,3 +129,60 @@ func (a readerAdmissionSignal) Acquire(ctx context.Context, priority ports.Image
 	close(a.waiting)
 	return a.ImageWorkAdmission.Acquire(ctx, priority)
 }
+
+func TestReaderServesPublishedSmallBeforeBackgroundReleasesCapacity(t *testing.T) {
+	processor, source, blobs, _, _ := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	waiting := make(chan struct{})
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		value, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		if err == nil && (!cached || string(value.Content) != "ready-small") {
+			err = errors.New("published small was not served")
+		}
+		done <- err
+	}()
+	select {
+	case <-waiting:
+	case <-ctx.Done():
+		t.Fatal("reader did not wait")
+	}
+	key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	if err := blobs.PutBlob(ctx, key, domain.ContentType("image/jpeg"), []byte("ready-small")); err != nil {
+		t.Fatal(err)
+	}
+	if err := blobs.PutBlob(ctx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte("image/jpeg")); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err != nil {
+		t.Fatal("small waited for remaining background variants", err)
+	}
+	blocked, stop := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer stop()
+	if accidentalRelease, err := limiter.Acquire(blocked, ports.ImageWorkForeground); err == nil {
+		accidentalRelease()
+		t.Fatal("reader released background capacity")
+	}
+	release()
+	available, stopAvailable := context.WithTimeout(context.Background(), time.Second)
+	defer stopAvailable()
+	permit, err := limiter.Acquire(available, ports.ImageWorkForeground)
+	if err != nil {
+		t.Fatal("reader leaked capacity", err)
+	}
+	permit()
+}
