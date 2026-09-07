@@ -17,7 +17,7 @@ func TestReaderUsesForegroundAdmissionAndServesCacheWithoutCapacity(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader, err := NewReader(processor, limiter)
+	reader, err := NewReader(processor, limiter, 10*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestReaderGuardRejectsAttachmentDeletedAfterAuthorization(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader, err := NewReader(processor, limiter)
+	reader, err := NewReader(processor, limiter, 10*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestReaderRechecksCacheAfterWaitingForWorker(t *testing.T) {
 	}
 	defer release()
 	waiting := make(chan struct{})
-	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting}, 10*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func TestReaderServesPublishedSmallBeforeBackgroundReleasesCapacity(t *testing.T
 	}
 	defer release()
 	waiting := make(chan struct{})
-	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting})
+	reader, err := NewReader(processor, readerAdmissionSignal{ImageWorkAdmission: limiter, waiting: waiting}, 10*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,7 +194,7 @@ func TestReaderReleasesAdmissionGrantedDuringCacheCancellation(t *testing.T) {
 		t.Fatal(err)
 	}
 	granted := make(chan struct{})
-	reader, err := NewReader(processor, readerDelayedGrant{ImageWorkAdmission: limiter, granted: granted})
+	reader, err := NewReader(processor, readerDelayedGrant{ImageWorkAdmission: limiter, granted: granted}, 10*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}

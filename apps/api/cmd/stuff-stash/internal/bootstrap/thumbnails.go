@@ -20,7 +20,7 @@ func buildThumbnailRuntime(repositories repositories, cfg config.ThumbnailConfig
 	if err != nil {
 		return nil, nil, err
 	}
-	reader, err := mediaapp.NewReader(processor, admission)
+	reader, err := mediaapp.NewReader(processor, admission, cfg.ForegroundCachePollInterval)
 	if err != nil {
 		return nil, nil, err
 	}
