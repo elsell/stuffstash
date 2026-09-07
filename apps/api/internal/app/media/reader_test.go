@@ -3,6 +3,7 @@ package media
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -245,4 +246,41 @@ func (a readerDelayedGrant) Acquire(ctx context.Context, priority ports.ImageWor
 	close(a.granted)
 	<-ctx.Done()
 	return release, nil
+}
+
+func TestReaderDoesNotPollStorageWhileWaiting(t *testing.T) {
+	processor, source, blobs, _, _ := processorFixture(t)
+	counted := &readerCountingBlobs{BlobStorage: blobs}
+	processor.blobs = counted
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release, err := limiter.Acquire(context.Background(), ports.ImageWorkBackground)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	reader, err := NewReader(processor, limiter, 10*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Millisecond)
+	defer cancel()
+	if _, _, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal(err)
+	}
+	if got := counted.reads.Load(); got != 1 {
+		t.Fatalf("waiting performed %d storage reads; want only initial cache lookup", got)
+	}
+}
+
+type readerCountingBlobs struct {
+	ports.BlobStorage
+	reads atomic.Int64
+}
+
+func (b *readerCountingBlobs) GetBlob(ctx context.Context, key domain.StorageKey) ([]byte, error) {
+	b.reads.Add(1)
+	return b.BlobStorage.GetBlob(ctx, key)
 }

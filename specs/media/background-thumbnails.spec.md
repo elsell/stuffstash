@@ -348,17 +348,27 @@ interruption. Keep backfill disabled through this migration/startup step.
 ## Foreground reads during incremental publication
 
 A foreground reader waiting for shared image capacity must be able to serve its
-requested derivative as soon as the stored derivative and metadata are readable,
-even if a background job still holds capacity for the remaining variants. Keep one
-cancellable admission attempt queued to preserve foreground FIFO order; recheck
-only the requested derivative while waiting. Do not download or decode the original
-without admission. Bound rechecks with environment-backed
-`STUFF_STASH_THUMBNAIL_FOREGROUND_CACHE_POLL_INTERVAL` (default 250ms, 100ms–5s).
-When cache readiness wins, cancel and join the admission attempt and release any
-permit granted concurrently. Request cancellation must also join and release it.
-This improves same-image publication waits; it cannot accelerate an ungenerated
-image waiting behind unrelated work. Verify early publication, late grant cleanup,
-and cancellation through real admission and blob-storage fakes.
+requested derivative once publication succeeds, even if the background job still
+holds capacity for remaining variants. Use an injected thumbnail-readiness port
+with one-shot subscriptions keyed by derivative storage key and a publication
+notification. The in-process adapter retains only active subscriptions and wakes
+all readers of the published key; unrelated keys remain independent.
+
+Subscribe before the initial cache read to avoid a missed-publication race. Keep
+one cancellable admission attempt queued to preserve foreground FIFO order. On a
+notification, read the requested cached derivative once; if it has disappeared,
+continue waiting for admission without spinning. Do not poll storage while waiting,
+and do not download or decode the original without admission. Publish the readiness
+notification only after blob and metadata publication succeeds. Cache readiness
+cancels and joins admission and releases any late permit. Cancellation unsubscribes
+and joins the admission attempt. Notifications are hints; stored bytes and normal
+authorization remain authoritative. An external processor can replace the readiness
+adapter along with worker scheduling when that architecture is introduced.
+
+The earlier cache-poll interval setting is retired. Production traces showed repeated
+250ms read timeouts while waiting; publication notifications avoid that added storage
+traffic. Verify early publication, failed publication, no polling, independent keys,
+unsubscription, late-grant cleanup and cancellation with real port fakes.
 
 Operational catch-up may temporarily increase API CPU using verified spare node
 capacity, through GitOps. Restore the reference resource limits before measured
