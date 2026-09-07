@@ -259,9 +259,6 @@ function VoiceSessionSheet({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  if (commandId === null) {
-    return null;
-  }
   const readyState = state.status === 'ready' ? state : null;
   const session = buildVoiceSessionPresentation({
     diagnosticsEnabled,
@@ -700,6 +697,9 @@ function ParentPicker({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
+  if (commandId === null) {
+    return null;
+  }
   const currentIndex = commands.findIndex((command) => command.id === commandId);
   const proposedParents = currentIndex < 0
     ? []

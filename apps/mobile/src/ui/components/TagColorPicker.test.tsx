@@ -70,7 +70,7 @@ describe('TagColorPicker', () => {
     expect(screen.allText()).not.toContain('Custom color');
   });
 
-  it('opens a dedicated custom-color modal with spectrum, hex, clear, cancel, and done', async () => {
+  it('opens an in-context custom-color editor with spectrum, hex, clear, cancel, and done', async () => {
     const { changes, screen } = await renderPicker('#123456');
     await screen.press(screen.byLabel('Choose a custom tag color'));
     expect(screen.allText()).toContain('Custom color');
@@ -96,7 +96,7 @@ describe('TagColorPicker', () => {
     ]));
   });
 
-  it('cancels the custom modal without mutating the original color', async () => {
+  it('cancels the custom editor without mutating the original color', async () => {
     const { changes, screen } = await renderPicker('#123456');
     await screen.press(screen.byLabel('Choose a custom tag color'));
     await screen.accessibilityAction(screen.byLabel('Saturation and brightness'), 'increment');
@@ -123,8 +123,8 @@ describe('TagColorPicker', () => {
   it('compacts the fixed fallback while keeping keyboard actions available in a short viewport', async () => {
     const { changes, screen } = await renderPicker('#123456');
     await screen.press(screen.byLabel('Choose a custom tag color'));
-    const modalShell = screen.all().find((node) => node.props.accessibilityViewIsModal);
-    await screen.run(() => modalShell?.props.onLayout?.({ nativeEvent: { layout: { height: 520 } } }));
+    const customPanel = screen.byTestId('custom-tag-color-panel');
+    await screen.run(() => customPanel?.props.onLayout?.({ nativeEvent: { layout: { height: 520 } } }));
     const spectrum = screen.byLabel('Saturation and brightness');
     expect(spectrum?.props.style).toEqual(expect.arrayContaining([expect.objectContaining({ height: 112 })]));
     expect(screen.allText()).toEqual(expect.arrayContaining(['Hex color', 'Clear color', 'Cancel', 'Done']));

@@ -10,6 +10,10 @@ import voiceScreenSource from '../screens/VoiceSessionSheetScreen.tsx?raw';
 import mapScreenSource from '../screens/InventoryMapScreen.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import addScreenSource from '../screens/AddAssetScreen.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import tagColorPickerSource from '../components/TagColorPicker.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import customizationFieldsSource from '../components/CustomizationEditorFields.tsx?raw';
 
 // @ts-expect-error Vitest's Vite transform provides the app route manifest to structural tests.
 const appSources = import.meta.glob('../../app/**/*.tsx', {
@@ -73,6 +77,8 @@ describe('mobile navigation contract', () => {
     expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
     expect(voiceScreenSource).toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*\{\s*router\.dismiss\(\);\s*router\.push\('\/settings\/voice'\);/s);
     expect(voiceScreenSource).not.toContain('<Modal');
+    expect(tagColorPickerSource).not.toContain('<Modal');
+    expect(customizationFieldsSource).not.toContain('<Modal');
     expect(mapScreenSource).not.toContain('InventoryMapInfoSheet');
     expect(mapScreenSource).toContain('router.push(assetDetailHref(asset.id))');
   });

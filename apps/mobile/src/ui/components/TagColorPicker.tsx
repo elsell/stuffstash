@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Check, Palette, X } from 'lucide-react-native';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
@@ -35,11 +34,11 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
   const customSelected = hasTypedColor && !tagColorChoices.includes(normalizedValue as typeof tagColorChoices[number]);
   const [customOpen, setCustomOpen] = useState(false);
   const [customDraft, setCustomDraft] = useState('');
-  const [modalHeight, setModalHeight] = useState(0);
+  const [customPanelHeight, setCustomPanelHeight] = useState(0);
   const { fontScale } = useWindowDimensions();
   const normalizedDraft = normalizeColor(customDraft);
   const validDraft = !customDraft.trim() || Boolean(normalizedDraft);
-  const modalLayout = tagColorModalLayout({ availableHeight: modalHeight, fontScale });
+  const customPanelLayout = tagColorModalLayout({ availableHeight: customPanelHeight, fontScale });
 
   function openCustom(): void {
     if (disabled) return;
@@ -104,13 +103,11 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
         <Text style={styles.customLabel}>Custom…</Text>
       </Pressable>
       {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Choose Custom… to correct this color.</Text> : null}
-      {customOpen ? <Modal animationType="slide" onRequestClose={closeCustom} presentationStyle="pageSheet" visible>
-        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.safeArea}>
-        <View accessibilityViewIsModal onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)} style={styles.modalShell}>
+      {customOpen ? (
+        <View onLayout={(event) => setCustomPanelHeight(event.nativeEvent.layout.height)} style={styles.customPanel} testID="custom-tag-color-panel">
           <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>Custom color</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : 'No color'}</Text></View></View>
           <View style={styles.pickerSurface}>
-            <FullSpectrumTagColorPicker compact={modalLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={setCustomDraft} />
+            <FullSpectrumTagColorPicker compact={customPanelLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={setCustomDraft} />
           </View>
           <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.supplementaryContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.supplementaryScroll}>
             <Text style={styles.inputLabel}>Hex color</Text>
@@ -123,9 +120,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: !validDraft }} disabled={!validDraft} onPress={applyCustom} style={[styles.doneAction, !validDraft ? styles.disabled : null]}><Text style={styles.doneActionText}>Done</Text></Pressable>
           </View>
         </View>
-        </KeyboardAvoidingView>
-        </SafeAreaView>
-      </Modal> : null}
+      ) : null}
     </View>
   );
 }
@@ -160,7 +155,6 @@ function createStyles(colors: MobileColorPalette) {
     gap: spacing.xs,
     minWidth: 0
   },
-  safeArea: { backgroundColor: colors.background, flex: 1 },
   swatches: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -203,9 +197,9 @@ function createStyles(colors: MobileColorPalette) {
   customButton: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.sm },
   customIndicator: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 11, borderWidth: 1, height: 22, justifyContent: 'center', width: 22 },
   customLabel: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
-  modalShell: { flex: 1, paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  customPanel: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, marginTop: spacing.sm, padding: spacing.md },
   modalHeader: { minHeight: 48, justifyContent: 'center' }, modalTitle: { color: colors.text, fontSize: 24, fontWeight: '800' }, modalSubtitle: { color: colors.textMuted, fontSize: 14, marginTop: spacing.xs },
-  pickerSurface: { flexShrink: 0, marginTop: spacing.md }, supplementaryScroll: { flex: 1, marginTop: spacing.md }, supplementaryContent: { gap: spacing.md, paddingBottom: spacing.md }, inputLabel: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  pickerSurface: { flexShrink: 0, marginTop: spacing.md }, supplementaryScroll: { marginTop: spacing.md, maxHeight: 180 }, supplementaryContent: { gap: spacing.md, paddingBottom: spacing.md }, inputLabel: { color: colors.text, fontSize: 14, fontWeight: '700' },
   hexInput: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: 44, paddingHorizontal: spacing.sm },
   clearAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', minHeight: 44 }, clearActionText: { color: colors.warning, fontSize: 16, fontWeight: '700' },
   modalActions: { flexDirection: 'row', gap: spacing.sm, paddingBottom: spacing.md, paddingTop: spacing.sm }, cancelAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 48 }, cancelActionText: { color: colors.text, fontSize: 16, fontWeight: '700' }, doneAction: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, flex: 1, justifyContent: 'center', minHeight: 48 }, doneActionText: { color: colors.onAction, fontSize: 16, fontWeight: '800' }
