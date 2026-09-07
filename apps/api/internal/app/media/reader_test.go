@@ -186,3 +186,63 @@ func TestReaderServesPublishedSmallBeforeBackgroundReleasesCapacity(t *testing.T
 	}
 	permit()
 }
+
+func TestReaderReleasesAdmissionGrantedDuringCacheCancellation(t *testing.T) {
+	processor, source, blobs, _, _ := processorFixture(t)
+	limiter, err := worklimit.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	granted := make(chan struct{})
+	reader, err := NewReader(processor, readerDelayedGrant{ImageWorkAdmission: limiter, granted: granted})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		_, cached, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		if err == nil && (!cached || ctx.Err() != nil) {
+			err = errors.New("cache readiness did not cancel queued admission")
+		}
+		done <- err
+	}()
+	select {
+	case <-granted:
+	case <-ctx.Done():
+		t.Fatal("admission was not granted")
+	}
+	key, _ := ThumbnailCacheKey(source.attachment.StorageKey, domain.ThumbnailVariantSmall)
+	if err := blobs.PutBlob(ctx, key, domain.ContentType("image/jpeg"), []byte("ready")); err != nil {
+		t.Fatal(err)
+	}
+	if err := blobs.PutBlob(ctx, thumbnailMetadataKey(key), domain.ContentType("text/plain"), []byte("image/jpeg")); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	available, stop := context.WithTimeout(context.Background(), time.Second)
+	defer stop()
+	permit, err := limiter.Acquire(available, ports.ImageWorkForeground)
+	if err != nil {
+		t.Fatal("late grant leaked", err)
+	}
+	permit()
+}
+
+type readerDelayedGrant struct {
+	ports.ImageWorkAdmission
+	granted chan struct{}
+}
+
+func (a readerDelayedGrant) Acquire(ctx context.Context, priority ports.ImageWorkPriority) (func(), error) {
+	release, err := a.ImageWorkAdmission.Acquire(ctx, priority)
+	if err != nil {
+		return nil, err
+	}
+	close(a.granted)
+	<-ctx.Done()
+	return release, nil
+}
