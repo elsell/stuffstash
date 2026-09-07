@@ -36,7 +36,28 @@ The small, fixed corpus cannot establish performance for every phone image size.
 
 ## Results
 
-Pending completion of baseline, both candidate runs, and deployment verification.
+The baseline completed with no request failures. No derivative readiness was
+observed before the fixed-delay reads. Candidate results remain pending.
+
+| Baseline operation | Requests | Median | p95 |
+| --- | ---: | ---: | ---: |
+| Upload confirmation, fixed-delay cohort | 18 | 2.969 s | 10.165 s |
+| Thumbnails after fixed delay | 54 | 7.489 s | 23.189 s |
+| Warm small thumbnails | 18 | 61 ms | 95 ms |
+| Immediate small thumbnails | 6 | 3.401 s | 8.456 s |
+| Ordinary asset list, whole run | 346 | 102 ms | 878 ms |
+
+Quantiles use nearest rank. The asset-list distribution includes idle waiting and
+active image work; it is not an isolated saturation test. Raw private evidence is
+`background-baseline-0d84c2da9.jsonl` and the associated resource samples.
+
+Candidate image publication passed backend race tests, PostgreSQL coordination
+checks, and build in CI run `34068976618`. GitOps revision `836f05b` stopped old writers; `f7d15df` started the candidate
+with concurrency one and backfill disabled. Migration and the production queue
+status command succeeded. Revision `d2646da` then enabled existing-image backfill.
+The final recreate strategy avoids overlapping API workers. Two initial attempts
+to change deployment strategy were rejected by Flux without replacing the old API;
+the explicit scale-down stage resolved field ownership before startup.
 
 ## Deferred observability
 

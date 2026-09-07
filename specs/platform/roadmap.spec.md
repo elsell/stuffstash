@@ -28,8 +28,11 @@ with an in-process Go worker, a database queue and shared foreground-priority
 admission. Follow `specs/media/background-thumbnails.spec.md`; benchmark concurrency
 one versus two before choosing the deployment default. Queue, workers, guarded
 publication, resumable backfill, deletion rechecks and operator commands are
-implemented. API race and PostgreSQL checks passed CI `34068507871`; broader
-application validation, GitOps rollout and production comparison remain pending.
+implemented. Broader application race tests and PostgreSQL checks passed CI
+`34068976618`; API `392891d17` is deployed through GitOps with concurrency one.
+The stop-writers/migrate/start sequence succeeded and existing-image backfill is
+running. The new baseline is captured; concurrency comparison remains pending.
+See `docs/reports/background-thumbnail-performance-2026-09-06.md`.
 
 The prioritized image-performance comparison is complete on `codex/media-observability`.
 Existing API tracing, metrics, logs and profiling were deployed through infra GitOps.
