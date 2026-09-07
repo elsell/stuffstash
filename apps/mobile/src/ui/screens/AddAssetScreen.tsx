@@ -887,6 +887,7 @@ function ParentPicker({
   onChangeQuery,
   onCreateParent,
   onOpenChange,
+  onSearchFocus,
   onSelectParent,
   parentAssetId,
   query
