@@ -338,3 +338,9 @@ the queue-aware revision; then enable the resumable scan in a separate GitOps ch
 Compare concurrency one and two against the same image corpus and resource limits,
 recording upload confirmation, thumbnail readiness, ordinary API latency, memory
 and restarts. Record immediate-open and already-ready reads separately.
+
+For the initial storage-key reservation migration, stop all old API writers before
+running migrations and starting the queue-aware API. A rolling overlap allows old
+writes after reservation seeding; thumbnail backfill alone cannot repair this gap.
+The single-deployment production rollout uses `Recreate`, accepting a brief API
+interruption. Keep backfill disabled through this migration/startup step.

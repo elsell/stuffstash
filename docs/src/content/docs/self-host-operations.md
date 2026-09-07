@@ -214,8 +214,10 @@ Set these environment variables on the API (in `.env` for the self-host Compose 
 | `STUFF_STASH_THUMBNAIL_BACKFILL_INTERVAL` | `5s` | Pause between scan batches. |
 | `STUFF_STASH_THUMBNAIL_MAX_ATTEMPTS` | `5` | Attempts before a job is marked failed. |
 
-For an upgrade, run migrations and replace every API instance first, keeping backfill
-disabled. Then enable backfill and restart the API through your normal deployment
+For the initial upgrade to background thumbnails, stop every old API instance before
+running migrations and starting the new API, keeping backfill disabled. This requires
+a brief interruption so older processes cannot write during migration. Then enable
+backfill and restart the API through your normal deployment
 process. The scan saves its progress and stops when complete. Newly uploaded images
 are processed ahead of backfill jobs. Disabling the worker pauses queued processing;
 it does not disable foreground generation or periodic blob cleanup.
