@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"runtime"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -88,4 +89,74 @@ func TestReadersAndWorkersDoNotDuplicateAnOwnedPhoto(t *testing.T) {
 	if guard.writes != 1 {
 		t.Fatal("fallback not published exactly once")
 	}
+}
+
+func TestWaitingReaderRecoversWhenActiveOwnerCancels(t *testing.T) {
+	p, source, _, guard, _ := processorFixture(t)
+	limiter, _ := worklimit.New(2)
+	p.admission = limiter
+	batch := &cancelFirstBatch{ImageBatchProcessor: p.images, entered: make(chan struct{})}
+	p.images = batch
+	waiting := make(chan struct{})
+	p.flights = readerObservedFlights{ThumbnailFlights: p.flights, waiting: waiting}
+	reader, err := NewReader(p, limiter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	ownerCtx, cancelOwner := context.WithCancel(ctx)
+	defer cancelOwner()
+	owner := make(chan error, 1)
+	go func() {
+		_, _, err := reader.ReadThumbnail(ownerCtx, source.attachment, domain.ThumbnailVariantSmall)
+		owner <- err
+	}()
+	select {
+	case <-batch.entered:
+	case <-ctx.Done():
+		t.Fatal("owner never entered")
+	}
+	waiter := make(chan error, 1)
+	go func() {
+		_, _, err := reader.ReadThumbnail(ctx, source.attachment, domain.ThumbnailVariantSmall)
+		waiter <- err
+	}()
+	select {
+	case <-waiting:
+	case <-ctx.Done():
+		t.Fatal("second reader never waited")
+	}
+	cancelOwner()
+	if err := <-owner; !errors.Is(err, context.Canceled) {
+		t.Fatal("owner did not cancel", err)
+	}
+	if err := <-waiter; err != nil {
+		t.Fatal("waiting reader did not recover", err)
+	}
+	if batch.calls.Load() != 2 || batch.maximum.Load() != 1 || guard.writes != 1 {
+		t.Fatalf("unexpected generation: calls=%d maximum=%d writes=%d", batch.calls.Load(), batch.maximum.Load(), guard.writes)
+	}
+}
+
+type cancelFirstBatch struct {
+	ports.ImageBatchProcessor
+	entered                chan struct{}
+	calls, active, maximum atomic.Int32
+}
+
+func (b *cancelFirstBatch) CreateThumbnails(ctx context.Context, request ports.ImageDerivativesRequest, publish func(domain.ThumbnailVariant, ports.ImageDerivative) error) error {
+	active := b.active.Add(1)
+	defer b.active.Add(-1)
+	for maximum := b.maximum.Load(); active > maximum; maximum = b.maximum.Load() {
+		if b.maximum.CompareAndSwap(maximum, active) {
+			break
+		}
+	}
+	if b.calls.Add(1) == 1 {
+		close(b.entered)
+		<-ctx.Done()
+		return ctx.Err()
+	}
+	return b.ImageBatchProcessor.CreateThumbnails(ctx, request, publish)
 }

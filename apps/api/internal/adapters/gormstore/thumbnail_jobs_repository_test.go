@@ -20,7 +20,20 @@ func TestThumbnailYieldRefundIsFencedAndFailuresStillCount(t *testing.T) {
 	if err := store.SaveAttachment(ctx, attachment, record, &job); err != nil {
 		t.Fatal(err)
 	}
-	now := job.CreatedAt
+	assertThumbnailYieldRefund(t, store, job.CreatedAt)
+}
+
+func TestPostgresThumbnailYieldRefundIsFencedAndFailuresStillCount(t *testing.T) {
+	store, now := postgresBackfillFixture(t)
+	if progress, err := store.BackfillThumbnailJobs(context.Background(), 1, now); err != nil || progress.Enqueued != 1 {
+		t.Fatal("could not seed one durable job", progress, err)
+	}
+	assertThumbnailYieldRefund(t, store, now)
+}
+
+func assertThumbnailYieldRefund(t *testing.T, store Store, now time.Time) {
+	t.Helper()
+	ctx := context.Background()
 	claims, err := store.ClaimThumbnailJobs(ctx, "first", 1, now, now.Add(time.Minute))
 	if err != nil || len(claims) != 1 {
 		t.Fatal(err)

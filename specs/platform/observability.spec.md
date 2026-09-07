@@ -249,3 +249,11 @@ errors, and the derived context. Audit metadata never becomes telemetry attribut
 This observes standalone read-audit persistence; transactional command audit
 writes remain part of their unit-of-work and are not represented as separate
 repository writes by this decorator.
+
+## Validation harness dependencies
+
+Mobile native transport tests execute in Node and load the locked React Native
+fetch implementation. Declare `@types/node` 24.13.1 explicitly for this test
+harness, reusing the existing workspace lockfile resolution. Background-work
+fakes signal entry only after recording the operation, so concurrency assertions
+observe a synchronized state rather than racing the notification.
