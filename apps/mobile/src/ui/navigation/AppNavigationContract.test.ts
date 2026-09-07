@@ -14,6 +14,8 @@ import addScreenSource from '../screens/AddAssetScreen.tsx?raw';
 import tagColorPickerSource from '../components/TagColorPicker.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import customizationFieldsSource from '../components/CustomizationEditorFields.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import assetDetailSheetsSource from '../screens/AssetDetailSheets.tsx?raw';
 
 // @ts-expect-error Vitest's Vite transform provides the app route manifest to structural tests.
 const appSources = import.meta.glob('../../app/**/*.tsx', {
@@ -77,6 +79,8 @@ describe('mobile navigation contract', () => {
     expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
     expect(voiceScreenSource).toContain("() => router.push('/settings/voice')");
     expect(voiceScreenSource).not.toContain('<Modal');
+    expect(voiceScreenSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(assetDetailSheetsSource).toContain('automaticallyAdjustKeyboardInsets');
     expect(homeScreenSource).not.toContain('<Modal');
     expect(browseScreenSource).not.toContain('<Modal');
     expect(tagColorPickerSource).not.toContain('<Modal');

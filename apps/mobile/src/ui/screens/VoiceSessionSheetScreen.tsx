@@ -303,6 +303,7 @@ function VoiceSessionSheet({
       ) : (
         <>
           <ScrollView
+            automaticallyAdjustKeyboardInsets
             contentContainerStyle={[
               styles.sessionContent,
               !body.hasBodyContent && styles.emptySessionContent
@@ -729,7 +730,7 @@ function ParentPicker({
         style={styles.parentSearchInput}
         value={query}
       />
-      <ScrollView contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <ParentOption
           label="Inventory root"
           meta="No containing location"

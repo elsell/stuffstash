@@ -82,7 +82,7 @@ export function EditAssetSheet({
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <Text style={styles.sheetTitle}>Edit asset</Text>
-      <ScrollView contentContainerStyle={styles.editScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.editScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
           <Text style={styles.readOnlyContextValue}>
@@ -328,7 +328,7 @@ export function MoveAssetSheet({
         style={styles.input}
         value={draft?.query ?? ''}
       />
-      <ScrollView style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
             <View style={styles.createKindSegment} accessibilityRole="tablist">
@@ -422,7 +422,7 @@ export function MoveThingsHereSheet({
         style={styles.input}
         value={draft?.query ?? ''}
       />
-      <ScrollView style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {draft?.matches.length === 0 ? (
           <View style={styles.parentEmptyState}>
             <Text style={styles.parentTitle}>{emptyState.title}</Text>
