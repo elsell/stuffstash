@@ -23,38 +23,22 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-Durable background thumbnail generation is deployed with an in-process Go worker,
-a database queue and shared foreground-priority admission. Uploads/imports,
-resumable backfill, guarded publication, deletion rechecks and operator commands
-follow `specs/media/background-thumbnails.spec.md`. All 277 existing-image jobs
-completed without failed jobs. API `f66f2d965` passed backend race, PostgreSQL and
-structural CI checks in `34073917277`; code critic review found no blocking issue.
-The final production comparison selects one worker at 500m CPU/512Mi through
-GitOps `1156b0d`: fixed-delay thumbnail median improved 7.489 to 0.329 seconds,
-but immediate-open latency regressed and intermittent blob-storage stalls remain.
-Two workers improved batch delivery but worsened foreground p95 and memory.
-Follow-up experiments reproduced admission interference between photos and
-paired API/direct-Garage storage stalls. Idle warm p95 recovered near baseline;
-the earlier 18-sample p95 was dominated by one outlier. The application scheduling
-mechanism is identified; underlying storage/NFS diagnosis awaits read-only node
-or storage-server diagnostics. See
-`docs/reports/thumbnail-regression-diagnosis-2026-09-07.md`.
-Prioritize those remaining latency problems before expanding observability.
-See `docs/reports/background-thumbnail-performance-2026-09-06.md` for evidence,
-failed attempts, measurement limits and deferred observability.
+Durable background thumbnail generation and cooperative scheduling are implemented
+behind ports with an in-process worker, PostgreSQL queue, fenced publication and
+per-photo ownership. The controlled one-worker 500m/512Mi comparison reduced
+back-to-back immediate-open median from 8.04 to 4.82 seconds, but the slowest of six
+samples increased from 12.50 to 13.77 seconds. Peak memory was 341 MiB. Preserve
+this limit and worker count; the evidence does not justify more memory yet.
+Scheduler validation `34080191156` and full PR CI `34080576863` passed; code critic
+review found no blocker. Complete PR 66, the release pipeline and released-image
+GitOps deployment. See `docs/reports/thumbnail-scheduling-2026-09-07.md` for
+reproduction, trace evidence and the unresolved long-wait counterexample.
 
-The prioritized image-performance comparison is complete on `codex/media-observability`.
-Existing API tracing, metrics, logs and profiling were deployed through infra GitOps.
-Staged resizing and direct internal Garage traffic reduced controlled cold HTTP
-median from 6.85 to 3.72 seconds and p95 from 11.15 to 7.96 seconds; 90/90 requests
-succeeded per run. See `docs/reports/image-performance-2026-09-06.md` and
-`specs/media/image-performance-evidence.spec.md` for sources and small-corpus limits.
-Cold large thumbnails still take seconds. Durable upload-time generation and
-physical-device verification are follow-up work. Web/mobile observability rollout,
-broader dependency instrumentation, alerts/SLOs and extended profiling are explicitly
-deferred; the undeployed frontend telemetry branch still has a mobile test type-check
-failure. API race checks and image publication passed CI `34061597496`; this is not
-a full frontend release gate. Keep builds in CI on the disk-constrained host.
+Storage-path stalls persist independently of image scheduling. Read-only node or
+storage-server diagnostics remain needed; do not attribute them to a physical
+cause without evidence. Web/mobile telemetry activation, physical-device rendering,
+broader instrumentation, alerts/SLOs and extended profiling are deferred. Frontend
+telemetry type checks now pass. Keep builds in CI on the disk-constrained host.
 
 The next milestone is a successful real voice conversation through the intended production flow. Pause additional configuration features. Exercise recorded audio over the authenticated mobile WebSocket protocol against configured providers, inspect transcription and authorized retrieval, and require a grounded spoken answer for the baby-clothes location question. Fix only blockers exposed by this path before broadening the workspace. Follow `specs/agent-model/voice-conversation-quality.spec.md`; preserve the configurable workflow work already completed. All builds remain in CI. Release and Kubernetes changes still use TestFlight and the infra GitOps repository.
 
