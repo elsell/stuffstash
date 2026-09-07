@@ -97,8 +97,6 @@ const emptyDraft: AddAssetDraft = {
   showDetails: false,
   lastParent: undefined
 };
-const addSheetBottomChromePadding = spacing.xl * 5;
-
 export function AddAssetScreen(props: AddAssetScreenProps) {
   const scopeId = useMobileServerStateScopeId();
   const addContext = useMobileInventoryServerQuery({ key: mobileQueryKeys.addContext, query: signal => props.addAssetContextQuery.execute({ signal }) });
@@ -114,7 +112,6 @@ function ScopedAddAssetScreen({
   const feedback = useAppFeedback();
   const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
-  const bottomChromeAllowance = safeAreaInsets.bottom + addSheetBottomChromePadding;
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [draftContext, setDraftContext] = useState<AddAssetDraftContext | undefined>();
   const [title, setTitle] = useState(emptyDraft.title);
@@ -453,6 +450,8 @@ function ScopedAddAssetScreen({
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       <View style={styles.dismissRow}>
+        <View style={styles.dismissSpacer} />
+        <Text accessibilityRole="header" style={styles.dismissTitle}>Add</Text>
         <Pressable
           accessibilityLabel="Close Add"
           accessibilityRole="button"
@@ -465,8 +464,9 @@ function ScopedAddAssetScreen({
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: bottomChromeAllowance }
+          { paddingBottom: safeAreaInsets.bottom + spacing.lg }
         ]}
+        automaticallyAdjustKeyboardInsets
         keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
       >
@@ -485,7 +485,6 @@ function ScopedAddAssetScreen({
         ) : null}
         {loadState.status === 'ready' ? (
           <View>
-            <Text style={styles.title}>Add</Text>
             <View style={styles.contextLine}>
               <IdentityLabel
                 iconSize="xs"
@@ -521,7 +520,7 @@ function ScopedAddAssetScreen({
                   photos={selectedPhotos}
                 />
 
-                <Text style={styles.fieldLabel}>What is it?</Text>
+                <Text style={styles.fieldLabel}>Name</Text>
                 <AppTextInput
                   accessibilityLabel="Asset name"
                   onChangeText={setTitle}
@@ -1228,9 +1227,20 @@ function createStyles(colors: MobileColorPalette) {
   dismissRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     minHeight: 44,
     paddingHorizontal: spacing.sm
+  },
+  dismissTitle: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center'
+  },
+  dismissSpacer: {
+    minHeight: 44,
+    minWidth: 44
   },
   dismissButton: {
     alignItems: 'center',
@@ -1280,13 +1290,6 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 14,
     lineHeight: 20,
     marginTop: spacing.xs
-  },
-  title: {
-    color: colors.text,
-    fontSize: 30,
-    fontWeight: '900',
-    letterSpacing: 0,
-    lineHeight: 36
   },
   contextLine: {
     alignItems: 'center',

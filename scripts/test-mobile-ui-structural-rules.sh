@@ -64,6 +64,28 @@ fi
 grep -F "Namespaced.tsx" "$workdir/output" >/dev/null
 
 rm "$workdir/apps/mobile/src/ui/screens/Namespaced.tsx"
+cat > "$workdir/apps/mobile/src/ui/screens/LegacyModal.tsx" <<'EOF'
+import { Modal } from 'react-native';
+export function LegacyModal() { return <Modal visible />; }
+EOF
+
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected a raw product Modal to fail the mobile UI structural check" >&2
+  exit 1
+fi
+
+grep -F "LegacyModal.tsx" "$workdir/output" >/dev/null
+grep -F "raw React Native Modal" "$workdir/output" >/dev/null
+
+rm "$workdir/apps/mobile/src/ui/screens/LegacyModal.tsx"
+cat > "$workdir/apps/mobile/src/ui/screens/FullScreenPhotoViewer.tsx" <<'EOF'
+import { Modal } from 'react-native';
+export function FullScreenPhotoViewer() { return <Modal visible />; }
+EOF
+
+"$checker" "$workdir/apps/mobile/src"
+rm "$workdir/apps/mobile/src/ui/screens/FullScreenPhotoViewer.tsx"
+
 cat > "$workdir/apps/mobile/src/ui/screens/RequiredNamespace.tsx" <<'EOF'
 const ReactNative = require('react-native');
 export function RequiredNamespace() { return <ReactNative.TextInput />; }

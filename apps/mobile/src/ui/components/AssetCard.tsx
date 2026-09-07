@@ -164,10 +164,6 @@ export function shouldShowAssetCardSupportingDetails(
     && (asset.description.trim().length > 0 || (asset.searchMatchLabels?.length ?? 0) > 0);
 }
 
-type BreadcrumbScroller = {
-  readonly scrollToEnd?: (options?: { readonly animated?: boolean }) => void;
-};
-
 export function AssetBreadcrumbTrail({
   onSegmentPress,
   palette: paletteOverride,
@@ -185,22 +181,10 @@ export function AssetBreadcrumbTrail({
     return null;
   }
 
-  let scroller: BreadcrumbScroller | null = null;
-  const scrollToMostSpecificParent = () => {
-    if (segments.length > 1) {
-      scroller?.scrollToEnd?.({ animated: false });
-    }
-  };
-
   return (
     <ScrollView
       accessibilityLabel={`Location ${segments.map((segment) => segment.title).join(', ')}`}
       horizontal
-      onContentSizeChange={scrollToMostSpecificParent}
-      onLayout={scrollToMostSpecificParent}
-      ref={(node) => {
-        scroller = node;
-      }}
       showsHorizontalScrollIndicator={false}
       style={styles.breadcrumbScroller}
       contentContainerStyle={styles.breadcrumbContent}
@@ -244,11 +228,9 @@ function createStyles(colors: MobileColorPalette) {
     overflow: 'hidden'
   },
   standardCard: {
-    flex: 1,
-    minHeight: 286
+    flex: 1
   },
   compactCard: {
-    minHeight: 210,
     width: 164
   },
   rowCard: {

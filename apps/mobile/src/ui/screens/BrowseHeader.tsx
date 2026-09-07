@@ -1,7 +1,6 @@
 import type { ReactNode, RefObject } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,7 +9,6 @@ import {
 } from 'react-native';
 import type { TextInput } from 'react-native';
 import { Check, Plus, Search, X } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type {
   AssetBrowseCheckoutFilter,
@@ -335,8 +333,7 @@ function BrowseFilterSheet({
   const sortedTags = [...tagFilters].sort((left, right) => left.label.localeCompare(right.label, undefined, { sensitivity: 'base' }));
   const selectedTags = new Set(draft.tagIds);
   return (
-    <Modal animationType="slide" onRequestClose={onClose} presentationStyle="pageSheet" visible>
-      <SafeAreaView style={styles.filterSheet} edges={['top', 'left', 'right', 'bottom']}>
+    <View style={styles.filterSheet}>
         <View style={styles.sheetHeader}>
           <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.sheetHeaderButton, pressed ? styles.controlPressed : null]}>
             <Text style={styles.sheetHeaderSecondary}>Cancel</Text>
@@ -346,7 +343,7 @@ function BrowseFilterSheet({
             <Text style={styles.sheetHeaderSecondary}>Reset</Text>
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={styles.sheetContent}>
+        <View style={styles.sheetContent}>
           <FilterSection palette={palette} title="Type">
             <View accessibilityLabel="Filter by type">
               <NativeSegmentedControl
@@ -423,14 +420,13 @@ function BrowseFilterSheet({
               </View>
             ) : null}
           </FilterSection>
-        </ScrollView>
+        </View>
         <View style={styles.sheetFooter}>
           <Pressable accessibilityRole="button" onPress={onApply} style={({ pressed }) => [styles.applyButton, pressed ? styles.applyButtonPressed : null]}>
             <Text style={styles.applyButtonText}>Show results</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
-    </Modal>
+    </View>
   );
 }
 
@@ -528,7 +524,7 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     errorText: { color: palette.warning, flex: 1, fontSize: 14, lineHeight: 20 },
     retryButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm },
     retryText: { color: palette.action, fontSize: 14, fontWeight: '700' },
-    filterSheet: { backgroundColor: palette.background, flex: 1 },
+    filterSheet: { backgroundColor: palette.background, borderColor: palette.border, borderRadius: radius.md, borderWidth: 1, marginTop: spacing.sm },
     sheetHeader: { alignItems: 'center', borderBottomColor: palette.border, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', minHeight: 56, paddingHorizontal: spacing.sm },
     sheetHeaderButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 72 },
     sheetHeaderSecondary: { color: palette.action, fontSize: 16, fontWeight: '600' },

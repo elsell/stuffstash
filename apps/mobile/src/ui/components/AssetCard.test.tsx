@@ -322,6 +322,7 @@ describe('AssetCard', () => {
 
     expect(styleValue(card.props?.style, 'flex')).toBe(1);
     expect(styleValue(card.props?.style, 'width')).toBeUndefined();
+    expect(styleValue(card.props?.style, 'minHeight')).toBeUndefined();
   });
 
   it('owns the compact footer action used by checked-out Home cards', () => {
@@ -406,7 +407,7 @@ describe('AssetBreadcrumbTrail', () => {
     ]));
   });
 
-  it('renders the trail in a horizontal scroller and defaults to the most specific parent', () => {
+  it('renders the trail in a horizontal scroller without hiding the location root', () => {
     const trail = AssetBreadcrumbTrail({
       segments: [
         { id: 'asset-garage', title: 'Garage', isImmediateParent: false },
@@ -415,15 +416,10 @@ describe('AssetBreadcrumbTrail', () => {
       onSegmentPress: vi.fn()
     });
     const scroller = findFirstByType(trail, 'ScrollView');
-    const fakeScroller = { scrollToEnd: vi.fn() };
-
     expect(scroller?.props?.horizontal).toBe(true);
     expect(collectText(scroller)).toEqual(expect.arrayContaining(['Garage', 'Holiday / seasonal bin']));
     expect(collectText(scroller)).not.toContain('Bottom drawer');
-    attachScroller(scroller, fakeScroller);
-    triggerContentSizeChange(scroller);
-
-    expect(fakeScroller.scrollToEnd).toHaveBeenCalledWith({ animated: false });
+    expect(scroller?.props?.onContentSizeChange).toBeUndefined();
   });
 
   it('opens the selected parent location and gives ancestors lower accessible visual weight', () => {
@@ -740,20 +736,4 @@ function findPressableWithText(node: unknown, value: string): ElementNode | unde
     (found, child) => found ?? findPressableWithText(child, value),
     undefined
   );
-}
-
-function attachScroller(node: ElementNode | undefined, scroller: { readonly scrollToEnd: () => void }): void {
-  const ref = node?.props?.ref;
-  if (typeof ref !== 'function') {
-    throw new Error('Missing ScrollView ref callback');
-  }
-  ref(scroller);
-}
-
-function triggerContentSizeChange(node: ElementNode | undefined): void {
-  const onContentSizeChange = node?.props?.onContentSizeChange;
-  if (typeof onContentSizeChange !== 'function') {
-    throw new Error('Missing content size handler');
-  }
-  onContentSizeChange();
 }

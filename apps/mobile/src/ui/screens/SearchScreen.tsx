@@ -11,14 +11,8 @@ import {
 } from 'react-native';
 import type { TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
-import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
-import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
-import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
-import type { ProgressiveAssetDetailQueries } from '../serverState/useProgressiveAssetDetail';
 import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
-import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import type {
   InventoryAssetTagsQuery
 } from '../../application/assets/InventoryAssetTagsQuery';
@@ -82,18 +76,10 @@ type SearchScreenProps = {
   readonly initialLifecycleState?: AssetBrowseLifecycleFilter;
   readonly initialCheckoutState?: AssetBrowseCheckoutFilter;
   readonly initialSort?: AssetBrowseSort;
-  readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
-  readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
-  readonly assetCoreQuery: ProgressiveAssetDetailQueries['assetCoreQuery'];
-  readonly assetContentsQuery: ProgressiveAssetDetailQueries['assetContentsQuery'];
-  readonly assetPhotosQuery: ProgressiveAssetDetailQueries['assetPhotosQuery'];
-  readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
-  readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
   readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
   readonly inventoryContextQuery: Pick<InventoryContextQuery, 'execute'>;
   readonly inventoryAssetTagsQuery: Pick<InventoryAssetTagsQuery, 'execute'>;
   readonly locationsQuery: Pick<LocationsQuery, 'execute'>;
-  readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly searchAssetsQuery: Pick<SearchAssetsQuery, 'execute'>;
 };
 
@@ -129,18 +115,10 @@ export function SearchScreen({
   initialLifecycleState = 'active',
   initialCheckoutState = 'any',
   initialSort = 'updated_desc',
-  addAssetPhotosCommand,
-  assetCheckoutCommand,
-  assetCoreQuery,
-  assetContentsQuery,
-  assetPhotosQuery,
-  assetLifecycleCommand,
-  deleteAssetPhotoCommand,
   inventoryMapQuery,
   inventoryContextQuery,
   inventoryAssetTagsQuery,
   locationsQuery,
-  photoSelectionQuery,
   searchAssetsQuery
 }: SearchScreenProps) {
   const { fontScale, width } = useWindowDimensions();
@@ -402,18 +380,10 @@ export function SearchScreen({
     return (
       <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
         <InventoryMapScreen
-          addAssetPhotosCommand={addAssetPhotosCommand}
-          assetCheckoutCommand={assetCheckoutCommand}
           key={scopeIdentity}
-          assetCoreQuery={assetCoreQuery}
-          assetContentsQuery={assetContentsQuery}
-          assetPhotosQuery={assetPhotosQuery}
-          assetLifecycleCommand={assetLifecycleCommand}
           canAdd={inventoryContext?.canAdd ?? false}
-          deleteAssetPhotoCommand={deleteAssetPhotoCommand}
           inventoryMapQuery={inventoryMapQuery}
           pathStore={mapPathStore}
-          photoSelectionQuery={photoSelectionQuery}
           selectedSurface={surface}
           onAdd={() => router.navigate('/add')}
           onChangeSurface={updateSurface}

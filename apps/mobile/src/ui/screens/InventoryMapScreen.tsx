@@ -1,8 +1,6 @@
-import { InventoryMapInfoSheet } from './InventoryMapInfoSheet';
 import { createStyles } from './InventoryMapScreen.styles';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
-import type { ProgressiveAssetDetailQueries } from '../serverState/useProgressiveAssetDetail';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import { router } from 'expo-router';
@@ -22,16 +20,11 @@ import {
 } from 'react-native';
 import { ChevronRight, Info, Package, Plus, Search, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
-import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
-import type { AssetLifecycleCommand } from '../../application/assets/AssetLifecycleCommand';
-import type { DeleteAssetPhotoCommand } from '../../application/assets/DeleteAssetPhotoCommand';
 import type {
   InventoryMapAssetViewModel,
   InventoryMapQuery,
   InventoryMapViewModel
 } from '../../application/assets/InventoryMapQuery';
-import type { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
@@ -57,21 +50,14 @@ import {
 import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapColumnViewModel } from './InventoryMapPresentation';
 import { addHereRouteParams } from './AddAssetInitialParent';
+import { assetDetailHref } from './AssetDetailNavigation';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 
 type InventoryMapScreenProps = {
-  readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
-  readonly assetCheckoutCommand: Pick<AssetCheckoutCommand, 'execute'>;
-  readonly assetCoreQuery: ProgressiveAssetDetailQueries['assetCoreQuery'];
-  readonly assetContentsQuery: ProgressiveAssetDetailQueries['assetContentsQuery'];
-  readonly assetPhotosQuery: ProgressiveAssetDetailQueries['assetPhotosQuery'];
-  readonly assetLifecycleCommand: Pick<AssetLifecycleCommand, 'execute'>;
   readonly canAdd: boolean;
-  readonly deleteAssetPhotoCommand: Pick<DeleteAssetPhotoCommand, 'execute'>;
   readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
-  readonly photoSelectionQuery: PhotoSelectionQuery;
   readonly selectedSurface: InventoryMapSurface;
   readonly onAdd: () => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
@@ -102,17 +88,9 @@ const horizontalInset = spacing.lg;
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 
 export function InventoryMapScreen({
-  addAssetPhotosCommand,
-  assetCheckoutCommand,
-  assetCoreQuery,
-  assetContentsQuery,
-  assetPhotosQuery,
-  assetLifecycleCommand,
   canAdd,
-  deleteAssetPhotoCommand,
   inventoryMapQuery,
   pathStore,
-  photoSelectionQuery,
   selectedSurface,
   onAdd,
   onChangeSurface
@@ -146,11 +124,6 @@ export function InventoryMapScreen({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingScrollLevel, setPendingScrollLevel] = useState<number | undefined>();
   const [highlightedAssetId, setHighlightedAssetId] = useState<string | undefined>();
-  const [selection, setSelection] = useState<{ scope: string; asset: InventoryMapAssetViewModel }>();
-  const selectedAsset = mapQuery.data && selection?.scope === mapStorageKey(mapQuery.data) ? selection.asset : undefined;
-  function setSelectedAsset(asset: InventoryMapAssetViewModel | undefined): void {
-    setSelection(asset && mapQuery.data ? { scope: mapStorageKey(mapQuery.data), asset } : undefined);
-  }
   const [branchSwipeVisual, setBranchSwipeVisual] = useState<BranchSwipeVisualState | undefined>();
   const [mapVerticalScrollLocked, setMapVerticalScrollLocked] = useState(false);
   const [exitingColumns, setExitingColumns] = useState<readonly RenderedInventoryMapColumn[]>([]);
@@ -187,9 +160,6 @@ export function InventoryMapScreen({
     if (!mapQuery.data) return;
     const nextMap = mapQuery.data;
     setHighlightedAssetId(undefined);
-    setSelection((current) => current?.scope === mapStorageKey(nextMap)
-      ? { ...current, asset: nextMap.assets.find((next) => next.id === current.asset.id) ?? current.asset }
-      : undefined);
     setBranchSwipeVisual(undefined);
     setMapVerticalScrollLocked(false);
     setOpenPath(pathStore.current.get(mapStorageKey(nextMap)) ?? []);
@@ -385,7 +355,7 @@ export function InventoryMapScreen({
     }
 
     if (!asset.canContainAssets) {
-      setSelectedAsset(asset);
+      router.push(assetDetailHref(asset.id));
       return;
     }
 
@@ -669,7 +639,7 @@ export function InventoryMapScreen({
                 onAddHere={openAddHere}
                 onBranchSwipeFinish={finishBranchSwipe}
                 onBranchSwipeProgress={driveBranchSwipeScroll}
-                onOpenInfo={setSelectedAsset}
+                onOpenInfo={(asset) => router.push(assetDetailHref(asset.id))}
                 onPressAsset={selectBranch}
                 onRefresh={refreshMap}
                 openPath={openPath}
@@ -680,19 +650,6 @@ export function InventoryMapScreen({
           </Animated.View>
         </View>
       ) : null}
-      <InventoryMapInfoSheet
-        addAssetPhotosCommand={addAssetPhotosCommand}
-        assetCheckoutCommand={assetCheckoutCommand}
-        asset={selectedAsset}
-        assetCoreQuery={assetCoreQuery}
-        assetContentsQuery={assetContentsQuery}
-        assetPhotosQuery={assetPhotosQuery}
-        assetLifecycleCommand={assetLifecycleCommand}
-        deleteAssetPhotoCommand={deleteAssetPhotoCommand}
-        photoSelectionQuery={photoSelectionQuery}
-        onClose={() => setSelectedAsset(undefined)}
-        onMapChanged={() => { void mapQuery.reconcile().catch(() => undefined); }}
-      />
     </View>
   );
 }

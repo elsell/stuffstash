@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -33,6 +32,7 @@ import type { ParentLookupResult } from '../../application/add/ParentLookupQuery
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import type { VoiceSessionActionPlanCommand } from '../navigation/VoiceSessionPresentation';
 import { assetDetailHref } from './AssetDetailNavigation';
+import { navigateAfterTransientDismissal } from '../navigation/TransientNavigation';
 import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
   voicePlanCommandEdits,
@@ -105,8 +105,8 @@ export function VoiceSessionSheetScreen() {
       diagnosticsExpanded={diagnosticsExpanded}
       diagnosticsEnabled={diagnosticsEnabled}
       onClose={() => {
-        if (router.canGoBack()) {
-          router.back();
+        if (router.canDismiss()) {
+          router.dismiss();
           return;
         }
 
@@ -184,8 +184,18 @@ export function VoiceSessionSheetScreen() {
         setPhotoDrafts({});
         setCommandDraftState({ drafts: {} });
       }}
-      onOpenProviderProfiles={() => router.push('/settings/voice')}
-      onOpenResponseArtifact={(artifact) => router.push(assetDetailHref(artifact.assetId))}
+      onOpenProviderProfiles={() => {
+        navigateAfterTransientDismissal(
+          () => router.dismiss(),
+          () => router.push('/settings/voice')
+        );
+      }}
+      onOpenResponseArtifact={(artifact) => {
+        navigateAfterTransientDismissal(
+          () => router.dismiss(),
+          () => router.push(assetDetailHref(artifact.assetId))
+        );
+      }}
       onSessionMic={() => {
         void handleSessionMic();
       }}
@@ -293,6 +303,7 @@ function VoiceSessionSheet({
       ) : (
         <>
           <ScrollView
+            automaticallyAdjustKeyboardInsets
             contentContainerStyle={[
               styles.sessionContent,
               !body.hasBodyContent && styles.emptySessionContent
@@ -692,57 +703,58 @@ function ParentPicker({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
+  if (commandId === null) {
+    return null;
+  }
   const currentIndex = commands.findIndex((command) => command.id === commandId);
   const proposedParents = currentIndex < 0
     ? []
     : commands.slice(0, currentIndex).filter((command) => command.editable && command.id);
   return (
-    <Modal animationType="slide" onRequestClose={onClose} presentationStyle="pageSheet" visible={commandId !== null}>
-      <SafeAreaView style={styles.parentPickerSheet}>
-        <View style={styles.parentPickerHeader}>
-          <View>
-            <Text style={styles.parentPickerTitle}>Containing location</Text>
-            <Text style={styles.parentPickerSubtitle}>Choose where this new thing belongs</Text>
-          </View>
-          <Pressable accessibilityLabel="Close location selector" accessibilityRole="button" onPress={onClose} style={styles.iconButton}>
-            <X color={palette.textMuted} size={21} strokeWidth={2.4} />
-          </Pressable>
+    <View style={styles.parentPickerSheet}>
+      <View style={styles.parentPickerHeader}>
+        <View>
+          <Text style={styles.parentPickerTitle}>Containing location</Text>
+          <Text style={styles.parentPickerSubtitle}>Choose where this new thing belongs</Text>
         </View>
-        <AppTextInput
-          accessibilityLabel="Search containing locations"
-          autoCapitalize="none"
-          onChangeText={onChangeQuery}
-          placeholder="Search locations, containers, and items"
-          placeholderTextColor={palette.textMuted}
-          style={styles.parentSearchInput}
-          value={query}
+        <Pressable accessibilityLabel="Close location selector" accessibilityRole="button" onPress={onClose} style={styles.iconButton}>
+          <X color={palette.textMuted} size={21} strokeWidth={2.4} />
+        </Pressable>
+      </View>
+      <AppTextInput
+        accessibilityLabel="Search containing locations"
+        autoCapitalize="none"
+        onChangeText={onChangeQuery}
+        placeholder="Search locations, containers, and items"
+        placeholderTextColor={palette.textMuted}
+        style={styles.parentSearchInput}
+        value={query}
+      />
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        <ParentOption
+          label="Inventory root"
+          meta="No containing location"
+          onPress={() => onSelect(commandId, { kind: 'root', label: 'Inventory root' })}
         />
-        <ScrollView contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        {proposedParents.map((command) => (
           <ParentOption
-            label="Inventory root"
-            meta="No containing location"
-            onPress={() => commandId && onSelect(commandId, { kind: 'root', label: 'Inventory root' })}
+            key={command.id}
+            label={command.id ? commandDrafts[command.id]?.title ?? command.title : command.title}
+            meta="Created by this plan"
+            onPress={() => command.id && onSelect(commandId, { kind: 'command', id: command.id, label: commandDrafts[command.id]?.title ?? command.title })}
           />
-          {proposedParents.map((command) => (
-            <ParentOption
-              key={command.id}
-              label={command.id ? commandDrafts[command.id]?.title ?? command.title : command.title}
-              meta="Created by this plan"
-              onPress={() => commandId && command.id && onSelect(commandId, { kind: 'command', id: command.id, label: commandDrafts[command.id]?.title ?? command.title })}
-            />
-          ))}
-          {matches.map((match) => (
-            <ParentOption
-              disabled={match.canSelectAsParent === false}
-              key={match.id}
-              label={match.title}
-              meta={match.disabledReason ?? (match.willPromoteToContainer ? `${match.pathLabel} · Will become a container` : match.pathLabel)}
-              onPress={() => commandId && onSelect(commandId, { kind: 'asset', id: match.id, label: match.pathLabel })}
-            />
-          ))}
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+        ))}
+        {matches.map((match) => (
+          <ParentOption
+            disabled={match.canSelectAsParent === false}
+            key={match.id}
+            label={match.title}
+            meta={match.disabledReason ?? (match.willPromoteToContainer ? `${match.pathLabel} · Will become a container` : match.pathLabel)}
+            onPress={() => onSelect(commandId, { kind: 'asset', id: match.id, label: match.pathLabel })}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 

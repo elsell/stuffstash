@@ -6,6 +6,16 @@ import homeScreenSource from '../screens/HomeScreen.tsx?raw';
 import browseScreenSource from '../screens/SearchScreen.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import voiceScreenSource from '../screens/VoiceSessionSheetScreen.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import mapScreenSource from '../screens/InventoryMapScreen.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import addScreenSource from '../screens/AddAssetScreen.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import tagColorPickerSource from '../components/TagColorPicker.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import customizationFieldsSource from '../components/CustomizationEditorFields.tsx?raw';
+// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
+import assetDetailSheetsSource from '../screens/AssetDetailSheets.tsx?raw';
 
 // @ts-expect-error Vitest's Vite transform provides the app route manifest to structural tests.
 const appSources = import.meta.glob('../../app/**/*.tsx', {
@@ -33,12 +43,15 @@ describe('mobile navigation contract', () => {
     expect(tabLayoutSource).toContain('<NativeTabs.BottomAccessory>');
     expect(tabLayoutSource).toContain('<VoiceBottomAccessory />');
     expect(tabLayoutSource).toContain('</NativeTabs.BottomAccessory>');
+    expect(tabLayoutSource).not.toContain('minimizeBehavior');
   });
 
   it('owns Add as a non-tab stack route', () => {
     expect(appSources).toHaveProperty('../../app/add.tsx');
     expect(appSources).not.toHaveProperty('../../app/(tabs)/add.tsx');
     expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']add["']/);
+    expect(addScreenSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(addScreenSource).toContain('accessibilityRole="header"');
   });
 
   it('keeps Settings as a non-tab stack route', () => {
@@ -57,7 +70,24 @@ describe('mobile navigation contract', () => {
   it('opens grounded voice response entities through the asset detail route', () => {
     expect(voiceScreenSource).toContain("import { assetDetailHref } from './AssetDetailNavigation'");
     expect(voiceScreenSource).toContain('router.push(assetDetailHref(artifact.assetId))');
+    expect(voiceScreenSource).toContain('navigateAfterTransientDismissal');
     expect(voiceScreenSource).not.toMatch(/artifact\.(?:href|url|route)/);
+  });
+
+  it('does not allow transient Voice or Map surfaces to own product navigation', () => {
+    expect(voiceScreenSource).toContain('router.dismiss()');
+    expect(voiceScreenSource).not.toMatch(/onOpenProviderProfiles=\{\(\)\s*=>\s*router\.push/);
+    expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
+    expect(voiceScreenSource).toContain("() => router.push('/settings/voice')");
+    expect(voiceScreenSource).not.toContain('<Modal');
+    expect(voiceScreenSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(assetDetailSheetsSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(homeScreenSource).not.toContain('<Modal');
+    expect(browseScreenSource).not.toContain('<Modal');
+    expect(tagColorPickerSource).not.toContain('<Modal');
+    expect(customizationFieldsSource).not.toContain('<Modal');
+    expect(mapScreenSource).not.toContain('InventoryMapInfoSheet');
+    expect(mapScreenSource).toContain('router.push(assetDetailHref(asset.id))');
   });
 
   it('keeps invitation acceptance outside the tab hierarchy', () => {
