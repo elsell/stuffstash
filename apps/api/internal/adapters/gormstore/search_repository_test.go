@@ -2,6 +2,7 @@ package gormstore
 
 import (
 	"context"
+	"crypto/rand"
 	"testing"
 	"time"
 
@@ -366,7 +367,7 @@ func saveSearchAttachmentWithAuditID(t *testing.T, ctx context.Context, store St
 	if !ok {
 		t.Fatalf("expected valid attachment id")
 	}
-	storageKey, ok := media.NewStorageKey("test/" + id)
+	storageKey, ok := media.NewStorageKey("test/" + id + "/" + rand.Text())
 	if !ok {
 		t.Fatalf("expected valid storage key")
 	}

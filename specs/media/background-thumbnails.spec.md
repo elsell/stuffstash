@@ -423,3 +423,7 @@ failure/crash attempts, fenced/idempotent yield resolution, same-photo suppressi
 at concurrency two, cancellation/retry wakeups, and unchanged authorized read and
 delete boundaries. Repeat the paced/back-to-back production experiment after CI
 and code-critic review; record storage failures separately from scheduling latency.
+
+Repeated PostgreSQL search fixtures must allocate a fresh original storage key for
+each attachment creation, matching the permanent reservation contract. Removing
+fixture attachment rows must not imply that a previously used blob key is reusable.
