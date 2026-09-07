@@ -29,6 +29,11 @@ status are sampled alongside it. Readiness is an upper bound affected by the pro
 interval and object HEAD latency. Kubernetes metrics are sampled working-set values,
 not proof of the instantaneous peak allocation.
 
+The mobile adapter selects small, medium and large authenticated thumbnail references;
+the web repository fetches small thumbnails for attachment and primary-photo views.
+Both use the existing API thumbnail contract, so background preparation applies to
+both without a frontend release.
+
 This measures API-visible image loading and background preparation, not mobile UI
 render time. JSON/base64 upload timing does not substitute for a direct-upload timing
 measurement. Automated boundary tests cover direct-upload completion and imports.
