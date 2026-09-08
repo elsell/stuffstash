@@ -1,3 +1,7 @@
+import { appendConversationExchange, canSubmitConversation } from './VoiceConversationHistory';
+import type { VoicePlanPhotoDrafts } from '../screens/VoicePlanPhotoDraftState';
+import type { VoicePlanCommandDrafts } from '../screens/VoicePlanEdits';
+import type { Dispatch, SetStateAction } from 'react';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -28,7 +32,22 @@ export type VoiceInteractionState =
       readonly realtime: VoiceRealtimeState | null;
     };
 
+type TitleEditor = { readonly commandId: string; readonly value: string } | null;
+type ConversationDraftState = { readonly planId?: string; readonly drafts: VoicePlanCommandDrafts };
 type VoiceInteractionStateContextValue = {
+  readonly titleEditor: TitleEditor;
+  readonly setTitleEditor: Dispatch<SetStateAction<TitleEditor>>;
+  readonly history: readonly VoiceRealtimeState[];
+  readonly composerText: string;
+  readonly setComposerText: (text: string) => void;
+  readonly photoDrafts: VoicePlanPhotoDrafts;
+  readonly setPhotoDrafts: Dispatch<SetStateAction<VoicePlanPhotoDrafts>>;
+  readonly commandDraftState: ConversationDraftState;
+  readonly setCommandDraftState: Dispatch<SetStateAction<ConversationDraftState>>;
+  readonly sendText: () => Promise<void>;
+  readonly pauseMedia: () => Promise<void>;
+  readonly scrollOffset: React.MutableRefObject<number>;
+  readonly railOffsets: React.MutableRefObject<Record<string, number>>;
   readonly diagnosticsEnabled: boolean;
   readonly state: VoiceInteractionState;
   readonly setStage: (stage: VoiceInteractionStage) => void;
@@ -64,15 +83,27 @@ export function VoiceInteractionStateProvider(props: VoiceInteractionStateProvid
 type PreviewState = { readonly status: 'loading' } | { readonly status: 'error'; readonly message: string } | { readonly status: 'ready'; readonly preview: VoiceInteractionPreviewViewModel };
 
 function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = false, realtimeController, previewState, scopeKey }: VoiceInteractionStateProviderProps & { readonly previewState: PreviewState; readonly scopeKey: string }) {
+  const [titleEditor, setTitleEditor] = useState<TitleEditor>(null);
+  const [history, setHistory] = useState<readonly VoiceRealtimeState[]>([]);
+  const [composerText, setComposerText] = useState('');
+  const [photoDrafts, setPhotoDrafts] = useState<VoicePlanPhotoDrafts>({});
+  const [commandDraftState, setCommandDraftState] = useState<ConversationDraftState>({ drafts: {} });
+  const scrollOffset = useRef(0);
+  const railOffsets = useRef<Record<string, number>>({});
+  const requestPending = useRef(false);
+  const interactionLifetime = useRef(0);
+  const photoRetries = useRef(new Set<string>());
   const [stage, setStage] = useState<VoiceInteractionStage>('ready');
   const [realtime, setRealtime] = useState<VoiceRealtimeState | null>(null);
   const sessionGeneration = useRef(0);
   const [stateOwner, setStateOwner] = useState(scopeKey);
   useEffect(() => {
     setStateOwner(scopeKey);
+    setTitleEditor(null); setHistory([]); setComposerText(''); setPhotoDrafts({}); setCommandDraftState({ drafts: {} });
+    scrollOffset.current = 0; railOffsets.current = {}; requestPending.current = false;
     setStage('ready');
     setRealtime(null);
-    return () => { sessionGeneration.current++; void realtimeController.dispose(); };
+    return () => { interactionLifetime.current++; photoRetries.current.clear(); sessionGeneration.current++; void realtimeController.dispose(); };
   }, [realtimeController, scopeKey]);
 
   useEffect(() => {
@@ -120,10 +151,43 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           : { status: 'loading', stage };
 
     return {
+      titleEditor, setTitleEditor,
+      history: stateOwner === scopeKey ? history : [], composerText: stateOwner === scopeKey ? composerText : '', setComposerText,
+      photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, scrollOffset, railOffsets,
+      pauseMedia: async () => {
+        if (stage === 'listening' || (canSubmitConversation(stage) && requestPending.current)) {
+          sessionGeneration.current++;
+          requestPending.current = false;
+          setStage('ready'); setRealtime(null);
+        }
+        await realtimeController.pauseMedia();
+      },
+      sendText: async () => {
+        if (!canSubmitConversation(stage) || requestPending.current || !composerText.trim()) return;
+        requestPending.current = true;
+        const text = composerText;
+        const generation = ++sessionGeneration.current;
+        setHistory(current => appendConversationExchange(current, realtime, commandDraftState.drafts));
+        setComposerText(''); setStage('processing');
+        try {
+          await realtimeController.sendText(text, next => {
+            if (sessionGeneration.current !== generation) return;
+            setRealtime(next); setStage(next.status);
+          });
+        } catch (error) {
+          if (sessionGeneration.current === generation) {
+            setComposerText(text);
+            setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState))); setStage('failed');
+          }
+        } finally { if (sessionGeneration.current === generation) requestPending.current = false; }
+      },
       diagnosticsEnabled,
       state,
       setStage,
       startRealtime: async () => {
+        if (!canSubmitConversation(stage) || requestPending.current) return;
+        requestPending.current = true;
+        setHistory(current => appendConversationExchange(current, realtime, commandDraftState.drafts));
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
         try {
@@ -138,15 +202,19 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           }
           setRealtime(next);
           setStage('listening');
+          requestPending.current = false;
         } catch (error) {
           if (sessionGeneration.current !== generation) {
             return;
           }
           setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
+          requestPending.current = false;
         }
       },
       stopRealtime: async () => {
+        if (stage !== 'listening' || requestPending.current) return;
+        requestPending.current = true;
         const generation = sessionGeneration.current;
         setStage('processing');
         try {
@@ -166,12 +234,14 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           }
           setRealtime(finalState);
           setStage(finalState?.status ?? 'failed');
+          requestPending.current = false;
         } catch (error) {
           if (sessionGeneration.current !== generation) {
             return;
           }
           if (isVoiceCancelledError(error)) {
-            const cancelled = await realtimeController.cancel();
+            requestPending.current = false;
+        const cancelled = await realtimeController.cancel();
             if (sessionGeneration.current !== generation) {
               return;
             }
@@ -181,6 +251,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           }
           setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
+          requestPending.current = false;
         }
       },
       approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts, edits?: readonly VoiceActionPlanCommandEdit[]) => {
@@ -190,6 +261,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         } catch (error) {
           setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
+          requestPending.current = false;
         }
       },
       cancelRealtimeActionPlan: async (planId: string) => {
@@ -199,20 +271,32 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         } catch (error) {
           setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
           setStage('failed');
+          requestPending.current = false;
         }
       },
       retryRealtimeActionPlanPhotos: async (planId: string) => {
+        if (photoRetries.current.has(planId)) return;
+        photoRetries.current.add(planId);
+        const generation = interactionLifetime.current;
         setRealtime((current) => markPhotoRetryInProgress(current, planId));
+        setHistory(current => current.map(exchange => markPhotoRetryInProgress(exchange, planId)!));
         try {
           const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
+          if (interactionLifetime.current !== generation) return;
           setRealtime((current) => markPhotoRetryResult(current, planId, photoAttachmentStatus));
+          setHistory(current => current.map(exchange => markPhotoRetryResult(exchange, planId, photoAttachmentStatus)!));
         } catch {
+          if (interactionLifetime.current !== generation) return;
           setRealtime((current) => markPhotoRetryFailure(current, planId));
+          setHistory(current => current.map(exchange => markPhotoRetryFailure(exchange, planId)!));
+        } finally {
+          if (interactionLifetime.current === generation) photoRetries.current.delete(planId);
         }
       },
       cancelRealtime: async () => {
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
+        requestPending.current = false;
         const cancelled = await realtimeController.cancel();
         if (sessionGeneration.current !== generation) {
           return;
@@ -221,12 +305,17 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         setStage('cancelled');
       },
       reset: () => {
+        interactionLifetime.current++; photoRetries.current.clear();
         sessionGeneration.current++;
+        void realtimeController.dispose();
+        requestPending.current = false;
+        setTitleEditor(null); setHistory([]); setComposerText(''); setPhotoDrafts({}); setCommandDraftState({ drafts: {} });
+        scrollOffset.current = 0; railOffsets.current = {};
         setRealtime(null);
         setStage('ready');
       }
     };
-  }, [diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey]);
+  }, [titleEditor, history, composerText, photoDrafts, commandDraftState, diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey]);
 
   return (
     <VoiceInteractionStateContext.Provider value={value}>
@@ -248,7 +337,7 @@ export function markReviewDecisionPending(state: VoiceRealtimeState | null, prog
 }
 
 export function markPhotoRetryInProgress(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
-  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos' } : state;
+  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos', ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: 'Adding photos…', canRetry: false } } : {}) } : state;
 }
 
 export function markPhotoRetryResult(

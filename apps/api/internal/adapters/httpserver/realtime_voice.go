@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"nhooyr.io/websocket"
 
@@ -31,6 +32,7 @@ const (
 	realtimeClientMessageSessionStart      realtimeClientMessageType = "session.start"
 	realtimeClientMessageAudioChunk        realtimeClientMessageType = "audio.chunk"
 	realtimeClientMessageAudioEnd          realtimeClientMessageType = "audio.end"
+	realtimeClientMessageTextInput         realtimeClientMessageType = "text.input"
 	realtimeClientMessageSessionCancel     realtimeClientMessageType = "session.cancel"
 	realtimeClientMessageActionPlanApprove realtimeClientMessageType = "action.plan.approve"
 	realtimeClientMessageActionPlanCancel  realtimeClientMessageType = "action.plan.cancel"
@@ -163,7 +165,7 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			turnLimit = app.RealtimeVoiceSessionTurnLimit(session)
 		}
 		for turn := 0; turn < turnLimit; turn++ {
-			audioChunks, nextClientSeq, err := readRealtimeAudio(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs, timeouts.idle)
+			audioChunks, textInput, nextClientSeq, err := readRealtimeInput(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs, timeouts.idle)
 			lastClientSeq = nextClientSeq
 			if err != nil {
 				if errors.Is(err, errRealtimeVoiceCancelled) {
@@ -195,6 +197,7 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			err = application.RunRealtimeVoiceQuery(ctx, app.RealtimeVoiceQueryInput{
 				Session:                    session,
 				AudioChunks:                audioChunks,
+				Text:                       textInput,
 				ContinueAfterClarification: true,
 				ConversationTurns:          conversationTurns,
 			}, func(event app.RealtimeVoiceEvent) error {
@@ -289,6 +292,7 @@ func appendRealtimeVoiceConversationTurns(turns []ports.AgentConversationTurn, t
 }
 
 type realtimeClientMessage struct {
+	Text                   string                           `json:"text"`
 	ConversationContinuity bool                             `json:"conversationContinuity,omitempty"`
 	Type                   realtimeClientMessageType        `json:"type"`
 	Seq                    int                              `json:"seq"`
@@ -484,54 +488,60 @@ func validRealtimeVoiceRequestedCapabilities(capabilities []string) bool {
 	return true
 }
 
-func readRealtimeAudio(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}, idleTimeout time.Duration) ([][]byte, int, error) {
+func readRealtimeInput(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}, idleTimeout time.Duration) ([][]byte, string, int, error) {
 	chunks := [][]byte{}
 	seenChunks := map[string]struct{}{}
 	for {
 		message, err := readRealtimeAudioMessageWithIdle(ctx, connection, idleTimeout)
 		if err != nil {
-			return nil, lastClientSeq, err
+			return nil, "", lastClientSeq, err
 		}
 		if message.Seq <= lastClientSeq {
-			return nil, lastClientSeq, ports.ErrInvalidProviderInput
+			return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 		}
 		lastClientSeq = message.Seq
 		if message.SessionID != sessionID {
-			return nil, lastClientSeq, ports.ErrForbidden
+			return nil, "", lastClientSeq, ports.ErrForbidden
 		}
 		switch message.Type {
 		case realtimeClientMessageClientAck:
 			if message.AckSeq <= 0 {
-				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			continue
 		case realtimeClientMessageAudioChunk:
 			chunkID := strings.TrimSpace(message.ChunkID)
 			if chunkID == "" {
-				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			if _, exists := seenChunks[chunkID]; exists {
-				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			if _, exists := seenSessionChunkIDs[chunkID]; exists {
-				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			seenChunks[chunkID] = struct{}{}
 			seenSessionChunkIDs[chunkID] = struct{}{}
 			chunk, err := base64.StdEncoding.DecodeString(message.AudioBase64)
 			if err != nil || len(chunk) == 0 || len(chunk) > maxRealtimeAudioChunkBytes {
-				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			chunks = append(chunks, chunk)
+		case realtimeClientMessageTextInput:
+			text := strings.TrimSpace(message.Text)
+			if len(chunks) != 0 || text == "" || utf8.RuneCountInString(text) > app.MaxRealtimeTextCharacters {
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
+			}
+			return nil, text, lastClientSeq, nil
 		case realtimeClientMessageAudioEnd:
 			if len(chunks) == 0 {
-				return nil, lastClientSeq, ports.ErrInvalidProviderInput
+				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
-			return chunks, lastClientSeq, nil
+			return chunks, "", lastClientSeq, nil
 		case realtimeClientMessageSessionCancel:
-			return nil, lastClientSeq, errRealtimeVoiceCancelled
+			return nil, "", lastClientSeq, errRealtimeVoiceCancelled
 		default:
-			return nil, lastClientSeq, ports.ErrInvalidProviderInput
+			return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 		}
 	}
 }

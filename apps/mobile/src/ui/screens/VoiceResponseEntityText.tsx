@@ -63,7 +63,7 @@ function createStyles(colors: ReturnType<typeof useAppearancePalette>) {
     responseText: {
       color: colors.text,
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: '400',
       lineHeight: 24
     },
     responseTextGroup: {

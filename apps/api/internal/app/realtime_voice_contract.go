@@ -90,7 +90,10 @@ type RealtimeVoiceSession struct {
 	textToSpeech               ports.TextToSpeechProvider
 }
 
+const MaxRealtimeTextCharacters = 8000
+
 type RealtimeVoiceQueryInput struct {
+	Text                       string
 	Session                    RealtimeVoiceSession
 	AudioChunks                [][]byte
 	ContinueAfterClarification bool

@@ -31,6 +31,7 @@ const voiceClientMessage = {
   sessionStart: 'session.start',
   audioChunk: 'audio.chunk',
   audioEnd: 'audio.end',
+  textInput: 'text.input',
   sessionCancel: 'session.cancel',
   actionPlanApprove: 'action.plan.approve',
   actionPlanCancel: 'action.plan.cancel'
@@ -108,6 +109,11 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
     this.webSocketFactory = options.webSocketFactory ?? createReactNativeWebSocket;
   }
 
+  close(): void {
+    this.activeFollowUpSession?.close();
+    this.activeFollowUpSession = null;
+  }
+
   async run(
     input: RealtimeVoiceTransportInput,
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
@@ -138,7 +144,13 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let settled = false;
       let decisionSent = false;
       let messageChain = Promise.resolve();
-      const sendAudioTurn = (audioChunksBase64: readonly string[], signal?: AbortSignal) => {
+      const sendAudioTurn = (audioChunksBase64: readonly string[], signal?: AbortSignal, text?: string) => {
+        if (signal?.aborted) throw new VoiceRealtimeCancelledError();
+        if (text !== undefined) {
+          if (!text.trim() || [...text].length > 8000 || audioChunksBase64.length) throw new Error('Invalid conversation message.');
+          socket.send(JSON.stringify({ type: voiceClientMessage.textInput, seq: seq++, sessionId, text: text.trim() }));
+          return;
+        }
         audioChunksBase64.forEach((audioBase64, index) => {
           if (signal?.aborted) {
             throw new VoiceRealtimeCancelledError();
@@ -295,7 +307,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             if (settled || options.signal?.aborted) {
               return;
             }
-            sendAudioTurn(input.audioChunksBase64);
+            sendAudioTurn(input.audioChunksBase64, options.signal, input.text);
           }
           if (message.type === voiceServerMessage.assistantResponseCompleted) {
             lastResponseKind = message.response.kind;
@@ -319,6 +331,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
                     cancelSocketForUser();
                     return Promise.reject(new VoiceRealtimeCancelledError());
                   }
+                  if (followUpPending) return Promise.reject(new Error('A response is already pending.'));
                   currentOnEvent = followUpOnEvent ?? onEvent;
                   followUpPending = true;
                   responseCompletedForTurn = false;
@@ -347,7 +360,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
                   });
                   followUpOptions?.signal?.addEventListener('abort', abortFollowUpHandler, { once: true });
                   try {
-                    sendAudioTurn(audioChunksBase64, followUpOptions?.signal);
+                    sendAudioTurn(audioChunksBase64, followUpOptions?.signal, followUpOptions?.text);
                   } catch (error) {
                     followUpOptions?.signal?.removeEventListener('abort', abortFollowUpHandler);
                     followUpPending = false;

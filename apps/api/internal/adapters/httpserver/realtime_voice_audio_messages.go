@@ -40,6 +40,7 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 		}
 	}
 	var message struct {
+		Text         string `json:"text"`
 		Type         string `json:"type"`
 		Seq          int    `json:"seq"`
 		SessionID    string `json:"sessionId"`
@@ -53,6 +54,7 @@ func readRealtimeAudioMessage(ctx context.Context, connection *websocket.Conn) (
 		return realtimeClientMessage{}, err
 	}
 	return realtimeClientMessage{
+		Text:         message.Text,
 		Type:         realtimeClientMessageType(strings.TrimSpace(message.Type)),
 		Seq:          message.Seq,
 		SessionID:    message.SessionID,
@@ -71,6 +73,8 @@ func realtimeAudioMessageFieldAllowed(messageType realtimeClientMessageType, fie
 		case "type", "seq", "sessionId", "chunkId", "audioBase64", "isFinalChunk":
 			return true
 		}
+	case realtimeClientMessageTextInput:
+		return field == "type" || field == "seq" || field == "sessionId" || field == "text"
 	case realtimeClientMessageAudioEnd:
 		switch field {
 		case "type", "seq", "sessionId":

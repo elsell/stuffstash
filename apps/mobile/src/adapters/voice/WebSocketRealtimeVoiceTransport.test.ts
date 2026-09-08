@@ -1574,3 +1574,18 @@ async function promiseSettled(promise: Promise<unknown>): Promise<boolean> {
 function isEventType(event: unknown, type: string): boolean {
   return typeof event === 'object' && event !== null && 'type' in event && event.type === type;
 }
+
+it('sends text as a sequenced authenticated turn without audio frames', async () => {
+  const socket = new FakeWebSocket();
+  const transport = new WebSocketRealtimeVoiceTransport({ apiBaseUrl: 'https://inventory.example', tokenProvider: () => 'test-token', webSocketFactory: () => socket });
+  const run = transport.run({ tenantId: 'tenant-home', inventoryId: 'inventory-home', source: 'mobile_voice', text: 'Find the drill',
+    inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 }, outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: [] }, async () => {});
+  socket.open(); socket.receive(sessionStarted());
+  socket.receive({ type: 'assistant.response.completed', seq: 2, sessionId: 'session-1', response: { kind: 'answer', spokenResponse: 'Here it is.', displayResponse: 'Here it is.' } });
+  socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1', followUpAvailable: true });
+  await run;
+  expect(socket.sent.map(message => message.type)).toEqual(['session.start', 'text.input']);
+  expect(socket.sent[1]).toEqual({ type: 'text.input', seq: 2, sessionId: 'session-1', text: 'Find the drill' });
+  transport.close();
+  expect(transport.canSendFollowUpAudio()).toBe(false);
+});

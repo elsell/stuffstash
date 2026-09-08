@@ -1,3 +1,4 @@
+import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
@@ -138,6 +139,7 @@ function ThemedApp() {
           }}
         />
       </Stack>
+      <VoiceConversationReturn />
       <AppKeyboardAccessory />
     </AppServicesProvider>
     </InventoryInvitationLinkProvider>

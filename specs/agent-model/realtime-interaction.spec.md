@@ -130,3 +130,7 @@ Speech-to-text and text-to-speech ports must also be project-owned. Their adapte
 - Should realtime interaction support resumable sessions?
 - What audio format should mobile clients stream first?
 - Which realtime provider capabilities are required for the first release?
+
+## Mobile typed turns
+
+`mobile-conversation-interface.spec.md` extends the authenticated realtime conversation with `text.input` turns, sharing the existing authorized model loop and explicit action-plan decisions. Text and audio can alternate within the same negotiated continuity window.
