@@ -179,6 +179,9 @@ function accessoryPhaseTitle(phase: VoiceRealtimeState['conversationPhase']): st
 
 function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | undefined, diagnosticsEnabled: boolean): string | undefined {
   const code = realtime?.failureCode;
+  if (code === 'provider_billing_disabled') {
+    return 'Ask your provider administrator to restore Google Cloud billing.';
+  }
   if (
     code === 'provider_readiness' ||
     code === 'speech_to_text_failed' ||
@@ -197,6 +200,8 @@ function safeFailureAccessorySubtitle(realtime: VoiceRealtimeState | null | unde
 
 function safeFailureAccessoryTitle(realtime: VoiceRealtimeState | null | undefined): string {
   switch (realtime?.failureCode) {
+    case 'provider_billing_disabled':
+      return 'Provider billing is disabled';
     case 'speech_to_text_failed':
       return 'Speech input failed';
     case 'language_inference_failed':
@@ -528,7 +533,8 @@ function friendlyParentKind(value: string | undefined): string {
 }
 
 function isProviderRecoveryFailure(code: VoiceRealtimeState['failureCode']): boolean {
-  return code === 'provider_readiness' ||
+  return code === 'provider_billing_disabled' ||
+    code === 'provider_readiness' ||
     code === 'speech_to_text_failed' ||
     code === 'language_inference_failed' ||
     code === 'text_to_speech_failed';

@@ -27,3 +27,21 @@ Proposals retain editable titles, parent selection, photos, risk disclosure, exp
 ## Verification and release
 
 Tests cover typed/audio continuity, invalid text frames, unauthorized and cross-scope access, retained conversation/draft state, entity links and bounded result presentation. Run mobile checks, relevant API security tests, structural checks and code-critic review before merging. Build exclusively in CI for this change. Release through the stable-tag workflow and its TestFlight job, then update the Stuff Stash GitOps image pins in `~/code/infra`. Upload success and Apple processing availability are separate release evidence.
+
+### Readable message layout and formatting
+
+Message bubbles size to their text and never grow to fill the scroll viewport.
+The conversation list has a bounded, flexible viewport between the fixed header
+and composer; long answers and result rails remain reachable by scrolling.
+Only the viewport owns vertical scrolling. Response text beside an icon gets its
+width from that row, without imposing vertical growth on text used in bubbles.
+User messages link only asset names actually mentioned, without adding answer
+result buttons to the user's bubble. Assistant messages retain fallback controls
+for ambiguous or otherwise unplaced resolved references.
+
+Display responses preserve paragraph and list line breaks up to the API's 1,000
+character display-response limit. A shared native text renderer supports paragraphs,
+bulleted/numbered lists, headings, bold, emphasis and inline code. Formatting is
+presentation only: links still come exclusively from authorized response artifacts;
+model-provided URLs do not become navigation targets. User transcripts stay literal.
+The same renderer applies to current and previous assistant messages.

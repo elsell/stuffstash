@@ -720,3 +720,17 @@ The mobile client opts in, retains the transport only when advertised, and reuse
 The model must distinguish referring to an existing recorded item from adding an explicitly additional physical item. A similar existing title is relevant evidence but does not prohibit an additional item. There is no creation-mode enum or evidence-quote gate. Tests must verify that existing-item moves do not duplicate assets and explicit additional-item requests can propose creation.
 
 The proposal remains reviewable and states which item will be created or moved. It cannot reuse an existing ID as the identity of a new item, approve itself or bypass domain command validation, authorization or audit.
+
+### Provider billing failures
+
+When a provider explicitly reports disabled billing, the API returns the safe
+`provider_billing_disabled` session failure code regardless of the failed voice
+stage. Google adapters recognize only structured `google.rpc.ErrorInfo` with
+`domain: googleapis.com` and `reason: BILLING_DISABLED` on HTTP 403, reading at most
+64 KiB of error data. Other errors retain their existing stage classification;
+arbitrary provider messages are never forwarded or interpreted as billing errors.
+Safe diagnostics may record the billing category, never response bodies or project
+identifiers. Mobile shows “Provider billing is disabled” and explains: “Your Google
+Cloud voice provider has billing disabled. Ask your provider administrator to
+restore billing, then try again.” The existing Voice providers recovery action
+remains available in the sheet and the minimized accessory names the same cause.

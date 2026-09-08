@@ -1,3 +1,4 @@
+import { voiceResponseMarkdown, type VoiceMarkdownSpan } from './VoiceResponseMarkdown';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import { useAppearancePalette } from '../theme/AppearanceContext';
@@ -5,38 +6,44 @@ import { spacing } from '../theme/tokens';
 import { buildVoiceResponseEntityLinks, voiceResponseEntityOpenLabel } from './VoiceResponseEntityLinks';
 
 export function VoiceResponseEntityText({
+  markdown = false,
+  showFallbackReferences = true,
   enabled,
   onOpen,
   references,
   text
 }: {
+  readonly markdown?: boolean;
+  readonly showFallbackReferences?: boolean;
   readonly enabled: boolean;
   readonly onOpen: (artifact: VoiceResponseArtifact) => void;
   readonly references: readonly VoiceResponseArtifact[];
   readonly text: string;
 }) {
   const styles = createStyles(useAppearancePalette());
-  const presentation = buildVoiceResponseEntityLinks(text, references);
+  const blocks = markdown ? voiceResponseMarkdown(text) : [{ prefix: '', spans: [{ text }] }];
+  const linkedBlocks = blocks.map(block => ({ ...block, links: buildVoiceResponseEntityLinks(block.spans.map(span => span.text).join(''), references) }));
+  const placed = new Set(linkedBlocks.flatMap(block => block.links.segments.flatMap(segment => segment.reference ? [segment.reference.assetId] : [])));
+  const fallbackReferences = references.filter(reference => !placed.has(reference.assetId));
   return (
     <View style={styles.responseTextGroup}>
-      <Text accessibilityLiveRegion="polite" style={styles.responseText}>
-        {presentation.segments.map((segment, index) => segment.reference ? (
+      {linkedBlocks.map((block, blockIndex) => <Text key={blockIndex} accessibilityLiveRegion="polite" style={[styles.responseText, block.heading && styles.strong]}>
+        {block.prefix}
+        {block.links.segments.map((segment, index) => (
           <Text
-            accessibilityHint={enabled ? 'Opens this asset' : undefined}
-            accessibilityLabel={enabled ? `Open ${segment.reference.title}` : undefined}
-            accessibilityRole={enabled ? 'link' : undefined}
-            key={`${segment.reference.assetId}-${index.toString()}`}
-            onPress={enabled ? () => onOpen(segment.reference!) : undefined}
-            style={enabled ? styles.responseEntityLink : undefined}
-          >
-            {segment.text}
-          </Text>
-        ) : segment.text)}
-      </Text>
-      {presentation.fallbackReferences.length ? (
+            accessibilityHint={enabled && segment.reference ? 'Opens this asset' : undefined}
+            accessibilityLabel={enabled && segment.reference ? `Open ${segment.reference.title}` : undefined}
+            accessibilityRole={enabled && segment.reference ? 'link' : undefined}
+            key={index}
+            onPress={enabled && segment.reference ? () => onOpen(segment.reference!) : undefined}
+            style={enabled && segment.reference ? styles.responseEntityLink : undefined}
+          >{formattedSlice(block.spans, block.links.segments.slice(0, index).reduce((length, previous) => length + previous.text.length, 0), segment.text.length).map((span, spanIndex) => <Text key={spanIndex} style={[span.bold && styles.strong, span.italic && styles.emphasis, span.code && styles.code]}>{span.text}</Text>)}</Text>
+        ))}
+      </Text>)}
+      {showFallbackReferences && fallbackReferences.length ? (
         <View style={styles.responseEntityActions}>
-          {presentation.fallbackReferences.map((reference) => {
-            const label = voiceResponseEntityOpenLabel(reference, presentation.fallbackReferences);
+          {fallbackReferences.map((reference) => {
+            const label = voiceResponseEntityOpenLabel(reference, fallbackReferences);
             const unavailableLabel = `${reference.title}${reference.context ? ` in ${reference.context}` : ''}, available after the response finishes`;
             return (
               <Pressable
@@ -58,8 +65,21 @@ export function VoiceResponseEntityText({
   );
 }
 
+function formattedSlice(spans: readonly VoiceMarkdownSpan[], start: number, length: number): VoiceMarkdownSpan[] {
+  let offset = 0;
+  return spans.flatMap(span => {
+    const from = Math.max(0, start - offset);
+    const to = Math.min(span.text.length, start + length - offset);
+    offset += span.text.length;
+    return to > from ? [{ ...span, text: span.text.slice(from, to) }] : [];
+  });
+}
+
 function createStyles(colors: ReturnType<typeof useAppearancePalette>) {
   return StyleSheet.create({
+    strong: { fontWeight: '700' },
+    emphasis: { fontStyle: 'italic' },
+    code: { fontFamily: 'monospace' },
     responseText: {
       color: colors.text,
       fontSize: 17,
@@ -67,7 +87,8 @@ function createStyles(colors: ReturnType<typeof useAppearancePalette>) {
       lineHeight: 24
     },
     responseTextGroup: {
-      flex: 1,
+      minWidth: 0,
+      flexShrink: 1,
       gap: spacing.sm
     },
     responseEntityLink: {

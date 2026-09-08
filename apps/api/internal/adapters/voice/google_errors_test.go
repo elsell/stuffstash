@@ -66,3 +66,27 @@ func TestGoogleGeminiLanguageInferenceReportsSafeTimeout(t *testing.T) {
 func googleConversationTestInput(text string) ports.ConversationModelInput {
 	return ports.ConversationModelInput{Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: text}}}
 }
+
+func TestGoogleProviderBillingFailureClassification(t *testing.T) {
+	for _, tc := range []struct{ name, body, want string }{
+		{"billing", `{"error":{"message":"private project secret","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"BILLING_DISABLED","domain":"googleapis.com","metadata":{"consumer":"private-project"}}]}}`, "provider_billing_disabled"},
+		{"permission", `{"error":{"message":"Billing is disabled","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"IAM_PERMISSION_DENIED","domain":"googleapis.com"}]}}`, "provider_http_status_403"},
+		{"untrusted domain", `{"error":{"details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"BILLING_DISABLED","domain":"untrusted"}]}}`, "provider_http_status_403"},
+		{"malformed", `{`, "provider_http_status_403"},
+		{"oversized", strings.Repeat(" ", 65536) + `{"error":{"details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"BILLING_DISABLED","domain":"googleapis.com"}]}}`, "provider_http_status_403"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(403); _, _ = w.Write([]byte(tc.body)) }))
+			defer server.Close()
+			client := newGoogleHTTPClient(server.URL, server.Client(), 0, staticTokenSource{}, "", "")
+			err := client.postJSON(context.Background(), "/", map[string]string{}, &struct{}{})
+			var safe interface{ SafeRealtimeVoiceDiagnostic() string }
+			if !errors.As(err, &safe) || safe.SafeRealtimeVoiceDiagnostic() != tc.want {
+				t.Fatalf("unexpected classification: %v", err)
+			}
+			if strings.Contains(err.Error(), "private") {
+				t.Fatal("response data leaked")
+			}
+		})
+	}
+}

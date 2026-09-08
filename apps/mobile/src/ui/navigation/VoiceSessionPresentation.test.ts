@@ -183,6 +183,24 @@ describe('VoiceSessionPresentation', () => {
         tenantName: 'Main tenant',
         inventoryName: 'Home',
         progressLabel: 'Voice failed',
+        failureCode: 'provider_billing_disabled',
+        errorMessage: 'Speech-to-text provider failed. Ask your provider administrator to restore Google Cloud billing.',
+        debugEvents: []
+      },
+      stage: 'failed',
+      status: 'ready'
+    })).toMatchObject({
+      title: 'Provider billing is disabled',
+      subtitle: 'Ask your provider administrator to restore Google Cloud billing.'
+    });
+
+    expect(buildVoiceAccessoryPresentation({
+      pathname: '/locations/location-1',
+      realtime: {
+        status: 'failed',
+        tenantName: 'Main tenant',
+        inventoryName: 'Home',
+        progressLabel: 'Voice failed',
         failureCode: 'speech_to_text_failed',
         errorMessage: 'Speech-to-text provider failed. Check Voice providers and try again.',
         debugEvents: []

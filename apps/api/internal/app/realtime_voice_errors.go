@@ -44,6 +44,9 @@ func safeRealtimeVoiceFinalText(value string, limit int) bool {
 func realtimeVoiceErrorCode(err error) string {
 	var providerErr realtimeVoiceProviderStageError
 	if errors.As(err, &providerErr) {
+		if safeRealtimeVoiceProviderDiagnosticError(providerErr.err) == "provider_billing_disabled" {
+			return "provider_billing_disabled"
+		}
 		return providerErr.code
 	}
 	switch {
@@ -64,6 +67,9 @@ func safeRealtimeVoiceErrorDetail(err error) string {
 	}
 	var providerErr realtimeVoiceProviderStageError
 	if errors.As(err, &providerErr) {
+		if safeRealtimeVoiceProviderDiagnosticError(providerErr.err) == "provider_billing_disabled" {
+			return "provider_billing_disabled"
+		}
 		return providerErr.code
 	}
 	switch {

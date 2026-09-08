@@ -250,6 +250,7 @@ export type VoicePhotoAttachmentStatus = {
 
 export type VoiceRealtimeFailureCode =
   | 'provider_readiness'
+  | 'provider_billing_disabled'
   | 'speech_to_text_failed'
   | 'language_inference_failed'
   | 'text_to_speech_failed'
@@ -685,7 +686,7 @@ export class RealtimeVoiceSessionController {
         const responseArtifacts = safeVoiceResponseArtifacts(event.response.artifacts ?? []);
         return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
           status: state.actionPlan ? 'review' : 'processing',
-          spokenResponse: safeVisibleAssistantResponseText(event.response.displayResponse, event.response.spokenResponse, 500),
+          spokenResponse: safeVisibleAssistantResponseText(event.response.displayResponse, event.response.spokenResponse, 1000),
           responseArtifacts,
           responseKind: event.response.kind,
           conversationPhase: 'answering'
@@ -1251,6 +1252,7 @@ function assetKindMatchesReviewedCommand(resultKind: string, command: VoiceActio
 
 function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
   switch (code) {
+    case 'provider_billing_disabled':
     case 'speech_to_text_failed':
     case 'language_inference_failed':
     case 'text_to_speech_failed':
@@ -1263,6 +1265,8 @@ function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
 
 function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled: boolean): string {
   switch (code) {
+    case 'provider_billing_disabled':
+      return 'Your Google Cloud voice provider has billing disabled. Ask your provider administrator to restore billing, then try again.';
     case 'speech_to_text_failed':
       return 'Speech-to-text provider failed. Check Voice providers and try again.';
     case 'language_inference_failed':
@@ -1288,6 +1292,8 @@ function safeFailureFallbackMessage(fallback: string): string {
 
 function voiceFailureProgressLabel(code: string): string {
   switch (code) {
+    case 'provider_billing_disabled':
+      return 'Provider billing is disabled';
     case 'clarification_turn_limit':
       return 'Voice needs a fresh start';
     case 'speech_to_text_failed':
@@ -1343,7 +1349,9 @@ function safeVisibleAssistantResponseText(displayResponse: string, spokenRespons
 
 function safeVisibleResponseText(value: string, maxLength: number): string {
   const normalized = redactUnsafeVoiceText(value)
-    .replace(/\s+/g, ' ')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
   if (normalized.length <= maxLength) {
     return normalized;
