@@ -18,9 +18,9 @@ export function VoiceConversationExchange({ exchange, railKey, onOpen }: { reado
     {exchange.startsNewContext ? <Text style={{ color: colors.textMuted }}>New conversation context</Text> : null}
     {exchange.transcript ? <View style={[styles.user, { backgroundColor: colors.surfaceMuted }]}>
       <Text style={{ color: colors.textMuted }}>You</Text>
-      <VoiceResponseEntityText enabled onOpen={onOpen} references={voiceConversationReferences(exchange)} text={exchange.transcript} />
+      <VoiceResponseEntityText enabled onOpen={onOpen} showFallbackReferences={false} references={voiceConversationReferences(exchange)} text={exchange.transcript} />
     </View> : null}
-    {exchange.spokenResponse ? <VoiceResponseEntityText enabled onOpen={onOpen} references={voiceConversationReferences(exchange)} text={exchange.spokenResponse} /> : null}
+    {exchange.spokenResponse ? <VoiceResponseEntityText markdown enabled onOpen={onOpen} references={voiceConversationReferences(exchange)} text={exchange.spokenResponse} /> : null}
     {exchange.actionPlan ? <Text style={{ color: colors.text }}>{exchange.actionPlan.commands.map(command => command.title ?? command.summary).join(', ')} · {exchange.actionPlan.status === 'executed' ? 'Saved' : exchange.actionPlan.status}</Text> : null}
     {exchange.photoAttachmentStatus ? <Text style={{ color: colors.textMuted }}>{exchange.photoAttachmentStatus.message}</Text> : null}
     {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <Pressable accessibilityRole="button" onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} style={styles.control}><Text style={{ color: colors.action }}>Retry photos</Text></Pressable> : null}

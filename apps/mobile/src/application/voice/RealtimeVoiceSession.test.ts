@@ -1484,6 +1484,35 @@ describe('RealtimeVoiceSessionController', () => {
     expect(player.played).toEqual([]);
   });
 
+  it('preserves paragraphs and complete display answers beyond 500 characters', async () => {
+    const answer = 'Your clothes are in the Garage:\n\n* **Newborn**: Bin 58.\n' + 'More clothing details. '.repeat(25);
+    const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), new FakeTransport([
+      { type: 'assistant.response.completed', seq: 1, response: { kind: 'answer', spokenResponse: 'In the Garage.', displayResponse: answer, artifacts: [] } },
+      { type: 'session.completed', seq: 2 }
+    ]), new FakePlayer());
+    await controller.start();
+    expect((await controller.stop()).at(-1)?.spokenResponse).toBe(answer.trim());
+  });
+
+  it('explains disabled billing without displaying provider response data', async () => {
+    const controller = new RealtimeVoiceSessionController(
+      new FakeInventoryRepository(),
+      new FakeRecorder(),
+      new FakeTransport([{ type: 'session.failed', seq: 1, code: 'provider_billing_disabled', message: 'secret-project raw provider response' }]),
+      new FakePlayer()
+    );
+
+    await controller.start();
+    const states = await controller.stop();
+
+    expect(states.at(-1)).toMatchObject({
+      status: 'failed',
+      failureCode: 'provider_billing_disabled',
+      errorMessage: 'Your Google Cloud voice provider has billing disabled. Ask your provider administrator to restore billing, then try again.',
+      progressLabel: 'Provider billing is disabled'
+    });
+  });
+
   it('maps provider stage failures to safe actionable mobile state', async () => {
     const controller = new RealtimeVoiceSessionController(
       new FakeInventoryRepository(),

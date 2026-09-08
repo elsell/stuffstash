@@ -319,6 +319,8 @@ function VoiceSessionSheet({
       ) : (
         <>
           <ScrollView
+            style={styles.conversationViewport}
+            nestedScrollEnabled
             ref={conversationScroll}
             onContentSizeChange={() => { if (followingLatest.current) conversationScroll.current?.scrollToEnd({ animated: false }); }}
             contentOffset={{ x: 0, y: scrollOffset.current }}
@@ -328,7 +330,6 @@ function VoiceSessionSheet({
               followingLatest.current = contentSize.height - layoutMeasurement.height - contentOffset.y < 60;
             }}
             scrollEventThrottle={100}
-            automaticallyAdjustKeyboardInsets
             contentContainerStyle={[
               styles.sessionContent,
               !body.hasBodyContent && styles.emptySessionContent
@@ -342,7 +343,7 @@ function VoiceSessionSheet({
             {session.transcript ? (
               <View style={styles.sessionSection}>
                 <Text style={styles.sectionLabel}>You</Text>
-                <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} references={references} text={session.transcript} />
+                <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} showFallbackReferences={false} references={references} text={session.transcript} />
               </View>
             ) : null}
 
@@ -448,12 +449,13 @@ function VoiceSessionSheet({
                 <View style={styles.responseIcon}>
                   <MessageCircle color={palette.accentStrong} size={18} strokeWidth={2.4} />
                 </View>
-                <VoiceResponseEntityText
+                <View style={styles.responseBody}><VoiceResponseEntityText
+                  markdown
                   enabled
                   onOpen={onOpenResponseArtifact}
                   references={references}
                   text={session.response}
-                />
+                /></View>
               </View>
             ) : null}
 
@@ -461,7 +463,7 @@ function VoiceSessionSheet({
 
             {state.realtime?.errorMessage ? (
               <View accessibilityLiveRegion="assertive" style={styles.errorSection}>
-                <Text style={styles.sectionLabel}>Voice failed</Text>
+                <Text style={styles.sectionLabel}>{state.realtime.progressLabel}</Text>
                 <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
                 {session.recoveryAction?.target === 'provider_profiles' ? (
                   <Pressable
@@ -768,6 +770,8 @@ function SessionErrorState({ message }: { readonly message: string }) {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+  conversationViewport: { flex: 1, minHeight: 0 },
+  responseBody: { flex: 1, minWidth: 0 },
   centerState: {
     alignItems: 'center',
     justifyContent: 'center',

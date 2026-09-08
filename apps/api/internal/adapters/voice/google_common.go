@@ -82,7 +82,8 @@ func (c googleHTTPClient) postJSON(ctx context.Context, path string, request any
 	defer httpResponse.Body.Close()
 	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
 		return googleProviderHTTPError{
-			statusCode: httpResponse.StatusCode,
+			statusCode:      httpResponse.StatusCode,
+			billingDisabled: googleBillingDisabled(httpResponse),
 		}
 	}
 	if c.maxResponseBytes > 0 {
@@ -109,7 +110,8 @@ func (googleProviderTimeoutError) SafeRealtimeVoiceDiagnostic() string {
 }
 
 type googleProviderHTTPError struct {
-	statusCode int
+	statusCode      int
+	billingDisabled bool
 }
 
 func (e googleProviderHTTPError) Error() string {
@@ -117,6 +119,9 @@ func (e googleProviderHTTPError) Error() string {
 }
 
 func (e googleProviderHTTPError) SafeRealtimeVoiceDiagnostic() string {
+	if e.billingDisabled {
+		return "provider_billing_disabled"
+	}
 	return fmt.Sprintf("provider_http_status_%d", e.statusCode)
 }
 

@@ -80,7 +80,7 @@ func safeRealtimeVoiceProviderDiagnosticError(err error) string {
 }
 
 func safeRealtimeVoiceProviderDiagnosticCategory(value string) bool {
-	if value == "provider_request_failed" || value == "provider_timeout" || value == "provider_auth_failed" || value == "provider_rate_limited" || value == "invalid_provider_output" {
+	if value == "provider_billing_disabled" || value == "provider_request_failed" || value == "provider_timeout" || value == "provider_auth_failed" || value == "provider_rate_limited" || value == "invalid_provider_output" {
 		return true
 	}
 	if !strings.HasPrefix(value, "provider_http_status_") {
