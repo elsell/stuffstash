@@ -25,6 +25,7 @@ export interface VoiceAudioPlayer {
 }
 
 export type RealtimeVoiceTransportInput = {
+  readonly text?: string;
   readonly tenantId: string;
   readonly inventoryId: string;
   readonly source: 'mobile_voice';
@@ -39,6 +40,7 @@ export type RealtimeVoiceTransportInput = {
 };
 
 export interface RealtimeVoiceTransport {
+  close?(): void;
   run(
     input: RealtimeVoiceTransportInput,
     onEvent: (event: VoiceRealtimeEvent) => Promise<void>,
@@ -55,6 +57,7 @@ export interface RealtimeVoiceTransport {
 }
 
 export type RealtimeVoiceTransportRunOptions = {
+  readonly text?: string;
   readonly signal?: AbortSignal;
 };
 
@@ -209,6 +212,7 @@ type VoiceActionPlanExecutedEvent = VoiceRealtimeEventMetadata & {
 };
 
 export type VoiceRealtimeState = {
+  readonly startsNewContext?: boolean;
   readonly status: 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
   readonly tenantName: string;
   readonly inventoryName: string;
@@ -269,6 +273,8 @@ export type VoiceSafeDiagnosticEvent = {
 };
 
 export class RealtimeVoiceSessionController {
+  private playbackSuspended = false;
+  private captureGeneration = 0;
   private currentContext: { readonly tenantId: TenantId; readonly inventoryId: InventoryId; readonly tenantName: string; readonly inventoryName: string } | null = null;
   private recordingStarted = false;
   private lastResponseKind: VoiceAssistantResponseKind | undefined;
@@ -289,16 +295,19 @@ export class RealtimeVoiceSessionController {
   ) {}
 
   async start(): Promise<VoiceRealtimeState> {
+    const captureGeneration = ++this.captureGeneration;
+    this.playbackSuspended = false;
+    this.transport.close?.();
     this.lastResponseKind = undefined;
     const generation = ++this.activeSessionGeneration;
     const context = await this.selectedInventoryContext();
     await this.options.readinessChecker?.assertReady();
-    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) throw new VoiceRealtimeCancelledError();
     this.currentContext = context;
     await this.player.stop();
-    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) throw new VoiceRealtimeCancelledError();
     await this.recorder.start();
-    if (this.isSessionGenerationCancelled(generation)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
+    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
     this.recordingStarted = true;
     return {
       status: 'listening',
@@ -327,6 +336,7 @@ export class RealtimeVoiceSessionController {
       throw new VoiceRealtimeCancelledError();
     }
     const states: VoiceRealtimeState[] = [{
+      startsNewContext: true,
       status: 'processing',
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
@@ -370,23 +380,74 @@ export class RealtimeVoiceSessionController {
     return states;
   }
 
+  async pauseMedia(): Promise<void> {
+    this.captureGeneration++;
+    this.playbackSuspended = true;
+    if (this.recordingStarted) {
+      await this.recorder.cancel();
+      this.recordingStarted = false;
+    }
+    await this.player.stop();
+  }
+
+  async sendText(text: string, onState?: VoiceRealtimeStateHandler): Promise<readonly VoiceRealtimeState[]> {
+    const trimmed = text.trim();
+    if (!trimmed || [...trimmed].length > 8000) throw new Error('Enter a message of up to 8,000 characters.');
+    const generation = ++this.activeSessionGeneration;
+    const context = await this.selectedInventoryContext();
+    await this.options.readinessChecker?.assertReady();
+    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+    const followUp = this.transport.canSendFollowUpAudio() && this.currentContext?.tenantId === context.tenantId && this.currentContext?.inventoryId === context.inventoryId;
+    if (!followUp) this.transport.close?.();
+    await this.pauseMedia();
+    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+    this.playbackSuspended = false;
+    this.currentContext = context;
+    const states: VoiceRealtimeState[] = [{ startsNewContext: !followUp, status: 'processing', tenantName: context.tenantName,
+      inventoryName: context.inventoryName, transcript: trimmed, progressLabel: 'Checking your inventory', debugEvents: [] }];
+    onState?.(states[0]);
+    const abortController = new AbortController();
+    this.activeRunAbortController = abortController;
+    const receive = async (event: VoiceRealtimeEvent) => {
+      if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+      const next = await this.reduceEvent(states[states.length - 1], event);
+      states.push(next);
+      onState?.(next);
+    };
+    try {
+      if (followUp) {
+        await this.transport.sendFollowUpAudio([], receive, { signal: abortController.signal, text: trimmed });
+      } else {
+        await this.transport.run({ tenantId: context.tenantId, inventoryId: context.inventoryId,
+          source: 'mobile_voice', text: trimmed, inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 },
+          outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: [] }, receive, { signal: abortController.signal });
+      }
+    } finally {
+      if (this.activeRunAbortController === abortController) this.activeRunAbortController = null;
+    }
+    this.syncFinalFollowUpAvailability(states, onState);
+    return states;
+  }
+
   canSendFollowUpAudio(): boolean {
     return this.transport.canSendFollowUpAudio();
   }
 
   async startFollowUp(): Promise<VoiceRealtimeState> {
+    const captureGeneration = ++this.captureGeneration;
+    this.playbackSuspended = false;
     if (!this.transport.canSendFollowUpAudio()) {
       throw new Error('Voice follow-up session is not active.');
     }
     const generation = ++this.activeSessionGeneration;
     const context = this.currentContext ?? (await this.selectedInventoryContext());
     await this.options.readinessChecker?.assertReady();
-    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) throw new VoiceRealtimeCancelledError();
     this.currentContext = context;
     await this.player.stop();
-    if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
+    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) throw new VoiceRealtimeCancelledError();
     await this.recorder.start();
-    if (this.isSessionGenerationCancelled(generation)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
+    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
     this.recordingStarted = true;
     return {
       status: 'listening',
@@ -449,6 +510,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async dispose(): Promise<void> {
+    this.transport.close?.();
     this.cancelledThroughSessionGeneration = Math.max(this.cancelledThroughSessionGeneration, this.activeSessionGeneration);
     this.activeRunAbortController?.abort();
     this.activeFollowUpAbortController?.abort();
@@ -632,7 +694,7 @@ export class RealtimeVoiceSessionController {
         this.ttsMimeType = event.mimeType;
         return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.chunk':
-        await this.player.playChunk(event.audioBase64, this.ttsMimeType);
+        if (!this.playbackSuspended) await this.player.playChunk(event.audioBase64, this.ttsMimeType);
         return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.completed':
         return withProgressStep(state, 'Speech complete', { status: state.actionPlan ? 'review' : 'speaking' });

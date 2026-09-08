@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
@@ -154,7 +155,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
 		return err
 	}
-	if len(input.AudioChunks) == 0 {
+	if (len(input.AudioChunks) == 0) == (strings.TrimSpace(input.Text) == "") || utf8.RuneCountInString(input.Text) > MaxRealtimeTextCharacters {
 		return ports.ErrInvalidProviderInput
 	}
 
@@ -164,17 +165,20 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if err := a.ensureRealtimeVoiceAccess(ctx, input.Session.Principal, input.Session.TenantID, input.Session.InventoryID); err != nil {
 		return err
 	}
-	transcription, err := input.Session.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
-		TenantID:    input.Session.TenantID,
-		InventoryID: input.Session.InventoryID,
-		Principal:   input.Session.Principal,
-		AudioFormat: input.Session.InputAudio,
-		AudioChunks: input.AudioChunks,
-	})
-	if err != nil {
-		return realtimeVoiceProviderStageError{code: realtimeVoiceFailureSpeechToText, err: err}
+	transcript := strings.TrimSpace(input.Text)
+	if transcript == "" {
+		transcription, err := input.Session.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
+			TenantID:    input.Session.TenantID,
+			InventoryID: input.Session.InventoryID,
+			Principal:   input.Session.Principal,
+			AudioFormat: input.Session.InputAudio,
+			AudioChunks: input.AudioChunks,
+		})
+		if err != nil {
+			return realtimeVoiceProviderStageError{code: realtimeVoiceFailureSpeechToText, err: err}
+		}
+		transcript = strings.TrimSpace(transcription.Transcript)
 	}
-	transcript := strings.TrimSpace(transcription.Transcript)
 	if transcript == "" {
 		return ports.ErrInvalidProviderInput
 	}

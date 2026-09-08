@@ -239,3 +239,7 @@ device accessibility/keyboard review remains follow-up work.
 Invitation server-prefill and
 arbitrary-domain browser-to-app handoff remain deferred under the existing
 invitation contract.
+
+## Current mobile conversation focus
+
+Promote approved B1 to the shared native mobile surface: keyboard and voice input, retained exchanges and drafts, ordinary asset navigation with return to conversation, and rich photo result rails. Implementation follows `../agent-model/mobile-conversation-interface.spec.md`. Remote validation on `paul` passed the full API suite, mobile typecheck, 1,108 mobile tests, and relevant structural hooks. Code-critic findings were addressed, including scope-isolated typed continuation, paused capture/playback, retained name buffers and attachment retries. No local builds were run. PR/CI, stable release, TestFlight upload and GitOps rollout remain pending: `gh` on `paul` returns HTTP 401 and requires restored authentication. Native keyboard/detent behavior still needs device verification from the CI-built release.

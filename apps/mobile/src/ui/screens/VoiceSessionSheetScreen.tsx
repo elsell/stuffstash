@@ -1,9 +1,15 @@
+import { voiceConversationReferences } from './VoiceConversationReferences';
+import { VoiceConversationComposer } from './VoiceConversationComposer';
+import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
 import { useParentCandidates } from '../serverState/useParentCandidates';
-import { useEffect, useRef, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -43,6 +49,7 @@ import {
 export function VoiceSessionSheetScreen() {
   const { parentLookupQuery, photoSelectionQuery } = useAppServices();
   const {
+    photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia,
     approveRealtimeActionPlan,
     cancelRealtime,
     cancelRealtimeActionPlan,
@@ -53,9 +60,10 @@ export function VoiceSessionSheetScreen() {
     state,
     stopRealtime
   } = useVoiceInteractionState();
+  const pauseMediaRef = useRef(pauseMedia);
+  pauseMediaRef.current = pauseMedia;
+  useFocusEffect(useCallback(() => () => { void pauseMediaRef.current(); }, []));
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
-  const [photoDrafts, setPhotoDrafts] = useState<VoicePlanPhotoDrafts>({});
-  const [commandDraftState, setCommandDraftState] = useState<{ readonly planId?: string; readonly drafts: VoicePlanCommandDrafts }>({ drafts: {} });
   const [parentPickerCommandId, setParentPickerCommandId] = useState<string | null>(null);
   const [parentQuery, setParentQuery] = useState('');
   const safeAreaInsets = useSafeAreaInsets();
@@ -66,7 +74,7 @@ export function VoiceSessionSheetScreen() {
   const parentPickerCommandIdRef = useRef<string | null>(null);
   const candidates = useParentCandidates(parentQuery, parentLookupQuery, parentPickerCommandId !== null && activePlanStatus === 'proposed');
   const parentMatches = candidates.data ?? [];
-  const commandDrafts = commandDraftState.planId === activePlanId && activePlanStatus === 'proposed' ? commandDraftState.drafts : {};
+  const commandDrafts = commandDraftState.planId === activePlanId ? commandDraftState.drafts : {};
 
   useEffect(() => {
     activePlanIdRef.current = activePlanId;
@@ -77,8 +85,11 @@ export function VoiceSessionSheetScreen() {
   }, [activePlanStatus]);
 
   useEffect(() => {
-    setPhotoDrafts({});
-    setCommandDraftState({ planId: activePlanId, drafts: {} });
+    if (commandDraftState.planId !== activePlanId) {
+      setTitleEditor(null);
+      setPhotoDrafts({});
+      setCommandDraftState({ planId: activePlanId, drafts: {} });
+    }
     setParentPickerCommandId(null);
     parentPickerCommandIdRef.current = null;
   }, [activePlanId, activePlanStatus]);
@@ -93,10 +104,6 @@ export function VoiceSessionSheetScreen() {
       return;
     }
 
-    if (state.stage !== 'ready') {
-      reset();
-    }
-
     await startRealtime();
   }
 
@@ -105,6 +112,8 @@ export function VoiceSessionSheetScreen() {
       diagnosticsExpanded={diagnosticsExpanded}
       diagnosticsEnabled={diagnosticsEnabled}
       onClose={() => {
+        Keyboard.dismiss();
+        void pauseMedia();
         if (router.canDismiss()) {
           router.dismiss();
           return;
@@ -190,7 +199,9 @@ export function VoiceSessionSheetScreen() {
           () => router.push('/settings/voice')
         );
       }}
-      onOpenResponseArtifact={(artifact) => {
+      onOpenResponseArtifact={async (artifact) => {
+        Keyboard.dismiss();
+        await pauseMedia();
         navigateAfterTransientDismissal(
           () => router.dismiss(),
           () => router.push(assetDetailHref(artifact.assetId))
@@ -262,6 +273,9 @@ function VoiceSessionSheet({
   readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
+  const { history, scrollOffset } = useVoiceInteractionState();
+  const conversationScroll = useRef<ScrollView>(null);
+  const followingLatest = useRef(scrollOffset.current === 0);
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
   const readyState = state.status === 'ready' ? state : null;
@@ -276,12 +290,14 @@ function VoiceSessionSheet({
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
   const bottomAction = session.bottomAction;
   const actionPlan = session.actionPlan;
+  const references = voiceConversationReferences(readyState?.realtime ?? null);
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
     <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
       <View style={styles.sheetHeader}>
         <View style={styles.sheetTitleGroup}>
-          <Text style={styles.sheetTitle}>{session.title}</Text>
+          <Text style={styles.sheetTitle}>Conversation</Text>
           <Text numberOfLines={1} style={styles.sheetContext}>
             {session.contextLabel}
           </Text>
@@ -303,6 +319,15 @@ function VoiceSessionSheet({
       ) : (
         <>
           <ScrollView
+            ref={conversationScroll}
+            onContentSizeChange={() => { if (followingLatest.current) conversationScroll.current?.scrollToEnd({ animated: false }); }}
+            contentOffset={{ x: 0, y: scrollOffset.current }}
+            onScroll={event => {
+              const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+              scrollOffset.current = contentOffset.y;
+              followingLatest.current = contentSize.height - layoutMeasurement.height - contentOffset.y < 60;
+            }}
+            scrollEventThrottle={100}
             automaticallyAdjustKeyboardInsets
             contentContainerStyle={[
               styles.sessionContent,
@@ -311,12 +336,13 @@ function VoiceSessionSheet({
             keyboardDismissMode={appKeyboardDismissMode()}
             keyboardShouldPersistTaps="handled"
           >
+            {history.map((exchange, index) => <VoiceConversationExchange key={index} exchange={exchange} railKey={`history-${index}`} onOpen={onOpenResponseArtifact} />)}
+            {!history.length && !session.transcript && !actionPlan ? <Text style={styles.progressHint}>Find something, add an item, or organize your belongings. Speak or type below.</Text> : null}
+            {state.realtime?.startsNewContext && history.length ? <Text style={styles.progressHint}>New conversation context · earlier exchanges are shown for your reference.</Text> : null}
             {session.transcript ? (
               <View style={styles.sessionSection}>
-                <Text style={styles.sectionLabel}>Transcript</Text>
-                <Text selectable style={styles.transcriptText}>
-                  {session.transcript}
-                </Text>
+                <Text style={styles.sectionLabel}>You</Text>
+                <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} references={references} text={session.transcript} />
               </View>
             ) : null}
 
@@ -325,7 +351,7 @@ function VoiceSessionSheet({
                 <View style={styles.actionPlanHeader}>
                   <View style={styles.actionPlanHeaderText}>
                     <Text style={styles.sectionLabel}>Review change</Text>
-                    <Text style={styles.actionPlanTitle}>{actionPlan.confirmationSummary}</Text>
+                    <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} references={references} text={actionPlan.confirmationSummary} />
                   </View>
                   <View style={styles.actionPlanCountPill}>
                     <Text style={styles.actionPlanCountText}>{actionPlan.summary}</Text>
@@ -357,7 +383,7 @@ function VoiceSessionSheet({
                                 onOpenParent={() => onOpenParentPicker(command.id!)}
                               />
                             ) : (
-                              <Text style={styles.actionPlanText}>{command.title}</Text>
+                              <Text style={styles.actionPlanText}>{command.id ? commandDrafts[command.id]?.title ?? command.title : command.title}</Text>
                             )}
                             <Text style={styles.actionPlanCommandMeta}>{command.subtitle}</Text>
                             {!command.editable && command.placement ? (
@@ -415,19 +441,7 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
-            {!actionPlan && session.progressTrace.length ? (
-              <View style={styles.progressTraceSection}>
-                <Text style={styles.sectionLabel}>Progress</Text>
-                <View style={styles.progressTraceList}>
-                  {session.progressTrace.map((step, index) => (
-                    <View key={`${step}-${index.toString()}`} style={styles.progressTraceRow}>
-                      <View style={styles.progressTraceMarker} />
-                      <Text style={styles.progressTraceText}>{step}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ) : null}
+            {session.isBusy ? <View style={styles.progressTraceRow}><ActivityIndicator color={palette.action} /><Text accessibilityLiveRegion="polite" style={styles.progressHint}>{session.progressLabel}</Text></View> : null}
 
             {session.response ? (
               <View style={styles.responseSection}>
@@ -435,13 +449,15 @@ function VoiceSessionSheet({
                   <MessageCircle color={palette.accentStrong} size={18} strokeWidth={2.4} />
                 </View>
                 <VoiceResponseEntityText
-                  enabled={state.stage === 'completed' || state.stage === 'failed'}
+                  enabled
                   onOpen={onOpenResponseArtifact}
-                  references={session.responseArtifacts}
+                  references={references}
                   text={session.response}
                 />
               </View>
             ) : null}
+
+            {session.responseArtifacts.length ? <VoiceResultRail references={references} railKey="current" onOpen={onOpenResponseArtifact} /> : null}
 
             {state.realtime?.errorMessage ? (
               <View accessibilityLiveRegion="assertive" style={styles.errorSection}>
@@ -497,15 +513,6 @@ function VoiceSessionSheet({
               styles.bottomActionContent,
               bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
             ]}>
-              <View style={styles.progressGroup}>
-                <Text accessibilityLiveRegion="polite" style={styles.progressTitle}>{session.progressLabel}</Text>
-                <Text
-                  numberOfLines={bottomAction.kind === 'review_decision' ? 1 : 2}
-                  style={styles.progressHint}
-                >
-                  {session.bottomHint}
-                </Text>
-              </View>
               {bottomAction.kind === 'review_decision' ? (
                 <View style={styles.reviewActionGroup}>
                   <Pressable
@@ -527,47 +534,8 @@ function VoiceSessionSheet({
                     <Text style={styles.approvePlanButtonText}>Approve</Text>
                   </Pressable>
                 </View>
-              ) : bottomAction.kind === 'session_controls' ? (
-                <>
-                  {bottomAction.canCancel ? (
-                    <Pressable
-                      accessibilityLabel="Cancel voice session"
-                      accessibilityRole="button"
-                      onPress={onCancelSession}
-                      style={styles.cancelSessionButton}
-                    >
-                      <Text style={styles.cancelSessionButtonText}>Cancel</Text>
-                    </Pressable>
-                  ) : null}
-                  <Pressable
-                    accessibilityLabel={bottomAction.mic.accessibilityLabel}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: bottomAction.mic.disabled, selected: bottomAction.mic.selected }}
-                    disabled={bottomAction.mic.disabled}
-                    onPress={onSessionMic}
-                    style={[
-                      styles.sessionMicButton,
-                      bottomAction.mic.icon === 'send' && styles.sendSessionMicButton,
-                      bottomAction.mic.icon === 'busy' && styles.busySessionMicButton,
-                      bottomAction.mic.disabled && styles.disabledSessionMicButton
-                    ]}
-                  >
-                    {bottomAction.mic.icon === 'send' ? (
-                      <View style={styles.sendButtonContent}>
-                        <VoiceLevelMeter
-                          level={session.activity.kind === 'listening' ? session.activity.level : 0}
-                          size="regular"
-                        />
-                        <SendHorizontal color={palette.onAction} size={27} strokeWidth={2.6} />
-                      </View>
-                    ) : bottomAction.mic.icon === 'busy' ? (
-                      <ActivityIndicator color={palette.warning} size="small" />
-                    ) : (
-                      <Mic color={palette.onAction} size={34} strokeWidth={2.5} />
-                    )}
-                  </Pressable>
-                </>
-              ) : null}
+              ) : <VoiceConversationComposer onMic={onSessionMic} />}
+
             </View>
           </View>
           <ParentPicker
@@ -583,6 +551,7 @@ function VoiceSessionSheet({
         </>
       )}
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -599,8 +568,11 @@ function EditablePlanCommandFields({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(draft?.title ?? command.title);
+  const { titleEditor, setTitleEditor } = useVoiceInteractionState();
+  const editing = titleEditor?.commandId === command.id;
+  const value = editing ? titleEditor!.value : draft?.title ?? command.title;
+  const setValue = (next: string) => { if (command.id) setTitleEditor({ commandId: command.id, value: next }); };
+  const setEditing = (next: boolean) => { if (!next) setTitleEditor(null); };
   const title = draft?.title ?? command.title;
   const placement = draft?.parent?.label ?? command.placement?.replace(/^Inside (?:new )?/, '') ?? 'Inventory root';
 
@@ -1154,7 +1126,7 @@ function createStyles(colors: MobileColorPalette) {
   },
   responseSection: {
     alignItems: 'flex-start',
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: colors.surface,
     borderRadius: radius.md,
     flexDirection: 'row',
     gap: spacing.sm,
@@ -1207,16 +1179,18 @@ function createStyles(colors: MobileColorPalette) {
     justifyContent: 'center'
   },
   sessionSection: {
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing.md
+    alignSelf: 'flex-end',
+    maxWidth: '94%',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.lg,
+    gap: spacing.xs,
+    padding: spacing.sm
   },
   sheet: {
     backgroundColor: colors.surface,
     flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm
   },
   sheetContext: {
     color: colors.textMuted,
@@ -1233,10 +1207,10 @@ function createStyles(colors: MobileColorPalette) {
   },
   sheetTitle: {
     color: colors.text,
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 19,
+    fontWeight: '700',
     letterSpacing: 0,
-    lineHeight: 29
+    lineHeight: 24
   },
   sheetTitleGroup: {
     flex: 1,

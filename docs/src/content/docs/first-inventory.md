@@ -64,8 +64,17 @@ The product center is conversational upkeep. Try the same task in that shape:
 
 > Where is the fertilizer?
 
-The useful answer is not a record ID. It is household language: garage shelf,
-office bin, medicine cabinet, wire rack.
+The answer should point you to a familiar place: the garage shelf, office bin,
+medicine cabinet, or wire rack.
+
+On mobile, open the conversation accessory to type, or tap its microphone to
+speak. Replies can include photo cards. Tap a linked item, container, or location
+to open its usual detail screen; **Return to conversation** brings you back to
+your messages and draft changes. Recording pauses when you leave the sheet.
+
+Earlier exchanges stay visible during the session. When the app marks a new
+conversation context, include the details the assistant needs in your next
+message.
 
 ## 7. Know The Save Rule
 

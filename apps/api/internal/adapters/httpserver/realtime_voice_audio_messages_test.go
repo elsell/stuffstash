@@ -73,7 +73,7 @@ func TestRealtimeVoiceQueryAcceptsClientAckBeforeAudio(t *testing.T) {
 			return
 		}
 		defer connection.Close(websocket.StatusNormalClosure, "")
-		chunks, seq, err := readRealtimeAudio(r.Context(), connection, "session-1", 1, map[string]struct{}{}, time.Second)
+		chunks, _, seq, err := readRealtimeInput(r.Context(), connection, "session-1", 1, map[string]struct{}{}, time.Second)
 		results <- result{chunks: chunks, seq: seq, err: err}
 	}))
 	t.Cleanup(server.Close)

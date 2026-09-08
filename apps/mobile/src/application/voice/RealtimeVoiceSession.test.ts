@@ -2357,3 +2357,52 @@ it('does not restart follow-up recording after scope disposal during readiness',
   await expect(start).rejects.toThrow('Voice session cancelled');
   expect(recorder.started).toBe(false);
 });
+
+it('sends typed requests without activating the microphone and resets continuation after scope disposal', async () => {
+  const recorder = new FakeRecorder();
+  const transport = new FakeTransport([{ type: 'session.completed', seq: 1, sessionId: 'session-1' }]);
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), recorder, transport, new FakePlayer());
+  await controller.sendText('  Where is the drill?  ');
+  expect(recorder.started).toBe(false);
+  expect(transport.lastInput).toMatchObject({ text: 'Where is the drill?', audioChunksBase64: [], tenantId: 'tenant-home', inventoryId: 'inventory-home' });
+  await controller.dispose();
+  await controller.sendText('Find batteries');
+  expect(transport.lastInput).toMatchObject({ text: 'Find batteries' });
+  expect(transport.followUpAudio).toEqual([]);
+});
+
+it('does not resume speech chunks after asset navigation pauses media', async () => {
+  const player = new FakePlayer();
+  const transport = new FakeTransport([
+    { type: 'tts.audio.started', seq: 1, sessionId: 'session-1', mimeType: 'audio/mpeg' },
+    { type: 'tts.audio.chunk', seq: 2, sessionId: 'session-1', chunkId: 'one', audioBase64: 'YQ==', isFinalChunk: true },
+    { type: 'session.completed', seq: 3, sessionId: 'session-1' }
+  ]);
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), transport, player);
+  await controller.sendText('Where is the drill?', async state => { if (state.status === 'speaking') await controller.pauseMedia(); });
+  expect(player.played).toEqual([]);
+});
+
+it('never sends typed follow-up over another inventory socket', async () => {
+  const inventory = new FakeInventoryRepository();
+  let selected = 'inventory-home';
+  inventory.getVoiceInventoryContext = async () => ({ tenantId: tenantId('tenant-home'), inventoryId: inventoryId(selected), tenantName: 'Home tenant', inventoryName: selected });
+  const transport = new FakeTransport([{ type: 'session.completed', seq: 1, sessionId: 'session-1' }]);
+  const controller = new RealtimeVoiceSessionController(inventory, new FakeRecorder(), transport, new FakePlayer());
+  await controller.sendText('Find tools');
+  selected = 'inventory-other';
+  await controller.sendText('Find batteries');
+  expect(transport.followUpAudio).toEqual([]);
+  expect(transport.lastInput).toMatchObject({ inventoryId: 'inventory-other', text: 'Find batteries' });
+});
+
+it('does not start the microphone after navigation while permission readiness is pending', async () => {
+  let ready!: () => void;
+  const recorder = new FakeRecorder();
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), recorder, new FakeTransport([]), new FakePlayer(), { readinessChecker: { assertReady: () => new Promise<void>(resolve => { ready = resolve; }) } });
+  const start = controller.start();
+  await Promise.resolve(); await Promise.resolve();
+  await controller.pauseMedia(); ready();
+  await expect(start).rejects.toMatchObject({ code: 'voice_cancelled' });
+  expect(recorder.started).toBe(false);
+});

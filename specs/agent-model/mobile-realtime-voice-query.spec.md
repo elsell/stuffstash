@@ -40,13 +40,13 @@ This spec includes:
 This spec does not include:
 
 - Unreviewed or model-direct write actions.
-- Production-polished approval UI beyond the safe review controls described here.
+- Unreviewed approval shortcuts.
 - External MCP write tools.
 - Long-term transcript retention.
 - Raw audio retention.
 - Offline voice behavior.
 - Direct client-to-provider streaming.
-- A final production voice visual design.
+
 
 ## Architecture
 
@@ -91,6 +91,9 @@ Read-only workflows must not create, update, move, archive, restore, delete, imp
 Supported state-changing workflows must use action-plan review. If the user asks for a supported create, move, archive, restore, checkout, or return action, the system must gather enough safe inventory context, propose a reviewable action plan, pause for explicit approval or cancellation, and execute only the approved plan through application services. Unsupported, unsafe, or under-specified state-changing requests must produce a safe clarification or refusal rather than executing a change.
 
 ## Mobile Interaction
+
+`mobile-conversation-interface.spec.md` defines the approved B1 conversational native surface, typed input, retained history, linked assets, and rich response cards. Its interaction requirements supersede the initial transcript/progress layout below.
+
 
 The mobile app must expose realtime voice as a global interaction layer anchored to the native bottom voice accessory. Voice is not a primary navigation destination in the production mobile experience.
 
