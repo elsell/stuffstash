@@ -1,3 +1,4 @@
+import { retainFailedConversation } from './VoiceConversationFailure';
 import { appendConversationExchange, canSubmitConversation } from './VoiceConversationHistory';
 import type { VoicePlanPhotoDrafts } from '../screens/VoicePlanPhotoDraftState';
 import type { VoicePlanCommandDrafts } from '../screens/VoicePlanEdits';
@@ -177,7 +178,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         } catch (error) {
           if (sessionGeneration.current === generation) {
             setComposerText(text);
-            setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState))); setStage('failed');
+            setRealtime(current => retainFailedConversation(current, buildFailedVoiceRealtimeState(error, voiceFailureContext(current, previewState)))); setStage('failed');
           }
         } finally { if (sessionGeneration.current === generation) requestPending.current = false; }
       },
@@ -207,7 +208,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           if (sessionGeneration.current !== generation) {
             return;
           }
-          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
+          setRealtime(current => retainFailedConversation(current, buildFailedVoiceRealtimeState(error, voiceFailureContext(current, previewState))));
           setStage('failed');
           requestPending.current = false;
         }
@@ -249,27 +250,36 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
             setStage('cancelled');
             return;
           }
-          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
+          setRealtime(current => retainFailedConversation(current, buildFailedVoiceRealtimeState(error, voiceFailureContext(current, previewState))));
           setStage('failed');
           requestPending.current = false;
         }
       },
       approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts, edits?: readonly VoiceActionPlanCommandEdit[]) => {
+        const lifetime = interactionLifetime.current;
         setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
         try {
           await realtimeController.approveActionPlan(planId, photoDrafts, edits);
         } catch (error) {
-          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
+          if (interactionLifetime.current !== lifetime) return;
+          if (isObject(error) && error.code === 'review_validation_failed') {
+            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: 'Check review details', errorMessage: 'Check the staged photos and edited fields, then approve again.' } : current);
+            setStage('review');
+            return;
+          }
+          setRealtime(current => retainFailedConversation(current, buildFailedVoiceRealtimeState(error, voiceFailureContext(current, previewState))));
           setStage('failed');
           requestPending.current = false;
         }
       },
       cancelRealtimeActionPlan: async (planId: string) => {
+        const lifetime = interactionLifetime.current;
         setRealtime((current) => markReviewDecisionPending(current, 'Cancelling change'));
         try {
           await realtimeController.cancelActionPlan(planId);
         } catch (error) {
-          setRealtime(buildFailedVoiceRealtimeState(error, voiceFailureContext(realtime, previewState)));
+          if (interactionLifetime.current !== lifetime) return;
+          setRealtime(current => retainFailedConversation(current, buildFailedVoiceRealtimeState(error, voiceFailureContext(current, previewState))));
           setStage('failed');
           requestPending.current = false;
         }
@@ -428,7 +438,7 @@ export function buildFailedVoiceRealtimeState(error: unknown, context: VoiceFail
     progressLabel: 'Voice failed',
     debugEvents: [],
     failureCode,
-    errorMessage: readinessFailure?.message ?? 'Voice failed safely.'
+    errorMessage: readinessFailure?.message ?? (isObject(error) && error.code === 'connection_interrupted' ? 'The connection was interrupted. Try again when you are connected.' : 'Could not finish this request. Try again or start a new conversation.')
   };
 }
 

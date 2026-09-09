@@ -25,7 +25,7 @@ func (m *continuousVoiceModel) Converse(_ context.Context, input ports.Conversat
 func TestRealtimeContinuityRetainsAnswerContextAndEndsAtLimit(t *testing.T) {
 	language := &continuousVoiceModel{}
 	application := newSeededTestAppWithVoice(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}}}, fakeSpeechToText{transcript: "Where are my tools?"}, language, fakeTextToSpeech{chunks: [][]byte{[]byte("audio")}})
-	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true}).Handler)
+	server := httptest.NewServer(NewServerWithOptions("127.0.0.1:0", application, Options{RateLimitDisabled: true, RealtimeVoiceIdleTimeout: 20 * time.Millisecond}).Handler)
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -43,6 +43,9 @@ func TestRealtimeContinuityRetainsAnswerContextAndEndsAtLimit(t *testing.T) {
 	}
 	sessionID := started["sessionId"].(string)
 	for turn := 0; turn < 3; turn++ {
+		if turn > 0 {
+			time.Sleep(50 * time.Millisecond)
+		}
 		writeRealtimeAudioTurn(t, ctx, connection, sessionID, 2+turn*2, "audio-"+string(rune('a'+turn)))
 		events := readRealtimeMessagesUntil(t, ctx, connection, "session.completed")
 		completed := findRealtimeEvent(t, events, "session.completed")

@@ -94,7 +94,7 @@ func TestVoiceProcessingDeadlinePersistsTerminalFailure(t *testing.T) {
 		t.Fatalf("configured deadline not enforced before inference: %v", err)
 	}
 	record := sessions.savedRecord(t, session.ID)
-	if record.State != ports.RealtimeSessionStateFailed || record.SafeFailureCode != "speech_to_text_failed" || !sessions.cleanupBounded {
+	if record.State != ports.RealtimeSessionStateFailed || record.SafeFailureCode != "request_timeout" || !sessions.cleanupBounded {
 		t.Fatalf("failure not persisted with bounded cleanup: %+v", record)
 	}
 }
@@ -123,5 +123,25 @@ func TestVoiceWorkflowToolBudgetBoundsModelSelectedReads(t *testing.T) {
 	err = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, AudioChunks: [][]byte{[]byte("audio")}}, func(RealtimeVoiceEvent) error { return nil })
 	if !errors.Is(err, appmodel.ErrConversationBudgetExhausted) || language.calls != 1 || speech.lastText != "" {
 		t.Fatalf("configured tool cap ignored: calls=%d err=%v", language.calls, err)
+	}
+}
+
+func TestVoiceWithoutWorkflowStillBoundsProcessing(t *testing.T) {
+	language := &turnBudgetConversationModel{}
+	resolver := successfulRealtimeVoiceResolver()
+	resolver.providers.ConversationModel = language
+	application := newRealtimeVoiceResolutionTestApp(t, resolver)
+	session, err := application.StartRealtimeVoiceSession(context.Background(), defaultRealtimeVoiceSessionInput())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = application.RunRealtimeVoiceQuery(context.Background(), RealtimeVoiceQueryInput{Session: session, Text: "Hello"}, func(RealtimeVoiceEvent) error { return nil })
+	if len(language.deadlines) == 0 {
+		t.Fatal("model processing has no deadline")
+	}
+	for _, remaining := range language.deadlines {
+		if remaining <= 0 || remaining > time.Minute {
+			t.Fatalf("unexpected processing deadline: %v", remaining)
+		}
 	}
 }

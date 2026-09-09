@@ -255,6 +255,10 @@ export type VoiceRealtimeFailureCode =
   | 'language_inference_failed'
   | 'text_to_speech_failed'
   | 'clarification_turn_limit'
+  | 'request_timeout'
+  | 'conversation_budget_exhausted'
+  | 'conversation_context_exhausted'
+  | 'invalid_provider_output'
   | 'voice_failed';
 
 export class VoiceRealtimeCancelledError extends Error {
@@ -549,13 +553,20 @@ export class RealtimeVoiceSessionController {
 
   async approveActionPlan(planId: string, photoDrafts: VoiceActionPlanPhotoDrafts = {}, edits: readonly VoiceActionPlanCommandEdit[] = []): Promise<void> {
     const safePlanId = usableActionPlanId(planId);
-    const boundedDrafts = boundedPhotoDrafts(photoDrafts);
-    validatePhotoApprovalMetadata(boundedDrafts);
+    let boundedDrafts: VoiceActionPlanPhotoDrafts;
+    let safeEdits: readonly VoiceActionPlanCommandEdit[];
+    try {
+      boundedDrafts = boundedPhotoDrafts(photoDrafts);
+      validatePhotoApprovalMetadata(boundedDrafts);
+      safeEdits = boundedCommandEdits(edits);
+    } catch (error) {
+      throw new VoiceReviewValidationError(error instanceof Error ? error.message : 'Review fields could not be validated.');
+    }
     if (Object.keys(boundedDrafts).length > 0) {
       this.pendingPhotoDraftsByPlanId.set(safePlanId, boundedDrafts);
     }
     try {
-      await this.transport.approveActionPlan(safePlanId, photoApprovalRequests(boundedDrafts), boundedCommandEdits(edits));
+      await this.transport.approveActionPlan(safePlanId, photoApprovalRequests(boundedDrafts), safeEdits);
     } catch (error) {
       this.pendingPhotoDraftsByPlanId.delete(safePlanId);
       throw error;
@@ -717,6 +728,8 @@ export class RealtimeVoiceSessionController {
         return withProgressStep(state, voiceFailureProgressLabel(event.code), {
           status: 'failed',
           partialTranscript: undefined,
+          actionPlan: state.actionPlan && (state.actionPlan.status === 'proposed' || state.actionPlan.status === 'approved') ? { ...state.actionPlan, status: 'failed' } : state.actionPlan,
+          reviewDecisionPending: false,
           failureCode: voiceFailureCode(event.code),
           errorMessage: voiceFailureMessage(event.code, event.message, this.options.diagnosticsEnabled === true)
         });
@@ -1252,6 +1265,10 @@ function assetKindMatchesReviewedCommand(resultKind: string, command: VoiceActio
 
 function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
   switch (code) {
+    case 'request_timeout':
+    case 'conversation_budget_exhausted':
+    case 'conversation_context_exhausted':
+    case 'invalid_provider_output':
     case 'provider_billing_disabled':
     case 'speech_to_text_failed':
     case 'language_inference_failed':
@@ -1265,6 +1282,16 @@ function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
 
 function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled: boolean): string {
   switch (code) {
+    case 'request_timeout':
+      return 'This request took too long to finish. Try a smaller request.';
+    case 'conversation_budget_exhausted':
+      return 'I reached the search limit before I could finish. Try asking about one item or place at a time.';
+    case 'conversation_context_exhausted':
+      return 'This conversation has reached its context limit. Start a new conversation to continue.';
+    case 'invalid_provider_output':
+      return 'The voice provider returned a response I could not use. Please try again.';
+    case 'voice_session_failed':
+      return 'Could not finish this request. The cause is unknown. Try again or start a new conversation.';
     case 'provider_billing_disabled':
       return 'Your Google Cloud voice provider has billing disabled. Ask your provider administrator to restore billing, then try again.';
     case 'speech_to_text_failed':
@@ -1386,4 +1413,8 @@ function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
     return normalized;
   }
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+export class VoiceReviewValidationError extends Error {
+  readonly code = 'review_validation_failed';
 }

@@ -42,8 +42,20 @@ func safeRealtimeVoiceFinalText(value string, limit int) bool {
 }
 
 func realtimeVoiceErrorCode(err error) string {
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		return "request_timeout"
+	case errors.Is(err, agentmodelapp.ErrConversationBudgetExhausted):
+		return "conversation_budget_exhausted"
+	case errors.Is(err, agentmodelapp.ErrConversationContextExhausted):
+		return "conversation_context_exhausted"
+	}
+
 	var providerErr realtimeVoiceProviderStageError
 	if errors.As(err, &providerErr) {
+		if errors.Is(providerErr.err, ports.ErrInvalidProviderInput) {
+			return "invalid_provider_output"
+		}
 		if safeRealtimeVoiceProviderDiagnosticError(providerErr.err) == "provider_billing_disabled" {
 			return "provider_billing_disabled"
 		}
@@ -62,11 +74,19 @@ func realtimeVoiceErrorCode(err error) string {
 }
 
 func safeRealtimeVoiceErrorDetail(err error) string {
+	code := realtimeVoiceErrorCode(err)
+	if code == "request_timeout" || code == "conversation_budget_exhausted" || code == "conversation_context_exhausted" {
+		return code
+	}
+
 	if err == nil {
 		return ""
 	}
 	var providerErr realtimeVoiceProviderStageError
 	if errors.As(err, &providerErr) {
+		if errors.Is(providerErr.err, ports.ErrInvalidProviderInput) {
+			return "invalid_provider_output"
+		}
 		if safeRealtimeVoiceProviderDiagnosticError(providerErr.err) == "provider_billing_disabled" {
 			return "provider_billing_disabled"
 		}

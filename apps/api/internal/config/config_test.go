@@ -414,3 +414,19 @@ func TestLoadAddsMobileClientIDToAcceptedOIDCAudiences(t *testing.T) {
 		t.Fatalf("unexpected accepted client IDs: %+v", cfg.OIDCClientIDs)
 	}
 }
+
+func TestConversationLifetimeConfiguration(t *testing.T) {
+	for _, tc := range []struct {
+		value                     string
+		wantSession, wantFollowUp time.Duration
+	}{
+		{"", 15 * time.Minute, 5 * time.Minute}, {"invalid", 15 * time.Minute, 5 * time.Minute}, {"0s", 15 * time.Minute, 5 * time.Minute}, {"-1s", 15 * time.Minute, 5 * time.Minute}, {"2m", 2 * time.Minute, 2 * time.Minute},
+	} {
+		t.Setenv(envRealtimeVoiceSessionTimeout, tc.value)
+		t.Setenv(envRealtimeVoiceFollowUpTimeout, tc.value)
+		cfg := Load()
+		if cfg.RealtimeVoiceSessionTimeout != tc.wantSession || cfg.RealtimeVoiceFollowUpTimeout != tc.wantFollowUp {
+			t.Fatalf("bad lifetime defaults for %q", tc.value)
+		}
+	}
+}

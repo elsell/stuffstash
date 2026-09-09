@@ -1100,7 +1100,7 @@ describe('RealtimeVoiceSessionController', () => {
         contentType: 'image/jpeg',
         contentBase64: 'cGhvdG8='
       }]
-    })).rejects.toThrow('Photo size is required before approving this change.');
+    })).rejects.toMatchObject({ code: 'review_validation_failed', message: 'Photo size is required before approving this change.' });
 
     await transport.cancelActionPlan('plan-1');
     await stop;

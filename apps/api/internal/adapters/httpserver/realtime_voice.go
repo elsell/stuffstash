@@ -86,8 +86,9 @@ func (e realtimeVoiceIdleTimeoutError) wait() {
 }
 
 type realtimeVoiceTimeouts struct {
-	session time.Duration
-	idle    time.Duration
+	session  time.Duration
+	followUp time.Duration
+	idle     time.Duration
 }
 
 func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) http.HandlerFunc {
@@ -165,7 +166,11 @@ func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) ht
 			turnLimit = app.RealtimeVoiceSessionTurnLimit(session)
 		}
 		for turn := 0; turn < turnLimit; turn++ {
-			audioChunks, textInput, nextClientSeq, err := readRealtimeInput(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs, timeouts.idle)
+			waitForInput := timeouts.idle
+			if turn > 0 {
+				waitForInput = timeouts.followUp
+			}
+			audioChunks, textInput, nextClientSeq, err := readRealtimeInput(ctx, connection, session.ID, lastClientSeq, seenAudioChunkIDs, timeouts.idle, waitForInput)
 			lastClientSeq = nextClientSeq
 			if err != nil {
 				if errors.Is(err, errRealtimeVoiceCancelled) {
@@ -488,11 +493,15 @@ func validRealtimeVoiceRequestedCapabilities(capabilities []string) bool {
 	return true
 }
 
-func readRealtimeInput(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}, idleTimeout time.Duration) ([][]byte, string, int, error) {
+func readRealtimeInput(ctx context.Context, connection *websocket.Conn, sessionID string, lastClientSeq int, seenSessionChunkIDs map[string]struct{}, idleTimeout time.Duration, firstInputTimeout ...time.Duration) ([][]byte, string, int, error) {
 	chunks := [][]byte{}
+	wait := idleTimeout
+	if len(firstInputTimeout) > 0 {
+		wait = firstInputTimeout[0]
+	}
 	seenChunks := map[string]struct{}{}
 	for {
-		message, err := readRealtimeAudioMessageWithIdle(ctx, connection, idleTimeout)
+		message, err := readRealtimeAudioMessageWithIdle(ctx, connection, wait)
 		if err != nil {
 			return nil, "", lastClientSeq, err
 		}
@@ -527,6 +536,7 @@ func readRealtimeInput(ctx context.Context, connection *websocket.Conn, sessionI
 				return nil, "", lastClientSeq, ports.ErrInvalidProviderInput
 			}
 			chunks = append(chunks, chunk)
+			wait = idleTimeout
 		case realtimeClientMessageTextInput:
 			text := strings.TrimSpace(message.Text)
 			if len(chunks) != 0 || text == "" || utf8.RuneCountInString(text) > app.MaxRealtimeTextCharacters {

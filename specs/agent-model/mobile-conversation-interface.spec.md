@@ -45,3 +45,28 @@ bulleted/numbered lists, headings, bold, emphasis and inline code. Formatting is
 presentation only: links still come exclusively from authorized response artifacts;
 model-provided URLs do not become navigation targets. User transcripts stay literal.
 The same renderer applies to current and previous assistant messages.
+
+### Card navigation, copy, and conversation recovery
+
+Shared asset breadcrumbs initially scroll to their most specific ancestor, including
+on layout/width or path changes, while allowing manual scrolling to earlier ancestors.
+Preview row cards use equal inset padding and top-aligned thumbnails. Previous/Next
+card controls animate to the selected card; passive restoration remains unanimated.
+User and assistant message text supports native selection and copy. The native text
+composer continues to support paste. A clearly labelled New conversation control is
+always available in the sheet header; resetting clears local history/drafts and cancels
+active capture/transport. Pending or executing writes require a native confirmation
+before discarding the conversation view; reset never implies an undo.
+
+Connection failures preserve the latest transcript, answer, proposed commands, edits,
+and staged photos. An interrupted review stays visible with an explicit connection
+message; approval controls are disabled once that connection is lost. No failure may
+silently replace a review with an empty state. Starting another request may archive the
+failed review, but it must retain its commands and explain why it could not continue.
+Safe failures explain request timeout, exhausted model-call budget, exhausted context,
+invalid provider output, and lost connection without exposing raw exceptions.
+
+Local review validation failures keep the live proposal editable; they do not report
+lost connectivity. Retained photos on disconnected reviews are visible read-only.
+Animated card navigation respects native Reduce Motion. Restoring a saved carousel
+position must not override subsequent animated scrolling.

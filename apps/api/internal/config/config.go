@@ -65,6 +65,8 @@ const (
 	envPrimaryThumbnailWarmTimeout        = "STUFF_STASH_PRIMARY_THUMBNAIL_WARM_TIMEOUT"
 	envVoiceDevFakeEnabled                = "STUFF_STASH_VOICE_DEV_FAKE_ENABLED"
 	envVoiceGoogleEnabled                 = "STUFF_STASH_VOICE_GOOGLE_ENABLED"
+	envRealtimeVoiceSessionTimeout        = "STUFF_STASH_REALTIME_VOICE_SESSION_TIMEOUT"
+	envRealtimeVoiceFollowUpTimeout       = "STUFF_STASH_REALTIME_VOICE_FOLLOW_UP_TIMEOUT"
 	envRealtimeVoiceIdleTimeout           = "STUFF_STASH_REALTIME_VOICE_IDLE_TIMEOUT"
 	envRealtimeVoiceToolCallTimeout       = "STUFF_STASH_REALTIME_VOICE_TOOL_CALL_TIMEOUT"
 	envVoiceProviderHTTPTimeout           = "STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT"
@@ -118,6 +120,8 @@ const (
 	defaultSpiceDBBootstrapMode           = false
 	defaultVoiceDevFakeEnabled            = false
 	defaultVoiceGoogleEnabled             = false
+	defaultRealtimeVoiceSessionTimeout    = 15 * time.Minute
+	defaultRealtimeVoiceFollowUpTimeout   = 5 * time.Minute
 	defaultRealtimeVoiceIdleTimeout       = 15 * time.Second
 	defaultRealtimeVoiceToolCallTimeout   = 10 * time.Second
 	defaultVoiceProviderHTTPTimeout       = 60 * time.Second
@@ -195,6 +199,8 @@ type Config struct {
 	PrimaryThumbnailWarmTimeout      time.Duration
 	VoiceDevFakeEnabled              bool
 	VoiceGoogleEnabled               bool
+	RealtimeVoiceSessionTimeout      time.Duration
+	RealtimeVoiceFollowUpTimeout     time.Duration
 	RealtimeVoiceIdleTimeout         time.Duration
 	RealtimeVoiceToolCallTimeout     time.Duration
 	VoiceProviderHTTPTimeout         time.Duration
@@ -272,6 +278,8 @@ func Load() Config {
 		PrimaryThumbnailWarmTimeout:      durationEnvOrDefault(envPrimaryThumbnailWarmTimeout, defaultPrimaryThumbnailWarmTimeout),
 		VoiceDevFakeEnabled:              boolEnvOrDefault(envVoiceDevFakeEnabled, defaultVoiceDevFakeEnabled),
 		VoiceGoogleEnabled:               boolEnvOrDefault(envVoiceGoogleEnabled, defaultVoiceGoogleEnabled),
+		RealtimeVoiceSessionTimeout:      durationEnvOrDefault(envRealtimeVoiceSessionTimeout, defaultRealtimeVoiceSessionTimeout),
+		RealtimeVoiceFollowUpTimeout:     durationEnvOrDefault(envRealtimeVoiceFollowUpTimeout, defaultRealtimeVoiceFollowUpTimeout),
 		RealtimeVoiceIdleTimeout:         durationEnvOrDefault(envRealtimeVoiceIdleTimeout, defaultRealtimeVoiceIdleTimeout),
 		RealtimeVoiceToolCallTimeout:     durationEnvOrDefault(envRealtimeVoiceToolCallTimeout, defaultRealtimeVoiceToolCallTimeout),
 		VoiceProviderHTTPTimeout:         durationEnvOrDefault(envVoiceProviderHTTPTimeout, defaultVoiceProviderHTTPTimeout),

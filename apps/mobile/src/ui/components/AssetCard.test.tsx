@@ -419,7 +419,10 @@ describe('AssetBreadcrumbTrail', () => {
     expect(scroller?.props?.horizontal).toBe(true);
     expect(collectText(scroller)).toEqual(expect.arrayContaining(['Garage', 'Holiday / seasonal bin']));
     expect(collectText(scroller)).not.toContain('Bottom drawer');
-    expect(scroller?.props?.onContentSizeChange).toBeUndefined();
+    const scrolls: boolean[] = [];
+    (scroller?.props?.ref as { current: unknown }).current = { scrollToEnd: ({ animated }: { animated: boolean }) => scrolls.push(animated) };
+    (scroller?.props?.onContentSizeChange as () => void)();
+    expect(scrolls).toEqual([false]);
   });
 
   it('opens the selected parent location and gives ancestors lower accessible visual weight', () => {

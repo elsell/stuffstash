@@ -117,12 +117,12 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 }
 
 func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
+	duration := time.Minute
 	if input.Session.workflow != nil {
-		duration := time.Duration(input.Session.workflow.Revision().Snapshot().Definition.Settings().Budget.ElapsedSeconds) * time.Second
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, duration)
-		defer cancel()
+		duration = time.Duration(input.Session.workflow.Revision().Snapshot().Definition.Settings().Budget.ElapsedSeconds) * time.Second
 	}
+	ctx, cancel := context.WithTimeout(ctx, duration)
+	defer cancel()
 	if input.Session.conversationModel != nil && !input.Session.conversationMemory.Matches(realtimeConversationScope(input.Session)) {
 		return ports.ErrForbidden
 	}

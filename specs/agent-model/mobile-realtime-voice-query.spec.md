@@ -734,3 +734,25 @@ identifiers. Mobile shows “Provider billing is disabled” and explains: “Yo
 Cloud voice provider has billing disabled. Ask your provider administrator to
 restore billing, then try again.” The existing Voice providers recovery action
 remains available in the sheet and the minimized accessory names the same cause.
+
+### Human-paced continuation and review
+
+The conversation connection has an environment-backed 15-minute lifetime
+(`STUFF_STASH_REALTIME_VOICE_SESSION_TIMEOUT`). Waiting for the first input of a
+follow-up turn allows five minutes (`STUFF_STASH_REALTIME_VOICE_FOLLOW_UP_TIMEOUT`),
+while the existing 15-second audio-frame idle limit remains in force after capture
+upload starts and for initial input. Invalid duration settings use bounded defaults.
+Review waits may use the remaining session lifetime; processing retains the existing
+per-turn workflow and per-tool deadlines. All follow-ups and approvals continue to
+reauthorize at the existing boundaries. Time spent reading or staging photos must
+not consume a single 60-second connection deadline.
+
+Safe error codes distinguish `request_timeout`, `conversation_budget_exhausted`,
+`conversation_context_exhausted`, `invalid_provider_output`, and
+`connection_interrupted`. Unclassified errors remain explicitly unknown rather than
+claiming an invented cause. Operational logs preserve these safe categories. Mobile
+retains the pending review when transport fails and prevents an approval being sent
+through a dead connection; it does not retry writes automatically.
+
+For sessions without a workflow revision, each processing turn retains a one-minute
+deadline, independent of the longer human interaction windows.

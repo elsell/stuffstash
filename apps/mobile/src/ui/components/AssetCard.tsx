@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type {
@@ -176,6 +177,8 @@ export function AssetBreadcrumbTrail({
   readonly prominence?: 'compact' | 'detail';
 }) {
   const styles = useAssetCardStyles(paletteOverride);
+  const scroll = createRef<ScrollView>();
+  const revealParent = () => scroll.current?.scrollToEnd({ animated: false });
 
   if (segments.length === 0) {
     return null;
@@ -183,6 +186,10 @@ export function AssetBreadcrumbTrail({
 
   return (
     <ScrollView
+      key={segments.map(segment => `${segment.id}:${segment.title}`).join('|')}
+      ref={scroll}
+      onLayout={revealParent}
+      onContentSizeChange={revealParent}
       accessibilityLabel={`Location ${segments.map((segment) => segment.title).join(', ')}`}
       horizontal
       showsHorizontalScrollIndicator={false}

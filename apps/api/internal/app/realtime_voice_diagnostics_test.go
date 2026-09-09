@@ -56,7 +56,11 @@ func TestRealtimeVoiceTypedResponsePreservesTextToSpeechBoundaries(t *testing.T)
 				return nil
 			})
 			if testCase.wantFailure {
-				if err == nil || RealtimeVoiceSafeErrorCode(err) != realtimeVoiceFailureTextToSpeech {
+				expectedCode := realtimeVoiceFailureTextToSpeech
+				if testCase.wantSafeError == "invalid_provider_output" {
+					expectedCode = "invalid_provider_output"
+				}
+				if err == nil || RealtimeVoiceSafeErrorCode(err) != expectedCode {
 					t.Fatalf("expected text-to-speech stage failure, got %v", err)
 				}
 				diagnostic := findRealtimeVoiceDiagnosticEvent(t, events, "Text-to-speech provider failed")

@@ -9,6 +9,7 @@ it('renders formatted list text with native asset links and content-sized messag
   const opened: string[] = [];
   try {
     await h.render(<VoiceResponseEntityText markdown enabled text={'Found:\n* **Newborn** Clothes: Bin 58.'} references={[reference]} onOpen={asset => opened.push(asset.assetId)} />);
+    expect(h.allByType('Text').some(node => node.props.selectable === true)).toBe(true);
     expect(h.allText().join('')).not.toContain('**');
     expect(h.allText()).toContain('• ');
     await h.press(h.byLabel('Open Newborn Clothes'));

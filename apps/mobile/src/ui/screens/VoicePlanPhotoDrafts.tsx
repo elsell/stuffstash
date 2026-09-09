@@ -33,11 +33,13 @@ export function showVoicePlanPhotoSourceChooser({
 }
 
 export function VoicePlanPhotoDraftStrip({
+  readOnly = false,
   commandKey,
   onAddPhotos,
   onRemovePhoto,
   photos
 }: {
+  readonly readOnly?: boolean;
   readonly commandKey: string;
   readonly onAddPhotos: (commandKey: string) => void;
   readonly onRemovePhoto: (commandKey: string, photoId: string) => void;
@@ -47,7 +49,7 @@ export function VoicePlanPhotoDraftStrip({
   const styles = createStyles(palette);
   return (
     <View style={styles.planPhotoStrip}>
-      <Pressable
+      {!readOnly ? <Pressable
         accessibilityLabel="Stage draft photos for this planned item"
         accessibilityRole="button"
         onPress={() => onAddPhotos(commandKey)}
@@ -57,7 +59,7 @@ export function VoicePlanPhotoDraftStrip({
         <Text style={styles.planPhotoAddText}>
           {photos.length > 0 ? 'Stage more' : 'Stage photos'}
         </Text>
-      </Pressable>
+      </Pressable> : null}
       {photos.length > 0 ? (
         <ScrollView
           horizontal
@@ -71,21 +73,21 @@ export function VoicePlanPhotoDraftStrip({
                 source={{ uri: photo.uri }}
                 style={styles.planPhotoPreview}
               />
-              <Pressable
+              {!readOnly ? <Pressable
                 accessibilityLabel="Remove draft photo"
                 accessibilityRole="button"
                 onPress={() => onRemovePhoto(commandKey, photo.id)}
                 style={styles.planPhotoRemoveButton}
               >
                 <X color={palette.surface} size={11} strokeWidth={3} />
-              </Pressable>
+              </Pressable> : null}
             </View>
           ))}
           <Text style={styles.planPhotoCount}>{photos.length.toString()}</Text>
         </ScrollView>
       ) : null}
       {photos.length > 0 ? (
-        <Text style={styles.planPhotoDraftNote}>Attaches after approval.</Text>
+        <Text style={styles.planPhotoDraftNote}>{readOnly ? 'Draft kept on this device.' : 'Attaches after approval.'}</Text>
       ) : null}
     </View>
   );
