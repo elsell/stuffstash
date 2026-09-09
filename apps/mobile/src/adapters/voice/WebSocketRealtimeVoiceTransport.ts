@@ -247,7 +247,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       }
       options.signal?.addEventListener('abort', abortHandler, { once: true });
       socket.onerror = (event) => {
-        settleReject(new Error(`Voice socket failed: ${String(event)}`));
+        settleReject(new VoiceConnectionInterruptedError());
       };
       socket.onclose = (event) => {
         void messageChain.then(() => {
@@ -255,7 +255,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             thisTransport.activeFollowUpSession = null;
           }
           if (followUpPending) {
-            const error = new Error(prematureCloseMessage(event));
+            const error = new VoiceConnectionInterruptedError(prematureCloseMessage(event));
             followUpPending = false;
             followUpResolve = null;
             followUpReject?.(error);
@@ -263,7 +263,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             return;
           }
           if (!completed) {
-            settleReject(new Error(prematureCloseMessage(event)));
+            settleReject(new VoiceConnectionInterruptedError(prematureCloseMessage(event)));
           }
         }).catch(settleReject);
       };
@@ -967,4 +967,9 @@ function objectValue(value: unknown, label: string): Record<string, unknown> {
     throw new Error(`Voice event field ${label} must contain objects.`);
   }
   return value as Record<string, unknown>;
+}
+
+class VoiceConnectionInterruptedError extends Error {
+  readonly code = 'connection_interrupted';
+  constructor(message = 'The conversation connection was interrupted.') { super(message); }
 }

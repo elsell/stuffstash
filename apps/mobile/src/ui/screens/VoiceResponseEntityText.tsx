@@ -27,7 +27,7 @@ export function VoiceResponseEntityText({
   const fallbackReferences = references.filter(reference => !placed.has(reference.assetId));
   return (
     <View style={styles.responseTextGroup}>
-      {linkedBlocks.map((block, blockIndex) => <Text key={blockIndex} accessibilityLiveRegion="polite" style={[styles.responseText, block.heading && styles.strong]}>
+      {linkedBlocks.map((block, blockIndex) => <Text selectable key={blockIndex} accessibilityLiveRegion="polite" style={[styles.responseText, block.heading && styles.strong]}>
         {block.prefix}
         {block.links.segments.map((segment, index) => (
           <Text

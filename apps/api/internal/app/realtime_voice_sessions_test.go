@@ -71,7 +71,7 @@ func TestRealtimeVoiceSessionPersistsFailureWithSafeCode(t *testing.T) {
 	}
 
 	failed := repository.savedRecord(t, session.ID)
-	if failed.State != ports.RealtimeSessionStateFailed || failed.SafeFailureCode != "speech_to_text_failed" || failed.EndedAt.IsZero() {
+	if failed.State != ports.RealtimeSessionStateFailed || failed.SafeFailureCode != "invalid_provider_output" || failed.EndedAt.IsZero() {
 		t.Fatalf("expected failed outcome with safe code, got %+v", failed)
 	}
 }

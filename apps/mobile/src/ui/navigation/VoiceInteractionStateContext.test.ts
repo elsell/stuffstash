@@ -47,7 +47,7 @@ describe('buildFailedVoiceRealtimeState', () => {
     expect(state).toMatchObject({
       status: 'failed',
       failureCode: 'voice_failed',
-      errorMessage: 'Voice failed safely.'
+      errorMessage: 'Could not finish this request. Try again or start a new conversation.'
     });
   });
 

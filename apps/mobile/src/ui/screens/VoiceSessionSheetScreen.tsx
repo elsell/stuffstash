@@ -7,6 +7,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -302,6 +303,14 @@ function VoiceSessionSheet({
             {session.contextLabel}
           </Text>
         </View>
+        <Pressable accessibilityRole="button" accessibilityLabel="New conversation" style={styles.iconButton} onPress={() => {
+          if (actionPlan && (actionPlan.status === 'proposed' || actionPlan.status === 'approved')) {
+            Alert.alert('Start a new conversation?', 'This clears the conversation and staged photos. It does not undo changes already submitted.', [
+              { text: 'Keep conversation', style: 'cancel' },
+              { text: 'New conversation', style: 'destructive', onPress: onReset }
+            ]);
+          } else { onReset(); }
+        }}><RotateCcw color={palette.textMuted} size={20} /></Pressable>
         <Pressable
           accessibilityLabel="Close voice session"
           accessibilityRole="button"
@@ -392,8 +401,9 @@ function VoiceSessionSheet({
                             ) : null}
                           </View>
                         </View>
-                        {actionPlan.status === 'proposed' && command.photoDraftEligible ? (
+                        {(actionPlan.status === 'proposed' || actionPlan.status === 'failed') && command.photoDraftEligible ? (
                           <VoicePlanPhotoDraftStrip
+                            readOnly={actionPlan.status !== 'proposed'}
                             commandKey={commandKey}
                             onAddPhotos={onAddPhotos}
                             onRemovePhoto={onRemovePhoto}
