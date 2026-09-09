@@ -185,6 +185,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTranscriptFinal, SessionID: input.Session.ID, Text: transcript}); err != nil {
 		return err
 	}
+	input.Session.silentReply = strings.TrimSpace(input.Text) != ""
 	return a.runRealtimeVoiceConversation(ctx, input.Session, transcript, input.ConversationTurns, emit)
 }
 

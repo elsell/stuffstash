@@ -34,6 +34,20 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 		return err
 	}
 
+	if !session.silentReply {
+		if err := emitRealtimeVoiceSpeech(ctx, session, response, toolResults, emit); err != nil {
+			return err
+		}
+	}
+	if !realtimeVoiceShouldContinueAfterClarification(response, continueAfterClarification...) && !(session.ConversationContinuity && response.Kind == ports.StructuredAgentResponseKindAnswer) {
+		if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
+			return err
+		}
+	}
+	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
+}
+
+func emitRealtimeVoiceSpeech(ctx context.Context, session RealtimeVoiceSession, response ports.StructuredAgentResponse, toolResults []ports.AgentToolResult, emit RealtimeVoiceEventSink) error {
 	speech, err := session.textToSpeech.Synthesize(ctx, ports.TextToSpeechInput{
 		TenantID:    session.TenantID,
 		InventoryID: session.InventoryID,
@@ -66,12 +80,7 @@ func (a App) completeRealtimeVoiceResponse(ctx context.Context, session Realtime
 	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTextToSpeechAudioCompleted, SessionID: session.ID}); err != nil {
 		return err
 	}
-	if !realtimeVoiceShouldContinueAfterClarification(response, continueAfterClarification...) && !(session.ConversationContinuity && response.Kind == ports.StructuredAgentResponseKindAnswer) {
-		if err := a.markRealtimeVoiceSessionOutcome(ctx, session, ports.RealtimeSessionStateCompleted, ""); err != nil {
-			return err
-		}
-	}
-	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventSessionCompleted, SessionID: session.ID})
+	return nil
 }
 
 func realtimeVoicePlayableSpeechChunks(chunks [][]byte) [][]byte {

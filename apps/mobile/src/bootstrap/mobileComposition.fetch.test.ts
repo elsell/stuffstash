@@ -76,3 +76,20 @@ it('allows an explicitly detached Request signal', async () => {
   });
   expect(await fetchWithTimeout(new Request('https://api.example.test', { signal: caller.signal }), { signal: null })).toBe(response);
 });
+
+it('gives photo finalization a separate bounded deadline without widening ordinary requests', async () => {
+  const { mobileApiRequestTimeoutMs } = await import('../adapters/network/TimeoutFetch');
+  const complete = 'https://api.example.test/tenants/t/inventories/i/assets/a/attachments/direct-uploads/u/complete';
+  expect(mobileApiRequestTimeoutMs(new Request(complete, { method: 'POST' }))).toBe(60000);
+  expect(mobileApiRequestTimeoutMs(complete, { method: 'POST' })).toBe(60000);
+  expect(mobileApiRequestTimeoutMs(complete, { method: 'GET' })).toBe(8000);
+  expect(mobileApiRequestTimeoutMs('https://api.example.test/assets')).toBe(8000);
+  const response = new Response();
+  const delayed: typeof fetch = async (_input, init) => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve(response), 20);
+    init?.signal?.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); }, { once: true });
+  });
+  const transport = createTimeoutFetch((input, init) => mobileApiRequestTimeoutMs(input, init) === 60000 ? 100 : 5, delayed);
+  await expect(transport(complete, { method: 'POST' })).resolves.toBe(response);
+  await expect(transport('https://api.example.test/assets')).rejects.toThrow('Network request timed out');
+});

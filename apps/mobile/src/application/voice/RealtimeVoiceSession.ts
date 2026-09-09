@@ -406,7 +406,7 @@ export class RealtimeVoiceSessionController {
     if (!followUp) this.transport.close?.();
     await this.pauseMedia();
     if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
-    this.playbackSuspended = false;
+    this.playbackSuspended = true;
     this.currentContext = context;
     const states: VoiceRealtimeState[] = [{ startsNewContext: !followUp, status: 'processing', tenantName: context.tenantName,
       inventoryName: context.inventoryName, transcript: trimmed, progressLabel: 'Checking your inventory', debugEvents: [] }];
@@ -703,12 +703,15 @@ export class RealtimeVoiceSessionController {
           conversationPhase: 'answering'
         });
       case 'tts.audio.started':
+        if (this.playbackSuspended) return state;
         this.ttsMimeType = event.mimeType;
         return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.chunk':
+        if (this.playbackSuspended) return state;
         if (!this.playbackSuspended) await this.player.playChunk(event.audioBase64, this.ttsMimeType);
         return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.completed':
+        if (this.playbackSuspended) return state;
         return withProgressStep(state, 'Speech complete', { status: state.actionPlan ? 'review' : 'speaking' });
       case 'session.completed':
         await this.player.stop();
@@ -784,6 +787,7 @@ export class RealtimeVoiceSessionController {
       inventoryId: context.inventoryId,
       commandAssetIds: {},
       photos: {},
+      attachedCount: 0,
       nonRetryableFailures: []
     };
     const nonRetryableFailures: string[] = [];
@@ -810,7 +814,7 @@ export class RealtimeVoiceSessionController {
         retry.photos[commandId] = photosWithIntents;
       }
       if (photosWithoutIntents.length > 0) {
-        nonRetryableFailures.push('The server did not return an upload intent for this photo.');
+        nonRetryableFailures.push(...photosWithoutIntents.map(() => 'The server did not return an upload intent for this photo.'));
       }
     }
 
@@ -818,14 +822,15 @@ export class RealtimeVoiceSessionController {
   }
 
   private async uploadPhotoRetry(planId: string, retry: VoiceActionPlanPhotoRetry): Promise<VoicePhotoAttachmentStatus | undefined> {
-    let attempted = retry.nonRetryableFailures.length;
+    let attempted = retry.attachedCount + retry.nonRetryableFailures.length;
     let failed = retry.nonRetryableFailures.length;
     const remaining: VoiceActionPlanPhotoRetry = {
       tenantId: retry.tenantId,
       inventoryId: retry.inventoryId,
       commandAssetIds: { ...retry.commandAssetIds },
       photos: {},
-      nonRetryableFailures: []
+      nonRetryableFailures: retry.nonRetryableFailures,
+      attachedCount: retry.attachedCount
     };
     const failureMessages: string[] = [...retry.nonRetryableFailures];
     for (const [commandId, photos] of Object.entries(retry.photos)) {
@@ -856,7 +861,7 @@ export class RealtimeVoiceSessionController {
       }
     }
     if (failed > 0 && hasRetryablePhotos(remaining)) {
-      this.pendingPhotoRetriesByPlanId.set(planId, remaining);
+      this.pendingPhotoRetriesByPlanId.set(planId, { ...remaining, attachedCount: attempted - failed });
     } else {
       this.pendingPhotoRetriesByPlanId.delete(planId);
     }
@@ -964,6 +969,7 @@ type VoiceActionPlanPhotoRetry = {
   readonly commandAssetIds: Record<string, string>;
   readonly photos: VoiceActionPlanPhotoDrafts;
   readonly nonRetryableFailures: readonly string[];
+  readonly attachedCount: number;
 };
 
 const maxVisibleProgressSteps = 12;

@@ -70,3 +70,26 @@ Local review validation failures keep the live proposal editable; they do not re
 lost connectivity. Retained photos on disconnected reviews are visible read-only.
 Animated card navigation respects native Reduce Motion. Restoring a saved carousel
 position must not override subsequent animated scrolling.
+
+### Typed replies and multi-photo completion
+
+Typed turns are silent: skip speech synthesis on the server for that turn and
+ignore any legacy speech events in the mobile client. A later microphone turn
+may speak normally. Typed replies must not show a Speaking indicator.
+
+An approved proposal uploads every staged photo in one user-initiated batch.
+Keep retries limited to unsuccessful photos and report cumulative attached/total
+counts across attempts, including in conversation history. Do not repeat asset
+creation on photo retry. Permanent missing-intent failures remain counted.
+
+Row preview cards size to their content, with the title and deepest-location
+breadcrumb adjacent without a reserved empty title row. Preserve native touch
+targets using hit slop where necessary. Horizontal rails do not stretch vertically.
+Show a single applying-change indicator, and distinguish saved changes from
+pending or failed photo attachments.
+
+Photo finalization validates uploaded bytes and may take longer than ordinary
+queries while thumbnails are being generated. Mobile API transport allows 60
+seconds for POST attachment direct-upload completion, versus 8 seconds for other
+requests. Caller cancellation still wins. These fixed interaction deadlines are
+transport policy, not deployment endpoint configuration.

@@ -100,7 +100,7 @@ import type { MobileRuntimeConfig } from '../config/mobileRuntimeConfigCore';
 import { createMobileQueryClient } from '../adapters/serverState/MobileQueryClient';
 import { QueryClientInventoryMutationObserver } from '../adapters/serverState/QueryClientInventoryMutationObserver';
 import { QueryClientInventorySelectionObserver } from '../adapters/serverState/QueryClientInventorySelectionObserver';
-import { createTimeoutFetch } from '../adapters/network/TimeoutFetch';
+import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
   readonly performanceObserver: PerformanceObserver;
@@ -222,7 +222,7 @@ export function createMobileComposition(
     platform: Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web',
     baseUrl: profile.apiBaseUrl,
     tokenProvider: () => validIdTokenForProfile(profile, sessionOptions),
-    fetch: createTimeoutFetch(8000)
+    fetch: createTimeoutFetch(mobileApiRequestTimeoutMs)
   });
   const client = createStuffStashClient(profile, sessionOptions, performanceSession.fetch);
   const serviceScopeId = createServiceScopeId();
@@ -351,7 +351,7 @@ function createOnboardingGateway(profile: ConnectionProfile): ApiOnboardingGatew
 function createStuffStashClient(
   profile: ConnectionProfile,
   options: MobileCompositionOptions = {},
-  fetchImpl: typeof fetch = createTimeoutFetch(8000)
+  fetchImpl: typeof fetch = createTimeoutFetch(mobileApiRequestTimeoutMs)
 ): StuffStashClient {
   return new StuffStashClient({
     baseUrl: profile.apiBaseUrl,

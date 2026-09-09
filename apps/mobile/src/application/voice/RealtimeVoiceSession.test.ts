@@ -2435,3 +2435,39 @@ it('does not start the microphone after navigation while permission readiness is
   await expect(start).rejects.toMatchObject({ code: 'voice_cancelled' });
   expect(recorder.started).toBe(false);
 });
+
+it('keeps typed replies silent even when a legacy server sends speech events', async () => {
+  const player = new FakePlayer();
+  const transport = new FakeTransport([
+    { type: 'tts.audio.started', seq: 1, sessionId: 'session-1', mimeType: 'audio/mpeg' },
+    { type: 'tts.audio.chunk', seq: 2, sessionId: 'session-1', chunkId: 'one', audioBase64: 'YQ==', isFinalChunk: true },
+    { type: 'tts.audio.completed', seq: 3, sessionId: 'session-1' },
+    { type: 'session.completed', seq: 4, sessionId: 'session-1' }
+  ]);
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), transport, player);
+  const states = await controller.sendText('Where is the drill?');
+  expect(player.played).toEqual([]);
+  expect(states.some(state => state.status === 'speaking' || state.progressLabel === 'Speaking')).toBe(false);
+  await controller.start();
+  await controller.stop();
+  expect(player.played).toEqual([{ audioBase64: 'YQ==', mimeType: 'audio/mpeg' }]);
+});
+
+it('uploads a whole photo batch and retains cumulative totals after retrying only failed photos', async () => {
+  const names = ['one.jpg', 'two.jpg', 'three.jpg'];
+  const transport = new ReviewDecisionTransport({
+    commandResults: [{ commandId: 'cmd-water-bottle', assetId: 'asset-water-bottle', operation: 'create', assetKind: 'item' }],
+    attachmentUploadIntents: names.map((name, index) => ({ ...testUploadIntent('cmd-water-bottle', 'asset-water-bottle', name), photoIndex: index }))
+  });
+  const repository = new FakeInventoryRepository();
+  repository.failPhotoUploads = 1;
+  const controller = new RealtimeVoiceSessionController(repository, new FakeRecorder(), transport, new FakePlayer());
+  await controller.start();
+  const stop = controller.stop();
+  await transport.reviewReady;
+  await controller.approveActionPlan('plan-1', { 'cmd-water-bottle': names.map(fileName => ({ fileName, contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5 })) });
+  expect((await stop).at(-1)?.photoAttachmentStatus?.message).toBe('2 of 3 photos attached.');
+  expect(await controller.retryPhotoAttachments('plan-1')).toMatchObject({ status: 'attached', message: '3 photos attached.' });
+  expect(repository.addedPhotos.map(photo => photo.fileName).sort()).toEqual(names.sort());
+  expect(transport.approvedPlanIds).toEqual(['plan-1']);
+});
