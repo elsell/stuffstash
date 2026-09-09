@@ -55,7 +55,7 @@ function VoiceResultRailContent({ references: bounded, identity, onOpen }: { rea
     scroll.current?.scrollTo({ x: next * cardWidth, animated: !reduceMotion });
   };
   return <View style={styles.rail}>
-    <ScrollView ref={scroll} onLayout={event => setViewportWidth(event.nativeEvent.layout.width)} contentContainerStyle={{ paddingRight: Math.max(0, viewportWidth - cardWidth) }} horizontal snapToInterval={cardWidth} decelerationRate="fast" showsHorizontalScrollIndicator={false}
+    <ScrollView ref={scroll} onLayout={event => setViewportWidth(event.nativeEvent.layout.width)} style={{ flexGrow: 0 }} contentContainerStyle={{ alignItems: 'flex-start', paddingRight: Math.max(0, viewportWidth - cardWidth) }} horizontal snapToInterval={cardWidth} decelerationRate="fast" showsHorizontalScrollIndicator={false}
       contentOffset={initialOffset.current}
       onMomentumScrollEnd={event => { const next = Math.max(0, Math.min(bounded.length - 1, Math.round(event.nativeEvent.contentOffset.x / cardWidth))); railOffsets.current[identity] = next; setPosition(next); }}>
       {bounded.map(reference => <View key={reference.assetId} style={styles.card}><VoiceResultCard reference={reference} onOpen={onOpen} /></View>)}
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   exchange: { gap: spacing.md, paddingBottom: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth },
   user: { alignSelf: 'flex-end', maxWidth: '94%', padding: spacing.sm, borderRadius: radius.lg, gap: spacing.xs },
   rail: { gap: spacing.xs }, card: { width: cardWidth, paddingRight: spacing.sm },
-  placeholder: { minHeight: 150, padding: spacing.md, borderRadius: radius.lg },
+  placeholder: { minHeight: 88, padding: spacing.md, borderRadius: radius.lg },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   control: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.sm }
 });

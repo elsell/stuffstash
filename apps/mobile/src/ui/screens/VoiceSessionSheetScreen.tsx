@@ -452,7 +452,7 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
-            {session.isBusy ? <View style={styles.progressTraceRow}><ActivityIndicator color={palette.action} /><Text accessibilityLiveRegion="polite" style={styles.progressHint}>{session.progressLabel}</Text></View> : null}
+            {session.isBusy && actionPlan?.status !== 'approved' ? <View style={styles.progressTraceRow}><ActivityIndicator color={palette.action} /><Text accessibilityLiveRegion="polite" style={styles.progressHint}>{session.progressLabel}</Text></View> : null}
 
             {session.response ? (
               <View style={styles.responseSection}>

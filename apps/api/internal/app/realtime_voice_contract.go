@@ -69,6 +69,7 @@ type RealtimeVoiceOutputAudio struct {
 }
 
 type RealtimeVoiceSession struct {
+	silentReply                bool
 	conversationMemory         *agentmodelapp.ConversationMemory
 	conversationModel          ports.ConversationModel
 	ConversationContinuity     bool

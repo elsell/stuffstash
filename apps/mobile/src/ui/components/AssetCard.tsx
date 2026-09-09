@@ -90,10 +90,11 @@ export function AssetCard({
       </Pressable>
       <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
         <Pressable
+          hitSlop={isRow ? { top: 12, bottom: 12 } : undefined}
           accessibilityLabel={`Open asset ${asset.title}`}
           accessibilityRole="button"
           onPress={onPress}
-          style={({ pressed }) => [styles.openTextRegion, pressed ? styles.openTextRegionPressed : undefined]}
+          style={({ pressed }) => [styles.openTextRegion, isRow ? styles.rowOpenTextRegion : undefined, pressed ? styles.openTextRegionPressed : undefined]}
         >
           <Text
             numberOfLines={isRow ? undefined : 2}
@@ -121,7 +122,7 @@ export function AssetCard({
           <Pressable
             accessible={false}
             onPress={onPress}
-            style={({ pressed }) => [styles.openTextRegion, pressed ? styles.openTextRegionPressed : undefined]}
+            style={({ pressed }) => [styles.openTextRegion, isRow ? styles.rowOpenTextRegion : undefined, pressed ? styles.openTextRegionPressed : undefined]}
           >
             {asset.description.trim().length > 0 ? (
               <Text numberOfLines={2} style={styles.description}>
@@ -277,6 +278,9 @@ function createStyles(colors: MobileColorPalette) {
     gap: spacing.xs,
     minHeight: 44
   },
+  rowOpenTextRegion: {
+    minHeight: 0
+  },
   openTextRegionPressed: {
     opacity: 0.82
   },
@@ -305,7 +309,7 @@ function createStyles(colors: MobileColorPalette) {
     gap: 0,
     minWidth: 0,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
+    paddingVertical: 0
   },
   topRow: {
     alignItems: 'center',
@@ -314,7 +318,8 @@ function createStyles(colors: MobileColorPalette) {
     minHeight: 28
   },
   breadcrumbScroller: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 1,
     minWidth: 0
   },
   breadcrumbContent: {
