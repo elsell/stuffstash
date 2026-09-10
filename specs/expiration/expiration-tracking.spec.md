@@ -48,3 +48,21 @@ Existing asset-type create/edit forms expose a shared labeled checkbox or native
 Closing or discarding the type editor clears its draft initialization state, so reopening the same type restores the saved capability instead of reviving an abandoned toggle.
 
 The native type editor uses a reusable `AppSwitchField` backed by the platform switch, with an accessible label and explanation. It is disabled for inherited/read-only types and during save or lifecycle changes. Editor snapshots include expiration capability so toggling it alone counts as an unsaved change; creation and update both send the selected boolean through the customization application service.
+
+## Client Date Transport
+
+Client asset models preserve expiration as an optional `{ date, precision }` value; absent/null server values represent no date. Create requests may omit expiration. Updates distinguish omission (keep the stored date), a date object (replace), and explicit null (clear). Existing untyped assets may send their initial custom type assignment along with a date, subject to server validation. Client adapters must not convert month precision to an invented day or drop explicit null during request construction.
+
+
+## Conversational Expiration Support
+
+The approved release includes expiration handling through voice and typed conversation on supported clients, using the same application services as ordinary asset forms. This is part of the feature acceptance criteria, not a later enhancement.
+
+- Queries such as “what medicine expires soon” filter authorized inventory assets by the resolved custom type or tag and their actual expiration status. Medicine remains user vocabulary, never a hard-coded type. Support upcoming, expired, specific-date/range queries and follow-up context. Unknown dates must not be described as safe or non-expiring.
+- “Soon” uses the requesting user's effective inventory/type advance-days setting and reminder timezone. Notification delivery switches do not hide matching assets from an explicit query. Explicit user-specified time ranges override the default query window. Upcoming excludes already expired assets; report expired separately when relevant.
+- Add requests such as “add Tylenol that expires in February 2028” preserve month precision; exact dates preserve day precision. Edit and clear requests use the same structured approval flow. Relative dates resolve using the injected clock and requesting user's timezone and appear as the resolved date in review. Ambiguous numeric dates, missing years or unclear phrases require clarification instead of guessing.
+- A type must support expiration before saving a date. Resolve an existing enabled type from authorized vocabulary and context; if not clear, ask which type to use. Do not silently enable a type, replace an existing assigned type, or discard a requested date. Initial type assignment follows the asset integration contract above.
+- Review widgets show each proposed expiration value and its precision, alongside the item and destination, before approval. Approval, recovery, retries, audit and undo retain that date. A rejected or interrupted request cannot claim the item or date was saved.
+- Relevant location responses include expiration context from current authorized data: for example, “I found your Tylenol in bin 8 in the hall closet. It expires soon, on February 12, 2028.” Month-only values are spoken as a month/year, never an invented exact day. Expired items are identified as expired. Result cards show the same date/status and preserve asset and location navigation.
+- Tool contracts expose typed expiration values, resolved status and query filters; model output cannot bypass validation, type capability, tenant/inventory scope or approval. Typed input retains the existing no-speech behavior.
+- Acceptance coverage includes day/month add, date edit/clear, ambiguous-date clarification, type/tag query resolution, personal thresholds/timezones, expired versus upcoming, missing dates, disabled types, location-answer enrichment, follow-up queries, cross-tenant denial and interrupted approval/retry. Remote realistic voice-corpus traces must be reviewed using the voice-evaluation workflow, in addition to deterministic tests.

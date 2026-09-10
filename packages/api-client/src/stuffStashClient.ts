@@ -120,7 +120,10 @@ export type AssetLifecycleState = 'active' | 'archived';
 export type AssetLifecycleFilter = AssetLifecycleState | 'all';
 export type AssetListSort = 'id_asc' | 'updated_desc';
 
+export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
+
 export interface Asset {
+  expiration?: AssetExpiration;
   id: string;
   tenantId: string;
   inventoryId: string;
@@ -245,6 +248,7 @@ export interface AssetPhotoReference {
 export type AssetPhotoVariant = 'small' | 'medium' | 'large';
 
 export interface CreateAssetInput {
+  expiration?: AssetExpiration;
   kind: AssetKind;
   title: string;
   description?: string;
@@ -255,6 +259,8 @@ export interface CreateAssetInput {
 }
 
 export interface UpdateAssetInput {
+  expiration?: AssetExpiration | null;
+  customAssetTypeId?: string;
   title?: string;
   description?: string;
   parentAssetId?: string | null;
@@ -2082,6 +2088,7 @@ function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
 
 function mapAsset(response: AssetResponse): Asset {
   return {
+    expiration: response.expiration ?? undefined,
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId,

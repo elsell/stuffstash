@@ -2,7 +2,11 @@ export type AssetLifecycleState = 'active' | 'archived';
 
 export type AssetKind = 'item' | 'container' | 'location';
 
+export type AssetExpiration = { readonly date: string; readonly precision: 'day' | 'month' };
+
 export type AssetSummary = {
+  readonly expiration?: AssetExpiration;
+  readonly customAssetTypeId?: string;
   readonly id: AssetId;
   readonly title: string;
   readonly kind: AssetKind;

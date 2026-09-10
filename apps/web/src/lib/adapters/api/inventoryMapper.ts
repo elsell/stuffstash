@@ -78,6 +78,7 @@ export function mapCapability(inventory: Inventory | null | undefined): Capabili
 
 export function mapAsset(asset: ApiAsset): Asset {
   return {
+    expiration: asset.expiration,
     id: asset.id,
     tenantId: asset.tenantId,
     inventoryId: asset.inventoryId,

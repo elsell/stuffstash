@@ -33,6 +33,8 @@ export class ApiInventoryAssetCommands {
     const currentPlacementAssets = parent ? [parent, ...await this.traversal.loadAssetAncestors(parent)] : [];
     const asset = await this.client.createAsset(inventory.tenantId, inventory.id, {
       kind: input.kind,
+      expiration: input.expiration,
+      customAssetTypeId: input.customAssetTypeId,
       title: input.title,
       description: input.description,
       parentAssetId: input.parentAssetId,
@@ -71,6 +73,8 @@ export class ApiInventoryAssetCommands {
     const destination = { ...previous, parentAssetId: input.parentAssetId !== undefined ? input.parentAssetId : previous.parentAssetId };
     const placementAssets = [previous, ...await this.traversal.loadAncestorsForAssets([previous, destination])];
     const asset = await this.client.updateAsset(inventory.tenantId, inventory.id, input.assetId, {
+      ...(input.expiration !== undefined ? { expiration: input.expiration } : {}),
+      ...(input.customAssetTypeId !== undefined ? { customAssetTypeId: input.customAssetTypeId } : {}),
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {}),

@@ -1,4 +1,4 @@
-import { assetId, type AssetKind } from '../../domain/assets/AssetSummary';
+import { assetId, type AssetKind, type AssetExpiration } from '../../domain/assets/AssetSummary';
 import type { ActiveAssetTagReference, CreateAssetTagDraft } from '../assets/AssetTagDraftResolution';
 import { createPendingAssetTags, reconcilePendingAssetTagDrafts } from '../assets/AssetTagDraftResolution';
 import type {
@@ -7,6 +7,8 @@ import type {
 } from '../home/InventorySummaryRepository';
 
 export type CreateAssetCommandInput = {
+  readonly expiration?: AssetExpiration;
+  readonly customAssetTypeId?: string;
   readonly kind?: AssetKind;
   readonly title: string;
   readonly description: string;
@@ -44,6 +46,8 @@ export class CreateAssetCommand {
 
     const asset = await this.inventories.createAsset({
       kind: input.kind ?? 'item',
+      expiration: input.expiration,
+      customAssetTypeId: input.customAssetTypeId,
       title,
       description: input.description.trim(),
       parentAssetId: input.parentAssetId ? assetId(input.parentAssetId) : undefined,

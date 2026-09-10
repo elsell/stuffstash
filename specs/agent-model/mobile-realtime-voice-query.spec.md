@@ -825,3 +825,8 @@ synthetic inventory/provider traces, not a replay against the user's inventory o
 physical microphone evidence. Full API tests and 1,138 mobile tests passed remotely;
 code critic review found the malformed-search recovery regression and confirmed
 its correction. No builds or tests ran on the developer Mac.
+
+
+## Expiration Feature Integration
+
+The expiration release extends typed inventory reads, structured action plans, review widgets and spoken/display responses according to `../expiration/expiration-tracking.spec.md#conversational-expiration-support`. It must support expiration queries, add/edit/clear dates and relevant location-answer warnings with preserved day/month precision. These behaviors share the asset application authorization and validation boundary; expiration is not an unvalidated custom-field shortcut. Add realistic remote corpus scenarios and inspect full traces before declaring this release complete.

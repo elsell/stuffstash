@@ -1,3 +1,4 @@
+import type { AssetExpiration } from '../../domain/assets/AssetSummary';
 import {
   InventoryId,
   InventorySummary,
@@ -100,6 +101,8 @@ export type AssetSearchMatchLabels = {
 };
 
 export type CreateInventoryAssetInput = {
+  readonly expiration?: AssetExpiration;
+  readonly customAssetTypeId?: string;
   readonly kind: AssetKind;
   readonly title: string;
   readonly description: string;
@@ -108,6 +111,8 @@ export type CreateInventoryAssetInput = {
 };
 
 export type UpdateInventoryAssetInput = {
+  readonly expiration?: AssetExpiration | null;
+  readonly customAssetTypeId?: string;
   readonly assetId: AssetId;
   readonly title?: string;
   readonly description?: string;

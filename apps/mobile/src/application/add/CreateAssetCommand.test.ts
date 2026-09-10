@@ -218,3 +218,12 @@ describe('CreateAssetCommand', () => {
     });
   });
 });
+
+
+it('passes the selected type and month expiration when creating an item', async () => {
+  const repository = new FakeInventorySummaryRepository();
+  const expiration = { date: '2028-02', precision: 'month' as const };
+  await new CreateAssetCommand(repository).execute({ title: 'Medicine', description: '',
+    customAssetTypeId: 'type-medicine', expiration });
+  expect(repository.createdInput).toMatchObject({ customAssetTypeId: 'type-medicine', expiration });
+});

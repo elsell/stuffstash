@@ -214,6 +214,8 @@ export function mapAsset(
 
   return {
     id: assetId(asset.id),
+    expiration: asset.expiration,
+    customAssetTypeId: asset.customAssetTypeId,
     title: asset.title,
     kind: asset.kind,
     lifecycleState: asset.lifecycleState,

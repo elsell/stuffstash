@@ -192,7 +192,10 @@ export interface MediaUploadPolicy {
   maxBytes: number;
 }
 
+export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
+
 export interface Asset {
+  expiration?: AssetExpiration;
   id: string;
   tenantId: string;
   inventoryId: string;
@@ -408,6 +411,7 @@ export interface ImportJob {
 }
 
 export interface AddAssetDraft {
+  expiration?: AssetExpiration;
   kind: AssetKind;
   title: string;
   description: string;
@@ -434,6 +438,8 @@ export type AddAssetSaveResult =
     };
 
 export interface UpdateAssetDraft {
+  expiration?: AssetExpiration | null;
+  customAssetTypeId?: string;
   title: string;
   description: string;
   parentAssetId: string | null;

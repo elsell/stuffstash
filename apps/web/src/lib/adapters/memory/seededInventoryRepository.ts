@@ -205,6 +205,7 @@ export class SeededInventoryRepository
       parentAssetId: draft.parentAssetId,
       lifecycleState: 'active',
       customAssetTypeId: draft.customAssetTypeId,
+      expiration: draft.expiration,
       customFields: draft.customFields ?? {},
       customAssetTypeLabel: this.customAssetTypeLabel(draft.customAssetTypeId),
       tags: this.assetTagsByIDs(tenantId, inventoryId, draft.tagIds ?? []),
@@ -262,6 +263,9 @@ export class SeededInventoryRepository
     this.validateAssetParent(tenantId, inventoryId, assetId, draft.parentAssetId);
     const updated: Asset = {
       ...asset,
+      expiration: draft.expiration === undefined ? asset.expiration : draft.expiration ?? undefined,
+      customAssetTypeId: draft.customAssetTypeId ?? asset.customAssetTypeId,
+      customAssetTypeLabel: this.customAssetTypeLabel(draft.customAssetTypeId ?? asset.customAssetTypeId),
       title: draft.title,
       description: draft.description,
       parentAssetId: draft.parentAssetId,

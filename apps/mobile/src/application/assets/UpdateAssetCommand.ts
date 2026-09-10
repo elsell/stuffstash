@@ -1,4 +1,4 @@
-import { assetId } from '../../domain/assets/AssetSummary';
+import { assetId, type AssetExpiration } from '../../domain/assets/AssetSummary';
 import type {
   InventoryAssetUpdateRepository
 } from '../home/InventorySummaryRepository';
@@ -6,6 +6,8 @@ import type { ActiveAssetTagReference, AssetTagCreateRepository, CreateAssetTagD
 import { createPendingAssetTags, reconcilePendingAssetTagDrafts } from './AssetTagDraftResolution';
 
 export type UpdateAssetCommandInput = {
+  readonly expiration?: AssetExpiration | null;
+  readonly customAssetTypeId?: string;
   readonly assetId: string;
   readonly title: string;
   readonly description: string;
@@ -45,6 +47,8 @@ export class UpdateAssetCommand {
 
     const updated = await this.inventories.updateAsset({
       assetId: assetId(input.assetId),
+      expiration: input.expiration,
+      customAssetTypeId: input.customAssetTypeId,
       title,
       description: input.description.trim(),
       tagIds
