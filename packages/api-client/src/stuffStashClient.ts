@@ -1,3 +1,4 @@
+import { NotificationsClient } from './notificationsClient';
 import createClient, { type Client } from 'openapi-fetch';
 import type { components, paths } from './generated/schema';
 
@@ -683,6 +684,7 @@ export class StuffStashAPIError extends Error {
 }
 
 export class StuffStashClient {
+  readonly notifications: NotificationsClient;
   private readonly client: Client<paths>;
   private readonly baseUrl: string;
   private readonly tokenProvider: TokenProvider;
@@ -694,6 +696,7 @@ export class StuffStashClient {
       baseUrl: this.baseUrl,
       fetch: options.fetch
     });
+    this.notifications = new NotificationsClient(this.client, { headers: () => this.authHeaders(), unwrap: (request) => this.unwrap(request) });
   }
 
   async me(signal?: AbortSignal): Promise<Principal> {

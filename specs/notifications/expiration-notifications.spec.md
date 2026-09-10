@@ -84,3 +84,8 @@ The API starts expiration generation automatically when `STUFF_STASH_NOTIFICATIO
 ## Inbox REST API
 
 Authenticated `GET /tenants/{tenantId}/inventories/{inventoryId}/notifications` lists personal visible alerts, with `limit` (default 30, maximum 100), optional `cursor` and `unreadOnly`. Shared pagination metadata carries the continuation cursor, including empty continued pages. `GET .../notifications/{notificationId}` returns a currently visible personal alert; `PUT .../notifications/{notificationId}/read` idempotently marks it read. Entries include notification ID, current asset ID/title/parent/type, date/precision, milestone, creation time and optional read time. Selecting an entry uses the current asset ID through normal asset detail navigation. No endpoint accepts a recipient identity. Standard authentication, scoped errors, read audit, and generated contracts apply. Inaccessible or stale item IDs return not found; inventory access denial remains forbidden.
+
+
+## Shared Client Transport
+
+The shared generated-contract client exposes a focused notifications subclient for preference initialization/read/update, setting/removing type overrides, paginated inbox reads, detail and mark-read. It reuses the existing bearer-token, cancellation and safe API error handling. Revision values and explicit false settings must pass through unchanged. Inbox pagination preserves an empty page with a continuation cursor; callers must not infer exhaustion from item count. Platform adapters keep their own domain models above this transport layer.
