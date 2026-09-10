@@ -780,6 +780,8 @@ it('submits month-only expiration for an enabled type and preserves it after a s
   await flush();
   input('#asset-expiration', '2028-02');
   await flush();
+  button('Medicine').click();
+  await flush();
   button('Save item').click();
   await flush();
   expect(submissions[0].expiration).toEqual({ date: '2028-02', precision: 'month' });

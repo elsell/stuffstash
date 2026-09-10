@@ -1141,3 +1141,24 @@ it('allows clearing a retained date while tracking is disabled', async () => {
   await flush();
   expect(drafts[0].expiration).toBeNull();
 });
+
+
+it('assigns an initial type and expiration together without dropping retained fields', async () => {
+  const drafts: UpdateAssetDraft[] = [];
+  mountAssetDetail({ action: 'edit', asset: { ...asset(), customAssetTypeId: undefined, customFields: { reference: 'keep me' } },
+    customAssetTypes: [{ id: 'medicine', tenantId: 'tenant-one', inventoryId: 'inventory-one', scope: 'inventory',
+      key: 'medicine', displayName: 'Medicine', description: '', lifecycleState: 'active', expirationEnabled: true }],
+    onSave: async (draft) => { drafts.push(draft); }
+  });
+  await flush();
+  clickFirst('Medicine');
+  await flush();
+  setInputValue(requiredElement('#edit-asset-expiration') as HTMLInputElement, '2028-02-29');
+  await flush();
+  clickFirst('Medicine');
+  await flush();
+  clickFirst('Save');
+  await flush();
+  expect(drafts[0]).toMatchObject({ customAssetTypeId: 'medicine', customFields: { reference: 'keep me' },
+    expiration: { date: '2028-02-29', precision: 'day' } });
+});

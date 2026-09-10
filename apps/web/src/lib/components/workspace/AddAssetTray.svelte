@@ -277,6 +277,7 @@
   }
 
   function setCustomAssetType(nextId: string): void {
+    if (nextId === customAssetTypeId) return;
     customAssetTypeId = nextId;
     expiration = undefined;
     expirationValid = true;

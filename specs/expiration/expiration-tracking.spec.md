@@ -76,3 +76,10 @@ The shared expiration field uses the existing segmented control for Exact date v
 ### Web Date Editing
 
 The item editor reuses the expiration field for an assigned active, expiration-enabled type. Date-only edits participate in dirty tracking and dismissal protection. Clearing sends explicit null; unrelated edits omit the date. A failed save retains the draft, while reopening initializes from persisted asset data. Retained dates whose type no longer tracks expiration remain visible with a tracking-disabled explanation and can be cleared without re-enabling the type.
+
+
+### Initial Type Assignment In The Web Editor
+
+An untyped item's editor offers active custom types from its authorized inventory context. Selecting a type reveals its applicable fields and expiration capability, and counts as a dirty change. Save submits initial type assignment and date together. Existing assigned types cannot be replaced here. Changing an unsaved type choice clears its expiration draft but preserves other existing asset fields and tags. Unknown retained fields are not silently discarded; the application service validates compatibility before accepting assignment.
+
+Reselecting the current type in either create or edit is a no-op and must preserve the visible date and its submitted value.

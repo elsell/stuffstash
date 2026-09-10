@@ -1,9 +1,12 @@
 <script lang="ts" module>
-  import type { AssetExpiration, AssetAttachment, AssetTag, AssetTagDraft, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
+  import type { CustomAssetType, AssetExpiration, AssetAttachment, AssetTag, AssetTagDraft, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
 
   export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | 'attachment-delete';
 
   export type AssetDetailActionPanelProps = {
+    customAssetTypes?: CustomAssetType[];
+    customAssetTypeId?: string;
+    onCustomTypeSelect?: (id: string) => void;
     expiration?: AssetExpiration;
     expirationValid?: boolean;
     expirationEnabled?: boolean;
@@ -47,6 +50,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import ChoiceGrid from './ChoiceGrid.svelte';
   import ExpirationField from './ExpirationField.svelte';
   import AssetTagSelector from './AssetTagSelector.svelte';
   import CustomFieldControls from './CustomFieldControls.svelte';
@@ -55,6 +59,9 @@
   import WorkspaceTaskSheet from './action-surface/WorkspaceTaskSheet.svelte';
 
   let {
+    customAssetTypes = [],
+    customAssetTypeId,
+    onCustomTypeSelect = () => {},
     expiration,
     expirationValid = true,
     expirationEnabled = false,
@@ -96,7 +103,7 @@
     if (panel === 'edit') {
       const currentTagIds = (asset.tags ?? []).map((tag) => tag.id).sort().join(',');
       const nextTagIds = [...selectedTagIds].sort().join(',');
-      return expiration?.date !== asset.expiration?.date || expiration?.precision !== asset.expiration?.precision ||
+      return (!asset.customAssetTypeId && !!customAssetTypeId) || expiration?.date !== asset.expiration?.date || expiration?.precision !== asset.expiration?.precision ||
         title !== asset.title || description !== asset.description ||
         applicableFields.some((field) => String(asset.customFields?.[field.key] ?? '') !== (customFieldValues[field.key] ?? '')) ||
         currentTagIds !== nextTagIds || newTags.length > 0;
@@ -123,8 +130,14 @@
       <Label for="edit-asset-description">Description</Label>
       <Textarea id="edit-asset-description" bind:value={description} />
     </div>
+    {#if !asset.customAssetTypeId && customAssetTypes.some((type) => type.lifecycleState === 'active')}
+      <fieldset>
+        <legend>Custom type</legend>
+        <ChoiceGrid label="Custom asset type" options={[{ value: '', label: 'Base asset' }, ...customAssetTypes.filter((type) => type.lifecycleState === 'active').map((type) => ({ value: type.id, label: type.displayName }))]} selectedValues={[customAssetTypeId ?? '']} onSelect={onCustomTypeSelect} />
+      </fieldset>
+    {/if}
     {#if expirationEnabled}
-      {#key asset.id}
+      {#key `${asset.id}:${customAssetTypeId ?? asset.customAssetTypeId ?? ''}`}
         <ExpirationField id="edit-asset-expiration" initialValue={asset.expiration} onChange={onExpirationChange} />
       {/key}
     {:else if asset.expiration}
