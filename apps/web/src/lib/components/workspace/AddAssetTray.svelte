@@ -21,6 +21,7 @@
   } from '$lib/application/workspaceAddPresentation';
   import type {
     AddAssetSubmission,
+    AssetExpiration,
     AddAssetSaveResult,
     AssetKind,
     AssetTag,
@@ -32,6 +33,7 @@
     SelectedPhoto
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions } from '$lib/domain/inventory';
+  import ExpirationField from './ExpirationField.svelte';
   import AddAssetCustomFieldsSection from './AddAssetCustomFieldsSection.svelte';
   import AddAssetPhotosSection from './AddAssetPhotosSection.svelte';
   import AssetTagSelector from './AssetTagSelector.svelte';
@@ -79,6 +81,8 @@
   let quickParentTitle = $state('');
   let quickParentKind = $state<'location' | 'container'>('location');
   let customAssetTypeId = $state('');
+  let expiration = $state<AssetExpiration | undefined>();
+  let expirationValid = $state(true);
   let customFieldValues = $state<Record<string, string>>({});
   let selectedTagIds = $state<string[]>([]);
   let newTags = $state<AssetTagDraft[]>([]);
@@ -92,6 +96,7 @@
   let returnFocusElement: HTMLElement | null = null;
   const assetKindOptions = assetKindControlOptions();
   let activeCustomAssetTypes = $derived(customAssetTypes.filter((assetType) => assetType.lifecycleState === 'active'));
+  let expirationEnabled = $derived(activeCustomAssetTypes.find((type) => type.id === customAssetTypeId)?.expirationEnabled ?? false);
   let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, customAssetTypeId || undefined));
   let quickParentMissingName = $derived(quickParentEnabled && quickParentTitle.trim().length === 0);
   let selectedParent = $derived(parentTargets.find((target) => target.id === parentAssetId) ?? null);
@@ -136,7 +141,7 @@
   });
 
   async function save(): Promise<void> {
-    if (!title.trim() || photoError) {
+    if (!title.trim() || photoError || !expirationValid) {
       return;
     }
     const result = await onSave({
@@ -148,6 +153,7 @@
         ? { kind: quickParentKind, title: quickParentTitle.trim() }
         : undefined,
       customAssetTypeId: customAssetTypeId || undefined,
+      expiration: expirationEnabled ? expiration : undefined,
       customFields: buildCustomFields(),
       tagIds: selectedTagIds,
       newTags,
@@ -170,6 +176,8 @@
     quickParentTitle = '';
     quickParentKind = 'location';
     customAssetTypeId = '';
+    expiration = undefined;
+    expirationValid = true;
     customFieldValues = {};
     selectedTagIds = [];
     newTags = [];
@@ -190,6 +198,8 @@
     quickParentTitle = '';
     quickParentKind = 'location';
     customAssetTypeId = '';
+    expiration = undefined;
+    expirationValid = true;
     customFieldValues = {};
     selectedTagIds = [];
     newTags = [];
@@ -268,6 +278,8 @@
 
   function setCustomAssetType(nextId: string): void {
     customAssetTypeId = nextId;
+    expiration = undefined;
+    expirationValid = true;
     customFieldValues = {};
   }
 
@@ -419,6 +431,12 @@
         onCustomFieldValueChange={setCustomFieldValue}
       />
 
+      {#if expirationEnabled}
+        {#key customAssetTypeId}
+          <ExpirationField id="asset-expiration" onChange={(value, valid) => { expiration = value; expirationValid = valid; }} />
+        {/key}
+      {/if}
+
       <AssetTagSelector
         tags={assetTags}
         selectedIds={selectedTagIds}
@@ -440,7 +458,7 @@
 
     <Sheet.Footer class="tray-actions shrink-0 border-t px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
+      <Button.Root disabled={saving || !expirationValid || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
     </Sheet.Footer>
   </Sheet.Content>
 </Sheet.Root>

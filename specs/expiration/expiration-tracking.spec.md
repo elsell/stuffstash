@@ -66,3 +66,8 @@ The approved release includes expiration handling through voice and typed conver
 - Relevant location responses include expiration context from current authorized data: for example, “I found your Tylenol in bin 8 in the hall closet. It expires soon, on February 12, 2028.” Month-only values are spoken as a month/year, never an invented exact day. Expired items are identified as expired. Result cards show the same date/status and preserve asset and location navigation.
 - Tool contracts expose typed expiration values, resolved status and query filters; model output cannot bypass validation, type capability, tenant/inventory scope or approval. Typed input retains the existing no-speech behavior.
 - Acceptance coverage includes day/month add, date edit/clear, ambiguous-date clarification, type/tag query resolution, personal thresholds/timezones, expired versus upcoming, missing dates, disabled types, location-answer enrichment, follow-up queries, cross-tenant denial and interrupted approval/retry. Remote realistic voice-corpus traces must be reviewed using the voice-evaluation workflow, in addition to deterministic tests.
+
+
+### Web Date Entry
+
+The shared expiration field uses the existing segmented control for Exact date versus Month and year, and a labeled native date/month input through the shared Input component. Separate precision drafts preserve what the user entered when switching modes without inventing a day. The visible selected value is the value submitted on Save. Clearing removes the active value. Invalid or incomplete nonempty input blocks save with inline guidance. In add-item forms, the field appears only for enabled types; changing the selected type resets its date draft to prevent accidental carryover.

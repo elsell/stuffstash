@@ -760,3 +760,33 @@ async function flush(): Promise<void> {
   await Promise.resolve();
   await tick();
 }
+
+
+it('submits month-only expiration for an enabled type and preserves it after a save failure', async () => {
+  const submissions: AddAssetSubmission[] = [];
+  component = mount(AddAssetTray, { target: document.body, props: {
+    open: true, closeHref: '/', parentTargets: [],
+    mediaPolicy: { supportedContentTypes: ['image/jpeg'], maxBytes: 1024 },
+    customAssetTypes: [{ ...customAssetType('medicine', 'Medicine'), expirationEnabled: true }],
+    customFieldDefinitions: [], saving: false, onClose: () => {},
+    onSave: async (draft) => { submissions.push(draft); return { saved: false }; }
+  }});
+  await flush();
+  expect(document.querySelector('#asset-expiration')).toBeNull();
+  button('Medicine').click();
+  await flush();
+  input('#asset-title', 'Tylenol');
+  button('Month and year').click();
+  await flush();
+  input('#asset-expiration', '2028-02');
+  await flush();
+  button('Save item').click();
+  await flush();
+  expect(submissions[0].expiration).toEqual({ date: '2028-02', precision: 'month' });
+  expect(inputElement('#asset-expiration').value).toBe('2028-02');
+  button('Clear expiration').click();
+  await flush();
+  button('Save item').click();
+  await flush();
+  expect(submissions[1].expiration).toBeUndefined();
+});
