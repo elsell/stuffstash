@@ -3,6 +3,7 @@
   import type { ExpirationNotification } from '$lib/domain/notification';
   import type { NotificationRepository } from '$lib/ports/notificationRepository';
   import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
+  import { markAllNotificationsRead } from '$lib/application/notificationInboxBatch';
   import { loadVisibleNotificationPage, openNotification } from '$lib/application/notificationInbox';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -20,12 +21,14 @@
   let error = $state('');
   let appendError = $state('');
   let openError = $state('');
+  let marking = $state(false);
+  let markingController: AbortController | undefined;
   let opening = $state<string | null>(null);
   let nextCursor = $state<string | null>(null);
   let hasMore = $state(false);
   let loadController: AbortController | undefined;
   let openController: AbortController | undefined;
-  onMount(() => { void load(); return () => { loadController?.abort(); openController?.abort(); }; });
+  onMount(() => { void load(); return () => { loadController?.abort(); openController?.abort(); markingController?.abort(); }; });
 
   function dateLabel(item: ExpirationNotification): string {
     const date = item.expiration.date + (item.expiration.precision === 'month' ? '-01' : '');
@@ -47,8 +50,22 @@
       if (append) appendError = message; else error = message;
     } finally { if (!controller.signal.aborted) { loading = false; appendLoading = false; } }
   }
+  async function markAll() {
+    if (marking || opening) return;
+    loadController?.abort(); appendLoading = false;
+    const controller = new AbortController(); markingController = controller;
+    marking = true; openError = '';
+    try {
+      await markAllNotificationsRead(repository, observer, tenantId, inventoryId, controller.signal);
+      if (controller.signal.aborted) return;
+      onRead();
+      await load();
+    } catch (caught) {
+      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'Not all notifications could be marked read. Try again.');
+    } finally { if (!controller.signal.aborted) marking = false; }
+  }
   async function open(item: ExpirationNotification) {
-    if (opening) return;
+    if (opening || marking) return;
     const controller = new AbortController(); openController = controller;
     opening = item.id; openError = '';
     try {
@@ -65,24 +82,25 @@
 
 <section aria-label="Notification inbox">
   <div class="toolbar">
-    <SegmentedControl label="Notification filter" value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening }, { value: 'unread', label: 'Unread', disabled: !!opening }]} onSelect={(value) => { filter = value; void load(); }} />
-    <Button.Root variant="ghost" disabled={loading || !!opening} onclick={() => load()}>Refresh</Button.Root>
+    <SegmentedControl label="Notification filter" value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
+    <Button.Root variant="ghost" disabled={loading || !!opening || marking} onclick={markAll}>{marking ? 'Marking read…' : 'Mark all read'}</Button.Root>
+    <Button.Root variant="ghost" disabled={loading || !!opening || marking} onclick={() => load()}>Refresh</Button.Root>
   </div>
   {#if openError}<p role="alert">{openError}</p>{/if}
   {#if loading}<p role="status">Loading notifications…</p>
-  {:else if error}<p role="alert">{error}</p><Button.Root onclick={() => load()}>Retry notifications</Button.Root>
+  {:else if error}<p role="alert">{error}</p><Button.Root disabled={marking} onclick={() => load()}>Retry notifications</Button.Root>
   {:else}
     {#if items.length === 0 && !hasMore}<p>{filter === 'unread' ? 'No unread notifications.' : 'No expiration notifications yet.'}</p>{/if}
     <ul>
       {#each items as item (item.id)}
-        <li><Button.Root variant="ghost" class="notification-row" disabled={!!opening} onclick={() => open(item)}>
+        <li><Button.Root variant="ghost" class="notification-row" disabled={!!opening || marking} onclick={() => open(item)}>
           <span><strong>{item.title}</strong><span>{item.milestone === 'expired' ? 'Expired' : 'Expires'} {dateLabel(item)}</span></span>
           {#if opening === item.id}<span>Opening…</span>{:else if !item.readAt && !readIds.has(item.id)}<span>Unread</span>{/if}
         </Button.Root></li>
       {/each}
     </ul>
     {#if appendError}<p role="alert">{appendError}</p>{/if}
-    {#if hasMore}<Button.Root variant="outline" disabled={appendLoading || !!opening} onclick={() => load(true)}>{appendLoading ? 'Loading more…' : appendError ? 'Retry more notifications' : 'Load more'}</Button.Root>{/if}
+    {#if hasMore}<Button.Root variant="outline" disabled={appendLoading || !!opening || marking} onclick={() => load(true)}>{appendLoading ? 'Loading more…' : appendError ? 'Retry more notifications' : 'Load more'}</Button.Root>{/if}
   {/if}
 </section>
 

@@ -125,3 +125,7 @@ Unread counts and mark-all-read traverse the same currently visible personal inb
 ### Inbox batch REST contracts
 
 `GET .../notifications/unread-count` returns `{count}` for the current bounded page. `PUT .../notifications/read-all` marks the current bounded page read and returns `{complete}`. Both accept an optional `cursor` and include shared pagination metadata; complete is true only when no continuation remains. Count is explicitly a page contribution. Both operate on the authenticated principal alone and require current inventory view access. The static paths take precedence over notification ID routes. Clients traverse all continuations; errors preserve prior read changes for safe retry. Read audit and per-notification mutation audit follow the existing application behavior.
+
+### Web batch traversal
+
+The web notification port exposes count and mark-all page operations. Application helpers accumulate count contributions or perform read-page mutations until cursor exhaustion, checking cancellation and rejecting repeated cursors or inconsistent completion flags. Traversal is bounded to 100 pages; reaching that limit is an explicit incomplete-operation error. Never present an incomplete count as zero or partial mark-all as success. Callers refresh the inbox/count after successful mark-all, and may safely retry after failure. Observation records only operation outcomes.

@@ -29,6 +29,12 @@ export class StuffStashNotificationRepository implements NotificationRepository 
   async getNotification(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal) {
     return mapNotification(await this.client.notifications.getNotification(tenantId, inventoryId, notificationId, signal));
   }
+  countUnreadPage(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal) {
+    return this.client.notifications.countUnreadPage(tenantId, inventoryId, cursor, signal);
+  }
+  markAllReadPage(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal) {
+    return this.client.notifications.markAllReadPage(tenantId, inventoryId, cursor, signal);
+  }
   markRead(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal) {
     return this.client.notifications.markRead(tenantId, inventoryId, notificationId, signal);
   }

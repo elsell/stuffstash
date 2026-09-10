@@ -4,6 +4,8 @@ import type { Pagination } from './pagination';
 export interface NotificationPage { items: ExpirationNotification[]; pagination: Pagination }
 export interface InboxOptions { cursor?: string; limit?: number; unreadOnly?: boolean; signal?: AbortSignal }
 export interface NotificationRepository {
+  countUnreadPage(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal): Promise<{ count: number; nextCursor: string | null }>;
+  markAllReadPage(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal): Promise<{ complete: boolean; nextCursor: string | null }>;
   getPreferences(tenantId: string, inventoryId: string, signal?: AbortSignal): Promise<NotificationPreferences>;
   initializePreferences(tenantId: string, inventoryId: string, timezone: string, signal?: AbortSignal): Promise<NotificationPreferences>;
   updatePreferences(tenantId: string, inventoryId: string, input: NotificationPreferencesUpdate, signal?: AbortSignal): Promise<NotificationPreferences>;

@@ -65,3 +65,23 @@ it('keeps continuation available after opening the last loaded unread notificati
     expect(document.body.textContent).toContain('Load more');
   } finally { await unmount(component); document.body.innerHTML = ''; }
 });
+it('marks all pages read before refreshing the inbox', async () => {
+  let batches = 0;
+  let refreshed = 0;
+  const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async (input, init) => {
+    const request = new Request(input, init);
+    if (request.url.includes('/read-all')) {
+      batches++;
+      return Response.json({ data: { complete: batches === 2 }, meta: { pagination: { limit: 100, nextCursor: batches === 2 ? null : 'next', hasMore: batches !== 2 } } });
+    }
+    refreshed++;
+    return Response.json({ data: [], meta: { pagination: { limit: 30, nextCursor: null, hasMore: false } } });
+  });
+  const component = mount(NotificationInbox, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', repository, observer: new InMemoryWorkspaceObserver(), onOpenAsset() {} } });
+  try {
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No expiration notifications'));
+    Array.from(document.querySelectorAll('button')).find((button) => button.textContent === 'Mark all read')!.click();
+    await vi.waitFor(() => expect(refreshed).toBe(2));
+    expect(batches).toBe(2);
+  } finally { await unmount(component); document.body.innerHTML = ''; }
+});
