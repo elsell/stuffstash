@@ -1,3 +1,4 @@
+import { InventoryAssetTypesQuery } from '../application/assets/InventoryAssetTypesQuery';
 import { Platform } from 'react-native';
 import { createMobilePerformanceSession } from '../adapters/observability/MobilePerformanceSession';
 import type { PerformanceObserver } from '../application/observability/PerformanceObserver';
@@ -143,6 +144,7 @@ export type MobileComposition = {
   readonly previewInventoryInvitationQuery: PreviewInventoryInvitationQuery;
   readonly acceptInventoryInvitationCommand: AcceptInventoryInvitationCommand;
   readonly settingsQuery: SettingsQuery;
+  readonly inventoryAssetTypesQuery: InventoryAssetTypesQuery;
   readonly customizationContextQuery: CustomizationContextQuery;
   readonly customizationCollectionQuery: CustomizationCollectionQuery;
   readonly manageTags: ManageTags;
@@ -259,6 +261,8 @@ export function createMobileComposition(
   );
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
+  const customizationContextQuery = new CustomizationContextQuery(settingsQuery);
+  const customizationCollectionQuery = new CustomizationCollectionQuery(customization, customizationObservability);
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
@@ -305,8 +309,9 @@ export function createMobileComposition(
     previewInventoryInvitationQuery: new PreviewInventoryInvitationQuery(inventoryInvitations),
     acceptInventoryInvitationCommand: new AcceptInventoryInvitationCommand(inventoryInvitations),
     settingsQuery,
-    customizationContextQuery: new CustomizationContextQuery(settingsQuery),
-    customizationCollectionQuery: new CustomizationCollectionQuery(customization, customizationObservability),
+    inventoryAssetTypesQuery: new InventoryAssetTypesQuery(customizationContextQuery, customizationCollectionQuery),
+    customizationContextQuery,
+    customizationCollectionQuery,
     manageTags: new ManageTags(customization, customizationObservability),
     manageCustomFields: new ManageCustomFields(customization, customizationObservability),
     manageCustomAssetTypes: new ManageCustomAssetTypes(customization, customizationObservability),

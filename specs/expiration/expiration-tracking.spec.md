@@ -96,3 +96,8 @@ Use `@react-native-community/datetimepicker` pinned to `8.6.0`, the installed Ex
 
 
 The shared native field stages iOS picker changes until Use date, commits Android's confirmed selection, and leaves the draft unchanged on dismissal. Its date button exposes the current value to assistive technology. Remote controlled-picker tests cover confirmation, cancellation, month/year validation, clearing and precision-draft retention; these do not substitute for native-device verification.
+
+
+### Native Type Choices
+
+Native asset forms load active tenant and inventory custom types through a dedicated application query using the existing customization ports. The inventory collection already includes inherited tenant types; do not call the tenant configuration endpoint, which requires elevated permissions. The query requires the expected tenant/inventory scope to match the selected context, honors cancellation, and refuses incomplete collections. It filters returned records to that scope and active lifecycle before presenting type choices; missing or failed metadata is not evidence that expiration tracking is disabled.
