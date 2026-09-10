@@ -40,6 +40,9 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
+	ActionNotificationCreated                       Action = "notification.created"
+	ActionNotificationRead                          Action = "notification.read"
+	ActionNotificationListed                        Action = "notification.listed"
 	ActionNotificationPreferencesViewed             Action = "notification_preferences.viewed"
 	ActionNotificationPreferencesUpdated            Action = "notification_preferences.updated"
 	ActionTenantCreated                             Action = "tenant.created"
@@ -143,7 +146,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,
@@ -277,6 +280,7 @@ func (s Source) String() string {
 type TargetType string
 
 const (
+	TargetNotification               TargetType = "notification"
 	TargetNotificationPreferences    TargetType = "notification_preferences"
 	TargetTenant                     TargetType = "tenant"
 	TargetInventory                  TargetType = "inventory"
@@ -299,7 +303,7 @@ const (
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
+	case TargetNotification, TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
 		return targetType, true
 	default:
 		return "", false
