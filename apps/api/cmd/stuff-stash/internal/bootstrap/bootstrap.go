@@ -47,6 +47,10 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		repositories = observeRepositories(repositories, telemetry.Telemetry)
 	}
 
+	notificationConfig, err := config.LoadNotifications()
+	if err != nil {
+		return err
+	}
 	thumbnailConfig, err := config.LoadThumbnails()
 	if err != nil {
 		return err
@@ -91,6 +95,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	defer stopEvaluations()
+	stopNotifications := startNotificationWorker(ctx, application.Notifications(), observer, notificationConfig)
+	defer stopNotifications()
 	startOutboxWorkers(ctx, application, observer, cfg)
 	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
 	defer stopThumbnails()

@@ -285,3 +285,16 @@ Evaluation workers run saved test suites against configured models using isolate
 | `STUFF_STASH_EVALUATION_MAX_ATTEMPTS` | `2` | Maximum claims after interrupted processing, from 1 to 10. |
 
 For Google server ADC evaluations, also set `STUFF_STASH_GOOGLE_ADC_CREDENTIAL_VERSION` to a non-secret revision label. Change it whenever you replace the mounted ADC credential or account. Normal token refresh does not need a new label. This lets queued evaluations detect credential changes without storing or hashing secret material. Ordinary voice use does not require this label.
+
+## Expiration reminders
+
+The API checks registered users' expiration reminders in the background. It does not require the web or mobile app to stay open. Personal reminder settings determine which milestones appear in each user's inbox.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_NOTIFICATION_WORKER_ENABLED` | `true` | Run background expiration checks. |
+| `STUFF_STASH_NOTIFICATION_POLL_INTERVAL` | `5s` | Pause between bounded pages of work; minimum `100ms`. |
+| `STUFF_STASH_NOTIFICATION_PAGE_SIZE` | `100` | Assets evaluated per recipient page, from 1 to 100. |
+| `STUFF_STASH_NOTIFICATION_PAGE_TIMEOUT` | `30s` | Time allowed for one page; minimum `1s`. |
+
+Larger inventories take multiple pages. Restarts and retries preserve existing notifications without generating duplicate milestones. These controls govern inbox generation; mobile push delivery requires separate provider configuration.

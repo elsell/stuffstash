@@ -198,4 +198,21 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 		t.Fatal("revoked registered recipient generated")
 	}
 
+	cursor := GenerationCursor{}
+	completed := false
+	for i := 0; i < 10; i++ {
+		next, done, err := service.GenerateSweepPage(ctx, cursor, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cursor = next
+		if done {
+			completed = true
+			break
+		}
+	}
+	if !completed {
+		t.Fatal("sweep did not advance through recipients and revoked membership")
+	}
+
 }
