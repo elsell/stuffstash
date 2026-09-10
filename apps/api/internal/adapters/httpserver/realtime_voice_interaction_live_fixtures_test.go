@@ -13,7 +13,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type liveInteractionInventory struct{ garage, office, kitchen, drill, officeScrewdriver, kitchenScrewdriver string }
+type liveInteractionInventory struct{ garage, office, kitchen, drill, officeScrewdriver, kitchenScrewdriver, coffeeCounter string }
 
 func seedLiveInteractionInventory(t *testing.T, ctx context.Context, application app.App) liveInteractionInventory {
 	t.Helper()
@@ -37,6 +37,10 @@ func checkLiveInteractionProposal(t *testing.T, scenario string, plan ports.Acti
 		t.Fatalf("unapproved plan is not proposed: %s", plan.State)
 	}
 	expectedCount := 1
+	if strings.HasPrefix(scenario, "coffee-counter") {
+		checkLiveCoffeeProposal(t, plan, fixture)
+		return
+	}
 	if scenario == "missing-bedroom" {
 		checkMissingBedroomProposal(t, plan)
 		return
@@ -126,5 +130,55 @@ func checkMissingBedroomProposal(t *testing.T, plan ports.ActionPlanRecord) {
 	}
 	if bedroomID == "" || item == nil || item["parentCommandId"] != bedroomID {
 		t.Fatalf("missing dependent containment: bedroom=%s item=%+v", bedroomID, item)
+	}
+}
+
+func seedLiveCoffeeCounter(t *testing.T, ctx context.Context, application app.App, kitchen string) string {
+	t.Helper()
+	result, err := application.CreateAssetWithOperation(ctx, app.CreateAssetInput{Principal: identity.Principal{ID: "user-1"}, Source: audit.SourceAPI, TenantID: "tenant-home", InventoryID: "inventory-home", Kind: "container", Title: "Coffee Counter", ParentAssetID: kitchen})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return result.Asset.ID.String()
+}
+func checkLiveCoffeeProposal(t *testing.T, plan ports.ActionPlanRecord, fixture liveInteractionInventory) {
+	t.Helper()
+	expected := 1
+	if fixture.coffeeCounter == "" {
+		expected = 2
+	}
+	if len(plan.Commands) != expected {
+		t.Fatalf("expected %d commands, got %+v", expected, plan.Commands)
+	}
+	var item, counter map[string]any
+	var counterCommand string
+	for _, command := range plan.Commands {
+		var args map[string]any
+		if err := json.Unmarshal([]byte(command.ArgumentsJSON), &args); err != nil {
+			t.Fatal(err)
+		}
+		title, _ := args["title"].(string)
+		if command.Kind != actionplan.CommandKindCreateAsset {
+			t.Fatalf("unexpected coffee operation: %+v", command)
+		}
+		if args["kind"] == "item" && strings.EqualFold(title, "Starbucks Coffee Beans") {
+			item = args
+		} else if args["kind"] == "container" && strings.EqualFold(title, "Coffee Counter") {
+			counter = args
+			counterCommand = command.ID
+		} else {
+			t.Fatalf("unexpected creation: %+v", args)
+		}
+		t.Logf("VOICE_INTERACTION_PROPOSAL kind=%s id=%s arguments=%s", command.Kind, command.ID, command.ArgumentsJSON)
+	}
+	if item == nil {
+		t.Fatal("coffee beans missing")
+	}
+	if fixture.coffeeCounter != "" {
+		if item["parentAssetId"] != fixture.coffeeCounter {
+			t.Fatalf("wrong existing counter: %+v", item)
+		}
+	} else if counter == nil || counter["parentAssetId"] != fixture.kitchen || item["parentCommandId"] != counterCommand {
+		t.Fatalf("lost kitchen/counter containment: counter=%+v item=%+v", counter, item)
 	}
 }

@@ -10,7 +10,10 @@ import (
 
 var ErrConversationBudgetExhausted = errors.New("conversation call budget exhausted")
 
-type ConversationLimits struct{ ModelCalls, ToolCalls, ContextBytes int }
+type ConversationLimits struct {
+	ModelCalls, ToolCalls, ContextBytes int
+	FinalizationToolNames               []string
+}
 type ConversationResult struct {
 	Answer         *ports.ConversationAnswer
 	Messages       []ports.ConversationMessage
@@ -40,7 +43,8 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 		}
 		input.Messages = result.Messages
 		result.ModelCalls++
-		turn, err := model.Converse(ctx, input)
+		completionOnly := reserveConversationCompletion(limits, result)
+		turn, err := model.Converse(ctx, conversationBudgetInput(input, limits, result))
 		if err != nil {
 			return result, err
 		}
@@ -77,6 +81,10 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 			if err := ctx.Err(); err != nil {
 				return result, err
 			}
+			if reserveConversationCompletion(limits, result) && !isConversationFinalizationTool(limits, call.Name) {
+				result.Messages = append(result.Messages, ports.ConversationMessage{Role: ports.ConversationRoleTool, ToolResults: []ports.AgentToolResult{{CallID: call.ID, Name: call.Name, Call: call, Content: conversationDiscoveryStopped}}})
+				continue
+			}
 			if result.ToolCalls >= limits.ToolCalls {
 				return result, ErrConversationBudgetExhausted
 			}
@@ -99,6 +107,9 @@ func RunConversation(ctx context.Context, model ports.ConversationModel, executo
 			if result.ApprovalPlanID != "" || result.Answer != nil {
 				return result, nil
 			}
+		}
+		if completionOnly {
+			return result, ErrConversationBudgetExhausted
 		}
 	}
 	return result, ErrConversationBudgetExhausted

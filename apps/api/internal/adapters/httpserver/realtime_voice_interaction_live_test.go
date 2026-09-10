@@ -30,6 +30,8 @@ func TestGoogleLiveRealtimeInteractionCorpus(t *testing.T) {
 		name  string
 		audio []string
 	}{
+		{"coffee-counter", []string{"coffee-counter"}},
+		{"coffee-counter-missing", []string{"coffee-counter"}},
 		{"missing-bedroom", []string{"missing-bedroom"}},
 		{"move-existing", []string{"move-existing"}},
 		{"create-additional", []string{"create-additional"}},
@@ -50,6 +52,10 @@ func runLiveInteraction(t *testing.T, name string, audioNames []string) {
 	providers := liveGoogleVoiceProviders(t, ctx)
 	application = application.WithRealtimeVoiceProviders(providers.SpeechToText, providers.ConversationModel, providers.TextToSpeech)
 	fixture := seedLiveInteractionInventory(t, ctx, application)
+	if name == "coffee-counter" {
+		seedLiveCoffeeCounter(t, ctx, application, fixture.garage)
+		fixture.coffeeCounter = seedLiveCoffeeCounter(t, ctx, application, fixture.kitchen)
+	}
 	list := app.ListAssetsInput{Principal: identity.Principal{ID: "user-1"}, TenantID: "tenant-home", InventoryID: "inventory-home", Source: audit.SourceAPI, Limit: 100}
 	before, err := application.ListAssets(ctx, list)
 	if err != nil || before.HasMore {
