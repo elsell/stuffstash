@@ -16,6 +16,8 @@ import (
 
 type Service struct{ deps Dependencies }
 type Dependencies struct {
+	Assets      ports.AssetRepository
+	Inbox       ports.NotificationInboxRepository
 	Authorizer  ports.Authorizer
 	Inventories ports.InventoryRepository
 	Types       ports.CustomAssetTypeRepository

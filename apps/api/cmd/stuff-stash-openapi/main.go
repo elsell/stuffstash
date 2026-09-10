@@ -35,6 +35,7 @@ func run() error {
 		InventoryAccess:           store,
 		InventoryAccessUnitOfWork: store,
 		NotificationPreferences:   store,
+		NotificationInbox:         store,
 		CustomAssetTypes:          store,
 		CustomAssetTypeUnitOfWork: store,
 		CustomFields:              store,

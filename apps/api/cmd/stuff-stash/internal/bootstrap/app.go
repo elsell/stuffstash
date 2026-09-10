@@ -47,6 +47,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
 		NotificationPreferences:          repositories.notificationPreferences,
+		NotificationInbox:                repositories.notificationInbox,
 		ConversationContextBytes:         contextBytes,
 		WorkflowActivation:               evaluations.activation,
 		EvaluationRunCommands:            evaluations.commands,
