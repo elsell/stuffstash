@@ -73,3 +73,23 @@ successful isolated rerun. These checks do not replace physical-device testing
 of microphone capture, photo picker interruption, backgrounding, or sheet layout.
 Existing context boundaries after completed writes remain explicit; prior visible
 history is not implicitly replayed to a fresh model session.
+
+## In-card save progress
+
+After approval, the action card changes from review to saving, with a native
+activity indicator and a concrete label naming the item when there is one change.
+Show that confirmation is pending; do not invent a percentage or completed
+command count before the server confirms execution. Cancellation of a proposal
+uses cancellation language, never saving language.
+
+Once execution is confirmed, mark changed rows complete and keep Saved visible
+while photos upload. Publish completed/total photo counts after every attachment
+attempt, including retries. The photo progress bar measures successfully attached
+photos, not elapsed time or bytes; failed attachments never count toward 100%.
+Show the number still needing attention. Retry progress keeps earlier successful
+photos in its totals and updates the same card, including archived exchanges.
+Use native accessibility progress values and existing theme colors. Keep progress
+inside the action card; avoid duplicate spinners in the conversation body and
+composer when this card owns progress.
+Save labels use the effective reviewed names, including edits made before approval.
+Photo counts supplement, rather than replace, actionable upload failure details.

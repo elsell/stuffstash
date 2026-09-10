@@ -859,6 +859,7 @@ describe('RealtimeVoiceSessionController', () => {
     const retry = await controller.retryPhotoAttachments('plan-1');
 
     expect(retry).toEqual({
+      attachedCount: 1, totalCount: 1, failedCount: 0,
       status: 'attached',
       message: '1 photo attached.'
     });
@@ -908,6 +909,7 @@ describe('RealtimeVoiceSessionController', () => {
     const states = await stop;
 
     expect(states.at(-1)?.photoAttachmentStatus).toEqual({
+      attachedCount: 0, totalCount: 1, failedCount: 1,
       status: 'failed',
       message: 'The change was applied, but photos could not be attached: Attachment content is not available for JSON upload fallback.',
       canRetry: true
@@ -1026,6 +1028,7 @@ describe('RealtimeVoiceSessionController', () => {
     const states = await stop;
 
     expect(states.at(-1)?.photoAttachmentStatus).toEqual({
+      attachedCount: 0, totalCount: 1, failedCount: 1,
       status: 'failed',
       message: 'The change was applied, but photos could not be attached: The server did not return an upload intent for this photo.',
       canRetry: false
@@ -1070,6 +1073,7 @@ describe('RealtimeVoiceSessionController', () => {
     const states = await stop;
 
     expect(states.at(-1)?.photoAttachmentStatus).toEqual({
+      attachedCount: 0, totalCount: 1, failedCount: 1,
       status: 'failed',
       message: 'The change was applied, but photos could not be attached: The server did not return an upload intent for this photo.',
       canRetry: false
@@ -2464,12 +2468,16 @@ it('uploads a whole photo batch and retains cumulative totals after retrying onl
   repository.failPhotoUploads = 1;
   const controller = new RealtimeVoiceSessionController(repository, new FakeRecorder(), transport, new FakePlayer());
   await controller.start();
-  const stop = controller.stop();
+  const progress: VoiceRealtimeState[] = [];
+  const stop = controller.stop(state => progress.push(state));
   await transport.reviewReady;
   await controller.approveActionPlan('plan-1', { 'cmd-water-bottle': names.map(fileName => ({ fileName, contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5 })) });
   expect((await stop).at(-1)?.photoAttachmentStatus?.message).toBe('2 of 3 photos attached.');
+  expect(progress.filter(state => state.photoAttachmentStatus?.status === 'uploading').map(state => state.photoAttachmentStatus?.attachedCount)).toEqual([0, 0, 1, 2]);
+  const retryProgress: number[] = [];
   await controller.cancel();
-  expect(await controller.retryPhotoAttachments('plan-1')).toMatchObject({ status: 'attached', message: '3 photos attached.' });
+  expect(await controller.retryPhotoAttachments('plan-1', status => { retryProgress.push(status.attachedCount!); expect(status.totalCount).toBe(3); })).toMatchObject({ status: 'attached', message: '3 photos attached.' });
+  expect(retryProgress).toEqual([2, 3]);
   expect(repository.addedPhotos.map(photo => photo.fileName).sort()).toEqual(names.sort());
   expect(transport.approvedPlanIds).toEqual(['plan-1']);
 });
