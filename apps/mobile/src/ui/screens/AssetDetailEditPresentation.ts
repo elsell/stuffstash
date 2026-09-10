@@ -107,6 +107,6 @@ export function assetEditContext(
   return {
     kindLabel: asset.kindLabel,
     customTypeLabel: asset.customTypeLabel,
-    helperText: 'Kind and type are fixed after creation.'
+    helperText: asset.customTypeLabel ? 'Kind and type are fixed after creation.' : 'Kind is fixed. You can assign a custom type below.'
   };
 }

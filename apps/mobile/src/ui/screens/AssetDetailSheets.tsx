@@ -1,3 +1,5 @@
+import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
+import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -61,6 +63,7 @@ export type MoveIntoDraft = {
 
 export function EditAssetSheet({
   asset,
+  assetTypes,
   assetTags,
   draft,
   isSaving,
@@ -69,6 +72,7 @@ export function EditAssetSheet({
   onSave
 }: {
   readonly asset: AssetDetailViewModel;
+  readonly assetTypes?: readonly CustomAssetTypeDefinition[];
   readonly assetTags: readonly AssetTagOptionViewModel[];
   readonly draft: EditDraft | undefined;
   readonly isSaving: boolean;
@@ -108,6 +112,7 @@ export function EditAssetSheet({
           style={[styles.input, styles.multilineInput]}
           value={draft?.description ?? ''}
         />
+        <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={isSaving} onChange={onChange} />
         <EditTagPicker
           disabled={isSaving}
           tags={assetTags}

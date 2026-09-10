@@ -17,7 +17,7 @@ it('opens Edit before tags load and preserves a dirty draft after background cor
   const query = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: title, asset: { ...asset, title } }) });
   try {
     await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
-      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={query} inventoryAssetTagsQuery={{ execute: () => new Promise(() => undefined) }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
+      <AssetEditSheetRouteScreen inventoryAssetTypesQuery={{ execute: async () => [] }} assetId="asset" assetCoreQuery={query} inventoryAssetTagsQuery={{ execute: () => new Promise(() => undefined) }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
     const name = harness.allByType('TextInput').find((input) => input.props.value === 'Tent');
@@ -45,5 +45,25 @@ it('keeps a Move draft mounted when background refresh discovers a different par
     parent = 'new-parent';
     await harness.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(harness);
     expect(harness.allByType('TextInput').some((input) => input.props.value === 'My destination')).toBe(true);
+  } finally { await harness.unmount(); }
+});
+
+it('submits an expiration clear through the native edit route', async () => {
+  const client = createMobileQueryClient();
+  const harness = new MobileRenderHarness();
+  const saved: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Medicine', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false,
+    customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' as const } };
+  const query = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={query} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        inventoryAssetTypesQuery={{ execute: async () => [{ kind: 'asset-type', id: 'medicine', key: 'medicine', displayName: 'Medicine', description: '', tenantId: 'tenant', inventoryId: 'inventory', scope: 'inventory', lifecycle: 'active', expirationEnabled: true }] }}
+        updateAssetCommand={{ execute: async (input) => { saved.push(input); return { id: 'asset', title: 'Medicine', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(harness); await settle(harness);
+    await harness.press(harness.byLabel('Clear expiration'));
+    await harness.press(harness.allByType('Pressable').at(-1));
+    expect(saved).toEqual([expect.objectContaining({ assetId: 'asset', expiration: null })]);
   } finally { await harness.unmount(); }
 });
