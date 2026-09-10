@@ -93,3 +93,6 @@ Native detail view models retain the original expiration value and assigned type
 ### Native Date Control Dependency
 
 Use `@react-native-community/datetimepicker` pinned to `8.6.0`, the installed Expo SDK 55 compatibility version, for system day selection behind a shared UI component. The installed pinned `@expo/ui` package exposes segmented control but not a date-picker replacement. Month precision uses labeled month/year native text controls and strict calendar validation; no synthetic day is stored. The field preserves separate drafts by precision, supports clearing, and never submits a date merely because a picker opened or was dismissed. UI receives its initial picker date from its caller. Remote tests use a controlled native-picker adapter; device behavior is validated by the CI-built release.
+
+
+The shared native field stages iOS picker changes until Use date, commits Android's confirmed selection, and leaves the draft unchanged on dismissal. Its date button exposes the current value to assistive technology. Remote controlled-picker tests cover confirmation, cancellation, month/year validation, clearing and precision-draft retention; these do not substitute for native-device verification.
