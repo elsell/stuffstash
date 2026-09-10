@@ -23,3 +23,20 @@ it('retains edited proposal titles in the completed exchange', () => {
   const result = appendConversationExchange([], { ...answer, actionPlan: { planId: 'plan', status: 'executed', confirmationSummary: 'Add drill', risks: [], commands: [{ id: 'drill', kind: 'create_asset', title: 'Drill', summary: 'Add drill' }] } }, { drill: { title: 'Cordless drill' } });
   expect(result[0].actionPlan?.commands[0].title).toBe('Cordless drill');
 });
+
+it('does not offer cancellation after a review decision or confirmed save', async () => {
+  const { canCancelConversation } = await import('./VoiceConversationHistory');
+  const base = { status: 'processing' as const, tenantName: 'Home', inventoryName: 'Main', progressLabel: 'Working', debugEvents: [] };
+  const actionPlan = { planId: 'plan', status: 'proposed' as const, commands: [], risks: [], confirmationSummary: 'Add bottle' };
+  expect(canCancelConversation('processing', base)).toBe(true);
+  expect(canCancelConversation('processing', { ...base, actionPlan, reviewDecisionPending: true })).toBe(false);
+  expect(canCancelConversation('processing', { ...base, actionPlan: { ...actionPlan, status: 'approved' } })).toBe(false);
+  expect(canCancelConversation('processing', { ...base, actionPlan: { ...actionPlan, status: 'executed' } })).toBe(false);
+});
+
+it('requires reset confirmation while photos remain unfinished', async () => {
+  const { shouldConfirmNewConversation } = await import('./VoiceConversationHistory');
+  expect(shouldConfirmNewConversation(answer)).toBe(false);
+  expect(shouldConfirmNewConversation({ ...answer, photoAttachmentStatus: { status: 'uploading', message: 'Adding photos' } })).toBe(true);
+  expect(shouldConfirmNewConversation({ ...answer, photoAttachmentStatus: { status: 'failed', message: 'Retry photos', canRetry: true } })).toBe(true);
+});

@@ -1,3 +1,4 @@
+import { shouldConfirmNewConversation } from '../navigation/VoiceConversationHistory';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
 import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
@@ -304,7 +305,7 @@ function VoiceSessionSheet({
           </Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="New conversation" style={styles.iconButton} onPress={() => {
-          if (actionPlan && (actionPlan.status === 'proposed' || actionPlan.status === 'approved')) {
+          if (shouldConfirmNewConversation(state.status === 'ready' ? state.realtime : null)) {
             Alert.alert('Start a new conversation?', 'This clears the conversation and staged photos. It does not undo changes already submitted.', [
               { text: 'Keep conversation', style: 'cancel' },
               { text: 'New conversation', style: 'destructive', onPress: onReset }

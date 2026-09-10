@@ -134,6 +134,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let seq = 1;
       let lastServerSeq = 0;
       let completed = false;
+      let terminated = false;
+      let executionConfirmed = false;
       let hasPendingActionPlan = false;
       let lastResponseKind = '';
       let responseCompletedForTurn = false;
@@ -170,7 +172,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         socket.send(JSON.stringify({ type: voiceClientMessage.audioEnd, seq: seq++, sessionId }));
       };
       const sendDecision = (type: VoiceClientActionPlanDecisionMessage, planId: string, photos: readonly VoiceActionPlanPhotoApprovalRequest[] = [], edits: readonly VoiceActionPlanCommandEdit[] = []) => {
-        if (!sessionId || settled) {
+        if (terminated || !sessionId || (settled && !followUpPending)) {
           throw new Error('Voice review session is not active.');
         }
         if (decisionSent) {
@@ -180,7 +182,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           ? safePhotoApprovalRequests(photos)
           : [];
         decisionSent = true;
-        thisTransport.activeReviewSession = null;
+        clearReview();
         socket.send(JSON.stringify({
           type,
           seq: seq++,
@@ -191,6 +193,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         }));
       };
       const cancelSocketForUser = () => {
+        terminated = true;
+        clearReview();
+        clearFollowUp();
         completed = true;
         try {
           if (sessionId) {
@@ -215,30 +220,43 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
         settleReject(new VoiceRealtimeCancelledError());
       };
 
+      function clearReview(): void {
+        if (thisTransport.activeReviewSession?.sendDecision === sendDecision) thisTransport.activeReviewSession = null;
+      }
+
+      function clearFollowUp(): void {
+        if (thisTransport.activeFollowUpSession?.close === closeFollowUpSession) thisTransport.activeFollowUpSession = null;
+      }
+
       function settleResolve(): void {
         if (!settled) {
           settled = true;
-          thisTransport.activeReviewSession = null;
+          clearReview();
           options.signal?.removeEventListener('abort', abortHandler);
           resolve();
         }
       }
 
       function settleReject(error: Error): void {
+        terminated = true;
+        const rejectPendingFollowUp = followUpReject;
+        followUpPending = false;
+        followUpResolve = null;
+        followUpReject = null;
+        clearReview();
+        clearFollowUp();
+        completed = true;
         if (!settled) {
           settled = true;
-          thisTransport.activeReviewSession = null;
-          if (thisTransport.activeFollowUpSession?.close === closeFollowUpSession) {
-            thisTransport.activeFollowUpSession = null;
-          }
           options.signal?.removeEventListener('abort', abortHandler);
           reject(error);
         }
+        rejectPendingFollowUp?.(error);
+        socket.close();
       }
 
       const closeFollowUpSession = () => {
-        thisTransport.activeFollowUpSession = null;
-        socket.close();
+        settleReject(new VoiceRealtimeCancelledError());
       };
 
       if (options.signal?.aborted) {
@@ -247,19 +265,15 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       }
       options.signal?.addEventListener('abort', abortHandler, { once: true });
       socket.onerror = (event) => {
+        if (executionConfirmed) return;
         settleReject(new VoiceConnectionInterruptedError());
       };
       socket.onclose = (event) => {
         void messageChain.then(() => {
-          if (thisTransport.activeFollowUpSession?.close === closeFollowUpSession) {
-            thisTransport.activeFollowUpSession = null;
-          }
+          clearFollowUp();
           if (followUpPending) {
             const error = new VoiceConnectionInterruptedError(prematureCloseMessage(event));
-            followUpPending = false;
-            followUpResolve = null;
-            followUpReject?.(error);
-            followUpReject = null;
+            settleReject(error);
             return;
           }
           if (!completed) {
@@ -284,6 +298,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       };
       socket.onmessage = (event) => {
         messageChain = messageChain.then(async () => {
+          if (terminated) return;
           if (settled) {
             if (!followUpPending) {
               return;
@@ -302,7 +317,9 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           if (message.type === voiceServerMessage.sessionStarted) {
             sessionId = message.sessionId;
           }
+          if (message.type === voiceServerMessage.actionPlanExecuted) executionConfirmed = true;
           await currentOnEvent(message);
+          if (terminated) return;
           if (message.type === voiceServerMessage.sessionStarted) {
             if (settled || options.signal?.aborted) {
               return;
@@ -327,7 +344,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
               this.activeFollowUpSession = {
                 sendAudio: (audioChunksBase64, followUpOnEvent, followUpOptions) => {
                   if (followUpOptions?.signal?.aborted) {
-                    thisTransport.activeFollowUpSession = null;
+                    clearFollowUp();
                     cancelSocketForUser();
                     return Promise.reject(new VoiceRealtimeCancelledError());
                   }
@@ -341,7 +358,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
                       return;
                     }
                     followUpPending = false;
-                    thisTransport.activeFollowUpSession = null;
+                    clearFollowUp();
                     cancelSocketForUser();
                     const rejectFollowUp = followUpReject;
                     followUpResolve = null;
@@ -375,7 +392,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             } else {
               followUpPending = false;
               socket.close();
-              this.activeFollowUpSession = null;
+              clearFollowUp();
               followUpResolve?.();
               followUpResolve = null;
               followUpReject = null;
@@ -388,8 +405,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
             message.type === voiceServerMessage.actionPlanFailed
           ) {
             completed = true;
-            this.activeReviewSession = null;
-            this.activeFollowUpSession = null;
+            clearReview();
+            clearFollowUp();
             followUpResolve?.();
             followUpResolve = null;
             followUpReject = null;
@@ -398,8 +415,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           }
           if (message.type === voiceServerMessage.sessionCancelled) {
             completed = true;
-            this.activeReviewSession = null;
-            this.activeFollowUpSession = null;
+            clearReview();
+            clearFollowUp();
             followUpResolve?.();
             followUpResolve = null;
             followUpReject = null;
@@ -408,8 +425,8 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           }
           if (message.type === voiceServerMessage.sessionFailed) {
             completed = true;
-            this.activeReviewSession = null;
-            this.activeFollowUpSession = null;
+            clearReview();
+            clearFollowUp();
             followUpResolve?.();
             followUpResolve = null;
             followUpReject = null;

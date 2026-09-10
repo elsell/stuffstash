@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { AppTextInput } from '../components/AppTextInput';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
 import { useVoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
-import { canSubmitConversation } from '../navigation/VoiceConversationHistory';
+import { canCancelConversation, canSubmitConversation } from '../navigation/VoiceConversationHistory';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing } from '../theme/tokens';
 
@@ -19,7 +19,7 @@ export function VoiceConversationComposer({ onMic }: { readonly onMic: () => voi
       onFocus={() => { if (listening) void pauseMedia(); }}
       style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceMuted, borderColor: colors.border }]} />
     {listening ? <VoiceLevelMeter level={state.status === 'ready' ? state.realtime?.recordingLevel ?? 0 : 0} size="regular" /> : null}
-    {busy ? <Pressable accessibilityRole="button" accessibilityLabel="Cancel request" onPress={() => { void cancelRealtime(); }} style={styles.send}><Text style={{ color: colors.action }}>Cancel</Text></Pressable> : null}
+    {busy && canCancelConversation(state.stage, state.status === 'ready' ? state.realtime : null) ? <Pressable accessibilityRole="button" accessibilityLabel="Cancel request" onPress={() => { void cancelRealtime(); }} style={styles.send}><Text style={{ color: colors.action }}>Cancel</Text></Pressable> : null}
     <Pressable accessibilityRole="button" accessibilityLabel={composerText.trim() && !listening ? 'Send message' : listening ? 'Finish recording and send' : 'Start recording'}
       accessibilityState={{ disabled: busy }} disabled={busy}
       onPress={() => { if (composerText.trim() && !listening) void sendText(); else onMic(); }}

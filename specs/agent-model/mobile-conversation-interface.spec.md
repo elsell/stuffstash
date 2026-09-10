@@ -93,3 +93,12 @@ queries while thumbnails are being generated. Mobile API transport allows 60
 seconds for POST attachment direct-upload completion, versus 8 seconds for other
 requests. Caller cancellation still wins. These fixed interaction deadlines are
 transport policy, not deployment endpoint configuration.
+
+### Follow-up proposal lifecycle
+
+Completing a conversational turn must not deactivate its live socket's later
+reviews. A proposal after clarification or an answer supports the same explicit
+approval/cancellation and staged-photo metadata as an initial-turn proposal.
+Exactly one decision is sent; completion settles the active turn. Socket errors
+and invalid response frames must reject the active follow-up and clear review
+availability, even when the initial turn's promise has already completed.

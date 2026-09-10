@@ -30,6 +30,7 @@ func TestGoogleLiveRealtimeInteractionCorpus(t *testing.T) {
 		name  string
 		audio []string
 	}{
+		{"missing-bedroom", []string{"missing-bedroom"}},
 		{"move-existing", []string{"move-existing"}},
 		{"create-additional", []string{"create-additional"}},
 		{"dependent-move", []string{"dependent-move"}},
