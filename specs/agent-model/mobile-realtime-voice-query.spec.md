@@ -767,3 +767,61 @@ the already requested destination. Ask for clarification when actual candidates
 or containment relationships are ambiguous. Live corpus coverage includes adding
 a water bottle to a missing Master Bedroom and verifies dependent commands and
 that no inventory writes occur before approval.
+
+### Directed add requests and bounded completion
+
+An explicit add request with a named destination must resolve that destination
+and propose the requested item. Broader category exploration is for discovery
+questions, not an obligation to exhaust synonyms for an item being added. Reuse
+returned containment evidence; do not repeatedly search a resolved destination.
+Cover adding Starbucks coffee beans to a coffee counter in the kitchen, with both
+an existing counter and a missing counter beneath an existing kitchen.
+
+Realtime conversations reserve their last configured model call and tool slot for
+completion: a reviewable proposal or an evidence-based answer/clarification.
+The generic conversation loop accepts an optional caller-owned list of terminal
+tool names, exposes remaining budgets to the model, and withholds discovery tools
+at the completion boundary. Read calls beyond the reserved discovery budget are
+not executed and receive explicit non-execution results before continuation.
+Never exceed configured call limits, infer missing IDs, skip authorization, or
+execute a proposal without approval. Callers not opting in retain their existing
+budget behavior. Budget failures must not blame the user's request complexity or
+claim that a simple single-item request needs splitting.
+
+Provider-native search returns the full bounded candidate window (20), rather
+than letting the model request a single candidate and miss competing locations.
+Remove the model-facing search limit parameter; normalize valid legacy limit
+arguments to that same bounded window. Other tool/REST pagination contracts stay
+unchanged. Truncated results never establish absence: use a parent-scoped list
+when a named destination may lie outside the returned candidate window.
+
+September 10 directed-add regression evidence: production recorded six searches
+and repeated asset reads before `conversation_budget_exhausted`. A small synthetic
+coffee-counter fixture passed before the fix, so it did not reproduce the full
+production failure. Adding competing Garage/Kitchen counters exposed a separate
+wrong duplicate proposal caused by a one-result search window. Deterministic tests
+reproduce model/tool exhaustion, reserve completion within unchanged limits, and
+verify candidate retention plus recovery from malformed search arguments.
+
+After the fix, the complete live Google interaction corpus passed without reruns
+in the final invocation. Human trace review (no automated judge) found:
+
+- Coffee counter: pass; one item under the returned Kitchen counter, ignoring the
+  Garage namesake. No duplicate counter.
+- Missing coffee counter: pass; counter under the existing Kitchen and beans under
+  that command, paused for approval.
+- Missing bedroom: pass; new Master Bedroom and dependent Water Bottle.
+- Existing move: pass; existing Office drill moved to the returned Garage ID.
+- Additional drill: pass; new drill proposed under Garage, existing drill unchanged.
+- Dependent move: pass; blue toolbox under Garage, existing drill referenced by ID
+  in the dependent move command.
+- Ambiguous screwdriver: pass; Office/Kitchen clarification followed by the chosen
+  Kitchen screwdriver move.
+- Follow-up color: pass; Office location followed by red color, grounded in the
+  retrieved drill and preserving its asset reference.
+
+Live fixtures assert inventory remains unchanged before approval. These are
+synthetic inventory/provider traces, not a replay against the user's inventory or
+physical microphone evidence. Full API tests and 1,138 mobile tests passed remotely;
+code critic review found the malformed-search recovery regression and confirmed
+its correction. No builds or tests ran on the developer Mac.

@@ -1339,7 +1339,7 @@ function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled:
     case 'request_timeout':
       return 'This request took too long to finish. Try a smaller request.';
     case 'conversation_budget_exhausted':
-      return 'I reached the search limit before I could finish. Try asking about one item or place at a time.';
+      return 'I couldn’t finish planning this request. Please try again.';
     case 'conversation_context_exhausted':
       return 'This conversation has reached its context limit. Start a new conversation to continue.';
     case 'invalid_provider_output':

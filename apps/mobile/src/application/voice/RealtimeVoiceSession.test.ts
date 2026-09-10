@@ -2548,3 +2548,10 @@ it('sends an already captured recording once as a fresh turn if the idle follow-
   expect(states[0].startsNewContext).toBe(true);
   expect(states.at(-1)?.status).toBe('completed');
 });
+
+it('does not blame a single-item request for exhausting internal planning limits', async () => {
+ const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), new FakeTransport([{ seq: 1, type: 'session.failed', code: 'conversation_budget_exhausted', message: 'budget exceeded' }]), new FakePlayer());
+ await controller.start();
+ const states = await controller.stop();
+ expect(states.at(-1)?.errorMessage).toBe('I couldn’t finish planning this request. Please try again.');
+});
