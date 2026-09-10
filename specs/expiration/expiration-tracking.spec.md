@@ -88,3 +88,8 @@ Reselecting the current type in either create or edit is a no-op and must preser
 ### Native Editor State
 
 Native detail view models retain the original expiration value and assigned type identity. The edit draft distinguishes unchanged/omitted dates from explicit clearing, includes type assignment in dirty detection, and preserves precision through normalization. A date-only change enables Save and protects dismissal; an invalid active date draft blocks Save while retaining edits. The native save command receives the normalized date/type values through the existing application port.
+
+
+### Native Date Control Dependency
+
+Use `@react-native-community/datetimepicker` pinned to `8.6.0`, the installed Expo SDK 55 compatibility version, for system day selection behind a shared UI component. The installed pinned `@expo/ui` package exposes segmented control but not a date-picker replacement. Month precision uses labeled month/year native text controls and strict calendar validation; no synthetic day is stored. The field preserves separate drafts by precision, supports clearing, and never submits a date merely because a picker opened or was dismissed. UI receives its initial picker date from its caller. Remote tests use a controlled native-picker adapter; device behavior is validated by the CI-built release.
