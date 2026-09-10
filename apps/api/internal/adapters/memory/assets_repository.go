@@ -142,7 +142,13 @@ func (s *Store) updateAssetLocked(expectedCurrent asset.Asset, item asset.Asset,
 		return ports.ErrForbidden
 	}
 	if existing.CustomAssetTypeID != item.CustomAssetTypeID {
-		return ports.ErrForbidden
+		if existing.CustomAssetTypeID != "" || item.CustomAssetTypeID == "" {
+			return ports.ErrForbidden
+		}
+		assigned, found := s.customAssetTypes[customfield.AssetTypeID(item.CustomAssetTypeID.String())]
+		if !found || !assigned.IsActive() || assigned.TenantID.String() != item.TenantID.String() || (assigned.Scope != customfield.ScopeTenant && assigned.InventoryID.String() != item.InventoryID.String()) {
+			return ports.ErrForbidden
+		}
 	}
 	if item.ParentAssetID.String() != "" {
 		parent, ok := s.assets[item.ParentAssetID]
@@ -197,6 +203,7 @@ func assetsEquivalentForStaleCheck(left asset.Asset, right asset.Asset) bool {
 		left.InventoryID == right.InventoryID &&
 		left.ParentAssetID == right.ParentAssetID &&
 		left.CustomAssetTypeID == right.CustomAssetTypeID &&
+		left.Expiration == right.Expiration &&
 		left.Kind == right.Kind &&
 		left.Title == right.Title &&
 		left.Description == right.Description &&
@@ -221,7 +228,7 @@ func (s *Store) updateAssetLifecycleLocked(expectedCurrent asset.Asset, item ass
 	if expectedCurrent.ID.String() != "" && !assetsEquivalentForStaleCheck(existing, expectedCurrent) {
 		return ports.ErrConflict
 	}
-	if existing.Kind != item.Kind || existing.Title != item.Title || existing.Description != item.Description || existing.ParentAssetID != item.ParentAssetID || existing.CustomAssetTypeID != item.CustomAssetTypeID || !existing.CustomFields.Equal(item.CustomFields) {
+	if existing.Expiration != item.Expiration || existing.Kind != item.Kind || existing.Title != item.Title || existing.Description != item.Description || existing.ParentAssetID != item.ParentAssetID || existing.CustomAssetTypeID != item.CustomAssetTypeID || !existing.CustomFields.Equal(item.CustomFields) {
 		return ports.ErrForbidden
 	}
 	if existing.LifecycleState == asset.LifecycleStateActive && item.LifecycleState == asset.LifecycleStateArchived {

@@ -2,6 +2,7 @@ package gormstore
 
 import (
 	"encoding/json"
+	"github.com/stuffstash/stuff-stash/internal/domainvalue/expirationdate"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -40,18 +41,20 @@ func (undoableOperationModel) TableName() string {
 }
 
 type undoableAssetSnapshot struct {
-	ID                string         `json:"id"`
-	TenantID          string         `json:"tenantId"`
-	InventoryID       string         `json:"inventoryId"`
-	ParentAssetID     string         `json:"parentAssetId,omitempty"`
-	CustomAssetTypeID string         `json:"customAssetTypeId,omitempty"`
-	Kind              string         `json:"kind"`
-	Title             string         `json:"title"`
-	Description       string         `json:"description"`
-	CustomFields      map[string]any `json:"customFields"`
-	LifecycleState    string         `json:"lifecycleState"`
-	TagIDs            []string       `json:"tagIds,omitempty"`
-	ReplacesTags      bool           `json:"replacesTags,omitempty"`
+	ExpirationDate      string         `json:"expirationDate,omitempty"`
+	ExpirationPrecision string         `json:"expirationPrecision,omitempty"`
+	ID                  string         `json:"id"`
+	TenantID            string         `json:"tenantId"`
+	InventoryID         string         `json:"inventoryId"`
+	ParentAssetID       string         `json:"parentAssetId,omitempty"`
+	CustomAssetTypeID   string         `json:"customAssetTypeId,omitempty"`
+	Kind                string         `json:"kind"`
+	Title               string         `json:"title"`
+	Description         string         `json:"description"`
+	CustomFields        map[string]any `json:"customFields"`
+	LifecycleState      string         `json:"lifecycleState"`
+	TagIDs              []string       `json:"tagIds,omitempty"`
+	ReplacesTags        bool           `json:"replacesTags,omitempty"`
 }
 
 type undoableCheckoutSnapshot struct {
@@ -319,18 +322,20 @@ func marshalUndoableAssetSnapshot(item asset.Asset, tagIDs []assettag.ID, replac
 		encodedTagIDs = append(encodedTagIDs, tagID.String())
 	}
 	encoded, err := json.Marshal(undoableAssetSnapshot{
-		ID:                item.ID.String(),
-		TenantID:          item.TenantID.String(),
-		InventoryID:       item.InventoryID.String(),
-		ParentAssetID:     item.ParentAssetID.String(),
-		CustomAssetTypeID: item.CustomAssetTypeID.String(),
-		Kind:              item.Kind.String(),
-		Title:             item.Title.String(),
-		Description:       item.Description.String(),
-		CustomFields:      item.CustomFields.Values(),
-		LifecycleState:    item.LifecycleState.String(),
-		TagIDs:            encodedTagIDs,
-		ReplacesTags:      replacesTags,
+		ExpirationDate:      item.Expiration.Value(),
+		ExpirationPrecision: string(item.Expiration.Precision()),
+		ID:                  item.ID.String(),
+		TenantID:            item.TenantID.String(),
+		InventoryID:         item.InventoryID.String(),
+		ParentAssetID:       item.ParentAssetID.String(),
+		CustomAssetTypeID:   item.CustomAssetTypeID.String(),
+		Kind:                item.Kind.String(),
+		Title:               item.Title.String(),
+		Description:         item.Description.String(),
+		CustomFields:        item.CustomFields.Values(),
+		LifecycleState:      item.LifecycleState.String(),
+		TagIDs:              encodedTagIDs,
+		ReplacesTags:        replacesTags,
 	})
 	return string(encoded), err
 }
@@ -364,7 +369,17 @@ func unmarshalUndoableAssetSnapshot(encoded string) (asset.Asset, []assettag.ID,
 		}
 		tagIDs = append(tagIDs, tagID)
 	}
+	var expiration expirationdate.Date
+	if snapshot.ExpirationDate != "" {
+		var err error
+		expiration, err = expirationdate.ParseDate(snapshot.ExpirationDate, expirationdate.Precision(snapshot.ExpirationPrecision))
+		if err != nil {
+			return asset.Asset{}, nil, false, false
+		}
+	}
+
 	return asset.Asset{
+		Expiration:        expiration,
 		ID:                id,
 		TenantID:          asset.TenantID(snapshot.TenantID),
 		InventoryID:       asset.InventoryID(snapshot.InventoryID),

@@ -20,13 +20,14 @@ func RegisterCreateTenant(api huma.API, application app.App) {
 		}
 
 		assetType, err := application.CreateTenantCustomAssetType(ctx, app.CreateCustomAssetTypeInput{
-			Principal:   principal,
-			Source:      audit.SourceAPI,
-			RequestID:   input.RequestID,
-			TenantID:    tenant.ID(input.TenantID),
-			Key:         input.Body.Key,
-			DisplayName: input.Body.DisplayName,
-			Description: input.Body.Description,
+			Principal:         principal,
+			Source:            audit.SourceAPI,
+			RequestID:         input.RequestID,
+			TenantID:          tenant.ID(input.TenantID),
+			Key:               input.Body.Key,
+			DisplayName:       input.Body.DisplayName,
+			Description:       input.Body.Description,
+			ExpirationEnabled: input.Body.ExpirationEnabled,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

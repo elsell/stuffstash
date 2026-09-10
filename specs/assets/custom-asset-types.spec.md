@@ -363,3 +363,7 @@ PostgreSQL tests must cover:
 - Join table persistence for multiple field targets.
 - Rejection of invalid custom field applicability rows.
 - Asset `custom_asset_type_id` round trip.
+
+## Expiration Capability
+
+`../expiration/expiration-tracking.spec.md` extends type create/update metadata with `expirationEnabled` (default false), independently configurable for any custom type. This capability does not change kind, scope or tags.

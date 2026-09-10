@@ -302,19 +302,23 @@ func updateAssetModelForUndoableOperation(tx *gorm.DB, model assetModel, item as
 		"title":                item.Title.String(),
 		"description":          item.Description.String(),
 		"custom_fields":        string(customFields),
+		"expiration_date":      item.Expiration.Value(),
+		"expiration_precision": string(item.Expiration.Precision()),
 		"lifecycle_state":      item.LifecycleState.String(),
 	}).Error
 }
 
 func gormAssetsSameIdentity(left asset.Asset, right asset.Asset) bool {
-	return left.ID == right.ID && left.TenantID == right.TenantID && left.InventoryID == right.InventoryID && left.Kind == right.Kind && left.CustomAssetTypeID == right.CustomAssetTypeID
+	return left.ID == right.ID && left.TenantID == right.TenantID && left.InventoryID == right.InventoryID && left.Kind == right.Kind
 }
 
 func gormAssetsEqual(left asset.Asset, right asset.Asset) bool {
 	return gormAssetsSameIdentity(left, right) &&
+		left.CustomAssetTypeID == right.CustomAssetTypeID &&
 		left.ParentAssetID == right.ParentAssetID &&
 		left.Title == right.Title &&
 		left.Description == right.Description &&
 		left.CustomFields.Equal(right.CustomFields) &&
+		left.Expiration == right.Expiration &&
 		left.LifecycleState == right.LifecycleState
 }

@@ -18,9 +18,10 @@ type CreateInventoryAssetTypeInput struct {
 }
 
 type CreateAssetTypeBody struct {
-	Key         string `json:"key" maxLength:"80" doc:"Stable custom asset type key"`
-	DisplayName string `json:"displayName" maxLength:"120" doc:"User-facing custom asset type label"`
-	Description string `json:"description,omitempty" maxLength:"1000" doc:"Custom asset type description"`
+	ExpirationEnabled bool   `json:"expirationEnabled,omitempty" doc:"Enable optional expiration tracking on assets of this type"`
+	Key               string `json:"key" maxLength:"80" doc:"Stable custom asset type key"`
+	DisplayName       string `json:"displayName" maxLength:"120" doc:"User-facing custom asset type label"`
+	Description       string `json:"description,omitempty" maxLength:"1000" doc:"Custom asset type description"`
 }
 
 type CreateAssetTypeOutput struct {
@@ -45,8 +46,9 @@ type UpdateInventoryAssetTypeInput struct {
 }
 
 type UpdateAssetTypeBody struct {
-	DisplayName *string `json:"displayName,omitempty" maxLength:"120" doc:"User-facing custom asset type label"`
-	Description *string `json:"description,omitempty" maxLength:"1000" doc:"Custom asset type description"`
+	ExpirationEnabled *bool   `json:"expirationEnabled,omitempty" doc:"Enable optional expiration tracking on assets of this type"`
+	DisplayName       *string `json:"displayName,omitempty" maxLength:"120" doc:"User-facing custom asset type label"`
+	Description       *string `json:"description,omitempty" maxLength:"1000" doc:"Custom asset type description"`
 }
 
 type UpdateAssetTypeOutput struct {
@@ -117,12 +119,13 @@ type ListAssetTypesOutput struct {
 }
 
 type AssetTypeResponse struct {
-	ID             string `json:"id"`
-	TenantID       string `json:"tenantId"`
-	InventoryID    string `json:"inventoryId,omitempty"`
-	Scope          string `json:"scope"`
-	Key            string `json:"key"`
-	DisplayName    string `json:"displayName"`
-	Description    string `json:"description"`
-	LifecycleState string `json:"lifecycleState"`
+	ExpirationEnabled bool   `json:"expirationEnabled"`
+	ID                string `json:"id"`
+	TenantID          string `json:"tenantId"`
+	InventoryID       string `json:"inventoryId,omitempty"`
+	Scope             string `json:"scope"`
+	Key               string `json:"key"`
+	DisplayName       string `json:"displayName"`
+	Description       string `json:"description"`
+	LifecycleState    string `json:"lifecycleState"`
 }

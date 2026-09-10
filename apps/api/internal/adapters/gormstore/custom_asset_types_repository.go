@@ -16,13 +16,14 @@ import (
 
 func (s Store) SaveCustomAssetType(ctx context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
 	model := customAssetTypeModel{
-		ID:             assetType.ID.String(),
-		TenantID:       assetType.TenantID.String(),
-		Scope:          assetType.Scope.String(),
-		TypeKey:        assetType.Key.String(),
-		DisplayName:    assetType.DisplayName.String(),
-		Description:    assetType.Description.String(),
-		LifecycleState: assetType.LifecycleState.String(),
+		ExpirationEnabled: assetType.ExpirationEnabled,
+		ID:                assetType.ID.String(),
+		TenantID:          assetType.TenantID.String(),
+		Scope:             assetType.Scope.String(),
+		TypeKey:           assetType.Key.String(),
+		DisplayName:       assetType.DisplayName.String(),
+		Description:       assetType.Description.String(),
+		LifecycleState:    assetType.LifecycleState.String(),
 	}
 	if assetType.InventoryID.String() != "" {
 		inventoryID := assetType.InventoryID.String()
@@ -73,8 +74,9 @@ func (s Store) UpdateCustomAssetType(ctx context.Context, assetType customfield.
 		}
 
 		updates := map[string]any{
-			"display_name": assetType.DisplayName.String(),
-			"description":  assetType.Description.String(),
+			"expiration_enabled": assetType.ExpirationEnabled,
+			"display_name":       assetType.DisplayName.String(),
+			"description":        assetType.Description.String(),
 		}
 		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
 			return customFieldDefinitionWriteError(err)

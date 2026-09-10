@@ -12,6 +12,7 @@ import (
 )
 
 type CreateAssetInput struct {
+	Expiration        *ExpirationInput
 	Principal         identity.Principal
 	Source            audit.Source
 	RequestID         string
@@ -54,17 +55,19 @@ type AssetParentUpdate struct {
 }
 
 type UpdateAssetInput struct {
-	Principal     identity.Principal
-	Source        audit.Source
-	RequestID     string
-	TenantID      tenant.ID
-	InventoryID   inventory.InventoryID
-	AssetID       asset.ID
-	Title         *string
-	Description   *string
-	ParentAssetID AssetParentUpdate
-	CustomFields  map[string]any
-	TagIDs        *[]string
+	CustomAssetTypeID *string
+	Expiration        ExpirationUpdate
+	Principal         identity.Principal
+	Source            audit.Source
+	RequestID         string
+	TenantID          tenant.ID
+	InventoryID       inventory.InventoryID
+	AssetID           asset.ID
+	Title             *string
+	Description       *string
+	ParentAssetID     AssetParentUpdate
+	CustomFields      map[string]any
+	TagIDs            *[]string
 }
 
 type AssetMutationResult struct {

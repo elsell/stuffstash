@@ -189,3 +189,29 @@ func TestStoreListsCustomAssetTypesByLifecycleAndScope(t *testing.T) {
 		t.Fatalf("expected tenant archived type only, items=%+v err=%v", tenantItems, err)
 	}
 }
+
+func TestStorePersistsExpirationTypeCapability(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	tenantID := tenant.ID("01ARZ3NDEKTSV4RRFFQ69G5FAV")
+	inventoryID := inventory.InventoryID("01ARZ3NDEKTSV4RRFFQ69G5FAW")
+	saveTenant(t, ctx, store, tenantID, "Home")
+	saveInventory(t, ctx, store, inventoryID.String(), tenantID, "Home")
+	value := customAssetType(t, "01ARZ3NDEKTSV4RRFFQ69G5FAX", tenantID.String(), inventoryID.String(), customfield.ScopeInventory, "medicine")
+	value.ExpirationEnabled = true
+	if err := saveCustomAssetType(t, ctx, store, value); err != nil {
+		t.Fatal(err)
+	}
+	saved, found, err := store.CustomAssetTypeByID(ctx, tenantID, inventoryID, value.ID)
+	if err != nil || !found || !saved.ExpirationEnabled {
+		t.Fatalf("capability lost: %+v %v", saved, err)
+	}
+	value.ExpirationEnabled = false
+	if err := store.UpdateCustomAssetType(ctx, value, auditRecord(t, auditIDWithSuffix(value.ID.String(), "T"), tenantID, inventoryID, audit.ActionCustomAssetTypeUpdated)); err != nil {
+		t.Fatal(err)
+	}
+	saved, found, err = store.CustomAssetTypeByID(ctx, tenantID, inventoryID, value.ID)
+	if err != nil || !found || saved.ExpirationEnabled {
+		t.Fatalf("disable lost: %+v %v", saved, err)
+	}
+}

@@ -21,14 +21,15 @@ func RegisterCreateInventory(api huma.API, application app.App) {
 		}
 
 		assetType, err := application.CreateInventoryCustomAssetType(ctx, app.CreateCustomAssetTypeInput{
-			Principal:   principal,
-			Source:      audit.SourceAPI,
-			RequestID:   input.RequestID,
-			TenantID:    tenant.ID(input.TenantID),
-			InventoryID: inventory.InventoryID(input.InventoryID),
-			Key:         input.Body.Key,
-			DisplayName: input.Body.DisplayName,
-			Description: input.Body.Description,
+			Principal:         principal,
+			Source:            audit.SourceAPI,
+			RequestID:         input.RequestID,
+			TenantID:          tenant.ID(input.TenantID),
+			InventoryID:       inventory.InventoryID(input.InventoryID),
+			Key:               input.Body.Key,
+			DisplayName:       input.Body.DisplayName,
+			Description:       input.Body.Description,
+			ExpirationEnabled: input.Body.ExpirationEnabled,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

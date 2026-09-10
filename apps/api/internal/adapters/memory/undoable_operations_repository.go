@@ -200,6 +200,7 @@ func memoryAssetsEqual(left asset.Asset, right asset.Asset) bool {
 		left.InventoryID == right.InventoryID &&
 		left.ParentAssetID == right.ParentAssetID &&
 		left.CustomAssetTypeID == right.CustomAssetTypeID &&
+		left.Expiration == right.Expiration &&
 		left.Kind == right.Kind &&
 		left.Title == right.Title &&
 		left.Description == right.Description &&

@@ -21,6 +21,7 @@ func RegisterCreate(api huma.API, application app.App) {
 		}
 
 		result, err := application.CreateAssetWithOperation(ctx, app.CreateAssetInput{
+			Expiration:        expirationInput(input.Body.Expiration),
 			Principal:         principal,
 			Source:            audit.SourceAPI,
 			RequestID:         input.RequestID,

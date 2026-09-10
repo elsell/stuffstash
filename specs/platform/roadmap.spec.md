@@ -23,6 +23,8 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+The approved next feature is optional expiration tracking per custom asset type, personal inventory defaults with type overrides, shared web/mobile notification inbox and mobile push. Follow `specs/expiration/expiration-tracking.spec.md` and `specs/notifications/expiration-notifications.spec.md`. Implement specs-first with remote/CI validation, required code critic review, PR merge, infra GitOps rollout and TestFlight upload. The user approved the existing native/shared UI direction on 2026-09-10; no further design gate is pending. This supersedes the earlier restriction to voice-only work below.
+
 Durable background thumbnail generation and cooperative scheduling are implemented
 behind ports with an in-process worker, PostgreSQL queue, fenced publication and
 per-photo ownership. The controlled one-worker 500m/512Mi comparison reduced

@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/mapper"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/app/assets"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -22,14 +23,16 @@ func RegisterUpdate(api huma.API, application app.App) {
 		}
 
 		result, err := application.UpdateAssetWithOperation(ctx, app.UpdateAssetInput{
-			Principal:   principal,
-			Source:      audit.SourceAPI,
-			RequestID:   input.RequestID,
-			TenantID:    tenant.ID(input.TenantID),
-			InventoryID: inventory.InventoryID(input.InventoryID),
-			AssetID:     asset.ID(input.AssetID),
-			Title:       input.Body.Title,
-			Description: input.Body.Description,
+			CustomAssetTypeID: input.Body.CustomAssetTypeID,
+			Expiration:        assets.ExpirationUpdate{Present: input.Body.Expiration.Present(), Value: expirationInput(input.Body.Expiration.Value())},
+			Principal:         principal,
+			Source:            audit.SourceAPI,
+			RequestID:         input.RequestID,
+			TenantID:          tenant.ID(input.TenantID),
+			InventoryID:       inventory.InventoryID(input.InventoryID),
+			AssetID:           asset.ID(input.AssetID),
+			Title:             input.Body.Title,
+			Description:       input.Body.Description,
 			ParentAssetID: app.AssetParentUpdate{
 				Present: input.Body.ParentAssetID.Present(),
 				Null:    input.Body.ParentAssetID.Null(),

@@ -1624,6 +1624,7 @@ export interface components {
                 [key: string]: unknown;
             };
             description: string;
+            expiration: components["schemas"]["Expiration"] | null;
             id: string;
             inventoryId: string;
             kind: string;
@@ -1676,6 +1677,7 @@ export interface components {
         AssetTypeResponse: {
             description: string;
             displayName: string;
+            expirationEnabled: boolean;
             id: string;
             inventoryId?: string;
             key: string;
@@ -1745,6 +1747,7 @@ export interface components {
             };
             /** @description Asset description */
             description?: string;
+            expiration?: components["schemas"]["Expiration"];
             /**
              * @description Asset kind
              * @enum {string}
@@ -1782,6 +1785,8 @@ export interface components {
             description?: string;
             /** @description User-facing custom asset type label */
             displayName: string;
+            /** @description Enable optional expiration tracking on assets of this type */
+            expirationEnabled?: boolean;
             /** @description Stable custom asset type key */
             key: string;
         };
@@ -2140,6 +2145,12 @@ export interface components {
         EvaluationRunVerdict: {
             failures: components["schemas"]["EvaluationRunFailure"][] | null;
             passed: boolean;
+        };
+        Expiration: {
+            /** @description Calendar date as YYYY-MM-DD or YYYY-MM */
+            date: string;
+            /** @enum {string} */
+            precision: "day" | "month";
         };
         GrantBody: {
             /**
@@ -3034,12 +3045,19 @@ export interface components {
              * @example https://example.com/schemas/UpdateAssetBody.json
              */
             readonly $schema?: string;
+            /** @description Initial type assignment for an untyped asset */
+            customAssetTypeId?: string;
             /** @description Custom field values */
             customFields?: {
                 [key: string]: unknown;
             };
             /** @description Asset description */
             description?: string;
+            expiration?: {
+                date: string;
+                /** @enum {string} */
+                precision: "day" | "month";
+            } | null;
             /** @description Parent asset ID, or null to move to inventory root */
             parentAssetId?: string | null;
             /** @description Complete assigned tag ID list */
@@ -3070,6 +3088,8 @@ export interface components {
             description?: string;
             /** @description User-facing custom asset type label */
             displayName?: string;
+            /** @description Enable optional expiration tracking on assets of this type */
+            expirationEnabled?: boolean;
         };
         UpdateDefinitionBody: {
             /**

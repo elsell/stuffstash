@@ -3,26 +3,29 @@ package gormstore
 import (
 	"encoding/json"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domainvalue/expirationdate"
 	"time"
 )
 
 type assetModel struct {
-	ID                string                `gorm:"primaryKey;size:26"`
-	TenantID          string                `gorm:"not null;size:26;index:idx_assets_tenant_inventory"`
-	Tenant            tenantModel           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
-	InventoryID       string                `gorm:"not null;size:26;index:idx_assets_tenant_inventory;index:idx_assets_inventory_parent;index:idx_assets_inventory_kind"`
-	Inventory         inventoryModel        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
-	ParentAssetID     *string               `gorm:"size:26;index;index:idx_assets_inventory_parent"`
-	ParentAsset       *assetModel           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:ParentAssetID;references:ID"`
-	CustomAssetTypeID *string               `gorm:"size:26;index"`
-	CustomAssetType   *customAssetTypeModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:CustomAssetTypeID;references:ID"`
-	Kind              string                `gorm:"not null;size:32;index:idx_assets_inventory_kind;check:chk_assets_kind,kind IN ('item','container','location')"`
-	Title             string                `gorm:"not null;size:160"`
-	Description       string                `gorm:"not null;default:''"`
-	CustomFields      string                `gorm:"type:jsonb;not null;default:'{}'"`
-	LifecycleState    string                `gorm:"not null;size:32;check:chk_assets_lifecycle_state,lifecycle_state IN ('active','archived')"`
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	ExpirationDate      string                `gorm:"not null;default:'';size:10"`
+	ExpirationPrecision string                `gorm:"not null;default:'';size:5"`
+	ID                  string                `gorm:"primaryKey;size:26"`
+	TenantID            string                `gorm:"not null;size:26;index:idx_assets_tenant_inventory"`
+	Tenant              tenantModel           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:TenantID;references:ID"`
+	InventoryID         string                `gorm:"not null;size:26;index:idx_assets_tenant_inventory;index:idx_assets_inventory_parent;index:idx_assets_inventory_kind"`
+	Inventory           inventoryModel        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:InventoryID;references:ID"`
+	ParentAssetID       *string               `gorm:"size:26;index;index:idx_assets_inventory_parent"`
+	ParentAsset         *assetModel           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:ParentAssetID;references:ID"`
+	CustomAssetTypeID   *string               `gorm:"size:26;index"`
+	CustomAssetType     *customAssetTypeModel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;foreignKey:CustomAssetTypeID;references:ID"`
+	Kind                string                `gorm:"not null;size:32;index:idx_assets_inventory_kind;check:chk_assets_kind,kind IN ('item','container','location')"`
+	Title               string                `gorm:"not null;size:160"`
+	Description         string                `gorm:"not null;default:''"`
+	CustomFields        string                `gorm:"type:jsonb;not null;default:'{}'"`
+	LifecycleState      string                `gorm:"not null;size:32;check:chk_assets_lifecycle_state,lifecycle_state IN ('active','archived')"`
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }
 
 func (assetModel) TableName() string {
@@ -70,7 +73,18 @@ func (m assetModel) toDomain() (asset.Asset, bool) {
 			return asset.Asset{}, false
 		}
 	}
+	var expiration expirationdate.Date
+	if m.ExpirationDate != "" {
+		var err error
+		expiration, err = expirationdate.ParseDate(m.ExpirationDate, expirationdate.Precision(m.ExpirationPrecision))
+		if err != nil {
+			return asset.Asset{}, false
+		}
+	} else if m.ExpirationPrecision != "" {
+		return asset.Asset{}, false
+	}
 	return asset.Asset{
+		Expiration:        expiration,
 		ID:                id,
 		TenantID:          asset.TenantID(m.TenantID),
 		InventoryID:       asset.InventoryID(m.InventoryID),
