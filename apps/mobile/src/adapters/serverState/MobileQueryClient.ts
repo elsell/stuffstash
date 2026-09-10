@@ -67,6 +67,8 @@ export async function resetMobileInventorySelection(
 }
 
 export const mobileQueryKeys = {
+  notificationCount: (scopeId: string, tenantId: string, inventoryId: string) => [...mobileQueryKeys.inventory(scopeId, tenantId, inventoryId), 'notification-count'] as const,
+  notificationRegistration: (scopeId: string, tenantId: string, inventoryId: string) => [...mobileQueryKeys.inventory(scopeId, tenantId, inventoryId), 'notification-registration'] as const,
   root: (compositionScopeId: string) => ['mobile', compositionScopeId] as const,
   home: (compositionScopeId: string, tenantId: string, inventoryId: string) => [
     ...mobileQueryKeys.inventory(compositionScopeId, tenantId, inventoryId),
