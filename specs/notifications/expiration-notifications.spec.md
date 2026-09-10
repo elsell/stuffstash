@@ -141,3 +141,7 @@ Mobile owns its notification and personal-preference models and an inventory-sco
 ### Native inbox queries
 
 Native application queries keep explicit tenant/inventory scope and use the notification repository for sparse inbox traversal, complete unread counts, mark-all pagination and resolving an alert before navigation. Apply the same bounded cursor and incomplete-result rules as web. Use the shared native cancellation helper, including runtimes without `AbortSignal.throwIfAborted`, before and after every request. Typed injected observations record query/mutation outcomes without notification contents. Native screen cache keys and composition must include server/session scope as well as inventory identity.
+
+### Native personal settings session
+
+Create a fresh native preference session per mounted server/principal/inventory settings surface. It serializes initialization, refresh and saves with the last successful revision, preserving unrelated defaults, delivery preference, timezone and type overrides. Failed or cancelled operations retain the previous snapshot and UI draft; explicit refresh obtains current state before retrying an uncertain mutation. Native snapshots are copied using ordinary object/array operations rather than requiring a runtime structured-clone API. A push-preference write is separate from device permission and registration; the UI must complete permission/registration handling before enabling delivery. The composition root provides the session factory and shared injected notification observation.

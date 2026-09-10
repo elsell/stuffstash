@@ -1,3 +1,4 @@
+import { NotificationPreferencesSession } from '../application/notifications/NotificationPreferencesSession';
 import { ApiNotificationRepository } from '../adapters/notifications/ApiNotificationRepository';
 import { NotificationInboxQueries } from '../application/notifications/NotificationInboxQueries';
 import type { NotificationEvent } from '../application/notifications/NotificationObservability';
@@ -107,6 +108,7 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly createNotificationPreferencesSession: (tenantId: string, inventoryId: string) => NotificationPreferencesSession;
   readonly notificationInboxQueries: NotificationInboxQueries;
   readonly performanceObserver: PerformanceObserver;
   readonly disposePerformance: () => void;
@@ -265,7 +267,8 @@ export function createMobileComposition(
     new ApiSettingsScopeRepository(client, inventorySummaries)
   );
   const notificationRepository = new ApiNotificationRepository(client);
-  const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, { record: (event) => options.onNotificationEvent?.(event) });
+  const notificationObserver = { record: (event: NotificationEvent) => options.onNotificationEvent?.(event) };
+  const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, notificationObserver);
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
   const customizationContextQuery = new CustomizationContextQuery(settingsQuery);
@@ -273,6 +276,7 @@ export function createMobileComposition(
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
+    createNotificationPreferencesSession: (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId),
     notificationInboxQueries,
     serviceScopeId,
     performanceObserver: performanceSession.observer,
