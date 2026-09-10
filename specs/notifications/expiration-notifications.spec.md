@@ -56,3 +56,7 @@ The API runtime embeds the Go toolchain's pinned IANA timezone database so perso
 ## Implementation Evidence
 
 The personal settings backend provides scoped persistence, optimistic revision updates, initialization and type overrides through generated REST contracts. Remote tests cover legitimate viewer settings, user and tenant isolation, unavailable types, invalid timezones, stale writes, inventory-default overrides and atomic audit rollback in memory and GORM. This is foundation work; inbox generation, delivery and client surfaces are still required before release.
+
+## Milestone Evaluation Contract
+
+Expiration evaluation receives an immutable candidate snapshot (asset and type IDs, date and precision, and active/expiration-enabled eligibility), personal settings, an injected current instant and the resolved personal timezone. It emits at most the currently due milestone: upcoming while inside the warning window, otherwise expired after the date ends. Disabled preferences produce none. An upcoming entry remains meaningful after expiration, but cannot be newly generated after expiration. Moving a date, removing eligibility or moving an upcoming date outside its current warning window withdraws that entry. Existing history remains visible when only personal enabled/upcoming/expired switches change. The persistent unique identity is scoped to recipient, tenant, inventory, asset, original date/precision and kind; never include mutable threshold or timezone in identity. This separates lifecycle visibility from generation and push eligibility.
