@@ -65,6 +65,29 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	if err != nil || view.Asset.Title.String() != "Bottle" {
 		t.Fatalf("legitimate detail %+v %v", view, err)
 	}
+	page, err := service.ListInbox(ctx, input, "", 10, false)
+	if err != nil || len(page.Items) != 1 || page.NextCursor != "" {
+		t.Fatalf("inbox page %+v %v", page, err)
+	}
+	if _, err := service.ListInbox(ctx, input, "", 0, false); err == nil {
+		t.Fatal("invalid page accepted")
+	}
+	for i := 0; i < 201; i++ {
+		hidden := entry
+		hidden.ID = fmt.Sprintf("withdrawn-%03d", i)
+		hidden.Milestone.AssetID = fmt.Sprintf("missing-%03d", i)
+		if _, _, err := store.InsertNotification(ctx, hidden, audit.Record{ID: audit.ID(fmt.Sprintf("seed-hidden-%03d", i)), TenantID: "home", InventoryID: "main", PrincipalID: "owner"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sparse, err := service.ListInbox(ctx, input, "", 10, false)
+	if err != nil || len(sparse.Items) != 0 || sparse.NextCursor == "" {
+		t.Fatalf("sparse continuation %+v %v", sparse, err)
+	}
+	continued, err := service.ListInbox(ctx, input, sparse.NextCursor, 10, false)
+	if err != nil || len(continued.Items) != 1 || continued.NextCursor != "" {
+		t.Fatalf("sparse history lost visible entry %+v %v", continued, err)
+	}
 	foreign := input
 	foreign.Principal.ID = "viewer"
 	if _, err := service.GetNotification(ctx, foreign, "notice"); err == nil {
@@ -85,6 +108,10 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	if read.ReadAt == nil {
 		t.Fatal("read state not saved")
 	}
+	page, err = service.ListInbox(ctx, input, sparse.NextCursor, 10, true)
+	if err != nil || len(page.Items) != 0 {
+		t.Fatal("read notification included in unread list")
+	}
 	kind.ExpirationEnabled = false
 	if err := store.UpdateCustomAssetType(ctx, kind, audit.Record{ID: "disable-type"}); err != nil {
 		t.Fatal(err)
@@ -94,6 +121,10 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	}
 	if err := service.MarkRead(ctx, input, "notice"); err == nil {
 		t.Fatal("obsolete notification mutable")
+	}
+	page, err = service.ListInbox(ctx, input, sparse.NextCursor, 10, false)
+	if err != nil || len(page.Items) != 0 {
+		t.Fatal("obsolete notification included in list")
 	}
 	kind.ExpirationEnabled = true
 	if err := store.UpdateCustomAssetType(ctx, kind, audit.Record{ID: "enable-type"}); err != nil {
