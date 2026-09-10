@@ -10,6 +10,7 @@ import (
 )
 
 func registerInbox(api huma.API, application app.App) {
+ registerInboxBatch(api, application)
 	const path = "/tenants/{tenantId}/inventories/{inventoryId}/notifications"
 	huma.Get(api, path, func(ctx context.Context, input *dto.InboxListInput) (*dto.InboxOutput, error) {
 		scope, err := authenticateScope(ctx, application, &input.ScopeInput)

@@ -1330,6 +1330,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put tenants by tenant ID inventories by inventory ID notifications read all */
+        put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-read-all"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notifications unread count */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-unread-count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}": {
         parameters: {
             query?: never;
@@ -2465,6 +2499,9 @@ export interface components {
             /** @description Source username for live-source imports */
             username?: string;
         };
+        InboxReadAllResponse: {
+            complete: boolean;
+        };
         InitializeBody: {
             /**
              * Format: uri
@@ -2872,6 +2909,16 @@ export interface components {
             data: components["schemas"]["ImportJobResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeInboxReadAllResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeInboxReadAllResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InboxReadAllResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeInventoryResponse: {
             /**
              * Format: uri
@@ -3202,6 +3249,16 @@ export interface components {
             data: components["schemas"]["TestProviderProfileResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeUnreadCountResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeUnreadCountResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["UnreadCountResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeVoiceProviderConfigurationResponse: {
             /**
              * Format: uri
@@ -3240,6 +3297,10 @@ export interface components {
         TypeOverrideResponse: {
             customAssetTypeId: string;
             settings: components["schemas"]["ExpirationPolicy"];
+        };
+        UnreadCountResponse: {
+            /** Format: int64 */
+            count: number;
         };
         UpdateAssetBody: {
             /**
@@ -7950,6 +8011,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListNotificationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-read-all": {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInboxReadAllResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-unread-count": {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeUnreadCountResponse"];
                 };
             };
             /** @description Error */

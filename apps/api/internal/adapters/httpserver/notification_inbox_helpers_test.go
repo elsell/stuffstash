@@ -51,6 +51,8 @@ func coverNotificationInboxScenarios(t *testing.T, coverage executedScenarioCove
 		token, status = "Bearer dev:outsider", http.StatusForbidden
 	}
 	coverage.request(t, server, http.MethodGet, template, base, token, nil, status)
+ coverage.request(t, server, http.MethodGet, template+"/unread-count", base+"/unread-count", token, nil, status)
+ coverage.request(t, server, http.MethodPut, template+"/read-all", base+"/read-all", token, nil, status)
 	coverage.request(t, server, http.MethodGet, template+"/{notificationId}", base+"/notice", token, nil, status)
 	coverage.request(t, server, http.MethodPut, template+"/{notificationId}/read", base+"/notice/read", token, nil, status)
 }

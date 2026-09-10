@@ -46,6 +46,14 @@ export class NotificationsClient {
     const result = await this.transport.unwrap(this.client.GET(`${inboxPath}/{notificationId}`, { params: { path: { tenantId, inventoryId, notificationId } }, headers: await this.transport.headers(), signal }));
     return result.data;
   }
+  async countUnreadPage(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal): Promise<{ count: number; nextCursor: string | null }> {
+    const result = await this.transport.unwrap(this.client.GET(`${inboxPath}/unread-count`, { params: { path: { tenantId, inventoryId }, query: { cursor } }, headers: await this.transport.headers(), signal }));
+    return { count: result.data.count, nextCursor: result.meta.pagination?.nextCursor ?? null };
+  }
+  async markAllReadPage(tenantId: string, inventoryId: string, cursor?: string, signal?: AbortSignal): Promise<{ complete: boolean; nextCursor: string | null }> {
+    const result = await this.transport.unwrap(this.client.PUT(`${inboxPath}/read-all`, { params: { path: { tenantId, inventoryId }, query: { cursor } }, headers: await this.transport.headers(), signal }));
+    return { complete: result.data.complete, nextCursor: result.meta.pagination?.nextCursor ?? null };
+  }
   async markRead(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal): Promise<void> {
     await this.transport.unwrap(this.client.PUT(`${inboxPath}/{notificationId}/read`, { params: { path: { tenantId, inventoryId, notificationId } }, headers: await this.transport.headers(), signal }));
   }

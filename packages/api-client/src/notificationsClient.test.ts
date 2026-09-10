@@ -40,3 +40,11 @@ it('initializes preferences and writes a complete type override without dropping
   expect(requests[1].method).toBe('PUT');
   expect(await requests[1].json()).toEqual({ revision: 1, settings: policy });
 });
+it('preserves count contributions and mark-all continuation without claiming completion', async () => {
+  const client = new StuffStashClient({ baseUrl: 'https://api.test', tokenProvider: () => 'token', fetch: async (input, init) => {
+    const request = new Request(input, init);
+    return Response.json({ data: request.method === 'GET' ? { count: 2 } : { complete: false }, meta: { pagination: { limit: 100, nextCursor: 'next', hasMore: true } } });
+  }});
+  await expect(client.notifications.countUnreadPage('tenant', 'inventory')).resolves.toEqual({ count: 2, nextCursor: 'next' });
+  await expect(client.notifications.markAllReadPage('tenant', 'inventory')).resolves.toEqual({ complete: false, nextCursor: 'next' });
+});
