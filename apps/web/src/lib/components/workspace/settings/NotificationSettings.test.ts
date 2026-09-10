@@ -11,7 +11,7 @@ it('loads personal settings and saves an inventory policy through its scoped rep
     if (request.method === 'PUT') settings = { ...settings, ...await request.json(), revision: settings.revision + 1 };
     return Response.json({ data: settings, meta: {} });
   });
-  const component = mount(NotificationSettings, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', initialTimezone: 'UTC', repository, observer: new InMemoryWorkspaceObserver(), assetTypes: [] } });
+  const component = mount(NotificationSettings, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', initialTimezone: 'UTC', repository, observer: new InMemoryWorkspaceObserver(), typeRepository: { async listInventoryCustomAssetTypes() { return { items: [], pagination: { limit: 30, hasMore: false, nextCursor: null } }; } } } });
   try {
     await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
     expect(requests[0].url).toContain('/tenants/tenant/inventories/inventory/notification-preferences/initialize');
@@ -22,5 +22,20 @@ it('loads personal settings and saves an inventory policy through its scoped rep
     await vi.waitFor(() => expect(settings.defaults.advanceDays).toBe(7));
     expect(settings.timezone).toBe('America/New_York');
     expect(document.body.textContent).toContain('mobile app');
+  } finally { await unmount(component); document.body.innerHTML = ''; }
+});
+it('shows a retryable type-load failure instead of claiming no types support expiration', async () => {
+  let fail = true;
+  const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async () => Response.json({ data: { revision: 1, defaults: { enabled: true, upcoming: true, expired: true, advanceDays: 30 }, timezone: 'UTC', pushEnabled: false, overrides: [] }, meta: {} }));
+  const component = mount(NotificationSettings, { target: document.body, props: {
+    tenantId: 'tenant', inventoryId: 'inventory', initialTimezone: 'UTC', repository, observer: new InMemoryWorkspaceObserver(),
+    typeRepository: { async listInventoryCustomAssetTypes() { if (fail) throw new Error('Temporary failure'); return { items: [], pagination: { limit: 30, hasMore: false, nextCursor: null } }; } }
+  } });
+  try {
+    await vi.waitFor(() => expect(document.querySelector('[role="alert"]')).not.toBeNull());
+    expect(document.body.textContent).not.toContain('Enable expiration tracking');
+    fail = false;
+    Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Retry loading'))!.click();
+    await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
   } finally { await unmount(component); document.body.innerHTML = ''; }
 });

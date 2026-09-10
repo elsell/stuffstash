@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
+  import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
+  import { collectSettingsPages } from '$lib/application/settingsManagement';
   import type { CustomAssetType } from '$lib/domain/inventory';
   import type { NotificationPreferences } from '$lib/domain/notification';
   import type { NotificationRepository } from '$lib/ports/notificationRepository';
@@ -11,12 +13,13 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import ExpirationReminderEditor from './ExpirationReminderEditor.svelte';
 
-  let { tenantId, inventoryId, initialTimezone, repository, observer, assetTypes }: {
+  let { tenantId, inventoryId, initialTimezone, repository, observer, typeRepository }: {
     tenantId: string; inventoryId: string; initialTimezone: string; repository: NotificationRepository;
-    observer: WorkspaceObserver; assetTypes: CustomAssetType[];
+    observer: WorkspaceObserver; typeRepository: Pick<InventoryCustomizationRepository, 'listInventoryCustomAssetTypes'>;
   } = $props();
   const session = untrack(() => new NotificationPreferencesSession(repository, observer, tenantId, inventoryId));
   const timezoneId = $props.id();
+  let assetTypes = $state<CustomAssetType[]>([]);
   let preferences = $state<NotificationPreferences | null>(null);
   let busy = $state(false);
   let error = $state('');
@@ -34,7 +37,9 @@
     busy = true; error = '';
     try {
       const first = preferences === null;
+      const loadedTypes = await collectSettingsPages((cursor) => typeRepository.listInventoryCustomAssetTypes(tenantId, inventoryId, cursor, 'active'));
       preferences = first ? await session.initialize(initialTimezone) : await session.refresh();
+      assetTypes = loadedTypes;
       if (first) timezone = preferences.timezone;
     } catch (caught) { error = safeWorkspaceErrorMessage(caught, 'Reminder settings could not be loaded. Try again.'); }
     finally { busy = false; }

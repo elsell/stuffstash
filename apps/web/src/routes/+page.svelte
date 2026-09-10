@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { StuffStashNotificationRepository } from '$lib/adapters/api/stuffStashNotificationRepository';
+  import type { NotificationWorkspace } from '$lib/ports/notificationWorkspace';
   import { conversationWorkspaceRepositories } from '$lib/adapters/api/conversations/workspaceRepositories';
   import type { ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import { onMount, setContext } from 'svelte';
@@ -35,6 +37,7 @@
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
   let repository = $state<WorkspaceRepository | null>(null);
+  let notifications = $state<NotificationWorkspace | undefined>();
   let conversations = $state<ConversationWorkspaceRepositories | undefined>();
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
@@ -83,6 +86,7 @@
             nextWorkspace = await provisionPersonalWorkspace(nextRepository, nextWorkspace.context.principal);
           }
           if (!mounted) return;
+          notifications = { apiIdentity: loadedConfig.apiBaseUrl, repository: new StuffStashNotificationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
           conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
           repository = nextRepository;
           workspaceData = nextWorkspace;
@@ -177,7 +181,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {repository} {conversations} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>

@@ -461,3 +461,12 @@ describe('workspace route state', () => {
     }
   });
 });
+
+it('routes notification preferences only at inventory scope without resource subroutes', () => {
+  const path = '/settings/tenants/home/inventories/main/notifications';
+  const route = parseWorkspaceRoute(new URL(`https://app.test${path}`));
+  expect(route).toMatchObject({ settingsLevel: 'inventory', settingsCollection: 'notifications', inventoryId: 'main' });
+  expect(workspaceRouteHref(route, null, null)).toBe(path);
+  expect(parseWorkspaceRoute(new URL('https://app.test/settings/tenants/home/notifications')).settingsCollection).toBeNull();
+  expect(parseWorkspaceRoute(new URL(`https://app.test${path}/new`)).settingsCollection).toBeNull();
+});

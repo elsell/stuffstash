@@ -1,8 +1,11 @@
 <script lang="ts">
   import './settings-management.css';
+  import { notificationWorkspaceContext, type NotificationWorkspace } from '$lib/ports/notificationWorkspace';
+  import NotificationSettings from './NotificationSettings.svelte';
   import { getContext } from 'svelte';
   import { conversationWorkspaceContext, type ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import ConversationWorkspace from './conversations/ConversationWorkspace.svelte';
+  const notifications = getContext<NotificationWorkspace | undefined>(notificationWorkspaceContext);
   const conversations = getContext<ConversationWorkspaceRepositories | undefined>(conversationWorkspaceContext);
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import { settingsOverviewDestinations, tenantSettingsDestinations, inventorySettingsDestinations, settingsResourceHref } from '$lib/application/settingsManagementNavigation';
@@ -66,7 +69,11 @@
 {:else}
   <div class="workspace-main settings-management settings-management-resource">
     <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
-    {#if route.settingsCollection === 'conversations' && route.settingsLevel === 'tenant' && conversations}
+    {#if route.settingsCollection === 'notifications' && inventory && notifications}
+      {#key JSON.stringify([notifications.apiIdentity, principal.id, tenant.id, inventory.id])}
+        <NotificationSettings tenantId={tenant.id} inventoryId={inventory.id} initialTimezone={Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'} repository={notifications.repository} {observer} typeRepository={repository} />
+      {/key}
+    {:else if route.settingsCollection === 'conversations' && route.settingsLevel === 'tenant' && conversations}
       {#key JSON.stringify([conversations.apiIdentity, principal.id, tenant.id])}
         <ConversationWorkspace scope={{ apiIdentity: conversations.apiIdentity, principalId: principal.id, tenantId: tenant.id }} repositories={conversations} />
       {/key}

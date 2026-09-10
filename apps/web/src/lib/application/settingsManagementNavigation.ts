@@ -1,7 +1,7 @@
 import type { AuditScope, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
 import { workspaceRouteHref, type AccessInvitationRouteAction, type SettingsCollection, type SettingsResourceAction } from './workspaceRoute';
 
-export type SettingsDestinationIcon = 'account' | 'tenant' | 'inventory' | 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | 'conversations';
+export type SettingsDestinationIcon = 'account' | 'tenant' | 'inventory' | 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | 'conversations' | 'notifications';
 
 export interface SettingsDestination {
   label: string;
@@ -56,6 +56,7 @@ export function tenantSettingsDestinations(tenant: Pick<Tenant, 'id'>): Settings
 export function inventorySettingsDestinations(inventory: Pick<Inventory, 'id' | 'tenantId'>): SettingsDestination[] {
   const base = { level: 'inventory' as const, tenantId: inventory.tenantId, inventoryId: inventory.id };
   return [
+    { label: 'Notifications', eyebrow: 'Personal', description: 'Expiration reminders and asset type overrides', icon: 'notifications', href: settingsResourceHref({ ...base, collection: 'notifications' }) },
     { label: 'Sharing', eyebrow: 'People', description: 'Access and invitations', icon: 'access', href: settingsResourceHref({ ...base, collection: 'access' }) },
     { label: 'Tags', eyebrow: 'Organization', description: 'Reusable labels for this inventory', icon: 'tags', href: settingsResourceHref({ ...base, collection: 'tags' }) },
     { label: 'Custom fields', eyebrow: 'Schema', description: 'Inherited and inventory-only fields', icon: 'fields', href: settingsResourceHref({ ...base, collection: 'fields' }) },

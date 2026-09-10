@@ -105,3 +105,7 @@ Each web settings surface owns an inventory-scoped preference session. Initializ
 ### Web settings surface
 
 The inventory notification settings surface loads/initializes personal settings with an explicit loading and retry state. It shows inventory defaults, a validated editable IANA timezone, and individual expiration-enabled active type editors. All editing controls are disabled during a save. A “Refresh saved settings” action reloads the revision and current inherited defaults while preserving open policy and timezone drafts; users explicitly save retained drafts afterward. The surface never requests browser notification permission. It explains that mobile push is configured in the mobile app. Mount a new surface when principal/server/tenant/inventory identity changes.
+
+### Web settings navigation and composition
+
+Expose Notifications under inventory settings at `/settings/tenants/{tenantId}/inventories/{inventoryId}/notifications`, available to inventory viewers. It is an inventory-only collection without resource or lifecycle subroutes. The authenticated composition root supplies a dedicated notification repository through workspace context. Key the settings surface by API identity, principal, tenant and inventory so pending drafts never cross those boundaries. Load the complete active type collection, including inherited types, through the inventory customization port; surface failures with retry rather than treating them as an empty list.
