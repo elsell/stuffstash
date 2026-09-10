@@ -1,4 +1,10 @@
 export type WorkspaceEventName =
+  | 'workspace.notification_inbox_load_started'
+  | 'workspace.notification_inbox_loaded'
+  | 'workspace.notification_inbox_load_failed'
+  | 'workspace.notification_open_started'
+  | 'workspace.notification_opened'
+  | 'workspace.notification_open_failed'
   | 'workspace.load_started'
   | 'workspace.load_failed'
   | 'workspace.loaded'

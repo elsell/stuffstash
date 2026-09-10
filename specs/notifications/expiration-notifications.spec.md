@@ -109,3 +109,7 @@ The inventory notification settings surface loads/initializes personal settings 
 ### Web settings navigation and composition
 
 Expose Notifications under inventory settings at `/settings/tenants/{tenantId}/inventories/{inventoryId}/notifications`, available to inventory viewers. It is an inventory-only collection without resource or lifecycle subroutes. The authenticated composition root supplies a dedicated notification repository through workspace context. Key the settings surface by API identity, principal, tenant and inventory so pending drafts never cross those boundaries. Load the complete active type collection, including inherited types, through the inventory customization port; surface failures with retry rather than treating them as an empty list.
+
+### Web inbox application reads
+
+Loading a visible inbox page follows empty continued pages until a visible page or actual exhaustion. Detect repeated/missing continuation cursors and bound traversal to 100 pages; incomplete traversal is an error, never an empty-inbox claim. Pass the unread filter and cancellation signal on every request. Opening an alert resolves it through the current notification detail endpoint, marks that notification read, then returns the resolved asset ID for ordinary navigation. If resolution or marking fails, do not navigate using a cached asset ID. Application observations record operation outcomes without alert titles or dates.
