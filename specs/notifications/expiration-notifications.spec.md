@@ -101,3 +101,7 @@ Use one reusable web editor for inventory defaults and type overrides. Inventory
 ### Personal settings application session
 
 Each web settings surface owns an inventory-scoped preference session. Initialization registers the current principal using the device timezone without replacing existing settings. Saves use the last successfully loaded revision and preserve unrelated preferences: changing defaults retains timezone/push, changing timezone retains defaults/push, and type override operations retain other types. Allow only one pending write per session. A failed write leaves its loaded snapshot unchanged; the UI retains its independent draft. Explicit refresh obtains a newer revision after a conflict without silently resubmitting a stale draft. Application observations describe load/save success and failure without preference values or user content.
+
+### Web settings surface
+
+The inventory notification settings surface loads/initializes personal settings with an explicit loading and retry state. It shows inventory defaults, a validated editable IANA timezone, and individual expiration-enabled active type editors. All editing controls are disabled during a save. A “Refresh saved settings” action reloads the revision and current inherited defaults while preserving open policy and timezone drafts; users explicitly save retained drafts afterward. The surface never requests browser notification permission. It explains that mobile push is configured in the mobile app. Mount a new surface when principal/server/tenant/inventory identity changes.
