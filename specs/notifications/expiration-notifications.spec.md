@@ -137,3 +137,7 @@ The inventory header mounts a notification bell keyed by API identity, principal
 ### Native notification repository boundary
 
 Mobile owns its notification and personal-preference models and an inventory-scoped application repository, separate from generated transport types. The API adapter maps date precision into the native expiration value, normalizes absent override collections, and preserves revisions, explicit false values, pagination and cancellation. Convert API failures into safe typed native failures for expired authentication, denied access, unavailable records, revision conflicts, validation and temporary service failure. Never expose raw provider/server error text. Cancellation remains cancellation rather than a visible failure.
+
+### Native inbox queries
+
+Native application queries keep explicit tenant/inventory scope and use the notification repository for sparse inbox traversal, complete unread counts, mark-all pagination and resolving an alert before navigation. Apply the same bounded cursor and incomplete-result rules as web. Use the shared native cancellation helper, including runtimes without `AbortSignal.throwIfAborted`, before and after every request. Typed injected observations record query/mutation outcomes without notification contents. Native screen cache keys and composition must include server/session scope as well as inventory identity.

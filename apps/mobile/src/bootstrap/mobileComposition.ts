@@ -1,3 +1,6 @@
+import { ApiNotificationRepository } from '../adapters/notifications/ApiNotificationRepository';
+import { NotificationInboxQueries } from '../application/notifications/NotificationInboxQueries';
+import type { NotificationEvent } from '../application/notifications/NotificationObservability';
 import { InventoryAssetTypesQuery } from '../application/assets/InventoryAssetTypesQuery';
 import { Platform } from 'react-native';
 import { createMobilePerformanceSession } from '../adapters/observability/MobilePerformanceSession';
@@ -104,6 +107,7 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly notificationInboxQueries: NotificationInboxQueries;
   readonly performanceObserver: PerformanceObserver;
   readonly disposePerformance: () => void;
   readonly acquirePerformance: () => () => void;
@@ -166,6 +170,7 @@ export type MobileComposition = {
 };
 
 export type MobileCompositionOptions = {
+  readonly onNotificationEvent?: (event: NotificationEvent) => void;
   readonly onAuthenticationRequired?: () => void;
   readonly onCustomizationEvent?: (event: CustomizationEvent) => void;
 };
@@ -259,6 +264,8 @@ export function createMobileComposition(
     new ExpoSettingsDiagnosticsProvider(config),
     new ApiSettingsScopeRepository(client, inventorySummaries)
   );
+  const notificationRepository = new ApiNotificationRepository(client);
+  const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, { record: (event) => options.onNotificationEvent?.(event) });
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
   const customizationContextQuery = new CustomizationContextQuery(settingsQuery);
@@ -266,6 +273,7 @@ export function createMobileComposition(
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
+    notificationInboxQueries,
     serviceScopeId,
     performanceObserver: performanceSession.observer,
     disposePerformance: performanceSession.dispose,
