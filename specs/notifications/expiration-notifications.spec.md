@@ -113,3 +113,7 @@ Expose Notifications under inventory settings at `/settings/tenants/{tenantId}/i
 ### Web inbox application reads
 
 Loading a visible inbox page follows empty continued pages until a visible page or actual exhaustion. Detect repeated/missing continuation cursors and bound traversal to 100 pages; incomplete traversal is an error, never an empty-inbox claim. Pass the unread filter and cancellation signal on every request. Opening an alert resolves it through the current notification detail endpoint, marks that notification read, then returns the resolved asset ID for ordinary navigation. If resolution or marking fails, do not navigate using a cached asset ID. Application observations record operation outcomes without alert titles or dates.
+
+### Web inbox list view
+
+The reusable inbox view presents All and Unread filters, explicit initial/append loading and retry states, and paginated alerts with readable expiration dates and unread text. Month precision is displayed without a day; calendar dates are formatted without shifting across timezones. Refresh/filter changes cancel obsolete loads and discard their results. Appending merges IDs without duplicate rows. Opening an alert disables duplicate activation, uses the verified application open flow, and reports unavailable/failure without navigating. Unmount cancels reads/opening and prevents late navigation. The shell supplies normal asset navigation and the containing accessible panel.
