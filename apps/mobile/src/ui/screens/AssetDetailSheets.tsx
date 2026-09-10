@@ -96,7 +96,7 @@ export function EditAssetSheet({
         <AppTextInput
           autoCapitalize="sentences"
           editable={!isSaving}
-          onChangeText={(title) => onChange({ title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
+          onChangeText={(title) => onChange({ ...draft, title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={styles.input}
           value={draft?.title ?? ''}
         />
@@ -104,7 +104,7 @@ export function EditAssetSheet({
         <AppTextInput
           editable={!isSaving}
           multiline
-          onChangeText={(description) => onChange({ title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
+          onChangeText={(description) => onChange({ ...draft, title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={[styles.input, styles.multilineInput]}
           value={draft?.description ?? ''}
         />
@@ -113,8 +113,8 @@ export function EditAssetSheet({
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
           newTags={draft?.newTags ?? []}
-          onChange={(tagIds) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags: draft?.newTags ?? [] })}
-          onNewTagsChange={(newTags) => onChange({ title: draft?.title ?? '', description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags })}
+          onChange={(tagIds) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags: draft?.newTags ?? [] })}
+          onNewTagsChange={(newTags) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags })}
         />
       </ScrollView>
       <SheetActions

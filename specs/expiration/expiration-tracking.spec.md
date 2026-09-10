@@ -83,3 +83,8 @@ The item editor reuses the expiration field for an assigned active, expiration-e
 An untyped item's editor offers active custom types from its authorized inventory context. Selecting a type reveals its applicable fields and expiration capability, and counts as a dirty change. Save submits initial type assignment and date together. Existing assigned types cannot be replaced here. Changing an unsaved type choice clears its expiration draft but preserves other existing asset fields and tags. Unknown retained fields are not silently discarded; the application service validates compatibility before accepting assignment.
 
 Reselecting the current type in either create or edit is a no-op and must preserve the visible date and its submitted value.
+
+
+### Native Editor State
+
+Native detail view models retain the original expiration value and assigned type identity. The edit draft distinguishes unchanged/omitted dates from explicit clearing, includes type assignment in dirty detection, and preserves precision through normalization. A date-only change enables Save and protects dismissal; an invalid active date draft blocks Save while retaining edits. The native save command receives the normalized date/type values through the existing application port.

@@ -30,6 +30,7 @@ import {
 } from './AssetDetailSheets';
 import {
   EditDraft,
+  canSaveEditAsset,
   hasDirtyEditAssetDraft,
   normalizedEditDraft
 } from './AssetDetailEditPresentation';
@@ -95,7 +96,7 @@ function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: E
   }
 
   async function save(): Promise<void> {
-    if (!draft) {
+    if (!draft || !canSaveEditAsset(asset, draft)) {
       return;
     }
     setIsSaving(true);
@@ -103,6 +104,8 @@ function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: E
       const normalized = normalizedEditDraft(draft);
       const result = await updateAssetCommand.execute({
         assetId,
+        expiration: normalized.expiration,
+        customAssetTypeId: asset.customAssetTypeId ? undefined : normalized.customAssetTypeId,
         title: normalized.title,
         description: normalized.description,
         tagIds: normalized.tagIds,
