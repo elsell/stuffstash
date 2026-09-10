@@ -16,7 +16,7 @@ export function VoicePlanProgress({ state, drafts }: { readonly state: VoiceReal
       {progress.percent !== undefined ? <Text style={{ color: palette.textMuted }}>{`${progress.percent}%`}</Text> : null}
     </View>
     <Text style={{ color: palette.textMuted }}>{progress.detail}</Text>
-    {progress.percent !== undefined ? <View style={[styles.track, { backgroundColor: palette.surface }]}><View style={[styles.fill, { width: `${`${progress.percent}%`}`, backgroundColor: palette.action }]} /></View> : null}
+    {progress.percent !== undefined ? <View style={[styles.track, { backgroundColor: palette.surface }]}><View style={[styles.fill, { width: `${progress.percent}%` as const, backgroundColor: palette.action }]} /></View> : null}
   </View>;
 }
 const styles = StyleSheet.create({ group: { gap: 8, paddingTop: 12 }, row: { flexDirection: 'row', alignItems: 'center', gap: 10 }, title: { flex: 1, fontWeight: '700', fontSize: 16 }, track: { height: 5, borderRadius: 3, overflow: 'hidden' }, fill: { height: '100%', borderRadius: 3 } });
