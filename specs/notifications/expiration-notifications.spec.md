@@ -93,3 +93,7 @@ The shared generated-contract client exposes a focused notifications subclient f
 ### Web notification repository boundary
 
 The web frontend owns notification, reminder-policy, and preference domain models. A dedicated inventory-scoped notification repository exposes initialization, preference updates, type override replacement/removal, paginated inbox reads, notification resolution, and read marking. Its API adapter maps transport date/precision fields into the frontend expiration value and preserves cancellation, optimistic revisions, and empty continued pages. Inbox records retain their asset identity for navigation; the server revalidates visibility when a record is resolved.
+
+### Reminder policy editor
+
+Use one reusable web editor for inventory defaults and type overrides. Inventory defaults explain that explicit type overrides can remain enabled. Type editors offer “Use inventory defaults”; inherited controls display the current defaults without allowing edits until an override is selected. Each form saves explicitly, validates whole-number advance days from 0 through 3650, disables controls while saving, and retains the draft on failure (including revision conflicts). A failed save must not announce success. Resetting inheritance submits removal of the override. Remount the editor when its inventory/type identity changes; parent orchestration supplies current policy and revision-aware save callbacks.
