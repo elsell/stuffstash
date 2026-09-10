@@ -72,6 +72,10 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	if _, err := service.ListInbox(ctx, input, "", 0, false); err == nil {
 		t.Fatal("invalid page accepted")
 	}
+	count, err := service.CountUnreadPage(ctx, input, "")
+	if err != nil || count.Count != 1 || count.NextCursor != "" {
+		t.Fatalf("unread count %+v %v", count, err)
+	}
 	for i := 0; i < 201; i++ {
 		hidden := entry
 		hidden.ID = fmt.Sprintf("withdrawn-%03d", i)
@@ -88,6 +92,14 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	if err != nil || len(continued.Items) != 1 || continued.NextCursor != "" {
 		t.Fatalf("sparse history lost visible entry %+v %v", continued, err)
 	}
+	count, err = service.CountUnreadPage(ctx, input, "")
+	if err != nil || count.Count != 0 || count.NextCursor == "" {
+		t.Fatalf("sparse count %+v %v", count, err)
+	}
+	count, err = service.CountUnreadPage(ctx, input, count.NextCursor)
+	if err != nil || count.Count != 1 || count.NextCursor != "" {
+		t.Fatalf("continued count %+v %v", count, err)
+	}
 	foreign := input
 	foreign.Principal.ID = "viewer"
 	if _, err := service.GetNotification(ctx, foreign, "notice"); err == nil {
@@ -100,6 +112,20 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	foreign.TenantID = "elsewhere"
 	if _, err := service.GetNotification(ctx, foreign, "notice"); err == nil {
 		t.Fatal("cross tenant detail")
+	}
+	if _, err := service.CountUnreadPage(ctx, foreign, ""); err == nil {
+		t.Fatal("foreign count accepted")
+	}
+	if _, err := service.MarkInboxPageRead(ctx, foreign, ""); err == nil {
+		t.Fatal("foreign mark all accepted")
+	}
+	batch, err := service.MarkInboxPageRead(ctx, input, "")
+	if err != nil || batch.NextCursor == "" {
+		t.Fatalf("sparse mark page %+v %v", batch, err)
+	}
+	batch, err = service.MarkInboxPageRead(ctx, input, batch.NextCursor)
+	if err != nil || batch.NextCursor != "" {
+		t.Fatalf("continued mark page %+v %v", batch, err)
 	}
 	if err := service.MarkRead(ctx, input, "notice"); err != nil {
 		t.Fatal(err)
