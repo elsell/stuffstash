@@ -1,12 +1,12 @@
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useEffect, useRef } from 'react';
 import { AccessibilityInfo, ActivityIndicator, findNodeHandle, Pressable, ScrollView, Text, View } from 'react-native';
-import { AudioLines, Braces, Share2, Tags } from 'lucide-react-native';
+import { AudioLines, Bell, Braces, Share2, Tags } from 'lucide-react-native';
 import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { SettingsNavigationRow, SettingsSection, SettingsSeparator, useSettingsListStyles } from './SettingsList';
 import { useSettingsModel } from './SettingsScreenState';
 
-type ScopedDestination = 'sharing' | 'tags' | 'fields' | 'asset-types' | 'voice';
+type ScopedDestination = 'sharing' | 'tags' | 'fields' | 'asset-types' | 'voice' | 'notifications';
 
 export function InventorySettingsScreen({ onNavigate, settingsQuery }: { readonly onNavigate: (destination: ScopedDestination) => void; readonly settingsQuery: SettingsQuery }) {
   const model = useSettingsModel(settingsQuery);
@@ -33,6 +33,7 @@ function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<
       ] : []
     : [
         ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: 'Sharing', context: name }] : []),
+        { id: 'notifications', label: 'Notifications', context: 'Your reminders' },
         { id: 'tags', label: 'Tags', context: name },
         { id: 'fields', label: 'Custom fields', context: name },
         { id: 'asset-types', label: 'Asset types', context: name }
@@ -58,6 +59,7 @@ export function DeniedSettingsState({ message }: { readonly message: string }) {
 
 function scopeIcon(id: ScopedDestination, color: string) {
   const props = { color, size: 20, strokeWidth: 2.2 };
+  if (id === 'notifications') return <Bell {...props} />;
   if (id === 'sharing') return <Share2 {...props} />;
   if (id === 'tags') return <Tags {...props} />;
   if (id === 'voice') return <AudioLines {...props} />;

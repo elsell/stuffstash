@@ -366,7 +366,7 @@ describe('rendered mobile customization production states', () => {
     const wrap = (child: React.ReactNode) => <MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-1', inventoryId: 'inventory-1' })}>{child}</MobileServerStateProvider>;
     harness = new MobileRenderHarness();
     await harness.render(wrap(<InventorySettingsScreen onNavigate={() => undefined} settingsQuery={readOnly} />)); await harness.run(() => new Promise((resolve) => setTimeout(resolve, 20)));
-    expect(harness.allText()).toEqual(expect.arrayContaining(['Tags', 'Custom fields', 'Asset types']));
+    expect(harness.allText()).toEqual(expect.arrayContaining(['Tags', 'Custom fields', 'Asset types', 'Notifications']));
     expect(harness.allText()).not.toContain('Sharing');
 
     await harness.render(wrap(<HouseholdSettingsScreen onNavigate={() => undefined} settingsQuery={readOnly} />)); await settleQueries(harness);

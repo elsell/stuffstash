@@ -149,3 +149,9 @@ Create a fresh native preference session per mounted server/principal/inventory 
 ### Native reminder policy editor
 
 Use a shared native policy editor for inventory defaults and type overrides, with AppSwitchField and AppTextInput, explicit save, and whole-number thresholds from 0 through 3650. Inherited policies display current inventory defaults and disable individual controls until customization is selected. Saving inheritance removes the override. Retain drafts after failures, show safe inline error text, announce saved status, prevent duplicate saves, and ignore late UI updates after unmount. The parent keys the editor by preference scope/type and owns revision-aware save callbacks. No permission prompt occurs in this policy editor.
+
+### Native settings screen
+
+The native settings screen loads a complete active asset-type query and initializes personal preferences before exposing editors. It presents inventory defaults, editable IANA timezone, and expiration-enabled type overrides in a scrollable native surface. Load failures are explicit and retryable. Refresh updates saved revisions and inherited defaults while retaining open drafts. One save disables all editors until completion; a failed save preserves drafts and offers refresh before retry. Unmount cancels pending work. Route composition supplies a fresh session keyed to authenticated service scope, tenant and inventory.
+
+Native inventory settings include Notifications for all members with inventory view access, including viewers; personal reminder settings do not require inventory configuration permission. The route uses the shared selected-scope query and native back navigation. Changing authenticated server scope or inventory remounts the preference session and discards the previous screen draft.

@@ -72,6 +72,7 @@ function ThemedApp() {
         <Stack.Screen name="settings/connection" options={{ title: 'Stuff Stash Server' }} />
         <Stack.Screen name="settings/about" options={{ title: 'About' }} />
         <Stack.Screen name="settings/diagnostics" options={{ title: 'Diagnostics' }} />
+        <Stack.Screen name="settings/inventory/notifications" options={{ title: 'Notifications' }} />
         <Stack.Screen name="settings/inventory/index" options={{ title: 'Inventory Settings' }} />
         <Stack.Screen name="settings/household/index" options={{ title: 'Household Settings' }} />
         <Stack.Screen name="settings/inventory/tags/index" options={{ title: 'Tags' }} />
