@@ -89,3 +89,7 @@ Authenticated `GET /tenants/{tenantId}/inventories/{inventoryId}/notifications` 
 ## Shared Client Transport
 
 The shared generated-contract client exposes a focused notifications subclient for preference initialization/read/update, setting/removing type overrides, paginated inbox reads, detail and mark-read. It reuses the existing bearer-token, cancellation and safe API error handling. Revision values and explicit false settings must pass through unchanged. Inbox pagination preserves an empty page with a continuation cursor; callers must not infer exhaustion from item count. Platform adapters keep their own domain models above this transport layer.
+
+### Web notification repository boundary
+
+The web frontend owns notification, reminder-policy, and preference domain models. A dedicated inventory-scoped notification repository exposes initialization, preference updates, type override replacement/removal, paginated inbox reads, notification resolution, and read marking. Its API adapter maps transport date/precision fields into the frontend expiration value and preserves cancellation, optimistic revisions, and empty continued pages. Inbox records retain their asset identity for navigation; the server revalidates visibility when a record is resolved.
