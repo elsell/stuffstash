@@ -15,6 +15,7 @@ import (
 	identityroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/identity/routes"
 	importroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/routes"
 	inventoryroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/routes"
+	notificationroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/notifications/routes"
 	providerprofileroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/providerprofiles/routes"
 	searchroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/routes"
 	tagroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/tags/routes"
@@ -24,6 +25,7 @@ import (
 )
 
 func registerRoutes(api huma.API, application app.App) {
+	notificationroutes.Register(api, application)
 	clienttelemetryroutes.Register(api, application)
 	identityroutes.Register(api, application)
 	tenantroutes.Register(api, application)

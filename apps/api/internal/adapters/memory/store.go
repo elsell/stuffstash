@@ -16,6 +16,7 @@ import (
 )
 
 type Store struct {
+	notificationPreferences map[ports.NotificationScope]ports.NotificationPreferencesRecord
 	mediaBlobKeys           map[media.StorageKey]struct{}
 	evaluationRuns          map[evaluationRunKey]agentmodel.EvaluationRun
 	evaluationCaseHeads     map[evaluationCaseKey]ports.EvaluationCaseHeadRecord

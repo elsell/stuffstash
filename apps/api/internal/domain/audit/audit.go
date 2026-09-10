@@ -40,6 +40,8 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
+	ActionNotificationPreferencesViewed             Action = "notification_preferences.viewed"
+	ActionNotificationPreferencesUpdated            Action = "notification_preferences.updated"
 	ActionTenantCreated                             Action = "tenant.created"
 	ActionTenantViewed                              Action = "tenant.viewed"
 	ActionTenantListed                              Action = "tenant.listed"
@@ -141,7 +143,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionTenantCreated,
+	case ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,
@@ -275,6 +277,7 @@ func (s Source) String() string {
 type TargetType string
 
 const (
+	TargetNotificationPreferences    TargetType = "notification_preferences"
 	TargetTenant                     TargetType = "tenant"
 	TargetInventory                  TargetType = "inventory"
 	TargetInventoryAccessGrant       TargetType = "inventory_access_grant"
@@ -296,7 +299,7 @@ const (
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
+	case TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
 		return targetType, true
 	default:
 		return "", false
