@@ -13,6 +13,7 @@ export function VoiceConversationComposer({ onMic }: { readonly onMic: () => voi
   const listening = state.stage === 'listening';
   const available = canSubmitConversation(state.stage);
   const busy = !available && !listening;
+  const cardOwnsProgress = state.status === 'ready' && !!state.realtime?.actionPlan;
   return <View style={[styles.row, { backgroundColor: colors.surface }]}>
     <AppTextInput accessibilityLabel="Message Stuff Stash" placeholder="Ask or add something…" placeholderTextColor={colors.textMuted}
       value={composerText} onChangeText={setComposerText} multiline maxLength={8000} editable={!busy}
@@ -24,7 +25,7 @@ export function VoiceConversationComposer({ onMic }: { readonly onMic: () => voi
       accessibilityState={{ disabled: busy }} disabled={busy}
       onPress={() => { if (composerText.trim() && !listening) void sendText(); else onMic(); }}
       style={[styles.send, { backgroundColor: colors.action, opacity: busy ? 0.5 : 1 }]}>
-      {busy ? <ActivityIndicator color={colors.onAction} /> : composerText.trim() || listening ? <SendHorizontal size={22} color={colors.onAction} /> : <Mic size={22} color={colors.onAction} />}
+      {busy && !cardOwnsProgress ? <ActivityIndicator color={colors.onAction} /> : composerText.trim() || listening ? <SendHorizontal size={22} color={colors.onAction} /> : <Mic size={22} color={colors.onAction} />}
     </Pressable>
   </View>;
 }

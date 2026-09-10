@@ -1,3 +1,4 @@
+import { VoicePlanProgress } from './VoicePlanProgress';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -23,7 +24,7 @@ export function VoiceConversationExchange({ exchange, railKey, onOpen }: { reado
     {exchange.spokenResponse ? <VoiceResponseEntityText markdown enabled onOpen={onOpen} references={voiceConversationReferences(exchange)} text={exchange.spokenResponse} /> : null}
     {exchange.errorMessage ? <Text selectable style={{ color: colors.warning }}>{exchange.errorMessage}</Text> : null}
     {exchange.actionPlan ? <Text selectable style={{ color: colors.text }}>{exchange.actionPlan.commands.map(command => command.title ?? command.summary).join(', ')} · {exchange.actionPlan.status === 'executed' ? 'Saved' : exchange.actionPlan.status}</Text> : null}
-    {exchange.photoAttachmentStatus ? <Text style={{ color: colors.textMuted }}>{exchange.photoAttachmentStatus.message}</Text> : null}
+    {exchange.photoAttachmentStatus ? <VoicePlanProgress state={exchange} /> : null}
     {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <Pressable accessibilityRole="button" onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} style={styles.control}><Text style={{ color: colors.action }}>Retry photos</Text></Pressable> : null}
     <VoiceResultRail references={voiceConversationReferences(exchange)} railKey={railKey} onOpen={onOpen} />
   </View>;

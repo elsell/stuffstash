@@ -1,3 +1,4 @@
+import { VoicePlanProgress } from './VoicePlanProgress';
 import { shouldConfirmNewConversation } from '../navigation/VoiceConversationHistory';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
@@ -361,7 +362,7 @@ function VoiceSessionSheet({
               <View style={styles.actionPlanSection}>
                 <View style={styles.actionPlanHeader}>
                   <View style={styles.actionPlanHeaderText}>
-                    <Text style={styles.sectionLabel}>Review change</Text>
+                    <Text style={styles.sectionLabel}>{actionPlan.status === 'executed' ? 'Saved' : actionPlan.status === 'approved' ? 'Saving changes' : 'Review change'}</Text>
                     <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} references={references} text={actionPlan.confirmationSummary} />
                   </View>
                   <View style={styles.actionPlanCountPill}>
@@ -379,7 +380,7 @@ function VoiceSessionSheet({
                             command.tone === 'create' && styles.actionPlanCreateMarker,
                             command.tone === 'use' && styles.actionPlanUseMarker
                           ]}>
-                            {command.tone === 'use' ? (
+                            {command.tone === 'use' || actionPlan.status === 'executed' ? (
                               <Check color={palette.accentStrong} size={15} strokeWidth={2.8} />
                             ) : (
                               <Text style={styles.actionPlanStepText}>{(index + 1).toString()}</Text>
@@ -424,17 +425,12 @@ function VoiceSessionSheet({
                     ))}
                   </View>
                 ) : null}
-                {actionPlan.status === 'approved' ? (
-                  <Text style={styles.actionPlanStatus}>Approved. Applying change.</Text>
-                ) : null}
+                <VoicePlanProgress state={state.realtime} drafts={commandDrafts} />
                 {actionPlan.status === 'cancelled' ? (
                   <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
                 ) : null}
                 {actionPlan.status === 'executed' ? (
                   <View style={styles.actionPlanStatusGroup}>
-                    <Text style={styles.actionPlanStatus}>
-                      {state.realtime?.photoAttachmentStatus?.message ?? 'Applied.'}
-                    </Text>
                     {state.realtime?.photoAttachmentStatus?.canRetry ? (
                       <Pressable
                         accessibilityLabel="Retry attaching voice photos"
@@ -453,7 +449,7 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
-            {session.isBusy && actionPlan?.status !== 'approved' ? <View style={styles.progressTraceRow}><ActivityIndicator color={palette.action} /><Text accessibilityLiveRegion="polite" style={styles.progressHint}>{session.progressLabel}</Text></View> : null}
+            {session.isBusy && !actionPlan ? <View style={styles.progressTraceRow}><ActivityIndicator color={palette.action} /><Text accessibilityLiveRegion="polite" style={styles.progressHint}>{session.progressLabel}</Text></View> : null}
 
             {session.response ? (
               <View style={styles.responseSection}>

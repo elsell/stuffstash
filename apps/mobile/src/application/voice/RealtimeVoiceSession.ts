@@ -244,6 +244,9 @@ export type VoiceConversationPhase =
   | 'recovering';
 
 export type VoicePhotoAttachmentStatus = {
+  readonly attachedCount?: number;
+  readonly totalCount?: number;
+  readonly failedCount?: number;
   readonly status: 'uploading' | 'attached' | 'partial_failed' | 'failed';
   readonly message: string;
   readonly canRetry?: boolean;
@@ -600,7 +603,7 @@ export class RealtimeVoiceSessionController {
     catch (error) { if (this.reviewDecisionPlanId === safePlanId) this.reviewDecisionPlanId = null; throw error; }
   }
 
-  async retryPhotoAttachments(planId: string): Promise<VoicePhotoAttachmentStatus> {
+  async retryPhotoAttachments(planId: string, onProgress?: (status: VoicePhotoAttachmentStatus) => void): Promise<VoicePhotoAttachmentStatus> {
     const safePlanId = usableActionPlanId(planId);
     const retry = this.pendingPhotoRetriesByPlanId.get(safePlanId);
     if (!retry) {
@@ -609,7 +612,7 @@ export class RealtimeVoiceSessionController {
         message: 'There are no photos ready to retry.'
       };
     }
-    return await this.uploadPhotoRetry(safePlanId, retry) ?? {
+    return await this.uploadPhotoRetry(safePlanId, retry, onProgress) ?? {
       status: 'failed',
       message: 'There are no photos ready to retry.'
     };
@@ -693,16 +696,13 @@ export class RealtimeVoiceSessionController {
             assetIds: [...new Set((event.commandResults ?? []).map(result => result.assetId).filter(id => id.trim().length > 0))]
           });
         }
-        const hasPhotos = Object.values(this.pendingPhotoDraftsByPlanId.get(event.planId) ?? {}).some(photos => photos.length > 0);
-        if (hasPhotos) onIntermediate?.(withProgressStep(state, 'Adding photos', {
-          status: 'processing', actionPlan: { ...state.actionPlan, status: 'executed' }, reviewDecisionPending: false,
-          photoAttachmentStatus: { status: 'uploading', message: 'Change saved. Adding photos…' }
-        }));
         const photoAttachmentStatus = await this.attachApprovedPlanPhotos({
           ...event,
           type: 'action.plan.executed',
           status: 'executed'
-        }, state.actionPlan);
+        }, state.actionPlan, photoAttachmentStatus => onIntermediate?.(withProgressStep(state, 'Adding photos', {
+          status: 'processing', actionPlan: { ...state.actionPlan!, status: 'executed' }, reviewDecisionPending: false, photoAttachmentStatus
+        })));
         return withProgressStep(state, 'Change applied', {
           status: 'completed',
           actionPlan: { ...state.actionPlan, status: 'executed' },
@@ -797,7 +797,8 @@ export class RealtimeVoiceSessionController {
 
   private async attachApprovedPlanPhotos(
     event: VoiceActionPlanExecutedEvent,
-    reviewedPlan: VoiceActionPlanProposal | undefined
+    reviewedPlan: VoiceActionPlanProposal | undefined,
+    onProgress?: (status: VoicePhotoAttachmentStatus) => void
   ): Promise<VoicePhotoAttachmentStatus | undefined> {
     const drafts = this.pendingPhotoDraftsByPlanId.get(event.planId);
     this.pendingPhotoDraftsByPlanId.delete(event.planId);
@@ -851,10 +852,10 @@ export class RealtimeVoiceSessionController {
       }
     }
 
-    return this.uploadPhotoRetry(event.planId, { ...retry, nonRetryableFailures });
+    return this.uploadPhotoRetry(event.planId, { ...retry, nonRetryableFailures }, onProgress);
   }
 
-  private async uploadPhotoRetry(planId: string, retry: VoiceActionPlanPhotoRetry): Promise<VoicePhotoAttachmentStatus | undefined> {
+  private async uploadPhotoRetry(planId: string, retry: VoiceActionPlanPhotoRetry, onProgress?: (status: VoicePhotoAttachmentStatus) => void): Promise<VoicePhotoAttachmentStatus | undefined> {
     const lifetime = this.photoLifetime;
     const assertActive = () => { if (this.photoLifetime !== lifetime) throw new VoiceRealtimeCancelledError(); };
     let attempted = retry.attachedCount + retry.nonRetryableFailures.length;
@@ -867,6 +868,13 @@ export class RealtimeVoiceSessionController {
       nonRetryableFailures: retry.nonRetryableFailures,
       attachedCount: retry.attachedCount
     };
+    const totalCount = attempted + Object.values(retry.photos).reduce((total, photos) => total + photos.length, 0);
+    const publishProgress = () => {
+      assertActive();
+      onProgress?.({ status: 'uploading', message: `Change saved. ${attempted - failed} of ${totalCount} photos attached.`,
+        attachedCount: attempted - failed, totalCount, failedCount: failed });
+    };
+    publishProgress();
     const failureMessages: string[] = [...retry.nonRetryableFailures];
     for (const [commandId, photos] of Object.entries(retry.photos)) {
       const targetAssetId = retry.commandAssetIds[commandId];
@@ -877,6 +885,7 @@ export class RealtimeVoiceSessionController {
           failed += 1;
           failureMessages.push('The server did not return an upload intent for this photo.');
           remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
+          publishProgress();
           continue;
         }
         try {
@@ -895,6 +904,7 @@ export class RealtimeVoiceSessionController {
           failureMessages.push(safePhotoUploadFailureReason(error));
           remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
         }
+        publishProgress();
       }
     }
     assertActive();
@@ -908,19 +918,19 @@ export class RealtimeVoiceSessionController {
     }
     if (failed === 0) {
       return {
-        status: 'attached',
+        status: 'attached', attachedCount: attempted, totalCount, failedCount: 0,
         message: `${attempted.toString()} ${attempted === 1 ? 'photo' : 'photos'} attached.`
       };
     }
     if (failed < attempted) {
       return {
-        status: 'partial_failed',
+        status: 'partial_failed', attachedCount: attempted - failed, totalCount, failedCount: failed,
         message: `${(attempted - failed).toString()} of ${attempted.toString()} photos attached.`,
         canRetry: hasRetryablePhotos(remaining)
       };
     }
     return {
-      status: 'failed',
+      status: 'failed', attachedCount: attempted - failed, totalCount, failedCount: failed,
       message: photoUploadFailureMessage(failureMessages),
       canRetry: hasRetryablePhotos(remaining)
     };

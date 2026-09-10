@@ -294,7 +294,11 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         setRealtime((current) => markPhotoRetryInProgress(current, planId));
         setHistory(current => current.map(exchange => markPhotoRetryInProgress(exchange, planId)!));
         try {
-          const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId);
+          const photoAttachmentStatus = await realtimeController.retryPhotoAttachments(planId, progress => {
+            if (interactionLifetime.current !== generation) return;
+            setRealtime(current => markPhotoRetryResult(current, planId, progress));
+            setHistory(current => current.map(exchange => markPhotoRetryResult(exchange, planId, progress)!));
+          });
           if (interactionLifetime.current !== generation) return;
           setRealtime((current) => markPhotoRetryResult(current, planId, photoAttachmentStatus));
           setHistory(current => current.map(exchange => markPhotoRetryResult(exchange, planId, photoAttachmentStatus)!));
@@ -361,7 +365,7 @@ export function markPhotoRetryResult(
 ): VoiceRealtimeState | null {
   return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
-    progressLabel: photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
+    progressLabel: photoAttachmentStatus.status === 'uploading' ? 'Adding photos' : photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
     photoAttachmentStatus
   } : state;
 }
