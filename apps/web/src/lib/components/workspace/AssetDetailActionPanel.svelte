@@ -1,9 +1,13 @@
 <script lang="ts" module>
-  import type { AssetAttachment, AssetTag, AssetTagDraft, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
+  import type { AssetExpiration, AssetAttachment, AssetTag, AssetTagDraft, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
 
   export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | 'attachment-delete';
 
   export type AssetDetailActionPanelProps = {
+    expiration?: AssetExpiration;
+    expirationValid?: boolean;
+    expirationEnabled?: boolean;
+    onExpirationChange?: (value: AssetExpiration | undefined, valid: boolean) => void;
     panel: AssetDetailPanel;
     asset: AssetViewModel;
     parentTargets: ParentTargetViewModel[];
@@ -43,6 +47,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import ExpirationField from './ExpirationField.svelte';
   import AssetTagSelector from './AssetTagSelector.svelte';
   import CustomFieldControls from './CustomFieldControls.svelte';
   import ParentTargetPicker from './ParentTargetPicker.svelte';
@@ -50,6 +55,10 @@
   import WorkspaceTaskSheet from './action-surface/WorkspaceTaskSheet.svelte';
 
   let {
+    expiration,
+    expirationValid = true,
+    expirationEnabled = false,
+    onExpirationChange = () => {},
     panel,
     asset,
     parentTargets,
@@ -87,7 +96,8 @@
     if (panel === 'edit') {
       const currentTagIds = (asset.tags ?? []).map((tag) => tag.id).sort().join(',');
       const nextTagIds = [...selectedTagIds].sort().join(',');
-      return title !== asset.title || description !== asset.description ||
+      return expiration?.date !== asset.expiration?.date || expiration?.precision !== asset.expiration?.precision ||
+        title !== asset.title || description !== asset.description ||
         applicableFields.some((field) => String(asset.customFields?.[field.key] ?? '') !== (customFieldValues[field.key] ?? '')) ||
         currentTagIds !== nextTagIds || newTags.length > 0;
     }
@@ -113,6 +123,14 @@
       <Label for="edit-asset-description">Description</Label>
       <Textarea id="edit-asset-description" bind:value={description} />
     </div>
+    {#if expirationEnabled}
+      {#key asset.id}
+        <ExpirationField id="edit-asset-expiration" initialValue={asset.expiration} onChange={onExpirationChange} />
+      {/key}
+    {:else if asset.expiration}
+      <p>Expiration: {asset.expiration.date}. Tracking is disabled for this type.</p>
+      {#if expiration}<Button.Root type="button" variant="ghost" onclick={() => onExpirationChange(undefined, true)}>Clear expiration</Button.Root>{/if}
+    {/if}
     {#if populatedFields.length > 0}
       <CustomFieldControls
         fields={populatedFields}
@@ -146,7 +164,7 @@
     {/if}
     {#snippet footer()}
       <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving || title.trim().length === 0 || !taskDirty} onclick={() => { void onSave(); }}>Save</Button.Root>
+      <Button.Root disabled={saving || !expirationValid || title.trim().length === 0 || !taskDirty} onclick={() => { void onSave(); }}>Save</Button.Root>
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'move'}

@@ -6,6 +6,7 @@ import type {
   AssetAttachment,
   AssetViewModel,
   CustomFieldDefinition,
+  CustomAssetType,
   MediaUploadPolicy,
   ParentTargetViewModel,
   SelectedAttachment,
@@ -891,6 +892,7 @@ function mountAssetDetail(
     workspaceAssets: Asset[];
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
+    customAssetTypes: CustomAssetType[];
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
@@ -1095,3 +1097,47 @@ async function flush(): Promise<void> {
   await Promise.resolve();
   await tick();
 }
+
+
+it('saves a date-only edit and preserves explicit clearing after a failed save', async () => {
+  const drafts: UpdateAssetDraft[] = [];
+  mountAssetDetail({ action: 'edit',
+    asset: { ...asset(), customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' } },
+    customAssetTypes: [{ id: 'medicine', tenantId: 'tenant-one', inventoryId: 'inventory-one', scope: 'inventory',
+      key: 'medicine', displayName: 'Medicine', description: '', lifecycleState: 'active', expirationEnabled: true }],
+    onSave: async (draft) => { drafts.push(draft); throw new Error('Try again'); }
+  });
+  await flush();
+  expect((requiredElement('#edit-asset-expiration') as HTMLInputElement).value).toBe('2028-02');
+  clickFirst('Clear expiration');
+  await flush();
+  expect(buttons('Save')[0].disabled).toBe(false);
+  clickFirst('Save');
+  await flush();
+  expect(drafts[0].expiration).toBeNull();
+  expect(document.body.textContent).toContain('Try again');
+  expect((requiredElement('#edit-asset-expiration') as HTMLInputElement).value).toBe('');
+  clickFirst('Exact date');
+  await flush();
+  setInputValue(requiredElement('#edit-asset-expiration') as HTMLInputElement, '2028-02-29');
+  await flush();
+  clickFirst('Save');
+  await flush();
+  expect(drafts[1].expiration).toEqual({ date: '2028-02-29', precision: 'day' });
+});
+
+it('allows clearing a retained date while tracking is disabled', async () => {
+  const drafts: UpdateAssetDraft[] = [];
+  mountAssetDetail({ action: 'edit',
+    asset: { ...asset(), customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' } },
+    onSave: async (draft) => { drafts.push(draft); }
+  });
+  await flush();
+  expect(document.body.textContent).toContain('Tracking is disabled');
+  expect(document.querySelector('#edit-asset-expiration')).toBeNull();
+  clickFirst('Clear expiration');
+  await flush();
+  clickFirst('Save');
+  await flush();
+  expect(drafts[0].expiration).toBeNull();
+});

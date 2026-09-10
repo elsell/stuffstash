@@ -71,3 +71,8 @@ The approved release includes expiration handling through voice and typed conver
 ### Web Date Entry
 
 The shared expiration field uses the existing segmented control for Exact date versus Month and year, and a labeled native date/month input through the shared Input component. Separate precision drafts preserve what the user entered when switching modes without inventing a day. The visible selected value is the value submitted on Save. Clearing removes the active value. Invalid or incomplete nonempty input blocks save with inline guidance. In add-item forms, the field appears only for enabled types; changing the selected type resets its date draft to prevent accidental carryover.
+
+
+### Web Date Editing
+
+The item editor reuses the expiration field for an assigned active, expiration-enabled type. Date-only edits participate in dirty tracking and dismissal protection. Clearing sends explicit null; unrelated edits omit the date. A failed save retains the draft, while reopening initializes from persisted asset data. Retained dates whose type no longer tracks expiration remain visible with a tracking-disabled explanation and can be cleared without re-enabling the type.

@@ -40,6 +40,8 @@
     MediaUploadPolicy,
     ParentTargetViewModel,
     SelectedAttachment,
+    AssetExpiration,
+    CustomAssetType,
     UpdateAssetDraft
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
@@ -61,6 +63,7 @@
     attachmentAction = null,
     parentTargets,
     customFieldDefinitions,
+    customAssetTypes = [],
     assetTags = [],
     saving,
     attachments,
@@ -98,6 +101,7 @@
     attachmentAction?: AttachmentRouteAction;
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
+    customAssetTypes?: CustomAssetType[];
     assetTags?: AssetTag[];
     saving: boolean;
     attachments: AssetAttachment[];
@@ -128,6 +132,9 @@
   } = $props();
 
   let panel = $state<AssetDetailPanel>('none');
+  let expiration = $state<AssetExpiration | undefined>();
+  let expirationValid = $state(true);
+  let expirationEnabled = $derived(customAssetTypes.some((type) => type.id === asset.customAssetTypeId && type.lifecycleState === 'active' && type.expirationEnabled));
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
@@ -247,6 +254,8 @@
   });
 
   function openEdit(notify = true): void {
+    expiration = asset.expiration;
+    expirationValid = true;
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -262,6 +271,7 @@
   }
 
   function openMove(notify = true): void {
+    expirationValid = true;
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -335,12 +345,13 @@
   }
 
   async function save(): Promise<void> {
-    if (!title.trim()) {
+    if (!title.trim() || !expirationValid) {
       return;
     }
     saveError = '';
     try {
       await onSave({
+        expiration: panel === 'edit' && (expiration?.date !== asset.expiration?.date || expiration?.precision !== asset.expiration?.precision) ? expiration ?? null : undefined,
         title: title.trim(),
         description: description.trim(),
         parentAssetId,
@@ -743,6 +754,10 @@
     {/if}
   <div class="asset-detail-sections">
       <AssetDetailActionPanel
+        {expiration}
+        {expirationValid}
+        {expirationEnabled}
+        onExpirationChange={(value, valid) => { expiration = value; expirationValid = valid; }}
         {panel}
         {asset}
         {parentTargets}
