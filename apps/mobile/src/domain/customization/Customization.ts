@@ -29,6 +29,7 @@ export type CustomFieldDefinition = {
 };
 
 export type CustomAssetTypeDefinition = {
+  readonly expirationEnabled?: boolean;
   readonly kind: 'asset-type';
   readonly id: string;
   readonly tenantId: string;

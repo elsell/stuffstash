@@ -39,3 +39,10 @@ describe('CustomizationEditorModel', () => {
     expect(customizationEditorIsDirty({ ...emptyCustomizationEditorDraft(), fieldType: 'number' }, '', 'create', false)).toBe(true);
   });
 });
+
+it('includes expiration tracking in dirty state and treats older drafts as off', () => {
+  const initial = emptyCustomizationEditorDraft();
+  const snapshot = customizationEditorSnapshot(initial);
+  expect(customizationEditorIsDirty({ ...initial, expirationEnabled: true }, snapshot, 'edit', false)).toBe(true);
+  expect(customizationEditorIsDirty({ ...initial, expirationEnabled: false }, snapshot, 'edit', false)).toBe(false);
+});

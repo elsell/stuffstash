@@ -28,8 +28,8 @@ export async function saveCustomizationEditor(input: {
     return;
   }
   if (kind === 'asset-type') {
-    if (mode === 'create') await managers.assetTypes.create(context, scope, { key: draft.key, displayName: draft.name, description: draft.description });
-    else await managers.assetTypes.update(address(context, scope, requiredId(resourceId)), { displayName: draft.name.trim(), description: draft.description.trim() });
+    if (mode === 'create') await managers.assetTypes.create(context, scope, { key: draft.key, displayName: draft.name, description: draft.description, expirationEnabled: draft.expirationEnabled ?? false });
+    else await managers.assetTypes.update(address(context, scope, requiredId(resourceId)), { displayName: draft.name.trim(), description: draft.description.trim(), expirationEnabled: draft.expirationEnabled ?? false });
     return;
   }
   if (mode === 'create') {

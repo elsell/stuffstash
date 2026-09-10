@@ -12,6 +12,7 @@ let highTextContrastEnabled = false;
 let systemColorScheme: 'light' | 'dark' = 'light';
 
 export const View = 'View';
+export const Switch = 'Switch';
 export const Image = 'Image';
 export function FlatList(props: Record<string, unknown>) {
   const rows = (props.data ?? []) as readonly unknown[];

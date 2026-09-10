@@ -7,6 +7,7 @@ import type {
 import { customizationKeyIsValid, customizationKeyValidationMessage, normalizeTagColor, suggestedCustomizationKey } from '../../domain/customization/Customization';
 
 export type CustomizationEditorDraft = {
+  readonly expirationEnabled?: boolean;
   readonly name: string;
   readonly key: string;
   readonly keyManuallyEdited: boolean;
@@ -59,6 +60,7 @@ export function customizationEditorSnapshot(draft: CustomizationEditorDraft): st
     name: draft.name,
     key: draft.key,
     description: draft.description,
+    expirationEnabled: draft.expirationEnabled ?? false,
     color: draft.color,
     fieldType: draft.fieldType,
     applicability: draft.applicability,

@@ -312,8 +312,10 @@ describe('rendered mobile customization production states', () => {
       let done = 0;
       const screen = await renderEditor({ kind, manageAssetTypes: manager, manageFields: manager, manageTags: manager, onDone: () => { done += 1; } });
       await screen.changeText(screen.byLabel('Name'), kind === 'tag' ? 'Tools' : 'Appliance');
+      if (kind === 'asset-type') await screen.run(() => screen.byLabel('Track expiration dates')?.props.onValueChange(true));
       await screen.press(screen.byText('Save')?.parent ?? undefined);
       expect(calls).toHaveLength(1);
+      if (kind === 'asset-type') expect(calls[0][2]).toMatchObject({ expirationEnabled: true });
       expect(done).toBe(1);
       expect(alertCount()).toBe(0);
     }
@@ -432,3 +434,15 @@ async function settleQueries(harness: MobileRenderHarness) {
   await harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
   await harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
 }
+
+it('loads enabled expiration tracking and saves an explicit disabled value', async () => {
+  const record = { ...assetType('medicine', 'Medicine', 'inventory'), expirationEnabled: true };
+  const saved: unknown[][] = [];
+  const manager = managerFake({ update: async (...args: unknown[]) => { saved.push(args); return record; } });
+  const screen = await renderEditor({ kind: 'asset-type', mode: 'edit', resourceId: record.id, manageAssetTypes: manager, query: collectionQuery({ assetTypes: [record] }) });
+  expect(screen.byLabel('Track expiration dates')?.props.value).toBe(true);
+  await screen.run(() => screen.byLabel('Track expiration dates')?.props.onValueChange(false));
+  await screen.press(screen.byText('Save')?.parent ?? undefined);
+  expect(saved).toHaveLength(1);
+  expect(saved[0][1]).toMatchObject({ expirationEnabled: false });
+});
