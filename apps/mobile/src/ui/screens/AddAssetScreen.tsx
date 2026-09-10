@@ -1,3 +1,6 @@
+import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
+import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
+import type { AssetExpiration } from '../../domain/assets/AssetSummary';
 import { useQuery } from '@tanstack/react-query';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
@@ -65,6 +68,7 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type AddAssetScreenProps = {
+  readonly inventoryAssetTypesQuery: Pick<InventoryAssetTypesQuery, 'execute'>;
   readonly addAssetDraftStore: AddAssetDraftStore;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
   readonly createAssetCommand: Pick<CreateAssetCommand, 'execute'>;
@@ -105,8 +109,9 @@ export function AddAssetScreen(props: AddAssetScreenProps) {
 }
 
 function ScopedAddAssetScreen({
-  addAssetDraftStore, createAssetCommand, initialParent, onDismiss = () => router.back(), parentLookupQuery, photoSelectionQuery, addContext, principalId, principalError, onRetry
+  inventoryAssetTypesQuery, addAssetDraftStore, createAssetCommand, initialParent, onDismiss = () => router.back(), parentLookupQuery, photoSelectionQuery, addContext, principalId, principalError, onRetry
 }: AddAssetScreenProps & { readonly addContext: ReturnType<typeof useMobileInventoryServerQuery<AddAssetContext>>; readonly principalId?: string; readonly principalError: Error | null; readonly onRetry: () => void }) {
+  const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), enabled: !!addContext.data, query: (signal) => inventoryAssetTypesQuery.execute(addContext.data!.tenantId, addContext.data!.inventoryId, { signal }) });
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const feedback = useAppFeedback();
@@ -115,6 +120,10 @@ function ScopedAddAssetScreen({
   const formScrollRef = useRef<ScrollView>(null);
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [draftContext, setDraftContext] = useState<AddAssetDraftContext | undefined>();
+  const [expiration, setExpiration] = useState<AssetExpiration | undefined>();
+  const [customAssetTypeId, setCustomAssetTypeId] = useState<string | undefined>();
+  const [expirationValid, setExpirationValid] = useState(true);
+  const [expirationRevision, setExpirationRevision] = useState(0);
   const [title, setTitle] = useState(emptyDraft.title);
   const [description, setDescription] = useState(emptyDraft.description);
   const [parentAssetId, setParentAssetId] = useState<string | undefined>(emptyDraft.parentAssetId);
@@ -171,6 +180,8 @@ function ScopedAddAssetScreen({
     }
 
     addAssetDraftStore.save(draftContext, {
+      expiration,
+      customAssetTypeId,
       title,
       description,
       parentAssetId,
@@ -183,6 +194,8 @@ function ScopedAddAssetScreen({
     });
   }, [
     addAssetDraftStore,
+    expiration,
+    customAssetTypeId,
     description,
     draftContext,
     lastParent,
@@ -224,6 +237,7 @@ function ScopedAddAssetScreen({
   }, []);
 
   async function saveAsset(): Promise<void> {
+    if (!expirationValid || saveState.status === 'saving') return;
     setSaveState({ status: 'saving' });
 
     try {
@@ -243,6 +257,8 @@ function ScopedAddAssetScreen({
         parentAssetId
       );
       const result = await createAssetCommand.execute({
+        expiration,
+        customAssetTypeId,
         title,
         description,
         parentAssetId: resolvedParentAssetId,
@@ -263,6 +279,10 @@ function ScopedAddAssetScreen({
         parentQuery,
         lastParent
       );
+      setExpiration(undefined);
+      setCustomAssetTypeId(undefined);
+      setExpirationValid(true);
+      setExpirationRevision(value => value + 1);
       setTitle('');
       setDescription('');
       setParentAssetId(nextParent?.id);
@@ -437,6 +457,10 @@ function ScopedAddAssetScreen({
   }
 
   function applyDraft(draft: AddAssetDraft): void {
+    setExpiration(draft.expiration);
+    setCustomAssetTypeId(draft.customAssetTypeId);
+    setExpirationValid(true);
+    setExpirationRevision(value => value + 1);
     setTitle(draft.title);
     setDescription(draft.description);
     setParentAssetId(draft.parentAssetId);
@@ -576,6 +600,10 @@ function ScopedAddAssetScreen({
                   )}
                 </Pressable>
 
+                {types.isError ? <Pressable accessibilityRole="button" accessibilityLabel="Retry asset types" onPress={() => void types.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.text }}>Asset types could not be loaded. Retry.</Text></Pressable> : null}
+                <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={saveState.status === 'saving'}
+                  draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
+                  onChange={(draft) => { setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} />
                 {showDetails ? (
                   <View>
                     <AppTextInput
@@ -606,7 +634,8 @@ function ScopedAddAssetScreen({
 
                 <Pressable
                   accessibilityRole="button"
-                  disabled={saveState.status === 'saving'}
+                  accessibilityLabel="Save item"
+                  disabled={!expirationValid || saveState.status === 'saving'}
                   onPress={saveAsset}
                   style={[styles.saveButton, saveState.status === 'saving' ? styles.disabledButton : null]}
                 >

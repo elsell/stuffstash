@@ -106,3 +106,8 @@ Native asset forms load active tenant and inventory custom types through a dedic
 ### Native Edit Integration
 
 The native edit route loads type choices under the current inventory query cache and refreshes them after customization changes. Loading failures show retry without treating tracking as disabled. Untyped assets offer initial type selection; typed assets retain their type. Enabled types show the shared date field; disabled types retain a visible recorded date and allow clearing. Changes merge into the existing text/tag draft. Changing type clears the expiration draft; reselecting the same type preserves it. The picker initial date is captured at the UI boundary, and the field is keyed by asset/type so navigation cannot reuse another item's draft.
+
+
+### Native Creation Integration
+
+The native add form uses the shared type/expiration editor and scoped type query. Valid chosen dates and initial type IDs join the existing per-principal/inventory draft and create command. Failed saves retain them; successful saves and Clear draft reset them. Invalid dates block submission without clearing other inputs. Date/type controls remain visible outside the optional description/tag section. Partial invalid date text stays in the mounted field; reopening restores the last structured draft and fresh validation state.
