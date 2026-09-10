@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Search from '@lucide/svelte/icons/search';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -13,6 +14,7 @@
   import WorkspaceAddMenu from './WorkspaceAddMenu.svelte';
 
   let {
+    headerActions,
     tenants,
     inventories,
     selectedTenantId,
@@ -34,6 +36,7 @@
     onSignOut,
     onMobileSurfaceOpenChange
   }: {
+    headerActions?: Snippet;
     tenants: Tenant[];
     inventories: Inventory[];
     selectedTenantId: string;
@@ -159,14 +162,6 @@
       onOpenChange={onMobileSurfaceOpenChange}
     />
   </div>
-  <AccountMenu
-    mobile
-    {userLabel}
-    settingsHref={accountSettingsHref}
-    {onOpenSettings}
-    {onSignOut}
-    onOpenChange={onMobileSurfaceOpenChange}
-  />
   {#if showSearch}
     <div bind:this={searchRegion} class="global-search-wrap" onfocusout={handleSearchFocusout}>
       <form class="global-search" onsubmit={(event) => { event.preventDefault(); closeSearchSuggestions(); onSearch(); }}>
@@ -205,6 +200,16 @@
       <strong>{inventory.name}</strong>
     </p>
   {/if}
+  <div class="header-actions">
+  {@render headerActions?.()}
+  <AccountMenu
+    mobile
+    {userLabel}
+    settingsHref={accountSettingsHref}
+    {onOpenSettings}
+    {onSignOut}
+    onOpenChange={onMobileSurfaceOpenChange}
+  />
   <WorkspaceAddMenu
     tenantId={selectedTenantId || null}
     inventoryId={selectedInventoryId || null}
@@ -213,4 +218,9 @@
     {disablePortal}
     {onOpenAdd}
   />
+  </div>
 </header>
+
+<style>
+  .header-actions { display: flex; align-items: center; gap: var(--space-2); grid-column: 2; grid-row: 1; }
+</style>

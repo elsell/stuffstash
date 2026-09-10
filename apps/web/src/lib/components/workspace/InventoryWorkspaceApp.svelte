@@ -1,4 +1,6 @@
 <script lang="ts">
+  import NotificationBell from './NotificationBell.svelte';
+  import { settingsResourceHref } from '$lib/application/settingsManagementNavigation';
   import { notificationWorkspaceContext, type NotificationWorkspace } from '$lib/ports/notificationWorkspace';
   import { conversationWorkspaceContext, type ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
@@ -1856,7 +1858,17 @@
     />
   </main>
 {:else}
+  {#snippet notificationHeader()}
+    {#if notifications && selectedInventory && selectedTenant}
+      {#key JSON.stringify([notifications.apiIdentity, data.context.principal.id, selectedTenant.id, selectedInventory.id])}
+        <NotificationBell tenantId={selectedTenant.id} inventoryId={selectedInventory.id} repository={notifications.repository} {observer}
+          onOpenAsset={(assetId) => navigateTo({ mode: 'asset', tenantId: selectedTenant!.id, inventoryId: selectedInventory!.id, assetId })}
+          onOpenSettings={() => navigateSettingsHref(settingsResourceHref({ level: 'inventory', tenantId: selectedTenant!.id, inventoryId: selectedInventory!.id, collection: 'notifications' }))} />
+      {/key}
+    {/if}
+  {/snippet}
   <InventoryWorkspaceChrome
+    headerActions={notificationHeader}
     tenants={data.context.tenants}
     inventories={data.context.inventories}
     selectedTenantId={data.context.selectedTenantId}

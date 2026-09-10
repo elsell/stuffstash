@@ -129,3 +129,7 @@ Unread counts and mark-all-read traverse the same currently visible personal inb
 ### Web batch traversal
 
 The web notification port exposes count and mark-all page operations. Application helpers accumulate count contributions or perform read-page mutations until cursor exhaustion, checking cancellation and rejecting repeated cursors or inconsistent completion flags. Traversal is bounded to 100 pages; reaching that limit is an explicit incomplete-operation error. Never present an incomplete count as zero or partial mark-all as success. Callers refresh the inbox/count after successful mark-all, and may safely retry after failure. Observation records only operation outcomes.
+
+### Web bell and inventory registration
+
+The inventory header mounts a notification bell keyed by API identity, principal, tenant and inventory. It initializes personal reminder registration with the device timezone and then loads a complete unread count. Refresh on opening the panel, window focus, successful read mutations and every 30 seconds while visible; stop timers and abort requests on unmount. Unknown/error counts have an accessible unavailable label instead of a zero badge. The existing task sheet supplies modal focus, Escape dismissal and scrolling; closing restores focus to the bell, while item/settings navigation uses the existing route handler. Inbox errors remain visible and retryable. Web never requests push permission.
