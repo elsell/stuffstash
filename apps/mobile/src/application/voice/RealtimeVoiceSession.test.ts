@@ -8,7 +8,8 @@ import {
   VoiceActionPlanCommand,
   VoiceAudioPlayer,
   VoiceAudioRecorder,
-  VoiceRealtimeEvent
+  VoiceRealtimeEvent,
+  VoiceRealtimeState
 } from './RealtimeVoiceSession';
 import {
   CreateInventoryAssetInput,
@@ -2467,7 +2468,75 @@ it('uploads a whole photo batch and retains cumulative totals after retrying onl
   await transport.reviewReady;
   await controller.approveActionPlan('plan-1', { 'cmd-water-bottle': names.map(fileName => ({ fileName, contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5 })) });
   expect((await stop).at(-1)?.photoAttachmentStatus?.message).toBe('2 of 3 photos attached.');
+  await controller.cancel();
   expect(await controller.retryPhotoAttachments('plan-1')).toMatchObject({ status: 'attached', message: '3 photos attached.' });
   expect(repository.addedPhotos.map(photo => photo.fileName).sort()).toEqual(names.sort());
   expect(transport.approvedPlanIds).toEqual(['plan-1']);
+});
+
+it.each(['dispose'] as const)('publishes saved execution before photos, and %s stops remaining photos without restoring retries', async interruption => {
+  let release!: () => void;
+  let began!: () => void;
+  const waiting = new Promise<void>(resolve => { began = resolve; });
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  class SlowPhotos extends FakeInventoryRepository {
+    attempts = 0;
+    override async addInventoryAssetPhoto(input: Parameters<FakeInventoryRepository['addInventoryAssetPhoto']>[0]) {
+      this.attempts++;
+      began(); await gate;
+      throw new Error('Controlled upload interruption');
+    }
+  }
+  const repository = new SlowPhotos();
+  const names = ['one.jpg', 'two.jpg', 'three.jpg'];
+  class LifetimeTransport extends ReviewDecisionTransport { finishRun() { this.finish(); } }
+  const transport = new LifetimeTransport({ commandResults: [{ commandId: 'cmd-water-bottle', assetId: 'asset-water-bottle', operation: 'create', assetKind: 'item' }], attachmentUploadIntents: names.map((name, photoIndex) => ({ ...testUploadIntent('cmd-water-bottle', 'asset-water-bottle', name), photoIndex })) });
+  const controller = new RealtimeVoiceSessionController(repository, new FakeRecorder(), transport, new FakePlayer());
+  const states: VoiceRealtimeState[] = [];
+  await controller.start();
+  const stop = controller.stop(state => states.push(state));
+  const stopped = stop.catch(() => undefined);
+  await transport.reviewReady;
+  const approval = controller.approveActionPlan('plan-1', { 'cmd-water-bottle': names.map(fileName => ({ fileName, contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5 })) });
+  const approved = approval.catch(() => undefined);
+  await waiting;
+  const savedBeforePhotos = states.at(-1)?.actionPlan?.status;
+  await controller[interruption]();
+  const countBeforeRelease = states.length;
+  release(); await approved;
+  // This controlled transport does not react to AbortSignal; finish its held run.
+  transport.finishRun();
+  await stopped;
+  expect(savedBeforePhotos).toBe('executed');
+  expect(repository.attempts).toBe(1);
+  expect(states).toHaveLength(countBeforeRelease);
+  expect(await controller.retryPhotoAttachments('plan-1')).toMatchObject({ message: 'There are no photos ready to retry.' });
+});
+
+it('coalesces repeated review decisions without losing staged photo metadata', async () => {
+  const transport = new ReviewDecisionTransport({ commandResults: [{ commandId: 'cmd-water-bottle', assetId: 'asset-water-bottle', operation: 'create', assetKind: 'item' }], attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'one.jpg')] });
+  const repository = new FakeInventoryRepository();
+  const controller = new RealtimeVoiceSessionController(repository, new FakeRecorder(), transport, new FakePlayer());
+  await controller.start(); const stop = controller.stop(); await transport.reviewReady;
+  await Promise.all([controller.approveActionPlan('plan-1', { 'cmd-water-bottle': [{ fileName: 'one.jpg', contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5 }] }), controller.approveActionPlan('plan-1'), controller.cancelActionPlan('plan-1')]);
+  await stop;
+  expect(transport.approvedPlanIds).toEqual(['plan-1']);
+  expect(transport.cancelledPlanIds).toEqual([]);
+  expect(repository.addedPhotos).toHaveLength(1);
+});
+
+it('sends an already captured recording once as a fresh turn if the idle follow-up expired', async () => {
+  class ExpiringTransport extends FakeTransport {
+    available = true;
+    override canSendFollowUpAudio() { return this.available; }
+    override async sendFollowUpAudio() { throw new Error('Expired connection'); }
+  }
+  const transport = new ExpiringTransport([{ type: 'session.completed', seq: 1, sessionId: 'session-1' }]);
+  const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), transport, new FakePlayer());
+  await controller.startFollowUp();
+  transport.available = false;
+  const states = await controller.stopFollowUp();
+  expect(transport.lastInput).toMatchObject({ audioChunksBase64: ['ZmFrZS1hdWRpbw=='], inventoryId: 'inventory-home' });
+  expect(states[0].startsNewContext).toBe(true);
+  expect(states.at(-1)?.status).toBe('completed');
 });

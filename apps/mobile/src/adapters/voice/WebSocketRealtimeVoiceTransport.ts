@@ -135,6 +135,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       let lastServerSeq = 0;
       let completed = false;
       let terminated = false;
+      let executionConfirmed = false;
       let hasPendingActionPlan = false;
       let lastResponseKind = '';
       let responseCompletedForTurn = false;
@@ -255,10 +256,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       }
 
       const closeFollowUpSession = () => {
-        terminated = true;
-        clearReview();
-        clearFollowUp();
-        socket.close();
+        settleReject(new VoiceRealtimeCancelledError());
       };
 
       if (options.signal?.aborted) {
@@ -267,6 +265,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
       }
       options.signal?.addEventListener('abort', abortHandler, { once: true });
       socket.onerror = (event) => {
+        if (executionConfirmed) return;
         settleReject(new VoiceConnectionInterruptedError());
       };
       socket.onclose = (event) => {
@@ -318,6 +317,7 @@ export class WebSocketRealtimeVoiceTransport implements RealtimeVoiceTransport {
           if (message.type === voiceServerMessage.sessionStarted) {
             sessionId = message.sessionId;
           }
+          if (message.type === voiceServerMessage.actionPlanExecuted) executionConfirmed = true;
           await currentOnEvent(message);
           if (terminated) return;
           if (message.type === voiceServerMessage.sessionStarted) {

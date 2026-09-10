@@ -11,3 +11,12 @@ export function appendConversationExchange(history: readonly VoiceRealtimeState[
 export function canSubmitConversation(stage: string): boolean {
   return ['ready', 'completed', 'cancelled', 'failed'].includes(stage);
 }
+
+export function canCancelConversation(stage: string, state: VoiceRealtimeState | null): boolean {
+  if (state?.reviewDecisionPending || state?.actionPlan?.status === 'approved' || state?.actionPlan?.status === 'executed') return false;
+  return ['listening', 'processing', 'speaking'].includes(stage);
+}
+
+export function shouldConfirmNewConversation(state: VoiceRealtimeState | null): boolean {
+  return state?.actionPlan?.status === 'proposed' || state?.actionPlan?.status === 'approved' || state?.photoAttachmentStatus?.status === 'uploading' || state?.photoAttachmentStatus?.canRetry === true;
+}

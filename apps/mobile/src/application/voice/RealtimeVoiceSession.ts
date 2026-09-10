@@ -1,4 +1,4 @@
-import type { VoiceInventoryContextRepository, VoiceInventoryMutationObserver } from './VoiceInventoryContext';
+import type { VoiceInventoryContext, VoiceInventoryContextRepository, VoiceInventoryMutationObserver } from './VoiceInventoryContext';
 import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
 import type { CreateInventoryAssetPhotoInput } from '../home/InventorySummaryRepository';
 import { assetId } from '../../domain/assets/AssetSummary';
@@ -212,6 +212,7 @@ type VoiceActionPlanExecutedEvent = VoiceRealtimeEventMetadata & {
 };
 
 export type VoiceRealtimeState = {
+  readonly inputAccepted?: boolean;
   readonly startsNewContext?: boolean;
   readonly status: 'ready' | 'listening' | 'review' | 'processing' | 'speaking' | 'completed' | 'cancelled' | 'failed';
   readonly tenantName: string;
@@ -243,7 +244,7 @@ export type VoiceConversationPhase =
   | 'recovering';
 
 export type VoicePhotoAttachmentStatus = {
-  readonly status: 'attached' | 'partial_failed' | 'failed';
+  readonly status: 'uploading' | 'attached' | 'partial_failed' | 'failed';
   readonly message: string;
   readonly canRetry?: boolean;
 };
@@ -279,6 +280,8 @@ export type VoiceSafeDiagnosticEvent = {
 
 export class RealtimeVoiceSessionController {
   private playbackSuspended = false;
+  private photoLifetime = 0;
+  private reviewDecisionPlanId: string | null = null;
   private captureGeneration = 0;
   private currentContext: { readonly tenantId: TenantId; readonly inventoryId: InventoryId; readonly tenantName: string; readonly inventoryName: string } | null = null;
   private recordingStarted = false;
@@ -340,6 +343,10 @@ export class RealtimeVoiceSessionController {
     if (this.isSessionGenerationCancelled(generation)) {
       throw new VoiceRealtimeCancelledError();
     }
+    return this.runRecordedTurn(generation, context, recorded, onState);
+  }
+
+  private async runRecordedTurn(generation: number, context: VoiceInventoryContext, recorded: RecordedVoiceAudio, onState?: VoiceRealtimeStateHandler): Promise<readonly VoiceRealtimeState[]> {
     const states: VoiceRealtimeState[] = [{
       startsNewContext: true,
       status: 'processing',
@@ -371,7 +378,8 @@ export class RealtimeVoiceSessionController {
           throw new VoiceRealtimeCancelledError();
         }
         const previous = states[states.length - 1];
-        const next = await this.reduceEvent(previous, event);
+        const next = await this.reduceEvent(previous, event, intermediate => { states.push(intermediate); onState?.(intermediate); });
+        if (this.isSessionGenerationCancelled(generation) || generation !== this.activeSessionGeneration) throw new VoiceRealtimeCancelledError();
         states.push(next);
         onState?.(next);
       }, { signal: abortController.signal });
@@ -415,7 +423,8 @@ export class RealtimeVoiceSessionController {
     this.activeRunAbortController = abortController;
     const receive = async (event: VoiceRealtimeEvent) => {
       if (this.isSessionGenerationCancelled(generation)) throw new VoiceRealtimeCancelledError();
-      const next = await this.reduceEvent(states[states.length - 1], event);
+      const next = await this.reduceEvent(states[states.length - 1], event, intermediate => { states.push(intermediate); onState?.(intermediate); });
+      if (this.isSessionGenerationCancelled(generation) || generation !== this.activeSessionGeneration) throw new VoiceRealtimeCancelledError();
       states.push(next);
       onState?.(next);
     };
@@ -477,6 +486,9 @@ export class RealtimeVoiceSessionController {
     if (this.isSessionGenerationCancelled(generation)) {
       throw new VoiceRealtimeCancelledError();
     }
+    if (!this.transport.canSendFollowUpAudio()) {
+      return this.runRecordedTurn(generation, context, recorded, onState);
+    }
     const states: VoiceRealtimeState[] = [{
       status: 'processing',
       tenantName: context.tenantName,
@@ -494,7 +506,8 @@ export class RealtimeVoiceSessionController {
           throw new VoiceRealtimeCancelledError();
         }
         const previous = states[states.length - 1];
-        const next = await this.reduceEvent(previous, event);
+        const next = await this.reduceEvent(previous, event, intermediate => { states.push(intermediate); onState?.(intermediate); });
+        if (this.isSessionGenerationCancelled(generation) || generation !== this.activeSessionGeneration) throw new VoiceRealtimeCancelledError();
         states.push(next);
         onState?.(next);
       }, { signal: abortController.signal });
@@ -515,6 +528,8 @@ export class RealtimeVoiceSessionController {
   }
 
   async dispose(): Promise<void> {
+    this.photoLifetime++;
+    this.reviewDecisionPlanId = null;
     this.transport.close?.();
     this.cancelledThroughSessionGeneration = Math.max(this.cancelledThroughSessionGeneration, this.activeSessionGeneration);
     this.activeRunAbortController?.abort();
@@ -529,6 +544,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async cancel(): Promise<VoiceRealtimeState> {
+    this.pendingPhotoDraftsByPlanId.clear();
     this.cancelledThroughSessionGeneration = Math.max(
       this.cancelledThroughSessionGeneration,
       this.activeSessionGeneration
@@ -553,6 +569,7 @@ export class RealtimeVoiceSessionController {
 
   async approveActionPlan(planId: string, photoDrafts: VoiceActionPlanPhotoDrafts = {}, edits: readonly VoiceActionPlanCommandEdit[] = []): Promise<void> {
     const safePlanId = usableActionPlanId(planId);
+    if (this.reviewDecisionPlanId === safePlanId) return;
     let boundedDrafts: VoiceActionPlanPhotoDrafts;
     let safeEdits: readonly VoiceActionPlanCommandEdit[];
     try {
@@ -562,6 +579,7 @@ export class RealtimeVoiceSessionController {
     } catch (error) {
       throw new VoiceReviewValidationError(error instanceof Error ? error.message : 'Review fields could not be validated.');
     }
+    this.reviewDecisionPlanId = safePlanId;
     if (Object.keys(boundedDrafts).length > 0) {
       this.pendingPhotoDraftsByPlanId.set(safePlanId, boundedDrafts);
     }
@@ -569,12 +587,17 @@ export class RealtimeVoiceSessionController {
       await this.transport.approveActionPlan(safePlanId, photoApprovalRequests(boundedDrafts), safeEdits);
     } catch (error) {
       this.pendingPhotoDraftsByPlanId.delete(safePlanId);
+      if (this.reviewDecisionPlanId === safePlanId) this.reviewDecisionPlanId = null;
       throw error;
     }
   }
 
   async cancelActionPlan(planId: string): Promise<void> {
-    await this.transport.cancelActionPlan(usableActionPlanId(planId));
+    const safePlanId = usableActionPlanId(planId);
+    if (this.reviewDecisionPlanId === safePlanId) return;
+    this.reviewDecisionPlanId = safePlanId;
+    try { await this.transport.cancelActionPlan(safePlanId); }
+    catch (error) { if (this.reviewDecisionPlanId === safePlanId) this.reviewDecisionPlanId = null; throw error; }
   }
 
   async retryPhotoAttachments(planId: string): Promise<VoicePhotoAttachmentStatus> {
@@ -596,7 +619,7 @@ export class RealtimeVoiceSessionController {
     return generation > 0 && generation <= this.cancelledThroughSessionGeneration;
   }
 
-  private async reduceEvent(state: VoiceRealtimeState, event: VoiceRealtimeEvent): Promise<VoiceRealtimeState> {
+  private async reduceEvent(state: VoiceRealtimeState, event: VoiceRealtimeEvent, onIntermediate?: VoiceRealtimeStateHandler): Promise<VoiceRealtimeState> {
     if (state.status === 'completed' || state.status === 'failed' || state.status === 'cancelled') {
       return state;
     }
@@ -607,7 +630,7 @@ export class RealtimeVoiceSessionController {
       case 'transcript.delta':
         return withProgressStep(state, 'Transcribing', { status: 'processing', partialTranscript: event.text });
       case 'transcript.final':
-        return withProgressStep(state, 'Understanding request', { status: 'processing', partialTranscript: undefined, transcript: event.text, conversationPhase: 'understanding' });
+        return withProgressStep(state, 'Understanding request', { status: 'processing', partialTranscript: undefined, transcript: event.text, inputAccepted: true, conversationPhase: 'understanding' });
       case 'agent.progress':
         return withProgressStep(state, event.message, { status: 'processing', conversationPhase: voiceConversationPhase(event.status) });
       case 'agent.diagnostic':
@@ -637,6 +660,7 @@ export class RealtimeVoiceSessionController {
             errorMessage: 'The proposed change could not be reviewed safely.'
           });
         }
+        if (state.actionPlan?.planId !== actionPlan.planId) this.reviewDecisionPlanId = null;
         return withProgressStep(state, 'Review needed', { status: 'review', actionPlan });
       }
       case 'action.plan.approved':
@@ -649,6 +673,7 @@ export class RealtimeVoiceSessionController {
           reviewDecisionPending: true
         });
       case 'action.plan.cancelled':
+        this.pendingPhotoDraftsByPlanId.delete(event.planId);
         if (!actionPlanEventMatchesState(state, event.planId)) {
           return state;
         }
@@ -668,6 +693,11 @@ export class RealtimeVoiceSessionController {
             assetIds: [...new Set((event.commandResults ?? []).map(result => result.assetId).filter(id => id.trim().length > 0))]
           });
         }
+        const hasPhotos = Object.values(this.pendingPhotoDraftsByPlanId.get(event.planId) ?? {}).some(photos => photos.length > 0);
+        if (hasPhotos) onIntermediate?.(withProgressStep(state, 'Adding photos', {
+          status: 'processing', actionPlan: { ...state.actionPlan, status: 'executed' }, reviewDecisionPending: false,
+          photoAttachmentStatus: { status: 'uploading', message: 'Change saved. Adding photos…' }
+        }));
         const photoAttachmentStatus = await this.attachApprovedPlanPhotos({
           ...event,
           type: 'action.plan.executed',
@@ -680,6 +710,7 @@ export class RealtimeVoiceSessionController {
           photoAttachmentStatus
         });
       case 'action.plan.failed':
+        this.pendingPhotoDraftsByPlanId.delete(event.planId);
         if (!actionPlanEventMatchesState(state, event.planId)) {
           return state;
         }
@@ -724,9 +755,11 @@ export class RealtimeVoiceSessionController {
                 : undefined
             });
       case 'session.cancelled':
+        this.pendingPhotoDraftsByPlanId.clear();
         await this.player.stop();
         return withProgressStep(state, 'Cancelled', { status: 'cancelled', partialTranscript: undefined });
       case 'session.failed':
+        this.pendingPhotoDraftsByPlanId.clear();
         await this.player.stop();
         return withProgressStep(state, voiceFailureProgressLabel(event.code), {
           status: 'failed',
@@ -822,6 +855,8 @@ export class RealtimeVoiceSessionController {
   }
 
   private async uploadPhotoRetry(planId: string, retry: VoiceActionPlanPhotoRetry): Promise<VoicePhotoAttachmentStatus | undefined> {
+    const lifetime = this.photoLifetime;
+    const assertActive = () => { if (this.photoLifetime !== lifetime) throw new VoiceRealtimeCancelledError(); };
     let attempted = retry.attachedCount + retry.nonRetryableFailures.length;
     let failed = retry.nonRetryableFailures.length;
     const remaining: VoiceActionPlanPhotoRetry = {
@@ -836,6 +871,7 @@ export class RealtimeVoiceSessionController {
     for (const [commandId, photos] of Object.entries(retry.photos)) {
       const targetAssetId = retry.commandAssetIds[commandId];
       for (const photo of photos) {
+        assertActive();
         attempted += 1;
         if (!targetAssetId) {
           failed += 1;
@@ -854,12 +890,14 @@ export class RealtimeVoiceSessionController {
             ...photo
           });
         } catch (error) {
+          assertActive();
           failed += 1;
           failureMessages.push(safePhotoUploadFailureReason(error));
           remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
         }
       }
     }
+    assertActive();
     if (failed > 0 && hasRetryablePhotos(remaining)) {
       this.pendingPhotoRetriesByPlanId.set(planId, { ...remaining, attachedCount: attempted - failed });
     } else {

@@ -756,3 +756,14 @@ through a dead connection; it does not retry writes automatically.
 
 For sessions without a workflow revision, each processing turn retains a one-minute
 deadline, independent of the longer human interaction windows.
+
+### Clear missing destinations
+
+After authorized discovery finds no matching destination, an explicit request to
+add an item to a clearly named room or container must produce one reviewable plan
+that creates the missing destination and the item beneath it. Approval of that
+plan supplies consent; do not add a redundant question asking whether to create
+the already requested destination. Ask for clarification when actual candidates
+or containment relationships are ambiguous. Live corpus coverage includes adding
+a water bottle to a missing Master Bedroom and verifies dependent commands and
+that no inventory writes occur before approval.

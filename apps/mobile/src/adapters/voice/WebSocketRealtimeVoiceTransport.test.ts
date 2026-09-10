@@ -1639,7 +1639,7 @@ async function startCompletedClarification(secondSocket?: FakeWebSocket) {
   return { socket, transport };
 }
 
-it('does not let a failed socket clear a newer review after its photo callback finishes', async () => {
+it('does not let an explicitly closed socket clear a newer review after its photo callback finishes', async () => {
   const second = new FakeWebSocket();
   const { socket, transport } = await startCompletedClarification(second);
   let finish!: () => void;
@@ -1656,7 +1656,7 @@ it('does not let a failed socket clear a newer review after its photo callback f
   socket.receive({ type: 'action.plan.executed', seq: 5, sessionId: 'session-1', planId: 'plan-1', status: 'executed', commandResults: [] });
   await waitForEventType(events, 'action.plan.executed');
   const rejected = expect(followUp).rejects.toThrow();
-  socket.onerror?.({});
+  transport.close();
   await rejected;
   const secondEvents: unknown[] = [];
   const run = transport.run({ tenantId: 'tenant-home', inventoryId: 'inventory-home', source: 'mobile_voice', text: 'Add another item', inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 }, outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: [] }, async event => { secondEvents.push(event); });
@@ -1668,4 +1668,24 @@ it('does not let a failed socket clear a newer review after its photo callback f
   expect(second.sent.at(-1)?.type).toBe('action.plan.cancel');
   second.receive({ type: 'action.plan.cancelled', seq: 3, sessionId: 'session-1', planId: 'plan-1', status: 'cancelled' });
   await run;
+});
+
+it('finishes confirmed execution callbacks despite a subsequent socket error', async () => {
+  const { socket, transport } = await startCompletedClarification();
+  let finish!: () => void;
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  const events: unknown[] = [];
+  const followUp = transport.sendFollowUpAudio([], async event => {
+    events.push(event);
+    if (event.type === 'action.plan.executed') await gate;
+  }, { text: 'Yes' });
+  const result = followUp.then(() => 'completed', () => 'failed');
+  socket.receive({ type: 'action.plan.proposed', seq: 4, sessionId: 'session-1', actionPlan: { planId: 'plan-1', confirmationSummary: 'Add bottle', commands: [{ id: 'bottle', kind: 'create_asset', operation: 'create', assetKind: 'item', title: 'Bottle', summary: 'Add bottle' }], risks: [] } });
+  await waitForEventType(events, 'action.plan.proposed');
+  await transport.approveActionPlan('plan-1');
+  socket.receive({ type: 'action.plan.executed', seq: 5, sessionId: 'session-1', planId: 'plan-1', status: 'executed', commandResults: [] });
+  await waitForEventType(events, 'action.plan.executed');
+  socket.onerror?.({});
+  finish();
+  expect(await result).toBe('completed');
 });

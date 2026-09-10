@@ -37,6 +37,10 @@ func checkLiveInteractionProposal(t *testing.T, scenario string, plan ports.Acti
 		t.Fatalf("unapproved plan is not proposed: %s", plan.State)
 	}
 	expectedCount := 1
+	if scenario == "missing-bedroom" {
+		checkMissingBedroomProposal(t, plan)
+		return
+	}
 	if scenario == "dependent-move" {
 		expectedCount = 2
 	}
@@ -85,5 +89,42 @@ func checkLiveInteractionProposal(t *testing.T, scenario string, plan ports.Acti
 		}
 	default:
 		t.Fatalf("unknown proposal scenario %s", scenario)
+	}
+}
+
+func checkMissingBedroomProposal(t *testing.T, plan ports.ActionPlanRecord) {
+	t.Helper()
+	if len(plan.Commands) != 2 {
+		t.Fatalf("expected destination and item, got %+v", plan.Commands)
+	}
+	var bedroomID string
+	var item map[string]any
+	for _, command := range plan.Commands {
+		var args map[string]any
+		if err := json.Unmarshal([]byte(command.ArgumentsJSON), &args); err != nil {
+			t.Fatal(err)
+		}
+		title, _ := args["title"].(string)
+		if command.Kind != actionplan.CommandKindCreateAsset && command.Kind != actionplan.CommandKindCreateLocation {
+			t.Fatalf("unexpected command: %+v", command)
+		}
+		switch args["kind"] {
+		case "location":
+			if !strings.EqualFold(title, "Master Bedroom") {
+				t.Fatalf("wrong destination: %+v", args)
+			}
+			bedroomID = command.ID
+		case "item":
+			if !strings.EqualFold(title, "Water Bottle") {
+				t.Fatalf("wrong item: %+v", args)
+			}
+			item = args
+		default:
+			t.Fatalf("unexpected asset kind: %+v", args)
+		}
+		t.Logf("VOICE_INTERACTION_PROPOSAL kind=%s id=%s arguments=%s", command.Kind, command.ID, command.ArgumentsJSON)
+	}
+	if bedroomID == "" || item == nil || item["parentCommandId"] != bedroomID {
+		t.Fatalf("missing dependent containment: bedroom=%s item=%+v", bedroomID, item)
 	}
 }

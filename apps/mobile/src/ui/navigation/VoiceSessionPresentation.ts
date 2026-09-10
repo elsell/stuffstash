@@ -1,3 +1,4 @@
+import { canCancelConversation } from './VoiceConversationHistory';
 import type {
   VoiceActionPlanCommand,
   VoiceRealtimeState,
@@ -552,7 +553,7 @@ function bottomActionForState(stage: VoiceInteractionStage, realtime: VoiceRealt
     const isWorking = stage === 'processing' || stage === 'speaking';
     return {
       kind: 'session_controls',
-      canCancel: stage === 'listening' || isWorking,
+      canCancel: canCancelConversation(stage, realtime),
       mic: {
         accessibilityLabel: stage === 'listening'
           ? 'Send voice request'

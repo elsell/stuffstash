@@ -1,5 +1,5 @@
 import { retainFailedConversation } from './VoiceConversationFailure';
-import { appendConversationExchange, canSubmitConversation } from './VoiceConversationHistory';
+import { appendConversationExchange, canCancelConversation, canSubmitConversation } from './VoiceConversationHistory';
 import type { VoicePlanPhotoDrafts } from '../screens/VoicePlanPhotoDraftState';
 import type { VoicePlanCommandDrafts } from '../screens/VoicePlanEdits';
 import type { Dispatch, SetStateAction } from 'react';
@@ -169,15 +169,17 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         const text = composerText;
         const generation = ++sessionGeneration.current;
         setHistory(current => appendConversationExchange(current, realtime, commandDraftState.drafts));
-        setComposerText(''); setStage('processing');
+        setComposerText(''); setRealtime(null); setStage('processing');
+        let inputAccepted = false;
         try {
           await realtimeController.sendText(text, next => {
+            inputAccepted ||= next.inputAccepted === true || !!next.actionPlan || !!next.spokenResponse;
             if (sessionGeneration.current !== generation) return;
             setRealtime(next); setStage(next.status);
           });
         } catch (error) {
           if (sessionGeneration.current === generation) {
-            setComposerText(text);
+            if (!inputAccepted) setComposerText(text);
             setRealtime(current => retainFailedConversation(current, buildFailedVoiceRealtimeState(error, voiceFailureContext(current, previewState)))); setStage('failed');
           }
         } finally { if (sessionGeneration.current === generation) requestPending.current = false; }
@@ -189,6 +191,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         if (!canSubmitConversation(stage) || requestPending.current) return;
         requestPending.current = true;
         setHistory(current => appendConversationExchange(current, realtime, commandDraftState.drafts));
+        setRealtime(null);
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
         try {
@@ -304,6 +307,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         }
       },
       cancelRealtime: async () => {
+        if (!canCancelConversation(stage, realtime)) return;
         const generation = sessionGeneration.current + 1;
         sessionGeneration.current = generation;
         requestPending.current = false;
