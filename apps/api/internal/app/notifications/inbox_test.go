@@ -149,4 +149,53 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 		t.Fatal("archived asset visible")
 	}
 
+	if _, err := service.InitializePreferences(ctx, input, "UTC"); err != nil {
+		t.Fatal(err)
+	}
+	item.ID = "new-bottle"
+	item.LifecycleState = asset.LifecycleStateActive
+	if err := store.CreateAsset(ctx, item, audit.Record{ID: "new-bottle-create"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	generated, err := service.GenerateRecipientPage(ctx, input, "", 100)
+	if err != nil || generated.Created != 1 || generated.NextCursor != "" {
+		t.Fatalf("generation %+v %v", generated, err)
+	}
+	generated, err = service.GenerateRecipientPage(ctx, input, "", 100)
+	if err != nil || generated.Created != 0 {
+		t.Fatal("generation duplicated milestone")
+	}
+	outsider := input
+	outsider.Principal.ID = "outsider"
+	if _, err := service.GenerateRecipientPage(ctx, outsider, "", 100); err == nil {
+		t.Fatal("unauthorized recipient generated")
+	}
+	if _, err := service.GenerateRecipientPage(ctx, input, "", 0); err == nil {
+		t.Fatal("unbounded generation accepted")
+	}
+
+	item.ID = "new-bottle-z"
+	if err := store.CreateAsset(ctx, item, audit.Record{ID: "new-bottle-z-create"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	first, err := service.GenerateRecipientPage(ctx, input, "", 1)
+	if err != nil || first.NextCursor != "new-bottle" || first.Created != 0 {
+		t.Fatalf("generation first page %+v %v", first, err)
+	}
+	second, err := service.GenerateRecipientPage(ctx, input, first.NextCursor, 1)
+	if err != nil || second.NextCursor != "" || second.Created != 1 {
+		t.Fatalf("generation continuation %+v %v", second, err)
+	}
+	viewerInput := input
+	viewerInput.Principal.ID = "viewer"
+	if _, err := service.InitializePreferences(ctx, viewerInput, "UTC"); err != nil {
+		t.Fatal(err)
+	}
+	if err := auth.RevokeInventoryViewer(ctx, viewerInput.Principal, "home", "main"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.GenerateRecipientPage(ctx, viewerInput, "", 100); err == nil {
+		t.Fatal("revoked registered recipient generated")
+	}
+
 }

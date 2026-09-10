@@ -5,6 +5,7 @@ import "context"
 type EventName string
 
 const (
+	EventNotificationCreated                       EventName = "notification.created"
 	EventNotificationPreferencesUpdated            EventName = "notification_preferences.updated"
 	EventThumbnailJobsRetried                      EventName = "thumbnail_jobs.retried"
 	EventBlobDeletionRechecked                     EventName = "blob_deletion.rechecked"
