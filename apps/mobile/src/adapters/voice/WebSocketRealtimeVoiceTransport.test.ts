@@ -1589,3 +1589,83 @@ it('sends text as a sequenced authenticated turn without audio frames', async ()
   transport.close();
   expect(transport.canSendFollowUpAudio()).toBe(false);
 });
+
+it.each(['approve', 'cancel'] as const)('allows %s of a proposal after a completed clarification turn', async decision => {
+  const { socket, transport } = await startCompletedClarification();
+  const events: unknown[] = [];
+  const followUp = transport.sendFollowUpAudio([], async event => { events.push(event); }, { text: 'Yes' });
+  socket.receive({ type: 'action.plan.proposed', seq: 4, sessionId: 'session-1', actionPlan: {
+    planId: 'plan-followup', confirmationSummary: 'Add a water bottle to Master Bedroom.',
+    commands: [{ id: 'bottle', kind: 'create_asset', operation: 'create', assetKind: 'item', title: 'Water bottle', summary: 'Add water bottle' }], risks: []
+  } });
+  await waitForEventType(events, 'action.plan.proposed');
+  if (decision === 'approve') {
+    await transport.approveActionPlan('plan-followup', [{ commandId: 'bottle', photoIndex: 0, fileName: 'bottle.jpg', contentType: 'image/jpeg', sizeBytes: 100 }]);
+  } else {
+    await transport.cancelActionPlan('plan-followup');
+  }
+  const decisions = socket.sent.filter(message => message.type === `action.plan.${decision}`);
+  expect(decisions).toHaveLength(1);
+  expect(decisions[0]).toMatchObject({ sessionId: 'session-1', planId: 'plan-followup' });
+  if (decision === 'approve') expect(decisions[0].photoAttachments).toEqual([{ commandId: 'bottle', photoIndex: 0, fileName: 'bottle.jpg', contentType: 'image/jpeg', sizeBytes: 100 }]);
+  await expect(transport.approveActionPlan('plan-followup')).rejects.toThrow();
+  socket.receive({ type: decision === 'approve' ? 'action.plan.executed' : 'action.plan.cancelled', seq: 5, sessionId: 'session-1', planId: 'plan-followup', status: decision === 'approve' ? 'executed' : 'cancelled', commandResults: [] });
+  await followUp;
+  expect(socket.closedByClient).toBe(true);
+  expect(transport.canSendFollowUpAudio()).toBe(false);
+});
+
+it.each(['socket error', 'invalid frame', 'socket close'] as const)('settles a pending follow-up on %s after the initial promise completes', async failure => {
+  const { socket, transport } = await startCompletedClarification();
+  const followUp = transport.sendFollowUpAudio([], undefined, { text: 'Yes' });
+  const rejected = expect(followUp).rejects.toThrow();
+  if (failure === 'socket error') socket.onerror?.({});
+  else if (failure === 'socket close') socket.closeFromServer(1006, 'network dropped');
+  else socket.receive({ type: 'invalid', seq: 4, sessionId: 'session-1' });
+  await rejected;
+  expect(transport.canSendFollowUpAudio()).toBe(false);
+  expect(socket.closedByClient).toBe(true);
+});
+
+async function startCompletedClarification(secondSocket?: FakeWebSocket) {
+  const socket = new FakeWebSocket();
+  const sockets = [socket, secondSocket ?? socket];
+  const transport = new WebSocketRealtimeVoiceTransport({ apiBaseUrl: 'http://127.0.0.1:8080/', tokenProvider: () => 'dev:user-1', webSocketFactory: () => sockets.shift()! });
+  const run = transport.run({ tenantId: 'tenant-home', inventoryId: 'inventory-home', source: 'mobile_voice', text: 'Add a water bottle to the master bedroom', inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 }, outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: [] }, async () => {});
+  socket.open(); socket.receive(sessionStarted());
+  socket.receive({ type: 'assistant.response.completed', seq: 2, sessionId: 'session-1', response: { kind: 'clarification', spokenResponse: 'Create Master Bedroom?', displayResponse: 'Create Master Bedroom?' } });
+  socket.receive({ type: 'session.completed', seq: 3, sessionId: 'session-1', followUpAvailable: true });
+  await run;
+  return { socket, transport };
+}
+
+it('does not let a failed socket clear a newer review after its photo callback finishes', async () => {
+  const second = new FakeWebSocket();
+  const { socket, transport } = await startCompletedClarification(second);
+  let finish!: () => void;
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  const events: unknown[] = [];
+  const followUp = transport.sendFollowUpAudio([], async event => {
+    events.push(event);
+    if (event.type === 'action.plan.executed') await gate;
+  }, { text: 'Yes' });
+  const proposal = { type: 'action.plan.proposed', seq: 4, sessionId: 'session-1', actionPlan: { planId: 'plan-1', confirmationSummary: 'Add bottle', commands: [{ id: 'bottle', kind: 'create_asset', operation: 'create', assetKind: 'item', title: 'Bottle', summary: 'Add bottle' }], risks: [] } };
+  socket.receive(proposal);
+  await waitForEventType(events, 'action.plan.proposed');
+  await transport.approveActionPlan('plan-1');
+  socket.receive({ type: 'action.plan.executed', seq: 5, sessionId: 'session-1', planId: 'plan-1', status: 'executed', commandResults: [] });
+  await waitForEventType(events, 'action.plan.executed');
+  const rejected = expect(followUp).rejects.toThrow();
+  socket.onerror?.({});
+  await rejected;
+  const secondEvents: unknown[] = [];
+  const run = transport.run({ tenantId: 'tenant-home', inventoryId: 'inventory-home', source: 'mobile_voice', text: 'Add another item', inputAudio: { mimeType: 'audio/mp4', sampleRate: 44100, channels: 1 }, outputAudioMimeTypes: ['audio/mpeg'], audioChunksBase64: [] }, async event => { secondEvents.push(event); });
+  second.open(); second.receive(sessionStarted()); second.receive({ ...proposal, seq: 2 });
+  await waitForEventType(secondEvents, 'action.plan.proposed');
+  finish();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  await transport.cancelActionPlan('plan-1');
+  expect(second.sent.at(-1)?.type).toBe('action.plan.cancel');
+  second.receive({ type: 'action.plan.cancelled', seq: 3, sessionId: 'session-1', planId: 'plan-1', status: 'cancelled' });
+  await run;
+});
