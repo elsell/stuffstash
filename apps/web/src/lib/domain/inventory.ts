@@ -162,6 +162,7 @@ export interface AuditRecord {
 }
 
 export interface CustomAssetType {
+  expirationEnabled?: boolean;
   id: string;
   tenantId: string;
   inventoryId: string | null;

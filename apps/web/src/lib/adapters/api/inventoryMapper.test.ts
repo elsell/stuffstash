@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapAsset, mapAssetCheckout, mapAssetTag, mapCapability, mapCheckedOutAsset, mapInventory, mapSearchResult, mapTenant } from './inventoryMapper';
+import { mapCustomAssetType, mapAsset, mapAssetCheckout, mapAssetTag, mapCapability, mapCheckedOutAsset, mapInventory, mapSearchResult, mapTenant } from './inventoryMapper';
 
 describe('inventory API mapper', () => {
   it('maps generated asset DTOs into frontend domain assets', () => {
@@ -165,4 +165,10 @@ describe('inventory API mapper', () => {
     expect(mapCapability(editableInventory)).toBe('editor');
     expect(mapCapability(viewerInventory)).toBe('viewer');
   });
+});
+
+it('preserves expiration capability when mapping custom asset types', () => {
+ const value={id:'medicine',tenantId:'home',inventoryId:'main',scope:'inventory' as const,key:'medicine',displayName:'Medicine',description:'',lifecycleState:'active' as const,expirationEnabled:true};
+ expect(mapCustomAssetType(value).expirationEnabled).toBe(true);
+ expect(mapCustomAssetType({...value,expirationEnabled:false}).expirationEnabled).toBe(false);
 });

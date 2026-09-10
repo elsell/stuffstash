@@ -237,6 +237,7 @@ export function mapAuditRecord(record: ApiAuditRecord): AuditRecord {
 
 export function mapCustomAssetType(assetType: ApiCustomAssetType): CustomAssetType {
   return {
+    expirationEnabled: assetType.expirationEnabled ?? false,
     id: assetType.id,
     tenantId: assetType.tenantId,
     inventoryId: assetType.inventoryId,

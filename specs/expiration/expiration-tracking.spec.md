@@ -40,3 +40,9 @@ Undo/redo that changes type assignment must validate the target type is currentl
 ### Foundation evidence (2026-09-10)
 
 The type capability and asset date API/persistence foundation is implemented. Remote Go tests passed for the full API tree; subsequent focused regressions passed for archived-type redo and response-schema nullability. Memory-backed HTTP tests cover date create/edit/clear, initial type assignment, invalid calendar values, missing/disabled types and cross-tenant rejection. SQLite tests cover date persistence and undo snapshot restoration. The shared calendar tests cover leap years and clock transitions at midnight, including a date that briefly repeats after rollback. Generated API types explicitly represent absent expiration as null. Remote mobile type checking and web checking passed (one existing web CSS warning); required code critic findings were fixed and re-reviewed. PostgreSQL migration CI, the cross-platform feature UI and notification delivery remain pending; this is not release-completion evidence.
+
+## Client Type Settings
+
+Existing asset-type create/edit forms expose a shared labeled checkbox or native switch, “Track expiration dates,” defaulting off for new types. Supporting text explains that individual assets receive their own optional date. Detail views show whether tracking is on. The capability participates in dirty-form detection and is preserved through API and in-memory adapters. Client models accept an absent capability from older cached records as false; explicit save sends the chosen boolean. Disabling the capability preserves recorded dates while suppressing expiration tracking, as defined above.
+
+Closing or discarding the type editor clears its draft initialization state, so reopening the same type restores the saved capability instead of reviving an abandoned toggle.

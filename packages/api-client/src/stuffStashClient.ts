@@ -308,6 +308,7 @@ export type CustomFieldType = 'text' | 'number' | 'boolean' | 'date' | 'url' | '
 export type CustomFieldApplicability = 'all_assets' | 'custom_asset_types';
 
 export interface CustomAssetType {
+  expirationEnabled?: boolean;
   id: string;
   tenantId: string;
   inventoryId: string | null;
@@ -333,12 +334,14 @@ export interface CustomFieldDefinition {
 }
 
 export interface CreateCustomAssetTypeInput {
+  expirationEnabled?: boolean;
   key: string;
   displayName: string;
   description?: string;
 }
 
 export interface UpdateCustomAssetTypeInput {
+  expirationEnabled?: boolean;
   displayName?: string;
   description?: string;
 }
@@ -2210,6 +2213,7 @@ function mapAssetPrimaryPhoto(response: components['schemas']['AssetPrimaryPhoto
 
 function mapCustomAssetType(response: AssetTypeResponse): CustomAssetType {
   return {
+    expirationEnabled: response.expirationEnabled ?? false,
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId ?? null,

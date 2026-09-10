@@ -717,6 +717,7 @@ export class SeededInventoryRepository
 
   async createCustomAssetType(tenantId: string, inventoryId: string, draft: CustomAssetTypeDraft): Promise<CustomAssetType> {
     const assetType: CustomAssetType = {
+      expirationEnabled: draft.expirationEnabled ?? false,
       id: `custom-asset-type-${Date.now()}`,
       tenantId,
       inventoryId: draft.scope === 'inventory' ? inventoryId : null,

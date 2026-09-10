@@ -10,6 +10,7 @@
   import type { SettingsResourceAction } from '$lib/application/workspaceRoute';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
@@ -23,7 +24,7 @@
     { level: 'tenant' | 'inventory'; tenant: Tenant; inventory?: Inventory | null; repository: InventoryCustomizationRepository; observer: WorkspaceObserver; canonicalItems: CustomAssetType[]; lifecycle?: 'active' | 'archived'; resourceId?: string | null; action?: SettingsResourceAction; onNavigate: (href: string) => void; onSchemaChange: (types: CustomAssetType[]) => void; onPermissionDenied: () => Promise<void> } = $props();
 
   let items = $state<CustomAssetType[]>([]); let loading = $state(true); let loadingMore = $state(false); let hasMore = $state(false); let nextCursor = $state<string | null>(null); let error = $state(''); let appendError = $state(''); let saving = $state(false); let query = $state(''); let loadEpoch = 0; let lastRequestKey = '';
-  let displayName = $state(''); let key = $state(''); let keyManuallyEdited = $state(false); let description = $state(''); let formError = $state(''); let formErrorElement = $state<HTMLElement | null>(null); let initializedFor = $state(''); let discardOpen = $state(false);
+  let expirationEnabled = $state(false); let displayName = $state(''); let key = $state(''); let keyManuallyEdited = $state(false); let description = $state(''); let formError = $state(''); let formErrorElement = $state<HTMLElement | null>(null); let initializedFor = $state(''); let discardOpen = $state(false);
   let selected = $derived(items.find((item) => item.id === resourceId) ?? null);
   let canManage = $derived(level === 'tenant' ? hasAccessPermission(tenant.access, 'configure') : hasAccessPermission(inventory?.access, 'configure'));
   let canManageTenant = $derived(hasAccessPermission(tenant.access, 'configure'));
@@ -36,10 +37,10 @@
   let detailOpen = $derived(Boolean(resourceId) && routeAction === null);
   let contextName = $derived(level === 'tenant' ? tenant.name : inventory?.name ?? 'Inventory');
   let collectionHref = $derived(href());
-  let dirty = $derived(displayName !== (ownedSelected?.displayName ?? '') || key !== (ownedSelected?.key ?? '') || description !== (ownedSelected?.description ?? ''));
+  let dirty = $derived(expirationEnabled !== (ownedSelected?.expirationEnabled ?? false) || displayName !== (ownedSelected?.displayName ?? '') || key !== (ownedSelected?.key ?? '') || description !== (ownedSelected?.description ?? ''));
 
   $effect(() => { const requestKey = `${level}:${tenant.id}:${inventory?.id ?? ''}:${lifecycle}`; if (requestKey === lastRequestKey) return; lastRequestKey = requestKey; const epoch = ++loadEpoch; void load(epoch); });
-  $effect(() => { if (routeAction === 'edit' && !ownedSelected) return; const marker = `${routeAction}:${resourceId ?? ''}:${ownedSelected?.displayName ?? ''}`; if (!formOpen || initializedFor === marker) return; initializedFor = marker; displayName = ownedSelected?.displayName ?? ''; key = ownedSelected?.key ?? ''; keyManuallyEdited = routeAction !== 'new'; description = ownedSelected?.description ?? ''; formError = ''; });
+  $effect(() => { if (!formOpen) { initializedFor = ''; return; } if (routeAction === 'edit' && !ownedSelected) return; const marker = `${routeAction}:${resourceId ?? ''}:${ownedSelected?.displayName ?? ''}`; if (!formOpen || initializedFor === marker) return; initializedFor = marker; displayName = ownedSelected?.displayName ?? ''; key = ownedSelected?.key ?? ''; keyManuallyEdited = routeAction !== 'new'; description = ownedSelected?.description ?? ''; expirationEnabled = ownedSelected?.expirationEnabled ?? false; formError = ''; });
   $effect(() => { if (routeAction === 'new' && formOpen && !keyManuallyEdited) key = settingsKeyFromName(displayName); });
 
   function href(options: { lifecycle?: 'active' | 'archived'; resourceId?: string; action?: SettingsResourceAction } = {}): string {
@@ -65,8 +66,8 @@
     observer.record('workspace.settings_mutation_started', { resource: 'asset_type', action: routeAction === 'new' ? 'create' : 'update', scope: level });
     try {
       const saved = routeAction === 'new'
-        ? await repository.createCustomAssetType(tenant.id, inventory?.id ?? '', { scope: level, key: stableKey, displayName: name, description: description.trim() })
-        : ownedSelected ? await repository.updateCustomAssetType(tenant.id, inventory?.id ?? '', ownedSelected.id, level, { displayName: name, description: description.trim() }) : null;
+        ? await repository.createCustomAssetType(tenant.id, inventory?.id ?? '', { scope: level, key: stableKey, displayName: name, description: description.trim(), expirationEnabled })
+        : ownedSelected ? await repository.updateCustomAssetType(tenant.id, inventory?.id ?? '', ownedSelected.id, level, { displayName: name, description: description.trim(), expirationEnabled }) : null;
       if (!saved) throw new Error('Asset type is unavailable.');
       invalidateSharedSettingsLoads(repository, 'custom-field-supporting-types:');
       items = sortSettingsRecords(routeAction === 'new' ? [...items, saved] : items.map((item) => item.id === saved.id ? saved : item));
@@ -122,7 +123,7 @@
 <WorkspaceTaskSheet open={formOpen} title={routeAction === 'new' ? 'Add Asset Type' : ownedSelected ? `Edit ${ownedSelected.displayName}` : 'Asset type unavailable'} description={`Managed in ${contextName}.`} busy={saving} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); requestClose(); }} onOpenChange={(open) => { if (!open && !saving) requestClose(); }}>
   {#if !canManage}<SettingsCollectionState kind="denied" title="Read only" message="This account can view asset types but cannot change them here." />
   {:else if routeAction === 'edit' && !ownedSelected}<SettingsCollectionState kind="error" title="Asset type unavailable" message="This record may be inherited, archived, or no longer available." />
-  {:else}{#if formError}<p class="settings-form-error" role="alert" tabindex="-1" bind:this={formErrorElement}>{formError}</p>{/if}<div class="field-stack"><Label for="asset-type-name">Display name</Label><Input id="asset-type-name" bind:value={displayName} maxlength={120} /></div><div class="field-stack"><Label for="asset-type-key">Stable key</Label><Input id="asset-type-key" value={key} readonly={routeAction !== 'new'} aria-describedby="asset-type-key-help" oninput={(event) => { key = event.currentTarget.value; keyManuallyEdited = true; }} /><small id="asset-type-key-help">The key cannot change after creation.</small></div><div class="field-stack"><Label for="asset-type-description">Description (optional)</Label><Textarea id="asset-type-description" bind:value={description} maxlength={1000} /></div>{/if}
+  {:else}{#if formError}<p class="settings-form-error" role="alert" tabindex="-1" bind:this={formErrorElement}>{formError}</p>{/if}<div class="field-stack"><Label for="asset-type-name">Display name</Label><Input id="asset-type-name" bind:value={displayName} maxlength={120} /></div><div class="field-stack"><Label for="asset-type-key">Stable key</Label><Input id="asset-type-key" value={key} readonly={routeAction !== 'new'} aria-describedby="asset-type-key-help" oninput={(event) => { key = event.currentTarget.value; keyManuallyEdited = true; }} /><small id="asset-type-key-help">The key cannot change after creation.</small></div><div class="field-stack"><Label for="asset-type-expiration"><Checkbox id="asset-type-expiration" bind:checked={expirationEnabled} disabled={saving} aria-describedby="asset-type-expiration-help" /> Track expiration dates</Label><small id="asset-type-expiration-help">Each asset can have its own optional expiration date. Turning this off keeps existing dates.</small></div><div class="field-stack"><Label for="asset-type-description">Description (optional)</Label><Textarea id="asset-type-description" bind:value={description} maxlength={1000} /></div>{/if}
   {#snippet footer()}<Button.Root variant="outline" disabled={saving} onclick={requestClose}>Cancel</Button.Root>{#if routeAction === 'edit' && ownedSelected}<Button.Root variant="destructive" href={href({ resourceId: ownedSelected.id, action: 'archive' })} onclick={(event) => { event.preventDefault(); onNavigate(href({ resourceId: ownedSelected.id, action: 'archive' })); }}>Archive</Button.Root>{/if}<Button.Root disabled={saving || !canManage || !dirty || !displayName.trim() || (routeAction === 'new' && !key.trim())} onclick={() => { void save(); }}>Save</Button.Root>{/snippet}
 </WorkspaceTaskSheet>
 
@@ -133,7 +134,7 @@
 
 <WorkspaceTaskSheet open={detailOpen} title={selected?.displayName ?? 'Asset type'} description={selected?.scope === 'tenant' && level === 'inventory' ? `Inherited from ${tenant.name}.` : `${selected?.lifecycleState === 'archived' ? 'Archived' : 'Managed'} in ${contextName}.`} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); onNavigate(collectionHref); }} onOpenChange={(open) => { if (!open) onNavigate(collectionHref); }}>
   {#if !selected}<SettingsCollectionState kind="error" title="Asset type unavailable" message="This record may no longer exist or may not be visible to this account." />
-  {:else}<dl class="settings-readonly-details"><div><dt>Stable key</dt><dd>{selected.key}</dd></div><div><dt>Description</dt><dd>{selected.description || 'None'}</dd></div><div><dt>Ownership</dt><dd>{selected.scope === 'tenant' ? `Inherited from ${tenant.name}` : `Only in ${contextName}`}</dd></div></dl>{/if}
+  {:else}<dl class="settings-readonly-details"><div><dt>Stable key</dt><dd>{selected.key}</dd></div><div><dt>Description</dt><dd>{selected.description || 'None'}</dd></div><div><dt>Expiration tracking</dt><dd>{selected.expirationEnabled ? 'On' : 'Off'}</dd></div><div><dt>Ownership</dt><dd>{selected.scope === 'tenant' ? `Inherited from ${tenant.name}` : `Only in ${contextName}`}</dd></div></dl>{/if}
   {#snippet footer()}<Button.Root variant="outline" onclick={() => onNavigate(collectionHref)}>Done</Button.Root>{#if selected?.scope === 'tenant' && level === 'inventory' && canManageTenant}<Button.Root href={manageInheritedHref(selected)} onclick={(event) => { event.preventDefault(); onNavigate(manageInheritedHref(selected)); }}>Manage in {tenant.name}</Button.Root>{:else if ownedSelected && ownedSelected.lifecycleState === 'archived' && canManage}<Button.Root href={href({ resourceId: ownedSelected.id, action: 'delete' })} variant="destructive" onclick={(event) => { event.preventDefault(); onNavigate(href({ resourceId: ownedSelected.id, action: 'delete' })); }}>Delete permanently</Button.Root><Button.Root href={href({ resourceId: ownedSelected.id, action: 'restore' })} onclick={(event) => { event.preventDefault(); onNavigate(href({ resourceId: ownedSelected.id, action: 'restore' })); }}>Restore</Button.Root>{/if}{/snippet}
 </WorkspaceTaskSheet>
 
