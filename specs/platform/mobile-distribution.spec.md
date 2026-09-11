@@ -127,6 +127,8 @@ profiles, disable other capabilities, or silently change signing secrets.
   push entitlement, distribution type, expiration and certificate membership
   before making it available for deliberate secret rotation. Never replace a
   stored signing secret with an unvalidated response.
+- Diagnostics may include HTTP status, the resource name, and bounded Apple
+  error codes or parameter names; never raw response bodies or error detail.
 - Private API keys and tokens are temporary, never logged or uploaded. A profile
   contains public signing material but is still handled as signing configuration:
   keep any maintenance artifact short-lived and do not commit it to source.

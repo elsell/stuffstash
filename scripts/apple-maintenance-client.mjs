@@ -12,7 +12,18 @@ export function appleMaintenanceClient({privateKey,keyId,issuerId,fetch:fetcher=
   let response;
   try {response=await fetcher(url.href,{method,redirect:'error',signal:AbortSignal.timeout(30000),headers:{Authorization:`Bearer ${input}.${signature}`,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});}
   catch {throw new Error('Apple maintenance request did not complete; inspect before retrying writes');}
-  if(!response.ok)throw new Error(`Apple maintenance request failed (HTTP ${response.status})`);
+  if(!response.ok) {
+   let diagnostic='';
+   try {
+    const body=await response.json();
+    const error=body?.errors?.[0];
+    const code=typeof error?.code==='string' && /^[A-Z][A-Z0-9_.]{0,80}$/.test(error.code)?error.code:'';
+    const parameter=typeof error?.source?.parameter==='string' && /^[a-zA-Z][a-zA-Z0-9_[\]-]{0,80}$/.test(error.source.parameter)?error.source.parameter:'';
+    if(code)diagnostic=`, ${code}${parameter?`:${parameter}`:''}`;
+   } catch { /* Response content is intentionally omitted. */ }
+   const resource=url.pathname.split('/')[2];
+   throw new Error(`Apple maintenance request failed (HTTP ${response.status}, ${resource}${diagnostic})`);
+  }
   try{return await response.json();}catch{throw new Error('Invalid Apple maintenance response');}
  };
 }
