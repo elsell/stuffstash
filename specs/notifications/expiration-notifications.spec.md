@@ -195,3 +195,9 @@ APNs token normalization is mandatory before ownership comparison: decode hexade
 ### Device client adapters
 
 The shared authenticated client provides registration, installation lookup and revision-aware revocation from generated OpenAPI types, preserving revision zero and inactive responses. Cancellation propagates through the existing transport. Native device adapters expose separate frontend registration metadata and command models, map safe notification failures, and ignore cancelled responses. Device tokens exist only in registration command input, never in returned frontend metadata. Existing notification and device adapters share one cancellation/error translation helper.
+
+### Native push setup lifecycle
+
+Enable push only after an explicit permission request succeeds, a native token is obtained, and the authenticated device registration completes. Denial changes neither inbox preferences nor registration. Before a registration mutation, persist a token-free cleanup record containing server, principal, tenant and inventory plus a stable installation ID, so an ambiguous response remains discoverable by installation lookup. This is cleanup metadata, not an offline mutation queue. Refresh saved preferences before enabling push and preserve all unrelated values.
+
+Sign-out cleanup enumerates only records for the current authenticated server/principal, refreshes each installation's current registration, revokes active registrations, then removes successfully cleaned metadata. Missing/already inactive registrations count as cleaned. A failed cleanup retains its record and reports failure; callers must finish cleanup before discarding credentials. Revisions are refreshed before each revocation; a conflict retries from current metadata at most once. Setup and cleanup serialize to avoid a late registration after sign-out. Cancellation stops dependent operations and preserves cleanup metadata.
