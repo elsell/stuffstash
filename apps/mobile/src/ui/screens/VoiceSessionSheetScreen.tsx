@@ -398,6 +398,7 @@ function VoiceSessionSheet({
                               <Text style={styles.actionPlanText}>{command.id ? commandDrafts[command.id]?.title ?? command.title : command.title}</Text>
                             )}
                             <Text style={styles.actionPlanCommandMeta}>{command.subtitle}</Text>
+                            {command.expirationLabel ? <Text style={styles.actionPlanPlacement}>{command.expirationLabel}</Text> : null}
                             {!command.editable && command.placement ? (
                               <Text style={styles.actionPlanPlacement}>{command.placement}</Text>
                             ) : null}

@@ -1,3 +1,4 @@
+import { isAssetExpiration } from '../../domain/assets/AssetExpiration';
 import type {
   RealtimeVoiceTransport,
   RealtimeVoiceTransportInput,
@@ -733,6 +734,7 @@ function actionPlanField(message: Record<string, unknown>) {
     confirmationSummary: stringField(actionPlan, 'confirmationSummary'),
     commands: arrayField(actionPlan, 'commands').map((item) => {
       const command = objectValue(item, 'actionPlan.commands');
+      if (command.expiration !== undefined && !isAssetExpiration(command.expiration)) throw new Error('Voice action plan expiration is invalid.');
       return {
         kind: stringField(command, 'kind'),
         summary: stringField(command, 'summary'),
@@ -743,7 +745,8 @@ function actionPlanField(message: Record<string, unknown>) {
         ...optionalObjectField('parentAssetId', optionalStringField(command, 'parentAssetId')),
         ...optionalObjectField('parentTitle', optionalStringField(command, 'parentTitle')),
         ...optionalObjectField('parentKind', optionalStringField(command, 'parentKind')),
-        ...optionalObjectField('parentCommandId', optionalStringField(command, 'parentCommandId'))
+        ...optionalObjectField('parentCommandId', optionalStringField(command, 'parentCommandId')),
+        ...(isAssetExpiration(command.expiration) ? { expiration: { date: command.expiration.date, precision: command.expiration.precision } } : {})
       };
     }),
     risks: arrayField(actionPlan, 'risks').map((item) => {

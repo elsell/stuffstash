@@ -130,7 +130,13 @@ type RealtimeVoiceActionPlanProposal struct {
 	Risks               []string
 }
 
+type RealtimeVoiceActionPlanExpiration struct {
+	Date      string
+	Precision string
+}
+
 type RealtimeVoiceActionPlanCommand struct {
+	Expiration      *RealtimeVoiceActionPlanExpiration
 	ID              string
 	Kind            string
 	Summary         string

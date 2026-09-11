@@ -36,6 +36,9 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		args, err := parseActionPlanCreateArguments(command)
 		if err == nil {
 			proposal.Title = args.Title
+			if args.Expiration != nil {
+				proposal.Expiration = &RealtimeVoiceActionPlanExpiration{Date: args.Expiration.Date, Precision: args.Expiration.Precision}
+			}
 			proposal.AssetKind = args.Kind
 			if command.Kind == actionplan.CommandKindCreateLocation {
 				proposal.AssetKind = asset.KindLocation.String()

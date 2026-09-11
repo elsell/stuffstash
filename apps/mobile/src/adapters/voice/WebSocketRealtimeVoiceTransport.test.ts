@@ -209,7 +209,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
           operation: 'create',
           title: 'Water bottle',
           assetKind: 'item',
-          parentTitle: 'Kitchen'
+          parentTitle: 'Kitchen',
+          expiration: { date: '2028-02', precision: 'month' }
         }],
         risks: ['Adds a new item to this inventory.']
       }
@@ -219,6 +220,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     socket.receive({ type: 'session.completed', seq: 8, sessionId: 'session-1' });
     await waitForSentMessageCount(socket, 3);
     await waitForEventType(events, 'action.plan.proposed');
+    expect(events).toContainEqual(expect.objectContaining({ type: 'action.plan.proposed', actionPlan: expect.objectContaining({ commands: expect.arrayContaining([expect.objectContaining({ expiration: { date: '2028-02', precision: 'month' } })]) }) }));
     await transport.approveActionPlan('plan-1', [{
       commandId: 'cmd-water-bottle',
       photoIndex: 0,
@@ -327,7 +329,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
             operation: 'create',
             title: 'Water bottle',
             assetKind: 'item',
-            parentTitle: 'Kitchen'
+            parentTitle: 'Kitchen',
+            expiration: { date: '2028-02', precision: 'month' }
           }],
           risks: ['Adds a new item to this inventory.']
         }
@@ -702,6 +705,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
   });
 
   it.each([
+    ['invalid expiration', [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', expiration: { date: '2027-02-29', precision: 'day' } }]],
     ['empty command list', []],
     ['missing command id', [{ kind: 'create_asset', operation: 'create', summary: 'Create item' }]],
     ['duplicate command ids', [

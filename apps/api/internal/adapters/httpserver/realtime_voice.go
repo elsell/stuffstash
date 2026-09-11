@@ -400,17 +400,23 @@ type realtimeActionPlanProposal struct {
 	Risks               []string                    `json:"risks"`
 }
 
+type realtimeActionPlanExpiration struct {
+	Date      string `json:"date"`
+	Precision string `json:"precision"`
+}
+
 type realtimeActionPlanCommand struct {
-	ID              string `json:"id,omitempty"`
-	Kind            string `json:"kind"`
-	Summary         string `json:"summary"`
-	Operation       string `json:"operation,omitempty"`
-	Title           string `json:"title,omitempty"`
-	AssetKind       string `json:"assetKind,omitempty"`
-	ParentAssetID   string `json:"parentAssetId,omitempty"`
-	ParentTitle     string `json:"parentTitle,omitempty"`
-	ParentKind      string `json:"parentKind,omitempty"`
-	ParentCommandID string `json:"parentCommandId,omitempty"`
+	Expiration      *realtimeActionPlanExpiration `json:"expiration,omitempty"`
+	ID              string                        `json:"id,omitempty"`
+	Kind            string                        `json:"kind"`
+	Summary         string                        `json:"summary"`
+	Operation       string                        `json:"operation,omitempty"`
+	Title           string                        `json:"title,omitempty"`
+	AssetKind       string                        `json:"assetKind,omitempty"`
+	ParentAssetID   string                        `json:"parentAssetId,omitempty"`
+	ParentTitle     string                        `json:"parentTitle,omitempty"`
+	ParentKind      string                        `json:"parentKind,omitempty"`
+	ParentCommandID string                        `json:"parentCommandId,omitempty"`
 }
 
 type realtimeActionPlanCommandResult struct {
@@ -717,7 +723,12 @@ func realtimeVoiceEventCommandResultsFromApp(results []app.RealtimeVoiceActionPl
 func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *realtimeActionPlanProposal {
 	commands := make([]realtimeActionPlanCommand, 0, len(proposal.Commands))
 	for _, command := range proposal.Commands {
+		var expiration *realtimeActionPlanExpiration
+		if command.Expiration != nil {
+			expiration = &realtimeActionPlanExpiration{Date: command.Expiration.Date, Precision: command.Expiration.Precision}
+		}
 		commands = append(commands, realtimeActionPlanCommand{
+			Expiration:      expiration,
 			ID:              command.ID,
 			Kind:            command.Kind,
 			Summary:         command.Summary,
