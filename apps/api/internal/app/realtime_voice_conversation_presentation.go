@@ -24,6 +24,24 @@ func (e *realtimeConversationTools) present(call ports.AgentToolCall) (ports.Con
 	if decoder.Decode(&input) != nil || input.Display == "" || len(input.AssetIDs) > maxRealtimeVoiceResponseArtifacts {
 		return ports.ConversationToolOutcome{}, ports.ErrInvalidProviderInput
 	}
+	var refresh []string
+	seen := map[string]bool{}
+	for _, id := range input.AssetIDs {
+		if e.stale[id] && !seen[id] {
+			refresh = append(refresh, id)
+			seen[id] = true
+		}
+	}
+	if len(refresh) > 0 {
+		content, err := json.Marshal(struct {
+			Error string   `json:"error"`
+			IDs   []string `json:"refreshAssetIds"`
+		}{"These items were observed in an earlier user turn. Read their current facts with get_asset_detail, then revise and present your answer using the new results. If unavailable, explain that without using the old facts or card.", refresh})
+		if err != nil {
+			return ports.ConversationToolOutcome{}, err
+		}
+		return ports.ConversationToolOutcome{Result: ports.AgentToolResult{Content: string(content)}}, nil
+	}
 	answer := &ports.ConversationAnswer{Spoken: input.Spoken, Display: input.Display, AssetIDs: input.AssetIDs}
 	if _, err := realtimeConversationResponse(answer, e.items); err != nil {
 		return ports.ConversationToolOutcome{}, err

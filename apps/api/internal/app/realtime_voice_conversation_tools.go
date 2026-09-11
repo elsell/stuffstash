@@ -16,6 +16,7 @@ type realtimeConversationTools struct {
 	emit        RealtimeVoiceEventSink
 	visible     map[string]struct{}
 	items       map[string]realtimeVoiceAssetToolItem
+	stale       map[string]bool
 	callIDs     []string
 	results     []ports.AgentToolResult
 }
@@ -76,6 +77,7 @@ func (e *realtimeConversationTools) ExecuteConversationTool(ctx context.Context,
 				}
 				e.visible[item.AssetID] = struct{}{}
 				e.items[item.AssetID] = item
+				delete(e.stale, item.AssetID)
 			}
 		}
 	}
