@@ -20,5 +20,10 @@ test('rejects foreign URLs without sending credentials',async()=>{
 });
 test('errors expose status without response secrets or retries',async()=>{
  let calls=0;const api=appleMaintenanceClient({...options,fetch:async()=>{calls++;return new Response('secret-response',{status:403});}});
- await assert.rejects(api('/v1/profiles'),{message:'Apple maintenance request failed (HTTP 403)'});assert.equal(calls,1);
+ await assert.rejects(api('/v1/profiles'),{message:'Apple maintenance request failed (HTTP 403, profiles)'});assert.equal(calls,1);
+});
+
+test('reports bounded Apple error codes and parameters without error details',async()=>{
+ const api=appleMaintenanceClient({...options,fetch:async()=>Response.json({errors:[{code:'PARAMETER_ERROR.INVALID',source:{parameter:'limit'},detail:'secret-token'}]},{status:400})});
+ await assert.rejects(api('/v1/certificates'),{message:'Apple maintenance request failed (HTTP 400, certificates, PARAMETER_ERROR.INVALID:limit)'});
 });
