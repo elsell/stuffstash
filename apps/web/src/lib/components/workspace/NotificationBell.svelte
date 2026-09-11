@@ -64,5 +64,5 @@
 
 <style>
   :global(.notification-bell) { position: relative; }
-  .badge { position: absolute; top: -0.2rem; right: -0.3rem; border-radius: 999px; padding: 0.1rem 0.3rem; background: var(--primary); color: var(--primary-foreground); font-size: 0.65rem; line-height: 1rem; }
+  .badge { position: absolute; top: -0.2rem; right: -0.3rem; border-radius: 999px; padding: 0.1rem 0.3rem; background: var(--primary); color: var(--primary-foreground); font-size: var(--text-caption-size); line-height: 1rem; }
 </style>

@@ -110,6 +110,6 @@
   ul { list-style: none; padding: 0; margin: 0; }
   li { border-bottom: 1px solid var(--border); }
   li :global(.notification-row) { display: flex; justify-content: space-between; width: 100%; height: auto; min-height: 3.5rem; padding: 1rem; text-align: start; white-space: normal; }
-  li span span { display: block; font-size: 0.875rem; color: var(--muted-foreground); }
+  li span span { display: block; font-size: var(--text-metadata-size); color: var(--muted-foreground); }
   [role='alert'] { color: var(--destructive); }
 </style>
