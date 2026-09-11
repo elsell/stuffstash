@@ -273,3 +273,5 @@ Promote approved B1 to the shared native mobile surface: keyboard and voice inpu
 Implement the approved expiration UI/UX audit across native and web, mark-unread semantics, reliable badges and inventory-wide expiration status. Validate through remote tests and CI, code-critic review, PR and GitOps/TestFlight release. Native layout/device evidence is required separately from test counts. APNs provider credentials remain a separately deferred setup task.
 
 The first usability release exposed a browser transport gap: PUT preflights were rejected despite public PUT endpoints. The hotfix adds method parity between the published API and CORS, with real HTTP regression coverage; intercepted UI fixtures alone do not validate cross-origin transport.
+
+Device feedback on the first usability release requires a second native settings pass: reuse grouped settings components, replace expanding inline editors with focused navigation, and make inbox refresh cover blank space. The browser CORS hotfix is deployed as v0.23.1 with successful live PUT preflight and preserved authentication denial. Continue native verification and release for the settings pass.

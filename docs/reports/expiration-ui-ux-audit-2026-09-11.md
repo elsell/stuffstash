@@ -150,3 +150,9 @@ The next implementation should start with form containment and shared selection 
 ## Implementation follow-through
 
 The approved revision adds mark-unread, compact type/date controls, stable Add completion, searchable tags, personal reminder modes, native mobile pull-to-refresh and shared item expiration warnings. Regression coverage includes PostgreSQL audit atomicity, authorization, date precision, dirty drafts, external read-state refresh and calendar-boundary retry. Native simulator/device layout acceptance remains separate from component-test evidence; do not treat a successful TestFlight upload as proof of those visual checks.
+
+## Follow-up from device screenshots: reminder settings
+
+The first revision still did not use the existing grouped native SettingsList. The days disclosure exposed a second toggle, a full-width unstyled input and two vertically stacked actions. Type and timezone disclosures could lengthen the same page indefinitely. `1 days` was grammatically wrong. The inbox ScrollView did not explicitly fill its viewport/content, leaving blank-space pull gestures outside the intended scroll surface; its refresh indicator also represented unrelated operations.
+
+Fix: reuse the existing settings groups and native switches, use native stack screens for type rules, timing and timezone, retain a compact overview, use checked timing choices with a focused custom entry and navigation Done action, and fill the scroll viewport/content for short and empty states. Preserve inheritance, failed drafts and timezone semantics. Review against Apple Settings, Lists and Tables, Pickers, and Toggles guidance; test scope and save behavior remotely and build via CI. Native touch geometry cannot be inferred from renderer tests alone.
