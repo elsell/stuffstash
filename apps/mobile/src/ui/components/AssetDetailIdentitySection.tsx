@@ -1,4 +1,4 @@
-import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
+import { formatAssetExpiration, expirationStatusLabel } from '../presentation/ExpirationPresentation';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Camera, CheckCircle2, MoveRight, Pencil } from 'lucide-react-native';
 import type {
@@ -62,6 +62,7 @@ export function AssetDetailIdentitySection({
       {asset.expiration ? <View style={styles.placement}>
         <Text style={styles.placementLabel}>Expiration</Text>
         <Text style={styles.placementFallback}>{formatAssetExpiration(asset.expiration)}</Text>
+        {expirationStatusLabel(asset.expirationContext) ? <Text style={styles.placementFallback}>{expirationStatusLabel(asset.expirationContext)}</Text> : null}
       </View> : null}
 
       {showPlacement ? <View style={styles.placement}>

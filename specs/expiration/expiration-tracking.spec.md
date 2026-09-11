@@ -33,6 +33,8 @@ The existing authorized asset detail GET adds optional `expirationContext` for a
 
 Web and native item details show Expiring soon or Expired beside the preserved date when tracking is enabled and that state applies; disabled tracking has an explicit explanation. Unknown context retains the neutral date label. Refreshing detail retrieves current status and personal policy; clients do not derive it from another user's cached notification or hard-coded warning window.
 
+Native staged placement/content loading preserves the core detail's date, type and personal context. A later list response may omit personal context; reuse the core context only while its revision, date precision/value, type and lifecycle still match. Changed asset facts must discard the old context rather than attach a stale warning to a new date.
+
 ## Validation And Release Evidence
 
 Tests precede implementation: precision round-trips, month ends/leap years, invalid dates, timezone/DST boundaries, unset dates, capability disable/re-enable, initial type assignment and field preservation, no-op writes, audit/undo, adversarial authenticated API boundaries and cross-platform entry behavior. Tests/builds run remotely or in CI, never on the user's Mac. Completion requires required checks, code critic review, generated API contracts, healthy GitOps deployment and confirmed TestFlight upload. Record actual evidence after completion; do not equate synthetic tests with physical-device verification.

@@ -194,7 +194,10 @@ export interface MediaUploadPolicy {
 
 export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
 
+export type AssetExpirationContext = { readonly state: 'current' | 'upcoming' | 'expired'; readonly trackingEnabled: boolean; readonly advanceDays: number; readonly timezone: string; };
+
 export interface Asset {
+  expirationContext?: AssetExpirationContext;
   expiration?: AssetExpiration;
   id: string;
   tenantId: string;

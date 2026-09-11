@@ -1162,3 +1162,11 @@ it('assigns an initial type and expiration together without dropping retained fi
   expect(drafts[0]).toMatchObject({ customAssetTypeId: 'medicine', customFields: { reference: 'keep me' },
     expiration: { date: '2028-02-29', precision: 'day' } });
 });
+
+it.each([
+ ['upcoming', true, 'Expiring soon'], ['expired', true, 'Expired'], ['expired', false, 'Expiration tracking disabled'], ['current', true, ''], ['missing',true,'']
+] as const)('shows personal expiration state %s with tracking %s', (state, trackingEnabled, expected) => {
+ mountAssetDetail({asset:{...asset(),expiration:{date:'2028-02',precision:'month'},expirationContext:state==='missing'?undefined:{state,trackingEnabled,advanceDays:14,timezone:'America/New_York'}}});
+ if(expected) expect(document.body.textContent).toContain(expected);
+ else { expect(document.body.textContent).not.toContain('Expiring soon');expect(document.body.textContent).not.toContain('Expiration tracking disabled'); }
+});

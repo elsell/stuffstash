@@ -58,6 +58,7 @@ export type AssetPhotoViewModel = {
 };
 
 export type AssetDetailViewModel = {
+  readonly expirationContext?: AssetSummary["expirationContext"];
   readonly expiration?: AssetSummary['expiration'];
   readonly customAssetTypeId?: string;
   readonly tenantId?: string;
@@ -156,6 +157,7 @@ export function toAssetDetailViewModel(
   return {
     ...toAssetCardViewModel(asset),
     expiration: asset.expiration,
+    expirationContext: asset.expirationContext,
     customAssetTypeId: asset.customAssetTypeId,
     tenantId: options.tenantId ?? '',
     inventoryId: options.inventoryId ?? '',
