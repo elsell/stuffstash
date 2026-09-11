@@ -136,17 +136,18 @@ type RealtimeVoiceActionPlanExpiration struct {
 }
 
 type RealtimeVoiceActionPlanCommand struct {
-	Expiration      *RealtimeVoiceActionPlanExpiration
-	ID              string
-	Kind            string
-	Summary         string
-	Operation       string
-	Title           string
-	AssetKind       string
-	ParentAssetID   string
-	ParentTitle     string
-	ParentKind      string
-	ParentCommandID string
+	ExpirationCleared bool
+	Expiration        *RealtimeVoiceActionPlanExpiration
+	ID                string
+	Kind              string
+	Summary           string
+	Operation         string
+	Title             string
+	AssetKind         string
+	ParentAssetID     string
+	ParentTitle       string
+	ParentKind        string
+	ParentCommandID   string
 }
 
 type RealtimeVoiceActionPlanCommandResult struct {

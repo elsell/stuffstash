@@ -10,7 +10,7 @@ import (
 func realtimeConversationProposalTool() ports.ConversationToolDefinition {
 	return ports.ConversationToolDefinition{
 		Name:        realtimeConversationProposeTool,
-		Description: "Prepare an inventory change for user approval; never execute it. Search for existing items first. Use existing assetId/parentAssetId only from tool results. Commands may depend on earlier create commands via parentCommandId. Put all related commands in one ordered proposal; execution pauses for review immediately. Move existing items rather than duplicating them. An explicitly additional physical item may be created.",
+		Description: "Prepare an inventory change for user approval; never execute it. Search for existing items first. Use existing assetId/parentAssetId only from tool results. Commands may depend on earlier create commands via parentCommandId. Put all related commands in one ordered proposal; execution pauses for review immediately. Move existing items rather than duplicating them. An explicitly additional physical item may be created. Expiration corrections use a single update_asset command: expiration object to set, null to remove.",
 		Parameters: json.RawMessage(`{
   "type": "object",
   "properties": {
@@ -29,6 +29,70 @@ func realtimeConversationProposalTool() ports.ConversationToolDefinition {
       "maxItems": 10,
       "items": {
         "anyOf": [
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "update_asset"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "expiration": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "precision": {
+                  "type": "string",
+                  "enum": [
+                    "day",
+                    "month"
+                  ]
+                }
+              },
+              "required": [
+                "date",
+                "precision"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "assetId",
+        "expiration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "summary",
+    "arguments"
+  ],
+  "additionalProperties": false
+},
           {
             "type": "object",
             "properties": {

@@ -15,3 +15,9 @@ it('keeps expiration visible when a review becomes saved history', async () => {
   expect(harness.allText()).toContain('Saved');
  } finally { await harness.unmount(); }
 });
+
+it('keeps explicit expiration removal visible in history', async () => {
+ const harness = new MobileRenderHarness();
+ const plan: VoiceActionPlanProposal = { planId: 'plan', status: 'executed', confirmationSummary: 'Remove date', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', summary: 'Remove date', title: 'Bottle', expirationCleared: true }] };
+ try {await harness.render(<VoicePlanHistorySummary plan={plan} />);expect(harness.allText().join(' ')).toContain('Bottle · Remove expiration date');} finally {await harness.unmount();}
+});

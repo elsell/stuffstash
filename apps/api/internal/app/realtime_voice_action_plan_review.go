@@ -57,6 +57,21 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 			}
 			proposal.ParentCommandID = args.ParentCommandID
 		}
+	} else if command.Kind == actionplan.CommandKindUpdateAsset {
+		args, err := parseActionPlanExpirationArguments(command)
+		if err != nil {
+			return RealtimeVoiceActionPlanCommand{}, err
+		}
+		item, err := a.realtimeVoiceReviewAsset(ctx, session, args.AssetID.String())
+		if err != nil {
+			return RealtimeVoiceActionPlanCommand{}, err
+		}
+		proposal.Title = item.Title.String()
+		proposal.AssetKind = item.Kind.String()
+		proposal.ExpirationCleared = args.Expiration == nil
+		if args.Expiration != nil {
+			proposal.Expiration = &RealtimeVoiceActionPlanExpiration{Date: args.Expiration.Date, Precision: args.Expiration.Precision}
+		}
 	} else if command.Kind == actionplan.CommandKindMoveAsset {
 		args, err := parseActionPlanMoveArguments(command)
 		if err == nil {

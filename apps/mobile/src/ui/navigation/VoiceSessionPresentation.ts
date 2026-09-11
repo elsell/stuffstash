@@ -1,4 +1,4 @@
-import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
+import { formatExpirationChange } from '../presentation/ExpirationPresentation';
 import { canCancelConversation } from './VoiceConversationHistory';
 import type {
   VoiceActionPlanCommand,
@@ -455,7 +455,7 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     title,
     subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
     placement: placementLabel(command, titlesByID),
-    ...(command.expiration ? { expirationLabel: `Expires ${formatAssetExpiration(command.expiration)}` } : {}),
+    expirationLabel: formatExpirationChange(command.expiration, command.expirationCleared),
     photoDraftEligible: isPhotoDraftEligible(command, title),
     editable: tone === 'create' && Boolean(command.id),
     tone

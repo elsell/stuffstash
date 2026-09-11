@@ -406,17 +406,18 @@ type realtimeActionPlanExpiration struct {
 }
 
 type realtimeActionPlanCommand struct {
-	Expiration      *realtimeActionPlanExpiration `json:"expiration,omitempty"`
-	ID              string                        `json:"id,omitempty"`
-	Kind            string                        `json:"kind"`
-	Summary         string                        `json:"summary"`
-	Operation       string                        `json:"operation,omitempty"`
-	Title           string                        `json:"title,omitempty"`
-	AssetKind       string                        `json:"assetKind,omitempty"`
-	ParentAssetID   string                        `json:"parentAssetId,omitempty"`
-	ParentTitle     string                        `json:"parentTitle,omitempty"`
-	ParentKind      string                        `json:"parentKind,omitempty"`
-	ParentCommandID string                        `json:"parentCommandId,omitempty"`
+	ExpirationCleared bool                          `json:"expirationCleared,omitempty"`
+	Expiration        *realtimeActionPlanExpiration `json:"expiration,omitempty"`
+	ID                string                        `json:"id,omitempty"`
+	Kind              string                        `json:"kind"`
+	Summary           string                        `json:"summary"`
+	Operation         string                        `json:"operation,omitempty"`
+	Title             string                        `json:"title,omitempty"`
+	AssetKind         string                        `json:"assetKind,omitempty"`
+	ParentAssetID     string                        `json:"parentAssetId,omitempty"`
+	ParentTitle       string                        `json:"parentTitle,omitempty"`
+	ParentKind        string                        `json:"parentKind,omitempty"`
+	ParentCommandID   string                        `json:"parentCommandId,omitempty"`
 }
 
 type realtimeActionPlanCommandResult struct {
@@ -728,17 +729,18 @@ func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *re
 			expiration = &realtimeActionPlanExpiration{Date: command.Expiration.Date, Precision: command.Expiration.Precision}
 		}
 		commands = append(commands, realtimeActionPlanCommand{
-			Expiration:      expiration,
-			ID:              command.ID,
-			Kind:            command.Kind,
-			Summary:         command.Summary,
-			Operation:       command.Operation,
-			Title:           command.Title,
-			AssetKind:       command.AssetKind,
-			ParentAssetID:   command.ParentAssetID,
-			ParentTitle:     command.ParentTitle,
-			ParentKind:      command.ParentKind,
-			ParentCommandID: command.ParentCommandID,
+			Expiration:        expiration,
+			ExpirationCleared: command.ExpirationCleared,
+			ID:                command.ID,
+			Kind:              command.Kind,
+			Summary:           command.Summary,
+			Operation:         command.Operation,
+			Title:             command.Title,
+			AssetKind:         command.AssetKind,
+			ParentAssetID:     command.ParentAssetID,
+			ParentTitle:       command.ParentTitle,
+			ParentKind:        command.ParentKind,
+			ParentCommandID:   command.ParentCommandID,
 		})
 	}
 	return &realtimeActionPlanProposal{
