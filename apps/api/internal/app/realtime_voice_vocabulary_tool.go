@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -27,10 +28,17 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 	if decoder.Decode(&args) != nil || len(args.Definitions) > agentmodel.MaxVoiceVocabularyRequests {
 		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}
+	validDefinitions := make([]agentmodel.VoiceVocabularyRequest, 0, len(args.Definitions))
+	invalidKeys := 0
 	for _, definition := range args.Definitions {
-		if definition.Validate() != nil {
+		if !definition.Kind.Valid() || strings.TrimSpace(definition.Key) == "" || len(definition.Key) > 80 {
 			return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 		}
+		if definition.Validate() != nil {
+			invalidKeys++
+			continue
+		}
+		validDefinitions = append(validDefinitions, definition)
 	}
 	types, err := a.ListInventoryCustomAssetTypes(ctx, ListCustomAssetTypesInput{Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID, Source: audit.SourceConversation, LifecycleState: "active", Limit: agentmodel.MaxVoiceVocabularyAssetTypes})
 	if err != nil {
@@ -51,7 +59,7 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 	manifest.CustomAssetTypesTruncated = manifest.CustomAssetTypesTruncated || types.HasMore
 	manifest.CustomFieldsTruncated = manifest.CustomFieldsTruncated || fields.HasMore
 	manifest.TagsTruncated = manifest.TagsTruncated || tags.HasMore
-	definitions, unavailable, err := catalog.resolve(args.Definitions)
+	definitions, unavailable, err := catalog.resolve(validDefinitions)
 	if err != nil {
 		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}
@@ -62,7 +70,7 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 		Manifest                   agentmodel.VoiceVocabularyManifest     `json:"manifest"`
 		Definitions                []agentmodel.VoiceVocabularyDefinition `json:"definitions,omitempty"`
 		UnavailableDefinitionCount int                                    `json:"unavailableDefinitionCount,omitempty"`
-	}{Manifest: manifest, Definitions: definitions, UnavailableDefinitionCount: unavailable})
+	}{Manifest: manifest, Definitions: definitions, UnavailableDefinitionCount: unavailable + invalidKeys})
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}
