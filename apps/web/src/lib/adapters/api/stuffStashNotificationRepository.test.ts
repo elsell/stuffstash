@@ -6,7 +6,7 @@ it('maps inbox dates with their precision and retains empty continuation pages',
   const notice = { id: 'notice', assetId: 'bottle', title: 'Pain relief', parentAssetId: 'bin', customAssetTypeId: 'medicine', expirationDate: '2026-10', expirationPrecision: 'month', milestone: 'upcoming', createdAt: '2026-09-10T12:00:00Z' };
   const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async () => Response.json({ data: empty ? [] : [notice], meta: { pagination: { limit: 30, nextCursor: 'next', hasMore: true } } }));
   const page = await repository.listInbox('tenant', 'inventory');
-  expect(page.items[0]).toEqual({ id: 'notice', assetId: 'bottle', title: 'Pain relief', parentAssetId: 'bin', customAssetTypeId: 'medicine', expiration: { date: '2026-10', precision: 'month' }, milestone: 'upcoming', createdAt: notice.createdAt, readAt: undefined });
+  expect(page.items[0]).toEqual({ id: 'notice', assetId: 'bottle', title: 'Pain relief', parentAssetId: 'bin', customAssetTypeId: 'medicine', expiration: { date: '2026-10', precision: 'month' }, milestone: 'upcoming', createdAt: notice.createdAt, readAt: undefined, parentTrail: [], parentTrailIncomplete: false });
   empty = true;
   await expect(repository.listInbox('tenant', 'inventory', { cursor: 'next' })).resolves.toEqual({ items: [], pagination: { limit: 30, nextCursor: 'next', hasMore: true } });
 });

@@ -27,3 +27,9 @@ it('keeps cancellation distinct from a visible notification failure', async () =
   expect(error).not.toBeInstanceOf(NotificationFailure);
   expect(error).toMatchObject({ name: 'AbortError' });
 });
+it('preserves current parent kinds and partial paths from the inbox API',async()=>{
+ const parentTrail=[{assetId:'closet',title:'Hall closet',kind:'location'},{assetId:'bin',title:'Bin 8',kind:'container'}];
+ const api=new StuffStashClient({baseUrl:'https://api.test',tokenProvider:()=> 'token',fetch:async()=>Response.json({data:{id:'notice',assetId:'item',title:'Bottle',parentAssetId:'bin',customAssetTypeId:'medicine',expirationDate:'2028-02',expirationPrecision:'month',milestone:'upcoming',createdAt:'2028-01-01T00:00:00Z',parentTrail,parentTrailIncomplete:true},meta:{}})});
+ const notification=await new ApiNotificationRepository(api).getNotification('tenant','inventory','notice');
+ expect(notification.parentTrail).toEqual(parentTrail);expect(notification.parentTrailIncomplete).toBe(true);
+});

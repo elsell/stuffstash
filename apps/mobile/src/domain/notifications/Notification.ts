@@ -15,6 +15,8 @@ export interface NotificationPreferences {
 }
 export type NotificationPreferencesUpdate = Omit<NotificationPreferences, 'overrides'>;
 export interface ExpirationNotification {
+  parentTrail?: readonly {assetId:string;title:string;kind:'item'|'container'|'location'}[];
+  parentTrailIncomplete?: boolean;
   id: string;
   assetId: string;
   title: string;

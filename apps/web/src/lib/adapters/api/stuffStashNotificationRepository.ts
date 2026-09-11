@@ -44,6 +44,6 @@ function mapPreferences(value: WirePreferences): NotificationPreferences {
     overrides: (value.overrides ?? []).map((override) => ({ customAssetTypeId: override.customAssetTypeId, settings: { ...override.settings } })) };
 }
 function mapNotification(value: WireNotification): ExpirationNotification {
-  return { id: value.id, assetId: value.assetId, title: value.title, parentAssetId: value.parentAssetId, customAssetTypeId: value.customAssetTypeId,
+  return { parentTrail: (value.parentTrail ?? []).map(entry => ({assetId:entry.assetId,title:entry.title,kind:entry.kind})), parentTrailIncomplete: value.parentTrailIncomplete ?? false, id: value.id, assetId: value.assetId, title: value.title, parentAssetId: value.parentAssetId, customAssetTypeId: value.customAssetTypeId,
     expiration: { date: value.expirationDate, precision: value.expirationPrecision }, milestone: value.milestone, createdAt: value.createdAt, readAt: value.readAt };
 }

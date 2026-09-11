@@ -19,6 +19,7 @@ it('shows a calendar month and opens only the currently resolved item after mark
     await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={(id) => events.push(id)} onChanged={() => events.push('changed')} onSettings={() => undefined} />);
     await harness.settle();
     expect(harness.allText().join(' ')).toContain('February 2027');
+    expect(harness.byLabel('Open Tylenol')?.props.accessibilityValue).toEqual({text:'Expires February 2027. Unread'});
     await harness.press(harness.byLabel('Open Tylenol'));
     expect(events).toEqual(['resolve', 'read', 'changed', 'current-item']);
     expect(harness.allText()).not.toContain('Unread');
@@ -58,4 +59,12 @@ it('refreshes unread results after marking all alerts read', async () => {
     expect(changes).toBe(1);
     expect(harness.allText().join(' ')).toContain('No unread notifications.');
   } finally { await harness.unmount(); }
+});
+it('opens the immediate parent separately without marking the alert read',async()=>{
+ const events:string[]=[];const harness=new MobileRenderHarness();
+ const queries={async list(){return {items:[{...alert,parentTrail:[{assetId:'closet',title:'Hall closet',kind:'location' as const},{assetId:'bin',title:'Bin 8',kind:'container' as const}],parentTrailIncomplete:true}],pagination:{limit:20,hasMore:false,nextCursor:null}};},async open(){events.push('read');return 'item';},async markAllRead(){}};
+ try {await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={id=>events.push(id)} onChanged={()=>{}} onSettings={()=>{}}/>);await harness.settle();
+ expect(harness.allText().join(' ')).toContain('Partial location path');
+ await harness.press(harness.byLabel('Open location Bin 8'));expect(events).toEqual(['bin']);
+ }finally{await harness.unmount();}
 });

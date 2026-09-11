@@ -1,3 +1,4 @@
+import { AssetBreadcrumbTrail } from '../components/AssetCard';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -71,11 +72,14 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     <View style={styles.actions}>{button('Refresh notifications', () => void load(filter))}{button('Reminder settings', onSettings)}</View>
     {error ? <Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text> : null}
     {busy ? <ActivityIndicator accessibilityLabel="Updating notifications" color={colors.action} /> : null}
-    {rows.map((row) => <Pressable key={row.id} accessibilityRole="button" accessibilityLabel={`Open ${row.title}`} disabled={busy} onPress={() => void open(row)} style={[styles.card, { borderColor: colors.controlBorder }]}>
+    {rows.map((row) => <View key={row.id} style={[styles.card, { borderColor: colors.controlBorder }]}><Pressable accessibilityRole="button" accessibilityLabel={`Open ${row.title}`} accessibilityValue={{text:`${row.milestone === 'expired' ? 'Expired' : 'Expires'} ${formatAssetExpiration(row.expiration)}. ${row.readAt || locallyRead.has(row.id) ? 'Read' : 'Unread'}`}} disabled={busy} onPress={() => void open(row)}>
       <Text style={[styles.title, { color: colors.text }]}>{row.title}</Text>
       <Text style={{ color: colors.text }}>{row.milestone === 'expired' ? 'Expired' : 'Expires'} {formatAssetExpiration(row.expiration)}</Text>
       <Text style={{ color: colors.textMuted }}>{row.readAt || locallyRead.has(row.id) ? 'Read' : 'Unread'}</Text>
-    </Pressable>)}
+    </Pressable>
+      {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? 'Partial location path' : 'Location unavailable'}</Text> : null}
+      <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(!busy)onOpenAsset(entry.id);}} />
+    </View>)}
     {loaded && !rows.length && !cursor && !error ? <Text style={{ color: colors.textMuted }}>{filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'}</Text> : null}
     {cursor ? button('Load more notifications', () => void load(filter, cursor)) : null}
     {rows.some((row) => !row.readAt && !locallyRead.has(row.id)) ? button('Mark all read', () => void markAll()) : null}

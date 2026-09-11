@@ -335,3 +335,14 @@ so clients can indicate a partial path. Reuse ancestor reads within one inbox
 page. Placement enrichment applies to displayed list/detail results, not delivery,
 unread counts, or marking read. Existing notification read audit covers this
 response metadata.
+
+### Inbox placement controls
+
+Both inboxes render the authorized parent trail beside each notification using
+horizontal breadcrumb controls, initially revealing the immediate parent. Each
+ancestor opens that asset through normal inventory navigation. Keep ancestor
+buttons separate from the button that opens and marks the notification read;
+opening an ancestor does not mark the notification read. Disable ancestor actions
+while inbox mutations or an item-opening operation are pending. Partial trails
+show an accessible incomplete-location indication. Legacy servers without trail
+fields render no invented breadcrumbs. Empty complete trails add no row.

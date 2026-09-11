@@ -85,3 +85,18 @@ it('marks all pages read before refreshing the inbox', async () => {
     expect(batches).toBe(2);
   } finally { await unmount(component); document.body.innerHTML = ''; }
 });
+it('opens a location from the current trail without marking its notification read',async()=>{
+ const requests:string[]=[];const opened:string[]=[];
+ const repository=new StuffStashNotificationRepository('https://api.test',()=> 'token',async(input,init)=>{
+  requests.push(new Request(input,init).method);
+  return Response.json({data:[{id:'notice',assetId:'item',title:'Tylenol',parentAssetId:'bin',customAssetTypeId:'medicine',expirationDate:'2028-02',expirationPrecision:'month',milestone:'upcoming',createdAt:'2028-01-01T00:00:00Z',parentTrail:[{assetId:'closet',title:'Hall closet',kind:'location'},{assetId:'bin',title:'Bin 8',kind:'container'}],parentTrailIncomplete:true}],meta:{pagination:{limit:30,nextCursor:null,hasMore:false}}});
+ });
+ const component=mount(NotificationInbox,{target:document.body,props:{tenantId:'tenant',inventoryId:'inventory',repository,observer:new InMemoryWorkspaceObserver(),onOpenAsset:id=>opened.push(id)}});
+ try{
+  await vi.waitFor(()=>expect(document.querySelector('[aria-label="Open Bin 8"]')).not.toBeNull());
+  expect(document.querySelector('[aria-label="Partial location path"]')).not.toBeNull();
+  const trail=document.querySelector<HTMLElement>('nav[aria-label="Item location"]')!;
+  Object.defineProperty(trail,'scrollWidth',{value:1000,configurable:true});window.dispatchEvent(new Event('resize'));expect(trail.scrollLeft).toBe(1000);
+  (document.querySelector('[aria-label="Open Bin 8"]') as HTMLButtonElement).click();expect(opened).toEqual(['bin']);expect(requests).toEqual(['GET']);
+ }finally{await unmount(component);document.body.innerHTML='';}
+});

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AssetLocationTrail from './AssetLocationTrail.svelte';
   import {formatAssetExpiration} from '$lib/application/expirationPresentation';
   import { onMount } from 'svelte';
   import type { ExpirationNotification } from '$lib/domain/notification';
@@ -94,7 +95,9 @@
         <li><Button.Root variant="ghost" class="notification-row" disabled={!!opening || marking} onclick={() => open(item)}>
           <span><strong>{item.title}</strong><span>{item.milestone === 'expired' ? 'Expired' : 'Expires'} {dateLabel(item)}</span></span>
           {#if opening === item.id}<span>Opening…</span>{:else if !item.readAt && !readIds.has(item.id)}<span>Unread</span>{/if}
-        </Button.Root></li>
+        </Button.Root>
+          <AssetLocationTrail segments={item.parentTrail} incomplete={item.parentTrailIncomplete} disabled={!!opening || marking} onOpen={onOpenAsset} />
+        </li>
       {/each}
     </ul>
     {#if appendError}<p role="alert">{appendError}</p>{/if}

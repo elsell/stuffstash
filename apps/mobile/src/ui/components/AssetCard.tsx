@@ -172,12 +172,14 @@ export function AssetBreadcrumbTrail({
   onSegmentPress,
   palette: paletteOverride,
   prominence = 'compact',
+  disabled = false,
   segments
 }: {
   readonly segments: readonly AssetParentLocationCrumbViewModel[];
   readonly onSegmentPress: (location: AssetParentLocationCrumbViewModel) => void;
   readonly palette?: MobileColorPalette;
   readonly prominence?: 'compact' | 'detail';
+  readonly disabled?: boolean;
 }) {
   const styles = useAssetCardStyles(paletteOverride);
   const scroll = createRef<ScrollView>();
@@ -203,6 +205,7 @@ export function AssetBreadcrumbTrail({
         <View key={segment.id} style={styles.breadcrumbSegment}>
           {index > 0 ? <Text style={styles.breadcrumbSeparator}>/</Text> : null}
           <Pressable
+            disabled={disabled}
             accessibilityLabel={`Open location ${segment.title}`}
             accessibilityRole="button"
             onPress={() => onSegmentPress(segment)}
