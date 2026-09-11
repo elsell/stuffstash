@@ -178,6 +178,10 @@ func TestLoadUsesSafeDefaults(t *testing.T) {
 	if cfg.VoiceProviderHTTPTimeout != defaultVoiceProviderHTTPTimeout {
 		t.Fatalf("expected voice provider HTTP timeout %s, got %s", defaultVoiceProviderHTTPTimeout, cfg.VoiceProviderHTTPTimeout)
 	}
+	if cfg.GoogleGeminiModel != "gemini-2.5-flash" {
+		t.Fatal("default voice model must use the validated Flash model")
+	}
+
 	if cfg.GoogleCloudProject != "" || cfg.GoogleCloudLocation != defaultGoogleCloudLocation || cfg.GoogleGeminiModel != defaultGoogleGeminiModel || cfg.GoogleTTSLanguageCode != defaultGoogleTTSLanguageCode || cfg.GoogleTTSVoiceName != defaultGoogleTTSVoiceName {
 		t.Fatalf("unexpected Google voice defaults: %+v", cfg)
 	}

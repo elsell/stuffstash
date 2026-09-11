@@ -126,7 +126,7 @@ const (
 	defaultRealtimeVoiceToolCallTimeout   = 10 * time.Second
 	defaultVoiceProviderHTTPTimeout       = 60 * time.Second
 	defaultGoogleCloudLocation            = "us-central1"
-	defaultGoogleGeminiModel              = "gemini-2.5-flash-lite"
+	defaultGoogleGeminiModel              = "gemini-2.5-flash"
 	defaultGoogleTTSLanguageCode          = "en-US"
 	defaultGoogleTTSVoiceName             = "en-US-Standard-C"
 	defaultImportJobTimeout               = 15 * time.Minute

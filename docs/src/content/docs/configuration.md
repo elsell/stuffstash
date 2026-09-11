@@ -140,7 +140,7 @@ the web origin. For local Garage this usually means:
 | `STUFF_STASH_VOICE_PROVIDER_HTTP_TIMEOUT` | `60s` | HTTP timeout for configured realtime voice provider calls. |
 | `STUFF_STASH_GOOGLE_CLOUD_PROJECT` | empty | Google Cloud project ID. Required when Google voice providers are enabled. |
 | `STUFF_STASH_GOOGLE_CLOUD_LOCATION` | `us-central1` | Google Cloud location for Gemini. |
-| `STUFF_STASH_GOOGLE_GEMINI_MODEL` | `gemini-2.5-flash-lite` | Gemini model name. |
+| `STUFF_STASH_GOOGLE_GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model for server-configured speech recognition and conversation. Explicit settings override this default. |
 | `STUFF_STASH_GOOGLE_TTS_LANGUAGE_CODE` | `en-US` | Google Text-to-Speech language code. |
 | `STUFF_STASH_GOOGLE_TTS_VOICE_NAME` | `en-US-Standard-C` | Google Text-to-Speech voice name. |
 | `STUFF_STASH_GOOGLE_CREDENTIAL_MODE` | `adc` | Google credential source. Use `adc` or `access_token`. |
