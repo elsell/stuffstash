@@ -107,6 +107,35 @@ distribution, or automatic promotion from TestFlight to the public App Store.
 - The selected macOS runner must build with the exact reviewed Xcode version;
   the workflow must fail closed if the runner image drifts.
 
+## Deliberate Push Profile Maintenance
+
+A manually dispatched maintenance workflow on trusted `main` may inspect and
+repair the existing application's push provisioning. This is separate from
+release builds: it must never create or revoke distribution certificates, delete
+profiles, disable other capabilities, or silently change signing secrets.
+
+- An inspect mode performs read-only Apple API calls using the existing App Store
+  Connect credential. Fail closed on missing certificate/profile permissions.
+- A repair mode is an explicit operator action. Resolve exactly the configured
+  team and bundle identifier, reuse a currently valid distribution certificate
+  already present in the stored profile, enable only `PUSH_NOTIFICATIONS` when
+  absent, and create an App Store profile with that same certificate.
+- All Apple requests use the fixed official API origin, bounded timeouts and
+  bounded pagination; follow-up URLs must retain the same origin. Do not retry
+  ambiguous profile-creation writes automatically.
+- Validate the resulting profile's team, explicit bundle identifier, production
+  push entitlement, distribution type, expiration and certificate membership
+  before making it available for deliberate secret rotation. Never replace a
+  stored signing secret with an unvalidated response.
+- Private API keys and tokens are temporary, never logged or uploaded. A profile
+  contains public signing material but is still handled as signing configuration:
+  keep any maintenance artifact short-lived and do not commit it to source.
+- Re-running a failed TestFlight job is permitted only after the validated profile
+  has replaced `BUILD_PROVISION_PROFILE_BASE64`. Preserve the exact release tag.
+- Tests use a controlled Apple transport and verify wrong-bundle, wrong-team,
+  missing-certificate, malformed response and foreign-pagination rejection, plus
+  the legitimate inspect/repair flow. No local builds are required for maintenance.
+
 ## Production Runtime Configuration
 
 - The general TestFlight build must not embed an API base URL, tenant hint, or

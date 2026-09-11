@@ -1,0 +1,59 @@
+name: iOS signing profile maintenance
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Inspect only, or deliberately create a push-enabled replacement profile
+        required: true
+        default: inspect
+        type: choice
+        options: [inspect, repair]
+permissions:
+  contents: read
+concurrency:
+  group: ios-profile-maintenance
+  cancel-in-progress: false
+jobs:
+  profile:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.17.0'
+      - name: Test maintenance contracts
+        run: |
+          node --test scripts/test-ios-profile-maintenance.mjs scripts/test-apple-maintenance-client.mjs
+          python3 scripts/test-ios-signing.py
+          python3 scripts/test-ios-profile-metadata.py
+      - name: Validate current signing profile
+        env:
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/ios-profile-maintenance"
+          python3 scripts/ios-profile-metadata.py prepare "$RUNNER_TEMP/ios-profile-maintenance"
+      - name: Inspect or repair Apple profile
+        env:
+          MAINTENANCE_MODE: ${{ inputs.mode }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: node scripts/run-ios-profile-maintenance.mjs "$MAINTENANCE_MODE" "$RUNNER_TEMP/ios-profile-maintenance"
+      - name: Validate replacement profile
+        if: inputs.mode == 'repair'
+        run: python3 scripts/ios-profile-metadata.py validate "$RUNNER_TEMP/ios-profile-maintenance"
+      - name: Retain validated replacement for deliberate secret rotation
+        if: inputs.mode == 'repair' && success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: validated-push-profile
+          path: ${{ runner.temp }}/ios-profile-maintenance/replacement.mobileprovision
+          retention-days: 1
+          if-no-files-found: error
+      - name: Report inspection
+        run: cat "$RUNNER_TEMP/ios-profile-maintenance/inspection.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary profile material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ios-profile-maintenance"
