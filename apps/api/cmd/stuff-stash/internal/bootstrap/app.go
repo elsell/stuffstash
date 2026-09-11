@@ -51,6 +51,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		NotificationDevices:              repositories.notificationDevices,
 		NotificationPushTokens:           push.NativeTokens{},
 		NotificationInbox:                repositories.notificationInbox,
+		NotificationDeliveries:           repositories.notificationDeliveries,
 		ConversationContextBytes:         contextBytes,
 		WorkflowActivation:               evaluations.activation,
 		EvaluationRunCommands:            evaluations.commands,

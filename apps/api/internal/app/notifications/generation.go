@@ -23,7 +23,7 @@ func (s Service) GenerateRecipientPage(ctx context.Context, input ScopeInput, af
 	if err := s.access(ctx, input); err != nil {
 		return GenerationPage{}, err
 	}
-	if limit < 1 || limit > maxGenerationPageSize || s.deps.Assets == nil || s.deps.Inbox == nil || s.deps.Types == nil || s.deps.Clock == nil || s.deps.IDs == nil {
+	if limit < 1 || limit > maxGenerationPageSize || s.deps.Assets == nil || s.deps.Deliveries == nil || s.deps.Types == nil || s.deps.Clock == nil || s.deps.IDs == nil {
 		return GenerationPage{}, apperrors.ErrInvalidInput
 	}
 	preferences, found, err := s.deps.Preferences.NotificationPreferences(ctx, input.Scope())
@@ -79,7 +79,14 @@ func (s Service) GenerateRecipientPage(ctx context.Context, input ScopeInput, af
 		if err != nil {
 			return result, err
 		}
-		_, created, err := s.deps.Inbox.InsertNotification(ctx, value, record)
+		destinations, err := s.deliveriesForNotification(ctx, value, preferences.Settings.PushEnabled)
+		if err != nil {
+			return result, err
+		}
+		if err := s.access(ctx, input); err != nil {
+			return result, err
+		}
+		_, created, err := s.deps.Deliveries.InsertNotificationWithDeliveries(ctx, value, destinations, record)
 		if err != nil {
 			return result, err
 		}

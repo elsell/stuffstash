@@ -59,7 +59,7 @@ func TestNotificationItemRevalidatesAssetAndPersonalScope(t *testing.T) {
 	if _, _, err := store.InsertNotification(ctx, entry, audit.Record{ID: "seed-notice", TenantID: "home", InventoryID: "main", PrincipalID: "owner"}); err != nil {
 		t.Fatal(err)
 	}
-	service := New(Dependencies{Authorizer: auth, Inventories: store, Types: store, Assets: store, Inbox: store, Preferences: store, Audit: store, IDs: &inboxIDs{}, Clock: inboxClock{now}})
+	service := New(Dependencies{Deliveries: store, Devices: store, Authorizer: auth, Inventories: store, Types: store, Assets: store, Inbox: store, Preferences: store, Audit: store, IDs: &inboxIDs{}, Clock: inboxClock{now}})
 	input := ScopeInput{Principal: owner, TenantID: "home", InventoryID: "main"}
 	view, err := service.GetNotification(ctx, input, "notice")
 	if err != nil || view.Asset.Title.String() != "Bottle" {

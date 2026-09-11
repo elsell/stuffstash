@@ -39,6 +39,7 @@ func run() error {
 		NotificationDevices:       store,
 		NotificationPushTokens:    push.NativeTokens{},
 		NotificationInbox:         store,
+		NotificationDeliveries:    store,
 		CustomAssetTypes:          store,
 		CustomAssetTypeUnitOfWork: store,
 		CustomFields:              store,
