@@ -1,3 +1,4 @@
+import type { AssetExpiration } from '../../domain/assets/AssetSummary';
 import {
   InventoryId,
   InventorySummary,
@@ -32,7 +33,7 @@ export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
   getAssetDetail?(input: GetInventoryAssetDetailInput, request?: ReadRequest): Promise<AssetSummary>;
-  selectInventory(inventoryId: InventoryId): Promise<void>;
+  selectInventory(inventoryId: InventoryId, request?: ReadRequest): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   createAssetTag?(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary>;
   addAssetPhoto(assetId: AssetId, input: CreateInventoryAssetPhotoInput): Promise<void>;
@@ -100,6 +101,8 @@ export type AssetSearchMatchLabels = {
 };
 
 export type CreateInventoryAssetInput = {
+  readonly expiration?: AssetExpiration;
+  readonly customAssetTypeId?: string;
   readonly kind: AssetKind;
   readonly title: string;
   readonly description: string;
@@ -108,6 +111,8 @@ export type CreateInventoryAssetInput = {
 };
 
 export type UpdateInventoryAssetInput = {
+  readonly expiration?: AssetExpiration | null;
+  readonly customAssetTypeId?: string;
   readonly assetId: AssetId;
   readonly title?: string;
   readonly description?: string;

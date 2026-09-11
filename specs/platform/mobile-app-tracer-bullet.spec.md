@@ -421,7 +421,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - It must never show raw credentials, sealed credential data, provider account details, provider-specific realtime URLs, raw prompts, raw transcripts, raw model responses, raw audio, or generated speech.
   - Mobile may create first-pass recommended profiles for the existing API-supported provider contracts so a tenant can be configured from the phone:
     - Gemini API-key speech-to-text using capability `speech_to_text`, provider kind `gemini`, model `gemini-2.5-flash-lite`, and credential purpose `api_key`.
-    - Gemini API-key language inference using capability `language_inference`, provider kind `gemini`, model `gemini-2.5-flash-lite`, credential purpose `api_key`, and optional prompt-template editing.
+    - Gemini API-key language inference using capability `language_inference`, provider kind `gemini`, model `gemini-2.5-flash`, credential purpose `api_key`, and optional prompt-template editing.
     - Google Cloud Text-to-Speech using capability `text_to_speech`, provider kind `gemini`, runtime options for `languageCode` and `voiceName`, and credential purpose `oauth_bearer` until an API-key-backed speech synthesis adapter is specified.
   - Mobile profile creation must keep advanced provider fields conservative and explicit. It must not ask for provider secrets until after the profile record exists, because credential replacement is a separate API operation that seals raw material server-side.
   - Mobile credential entry must send the raw credential only to the credential replacement command, keep it in component state only for the active edit session, clear it after completion or cancellation, and never persist, log, echo, or include it in diagnostics.

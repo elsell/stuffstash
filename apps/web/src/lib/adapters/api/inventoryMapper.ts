@@ -78,6 +78,8 @@ export function mapCapability(inventory: Inventory | null | undefined): Capabili
 
 export function mapAsset(asset: ApiAsset): Asset {
   return {
+    expiration: asset.expiration,
+    ...(asset.expirationContext ? {expirationContext:asset.expirationContext}:{}),
     id: asset.id,
     tenantId: asset.tenantId,
     inventoryId: asset.inventoryId,
@@ -237,6 +239,7 @@ export function mapAuditRecord(record: ApiAuditRecord): AuditRecord {
 
 export function mapCustomAssetType(assetType: ApiCustomAssetType): CustomAssetType {
   return {
+    expirationEnabled: assetType.expirationEnabled ?? false,
     id: assetType.id,
     tenantId: assetType.tenantId,
     inventoryId: assetType.inventoryId,

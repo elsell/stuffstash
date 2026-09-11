@@ -1429,3 +1429,13 @@ describe('VoiceSessionPresentation', () => {
     });
   });
 });
+
+it('shows the expiration date on the voice review command', () => {
+ const session = buildVoiceSessionPresentation({ diagnosticsEnabled: false, diagnosticsExpanded: false, inventoryName: 'Home', tenantName: 'Home', stage: 'review', realtime: { status: 'review', tenantName: 'Home', inventoryName: 'Home', progressLabel: 'Review', debugEvents: [], actionPlan: { planId: 'plan', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'create_asset', operation: 'create', title: 'Bottle', summary: 'Add bottle', assetKind: 'item', expiration: { date: '2028-02', precision: 'month' } }] } } });
+ expect(session.actionPlan?.commands[0]?.expirationLabel).toBe('Expires February 2028');
+});
+
+it('shows explicit expiration removal in the voice review', () => {
+ const session = buildVoiceSessionPresentation({ diagnosticsEnabled: false, diagnosticsExpanded: false, inventoryName: 'Home', tenantName: 'Home', stage: 'review', realtime: { status: 'review', tenantName: 'Home', inventoryName: 'Home', progressLabel: 'Review', debugEvents: [], actionPlan: { planId: 'plan', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', operation: 'update', title: 'Bottle', summary: 'Add bottle', assetKind: 'item', expirationCleared: true }] } } });
+ expect(session.actionPlan?.commands[0]?.expirationLabel).toBe('Remove expiration date');
+});

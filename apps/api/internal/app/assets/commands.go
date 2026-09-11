@@ -154,6 +154,11 @@ func (s Service) prepareCreateAsset(ctx context.Context, input CreateAssetInput,
 		UpdatedAt:         now,
 	}
 
+	item.Expiration, err = s.validateExpiration(ctx, input.TenantID, input.InventoryID, item.CustomAssetTypeID, input.Expiration)
+	if err != nil {
+		return PreparedCreateAsset{}, err
+	}
+
 	undoableOperation, err := s.newAssetUndoableOperation(input.Principal.ID, input.Source, input.TenantID, input.InventoryID, audit.ActionAssetCreated, nil, item)
 	if err != nil {
 		return PreparedCreateAsset{}, err
@@ -330,6 +335,11 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 	parentChanged := false
 	fieldsChanged := false
 
+	updated, fieldsChanged, err = s.applyAssetTypeAndExpiration(ctx, input, current)
+	if err != nil {
+		return PreparedUpdateAsset{}, err
+	}
+
 	if input.Title != nil {
 		title, ok := asset.NewTitle(*input.Title)
 		if !ok {
@@ -347,7 +357,7 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 		}
 	}
 	if input.CustomFields != nil {
-		customFields, err := s.validatedCustomFields(ctx, input.TenantID, input.InventoryID, current.CustomAssetTypeID, input.CustomFields)
+		customFields, err := s.validatedCustomFields(ctx, input.TenantID, input.InventoryID, updated.CustomAssetTypeID, input.CustomFields)
 		if err != nil {
 			return PreparedUpdateAsset{}, err
 		}
@@ -480,6 +490,14 @@ func (s Service) coalesceDirectAssetEdit(input UpdateAssetInput, prepared Prepar
 		metadata["previous_parent"] = prepared.PreviousAsset.ParentAssetID.String()
 		metadata["new_parent"] = prepared.Asset.ParentAssetID.String()
 	}
+	if prepared.Asset.CustomAssetTypeID != prepared.PreviousAsset.CustomAssetTypeID {
+		metadata["custom_asset_type_id"] = prepared.Asset.CustomAssetTypeID.String()
+	}
+
+	if prepared.Asset.Expiration != prepared.PreviousAsset.Expiration {
+		metadata["expiration_changed"] = "true"
+	}
+
 	if tagsChanged && prepared.UndoableOperation != nil {
 		metadata["previous_tag_count"] = strconv.Itoa(len(prepared.UndoableOperation.BeforeTagIDs))
 		metadata["updated_tag_count"] = strconv.Itoa(len(prepared.UndoableOperation.AfterTagIDs))

@@ -1642,3 +1642,20 @@ describe('StuffStashClient', () => {
     });
   });
 });
+
+it('preserves expiration precision and explicit clearing through asset transport', async () => {
+  const requests: Request[] = [];
+  let expiration: { date: string; precision: 'day' | 'month' } | null = { date: '2028-02', precision: 'month' };
+  const client = new StuffStashClient({ baseUrl: 'http://api.local', tokenProvider: () => 'id-token', fetch: async (input, init) => {
+    requests.push(new Request(input, init));
+    return Response.json({ data: { id: 'bottle', tenantId: 'home', inventoryId: 'main', kind: 'item', title: 'Bottle', description: '', lifecycleState: 'active', expiration }, meta: {} });
+  } });
+  expect((await client.getAsset('home', 'main', 'bottle')).expiration).toEqual(expiration);
+  await client.updateAsset('home', 'main', 'bottle', { expiration: { date: '2028-02-29', precision: 'day' }, customAssetTypeId: 'medicine' });
+  expect(await requests[1].json()).toEqual({ expiration: { date: '2028-02-29', precision: 'day' }, customAssetTypeId: 'medicine' });
+  expiration = null;
+  expect((await client.updateAsset('home', 'main', 'bottle', { expiration: null })).expiration).toBeUndefined();
+  expect(await requests[2].json()).toEqual({ expiration: null });
+  await client.updateAsset('home', 'main', 'bottle', { title: 'Bottle renamed' });
+  expect(await requests[3].json()).toEqual({ title: 'Bottle renamed' });
+});

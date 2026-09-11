@@ -1,6 +1,7 @@
 import type { AssetSummary } from '../../domain/assets/AssetSummary';
 
 export type AssetCardViewModel = {
+  readonly expiration?: AssetSummary['expiration'];
   readonly id: string;
   readonly title: string;
   readonly kindLabel: string;
@@ -57,6 +58,9 @@ export type AssetPhotoViewModel = {
 };
 
 export type AssetDetailViewModel = {
+  readonly expirationContext?: AssetSummary["expirationContext"];
+  readonly expiration?: AssetSummary['expiration'];
+  readonly customAssetTypeId?: string;
   readonly tenantId?: string;
   readonly inventoryId?: string;
   readonly id: string;
@@ -111,6 +115,7 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
   return {
     id: asset.id,
     title: asset.title,
+    ...(asset.expiration ? { expiration: asset.expiration } : {}),
     kindLabel: labelAssetKind(asset.kind),
     customTypeLabel: asset.customType,
     description: asset.description,
@@ -151,6 +156,9 @@ export function toAssetDetailViewModel(
 
   return {
     ...toAssetCardViewModel(asset),
+    expiration: asset.expiration,
+    expirationContext: asset.expirationContext,
+    customAssetTypeId: asset.customAssetTypeId,
     tenantId: options.tenantId ?? '',
     inventoryId: options.inventoryId ?? '',
     kind: asset.kind,

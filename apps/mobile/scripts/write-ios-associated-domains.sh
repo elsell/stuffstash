@@ -93,6 +93,16 @@ else
   esac
 fi
 
+case "${STUFF_STASH_MOBILE_PRODUCTION_BUILD:-false}" in
+  1|true|TRUE|yes|YES) production_build=true ;;
+  0|false|FALSE|no|NO|'') production_build=false ;;
+  *) echo 'STUFF_STASH_MOBILE_PRODUCTION_BUILD must be a boolean.' >&2; exit 1 ;;
+esac
+push_environment=development
+if [ "$production_build" = true ] || [ "${CONFIGURATION:-Debug}" = Release ] || [ "${EAS_BUILD_PROFILE:-}" = production ]; then
+  push_environment=production
+fi
+
 mkdir -p "$(dirname "$output_path")"
 if [ -n "$domain" ]; then
   domains="
@@ -108,6 +118,8 @@ cat > "$output_path" <<EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>$domains
+    <key>aps-environment</key>
+    <string>$push_environment</string>
   </dict>
 </plist>
 EOF

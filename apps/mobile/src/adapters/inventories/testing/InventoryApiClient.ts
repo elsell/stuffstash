@@ -1,5 +1,7 @@
 import type {
   Asset,
+  CreateAssetInput,
+  UpdateAssetInput,
   AssetCheckout,
   AssetPhotoReference,
   AssetSearchResult,
@@ -115,6 +117,8 @@ export class FakeInventoryApiClient {
         readonly title: string;
         readonly parentAssetId?: string;
         readonly tagIds?: readonly string[];
+        readonly expiration?: Asset['expiration'] | null;
+        readonly customAssetTypeId?: string;
       }
     | undefined;
   createdAssetTagInput:
@@ -142,6 +146,8 @@ export class FakeInventoryApiClient {
         readonly description?: string;
         readonly parentAssetId?: string | null;
         readonly tagIds?: readonly string[];
+        readonly expiration?: Asset['expiration'] | null;
+        readonly customAssetTypeId?: string;
       }
     | undefined;
   initiatedDirectUploadInput:
@@ -416,18 +422,22 @@ export class FakeInventoryApiClient {
   async createAsset(
     tenantId: string,
     inventoryId: string,
-    input: { readonly kind: 'item' | 'container' | 'location'; readonly title: string; readonly description?: string; readonly parentAssetId?: string | null; readonly tagIds?: readonly string[] }
+    input: CreateAssetInput
   ): Promise<Asset> {
     this.createdAssetInput = {
       tenantId,
       inventoryId,
       title: input.title,
       parentAssetId: input.parentAssetId ?? undefined,
-      tagIds: input.tagIds
+      tagIds: input.tagIds,
+      ...(input.expiration !== undefined ? { expiration: input.expiration } : {}),
+      ...(input.customAssetTypeId !== undefined ? { customAssetTypeId: input.customAssetTypeId } : {})
     };
 
     return {
       id: 'asset-created',
+      expiration: input.expiration,
+      customAssetTypeId: input.customAssetTypeId,
       tenantId,
       inventoryId,
       kind: input.kind,
@@ -445,7 +455,7 @@ export class FakeInventoryApiClient {
     tenantId: string,
     inventoryId: string,
     assetIdValue: string,
-    input: { readonly title?: string; readonly description?: string; readonly parentAssetId?: string | null; readonly tagIds?: readonly string[] }
+    input: UpdateAssetInput
   ): Promise<Asset> {
     this.updatedAssetInput = {
       tenantId,
@@ -454,19 +464,25 @@ export class FakeInventoryApiClient {
       title: input.title,
       description: input.description,
       parentAssetId: input.parentAssetId,
-      tagIds: input.tagIds
+      tagIds: input.tagIds,
+      ...(input.expiration !== undefined ? { expiration: input.expiration } : {}),
+      ...(input.customAssetTypeId !== undefined ? { customAssetTypeId: input.customAssetTypeId } : {})
     };
     const current = this.assets.find((asset) => asset.id === assetIdValue);
     if (!current) {
       throw new Error('Asset not found.');
     }
-    return {
+    const updated: Asset = {
       ...current,
+      expiration: input.expiration === undefined ? current.expiration : input.expiration ?? undefined,
+      customAssetTypeId: input.customAssetTypeId ?? current.customAssetTypeId,
       title: input.title ?? current.title,
       description: input.description ?? current.description,
       parentAssetId: input.parentAssetId === undefined ? current.parentAssetId : input.parentAssetId,
       updatedAt: '2026-06-25T10:00:00Z'
     };
+    this.assets = this.assets.map((asset) => asset.id === assetIdValue ? updated : asset);
+    return updated;
   }
 
   async createAssetAttachment(

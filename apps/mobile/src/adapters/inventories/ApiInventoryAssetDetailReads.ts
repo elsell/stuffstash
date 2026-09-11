@@ -74,7 +74,15 @@ export class ApiInventoryAssetDetailReads {
       selected.inventory.id,
       request.signal
     );
-    const selectedFromTraversal = activeAssets.find((asset) => asset.id === sourceAsset.id) ?? sourceAsset;
+    const listed = activeAssets.find((asset) => asset.id === sourceAsset.id);
+    const sameExpirationFacts = listed?.updatedAt === core.revision
+      && listed?.expiration?.date === core.asset.expiration?.date
+      && listed?.expiration?.precision === core.asset.expiration?.precision
+      && listed?.customAssetTypeId === core.asset.customAssetTypeId
+      && listed?.lifecycleState === core.asset.lifecycleState;
+    const selectedFromTraversal = listed
+      ? { ...listed, expirationContext: listed.expirationContext ?? (sameExpirationFacts ? core.asset.expirationContext : undefined) }
+      : sourceAsset;
     const workspace = selectAssetDetailWorkspace(selectedFromTraversal, activeAssets);
     const assets = await this.photos.mapAssetsWithMapPhotos(
       selected.inventory.name,

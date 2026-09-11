@@ -246,12 +246,12 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 			Record:         executed,
 			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "create")},
 		}, nil
-	case actionplan.CommandKindMoveAsset:
-		moveInput, err := actionPlanMoveAssetInput(input, command)
+	case actionplan.CommandKindMoveAsset, actionplan.CommandKindUpdateAsset:
+		updateInput, operation, err := actionPlanAssetUpdateInput(input, command)
 		if err != nil {
 			return ActionPlanExecutionResult{}, err
 		}
-		prepared, err := a.assetService.PrepareUpdateAsset(ctx, moveInput)
+		prepared, err := a.assetService.PrepareUpdateAsset(ctx, updateInput)
 		if err != nil {
 			return ActionPlanExecutionResult{}, err
 		}
@@ -273,7 +273,7 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
 		return ActionPlanExecutionResult{
 			Record:         executed,
-			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "move")},
+			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, operation)},
 		}, nil
 	case actionplan.CommandKindArchiveAsset:
 		archiveInput, err := actionPlanLifecycleAssetInput(input, command)
@@ -434,101 +434,6 @@ func actionPlanCommandCheckoutResult(command ports.ActionPlanCommandRecord, chec
 		AssetID:   checkout.AssetID.String(),
 		Operation: operation,
 		AssetKind: asset.KindItem.String(),
-	}
-}
-
-func actionPlanCreateAssetInput(input ActionPlanDecisionInput, command ports.ActionPlanCommandRecord) (CreateAssetInput, error) {
-	args, err := parseActionPlanCreateArguments(command)
-	if err != nil {
-		return CreateAssetInput{}, err
-	}
-	kind := args.Kind
-	if command.Kind == actionplan.CommandKindCreateLocation {
-		kind = "location"
-	}
-	if strings.TrimSpace(kind) == "" {
-		kind = "item"
-	}
-	return CreateAssetInput{
-		Principal:     input.Principal,
-		Source:        audit.SourceConversation,
-		RequestID:     command.ID,
-		TenantID:      input.TenantID,
-		InventoryID:   input.InventoryID,
-		Kind:          kind,
-		Title:         args.Title,
-		Description:   args.Description,
-		ParentAssetID: args.ParentAssetID,
-		CustomFields:  map[string]any{},
-	}, nil
-}
-
-type actionPlanCreateArguments struct {
-	Title           string
-	Kind            string
-	Description     string
-	ParentAssetID   string
-	ParentCommandID string
-}
-
-func parseActionPlanCreateArguments(command ports.ActionPlanCommandRecord) (actionPlanCreateArguments, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(command.ArgumentsJSON, &raw); err != nil {
-		return actionPlanCreateArguments{}, ErrValidation
-	}
-	args := actionPlanCreateArguments{}
-	for key, value := range raw {
-		switch key {
-		case "title", "name":
-			text, err := actionPlanStringArgument(value)
-			if err != nil {
-				return actionPlanCreateArguments{}, err
-			}
-			if strings.TrimSpace(args.Title) == "" {
-				args.Title = text
-			}
-		case "kind":
-			text, err := actionPlanStringArgument(value)
-			if err != nil {
-				return actionPlanCreateArguments{}, err
-			}
-			args.Kind = text
-		case "description":
-			text, err := actionPlanStringArgument(value)
-			if err != nil {
-				return actionPlanCreateArguments{}, err
-			}
-			args.Description = text
-		case "parentAssetId":
-			text, err := actionPlanStringArgument(value)
-			if err != nil {
-				return actionPlanCreateArguments{}, err
-			}
-			args.ParentAssetID = text
-		case "parentCommandId":
-			text, err := actionPlanStringArgument(value)
-			if err != nil {
-				return actionPlanCreateArguments{}, err
-			}
-			args.ParentCommandID = text
-		default:
-			return actionPlanCreateArguments{}, ErrValidation
-		}
-	}
-	if strings.TrimSpace(args.Title) == "" {
-		return actionPlanCreateArguments{}, ErrValidation
-	}
-	if strings.TrimSpace(args.ParentAssetID) != "" && strings.TrimSpace(args.ParentCommandID) != "" {
-		return actionPlanCreateArguments{}, ErrValidation
-	}
-	switch strings.TrimSpace(args.Kind) {
-	case "", "item", "container", "location":
-		if command.Kind == actionplan.CommandKindCreateLocation && strings.TrimSpace(args.Kind) != "" && strings.TrimSpace(args.Kind) != "location" {
-			return actionPlanCreateArguments{}, ErrValidation
-		}
-		return args, nil
-	default:
-		return actionPlanCreateArguments{}, ErrValidation
 	}
 }
 

@@ -1,3 +1,4 @@
+import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { createRef } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
@@ -91,7 +92,7 @@ export function AssetCard({
       <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
         <Pressable
           hitSlop={isRow ? { top: 12, bottom: 12 } : undefined}
-          accessibilityLabel={`Open asset ${asset.title}`}
+          accessibilityLabel={`Open asset ${asset.title}${asset.expiration ? `. Expiration: ${formatAssetExpiration(asset.expiration)}` : ''}`}
           accessibilityRole="button"
           onPress={onPress}
           style={({ pressed }) => [styles.openTextRegion, isRow ? styles.rowOpenTextRegion : undefined, pressed ? styles.openTextRegionPressed : undefined]}
@@ -105,6 +106,7 @@ export function AssetCard({
           >
             {asset.title}
           </Text>
+          {asset.expiration ? <Text style={styles.updatedAt}>Expiration: {formatAssetExpiration(asset.expiration)}</Text> : null}
           {showUpdatedAt && isRow ? <Text style={styles.updatedAt}>{asset.updatedAtLabel}</Text> : null}
           {asset.checkedOutLabel && isRow ? <Text style={styles.rowCheckoutStatus}>{asset.checkedOutLabel}</Text> : null}
         </Pressable>
@@ -170,12 +172,14 @@ export function AssetBreadcrumbTrail({
   onSegmentPress,
   palette: paletteOverride,
   prominence = 'compact',
+  disabled = false,
   segments
 }: {
   readonly segments: readonly AssetParentLocationCrumbViewModel[];
   readonly onSegmentPress: (location: AssetParentLocationCrumbViewModel) => void;
   readonly palette?: MobileColorPalette;
   readonly prominence?: 'compact' | 'detail';
+  readonly disabled?: boolean;
 }) {
   const styles = useAssetCardStyles(paletteOverride);
   const scroll = createRef<ScrollView>();
@@ -201,6 +205,7 @@ export function AssetBreadcrumbTrail({
         <View key={segment.id} style={styles.breadcrumbSegment}>
           {index > 0 ? <Text style={styles.breadcrumbSeparator}>/</Text> : null}
           <Pressable
+            disabled={disabled}
             accessibilityLabel={`Open location ${segment.title}`}
             accessibilityRole="button"
             onPress={() => onSegmentPress(segment)}

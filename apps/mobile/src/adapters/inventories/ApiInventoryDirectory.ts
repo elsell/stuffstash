@@ -31,10 +31,11 @@ export class ApiInventoryDirectory {
 
   async selectedForCommand(): Promise<SelectedInventory> { return this.selectedIdentity ?? this.selected(); }
 
-  async select(id: string): Promise<void> {
-    let directory = await this.load();
-    if (!directory.availableInventories.some(item => item.inventory.id === id)) directory = await this.load(undefined, true);
+  async select(id: string, signal?: AbortSignal): Promise<void> {
+    let directory = await this.load(signal);
+    if (!directory.availableInventories.some(item => item.inventory.id === id)) directory = await this.load(signal, true);
     if (!directory.availableInventories.some(item => item.inventory.id === id)) throw new Error('Selected inventory is not available in the configured tenant.');
+    assertReadActive(signal);
     this.selectedId = id;
     this.selectedIdentity = directory.availableInventories.find(item => item.inventory.id === id);
   }

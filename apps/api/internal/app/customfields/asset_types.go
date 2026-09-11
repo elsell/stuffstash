@@ -16,14 +16,15 @@ import (
 )
 
 type CreateCustomAssetTypeInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	Key         string
-	DisplayName string
-	Description string
+	ExpirationEnabled bool
+	Principal         identity.Principal
+	Source            audit.Source
+	RequestID         string
+	TenantID          tenant.ID
+	InventoryID       inventory.InventoryID
+	Key               string
+	DisplayName       string
+	Description       string
 }
 
 type ListCustomAssetTypesInput struct {
@@ -47,6 +48,7 @@ type GetCustomAssetTypeInput struct {
 }
 
 type UpdateCustomAssetTypeInput struct {
+	ExpirationEnabled *bool
 	Principal         identity.Principal
 	Source            audit.Source
 	RequestID         string
@@ -262,6 +264,8 @@ func (s Service) createCustomAssetType(ctx context.Context, input CreateCustomAs
 		return customfield.AssetType{}, apperrors.ErrInvalidInput
 	}
 
+	assetType.ExpirationEnabled = input.ExpirationEnabled
+
 	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
 		Principal:   input.Principal,
 		TenantID:    input.TenantID,
@@ -305,7 +309,7 @@ func (s Service) createCustomAssetType(ctx context.Context, input CreateCustomAs
 
 func (s Service) updateCustomAssetType(ctx context.Context, input UpdateCustomAssetTypeInput, scope customfield.Scope) (customfield.AssetType, error) {
 	assetTypeID, ok := customfield.NewAssetTypeID(input.CustomAssetTypeID.String())
-	if !ok || (input.DisplayName == nil && input.Description == nil) {
+	if !ok || (input.DisplayName == nil && input.Description == nil && input.ExpirationEnabled == nil) {
 		return customfield.AssetType{}, apperrors.ErrInvalidInput
 	}
 	current, found, err := s.customAssetTypes.CustomAssetTypeByID(ctx, input.TenantID, input.InventoryID, assetTypeID)
@@ -346,6 +350,10 @@ func (s Service) updateCustomAssetType(ctx context.Context, input UpdateCustomAs
 			updated.Description = description
 			changedFields["description"] = "true"
 		}
+	}
+	if input.ExpirationEnabled != nil && *input.ExpirationEnabled != current.ExpirationEnabled {
+		updated.ExpirationEnabled = *input.ExpirationEnabled
+		changedFields["expiration_enabled"] = "true"
 	}
 	if len(changedFields) == 0 {
 		return current, nil

@@ -23,6 +23,8 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+The approved next feature is optional expiration tracking per custom asset type, personal inventory defaults with type overrides, shared web/mobile notification inbox and mobile push, including full conversational expiration queries, date writes and relevant response warnings. Follow `specs/expiration/expiration-tracking.spec.md` and `specs/notifications/expiration-notifications.spec.md`. Implement specs-first with remote/CI validation, required code critic review, PR merge, infra GitOps rollout and TestFlight upload. The user approved the existing native/shared UI direction on 2026-09-10; no further design gate is pending. This supersedes the earlier restriction to voice-only work below. Live expiration acceptance led to native required Google function calling and a simplified command schema. Flash passed sixteen expiration/audio scenarios plus the mixed tag-query fixture; Flash-Lite failed acceptance, so new server defaults and mobile language recommendations use Flash while explicit configurations remain unchanged. Personal detail status now flows from the server policy through web/native presentation, including staged native loading. See `specs/expiration/live-acceptance.spec.md`. Deployed provider selection, remaining conversation/device acceptance and actual push delivery remain release gates.
+
 Durable background thumbnail generation and cooperative scheduling are implemented
 behind ports with an in-process worker, PostgreSQL queue, fenced publication and
 per-photo ownership. The controlled one-worker 500m/512Mi comparison reduced

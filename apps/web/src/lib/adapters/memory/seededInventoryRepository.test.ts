@@ -486,8 +486,12 @@ describe('SeededInventoryRepository tenant selection', () => {
       scope: 'inventory',
       key: 'medicine',
       displayName: 'Medicine',
-      description: 'Medication'
+      description: 'Medication',
+      expirationEnabled: true
     });
+    expect(assetType.expirationEnabled).toBe(true);
+    const disabledType = await repository.updateCustomAssetType('tenant-home', 'inventory-household', assetType.id, 'inventory', { displayName: 'Medicine', description: 'Medication', expirationEnabled: false });
+    expect(disabledType.expirationEnabled).toBe(false);
     const field = await repository.createCustomFieldDefinition('tenant-home', 'inventory-household', {
       scope: 'inventory',
       key: 'expiration-date',

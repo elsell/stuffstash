@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -29,12 +30,23 @@ func (transport liveVoiceTraceTransport) RoundTrip(request *http.Request) (*http
 	}
 	started := time.Now()
 	response, err := transport.next.RoundTrip(request)
-	if err != nil || response.StatusCode != http.StatusOK {
+	if err != nil {
 		return response, err
 	}
 	body, err := io.ReadAll(io.LimitReader(response.Body, maxCapturedBytes+1))
 	response.Body = &liveVoiceRestoredBody{Reader: io.MultiReader(bytes.NewReader(body), response.Body), Closer: response.Body}
 	if err != nil || len(body) > maxCapturedBytes {
+		return response, nil
+	}
+	if response.StatusCode != http.StatusOK {
+		lower := strings.ToLower(string(body))
+		var categories []string
+		for _, term := range []string{"schema", "complex", "states", "unknown name", "parametersjsonschema", "anyof", "maxitems", "functioncallingconfig", "mode"} {
+			if strings.Contains(lower, term) {
+				categories = append(categories, term)
+			}
+		}
+		transport.t.Logf("VOICE_PROVIDER_REJECTION status=%d categories=%v", response.StatusCode, categories)
 		return response, nil
 	}
 	transport.t.Logf("VOICE_PROVIDER_IO requestBytes=%d responseBytes=%d elapsedMs=%d", request.ContentLength, len(body), time.Since(started).Milliseconds())

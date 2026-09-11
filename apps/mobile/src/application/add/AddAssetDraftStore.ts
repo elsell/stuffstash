@@ -1,5 +1,5 @@
 import type { SelectedAssetPhoto } from './PhotoSelectionQuery';
-import type { AssetKind } from '../../domain/assets/AssetSummary';
+import type { AssetKind, AssetExpiration } from '../../domain/assets/AssetSummary';
 import type { CreateAssetTagDraft } from '../assets/AssetTagDraftResolution';
 
 export type AddAssetDraftParent = {
@@ -13,6 +13,8 @@ export type AddAssetDraftParent = {
 };
 
 export type AddAssetDraft = {
+  readonly expiration?: AssetExpiration;
+  readonly customAssetTypeId?: string;
   readonly title: string;
   readonly description: string;
   readonly parentAssetId?: string;

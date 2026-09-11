@@ -162,6 +162,7 @@ export interface AuditRecord {
 }
 
 export interface CustomAssetType {
+  expirationEnabled?: boolean;
   id: string;
   tenantId: string;
   inventoryId: string | null;
@@ -191,7 +192,13 @@ export interface MediaUploadPolicy {
   maxBytes: number;
 }
 
+export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
+
+export type AssetExpirationContext = { readonly state: 'current' | 'upcoming' | 'expired'; readonly trackingEnabled: boolean; readonly advanceDays: number; readonly timezone: string; };
+
 export interface Asset {
+  expirationContext?: AssetExpirationContext;
+  expiration?: AssetExpiration;
   id: string;
   tenantId: string;
   inventoryId: string;
@@ -407,6 +414,7 @@ export interface ImportJob {
 }
 
 export interface AddAssetDraft {
+  expiration?: AssetExpiration;
   kind: AssetKind;
   title: string;
   description: string;
@@ -433,6 +441,8 @@ export type AddAssetSaveResult =
     };
 
 export interface UpdateAssetDraft {
+  expiration?: AssetExpiration | null;
+  customAssetTypeId?: string;
   title: string;
   description: string;
   parentAssetId: string | null;

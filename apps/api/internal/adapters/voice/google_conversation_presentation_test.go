@@ -27,11 +27,11 @@ func TestGoogleStructuredConversationKeepsModelToolChoiceAndResults(t *testing.T
 			return
 		}
 		requests <- body
-		text := `{"toolCalls":[{"name":"search","arguments":{"query":"clothes"}}]}`
+		call := map[string]any{"id": "native-read", "name": "search", "args": map[string]any{"query": "clothes"}}
 		if len(body["contents"].([]any)) > 1 {
-			text = `{"toolCalls":[{"name":"deliver","arguments":{"speech":"They are in the hall closet."}}]}`
+			call = map[string]any{"id": "native-answer", "name": "deliver", "args": map[string]any{"speech": "They are in the hall closet."}}
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{"finishReason": "STOP", "content": map[string]any{"role": "model", "parts": []any{map[string]any{"text": text}}}}}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{"finishReason": "STOP", "content": map[string]any{"role": "model", "parts": []any{map[string]any{"functionCall": call, "thoughtSignature": "fixture-signature"}}}}}})
 	}))
 	defer server.Close()
 	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{BaseURL: server.URL, APIKey: "fixture-key", Model: "fixture-model"})
@@ -48,18 +48,18 @@ func TestGoogleStructuredConversationKeepsModelToolChoiceAndResults(t *testing.T
 	}
 	firstRequest := <-requests
 	config := firstRequest["generationConfig"].(map[string]any)
-	if config["responseMimeType"] != "application/json" || config["responseJsonSchema"] == nil || firstRequest["tools"] != nil || firstRequest["toolConfig"] != nil {
+	if config["responseJsonSchema"] != nil || firstRequest["tools"] == nil || firstRequest["toolConfig"] == nil {
 		t.Fatalf("mixed or unconstrained protocol: %+v", firstRequest)
 	}
 	secondRequest := <-requests
 	encoded, _ := json.Marshal(secondRequest["contents"])
-	for _, value := range []string{call.ID, "Hall Closet", "clothes-1", "toolResults"} {
+	for _, value := range []string{call.ID, "Hall Closet", "clothes-1", "functionResponse", "fixture-signature"} {
 		if !strings.Contains(string(encoded), value) {
 			t.Fatalf("missing correlated evidence %q", value)
 		}
 	}
-	if strings.Contains(string(encoded), "functionResponse") {
-		t.Fatal("JSON tool results emitted as native function responses")
+	if strings.Contains(string(encoded), "toolResults") {
+		t.Fatal("native results emitted as JSON envelope")
 	}
 }
 
@@ -78,51 +78,30 @@ func TestGoogleConversationWithoutResponseToolKeepsNativeTextChoice(t *testing.T
 	}
 }
 
-func TestGoogleEnvelopeSchemaBindsNamesToArgumentShapes(t *testing.T) {
+func TestGoogleNativeDeclarationsBindNamesToArgumentShapes(t *testing.T) {
 	request, err := googleConversationRequest(ports.ConversationModelInput{Messages: []ports.ConversationMessage{{Role: ports.ConversationRoleUser, Text: "Find clothes"}}, Tools: responseCatalog()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	encoded, _ := json.Marshal(request)
-	var wire struct {
-		GenerationConfig struct {
-			ResponseJSONSchema struct {
-				Properties map[string]struct {
-					Items struct {
-						AnyOf []struct {
-							Properties map[string]json.RawMessage `json:"properties"`
-						} `json:"anyOf"`
-					} `json:"items"`
-				} `json:"properties"`
-			} `json:"responseJsonSchema"`
-		} `json:"generationConfig"`
-	}
-	if json.Unmarshal(encoded, &wire) != nil {
-		t.Fatal("invalid JSON schema")
-	}
-	choices := wire.GenerationConfig.ResponseJSONSchema.Properties["toolCalls"].Items.AnyOf
-	if len(choices) != 2 {
-		t.Fatalf("expected distinct tool schemas, got %d", len(choices))
+	if len(request.Tools) != 1 || len(request.Tools[0].FunctionDeclarations) != 2 {
+		t.Fatal("missing declarations")
 	}
 	expected := map[string]string{"search": "query", "deliver": "speech"}
-	for _, choice := range choices {
-		var name struct {
-			Enum []string `json:"enum"`
-		}
+	for _, declaration := range request.Tools[0].FunctionDeclarations {
 		var args struct {
-			Properties map[string]any `json:"properties"`
-			Required   []string       `json:"required"`
+			Properties map[string]any
+			Required   []string
 		}
-		if json.Unmarshal(choice.Properties["name"], &name) != nil || len(name.Enum) != 1 || json.Unmarshal(choice.Properties["arguments"], &args) != nil {
-			t.Fatal("invalid tool alternative")
+		if err := json.Unmarshal(declaration.ParametersJSONSchema, &args); err != nil {
+			t.Fatal(err)
 		}
-		field, ok := expected[name.Enum[0]]
+		field, ok := expected[declaration.Name]
 		if !ok || len(args.Properties) != 1 || args.Properties[field] == nil || len(args.Required) != 1 || args.Required[0] != field {
-			t.Fatalf("tool name not bound to its arguments: %s %+v", name.Enum[0], args)
+			t.Fatal("declaration lost its argument contract")
 		}
-		delete(expected, name.Enum[0])
+		delete(expected, declaration.Name)
 	}
 	if len(expected) != 0 {
-		t.Fatal("tool schema missing")
+		t.Fatal("missing tools")
 	}
 }

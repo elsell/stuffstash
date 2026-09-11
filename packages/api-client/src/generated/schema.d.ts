@@ -1260,6 +1260,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID notification devices */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices/by-installation/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notification devices by installation by installation ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-installation-by-installation-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID notification devices by device ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-device-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notification preferences */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences"];
+        /** Put tenants by tenant ID inventories by inventory ID notification preferences */
+        put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences/initialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID notification preferences initialize */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-initialize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences/types/{customAssetTypeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put tenants by tenant ID inventories by inventory ID notification preferences types by custom asset type ID */
+        put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id"];
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID notification preferences types by custom asset type ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notifications */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put tenants by tenant ID inventories by inventory ID notifications read all */
+        put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-read-all"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notifications unread count */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-unread-count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notifications by notification ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put tenants by tenant ID inventories by inventory ID notifications by notification ID read */
+        put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/restore": {
         parameters: {
             query?: never;
@@ -1624,6 +1813,8 @@ export interface components {
                 [key: string]: unknown;
             };
             description: string;
+            expiration: components["schemas"]["Expiration"] | null;
+            expirationContext?: components["schemas"]["ExpirationContext"];
             id: string;
             inventoryId: string;
             kind: string;
@@ -1676,6 +1867,7 @@ export interface components {
         AssetTypeResponse: {
             description: string;
             displayName: string;
+            expirationEnabled: boolean;
             id: string;
             inventoryId?: string;
             key: string;
@@ -1745,6 +1937,7 @@ export interface components {
             };
             /** @description Asset description */
             description?: string;
+            expiration?: components["schemas"]["Expiration"];
             /**
              * @description Asset kind
              * @enum {string}
@@ -1782,6 +1975,8 @@ export interface components {
             description?: string;
             /** @description User-facing custom asset type label */
             displayName: string;
+            /** @description Enable optional expiration tracking on assets of this type */
+            expirationEnabled?: boolean;
             /** @description Stable custom asset type key */
             key: string;
         };
@@ -1927,6 +2122,14 @@ export interface components {
             scope: string;
             tenantId: string;
             type: string;
+        };
+        DeviceResponse: {
+            active: boolean;
+            id: string;
+            installationId: string;
+            /** Format: int64 */
+            revision: number;
+            transport: string;
         };
         DirectUploadResponse: {
             attachmentId: string;
@@ -2141,6 +2344,27 @@ export interface components {
             failures: components["schemas"]["EvaluationRunFailure"][] | null;
             passed: boolean;
         };
+        Expiration: {
+            /** @description Calendar date as YYYY-MM-DD or YYYY-MM */
+            date: string;
+            /** @enum {string} */
+            precision: "day" | "month";
+        };
+        ExpirationContext: {
+            /** Format: int64 */
+            advanceDays: number;
+            /** @enum {string} */
+            state: "current" | "upcoming" | "expired";
+            timezone: string;
+            trackingEnabled: boolean;
+        };
+        ExpirationPolicy: {
+            /** Format: int64 */
+            advanceDays: number;
+            enabled: boolean;
+            expired: boolean;
+            upcoming: boolean;
+        };
         GrantBody: {
             /**
              * Format: uri
@@ -2343,6 +2567,18 @@ export interface components {
             /** @description Source username for live-source imports */
             username?: string;
         };
+        InboxReadAllResponse: {
+            complete: boolean;
+        };
+        InitializeBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/InitializeBody.json
+             */
+            readonly $schema?: string;
+            timezone: string;
+        };
         InitiateDirectUploadBody: {
             /**
              * Format: uri
@@ -2442,6 +2678,34 @@ export interface components {
             lifecycleState: string;
             name: string;
         };
+        NotificationAncestor: {
+            assetId: string;
+            /** @enum {string} */
+            kind: "item" | "container" | "location";
+            title: string;
+        };
+        NotificationReadResponse: {
+            id: string;
+            read: boolean;
+        };
+        NotificationResponse: {
+            assetId: string;
+            /** Format: date-time */
+            createdAt: string;
+            customAssetTypeId: string;
+            expirationDate: string;
+            /** @enum {string} */
+            expirationPrecision: "day" | "month";
+            id: string;
+            /** @enum {string} */
+            milestone: "upcoming" | "expired";
+            parentAssetId: string;
+            parentTrail: components["schemas"]["NotificationAncestor"][] | null;
+            parentTrailIncomplete: boolean;
+            /** Format: date-time */
+            readAt?: string;
+            title: string;
+        };
         NullableSuccessEnvelopeWorkflowSelection: {
             /**
              * Format: uri
@@ -2457,6 +2721,14 @@ export interface components {
             /** Format: int64 */
             limit: number;
             nextCursor: string | null;
+        };
+        PreferencesResponse: {
+            defaults: components["schemas"]["ExpirationPolicy"];
+            overrides: components["schemas"]["TypeOverrideResponse"][] | null;
+            pushEnabled: boolean;
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
         };
         PrincipalResponse: {
             displayName?: string;
@@ -2520,6 +2792,20 @@ export interface components {
             targetId: string;
             targetType: string;
             tenantId: string;
+        };
+        RegisterDeviceBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RegisterDeviceBody.json
+             */
+            readonly $schema?: string;
+            installationId: string;
+            /** Format: int64 */
+            revision: number;
+            token: string;
+            /** @enum {string} */
+            transport: "apns" | "fcm";
         };
         ReplaceProviderProfileCredentialBody: {
             /**
@@ -2653,6 +2939,16 @@ export interface components {
             data: components["schemas"]["DefinitionResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeDeviceResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeDeviceResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["DeviceResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeDirectUploadResponse: {
             /**
              * Format: uri
@@ -2711,6 +3007,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["ImportJobResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeInboxReadAllResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeInboxReadAllResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InboxReadAllResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeInventoryResponse: {
@@ -2913,6 +3219,16 @@ export interface components {
             data: components["schemas"]["MyTenantResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListNotificationResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListNotificationResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["NotificationResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListProviderProfileResponse: {
             /**
              * Format: uri
@@ -2951,6 +3267,36 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["WorkflowHead"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeNotificationReadResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeNotificationReadResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["NotificationReadResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeNotificationResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeNotificationResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["NotificationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePreferencesResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePreferencesResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PreferencesResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopePrincipalResponse: {
@@ -3003,6 +3349,16 @@ export interface components {
             data: components["schemas"]["TestProviderProfileResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeUnreadCountResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeUnreadCountResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["UnreadCountResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeVoiceProviderConfigurationResponse: {
             /**
              * Format: uri
@@ -3027,6 +3383,25 @@ export interface components {
             status: string;
             testedAt: string;
         };
+        TypeOverrideBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/TypeOverrideBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            revision: number;
+            settings: components["schemas"]["ExpirationPolicy"];
+        };
+        TypeOverrideResponse: {
+            customAssetTypeId: string;
+            settings: components["schemas"]["ExpirationPolicy"];
+        };
+        UnreadCountResponse: {
+            /** Format: int64 */
+            count: number;
+        };
         UpdateAssetBody: {
             /**
              * Format: uri
@@ -3034,12 +3409,19 @@ export interface components {
              * @example https://example.com/schemas/UpdateAssetBody.json
              */
             readonly $schema?: string;
+            /** @description Initial type assignment for an untyped asset */
+            customAssetTypeId?: string;
             /** @description Custom field values */
             customFields?: {
                 [key: string]: unknown;
             };
             /** @description Asset description */
             description?: string;
+            expiration?: {
+                date: string;
+                /** @enum {string} */
+                precision: "day" | "month";
+            } | null;
             /** @description Parent asset ID, or null to move to inventory root */
             parentAssetId?: string | null;
             /** @description Complete assigned tag ID list */
@@ -3070,6 +3452,21 @@ export interface components {
             description?: string;
             /** @description User-facing custom asset type label */
             displayName?: string;
+            /** @description Enable optional expiration tracking on assets of this type */
+            expirationEnabled?: boolean;
+        };
+        UpdateBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateBody.json
+             */
+            readonly $schema?: string;
+            defaults: components["schemas"]["ExpirationPolicy"];
+            pushEnabled: boolean;
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
         };
         UpdateDefinitionBody: {
             /**
@@ -7484,6 +7881,495 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDeviceBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDeviceResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-installation-by-installation-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDeviceResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-device-id": {
+        parameters: {
+            query: {
+                revision: number;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDeviceResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePreferencesResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePreferencesResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-initialize": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitializeBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePreferencesResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TypeOverrideBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePreferencesResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
+        parameters: {
+            query: {
+                revision: number;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                customAssetTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePreferencesResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications": {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                unreadOnly?: boolean;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListNotificationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-read-all": {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInboxReadAllResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-unread-count": {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeUnreadCountResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeNotificationResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeNotificationReadResponse"];
                 };
             };
             /** @description Error */

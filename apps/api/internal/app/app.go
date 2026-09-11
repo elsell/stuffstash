@@ -11,11 +11,13 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	customfieldapp "github.com/stuffstash/stuff-stash/internal/app/customfields"
+	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type App struct {
+	notificationService          notificationapp.Service
 	conversationContextBytes     int
 	observer                     ports.Observer
 	auth                         ports.Authenticator
@@ -96,6 +98,12 @@ type App struct {
 }
 
 type Dependencies struct {
+	NotificationPreferences          ports.NotificationPreferencesRepository
+	NotificationDeliveries           ports.NotificationDeliveryRepository
+	NotificationDevices              ports.NotificationDeviceRepository
+	NotificationPushTokens           ports.NotificationPushTokenValidator
+	NotificationPushSender           ports.NotificationPushSender
+	NotificationInbox                ports.NotificationInboxRepository
 	ConversationContextBytes         int
 	Observer                         ports.Observer
 	Auth                             ports.Authenticator
@@ -293,6 +301,8 @@ func New(deps Dependencies) App {
 		DefaultPageLimit:    app.defaultPageLimit,
 		MaxPageLimit:        app.maxPageLimit,
 	})
+	app.notificationService = notificationapp.New(notificationapp.Dependencies{PushSender: deps.NotificationPushSender, Deliveries: deps.NotificationDeliveries, Devices: deps.NotificationDevices, PushTokens: deps.NotificationPushTokens, Authorizer: app.authorizer, Inventories: app.inventories, Types: app.customAssetTypes, Assets: app.assets, Inbox: deps.NotificationInbox, Preferences: deps.NotificationPreferences, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer})
+
 	app.customFieldService = customfieldapp.New(customfieldapp.Dependencies{
 		Observer:                  app.observer,
 		Authorizer:                app.authorizer,

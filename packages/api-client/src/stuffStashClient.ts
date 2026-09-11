@@ -1,3 +1,4 @@
+import { NotificationsClient } from './notificationsClient';
 import createClient, { type Client } from 'openapi-fetch';
 import type { components, paths } from './generated/schema';
 
@@ -120,7 +121,13 @@ export type AssetLifecycleState = 'active' | 'archived';
 export type AssetLifecycleFilter = AssetLifecycleState | 'all';
 export type AssetListSort = 'id_asc' | 'updated_desc';
 
+export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
+
+export type AssetExpirationContext = components["schemas"]["ExpirationContext"];
+
 export interface Asset {
+  expirationContext?: AssetExpirationContext;
+  expiration?: AssetExpiration;
   id: string;
   tenantId: string;
   inventoryId: string;
@@ -245,6 +252,7 @@ export interface AssetPhotoReference {
 export type AssetPhotoVariant = 'small' | 'medium' | 'large';
 
 export interface CreateAssetInput {
+  expiration?: AssetExpiration;
   kind: AssetKind;
   title: string;
   description?: string;
@@ -255,6 +263,8 @@ export interface CreateAssetInput {
 }
 
 export interface UpdateAssetInput {
+  expiration?: AssetExpiration | null;
+  customAssetTypeId?: string;
   title?: string;
   description?: string;
   parentAssetId?: string | null;
@@ -308,6 +318,7 @@ export type CustomFieldType = 'text' | 'number' | 'boolean' | 'date' | 'url' | '
 export type CustomFieldApplicability = 'all_assets' | 'custom_asset_types';
 
 export interface CustomAssetType {
+  expirationEnabled?: boolean;
   id: string;
   tenantId: string;
   inventoryId: string | null;
@@ -333,12 +344,14 @@ export interface CustomFieldDefinition {
 }
 
 export interface CreateCustomAssetTypeInput {
+  expirationEnabled?: boolean;
   key: string;
   displayName: string;
   description?: string;
 }
 
 export interface UpdateCustomAssetTypeInput {
+  expirationEnabled?: boolean;
   displayName?: string;
   description?: string;
 }
@@ -674,6 +687,7 @@ export class StuffStashAPIError extends Error {
 }
 
 export class StuffStashClient {
+  readonly notifications: NotificationsClient;
   private readonly client: Client<paths>;
   private readonly baseUrl: string;
   private readonly tokenProvider: TokenProvider;
@@ -685,6 +699,7 @@ export class StuffStashClient {
       baseUrl: this.baseUrl,
       fetch: options.fetch
     });
+    this.notifications = new NotificationsClient(this.client, { headers: () => this.authHeaders(), unwrap: (request) => this.unwrap(request) });
   }
 
   async me(signal?: AbortSignal): Promise<Principal> {
@@ -2079,6 +2094,8 @@ function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
 
 function mapAsset(response: AssetResponse): Asset {
   return {
+    expiration: response.expiration ?? undefined,
+    ...(response.expirationContext ? { expirationContext: response.expirationContext } : {}),
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId,
@@ -2210,6 +2227,7 @@ function mapAssetPrimaryPhoto(response: components['schemas']['AssetPrimaryPhoto
 
 function mapCustomAssetType(response: AssetTypeResponse): CustomAssetType {
   return {
+    expirationEnabled: response.expirationEnabled ?? false,
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId ?? null,

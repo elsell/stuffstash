@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -11,7 +12,7 @@ import (
 )
 
 func realtimeConversationVocabularyTool() ports.ConversationToolDefinition {
-	return ports.ConversationToolDefinition{Name: RealtimeVoiceToolGetInventoryVocabulary, Description: "Discover the actual tags, item types and fields used to organize this inventory. Helpful when the user's concept differs from stored names or searches find nothing: the manifest lets you choose related local terms instead of guessing labels. No arguments returns a bounded manifest with truncation flags. Optional definitions requests use kind and stable key from the manifest to read field types, enum options and applicability. Unavailable keys are counted without discarding the manifest; they may be absent or outside its bounded coverage.", Parameters: json.RawMessage(`{"type":"object","properties":{"definitions":{"type":"array","maxItems":12,"items":{"type":"object","properties":{"kind":{"type":"string","enum":["custom_asset_type","custom_field","tag"]},"key":{"type":"string","maxLength":80}},"required":["kind","key"],"additionalProperties":false}}},"additionalProperties":false}`)}
+	return ports.ConversationToolDefinition{Name: RealtimeVoiceToolGetInventoryVocabulary, Description: "Discover the actual tags, item types and fields used to organize this inventory. FIRST call with empty arguments {} to discover custom asset type IDs, stable keys and expirationEnabled. Never put a display name such as Medicine into definitions.key; copy a stable key returned by the manifest. A dated create requires an enabled type ID from this result. Helpful when the user's concept differs from stored names or searches find nothing: the manifest lets you choose related local terms instead of guessing labels. No arguments returns a bounded manifest with truncation flags. Optional definitions requests use kind and stable key from the manifest to read field types, enum options and applicability. Unavailable keys are counted without discarding the manifest; they may be absent or outside its bounded coverage.", Parameters: json.RawMessage(`{"type":"object","properties":{"definitions":{"type":"array","maxItems":12,"items":{"type":"object","properties":{"kind":{"type":"string","enum":["custom_asset_type","custom_field","tag"]},"key":{"type":"string","maxLength":80}},"required":["kind","key"],"additionalProperties":false}}},"additionalProperties":false}`)}
 }
 
 func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
@@ -27,10 +28,17 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 	if decoder.Decode(&args) != nil || len(args.Definitions) > agentmodel.MaxVoiceVocabularyRequests {
 		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}
+	validDefinitions := make([]agentmodel.VoiceVocabularyRequest, 0, len(args.Definitions))
+	invalidKeys := 0
 	for _, definition := range args.Definitions {
-		if definition.Validate() != nil {
+		if !definition.Kind.Valid() || strings.TrimSpace(definition.Key) == "" || len(definition.Key) > 80 {
 			return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 		}
+		if definition.Validate() != nil {
+			invalidKeys++
+			continue
+		}
+		validDefinitions = append(validDefinitions, definition)
 	}
 	types, err := a.ListInventoryCustomAssetTypes(ctx, ListCustomAssetTypesInput{Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID, Source: audit.SourceConversation, LifecycleState: "active", Limit: agentmodel.MaxVoiceVocabularyAssetTypes})
 	if err != nil {
@@ -51,7 +59,7 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 	manifest.CustomAssetTypesTruncated = manifest.CustomAssetTypesTruncated || types.HasMore
 	manifest.CustomFieldsTruncated = manifest.CustomFieldsTruncated || fields.HasMore
 	manifest.TagsTruncated = manifest.TagsTruncated || tags.HasMore
-	definitions, unavailable, err := catalog.resolve(args.Definitions)
+	definitions, unavailable, err := catalog.resolve(validDefinitions)
 	if err != nil {
 		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}
@@ -62,7 +70,7 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 		Manifest                   agentmodel.VoiceVocabularyManifest     `json:"manifest"`
 		Definitions                []agentmodel.VoiceVocabularyDefinition `json:"definitions,omitempty"`
 		UnavailableDefinitionCount int                                    `json:"unavailableDefinitionCount,omitempty"`
-	}{Manifest: manifest, Definitions: definitions, UnavailableDefinitionCount: unavailable})
+	}{Manifest: manifest, Definitions: definitions, UnavailableDefinitionCount: unavailable + invalidKeys})
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}

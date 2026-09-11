@@ -12,6 +12,7 @@ export interface CustomizationPage<T> {
 }
 
 export interface CustomAssetTypeDraft {
+  expirationEnabled?: boolean;
   scope: 'tenant' | 'inventory';
   key: string;
   displayName: string;
@@ -29,6 +30,7 @@ export interface CustomFieldDefinitionDraft {
 }
 
 export interface CustomAssetTypeUpdate {
+  expirationEnabled?: boolean;
   displayName: string;
   description: string;
 }

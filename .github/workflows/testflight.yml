@@ -159,6 +159,7 @@ jobs:
           PY
           test -z "$(find "$app_path" \( -iname '*EXDevLauncher*' -o -iname '*EXDevMenu*' \) -print -quit)"
           codesign -d --entitlements :- "$app_path" > "$RUNNER_TEMP/StuffStash-entitlements.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :aps-environment' "$RUNNER_TEMP/StuffStash-entitlements.plist")" = production
           if /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.associated-domains' \
             "$RUNNER_TEMP/StuffStash-entitlements.plist" >/dev/null 2>&1; then
             echo 'General TestFlight archive unexpectedly contains associated domains.' >&2

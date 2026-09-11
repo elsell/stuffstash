@@ -10,7 +10,7 @@ import (
 func realtimeConversationProposalTool() ports.ConversationToolDefinition {
 	return ports.ConversationToolDefinition{
 		Name:        realtimeConversationProposeTool,
-		Description: "Prepare an inventory change for user approval; never execute it. Search for existing items first. Use existing assetId/parentAssetId only from tool results. Commands may depend on earlier create commands via parentCommandId. Put all related commands in one ordered proposal; execution pauses for review immediately. Move existing items rather than duplicating them. An explicitly additional physical item may be created.",
+		Description: "Prepare an inventory change for user approval; never execute it. Do not call this tool for an absolute date with an omitted year or ambiguous numeric notation such as 03/04: ask the user to clarify first. Relative dates such as next month are allowed after resolving them with get_expiration_calendar. Never infer a year for an incomplete absolute date or convert ambiguous day/month text to month precision. Preserve every explicit expiration date, and fetch the vocabulary manifest with {} before selecting its enabled customAssetTypeId. Search for existing items first. Use existing assetId/parentAssetId only from tool results. Commands may depend on earlier create commands via parentCommandId. Put all related commands in one ordered proposal; execution pauses for review immediately. Move existing items rather than duplicating them. An explicitly additional physical item may be created. Expiration corrections use a single update_asset command: expiration object to set, null to remove.",
 		Parameters: json.RawMessage(`{
   "type": "object",
   "properties": {
@@ -29,6 +29,70 @@ func realtimeConversationProposalTool() ports.ConversationToolDefinition {
       "maxItems": 10,
       "items": {
         "anyOf": [
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "update_asset"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "expiration": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "precision": {
+                  "type": "string",
+                  "enum": [
+                    "day",
+                    "month"
+                  ]
+                }
+              },
+              "required": [
+                "date",
+                "precision"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "assetId",
+        "expiration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "summary",
+    "arguments"
+  ],
+  "additionalProperties": false
+},
           {
             "type": "object",
             "properties": {
@@ -70,6 +134,31 @@ func realtimeConversationProposalTool() ports.ConversationToolDefinition {
                   "parentCommandId": {
                     "type": "string",
                     "description": "ID of an earlier create command for the parent. Set at most one of parentAssetId and parentCommandId. Never use command IDs as assetId or parentAssetId."
+                  },
+                  "customAssetTypeId": {
+                    "type": "string",
+                    "description": "Existing assetTypeId from inventory vocabulary. Choose an expiration-enabled type when recording a date."
+                  },
+                  "expiration": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Exact YYYY-MM-DD or month-only YYYY-MM, preserving the user label. Clarify ambiguous or missing years."
+                      },
+                      "precision": {
+                        "type": "string",
+                        "enum": [
+                          "day",
+                          "month"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "precision"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -125,6 +214,31 @@ func realtimeConversationProposalTool() ports.ConversationToolDefinition {
                   "parentCommandId": {
                     "type": "string",
                     "description": "ID of an earlier create command for the parent. Set at most one of parentAssetId and parentCommandId. Never use command IDs as assetId or parentAssetId."
+                  },
+                  "customAssetTypeId": {
+                    "type": "string",
+                    "description": "Existing assetTypeId from inventory vocabulary. Choose an expiration-enabled type when recording a date."
+                  },
+                  "expiration": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Exact YYYY-MM-DD or month-only YYYY-MM, preserving the user label. Clarify ambiguous or missing years."
+                      },
+                      "precision": {
+                        "type": "string",
+                        "enum": [
+                          "day",
+                          "month"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "precision"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [

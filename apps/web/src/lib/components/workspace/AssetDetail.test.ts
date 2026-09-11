@@ -6,6 +6,7 @@ import type {
   AssetAttachment,
   AssetViewModel,
   CustomFieldDefinition,
+  CustomAssetType,
   MediaUploadPolicy,
   ParentTargetViewModel,
   SelectedAttachment,
@@ -891,6 +892,7 @@ function mountAssetDetail(
     workspaceAssets: Asset[];
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
+    customAssetTypes: CustomAssetType[];
     saving: boolean;
     attachments: AssetAttachment[];
     mediaPolicy: MediaUploadPolicy;
@@ -1095,3 +1097,76 @@ async function flush(): Promise<void> {
   await Promise.resolve();
   await tick();
 }
+
+
+it('saves a date-only edit and preserves explicit clearing after a failed save', async () => {
+  const drafts: UpdateAssetDraft[] = [];
+  mountAssetDetail({ action: 'edit',
+    asset: { ...asset(), customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' } },
+    customAssetTypes: [{ id: 'medicine', tenantId: 'tenant-one', inventoryId: 'inventory-one', scope: 'inventory',
+      key: 'medicine', displayName: 'Medicine', description: '', lifecycleState: 'active', expirationEnabled: true }],
+    onSave: async (draft) => { drafts.push(draft); throw new Error('Try again'); }
+  });
+  await flush();
+  expect((requiredElement('#edit-asset-expiration') as HTMLInputElement).value).toBe('2028-02');
+  clickFirst('Clear expiration');
+  await flush();
+  expect(buttons('Save')[0].disabled).toBe(false);
+  clickFirst('Save');
+  await flush();
+  expect(drafts[0].expiration).toBeNull();
+  expect(document.body.textContent).toContain('Try again');
+  expect((requiredElement('#edit-asset-expiration') as HTMLInputElement).value).toBe('');
+  clickFirst('Exact date');
+  await flush();
+  setInputValue(requiredElement('#edit-asset-expiration') as HTMLInputElement, '2028-02-29');
+  await flush();
+  clickFirst('Save');
+  await flush();
+  expect(drafts[1].expiration).toEqual({ date: '2028-02-29', precision: 'day' });
+});
+
+it('allows clearing a retained date while tracking is disabled', async () => {
+  const drafts: UpdateAssetDraft[] = [];
+  mountAssetDetail({ action: 'edit',
+    asset: { ...asset(), customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' } },
+    onSave: async (draft) => { drafts.push(draft); }
+  });
+  await flush();
+  expect(document.body.textContent).toContain('Tracking is disabled');
+  expect(document.querySelector('#edit-asset-expiration')).toBeNull();
+  clickFirst('Clear expiration');
+  await flush();
+  clickFirst('Save');
+  await flush();
+  expect(drafts[0].expiration).toBeNull();
+});
+
+
+it('assigns an initial type and expiration together without dropping retained fields', async () => {
+  const drafts: UpdateAssetDraft[] = [];
+  mountAssetDetail({ action: 'edit', asset: { ...asset(), customAssetTypeId: undefined, customFields: { reference: 'keep me' } },
+    customAssetTypes: [{ id: 'medicine', tenantId: 'tenant-one', inventoryId: 'inventory-one', scope: 'inventory',
+      key: 'medicine', displayName: 'Medicine', description: '', lifecycleState: 'active', expirationEnabled: true }],
+    onSave: async (draft) => { drafts.push(draft); }
+  });
+  await flush();
+  clickFirst('Medicine');
+  await flush();
+  setInputValue(requiredElement('#edit-asset-expiration') as HTMLInputElement, '2028-02-29');
+  await flush();
+  clickFirst('Medicine');
+  await flush();
+  clickFirst('Save');
+  await flush();
+  expect(drafts[0]).toMatchObject({ customAssetTypeId: 'medicine', customFields: { reference: 'keep me' },
+    expiration: { date: '2028-02-29', precision: 'day' } });
+});
+
+it.each([
+ ['upcoming', true, 'Expiring soon'], ['expired', true, 'Expired'], ['expired', false, 'Expiration tracking disabled'], ['current', true, ''], ['missing',true,'']
+] as const)('shows personal expiration state %s with tracking %s', (state, trackingEnabled, expected) => {
+ mountAssetDetail({asset:{...asset(),expiration:{date:'2028-02',precision:'month'},expirationContext:state==='missing'?undefined:{state,trackingEnabled,advanceDays:14,timezone:'America/New_York'}}});
+ if(expected) expect(document.body.textContent).toContain(expected);
+ else { expect(document.body.textContent).not.toContain('Expiring soon');expect(document.body.textContent).not.toContain('Expiration tracking disabled'); }
+});

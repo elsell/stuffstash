@@ -254,6 +254,7 @@
     canCreate={status.createAssetAllowed}
     workspaceAssets={workspace.detailAssets}
     parentTargets={moveParentTargets(workspace.detailAssets, workspace.selectedAsset.id)}
+    customAssetTypes={workspace.data.context.customAssetTypes}
     customFieldDefinitions={workspace.data.context.customFieldDefinitions}
     assetTags={workspace.data.context.assetTags ?? []}
     saving={status.busy}

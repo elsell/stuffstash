@@ -15,7 +15,8 @@ export class ManageCustomAssetTypes {
     return this.singleFlight(scope, 'create', () => this.repository.createAssetType(context, scope, {
       key,
       displayName: input.displayName.trim(),
-      description: input.description.trim()
+      description: input.description.trim(),
+      expirationEnabled: input.expirationEnabled ?? false
     }));
   }
 

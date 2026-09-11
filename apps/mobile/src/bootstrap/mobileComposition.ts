@@ -1,4 +1,22 @@
-import { Platform } from 'react-native';
+import { OpenPushNotification } from '../application/notifications/OpenPushNotification';
+import type { PushNotificationResponses } from '../application/notifications/PushNotificationResponses';
+import { ExpoPushNotificationResponses } from '../adapters/notifications/ExpoPushNotificationResponses';
+import { PushReconciliationController } from '../application/notifications/PushReconciliationController';
+import { ExpoPushReconciliationEvents } from '../adapters/notifications/ExpoPushReconciliationEvents';
+import * as Notifications from 'expo-notifications';
+import * as Crypto from 'expo-crypto';
+import { ExpoPushDevice } from '../adapters/notifications/ExpoPushDevice';
+import { ExpoPushRegistrationJournal } from '../adapters/notifications/ExpoPushRegistrationJournal';
+import { ApiNotificationDeviceRepository } from '../adapters/notifications/ApiNotificationDeviceRepository';
+import { PushSetup } from '../application/notifications/PushSetup';
+import { PushSession } from '../application/notifications/PushSession';
+import { normalizeInstanceUrl } from '../application/onboarding/ConnectionProfile';
+import { NotificationPreferencesSession } from '../application/notifications/NotificationPreferencesSession';
+import { ApiNotificationRepository } from '../adapters/notifications/ApiNotificationRepository';
+import { NotificationInboxQueries } from '../application/notifications/NotificationInboxQueries';
+import type { NotificationEvent } from '../application/notifications/NotificationObservability';
+import { InventoryAssetTypesQuery } from '../application/assets/InventoryAssetTypesQuery';
+import { AppState, Platform } from 'react-native';
 import { createMobilePerformanceSession } from '../adapters/observability/MobilePerformanceSession';
 import type { PerformanceObserver } from '../application/observability/PerformanceObserver';
 import * as Network from 'expo-network';
@@ -103,6 +121,13 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly pushReconciliation: PushReconciliationController;
+  readonly pushNotificationResponses: PushNotificationResponses;
+  readonly openPushNotification: OpenPushNotification;
+  readonly notificationObserver: {record(event: NotificationEvent):void};
+  readonly pushSession: PushSession;
+  readonly createNotificationPreferencesSession: (tenantId: string, inventoryId: string) => NotificationPreferencesSession;
+  readonly notificationInboxQueries: NotificationInboxQueries;
   readonly performanceObserver: PerformanceObserver;
   readonly disposePerformance: () => void;
   readonly acquirePerformance: () => () => void;
@@ -143,6 +168,7 @@ export type MobileComposition = {
   readonly previewInventoryInvitationQuery: PreviewInventoryInvitationQuery;
   readonly acceptInventoryInvitationCommand: AcceptInventoryInvitationCommand;
   readonly settingsQuery: SettingsQuery;
+  readonly inventoryAssetTypesQuery: InventoryAssetTypesQuery;
   readonly customizationContextQuery: CustomizationContextQuery;
   readonly customizationCollectionQuery: CustomizationCollectionQuery;
   readonly manageTags: ManageTags;
@@ -164,10 +190,13 @@ export type MobileComposition = {
 };
 
 export type MobileCompositionOptions = {
+  readonly onNotificationEvent?: (event: NotificationEvent) => void;
   readonly onAuthenticationRequired?: () => void;
   readonly onCustomizationEvent?: (event: CustomizationEvent) => void;
 };
 
+const pushNotificationResponses = new ExpoPushNotificationResponses(Notifications, Notifications.DEFAULT_ACTION_IDENTIFIER);
+const pushJournal = new ExpoPushRegistrationJournal(SecureStore, () => Crypto.randomUUID());
 const connectionProfiles = new FileSystemConnectionProfileStore();
 const appearancePreferences = new AppearancePreferenceController(
   new FileSystemAppearancePreferenceStore()
@@ -257,11 +286,27 @@ export function createMobileComposition(
     new ExpoSettingsDiagnosticsProvider(config),
     new ApiSettingsScopeRepository(client, inventorySummaries)
   );
+  const notificationRepository = new ApiNotificationRepository(client);
+  const notificationObserver = { record: (event: NotificationEvent) => options.onNotificationEvent?.(event) };
+  const pushDevice = new ExpoPushDevice(Notifications, Platform.OS, Notifications.AndroidImportance.DEFAULT);
+  const pushSetup = new PushSetup(pushDevice, pushJournal, new ApiNotificationDeviceRepository(client), notificationObserver);
+  const pushSession = new PushSession(normalizeInstanceUrl(profile.apiBaseUrl), principals, pushSetup, (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId));
+  const selectInventoryCommand = new SelectInventoryCommand(inventorySummaries, new QueryClientInventorySelectionObserver(queryClient, serviceScopeId));
+  const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, notificationObserver);
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
+  const customizationContextQuery = new CustomizationContextQuery(settingsQuery);
+  const customizationCollectionQuery = new CustomizationCollectionQuery(customization, customizationObservability);
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
+    createNotificationPreferencesSession: (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId),
+    notificationInboxQueries,
+    pushSession,
+    pushNotificationResponses,
+    notificationObserver,
+    openPushNotification: new OpenPushNotification(normalizeInstanceUrl(profile.apiBaseUrl), principals, notificationInboxQueries, selectInventoryCommand),
+    pushReconciliation: new PushReconciliationController(new ExpoPushReconciliationEvents(AppState, Notifications, pushDevice), pushSession, notificationObserver),
     serviceScopeId,
     performanceObserver: performanceSession.observer,
     disposePerformance: performanceSession.dispose,
@@ -270,10 +315,7 @@ export function createMobileComposition(
     connectivitySource: new ExpoConnectivitySource(Network),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     currentInventoryScopeQuery: new CurrentInventoryScopeQuery(inventorySummaries),
-    selectInventoryCommand: new SelectInventoryCommand(
-      inventorySummaries,
-      new QueryClientInventorySelectionObserver(queryClient, serviceScopeId)
-    ),
+    selectInventoryCommand,
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     inventoryContextQuery: new InventoryContextQuery(inventorySummaries),
     assetActivityQuery: new AssetActivityQuery(assetActivity),
@@ -305,8 +347,9 @@ export function createMobileComposition(
     previewInventoryInvitationQuery: new PreviewInventoryInvitationQuery(inventoryInvitations),
     acceptInventoryInvitationCommand: new AcceptInventoryInvitationCommand(inventoryInvitations),
     settingsQuery,
-    customizationContextQuery: new CustomizationContextQuery(settingsQuery),
-    customizationCollectionQuery: new CustomizationCollectionQuery(customization, customizationObservability),
+    inventoryAssetTypesQuery: new InventoryAssetTypesQuery(customizationContextQuery, customizationCollectionQuery),
+    customizationContextQuery,
+    customizationCollectionQuery,
     manageTags: new ManageTags(customization, customizationObservability),
     manageCustomFields: new ManageCustomFields(customization, customizationObservability),
     manageCustomAssetTypes: new ManageCustomAssetTypes(customization, customizationObservability),

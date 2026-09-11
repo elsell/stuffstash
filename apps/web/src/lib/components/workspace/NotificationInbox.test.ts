@@ -1,0 +1,102 @@
+import { mount, unmount, tick } from 'svelte';
+import { expect, it, vi } from 'vitest';
+import NotificationInbox from './NotificationInbox.svelte';
+import { StuffStashNotificationRepository } from '$lib/adapters/api/stuffStashNotificationRepository';
+import { InMemoryWorkspaceObserver } from '$lib/observability/workspaceObserver';
+it('renders an unread month-only alert and resolves its current item before navigating', async () => {
+  const requests: string[] = [];
+  const opened: string[] = [];
+  const notice = { id: 'notice', assetId: 'item', title: 'Tylenol', parentAssetId: 'bin', customAssetTypeId: 'medicine', expirationDate: '2026-10', expirationPrecision: 'month', milestone: 'upcoming', createdAt: '2026-09-10T12:00:00Z' };
+  const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async (input, init) => {
+    const request = new Request(input, init); requests.push(`${request.method} ${request.url}`);
+    if (request.url.endsWith('/read')) return Response.json({ data: {}, meta: {} });
+    if (request.url.endsWith('/notice')) return Response.json({ data: { ...notice, assetId: 'current-item' }, meta: {} });
+    return Response.json({ data: [notice], meta: { pagination: { limit: 30, nextCursor: null, hasMore: false } } });
+  });
+  const component = mount(NotificationInbox, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', repository, observer: new InMemoryWorkspaceObserver(), onOpenAsset: (id) => { opened.push(id); } } });
+  try {
+    const alert = () => Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Tylenol'));
+    await vi.waitFor(() => expect(alert()).toBeDefined());
+    expect(alert()?.textContent).toContain('Unread');
+    expect(alert()?.textContent).toContain('October 2026');
+    alert()!.click();
+    await vi.waitFor(() => expect(opened).toEqual(['current-item']));
+    expect(requests.at(-1)).toContain('/notice/read');
+  } finally { await unmount(component); document.body.innerHTML = ''; }
+});
+it('shows errors separately from an empty inbox and retries the unread filter', async () => {
+  let fail = true;
+  const requests: string[] = [];
+  const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async (input, init) => {
+    const request = new Request(input, init); requests.push(request.url);
+    return fail ? Response.json({ error: { code: 'unavailable', message: 'Unavailable' } }, { status: 503 })
+      : Response.json({ data: [], meta: { pagination: { limit: 30, nextCursor: null, hasMore: false } } });
+  });
+  const component = mount(NotificationInbox, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', repository, observer: new InMemoryWorkspaceObserver(), onOpenAsset() {} } });
+  try {
+    await vi.waitFor(() => expect(document.querySelector('[role="alert"]')).not.toBeNull());
+    expect(document.body.textContent).not.toContain('No expiration notifications');
+    fail = false;
+    Array.from(document.querySelectorAll('button')).find((button) => button.textContent === 'Unread')!.click();
+    await tick();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No unread notifications.'));
+    expect(requests.at(-1)).toContain('unreadOnly=true');
+  } finally { await unmount(component); document.body.innerHTML = ''; }
+});
+it('keeps continuation available after opening the last loaded unread notification', async () => {
+  const notice = { id: 'notice', assetId: 'item', title: 'Bottle', parentAssetId: 'bin', customAssetTypeId: 'medicine', expirationDate: '2026-10-01', expirationPrecision: 'day', milestone: 'upcoming', createdAt: '2026-09-10T12:00:00Z' };
+  let read = false;
+  const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async (input, init) => {
+    const request = new Request(input, init);
+    if (request.url.endsWith('/read')) { read = true; return Response.json({ data: {}, meta: {} }); }
+    if (request.url.endsWith('/notice')) return Response.json({ data: notice, meta: {} });
+    return Response.json({ data: [notice], meta: { pagination: { limit: 1, nextCursor: 'next', hasMore: true } } });
+  });
+  const component = mount(NotificationInbox, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', repository, observer: new InMemoryWorkspaceObserver(), onOpenAsset() {} } });
+  try {
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Bottle'));
+    Array.from(document.querySelectorAll('button')).find((button) => button.textContent === 'Unread')!.click();
+    await tick();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Bottle'));
+    Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Bottle'))!.click();
+    await vi.waitFor(() => expect(read).toBe(true));
+    await vi.waitFor(() => expect(document.body.textContent).not.toContain('Bottle'));
+    expect(document.body.textContent).not.toContain('No unread notifications');
+    expect(document.body.textContent).toContain('Load more');
+  } finally { await unmount(component); document.body.innerHTML = ''; }
+});
+it('marks all pages read before refreshing the inbox', async () => {
+  let batches = 0;
+  let refreshed = 0;
+  const repository = new StuffStashNotificationRepository('https://api.test', () => 'token', async (input, init) => {
+    const request = new Request(input, init);
+    if (request.url.includes('/read-all')) {
+      batches++;
+      return Response.json({ data: { complete: batches === 2 }, meta: { pagination: { limit: 100, nextCursor: batches === 2 ? null : 'next', hasMore: batches !== 2 } } });
+    }
+    refreshed++;
+    return Response.json({ data: [], meta: { pagination: { limit: 30, nextCursor: null, hasMore: false } } });
+  });
+  const component = mount(NotificationInbox, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', repository, observer: new InMemoryWorkspaceObserver(), onOpenAsset() {} } });
+  try {
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No expiration notifications'));
+    Array.from(document.querySelectorAll('button')).find((button) => button.textContent === 'Mark all read')!.click();
+    await vi.waitFor(() => expect(refreshed).toBe(2));
+    expect(batches).toBe(2);
+  } finally { await unmount(component); document.body.innerHTML = ''; }
+});
+it('opens a location from the current trail without marking its notification read',async()=>{
+ const requests:string[]=[];const opened:string[]=[];
+ const repository=new StuffStashNotificationRepository('https://api.test',()=> 'token',async(input,init)=>{
+  requests.push(new Request(input,init).method);
+  return Response.json({data:[{id:'notice',assetId:'item',title:'Tylenol',parentAssetId:'bin',customAssetTypeId:'medicine',expirationDate:'2028-02',expirationPrecision:'month',milestone:'upcoming',createdAt:'2028-01-01T00:00:00Z',parentTrail:[{assetId:'closet',title:'Hall closet',kind:'location'},{assetId:'bin',title:'Bin 8',kind:'container'}],parentTrailIncomplete:true}],meta:{pagination:{limit:30,nextCursor:null,hasMore:false}}});
+ });
+ const component=mount(NotificationInbox,{target:document.body,props:{tenantId:'tenant',inventoryId:'inventory',repository,observer:new InMemoryWorkspaceObserver(),onOpenAsset:id=>opened.push(id)}});
+ try{
+  await vi.waitFor(()=>expect(document.querySelector('[aria-label="Open Bin 8"]')).not.toBeNull());
+  expect(document.querySelector('[aria-label="Partial location path"]')).not.toBeNull();
+  const trail=document.querySelector<HTMLElement>('nav[aria-label="Item location"]')!;
+  Object.defineProperty(trail,'scrollWidth',{value:1000,configurable:true});window.dispatchEvent(new Event('resize'));expect(trail.scrollLeft).toBe(1000);
+  (document.querySelector('[aria-label="Open Bin 8"]') as HTMLButtonElement).click();expect(opened).toEqual(['bin']);expect(requests).toEqual(['GET']);
+ }finally{await unmount(component);document.body.innerHTML='';}
+});

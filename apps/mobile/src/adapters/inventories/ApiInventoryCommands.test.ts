@@ -269,3 +269,25 @@ it('invalidates ancestor contents when creating inside an unvisited empty nested
     expect(cache.getQueryState(key)?.isInvalidated).toBe(true);
     cache.clear();
   });
+
+
+it('preserves expiration precision and supports clearing without changing ordinary edits', async () => {
+  const client = new FakeInventoryApiClient();
+  const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  const month = { date: '2028-02', precision: 'month' as const };
+  await expect(repository.createAsset({ kind: 'item', title: 'Medicine', description: '',
+    customAssetTypeId: 'type-medicine', expiration: month
+  })).resolves.toMatchObject({ expiration: month, customAssetTypeId: 'type-medicine' });
+  const day = { date: '2028-02-29', precision: 'day' as const };
+  await expect(repository.updateAsset({ assetId: assetId('asset-filters'), expiration: day }))
+    .resolves.toMatchObject({ expiration: day });
+  expect(client.updatedAssetInput?.expiration).toEqual(day);
+  await expect(repository.updateAsset({ assetId: assetId('asset-filters'), title: 'Renamed' }))
+    .resolves.toMatchObject({ expiration: day });
+  expect((await client.getAsset('tenant-home', 'inventory-home', 'asset-filters')).expiration).toEqual(day);
+  await expect(repository.updateAsset({ assetId: assetId('asset-filters'), expiration: null }))
+    .resolves.toMatchObject({ expiration: undefined });
+  expect(client.updatedAssetInput?.expiration).toBeNull();
+  await repository.updateAsset({ assetId: assetId('asset-filters'), title: 'Renamed' });
+  expect(client.updatedAssetInput?.expiration).toBeUndefined();
+});

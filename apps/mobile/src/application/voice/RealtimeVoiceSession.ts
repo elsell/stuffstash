@@ -1,3 +1,5 @@
+import type { AssetExpiration } from '../../domain/assets/AssetSummary';
+import { isAssetExpiration } from '../../domain/assets/AssetExpiration';
 import type { VoiceInventoryContext, VoiceInventoryContextRepository, VoiceInventoryMutationObserver } from './VoiceInventoryContext';
 import type { InventorySummaryRepository } from '../home/InventorySummaryRepository';
 import type { CreateInventoryAssetPhotoInput } from '../home/InventorySummaryRepository';
@@ -155,6 +157,8 @@ export type VoiceActionPlanProposal = {
 type VoiceActionPlanStatus = VoiceActionPlanProposal['status'];
 
 export type VoiceActionPlanCommand = {
+  readonly expiration?: AssetExpiration;
+  readonly expirationCleared?: boolean;
   readonly id?: string;
   readonly kind: string;
   readonly summary: string;
@@ -1180,7 +1184,9 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
       parentAssetId: command.parentAssetId,
       parentTitle: command.parentTitle ? safeBoundedActionPlanText(command.parentTitle, 120) : undefined,
       parentKind: command.parentKind ? safeBoundedText(command.parentKind, 40) : undefined,
-      parentCommandId: command.parentCommandId
+      parentCommandId: command.parentCommandId,
+      ...(command.expirationCleared ? { expirationCleared: true } : {}),
+      ...(command.expiration ? { expiration: { ...command.expiration } } : {})
     })),
     risks: proposal.risks.slice(0, 6).map((risk) => safeBoundedActionPlanText(risk, 180)).filter(Boolean)
   };
@@ -1212,6 +1218,9 @@ export function isValidVoiceActionPlanProposal(proposal: VoiceActionPlanProposal
     if (!command.id || !isValidOpaqueVoiceID(command.id) || seen.has(command.id) || !command.summary.trim()) {
       return false;
     }
+    if (command.expiration !== undefined && (!isAssetExpiration(command.expiration) || (command.kind !== 'create_asset' && command.kind !== 'create_location' && command.kind !== 'update_asset'))) return false;
+    if (command.expirationCleared !== undefined && (typeof command.expirationCleared !== 'boolean' || (command.expirationCleared && (command.kind !== 'update_asset' || command.expiration !== undefined)))) return false;
+    if (command.kind === 'update_asset' && command.expiration === undefined && command.expirationCleared !== true) return false;
     const expectedOperation = voiceActionPlanOperations[command.kind as keyof typeof voiceActionPlanOperations];
     if (!expectedOperation || command.operation !== expectedOperation) {
       return false;

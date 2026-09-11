@@ -740,3 +740,10 @@ function findPressableWithText(node: unknown, value: string): ElementNode | unde
     undefined
   );
 }
+it('announces the displayed expiration when opening a dated card',()=>{
+ const asset={id:'bottle',title:'Bottle',kindLabel:'Item',description:'',locationTrailLabel:'',parentLocationTrail:[],updatedAtLabel:'Today',photoLabel:'',imagePlaceholderLabel:'Item'};
+ const dated=AssetCard({asset:{...asset,expiration:{date:'2028-02',precision:'month'}},onPress(){},onParentLocationPress(){}});
+ expect(findFirstByAccessibilityLabel(dated,'Open asset Bottle. Expiration: February 2028')?.props?.accessibilityRole).toBe('button');
+ const undated=AssetCard({asset,onPress(){},onParentLocationPress(){}});
+ expect(findFirstByAccessibilityLabel(undated,'Open asset Bottle')?.props?.accessibilityRole).toBe('button');
+});

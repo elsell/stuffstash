@@ -84,7 +84,7 @@ if (unsupportedBreakpoints.length > 0) {
 }
 const legacyRawValueCeilings = {
   offScaleSpacing: 73,
-  rawFontSize: 120,
+  rawFontSize: 119,
   rawRadius: 45,
   rawShadow: 27,
   unsupportedWeight: 25

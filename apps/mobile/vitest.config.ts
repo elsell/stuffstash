@@ -7,6 +7,9 @@ export default defineConfig({
   test: { setupFiles: ['./native-runtime.setup.ts'] },
   resolve: {
     alias: [
+      { find: /^expo-notifications$/, replacement: support('expo-notifications.ts') },
+      { find: /^expo-crypto$/, replacement: support('expo-crypto.ts') },
+      { find: /^@react-native-community\/datetimepicker$/, replacement: support('native-date-picker.ts') },
       { find: /^expo-network$/, replacement: support('expo-network.ts') },
       { find: /^react-native-image-viewing$/, replacement: support('react-native-image-viewing.ts') },
       { find: /^react-native$/, replacement: support('react-native.ts') },

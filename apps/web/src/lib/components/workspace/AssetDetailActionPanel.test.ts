@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
+import { fromStore, writable } from 'svelte/store';
 import type { AssetAttachment, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel, UpdateAssetDraft } from '$lib/domain/inventory';
 import AssetDetailActionPanel, { type AssetDetailActionPanelProps } from './AssetDetailActionPanel.svelte';
 
@@ -316,3 +317,20 @@ function link(text: string): HTMLAnchorElement {
   }
   return target;
 }
+
+
+it('reinitializes the expiration field when the edited asset changes', async () => {
+  const current = writable<AssetViewModel>({ ...asset(), expiration: { date: '2028-02', precision: 'month' } });
+  const state = fromStore(current);
+  component = mount(AssetDetailActionPanel, { target: document.body, props: {
+    ...panelProps({ panel: 'edit', expirationEnabled: true }),
+    get asset() { return state.current; },
+    get expiration() { return state.current.expiration; }
+  }});
+  await tick();
+  expect(input('edit-asset-expiration').value).toBe('2028-02');
+  current.set({ ...asset(), id: 'another-asset', expiration: { date: '2029-03-12', precision: 'day' } });
+  await tick();
+  expect(input('edit-asset-expiration').value).toBe('2029-03-12');
+  expect(input('edit-asset-expiration').type).toBe('date');
+});

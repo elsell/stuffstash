@@ -240,6 +240,7 @@ export class StuffStashInventoryRepository
           description: draft.description,
           parentAssetId: draft.parentAssetId,
           customAssetTypeId: draft.customAssetTypeId,
+          expiration: draft.expiration,
           customFields: draft.customFields,
           tagIds: draft.tagIds
         })
@@ -283,6 +284,8 @@ export class StuffStashInventoryRepository
     try {
       const asset = await this.mapAssetWithPrimaryPhoto(
         await this.client.updateAsset(tenantId, inventoryId, assetId, {
+          expiration: draft.expiration,
+          customAssetTypeId: draft.customAssetTypeId,
           title: draft.title,
           description: draft.description,
           parentAssetId: draft.parentAssetId,
@@ -908,7 +911,7 @@ export class StuffStashInventoryRepository
   }
 
   async createCustomAssetType(tenantId: string, inventoryId: string, draft: CustomAssetTypeDraft) {
-    const input = { key: draft.key, displayName: draft.displayName, description: draft.description };
+    const input = { key: draft.key, displayName: draft.displayName, description: draft.description, expirationEnabled: draft.expirationEnabled ?? false };
     const assetType =
       draft.scope === 'tenant'
         ? await this.client.createTenantCustomAssetType(tenantId, input)

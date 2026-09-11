@@ -339,8 +339,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
     return { tenantId: tenantId(selected.tenant.id), inventoryId: inventoryId(selected.inventory.id), tenantName: selected.tenant.name, inventoryName: selected.inventory.name };
   }
 
-  selectInventory(selectedInventoryId: InventoryId): Promise<void> {
-    return this.directory.select(selectedInventoryId);
+  selectInventory(selectedInventoryId: InventoryId, request: ReadRequest = {}): Promise<void> {
+    return this.directory.select(selectedInventoryId, request.signal);
   }
 
   async listActiveInventoryMapAssets(request: ReadRequest = {}): Promise<{

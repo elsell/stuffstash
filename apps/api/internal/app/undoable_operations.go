@@ -80,7 +80,7 @@ func (a App) applyUndoableOperation(ctx context.Context, input ApplyUndoableOper
 	if err != nil {
 		return asset.Asset{}, err
 	}
-	if err := a.validateUndoableAssetResult(ctx, input.TenantID, input.InventoryID, resulting); err != nil {
+	if err := a.validateUndoableAssetResult(ctx, input.TenantID, input.InventoryID, resulting, resulting.CustomAssetTypeID != expectedCurrent.CustomAssetTypeID); err != nil {
 		return asset.Asset{}, err
 	}
 	applied, item, err := a.undoables.ApplyAssetUndoableOperation(ctx, operation.ID, direction, expectedCurrent, resulting, auditRecord)
@@ -151,10 +151,10 @@ func (a App) applyCheckoutUndoableOperation(ctx context.Context, input ApplyUndo
 	return item, nil
 }
 
-func (a App) validateUndoableAssetResult(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, item asset.Asset) error {
+func (a App) validateUndoableAssetResult(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, item asset.Asset, assigningType bool) error {
 	customAssetTypeID := item.CustomAssetTypeID
 	if customAssetTypeID.String() != "" {
-		err := a.ensureSnapshotCustomAssetTypeExists(ctx, tenantID, inventoryID, customAssetTypeID)
+		err := a.ensureSnapshotCustomAssetTypeExists(ctx, tenantID, inventoryID, customAssetTypeID, assigningType)
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (a App) validateUndoableAssetResult(ctx context.Context, tenantID tenant.ID
 	return nil
 }
 
-func (a App) ensureSnapshotCustomAssetTypeExists(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, customAssetTypeID asset.CustomAssetTypeID) error {
+func (a App) ensureSnapshotCustomAssetTypeExists(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, customAssetTypeID asset.CustomAssetTypeID, requireActive bool) error {
 	parsed, ok := customfield.NewAssetTypeID(customAssetTypeID.String())
 	if !ok {
 		return ErrInvalidInput
@@ -173,13 +173,17 @@ func (a App) ensureSnapshotCustomAssetTypeExists(ctx context.Context, tenantID t
 	if a.customAssetTypes == nil {
 		return ErrInvalidInput
 	}
-	_, found, err := a.customAssetTypes.CustomAssetTypeByID(ctx, tenantID, inventoryID, parsed)
+	kind, found, err := a.customAssetTypes.CustomAssetTypeByID(ctx, tenantID, inventoryID, parsed)
 	if err != nil {
 		return err
 	}
 	if !found {
 		return ErrNotFound
 	}
+	if requireActive && !kind.IsActive() {
+		return ErrInvalidInput
+	}
+
 	return nil
 }
 

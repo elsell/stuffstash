@@ -181,3 +181,20 @@ it('uses one selected-asset request across the complete progressive detail graph
     expect(client.listAttachmentRequests).toHaveLength(1);
     expect(client.listAssetRequests).toEqual([]);
   });
+
+it.each(['item','container'] as const)('preserves expiration through staged %s detail loading',async(kind)=>{
+ const client=new FakeInventoryApiClient();
+ const expiration={date:'2028-02',precision:'month' as const};
+ const expirationContext={state:'upcoming' as const,trackingEnabled:true,advanceDays:14,timezone:'America/New_York'};
+ client.assets[1]={...client.assets[1]!,kind,customAssetTypeId:'medicine',expiration,expirationContext};
+ const repository=new ApiInventorySummaryRepository(client,'tenant-home');
+ const core=await repository.getAssetCore(assetId('asset-filters'));
+ client.assets[1]={...client.assets[1]!,expirationContext:undefined};
+ await expect(repository.getAssetPlacement(core)).resolves.toMatchObject({expiration,expirationContext,customAssetTypeId:'medicine'});
+ await expect(repository.getAssetContents(core)).resolves.toMatchObject({asset:{expiration,expirationContext,customAssetTypeId:'medicine'}});
+ if(kind==='container') {
+  client.assets[1]={...client.assets[1]!,expiration:{date:'2029-01',precision:'month'}};
+  const changed=await repository.getAssetContents(core);
+  expect(changed.asset.expirationContext).toBeUndefined();
+ }
+});

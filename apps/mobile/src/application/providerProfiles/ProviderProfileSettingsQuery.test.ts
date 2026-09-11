@@ -199,7 +199,7 @@ describe('TestProviderProfileCommand', () => {
 });
 
 describe('ManageProviderProfileCommand', () => {
-  it('creates recommended cheap Gemini profiles through the repository', async () => {
+  it('creates the validated Gemini language profile through the repository', async () => {
     const repository = new FakeProviderProfileRepository();
     const command = new ManageProviderProfileCommand(repository);
 
@@ -208,8 +208,8 @@ describe('ManageProviderProfileCommand', () => {
     expect(repository.createdProfile).toMatchObject({
       capability: 'language_inference',
       providerKind: 'gemini',
-      displayName: 'Gemini Flash-Lite language',
-      modelName: 'gemini-2.5-flash-lite',
+      displayName: 'Gemini Flash language',
+      modelName: 'gemini-2.5-flash',
       runtimeOptions: { credentialType: 'api_key' }
     });
     expect(recommendedProviderProfiles[1].credentialPurpose).toBe('api_key');

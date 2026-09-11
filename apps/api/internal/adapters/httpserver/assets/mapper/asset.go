@@ -19,6 +19,7 @@ func AssetToResponse(item asset.Asset, primaryPhoto *media.Attachment, currentCh
 
 func AssetToResponseWithTags(item asset.Asset, tags []assettag.Tag, primaryPhoto *media.Attachment, currentCheckout *asset.Checkout, checkoutPrincipals map[identity.PrincipalID]identity.User) dto.AssetResponse {
 	response := dto.AssetResponse{
+		Expiration:        ExpirationToResponse(item.Expiration),
 		ID:                item.ID.String(),
 		TenantID:          item.TenantID.String(),
 		InventoryID:       item.InventoryID.String(),

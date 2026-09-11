@@ -30,6 +30,7 @@ func RegisterUpdateInventory(api huma.API, application app.App) {
 			CustomAssetTypeID: customfield.AssetTypeID(input.CustomAssetTypeID),
 			DisplayName:       input.Body.DisplayName,
 			Description:       input.Body.Description,
+			ExpirationEnabled: input.Body.ExpirationEnabled,
 		})
 		if err != nil {
 			return nil, shared.ToHumaError(err)

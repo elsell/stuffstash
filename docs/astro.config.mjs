@@ -34,6 +34,7 @@ export default defineConfig({
             { label: 'Dex Users And Clients', slug: 'dex-users' },
             { label: 'Configuration Reference', slug: 'configuration' },
             { label: 'First Inventory', slug: 'first-inventory' },
+            { label: 'Expiration Dates', slug: 'expiration' },
             { label: 'Concepts', slug: 'concepts' },
             { label: 'Trust And Security', slug: 'security' },
           ],

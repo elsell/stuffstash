@@ -2555,3 +2555,23 @@ it('does not blame a single-item request for exhausting internal planning limits
  const states = await controller.stop();
  expect(states.at(-1)?.errorMessage).toBe('I couldn’t finish planning this request. Please try again.');
 });
+
+it('preserves expiration through the session review boundary', async () => {
+ const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), new FakeTransport([{ type: 'action.plan.proposed', seq: 1, sessionId: 'session-1', actionPlan: { planId: 'plan-1', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'create_asset', operation: 'create', title: 'Bottle', summary: 'Add bottle', expiration: { date: '2028-02', precision: 'month' } }] } }, { type: 'session.completed', seq: 2, sessionId: 'session-1' }]), new FakePlayer());
+ await controller.start();
+ const states = await controller.stop();
+ expect(states.at(-1)?.actionPlan?.commands[0]?.expiration).toEqual({ date: '2028-02', precision: 'month' });
+});
+
+it('preserves expiration removal through the session review boundary', async () => {
+ const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), new FakeTransport([{ type: 'action.plan.proposed', seq: 1, sessionId: 'session-1', actionPlan: { planId: 'plan-1', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', operation: 'update', title: 'Bottle', summary: 'Add bottle', expirationCleared: true }] } }, { type: 'session.completed', seq: 2, sessionId: 'session-1' }]), new FakePlayer());
+ await controller.start();
+ const states = await controller.stop();
+ expect(states.at(-1)?.actionPlan?.commands[0]?.expirationCleared).toBe(true);
+});
+it.each([undefined, false])('rejects incomplete expiration correction %s', async (expirationCleared) => {
+ const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), new FakeTransport([{ type: 'action.plan.proposed', seq: 1, sessionId: 'session-1', actionPlan: { planId: 'plan-1', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', operation: 'update', title: 'Bottle', summary: 'Add bottle', expirationCleared }] } }, { type: 'session.completed', seq: 2, sessionId: 'session-1' }]), new FakePlayer());
+ await controller.start();
+ const states = await controller.stop();
+ expect(states.at(-1)?.status).toBe('failed');
+});

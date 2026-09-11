@@ -58,6 +58,10 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: apps/api/go.sum
+      - name: Verify notification persistence concurrency
+        env:
+          STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000
+        run: go test -timeout=2m ./apps/api/internal/adapters/gormstore -run '^TestPostgresNotification' -count=1
       - name: Measure search repository
         env:
           STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000

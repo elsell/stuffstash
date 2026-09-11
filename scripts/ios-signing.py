@@ -13,6 +13,8 @@ import subprocess
 
 def validate_profile(profile, team, bundle, now):
     entitlements = profile.get('Entitlements', {})
+    if entitlements.get('aps-environment') != 'production':
+        raise ValueError('Distribution profile must enable production push notifications')
     prefixes = profile.get('ApplicationIdentifierPrefix', [])
     if (profile.get('TeamIdentifier') != [team]
             or entitlements.get('com.apple.developer.team-identifier') != team

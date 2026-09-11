@@ -16,6 +16,10 @@ import (
 )
 
 type Store struct {
+	notificationDeliveries  map[string]ports.NotificationDelivery
+	notificationDevices     map[string]ports.NotificationDevice
+	notificationInbox       map[string]ports.NotificationRecord
+	notificationPreferences map[ports.NotificationScope]ports.NotificationPreferencesRecord
 	mediaBlobKeys           map[media.StorageKey]struct{}
 	evaluationRuns          map[evaluationRunKey]agentmodel.EvaluationRun
 	evaluationCaseHeads     map[evaluationCaseKey]ports.EvaluationCaseHeadRecord

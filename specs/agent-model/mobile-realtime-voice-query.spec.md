@@ -825,3 +825,18 @@ synthetic inventory/provider traces, not a replay against the user's inventory o
 physical microphone evidence. Full API tests and 1,138 mobile tests passed remotely;
 code critic review found the malformed-search recovery regression and confirmed
 its correction. No builds or tests ran on the developer Mac.
+
+
+## Expiration Feature Integration
+
+The expiration release extends typed inventory reads, structured action plans, review widgets and spoken/display responses according to `../expiration/expiration-tracking.spec.md#conversational-expiration-support`. It must support expiration queries, add/edit/clear dates and relevant location-answer warnings with preserved day/month precision. These behaviors share the asset application authorization and validation boundary; expiration is not an unvalidated custom-field shortcut. Add realistic remote corpus scenarios and inspect full traces before declaring this release complete.
+
+### Native Google response-tool protocol
+
+For a conversation catalog containing a response tool, use Google's native function-calling protocol with `functionCallingConfig.mode=ANY` and `parametersJsonSchema` declarations. The model may select reads, proposals or the answer tool; it cannot bypass cards by completing with plain text. Preserve full native provider continuation parts, including thought signatures. A response-tool catalog returning no function call is invalid provider output. Non-response catalogs retain their existing native automatic mode. Application authorization, budgets, approval and strict command validation remain unchanged. This replaces the structured JSON envelope. The live Gemini Flash expiration corpus passed all eight cases and the API regressions passed; model-specific quality limitations are recorded in the expiration live-acceptance spec.
+
+Native command selection: use a Google-only flattened command decoding schema after live audio move requests selected expiration updates under the nested union. Only recognizable closed command envelopes may be projected; preserve every command kind, argument shape and explicit null, retain strict application validation and approval, and leave the shared catalog unchanged. Flatten and deduplicate repeated alternatives; annotation-only differences must not introduce validation branches. The final Flash run passed all eight expiration and eight recorded-audio cases; evidence and model-specific limitations are recorded in the expiration live-acceptance spec.
+
+The server Google model fallback and newly recommended mobile language profiles use `gemini-2.5-flash`, based on the recorded expiration and audio comparison. The server fallback currently supplies both speech recognition and language inference, as exercised by the recorded-audio corpus. The separate mobile speech-to-text recommendation remains `gemini-2.5-flash-lite`. Explicit environment configuration and existing tenant profile model choices take precedence and are not migrated silently. Release operators must check the selected language profile: Flash-Lite did not meet expiration acceptance in this comparison.
+
+Native Google JSON-schema declarations use the existing provider-only bounded-union-array count translation: remove only the decoding count bound and retain it as guidance, while application validators keep the strict limit. The initial native request was rejected as schema complexity; this translation is evaluated explicitly in the live corpus.

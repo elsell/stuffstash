@@ -183,3 +183,7 @@ The system must eventually support things that can be used up, such as medicine,
 - What asset fields should be first-class rather than custom fields?
 - Can users convert an existing asset from one kind to another?
 - Can users change an existing asset's custom asset type, and how should values for no-longer-applicable custom fields be handled?
+
+## Expiration Extension
+
+`../expiration/expiration-tracking.spec.md` defines optional precision-preserving expiration metadata and the narrow exception allowing initial custom type assignment on an existing untyped asset. Existing assigned-type replacement remains prohibited. Retained fields and tags must validate and persist atomically with audit.

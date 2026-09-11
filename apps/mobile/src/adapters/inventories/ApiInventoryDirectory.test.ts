@@ -37,3 +37,8 @@ it('keeps warmed command identity off the discovery-refresh critical path', asyn
   expect((await directory.selectedForCommand()).inventory.id).toBe('inventory'); expect(reads).toBe(1);
   await directory.load(); expect(reads).toBe(2);
 });
+it('does not change selected inventory when selection discovery is cancelled',async()=>{
+ const controller=new AbortController();
+ const directory=new ApiInventoryDirectory({async listMyTenants(){controller.abort();return page([tenant]);},async listInventories(){return page([inventory]);}},'tenant');
+ await expect(directory.select('inventory',controller.signal)).rejects.toThrow();
+});

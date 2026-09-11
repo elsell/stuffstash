@@ -5,6 +5,12 @@ import "context"
 type EventName string
 
 const (
+	EventNotificationDeliverySettled               EventName = "notification_delivery.settled"
+	EventNotificationWorkerFailed                  EventName = "notification_worker.failed"
+	EventNotificationDeviceUpdated                 EventName = "notification_device.updated"
+	EventNotificationDeviceRevoked                 EventName = "notification_device.revoked"
+	EventNotificationCreated                       EventName = "notification.created"
+	EventNotificationPreferencesUpdated            EventName = "notification_preferences.updated"
 	EventThumbnailJobsRetried                      EventName = "thumbnail_jobs.retried"
 	EventBlobDeletionRechecked                     EventName = "blob_deletion.rechecked"
 	EventThumbnailJobResolved                      EventName = "thumbnail_job.resolved"

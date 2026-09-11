@@ -116,18 +116,20 @@ func createAssetInTx(tx *gorm.DB, item asset.Asset, auditRecord audit.Record, un
 		return err
 	}
 	if err := tx.Create(&assetModel{
-		ID:                item.ID.String(),
-		TenantID:          item.TenantID.String(),
-		InventoryID:       item.InventoryID.String(),
-		ParentAssetID:     parentAssetID,
-		CustomAssetTypeID: customAssetTypeID,
-		Kind:              item.Kind.String(),
-		Title:             item.Title.String(),
-		Description:       item.Description.String(),
-		CustomFields:      string(customFields),
-		LifecycleState:    item.LifecycleState.String(),
-		CreatedAt:         item.CreatedAt,
-		UpdatedAt:         item.UpdatedAt,
+		ID:                  item.ID.String(),
+		TenantID:            item.TenantID.String(),
+		InventoryID:         item.InventoryID.String(),
+		ParentAssetID:       parentAssetID,
+		CustomAssetTypeID:   customAssetTypeID,
+		ExpirationDate:      item.Expiration.Value(),
+		ExpirationPrecision: string(item.Expiration.Precision()),
+		Kind:                item.Kind.String(),
+		Title:               item.Title.String(),
+		Description:         item.Description.String(),
+		CustomFields:        string(customFields),
+		LifecycleState:      item.LifecycleState.String(),
+		CreatedAt:           item.CreatedAt,
+		UpdatedAt:           item.UpdatedAt,
 	}).Error; err != nil {
 		return err
 	}
@@ -179,7 +181,17 @@ func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset,
 		return ports.ErrForbidden
 	}
 	if stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
-		return ports.ErrForbidden
+		if existing.CustomAssetTypeID != nil || item.CustomAssetTypeID == "" {
+			return ports.ErrForbidden
+		}
+		var assigned customAssetTypeModel
+		err := tx.Where(&customAssetTypeModel{ID: item.CustomAssetTypeID.String(), TenantID: item.TenantID.String(), LifecycleState: customfield.AssetTypeLifecycleActive.String()}).Where(clause.Or(clause.Eq{Column: "scope", Value: customfield.ScopeTenant.String()}, clause.Eq{Column: "inventory_id", Value: item.InventoryID.String()})).First(&assigned).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ports.ErrForbidden
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	if item.ParentAssetID.String() != "" {
@@ -214,6 +226,8 @@ func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset,
 		"title":                item.Title.String(),
 		"description":          item.Description.String(),
 		"custom_fields":        string(customFields),
+		"expiration_date":      item.Expiration.Value(),
+		"expiration_precision": string(item.Expiration.Precision()),
 		"updated_at":           item.UpdatedAt,
 	}
 	if err := tx.Model(&existing).Updates(updates).Error; err != nil {
@@ -241,6 +255,7 @@ func assetsEquivalentForStaleCheck(left asset.Asset, right asset.Asset) bool {
 		left.InventoryID == right.InventoryID &&
 		left.ParentAssetID == right.ParentAssetID &&
 		left.CustomAssetTypeID == right.CustomAssetTypeID &&
+		left.Expiration == right.Expiration &&
 		left.Kind == right.Kind &&
 		left.Title == right.Title &&
 		left.Description == right.Description &&
@@ -278,7 +293,7 @@ func updateAssetLifecycleInTx(tx *gorm.DB, expectedCurrent asset.Asset, item ass
 			return ports.ErrConflict
 		}
 	}
-	if existing.Kind != item.Kind.String() || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
+	if existing.ExpirationDate != item.Expiration.Value() || existing.ExpirationPrecision != string(item.Expiration.Precision()) || existing.Kind != item.Kind.String() || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
 		return ports.ErrForbidden
 	}
 	var existingCustomFields map[string]any

@@ -11,6 +11,7 @@ type CreateAssetInput struct {
 }
 
 type CreateAssetBody struct {
+	Expiration        *Expiration    `json:"expiration,omitempty"`
 	Kind              string         `json:"kind" enum:"item,container,location" doc:"Asset kind"`
 	Title             string         `json:"title" maxLength:"160" doc:"Asset title"`
 	Description       string         `json:"description,omitempty" doc:"Asset description"`
@@ -34,11 +35,13 @@ type UpdateAssetInput struct {
 }
 
 type UpdateAssetBody struct {
-	Title         *string               `json:"title,omitempty" maxLength:"160" doc:"Asset title"`
-	Description   *string               `json:"description,omitempty" doc:"Asset description"`
-	ParentAssetID shared.NullableString `json:"parentAssetId,omitempty" doc:"Parent asset ID, or null to move to inventory root"`
-	CustomFields  map[string]any        `json:"customFields,omitempty" doc:"Custom field values"`
-	TagIDs        *[]string             `json:"tagIds,omitempty" doc:"Complete assigned tag ID list"`
+	CustomAssetTypeID *string               `json:"customAssetTypeId,omitempty" doc:"Initial type assignment for an untyped asset"`
+	Expiration        ExpirationUpdate      `json:"expiration,omitempty"`
+	Title             *string               `json:"title,omitempty" maxLength:"160" doc:"Asset title"`
+	Description       *string               `json:"description,omitempty" doc:"Asset description"`
+	ParentAssetID     shared.NullableString `json:"parentAssetId,omitempty" doc:"Parent asset ID, or null to move to inventory root"`
+	CustomFields      map[string]any        `json:"customFields,omitempty" doc:"Custom field values"`
+	TagIDs            *[]string             `json:"tagIds,omitempty" doc:"Complete assigned tag ID list"`
 }
 
 type UpdateAssetOutput struct {
@@ -166,6 +169,8 @@ type ListAssetsOutput struct {
 }
 
 type AssetResponse struct {
+	ExpirationContext   *ExpirationContext `json:"expirationContext,omitempty"`
+	Expiration          *Expiration        `json:"expiration"`
 	ID                  string             `json:"id"`
 	TenantID            string             `json:"tenantId"`
 	InventoryID         string             `json:"inventoryId"`

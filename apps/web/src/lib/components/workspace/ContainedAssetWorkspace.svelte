@@ -18,6 +18,7 @@
 </script>
 
 <script lang="ts">
+  import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import { tick } from 'svelte';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import MoveRight from '@lucide/svelte/icons/move-right';
@@ -237,7 +238,7 @@
               >
                 <AssetThumb {asset} />
                 <span class="contained-asset-copy">
-                  <strong>{asset.title}</strong>
+                  <strong>{asset.title}</strong><AssetExpirationLabel expiration={asset.expiration} />
                   <small>{assetKindLabel(asset.kind)}{asset.relativePath ? ` · ${asset.relativePath}` : ''}</small>
                   {#if asset.currentCheckout}<CheckoutBadge checkout={asset.currentCheckout} compact />{/if}
                 </span>

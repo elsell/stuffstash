@@ -22,6 +22,12 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	toolCtx, cancel := context.WithTimeout(ctx, a.realtimeVoiceToolCallTimeout)
 	defer cancel()
 	switch call.Name {
+	case RealtimeVoiceToolGetExpirationCalendar:
+		result, err := a.executeRealtimeVoiceExpirationCalendar(toolCtx, session, call)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
+	case RealtimeVoiceToolQueryExpiringAssets:
+		result, err := a.executeRealtimeVoiceExpirationQuery(toolCtx, session, call)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolGetInventoryVocabulary:
 		result, err := a.executeRealtimeVoiceVocabularyTool(toolCtx, session, call)
 		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
@@ -229,6 +235,10 @@ func (a App) realtimeVoiceAssetToolItemWithCheckout(ctx context.Context, session
 		LocationTitle:   locationTitle,
 		ContainmentPath: path,
 		MatchFields:     matchFields,
+	}
+	toolItem.Expiration, err = a.realtimeVoiceExpiration(ctx, session, item)
+	if err != nil {
+		return realtimeVoiceAssetToolItem{}, err
 	}
 	if includeAssetID {
 		toolItem.AssetID = item.ID.String()

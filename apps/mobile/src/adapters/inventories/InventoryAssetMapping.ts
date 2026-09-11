@@ -214,6 +214,9 @@ export function mapAsset(
 
   return {
     id: assetId(asset.id),
+    expiration: asset.expiration,
+    ...(asset.expirationContext ? {expirationContext:asset.expirationContext}:{}),
+    customAssetTypeId: asset.customAssetTypeId,
     title: asset.title,
     kind: asset.kind,
     lifecycleState: asset.lifecycleState,
@@ -357,6 +360,9 @@ export function summaryToApiAsset(
 ): Asset {
   return {
     id: asset.id,
+    expiration: asset.expiration,
+    expirationContext: asset.expirationContext,
+    customAssetTypeId: asset.customAssetTypeId,
     tenantId: tenantID,
     inventoryId: inventoryID,
     kind: asset.kind,

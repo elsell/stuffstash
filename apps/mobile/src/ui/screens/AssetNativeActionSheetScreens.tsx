@@ -1,3 +1,4 @@
+import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
 import { Fragment, ReactNode, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
@@ -30,6 +31,7 @@ import {
 } from './AssetDetailSheets';
 import {
   EditDraft,
+  canSaveEditAsset,
   hasDirtyEditAssetDraft,
   normalizedEditDraft
 } from './AssetDetailEditPresentation';
@@ -71,14 +73,16 @@ function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }:
 }
 
 type EditProps = ActionAssetQueries & {
+  readonly inventoryAssetTypesQuery: Pick<InventoryAssetTypesQuery, 'execute'>;
   readonly inventoryAssetTagsQuery: Pick<InventoryAssetTagsQuery, 'execute'>;
   readonly updateAssetCommand: Pick<UpdateAssetCommand, 'execute'>;
 };
 export function AssetEditSheetRouteScreen(props: EditProps) {
   return <ActionAsset {...props}>{(asset) => <EditAssetForm {...props} asset={asset} />}</ActionAsset>;
 }
-function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: EditProps & { asset: AssetDetailViewModel }) {
+function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuery, updateAssetCommand }: EditProps & { asset: AssetDetailViewModel }) {
   const assetId = asset.id;
+  const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), query: (signal) => inventoryAssetTypesQuery.execute(asset.tenantId ?? '', asset.inventoryId ?? '', { signal }) });
   const tags = useMobileInventoryServerQuery({ key: mobileQueryKeys.assetTags, query: (signal) => inventoryAssetTagsQuery.execute({ signal }) });
   const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
   const [isSaving, setIsSaving] = useState(false);
@@ -95,7 +99,7 @@ function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: E
   }
 
   async function save(): Promise<void> {
-    if (!draft) {
+    if (!draft || !canSaveEditAsset(asset, draft)) {
       return;
     }
     setIsSaving(true);
@@ -103,6 +107,8 @@ function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: E
       const normalized = normalizedEditDraft(draft);
       const result = await updateAssetCommand.execute({
         assetId,
+        expiration: normalized.expiration,
+        customAssetTypeId: asset.customAssetTypeId ? undefined : normalized.customAssetTypeId,
         title: normalized.title,
         description: normalized.description,
         tagIds: normalized.tagIds,
@@ -144,10 +150,12 @@ function EditAssetForm({ asset, inventoryAssetTagsQuery, updateAssetCommand }: E
 
   return (
     <NativeSheetFrame title="Edit asset">
+      {types.isError ? <ErrorState message="Asset types could not be loaded." onRetry={() => void types.refetch()} /> : null}
       {tags.isError ? <ErrorState message="Tags could not be loaded." onRetry={() => void tags.refetch()} /> : null}
       {(
         <EditAssetSheet
           asset={asset}
+          assetTypes={types.data}
           assetTags={tags.data ?? []}
           draft={draft}
           isSaving={isSaving}

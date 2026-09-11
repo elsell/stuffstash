@@ -3,6 +3,7 @@ package asset
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/stuffstash/stuff-stash/internal/domainvalue/expirationdate"
 	"strings"
 	"time"
 )
@@ -190,6 +191,7 @@ func canonicalCustomFields(values map[string]any) ([]byte, bool) {
 }
 
 type Asset struct {
+	Expiration        expirationdate.Date
 	ID                ID
 	TenantID          TenantID
 	InventoryID       InventoryID

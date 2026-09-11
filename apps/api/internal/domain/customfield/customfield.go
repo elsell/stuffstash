@@ -170,14 +170,15 @@ func (a Applicability) String() string {
 }
 
 type AssetType struct {
-	ID             AssetTypeID
-	TenantID       TenantID
-	InventoryID    InventoryID
-	Scope          Scope
-	Key            Key
-	DisplayName    DisplayName
-	Description    Description
-	LifecycleState AssetTypeLifecycleState
+	ExpirationEnabled bool
+	ID                AssetTypeID
+	TenantID          TenantID
+	InventoryID       InventoryID
+	Scope             Scope
+	Key               Key
+	DisplayName       DisplayName
+	Description       Description
+	LifecycleState    AssetTypeLifecycleState
 }
 
 func NewAssetType(id AssetTypeID, tenantID TenantID, inventoryID InventoryID, scope Scope, key Key, displayName DisplayName, description Description) (AssetType, bool) {

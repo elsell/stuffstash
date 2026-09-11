@@ -105,6 +105,15 @@ func safeErrorDetails(status int, errs []error) []ErrorDetail {
 		if err == nil {
 			continue
 		}
+		var validation *huma.ErrorDetail
+		if errors.As(err, &validation) {
+			message := validation.Message
+			if validation.Location != "" {
+				message += " (" + validation.Location + ")"
+			}
+			details = append(details, ErrorDetail{Message: message})
+			continue
+		}
 		details = append(details, ErrorDetail{Message: err.Error()})
 	}
 	return details

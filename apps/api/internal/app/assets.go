@@ -4,6 +4,8 @@ import (
 	"context"
 
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
+	expirationapp "github.com/stuffstash/stuff-stash/internal/app/expiration"
+	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -18,7 +20,10 @@ type AssetParentUpdate = assetapp.AssetParentUpdate
 type UpdateAssetInput = assetapp.UpdateAssetInput
 type AssetMutationResult = assetapp.AssetMutationResult
 type UpdateAssetLifecycleInput = assetapp.UpdateAssetLifecycleInput
-type GetAssetResult = assetapp.GetAssetResult
+type GetAssetResult struct {
+	assetapp.GetAssetResult
+	ExpirationContext *expirationapp.Description
+}
 type ListAssetsResult = assetapp.ListAssetsResult
 type CheckoutAssetInput = assetapp.CheckoutAssetInput
 type ReturnAssetInput = assetapp.ReturnAssetInput
@@ -67,7 +72,11 @@ func (a App) GetAssetDetail(ctx context.Context, input GetAssetInput) (GetAssetR
 	if result.PrimaryPhoto != nil {
 		a.warmPrimarySmallThumbnails(ctx, []media.Attachment{*result.PrimaryPhoto})
 	}
-	return result, nil
+	context, err := a.describeAssetExpiration(ctx, notificationapp.ScopeInput{Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID, Source: input.Source}, result.Item)
+	if err != nil {
+		return GetAssetResult{}, err
+	}
+	return GetAssetResult{GetAssetResult: result, ExpirationContext: context}, nil
 }
 
 func (a App) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInput) error {

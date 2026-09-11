@@ -16,6 +16,7 @@ export default function AddRoute() {
     params.parentWillPromoteToContainer
   ]);
   const {
+    inventoryAssetTypesQuery,
     addAssetDraftStore,
     addAssetContextQuery,
     addDraftScopeQuery,
@@ -26,6 +27,7 @@ export default function AddRoute() {
 
   return (
     <AddAssetScreen
+      inventoryAssetTypesQuery={inventoryAssetTypesQuery}
       addAssetDraftStore={addAssetDraftStore}
       addAssetContextQuery={addAssetContextQuery}
       addDraftScopeQuery={addDraftScopeQuery}

@@ -14,7 +14,7 @@ class SigningTests(unittest.TestCase):
                 'TeamIdentifier': ['TEAM123'],
                 'ApplicationIdentifierPrefix': ['PREFIX'],
                 'ExpirationDate': datetime.datetime(2030, 1, 1),
-                'Entitlements': {'application-identifier': 'PREFIX.org.example.app',
+                'Entitlements': {'aps-environment': 'production', 'application-identifier': 'PREFIX.org.example.app',
                                  'com.apple.developer.team-identifier': 'TEAM123',
                                  'get-task-allow': False},
                 'DeveloperCertificates': [b'certificate']}
@@ -39,6 +39,13 @@ class SigningTests(unittest.TestCase):
             profile = self.profile()
             profile['Entitlements'][key] = value
             with self.subTest(key=key), self.assertRaises(ValueError):
+                self.validate(profile)
+
+    def test_requires_production_push_capability(self):
+        for value in (None, 'development', True):
+            profile = self.profile()
+            profile['Entitlements']['aps-environment'] = value
+            with self.assertRaises(ValueError):
                 self.validate(profile)
 
     def test_identity_must_match_profile(self):

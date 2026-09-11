@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {formatAssetExpiration, expirationStatusLabel} from '$lib/application/expirationPresentation';
   import { tick } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -40,6 +41,8 @@
     MediaUploadPolicy,
     ParentTargetViewModel,
     SelectedAttachment,
+    AssetExpiration,
+    CustomAssetType,
     UpdateAssetDraft
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
@@ -61,6 +64,7 @@
     attachmentAction = null,
     parentTargets,
     customFieldDefinitions,
+    customAssetTypes = [],
     assetTags = [],
     saving,
     attachments,
@@ -98,6 +102,7 @@
     attachmentAction?: AttachmentRouteAction;
     parentTargets: ParentTargetViewModel[];
     customFieldDefinitions: CustomFieldDefinition[];
+    customAssetTypes?: CustomAssetType[];
     assetTags?: AssetTag[];
     saving: boolean;
     attachments: AssetAttachment[];
@@ -128,6 +133,11 @@
   } = $props();
 
   let panel = $state<AssetDetailPanel>('none');
+  let selectedCustomTypeId = $state<string | undefined>();
+  let effectiveCustomTypeId = $derived(panel === 'edit' ? selectedCustomTypeId : asset.customAssetTypeId);
+  let expiration = $state<AssetExpiration | undefined>();
+  let expirationValid = $state(true);
+  let expirationEnabled = $derived(customAssetTypes.some((type) => type.id === effectiveCustomTypeId && type.lifecycleState === 'active' && type.expirationEnabled));
   let title = $state('');
   let description = $state('');
   let parentAssetId = $state<string | null>(null);
@@ -150,7 +160,7 @@
   let lastRouteActionKey = $state('');
   let actionReturnFocus = $state<HTMLElement | null>(null);
   let actionReturnHref = $state('');
-  let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, asset.customAssetTypeId));
+  let applicableFields = $derived(applicableCustomFieldDefinitions(customFieldDefinitions, effectiveCustomTypeId));
   let imageContentTypes = $derived(mediaPolicy.supportedContentTypes.filter((contentType) => contentType.startsWith('image/')));
   let photoAttachments = $derived(
     attachments.filter((attachment) => attachment.contentType.startsWith('image/') && !removedPhotoIds.includes(attachment.id))
@@ -247,11 +257,14 @@
   });
 
   function openEdit(notify = true): void {
+    selectedCustomTypeId = asset.customAssetTypeId;
+    expiration = asset.expiration;
+    expirationValid = true;
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
     customFieldValues = Object.fromEntries(
-      applicableFields.map((field) => [field.key, stringifyCustomFieldValue(asset.customFields?.[field.key])])
+      Object.entries(asset.customFields ?? {}).map(([key, value]) => [key, stringifyCustomFieldValue(value)])
     );
     selectedTagIds = asset.tags?.map((tag) => tag.id) ?? [];
     newTags = [];
@@ -262,6 +275,7 @@
   }
 
   function openMove(notify = true): void {
+    expirationValid = true;
     title = asset.title;
     description = asset.description;
     parentAssetId = asset.parentAssetId;
@@ -335,12 +349,14 @@
   }
 
   async function save(): Promise<void> {
-    if (!title.trim()) {
+    if (!title.trim() || !expirationValid) {
       return;
     }
     saveError = '';
     try {
       await onSave({
+        customAssetTypeId: panel === 'edit' && !asset.customAssetTypeId ? selectedCustomTypeId : undefined,
+        expiration: panel === 'edit' && (expiration?.date !== asset.expiration?.date || expiration?.precision !== asset.expiration?.precision) ? expiration ?? null : undefined,
         title: title.trim(),
         description: description.trim(),
         parentAssetId,
@@ -576,6 +592,13 @@
     onAttachmentDeleteOpen(attachment.id);
   }
 
+  function selectCustomType(id: string): void {
+    if (asset.customAssetTypeId || (id || undefined) === selectedCustomTypeId) return;
+    selectedCustomTypeId = id || undefined;
+    expiration = undefined;
+    expirationValid = true;
+  }
+
   function setCustomFieldValue(key: string, value: string): void {
     customFieldValues = { ...customFieldValues, [key]: value };
   }
@@ -594,10 +617,11 @@
   }
 
   function buildCustomFields(): Record<string, unknown> {
-    const values: Record<string, unknown> = {};
+    const values: Record<string, unknown> = { ...asset.customFields };
     for (const field of applicableFields) {
       const value = customFieldValues[field.key] ?? '';
       if (!value) {
+        delete values[field.key];
         continue;
       }
       values[field.key] = field.type === 'number' ? Number(value) : field.type === 'boolean' ? value === 'true' : value;
@@ -675,6 +699,7 @@
 	          </span>
         </div>
         <dl class="detail-list">
+	          {#if asset.expiration}<div><dt>Expiration</dt><dd>{formatAssetExpiration(asset.expiration)}{#if expirationStatusLabel(asset.expirationContext)}<span class="block">{expirationStatusLabel(asset.expirationContext)}</span>{/if}</dd></div>{/if}
 	          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
 	          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
 	          {#if asset.currentCheckout}
@@ -743,6 +768,13 @@
     {/if}
   <div class="asset-detail-sections">
       <AssetDetailActionPanel
+        {customAssetTypes}
+        customAssetTypeId={selectedCustomTypeId}
+        onCustomTypeSelect={selectCustomType}
+        {expiration}
+        {expirationValid}
+        {expirationEnabled}
+        onExpirationChange={(value, valid) => { expiration = value; expirationValid = valid; }}
         {panel}
         {asset}
         {parentTargets}

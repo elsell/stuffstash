@@ -12,6 +12,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
+	"github.com/stuffstash/stuff-stash/internal/adapters/push"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
@@ -46,6 +47,11 @@ func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authoriz
 		InventoryUnitOfWork:        store,
 		InventoryAccess:            store,
 		InventoryAccessUnitOfWork:  store,
+		NotificationPreferences:    store,
+		NotificationDevices:        store,
+		NotificationPushTokens:     push.NativeTokens{},
+		NotificationInbox:          store,
+		NotificationDeliveries:     store,
 		CustomAssetTypes:           store,
 		CustomAssetTypeUnitOfWork:  store,
 		CustomFields:               store,
@@ -128,6 +134,11 @@ func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seede
 		InventoryUnitOfWork:        store,
 		InventoryAccess:            store,
 		InventoryAccessUnitOfWork:  store,
+		NotificationPreferences:    store,
+		NotificationDevices:        store,
+		NotificationPushTokens:     push.NativeTokens{},
+		NotificationInbox:          store,
+		NotificationDeliveries:     store,
 		CustomAssetTypes:           store,
 		CustomAssetTypeUnitOfWork:  store,
 		CustomFields:               store,
@@ -177,6 +188,11 @@ func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, sto
 		InventoryUnitOfWork:        store,
 		InventoryAccess:            store,
 		InventoryAccessUnitOfWork:  store,
+		NotificationPreferences:    store,
+		NotificationDevices:        store,
+		NotificationPushTokens:     push.NativeTokens{},
+		NotificationInbox:          store,
+		NotificationDeliveries:     store,
 		CustomAssetTypes:           store,
 		CustomAssetTypeUnitOfWork:  store,
 		CustomFields:               store,

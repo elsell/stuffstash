@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
 import { ChevronDown, Plus, UserCircle } from 'lucide-react-native';
 import {
@@ -26,11 +26,12 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type HomeScreenProps = {
+  readonly notificationAction?: ReactNode;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
 };
 
-export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenProps) {
+export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationAction }: HomeScreenProps) {
   const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   const feedback = useAppFeedback();
   const dashboardState = useMobileInventoryServerQuery({
@@ -61,6 +62,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery }: HomeScreenP
       ) : null}
       {dashboardState.data ? (
         <Dashboard
+          notificationAction={notificationAction}
           assetCheckoutCommand={assetCheckoutCommand}
           dashboard={dashboardState.data}
           isRefreshing={dashboardState.isRefetching}
@@ -105,11 +107,13 @@ function readableError(error: unknown, fallback: string): string {
 }
 
 function Dashboard({
+  notificationAction,
   assetCheckoutCommand,
   dashboard,
   isRefreshing,
   onRefresh
 }: {
+  readonly notificationAction?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
   readonly isRefreshing: boolean;
@@ -132,6 +136,7 @@ function Dashboard({
       }
     >
       <DashboardHeader
+        notificationAction={notificationAction}
         assetCheckoutCommand={assetCheckoutCommand}
         dashboard={dashboard}
         onDashboardChanged={onRefresh}
@@ -149,10 +154,12 @@ type PendingReturnState = {
 };
 
 function DashboardHeader({
+  notificationAction,
   assetCheckoutCommand,
   dashboard,
   onDashboardChanged
 }: {
+  readonly notificationAction?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
   readonly onDashboardChanged: () => void | Promise<void>;
@@ -258,6 +265,7 @@ function DashboardHeader({
           <ChevronDown color={colors.textMuted} size={18} strokeWidth={2} />
         </Pressable>
         <View style={styles.topBarActions}>
+          {notificationAction}
           {dashboard.canAdd ? (
             <Pressable
               accessibilityLabel="Add an asset"

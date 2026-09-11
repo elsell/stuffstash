@@ -23,10 +23,11 @@ export const recommendedProviderProfiles: readonly RecommendedProviderProfileTem
   {
     key: 'gemini-language-api-key',
     title: 'Gemini language inference',
-    description: 'Cheap model for inventory tool calls and spoken answers.',
+    description: 'Validated model for inventory changes, expiration dates, and answers.',
     credentialPurpose: 'api_key',
     input: {
-      ...geminiProfile('language_inference', 'Gemini Flash-Lite language'),
+      ...geminiProfile('language_inference', 'Gemini Flash language'),
+      modelName: 'gemini-2.5-flash',
       promptTemplate: ''
     }
   },

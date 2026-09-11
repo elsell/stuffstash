@@ -28,6 +28,7 @@
     onOpenAccountSettings: () => void;
     onSignOut: () => void;
     children?: Snippet;
+    headerActions?: Snippet;
   };
 </script>
 
@@ -62,6 +63,7 @@
     onOpenAdd,
     onOpenAccountSettings,
     onSignOut,
+    headerActions,
     children
   }: InventoryWorkspaceChromeProps = $props();
 
@@ -88,6 +90,7 @@
 
   <div class="workspace-column">
     <TopHeader
+      {headerActions}
       {tenants}
       {inventories}
       {selectedTenantId}

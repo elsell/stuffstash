@@ -209,7 +209,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
           operation: 'create',
           title: 'Water bottle',
           assetKind: 'item',
-          parentTitle: 'Kitchen'
+          parentTitle: 'Kitchen',
+          expiration: { date: '2028-02', precision: 'month' }
         }],
         risks: ['Adds a new item to this inventory.']
       }
@@ -219,6 +220,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
     socket.receive({ type: 'session.completed', seq: 8, sessionId: 'session-1' });
     await waitForSentMessageCount(socket, 3);
     await waitForEventType(events, 'action.plan.proposed');
+    expect(events).toContainEqual(expect.objectContaining({ type: 'action.plan.proposed', actionPlan: expect.objectContaining({ commands: expect.arrayContaining([expect.objectContaining({ expiration: { date: '2028-02', precision: 'month' } })]) }) }));
     await transport.approveActionPlan('plan-1', [{
       commandId: 'cmd-water-bottle',
       photoIndex: 0,
@@ -327,7 +329,8 @@ describe('WebSocketRealtimeVoiceTransport', () => {
             operation: 'create',
             title: 'Water bottle',
             assetKind: 'item',
-            parentTitle: 'Kitchen'
+            parentTitle: 'Kitchen',
+            expiration: { date: '2028-02', precision: 'month' }
           }],
           risks: ['Adds a new item to this inventory.']
         }
@@ -702,6 +705,11 @@ describe('WebSocketRealtimeVoiceTransport', () => {
   });
 
   it.each([
+    ['conflicting expiration removal', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item', expirationCleared: true, expiration: { date: '2028-02', precision: 'month' } }]],
+    ['removal on creation', [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', expirationCleared: true }]],
+    ['missing correction', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item' }]],
+    ['false-only correction', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item', expirationCleared: false }]],
+    ['invalid expiration', [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', expiration: { date: '2027-02-29', precision: 'day' } }]],
     ['empty command list', []],
     ['missing command id', [{ kind: 'create_asset', operation: 'create', summary: 'Create item' }]],
     ['duplicate command ids', [
@@ -1688,4 +1696,16 @@ it('finishes confirmed execution callbacks despite a subsequent socket error', a
   socket.onerror?.({});
   finish();
   expect(await result).toBe('completed');
+});
+
+it('preserves explicit expiration removal from the wire through review', async () => {
+ const {socket,transport}=await startCompletedClarification();
+ const events: unknown[]=[];
+ const run=transport.sendFollowUpAudio([],async event=>{events.push(event);},{text:'Remove the expiration date'});
+ socket.receive({type:'action.plan.proposed',seq:4,sessionId:'session-1',actionPlan:{planId:'plan-1',confirmationSummary:'Remove expiration date',commands:[{id:'correction',kind:'update_asset',operation:'update',title:'Bottle',summary:'Remove date',expirationCleared:true}],risks:[]}});
+ await waitForEventType(events,'action.plan.proposed');
+ expect(events).toContainEqual(expect.objectContaining({type:'action.plan.proposed',actionPlan:expect.objectContaining({commands:expect.arrayContaining([expect.objectContaining({expirationCleared:true})])})}));
+ await transport.cancelActionPlan('plan-1');
+ socket.receive({type:'action.plan.cancelled',seq:5,sessionId:'session-1',planId:'plan-1',status:'cancelled'});
+ await run;
 });

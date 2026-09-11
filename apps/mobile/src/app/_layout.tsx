@@ -1,3 +1,4 @@
+import { PushNotificationNavigation } from '../ui/navigation/PushNotificationNavigation';
 import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
@@ -72,6 +73,8 @@ function ThemedApp() {
         <Stack.Screen name="settings/connection" options={{ title: 'Stuff Stash Server' }} />
         <Stack.Screen name="settings/about" options={{ title: 'About' }} />
         <Stack.Screen name="settings/diagnostics" options={{ title: 'Diagnostics' }} />
+        <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
+        <Stack.Screen name="settings/inventory/notifications" options={{ title: 'Notifications' }} />
         <Stack.Screen name="settings/inventory/index" options={{ title: 'Inventory Settings' }} />
         <Stack.Screen name="settings/household/index" options={{ title: 'Household Settings' }} />
         <Stack.Screen name="settings/inventory/tags/index" options={{ title: 'Tags' }} />
@@ -139,6 +142,7 @@ function ThemedApp() {
           }}
         />
       </Stack>
+      <PushNotificationNavigation />
       <VoiceConversationReturn />
       <AppKeyboardAccessory />
     </AppServicesProvider>

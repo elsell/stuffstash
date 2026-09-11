@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"github.com/stuffstash/stuff-stash/internal/adapters/push"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
@@ -13,7 +14,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories, pushSender ports.NotificationPushSender) (app.App, error) {
 	evaluationSettings, err := cfg.ConversationEvaluations.Settings()
 	if err != nil {
 		return app.App{}, err
@@ -46,6 +47,12 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	importer := homebox.NewLegacyImporter(nil)
 	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
+		NotificationPreferences:          repositories.notificationPreferences,
+		NotificationDevices:              repositories.notificationDevices,
+		NotificationPushTokens:           push.NativeTokens{},
+		NotificationPushSender:           pushSender,
+		NotificationInbox:                repositories.notificationInbox,
+		NotificationDeliveries:           repositories.notificationDeliveries,
 		ConversationContextBytes:         contextBytes,
 		WorkflowActivation:               evaluations.activation,
 		EvaluationRunCommands:            evaluations.commands,

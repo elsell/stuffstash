@@ -31,3 +31,5 @@ export const ImagePlus = 'ImagePlusIcon';
 export const ChevronUp = 'ChevronUpIcon';
 
 export const MailCheck = 'MailCheckIcon';
+
+export const Bell = 'BellIcon';

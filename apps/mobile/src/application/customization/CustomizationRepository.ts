@@ -68,12 +68,14 @@ export type UpdateCustomFieldInput = {
 };
 
 export type CreateCustomAssetTypeInput = {
+  readonly expirationEnabled?: boolean;
   readonly key: string;
   readonly displayName: string;
   readonly description: string;
 };
 
 export type UpdateCustomAssetTypeInput = {
+  readonly expirationEnabled?: boolean;
   readonly displayName?: string;
   readonly description?: string;
 };

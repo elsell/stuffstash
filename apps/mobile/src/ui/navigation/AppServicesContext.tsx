@@ -1,3 +1,4 @@
+import { PushRegistrationLifecycle } from './PushRegistrationLifecycle';
 import { useRouter } from 'expo-router';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -129,7 +130,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   }
 
   const mobileComposition = state.composition;
-  const signOut = async (): Promise<void> => {
+  const signOut = (): Promise<void> => mobileComposition.pushSession.disconnect(async () => {
     mobileComposition.disposePerformance();
     const profile = await getConnectionProfileStore().load();
     if (!profile) {
@@ -140,12 +141,12 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
 
     await onboardingCommand.expireSession({ profile });
     setState(appServicesStateAfterSignOut(profile));
-  };
-  const changeServer = async (): Promise<void> => {
+  });
+  const changeServer = (): Promise<void> => mobileComposition.pushSession.disconnect(async () => {
     mobileComposition.disposePerformance();
     await onboardingCommand.reset();
     setState(appServicesStateAfterServerChange());
-  };
+  });
 
   return (
     <MobileServerStateProvider
@@ -167,6 +168,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
             previewQuery={mobileComposition.voiceInteractionPreviewQuery}
             realtimeController={mobileComposition.realtimeVoiceSessionController}
           >
+            <PushRegistrationLifecycle />
             {children}
           </VoiceInteractionStateProvider>
         </AppConnectionActionsContext.Provider>

@@ -206,16 +206,18 @@ type realtimeVoiceAssetCheckoutHistoryArgs struct {
 }
 
 type realtimeVoiceAssetToolOutput struct {
-	Tool    string                       `json:"tool"`
-	Query   string                       `json:"query,omitempty"`
-	Filters map[string]string            `json:"filters,omitempty"`
-	Count   int                          `json:"count"`
-	HasMore bool                         `json:"hasMore,omitempty"`
-	Note    string                       `json:"note,omitempty"`
-	Items   []realtimeVoiceAssetToolItem `json:"items"`
+	NextCursor string                       `json:"nextCursor,omitempty"`
+	Tool       string                       `json:"tool"`
+	Query      string                       `json:"query,omitempty"`
+	Filters    map[string]string            `json:"filters,omitempty"`
+	Count      int                          `json:"count"`
+	HasMore    bool                         `json:"hasMore,omitempty"`
+	Note       string                       `json:"note,omitempty"`
+	Items      []realtimeVoiceAssetToolItem `json:"items"`
 }
 
 type realtimeVoiceAssetToolItem struct {
+	Expiration      *realtimeVoiceExpiration           `json:"expiration"`
 	TagNames        []string                           `json:"tagNames"`
 	AssetID         string                             `json:"assetId,omitempty"`
 	Title           string                             `json:"title"`
