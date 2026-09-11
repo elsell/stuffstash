@@ -1,3 +1,11 @@
+import * as Notifications from 'expo-notifications';
+import * as Crypto from 'expo-crypto';
+import { ExpoPushDevice } from '../adapters/notifications/ExpoPushDevice';
+import { ExpoPushRegistrationJournal } from '../adapters/notifications/ExpoPushRegistrationJournal';
+import { ApiNotificationDeviceRepository } from '../adapters/notifications/ApiNotificationDeviceRepository';
+import { PushSetup } from '../application/notifications/PushSetup';
+import { PushSession } from '../application/notifications/PushSession';
+import { normalizeInstanceUrl } from '../application/onboarding/ConnectionProfile';
 import { NotificationPreferencesSession } from '../application/notifications/NotificationPreferencesSession';
 import { ApiNotificationRepository } from '../adapters/notifications/ApiNotificationRepository';
 import { NotificationInboxQueries } from '../application/notifications/NotificationInboxQueries';
@@ -108,6 +116,7 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly pushSession: PushSession;
   readonly createNotificationPreferencesSession: (tenantId: string, inventoryId: string) => NotificationPreferencesSession;
   readonly notificationInboxQueries: NotificationInboxQueries;
   readonly performanceObserver: PerformanceObserver;
@@ -177,6 +186,7 @@ export type MobileCompositionOptions = {
   readonly onCustomizationEvent?: (event: CustomizationEvent) => void;
 };
 
+const pushJournal = new ExpoPushRegistrationJournal(SecureStore, () => Crypto.randomUUID());
 const connectionProfiles = new FileSystemConnectionProfileStore();
 const appearancePreferences = new AppearancePreferenceController(
   new FileSystemAppearancePreferenceStore()
@@ -268,6 +278,8 @@ export function createMobileComposition(
   );
   const notificationRepository = new ApiNotificationRepository(client);
   const notificationObserver = { record: (event: NotificationEvent) => options.onNotificationEvent?.(event) };
+  const pushSetup = new PushSetup(new ExpoPushDevice(Notifications, Platform.OS, Notifications.AndroidImportance.DEFAULT), pushJournal, new ApiNotificationDeviceRepository(client), notificationObserver);
+  const pushSession = new PushSession(normalizeInstanceUrl(profile.apiBaseUrl), principals, pushSetup, (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId));
   const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, notificationObserver);
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
@@ -278,6 +290,7 @@ export function createMobileComposition(
   return {
     createNotificationPreferencesSession: (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId),
     notificationInboxQueries,
+    pushSession,
     serviceScopeId,
     performanceObserver: performanceSession.observer,
     disposePerformance: performanceSession.dispose,

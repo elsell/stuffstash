@@ -129,7 +129,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
   }
 
   const mobileComposition = state.composition;
-  const signOut = async (): Promise<void> => {
+  const signOut = (): Promise<void> => mobileComposition.pushSession.disconnect(async () => {
     mobileComposition.disposePerformance();
     const profile = await getConnectionProfileStore().load();
     if (!profile) {
@@ -140,12 +140,12 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
 
     await onboardingCommand.expireSession({ profile });
     setState(appServicesStateAfterSignOut(profile));
-  };
-  const changeServer = async (): Promise<void> => {
+  });
+  const changeServer = (): Promise<void> => mobileComposition.pushSession.disconnect(async () => {
     mobileComposition.disposePerformance();
     await onboardingCommand.reset();
     setState(appServicesStateAfterServerChange());
-  };
+  });
 
   return (
     <MobileServerStateProvider

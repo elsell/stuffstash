@@ -28,6 +28,12 @@ export class PushSetup {
    return 'enabled';
   });
  }
+ async hasRegistrations(serverId: string, request: ReadRequest = {}): Promise<boolean> {
+  assertReadActive(request.signal);
+  const records = await this.journal.list();
+  assertReadActive(request.signal);
+  return records.some(scope => scope.serverId === serverId);
+ }
  cleanup(serverId: string, principalId: string, request: ReadRequest = {}): Promise<void> {
   return this.run('push-cleanup',request,async()=>{
    if (!serverId || !principalId) throw new NotificationFailure('invalid');

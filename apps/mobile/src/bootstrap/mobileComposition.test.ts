@@ -112,3 +112,18 @@ describe('createMobileComposition', () => {
     expect(first.queryClient.getQueryCache().getAll()).toEqual([]);
   });
 });
+
+it('preserves the push journal and requests reauthentication when cleanup encounters 401', async () => {
+  const journal = JSON.stringify({version:1, installationId:'phone', scopes:[{serverId:'http://api.local',principalId:'user',tenantId:'tenant',inventoryId:'inventory'}]});
+  const stored = new Map<string,string>([['stuffstash.mobile.push.registrations',journal]]);
+  const credentials = JSON.stringify({apiBaseUrl:'http://api.local',issuer:'https://accounts.example.test',clientId:'stuff-stash-mobile',idToken:'stale-id-token',refreshToken:'refresh-token',expiresAt:Date.now()+600_000});
+  vi.mocked(SecureStore.getItemAsync).mockImplementation(async key => stored.get(key) ?? credentials);
+  vi.mocked(SecureStore.setItemAsync).mockImplementation(async (key,value) => { stored.set(key,value); });
+  vi.stubGlobal('fetch', async () => Response.json({error:{code:'authentication_required',message:'Authentication required.',details:[]},meta:{}},{status:401}));
+  let reauthenticate=false; let reset=false;
+  const composition=createMobileComposition({apiBaseUrl:'http://api.local'},{onAuthenticationRequired(){reauthenticate=true;}});
+  await expect(composition.pushSession.disconnect(async()=>{reset=true;})).rejects.toBeDefined();
+  expect(reauthenticate).toBe(true);
+  expect(reset).toBe(false);
+  expect(stored.get('stuffstash.mobile.push.registrations')).toBe(journal);
+});
