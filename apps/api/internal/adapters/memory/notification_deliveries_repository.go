@@ -62,7 +62,7 @@ func (s *Store) ClaimNotificationDeliveries(ctx context.Context, now time.Time, 
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	if now.IsZero() || fence == "" || lease <= 0 || policy.Validate() != nil || limit < 1 || limit > 100 {
+	if now.IsZero() || fence == "" || len(fence) > 128 || lease <= 0 || policy.Validate() != nil || limit < 1 || limit > 100 {
 		return nil, ports.ErrInvalidProviderInput
 	}
 	s.mu.Lock()
