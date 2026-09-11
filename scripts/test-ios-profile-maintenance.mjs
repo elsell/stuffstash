@@ -10,9 +10,9 @@ const profile = { ...expected, certificateSha256: [digest] };
 function fixture() {
   const calls = [];
   const responses = {
-    '/v1/bundleIds?filter%5Bidentifier%5D=org.stuffstash.mobile&limit=200': {data:[{id:'bundle',attributes:{identifier:expected.bundleId}}]},
-    '/v1/certificates?limit=200': {data:[{id:'cert',attributes:{certificateType:'DISTRIBUTION',certificateContent:certificate.toString('base64'),expirationDate:'2027-01-01T00:00:00Z'}}]},
-    '/v1/bundleIds/bundle/bundleIdCapabilities?limit=200': {data:[]}
+    '/v1/bundleIds?filter%5Bidentifier%5D=org.stuffstash.mobile': {data:[{id:'bundle',attributes:{identifier:expected.bundleId}}]},
+    '/v1/certificates': {data:[{id:'cert',attributes:{certificateType:'DISTRIBUTION',certificateContent:certificate.toString('base64'),expirationDate:'2027-01-01T00:00:00Z'}}]},
+    '/v1/bundleIds/bundle/bundleIdCapabilities': {data:[]}
   };
   return { calls, responses, api: async (path, method='GET', body) => {
     calls.push({path,method,body});
@@ -31,12 +31,12 @@ test('rejects another team or bundle before requesting Apple data',async()=>{
 });
 test('rejects missing, expired or development certificates',async()=>{
   for(const attributes of [{certificateContent:'b3RoZXI='},{expirationDate:'2020-01-01T00:00:00Z'},{certificateType:'DEVELOPMENT'}]) {
-    const f=fixture(); Object.assign(f.responses['/v1/certificates?limit=200'].data[0].attributes,attributes);
+    const f=fixture(); Object.assign(f.responses['/v1/certificates'].data[0].attributes,attributes);
     await assert.rejects(inspectProfileRepair(f.api,profile,expected,now));
   }
 });
 test('rejects foreign pagination and ambiguous bundle matches',async()=>{
-  const f=fixture(); f.responses['/v1/certificates?limit=200'].links={next:'https://example.com/steal'};
+  const f=fixture(); f.responses['/v1/certificates'].links={next:'https://example.com/steal'};
   await assert.rejects(inspectProfileRepair(f.api,profile,expected,now));
   const other=fixture(); other.responses[Object.keys(other.responses)[0]].data.push({id:'second',attributes:{identifier:expected.bundleId}});
   await assert.rejects(inspectProfileRepair(other.api,profile,expected,now));
@@ -53,4 +53,12 @@ test('repair only enables push and creates a profile referencing the existing ce
 test('already enabled push is preserved and failed creation is not retried',async()=>{
   let calls=0;await assert.rejects(repairPushProfile(async(path)=>{calls++;assert.equal(path,'/v1/profiles');throw new Error('timeout');},{bundleId:'bundle',certificateId:'cert',pushEnabled:true},'profile'));
   assert.equal(calls,1);
+});
+
+test('follows Apple pagination to find the existing certificate on a later page',async()=>{
+ const f=fixture();const certificates=f.responses['/v1/certificates'];
+ f.responses['/v1/certificates']={data:[],links:{next:origin+'/v1/certificates?cursor=next'}};
+ f.responses['/v1/certificates?cursor=next']=certificates;
+ const plan=await inspectProfileRepair(f.api,profile,expected,now);assert.equal(plan.certificateId,'cert');
+ assert.ok(f.calls.some(value=>value.path==='/v1/certificates?cursor=next'));
 });

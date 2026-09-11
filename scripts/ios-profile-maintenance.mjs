@@ -18,10 +18,10 @@ async function collect(api, path) {
 }
 export async function inspectProfileRepair(api, profile, expected, now) {
   if (!expected.teamId || !expected.bundleId || profile.teamId !== expected.teamId || profile.bundleId !== expected.bundleId || !Array.isArray(profile.certificateSha256) || !profile.certificateSha256.length) throw new Error('Stored profile does not match application');
-  const query = new URLSearchParams({'filter[identifier]':expected.bundleId, limit:'200'});
+  const query = new URLSearchParams({'filter[identifier]':expected.bundleId});
   const bundles = await collect(api, `/v1/bundleIds?${query}`);
   if (bundles.length !== 1 || bundles[0]?.attributes?.identifier !== expected.bundleId || !bundles[0].id) throw new Error('Expected one matching Apple bundle');
-  const certificates = await collect(api, '/v1/certificates?limit=200');
+  const certificates = await collect(api, '/v1/certificates');
   const matching = certificates.filter(value => {
     const attrs = value?.attributes;
     return value?.id && ['DISTRIBUTION','IOS_DISTRIBUTION'].includes(attrs?.certificateType)
@@ -31,7 +31,7 @@ export async function inspectProfileRepair(api, profile, expected, now) {
   });
   if (matching.length !== 1) throw new Error('Expected one existing valid distribution certificate');
   const bundleId = bundles[0].id;
-  const capabilities = await collect(api, `/v1/bundleIds/${encodeURIComponent(bundleId)}/bundleIdCapabilities?limit=200`);
+  const capabilities = await collect(api, `/v1/bundleIds/${encodeURIComponent(bundleId)}/bundleIdCapabilities`);
   return {bundleId, certificateId:matching[0].id, pushEnabled:capabilities.some(value=>value?.attributes?.capabilityType==='PUSH_NOTIFICATIONS')};
 }
 export async function repairPushProfile(api, plan, name) {
