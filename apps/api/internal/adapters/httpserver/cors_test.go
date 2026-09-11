@@ -2,6 +2,8 @@ package httpserver
 
 import (
 	"net/http"
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -66,7 +68,7 @@ func TestCORSRejectsUnsupportedPreflightMethod(t *testing.T) {
 
 	response := performRequestWithHeaders(server, http.MethodOptions, "/tenants", "", map[string]string{
 		"Origin":                        "http://localhost:5173",
-		"Access-Control-Request-Method": "PUT",
+		"Access-Control-Request-Method": "TRACE",
 	}, nil)
 
 	if response.Code != http.StatusForbidden {
@@ -87,5 +89,32 @@ func TestCORSRejectsUnsupportedPreflightHeaders(t *testing.T) {
 
 	if response.Code != http.StatusForbidden {
 		t.Fatalf("expected preflight status %d, got %d with body %s", http.StatusForbidden, response.Code, response.Body.String())
+	}
+}
+
+func TestCORSAllowsEveryPublishedAPIMethod(t *testing.T) {
+	const origin = "https://web.example.test"
+	server := NewServerWithOptions(":0", newTestApp(&fakeObserver{}, "unused-id"), Options{CORSAllowedOrigins: []string{origin}})
+	var contract struct {
+		Paths map[string]map[string]any `json:"paths"`
+	}
+	decodeBody(t, performRequest(server, http.MethodGet, "/openapi.json", "", nil), &contract)
+	checked := map[string]bool{}
+	for path, operations := range contract.Paths {
+		for operation := range operations {
+			method := strings.ToUpper(operation)
+			if !slices.Contains([]string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"}, method) || checked[method] {
+				continue
+			}
+			checked[method] = true
+			response := performRequestWithHeaders(server, http.MethodOptions, path, "", map[string]string{"Origin": origin, "Access-Control-Request-Method": method, "Access-Control-Request-Headers": "Authorization, Content-Type, X-Request-ID"}, nil)
+			requireStatus(t, response, http.StatusNoContent)
+			if !slices.Contains(strings.Split(response.Header().Get("Access-Control-Allow-Methods"), ", "), method) {
+				t.Fatalf("published method %s is not advertised for browsers", method)
+			}
+		}
+	}
+	if !checked[http.MethodPut] {
+		t.Fatal("contract no longer exercises PUT")
 	}
 }

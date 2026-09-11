@@ -74,3 +74,26 @@ func TestNotificationInboxHTTPAccessAndReadState(t *testing.T) {
 	requireStatus(t, performRequest(server, http.MethodGet, base+"/notice", "Bearer dev:owner", nil), http.StatusNotFound)
 	requireStatus(t, performRequest(server, http.MethodDelete, base+"/notice/read", "Bearer dev:owner", nil), http.StatusNotFound)
 }
+
+func TestNotificationBrowserReadFlowPreservesAccessBoundaries(t *testing.T) {
+	const origin = "https://web.example.test"
+	const base = "/tenants/home/inventories/main/notifications"
+	server, _ := notificationHTTPFixture(t, Options{CORSAllowedOrigins: []string{origin}})
+	for _, path := range []string{base + "/notice/read", base + "/read-all"} {
+		headers := map[string]string{"Origin": origin, "Access-Control-Request-Method": http.MethodPut, "Access-Control-Request-Headers": "Authorization"}
+		requireStatus(t, performRequestWithHeaders(server, http.MethodOptions, path, "", headers, nil), http.StatusNoContent)
+		for _, token := range []string{"", "Bearer malformed", "Bearer dev:outsider"} {
+			response := performRequestWithHeaders(server, http.MethodPut, path, token, map[string]string{"Origin": origin}, nil)
+			if response.Code != http.StatusUnauthorized && response.Code != http.StatusForbidden {
+				t.Fatalf("browser mutation bypassed auth: %d", response.Code)
+			}
+		}
+		response := performRequestWithHeaders(server, http.MethodPut, path, "Bearer dev:owner", map[string]string{"Origin": origin}, nil)
+		requireStatus(t, response, http.StatusOK)
+		if response.Header().Get("Access-Control-Allow-Origin") != origin {
+			t.Fatal("browser cannot read response")
+		}
+	}
+	requireStatus(t, performRequestWithHeaders(server, http.MethodDelete, base+"/notice/read", "Bearer dev:owner", map[string]string{"Origin": origin}, nil), http.StatusOK)
+	requireStatus(t, performRequestWithHeaders(server, http.MethodGet, base+"/notice", "Bearer dev:owner", map[string]string{"Origin": origin}, nil), http.StatusOK)
+}

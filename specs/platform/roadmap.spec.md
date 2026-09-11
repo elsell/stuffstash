@@ -271,3 +271,5 @@ Promote approved B1 to the shared native mobile surface: keyboard and voice inpu
 ## Current focus: expiration usability follow-through (2026-09-11)
 
 Implement the approved expiration UI/UX audit across native and web, mark-unread semantics, reliable badges and inventory-wide expiration status. Validate through remote tests and CI, code-critic review, PR and GitOps/TestFlight release. Native layout/device evidence is required separately from test counts. APNs provider credentials remain a separately deferred setup task.
+
+The first usability release exposed a browser transport gap: PUT preflights were rejected despite public PUT endpoints. The hotfix adds method parity between the published API and CORS, with real HTTP regression coverage; intercepted UI fixtures alone do not validate cross-origin transport.
