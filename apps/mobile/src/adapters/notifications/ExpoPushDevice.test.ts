@@ -41,3 +41,21 @@ it('hides native provider failures',async()=>{
  api.getDevicePushTokenAsync=async()=>{throw new Error('private provider token');};
  await expect(new ExpoPushDevice(api,'ios',3).nativeToken()).rejects.toMatchObject({kind:'unavailable',message:'Notifications could not be updated. Try again.'});
 });
+it('checks permission silently without prompting or fetching a token',async()=>{
+ const device=new ExpoPushDevice({async getPermissionsAsync(){return {granted:false};},async requestPermissionsAsync(){throw new Error('must not prompt');},async getDevicePushTokenAsync(){throw new Error('must not fetch');},async setNotificationChannelAsync(){throw new Error('must not alter');}},'ios',3);
+ await expect(device.permissionGranted()).resolves.toBe(false);
+});
+it('keeps a newer token event when an older native read finishes later',async()=>{
+ let complete!:(value:{type:string;data:unknown})=>void;
+ const device=new ExpoPushDevice({async getPermissionsAsync(){return {granted:true};},async requestPermissionsAsync(){return {granted:true};},async setNotificationChannelAsync(){},getDevicePushTokenAsync(){return new Promise(resolve=>{complete=resolve;});}},'ios',3);
+ const reading=device.nativeToken();expect(device.acceptNativeToken({type:'ios',data:'new-token'})).toBe(true);
+ complete({type:'ios',data:'old-token'});
+ await expect(reading).resolves.toEqual({transport:'apns',token:'new-token'});
+ await expect(device.nativeToken()).resolves.toEqual({transport:'apns',token:'new-token'});
+});
+it('discards a native read invalidated by a later foreground transition',async()=>{
+ let complete!:(value:{type:string;data:unknown})=>void;
+ const device=new ExpoPushDevice({async getPermissionsAsync(){return {granted:true};},async requestPermissionsAsync(){return {granted:true};},async setNotificationChannelAsync(){},getDevicePushTokenAsync(){return new Promise(resolve=>{complete=resolve;});}},'ios',3);
+ const reading=device.nativeToken();device.invalidateNativeToken();complete({type:'ios',data:'old-token'});
+ await expect(reading).rejects.toMatchObject({kind:'unavailable'});
+});

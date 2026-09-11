@@ -1,3 +1,5 @@
+import { PushReconciliationController } from '../application/notifications/PushReconciliationController';
+import { ExpoPushReconciliationEvents } from '../adapters/notifications/ExpoPushReconciliationEvents';
 import * as Notifications from 'expo-notifications';
 import * as Crypto from 'expo-crypto';
 import { ExpoPushDevice } from '../adapters/notifications/ExpoPushDevice';
@@ -11,7 +13,7 @@ import { ApiNotificationRepository } from '../adapters/notifications/ApiNotifica
 import { NotificationInboxQueries } from '../application/notifications/NotificationInboxQueries';
 import type { NotificationEvent } from '../application/notifications/NotificationObservability';
 import { InventoryAssetTypesQuery } from '../application/assets/InventoryAssetTypesQuery';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { createMobilePerformanceSession } from '../adapters/observability/MobilePerformanceSession';
 import type { PerformanceObserver } from '../application/observability/PerformanceObserver';
 import * as Network from 'expo-network';
@@ -116,6 +118,7 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly pushReconciliation: PushReconciliationController;
   readonly pushSession: PushSession;
   readonly createNotificationPreferencesSession: (tenantId: string, inventoryId: string) => NotificationPreferencesSession;
   readonly notificationInboxQueries: NotificationInboxQueries;
@@ -278,7 +281,8 @@ export function createMobileComposition(
   );
   const notificationRepository = new ApiNotificationRepository(client);
   const notificationObserver = { record: (event: NotificationEvent) => options.onNotificationEvent?.(event) };
-  const pushSetup = new PushSetup(new ExpoPushDevice(Notifications, Platform.OS, Notifications.AndroidImportance.DEFAULT), pushJournal, new ApiNotificationDeviceRepository(client), notificationObserver);
+  const pushDevice = new ExpoPushDevice(Notifications, Platform.OS, Notifications.AndroidImportance.DEFAULT);
+  const pushSetup = new PushSetup(pushDevice, pushJournal, new ApiNotificationDeviceRepository(client), notificationObserver);
   const pushSession = new PushSession(normalizeInstanceUrl(profile.apiBaseUrl), principals, pushSetup, (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId));
   const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, notificationObserver);
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
@@ -291,6 +295,7 @@ export function createMobileComposition(
     createNotificationPreferencesSession: (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId),
     notificationInboxQueries,
     pushSession,
+    pushReconciliation: new PushReconciliationController(new ExpoPushReconciliationEvents(AppState, Notifications, pushDevice), pushSession, notificationObserver),
     serviceScopeId,
     performanceObserver: performanceSession.observer,
     disposePerformance: performanceSession.dispose,

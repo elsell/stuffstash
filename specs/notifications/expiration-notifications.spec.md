@@ -275,3 +275,22 @@ The first FCM credential adapter accepts an explicitly supplied Google service-a
 Native push providers are independently enabled through environment configuration and default off until credentials are supplied. APNs requires key ID, team ID, bundle topic and a mounted private-key file; production is the default with an explicit sandbox override. FCM requires project ID, a mounted service-account JSON file and the native expiration channel. Both require a configured public API-server identity URL. Enabled but missing/invalid credentials fail startup with fixed safe errors. Credential files are read only during infrastructure construction and bounded to 64 KiB. Sender routing uses only the registered device transport; a missing provider never falls back to another transport. The sender is injected into the notification service. A cancellable delivery worker runs when at least one provider is enabled, with configurable page size, poll interval, page timeout, lease and retry bounds. Defaults are 10 jobs, five-second polls, 30-second page timeout, one-minute leases and six attempts with one-minute initial/fifteen-minute maximum backoff. Page timeout must be shorter than the lease. Shutdown cancels and joins the worker; failed pages emit a safe domain worker-failure observation. In-app notification generation remains independent of push activation.
 
 Delivery pages claim one job immediately before processing it, up to the configured page size. A stalled send or cancelled page must not consume retry attempts for jobs the page has not started.
+
+### Mobile registration reconciliation
+
+On authenticated startup, return to the foreground, or native push token change,
+reconcile only journaled registrations for the current server and principal.
+This background operation checks permission without prompting. If permission is
+revoked, revoke the device registration while retaining its journal record for a
+later permission restoration. Do not change personal inventory preferences.
+With permission, read the current native token and register idempotently with
+revision zero first; only on revision conflict fetch the current revision and
+retry. Unchanged registrations must not rotate revisions or invalidate queued
+notifications merely because the app returns to the foreground. Account/server
+cleanup and reconciliation share the session operation guard. Abort outstanding
+work when its authenticated composition unmounts. Coalesce repeated triggers and
+retry failed reconciliation on the next foreground or token event; report safe
+notification observability without including tokens.
+
+Native token events carry the new token into a validated in-memory adapter cache. Reconciliation caused by that event uses the supplied token rather than requesting another native token, preventing Expo token-fetch event feedback. Foreground transitions invalidate the cache before reconciliation; tokens are never persisted in the registration journal.
+A native token read that finishes after a newer token event or foreground invalidation must not overwrite that newer state.

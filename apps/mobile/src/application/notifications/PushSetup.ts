@@ -28,6 +28,38 @@ export class PushSetup {
    return 'enabled';
   });
  }
+ reconcile(serverId: string, principalId: string, request: ReadRequest = {}): Promise<void> {
+  return this.run('push-reconcile',request,async()=>{
+   if(!serverId || !principalId) throw new NotificationFailure('invalid');
+   const records=(await this.journal.list()).filter(scope=>scope.serverId===serverId && scope.principalId===principalId);
+   assertReadActive(request.signal);
+   if(!records.length) return;
+   const granted=await this.device.permissionGranted(); assertReadActive(request.signal);
+   const token=granted ? await this.device.nativeToken() : null; assertReadActive(request.signal);
+   const installationId=await this.journal.installationId(); assertReadActive(request.signal);
+   let failure: unknown;
+   for(const scope of records){
+    assertReadActive(request.signal); validateScope(scope);
+    try {
+     if(!token) { await this.revoke(scope,installationId,request); continue; }
+     let revision=0;
+     for(let attempt=0;attempt<2;attempt++) {
+      try {
+       const result=await this.repository.register(scope.tenantId,scope.inventoryId,{installationId,...token,revision},request.signal);
+       assertReadActive(request.signal);
+       if(!result.active || result.installationId!==installationId) throw new NotificationFailure('unavailable');
+       break;
+      } catch(error) {
+       assertReadActive(request.signal);
+       if(attempt===0 && error instanceof NotificationFailure && error.kind==='conflict') { revision=(await this.lookup(scope,installationId,request))?.revision ?? 0; continue; }
+       throw error;
+      }
+     }
+    } catch(error) { assertReadActive(request.signal); failure=error; }
+   }
+   if(failure) throw failure;
+  });
+ }
  async hasRegistrations(serverId: string, request: ReadRequest = {}): Promise<boolean> {
   assertReadActive(request.signal);
   const records = await this.journal.list();

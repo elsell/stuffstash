@@ -7,6 +7,7 @@ type Preferences = Parameters<PushSetup['enable']>[1];
 export class PushSession {
   private busy = false;
   private disconnected = false;
+  private background: {controller: AbortController; work: Promise<void>} | null = null;
   constructor(
     private readonly serverId: string,
     private readonly principals: CurrentPrincipalRepository,
@@ -23,7 +24,28 @@ export class PushSession {
     });
   }
 
+  async reconcile(request: ReadRequest = {}): Promise<void> {
+    assertReadActive(request.signal);
+    if(this.busy || this.disconnected) throw new NotificationFailure('conflict');
+    const controller=new AbortController();
+    const abort=()=>controller.abort();
+    request.signal?.addEventListener('abort',abort,{once:true});
+    const backgroundRequest={signal:controller.signal};
+    const work=this.run(async()=>{
+      if(!await this.setup.hasRegistrations(this.serverId,backgroundRequest)) return;
+      const principal=await this.principals.getCurrentPrincipal(backgroundRequest);
+      assertReadActive(controller.signal);
+      await this.setup.reconcile(this.serverId,principal.id,backgroundRequest);
+    });
+    this.background={controller,work};
+    try {await work;} finally {this.background=null;request.signal?.removeEventListener('abort',abort);}
+  }
+
   async disconnect(action: () => Promise<void>, request: ReadRequest = {}): Promise<void> {
+    if(this.background){
+      this.background.controller.abort();
+      try {await this.background.work;} catch { /* Cleanup below rechecks the journal. */ }
+    }
     return this.run(async () => {
       assertReadActive(request.signal);
       if (await this.setup.hasRegistrations(this.serverId, request)) {

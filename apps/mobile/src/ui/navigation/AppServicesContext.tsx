@@ -1,3 +1,4 @@
+import { PushRegistrationLifecycle } from './PushRegistrationLifecycle';
 import { useRouter } from 'expo-router';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -167,6 +168,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
             previewQuery={mobileComposition.voiceInteractionPreviewQuery}
             realtimeController={mobileComposition.realtimeVoiceSessionController}
           >
+            <PushRegistrationLifecycle />
             {children}
           </VoiceInteractionStateProvider>
         </AppConnectionActionsContext.Provider>

@@ -19,9 +19,6 @@ vi.mock('expo-web-browser', () => ({
   maybeCompleteAuthSession: vi.fn()
 }));
 
-vi.mock('react-native', () => ({
-  Platform: { OS: 'ios' }
-}));
 
 vi.mock('expo-constants', () => ({
   default: { expoConfig: { extra: {} } }

@@ -1,5 +1,6 @@
 import type { PushTransport } from '../../domain/notifications/NotificationDevice';
 export interface PushDevicePort {
+ permissionGranted(): Promise<boolean>;
  requestPermission(): Promise<boolean>;
  nativeToken(): Promise<{transport: PushTransport; token: string}>;
 }
