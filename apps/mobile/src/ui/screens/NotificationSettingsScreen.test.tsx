@@ -5,7 +5,7 @@ import { StuffStashClient } from '@stuff-stash/api-client';
 import { ApiNotificationRepository } from '../../adapters/notifications/ApiNotificationRepository';
 import { NotificationPreferencesSession } from '../../application/notifications/NotificationPreferencesSession';
 import { NotificationSettingsScreen } from './NotificationSettingsScreen';
-it('loads personal settings and saves a changed threshold without changing timezone', async () => {
+it('loads personal timing and saves a changed threshold without changing timezone', async () => {
   let preferences = { revision: 1, defaults: { enabled: true, upcoming: true, expired: true, advanceDays: 30 }, timezone: 'America/New_York', pushEnabled: false, overrides: [] };
   const repository = new ApiNotificationRepository(new StuffStashClient({ baseUrl: 'https://api.test', tokenProvider: () => 'token', fetch: async (input, init) => {
     const request = new Request(input, init);
@@ -16,11 +16,9 @@ it('loads personal settings and saves a changed threshold without changing timez
   await session.initialize('America/New_York');
   const harness = new MobileRenderHarness();
   try {
-    await harness.render(<NotificationSettingsScreen tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{ async execute() { return []; } }} />);
+    await harness.render(<NotificationSettingsScreen page={{kind:"timing"}} onBack={()=>{}} onNavigate={()=>{}} tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{ async execute() { return []; } }} />);
     await harness.settle();
-    await harness.press(harness.byLabel('Time zone'));
-    await harness.press(harness.byLabel('Before expiration'));
-    expect(harness.byLabel('Time zone')?.props.accessibilityValue.text).toContain('New York');
+    await harness.press(harness.byLabel('Custom days'));
     expect(harness.byLabel('Days before expiration')).toBeDefined();
     await harness.changeText(harness.byLabel('Days before expiration'), '7');
     await harness.press(harness.byLabel('Save reminder days'));
@@ -45,7 +43,7 @@ it('handles denied permission, successful enablement and disabling without chang
   }};
   const harness=new MobileRenderHarness();
   try {
-    await harness.render(<NotificationSettingsScreen tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{async execute(){return [];}}} pushSession={pushSession} />);
+    await harness.render(<NotificationSettingsScreen onBack={()=>{}} onNavigate={()=>{}} tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{async execute(){return [];}}} pushSession={pushSession} />);
     await harness.settle();
     await harness.press(harness.byLabel('Set up alerts on this device'));
     await harness.settle();

@@ -105,3 +105,18 @@ it('accepts another device marking a previously opened notification unread on re
   expect(harness.byLabel('Mark Tylenol read')).toBeDefined();
  } finally { await harness.unmount(); }
 });
+it('keeps empty and short inbox refresh surfaces as large as the viewport', async () => {
+ const harness=new MobileRenderHarness();let loads=0;
+ const queries={async list(){loads++;return {items:loads===1?[]:[alert],pagination:{limit:20,hasMore:false,nextCursor:null}};},async open(){return '';},async setRead(){},async markAllRead(){}};
+ try{
+  await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={()=>{}} onChanged={()=>{}} onSettings={()=>{}}/>);
+  await harness.settle();
+  const scroll=harness.byType('ScrollView')!;
+  expect(scroll.props.style).toMatchObject({flex:1});
+  expect(scroll.props.contentContainerStyle).toMatchObject({flexGrow:1});
+  expect(scroll.props.alwaysBounceVertical).toBe(true);
+  await harness.run(()=>scroll.props.refreshControl.props.onRefresh());
+  expect(loads).toBe(2);
+  expect(harness.byLabel('Open Tylenol')).toBeDefined();
+ }finally{await harness.unmount();}
+});
