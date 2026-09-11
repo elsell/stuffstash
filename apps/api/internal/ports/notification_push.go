@@ -24,8 +24,9 @@ type NotificationPushMessage struct {
 	Body           string
 }
 type NotificationPushResult struct {
-	Outcome       NotificationPushOutcome
-	InvalidatedAt time.Time
+	Outcome        NotificationPushOutcome
+	InvalidatedAt  time.Time
+	RetryNotBefore time.Time
 }
 type NotificationPushSender interface {
 	SendNotification(context.Context, NotificationPushMessage) (NotificationPushResult, error)

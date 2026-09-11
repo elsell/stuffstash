@@ -18,10 +18,11 @@ import (
 )
 
 type pushSenderFake struct {
-	before        func()
-	messages      []ports.NotificationPushMessage
-	outcome       ports.NotificationPushOutcome
-	invalidatedAt time.Time
+	before         func()
+	messages       []ports.NotificationPushMessage
+	outcome        ports.NotificationPushOutcome
+	invalidatedAt  time.Time
+	retryNotBefore time.Time
 }
 
 func (f *pushSenderFake) SendNotification(_ context.Context, message ports.NotificationPushMessage) (ports.NotificationPushResult, error) {
@@ -29,7 +30,7 @@ func (f *pushSenderFake) SendNotification(_ context.Context, message ports.Notif
 		f.before()
 	}
 	f.messages = append(f.messages, message)
-	return ports.NotificationPushResult{Outcome: f.outcome, InvalidatedAt: f.invalidatedAt}, nil
+	return ports.NotificationPushResult{Outcome: f.outcome, InvalidatedAt: f.invalidatedAt, RetryNotBefore: f.retryNotBefore}, nil
 }
 func deliveryFixture(t *testing.T, sender *pushSenderFake) (Service, *memory.Store, ScopeInput) {
 	ctx := context.Background()
@@ -235,5 +236,29 @@ func TestSameTokenFreshRegistrationAdvancesRevision(t *testing.T) {
 	device, err := service.RegisterDevice(context.Background(), input, RegisterDeviceInput{InstallationID: previous.InstallationID, Transport: previous.Transport, Token: previous.Token, Revision: previous.Revision})
 	if err != nil || device.Revision != previous.Revision+1 || !device.UpdatedAt.Equal(service.deps.Clock.Now()) {
 		t.Fatalf("fresh registration not recorded: %+v %v", device, err)
+	}
+}
+
+func TestDeliveryWaitsForProviderDeadlineBeyondBackoffCap(t *testing.T) {
+	sender := &pushSenderFake{outcome: ports.NotificationPushRetry}
+	service, _, _ := deliveryFixture(t, sender)
+	now := service.deps.Clock.Now()
+	sender.retryNotBefore = now.Add(2 * time.Hour)
+	policy := notification.RetryPolicy{MaxAttempts: 3, InitialDelay: time.Second, MaximumDelay: time.Minute}
+	for _, at := range []time.Time{now, now.Add(time.Minute), now.Add(time.Hour)} {
+		service.deps.Clock = inboxClock{at}
+		if _, err := service.DeliverPage(context.Background(), 10, time.Minute, policy); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(sender.messages) != 1 {
+		t.Fatal("provider deadline ignored")
+	}
+	service.deps.Clock = inboxClock{sender.retryNotBefore}
+	if _, err := service.DeliverPage(context.Background(), 10, time.Minute, policy); err != nil {
+		t.Fatal(err)
+	}
+	if len(sender.messages) != 2 {
+		t.Fatal("delivery not resumed at deadline")
 	}
 }

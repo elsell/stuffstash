@@ -27,5 +27,5 @@ const (
 type NotificationDeliveryRepository interface {
 	InsertNotificationWithDeliveries(context.Context, NotificationRecord, []NotificationDelivery, audit.Record) (NotificationRecord, bool, error)
 	ClaimNotificationDeliveries(context.Context, time.Time, string, time.Duration, notification.RetryPolicy, int) ([]NotificationDelivery, error)
-	SettleNotificationDelivery(context.Context, string, string, time.Time, NotificationDeliveryOutcome, notification.RetryPolicy) error
+	SettleNotificationDelivery(context.Context, string, string, time.Time, NotificationDeliveryOutcome, notification.RetryPolicy, time.Time) error
 }

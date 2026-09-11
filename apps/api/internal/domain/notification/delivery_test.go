@@ -54,7 +54,7 @@ func TestDeliveryRetryBackoffAndExhaustion(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		value, err = claimed.Retry(now, fence, policy)
+		value, err = claimed.Retry(now, fence, policy, time.Time{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -87,7 +87,7 @@ func TestDeliveryCancellationAndInvalidPolicy(t *testing.T) {
 	if err != nil || cancelled.Status != DeliveryCancelled {
 		t.Fatalf("cancel: %+v %v", cancelled, err)
 	}
-	if _, err := cancelled.Retry(now, "worker", policy); !errors.Is(err, ErrStaleDeliveryLease) {
+	if _, err := cancelled.Retry(now, "worker", policy, time.Time{}); !errors.Is(err, ErrStaleDeliveryLease) {
 		t.Fatalf("cancel retry: %v", err)
 	}
 }
@@ -111,8 +111,31 @@ func TestRetryDelayCannotOverflow(t *testing.T) {
 	maximum := time.Duration(1<<63 - 1)
 	policy := RetryPolicy{MaxAttempts: 100, InitialDelay: maximum/2 + 1, MaximumDelay: maximum}
 	state := DeliveryState{Status: DeliveryLeased, Attempts: 99, Fence: "worker", LeaseUntil: now.Add(time.Minute)}
-	next, err := state.Retry(now, "worker", policy)
+	next, err := state.Retry(now, "worker", policy, time.Time{})
 	if err != nil || !next.NextAttemptAt.Equal(now.Add(maximum)) {
 		t.Fatalf("overflow retry: %+v %v", next, err)
+	}
+}
+
+func TestDeliveryRetryHonorsProviderDeadlineWithoutExtendingLease(t *testing.T) {
+	now := time.Date(2026, 9, 10, 12, 0, 0, 0, time.UTC)
+	policy := RetryPolicy{MaxAttempts: 3, InitialDelay: time.Second, MaximumDelay: time.Minute}
+	pending, _ := NewDelivery(now)
+	claimed, _ := pending.Claim(now, "worker", time.Minute, policy)
+	for _, deadline := range []time.Time{time.Time{}, now.Add(-time.Hour), now.Add(2 * time.Hour)} {
+		next, err := claimed.Retry(now, "worker", policy, deadline)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := now.Add(time.Second)
+		if deadline.After(want) {
+			want = deadline
+		}
+		if !next.NextAttemptAt.Equal(want) {
+			t.Fatal("provider delay shortened or backoff lost")
+		}
+	}
+	if _, err := claimed.Retry(now.Add(time.Minute), "worker", policy, now.Add(time.Hour)); !errors.Is(err, ErrStaleDeliveryLease) {
+		t.Fatal("deadline bypassed expired lease")
 	}
 }

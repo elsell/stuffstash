@@ -89,7 +89,7 @@ func (s Store) ClaimNotificationDeliveries(ctx context.Context, now time.Time, f
 	}
 	return result, nil
 }
-func (s Store) SettleNotificationDelivery(ctx context.Context, id, fence string, now time.Time, outcome ports.NotificationDeliveryOutcome, policy notification.RetryPolicy) error {
+func (s Store) SettleNotificationDelivery(ctx context.Context, id, fence string, now time.Time, outcome ports.NotificationDeliveryOutcome, policy notification.RetryPolicy, notBefore time.Time) error {
 	if id == "" {
 		return notification.ErrStaleDeliveryLease
 	}
@@ -110,7 +110,7 @@ func (s Store) SettleNotificationDelivery(ctx context.Context, id, fence string,
 		case ports.NotificationDeliveryCancelled:
 			next, err = current.Cancel(now, fence)
 		case ports.NotificationDeliveryRetry:
-			next, err = current.Retry(now, fence, policy)
+			next, err = current.Retry(now, fence, policy, notBefore)
 		default:
 			return ports.ErrInvalidProviderInput
 		}

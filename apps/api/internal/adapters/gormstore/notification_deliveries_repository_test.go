@@ -67,10 +67,10 @@ func TestNotificationDeliveryAtomicPublicationAndFencing(t *testing.T) {
 	if err != nil || len(second) != 1 {
 		t.Fatalf("reclaim: %v", err)
 	}
-	if err := store.SettleNotificationDelivery(ctx, "delivery", "first", now.Add(time.Minute), ports.NotificationDeliveryAccepted, policy); !errors.Is(err, notification.ErrStaleDeliveryLease) {
+	if err := store.SettleNotificationDelivery(ctx, "delivery", "first", now.Add(time.Minute), ports.NotificationDeliveryAccepted, policy, time.Time{}); !errors.Is(err, notification.ErrStaleDeliveryLease) {
 		t.Fatalf("stale fence: %v", err)
 	}
-	if err := store.SettleNotificationDelivery(ctx, "delivery", "second", now.Add(time.Minute), ports.NotificationDeliveryAccepted, policy); err != nil {
+	if err := store.SettleNotificationDelivery(ctx, "delivery", "second", now.Add(time.Minute), ports.NotificationDeliveryAccepted, policy, time.Time{}); err != nil {
 		t.Fatal(err)
 	}
 	pending, err := store.ClaimNotificationDeliveries(ctx, now.Add(time.Hour), "third", time.Minute, policy, 10)
@@ -88,21 +88,21 @@ func TestNotificationDeliveryAtomicPublicationAndFencing(t *testing.T) {
 	if _, err := store.ClaimNotificationDeliveries(ctx, now, "retry-one", time.Minute, policy, 1); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.SettleNotificationDelivery(ctx, delivery.ID, "retry-one", now, ports.NotificationDeliveryRetry, policy); err != nil {
+	if err := store.SettleNotificationDelivery(ctx, delivery.ID, "retry-one", now, ports.NotificationDeliveryRetry, policy, now.Add(2*time.Hour)); err != nil {
 		t.Fatal(err)
 	}
-	early, err := store.ClaimNotificationDeliveries(ctx, now, "early", time.Minute, policy, 1)
+	early, err := store.ClaimNotificationDeliveries(ctx, now.Add(time.Hour), "early", time.Minute, policy, 1)
 	if err != nil || len(early) != 0 {
 		t.Fatal("retry ignored backoff")
 	}
-	due, err := store.ClaimNotificationDeliveries(ctx, now.Add(time.Second), "retry-two", time.Minute, policy, 1)
+	due, err := store.ClaimNotificationDeliveries(ctx, now.Add(2*time.Hour), "retry-two", time.Minute, policy, 1)
 	if err != nil || len(due) != 1 {
 		t.Fatal("retry not due")
 	}
-	if err := store.SettleNotificationDelivery(ctx, delivery.ID, "retry-two", now.Add(time.Second), ports.NotificationDeliveryRetry, policy); err != nil {
+	if err := store.SettleNotificationDelivery(ctx, delivery.ID, "retry-two", now.Add(2*time.Hour), ports.NotificationDeliveryRetry, policy, time.Time{}); err != nil {
 		t.Fatal(err)
 	}
-	exhausted, err := store.ClaimNotificationDeliveries(ctx, now.Add(time.Hour), "retry-three", time.Minute, policy, 1)
+	exhausted, err := store.ClaimNotificationDeliveries(ctx, now.Add(3*time.Hour), "retry-three", time.Minute, policy, 1)
 	if err != nil || len(exhausted) != 0 {
 		t.Fatal("exhausted retry reclaimed")
 	}

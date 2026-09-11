@@ -97,7 +97,7 @@ func (s *Store) ClaimNotificationDeliveries(ctx context.Context, now time.Time, 
 	}
 	return result, nil
 }
-func (s *Store) SettleNotificationDelivery(ctx context.Context, id, fence string, now time.Time, outcome ports.NotificationDeliveryOutcome, policy notification.RetryPolicy) error {
+func (s *Store) SettleNotificationDelivery(ctx context.Context, id, fence string, now time.Time, outcome ports.NotificationDeliveryOutcome, policy notification.RetryPolicy, notBefore time.Time) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (s *Store) SettleNotificationDelivery(ctx context.Context, id, fence string
 	case ports.NotificationDeliveryCancelled:
 		state, err = delivery.State.Cancel(now, fence)
 	case ports.NotificationDeliveryRetry:
-		state, err = delivery.State.Retry(now, fence, policy)
+		state, err = delivery.State.Retry(now, fence, policy, notBefore)
 	default:
 		return ports.ErrInvalidProviderInput
 	}

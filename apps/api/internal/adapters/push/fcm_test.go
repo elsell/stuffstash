@@ -7,6 +7,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"strings"
 	"testing"
+	"time"
 )
 
 type fcmAuthFake struct{}
@@ -27,7 +28,7 @@ func TestFCMRequestAndProviderClassification(t *testing.T) {
 		{302, ``, ports.NotificationPushRetry}, {503, `private provider data`, ports.NotificationPushRetry},
 	} {
 		transport := &apnsTransportFake{status: tc.status, body: tc.body}
-		sender, err := NewFCM(FCMConfig{ProjectID: "test-project", ServerID: "https://api.test", ChannelID: "expiration"}, fcmAuthFake{}, transport)
+		sender, err := NewFCM(FCMConfig{ProjectID: "test-project", ServerID: "https://api.test", ChannelID: "expiration"}, fcmAuthFake{}, transport, &authClock{now: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC)})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,7 +59,7 @@ func (failingFCMAuth) Token(context.Context) (string, error) {
 }
 func TestFCMDoesNotLeakCredentialsAndHonorsCancellation(t *testing.T) {
 	transport := &apnsTransportFake{status: 200, body: `{"name":"projects/test-project/messages/id"}`}
-	sender, err := NewFCM(FCMConfig{ProjectID: "test-project", ServerID: "https://api.test", ChannelID: "expiration"}, failingFCMAuth{}, transport)
+	sender, err := NewFCM(FCMConfig{ProjectID: "test-project", ServerID: "https://api.test", ChannelID: "expiration"}, failingFCMAuth{}, transport, &authClock{now: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +70,7 @@ func TestFCMDoesNotLeakCredentialsAndHonorsCancellation(t *testing.T) {
 		t.Fatal("credential error leaked or request sent")
 	}
 	blocked := blockingAPNSTransport{started: make(chan struct{})}
-	sender, err = NewFCM(FCMConfig{ProjectID: "test-project", ServerID: "https://api.test", ChannelID: "expiration"}, fcmAuthFake{}, blocked)
+	sender, err = NewFCM(FCMConfig{ProjectID: "test-project", ServerID: "https://api.test", ChannelID: "expiration"}, fcmAuthFake{}, blocked, &authClock{now: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +86,7 @@ func TestFCMDoesNotLeakCredentialsAndHonorsCancellation(t *testing.T) {
 }
 func TestFCMRejectsInvalidConfiguration(t *testing.T) {
 	for _, project := range []string{"../other", "project/other", "", "PROJECT"} {
-		if _, err := NewFCM(FCMConfig{ProjectID: project, ServerID: "https://api.test", ChannelID: "expiration"}, fcmAuthFake{}, nil); err == nil {
+		if _, err := NewFCM(FCMConfig{ProjectID: project, ServerID: "https://api.test", ChannelID: "expiration"}, fcmAuthFake{}, nil, &authClock{now: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC)}); err == nil {
 			t.Fatal("invalid project accepted")
 		}
 	}

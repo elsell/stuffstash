@@ -24,20 +24,21 @@ type fcmTokenSource interface {
 	Token(context.Context) (string, error)
 }
 type FCM struct {
+	clock  ports.Clock
 	config FCMConfig
 	auth   fcmTokenSource
 	client *http.Client
 }
 
-func NewFCM(config FCMConfig, auth fcmTokenSource, transport http.RoundTripper) (*FCM, error) {
+func NewFCM(config FCMConfig, auth fcmTokenSource, transport http.RoundTripper, clock ports.Clock) (*FCM, error) {
 	server, err := url.Parse(config.ServerID)
-	if err != nil || server.Host == "" || (server.Scheme != "https" && server.Scheme != "http") || server.User != nil || server.RawQuery != "" || server.Fragment != "" || !fcmProject.MatchString(config.ProjectID) || strings.TrimSpace(config.ChannelID) == "" || len(config.ChannelID) > 100 || auth == nil {
+	if err != nil || server.Host == "" || (server.Scheme != "https" && server.Scheme != "http") || server.User != nil || server.RawQuery != "" || server.Fragment != "" || !fcmProject.MatchString(config.ProjectID) || strings.TrimSpace(config.ChannelID) == "" || len(config.ChannelID) > 100 || auth == nil || clock == nil {
 		return nil, errFCM
 	}
 	if transport == nil {
 		transport = http.DefaultTransport.(*http.Transport).Clone()
 	}
-	return &FCM{config: config, auth: auth, client: &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
+	return &FCM{clock: clock, config: config, auth: auth, client: &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
 }
 func (f *FCM) SendNotification(ctx context.Context, message ports.NotificationPushMessage) (ports.NotificationPushResult, error) {
 	retry := ports.NotificationPushResult{Outcome: ports.NotificationPushRetry}
@@ -73,6 +74,7 @@ func (f *FCM) SendNotification(ctx context.Context, message ports.NotificationPu
 		return retry, errFCM
 	}
 	defer response.Body.Close()
+	retry.RetryNotBefore = fcmRetryNotBefore(response.Header.Get("Retry-After"), response.StatusCode, f.clock.Now())
 	body, err := io.ReadAll(io.LimitReader(response.Body, 4097))
 	if err != nil || len(body) > 4096 {
 		return retry, nil

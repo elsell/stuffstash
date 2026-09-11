@@ -23,11 +23,11 @@ func (s Service) DeliverPage(ctx context.Context, limit int, lease time.Duration
 		if err := ctx.Err(); err != nil {
 			return completed, err
 		}
-		outcome := s.deliver(ctx, job)
+		outcome, notBefore := s.deliver(ctx, job)
 		if err := ctx.Err(); err != nil {
 			return completed, err
 		}
-		if err := s.deps.Deliveries.SettleNotificationDelivery(ctx, job.ID, job.State.Fence, s.deps.Clock.Now(), outcome, policy); err != nil {
+		if err := s.deps.Deliveries.SettleNotificationDelivery(ctx, job.ID, job.State.Fence, s.deps.Clock.Now(), outcome, policy, notBefore); err != nil {
 			return completed, err
 		}
 		completed++
@@ -37,41 +37,41 @@ func (s Service) DeliverPage(ctx context.Context, limit int, lease time.Duration
 	}
 	return completed, nil
 }
-func (s Service) deliver(ctx context.Context, job ports.NotificationDelivery) ports.NotificationDeliveryOutcome {
+func (s Service) deliver(ctx context.Context, job ports.NotificationDelivery) (ports.NotificationDeliveryOutcome, time.Time) {
 	input := ScopeInput{Principal: identity.Principal{ID: job.Scope.PrincipalID}, TenantID: job.Scope.TenantID, InventoryID: job.Scope.InventoryID}
 	view, err := s.currentNotification(ctx, input, job.NotificationID)
 	if err != nil {
-		return deliveryFailureOutcome(err)
+		return deliveryFailureOutcome(err), time.Time{}
 	}
 	preferences, found, err := s.deps.Preferences.NotificationPreferences(ctx, job.Scope)
 	if err != nil {
-		return ports.NotificationDeliveryRetry
+		return ports.NotificationDeliveryRetry, time.Time{}
 	}
 	if !found || !preferences.Settings.PushEnabled {
-		return ports.NotificationDeliveryCancelled
+		return ports.NotificationDeliveryCancelled, time.Time{}
 	}
 	zone, err := time.LoadLocation(preferences.Settings.Timezone)
 	if err != nil {
-		return ports.NotificationDeliveryRetry
+		return ports.NotificationDeliveryRetry, time.Time{}
 	}
 	candidate := notification.ExpirationCandidate{AssetID: view.Asset.ID.String(), TypeID: notification.AssetTypeID(view.Asset.CustomAssetTypeID), Date: view.Asset.Expiration, Eligible: true}
 	due, eligible := candidate.Due(preferences.Settings, s.deps.Clock.Now(), zone)
 	if !eligible || due != view.Notification.Milestone {
-		return ports.NotificationDeliveryCancelled
+		return ports.NotificationDeliveryCancelled, time.Time{}
 	}
 	device, found, err := s.deps.Devices.NotificationDeviceByID(ctx, job.Scope, job.DeviceID)
 	if err != nil {
-		return ports.NotificationDeliveryRetry
+		return ports.NotificationDeliveryRetry, time.Time{}
 	}
 	if !found || !device.Active || device.Revision != job.DeviceRevision {
-		return ports.NotificationDeliveryCancelled
+		return ports.NotificationDeliveryCancelled, time.Time{}
 	}
 	if err := s.access(ctx, input); err != nil {
-		return deliveryFailureOutcome(err)
+		return deliveryFailureOutcome(err), time.Time{}
 	}
 	remaining := job.State.LeaseUntil.Sub(s.deps.Clock.Now())
 	if remaining <= 0 {
-		return ports.NotificationDeliveryRetry
+		return ports.NotificationDeliveryRetry, time.Time{}
 	}
 	sendCtx, cancel := context.WithTimeout(ctx, remaining)
 	defer cancel()
@@ -81,22 +81,22 @@ func (s Service) deliver(ctx context.Context, job ports.NotificationDelivery) po
 	}
 	result, err := s.deps.PushSender.SendNotification(sendCtx, ports.NotificationPushMessage{DeliveryID: job.ID, NotificationID: job.NotificationID, Scope: job.Scope, Transport: device.Transport, Token: device.Token, Title: "Stuff Stash", Body: body})
 	if err != nil {
-		return ports.NotificationDeliveryRetry
+		return ports.NotificationDeliveryRetry, time.Time{}
 	}
 	switch result.Outcome {
 	case ports.NotificationPushAccepted:
-		return ports.NotificationDeliveryAccepted
+		return ports.NotificationDeliveryAccepted, time.Time{}
 	case ports.NotificationPushInvalidDevice:
 		if !result.InvalidatedAt.IsZero() && device.UpdatedAt.After(result.InvalidatedAt) {
-			return ports.NotificationDeliveryRetry
+			return ports.NotificationDeliveryRetry, time.Time{}
 		}
 		_, err := s.RevokeDevice(ctx, input, job.DeviceID, job.DeviceRevision)
 		if err != nil && !errors.Is(err, ports.ErrConflict) && !errors.Is(err, apperrors.ErrNotFound) {
-			return ports.NotificationDeliveryRetry
+			return ports.NotificationDeliveryRetry, time.Time{}
 		}
-		return ports.NotificationDeliveryCancelled
+		return ports.NotificationDeliveryCancelled, time.Time{}
 	default:
-		return ports.NotificationDeliveryRetry
+		return ports.NotificationDeliveryRetry, result.RetryNotBefore
 	}
 }
 func deliveryFailureOutcome(err error) ports.NotificationDeliveryOutcome {

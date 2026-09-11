@@ -93,7 +93,7 @@ func (d DeliveryState) Cancel(now time.Time, fence string) (DeliveryState, error
 	}
 	return d.terminal(DeliveryCancelled), nil
 }
-func (d DeliveryState) Retry(now time.Time, fence string, policy RetryPolicy) (DeliveryState, error) {
+func (d DeliveryState) Retry(now time.Time, fence string, policy RetryPolicy, notBefore time.Time) (DeliveryState, error) {
 	if !d.owns(now, fence) {
 		return d, ErrStaleDeliveryLease
 	}
@@ -105,6 +105,9 @@ func (d DeliveryState) Retry(now time.Time, fence string, policy RetryPolicy) (D
 	}
 	d.Status = DeliveryPending
 	d.NextAttemptAt = now.Add(policy.delay(d.Attempts))
+	if notBefore.After(d.NextAttemptAt) {
+		d.NextAttemptAt = notBefore
+	}
 	d.LeaseUntil = time.Time{}
 	return d, nil
 }
