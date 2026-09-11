@@ -191,3 +191,7 @@ Under `/tenants/{tenantId}/inventories/{inventoryId}/notification-devices`, POST
 Shared HTTP schema-validation details report the constraint and field location but omit the submitted value. This prevents malformed token types as well as oversized strings from being reflected through validation errors, and applies consistently to other secret-bearing inputs.
 
 APNs token normalization is mandatory before ownership comparison: decode hexadecimal input and encode canonical lowercase hex. The injected token adapter returns the normalized token. Persistence rejects noncanonical APNs values as invalid input, preventing alternate casing from bypassing token ownership even through another adapter. FCM tokens remain case-sensitive and unchanged.
+
+### Device client adapters
+
+The shared authenticated client provides registration, installation lookup and revision-aware revocation from generated OpenAPI types, preserving revision zero and inactive responses. Cancellation propagates through the existing transport. Native device adapters expose separate frontend registration metadata and command models, map safe notification failures, and ignore cancelled responses. Device tokens exist only in registration command input, never in returned frontend metadata. Existing notification and device adapters share one cancellation/error translation helper.

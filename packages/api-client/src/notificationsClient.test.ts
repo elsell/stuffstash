@@ -48,3 +48,17 @@ it('preserves count contributions and mark-all continuation without claiming com
   await expect(client.notifications.countUnreadPage('tenant', 'inventory')).resolves.toEqual({ count: 2, nextCursor: 'next' });
   await expect(client.notifications.markAllReadPage('tenant', 'inventory')).resolves.toEqual({ complete: false, nextCursor: 'next' });
 });
+it('registers, looks up and revokes a scoped device without losing revisions or false state', async () => {
+ const requests: Request[] = [];
+ const metadata = { id: 'device', installationId: 'phone', transport: 'apns', revision: 1, active: false };
+ const client = new StuffStashClient({baseUrl:'https://api.test',tokenProvider:()=> 'access',fetch:async(input,init)=>{requests.push(new Request(input,init));return Response.json({data:metadata,meta:{}});}});
+ const input = { installationId:'phone',transport:'apns' as const,token:'abab',revision:0 };
+ await expect(client.notifications.registerDevice('tenant','inventory',input)).resolves.toEqual(metadata);
+ expect(await requests[0].json()).toEqual(input);
+ expect(requests[0].headers.get('Authorization')).toBe('Bearer access');
+ await client.notifications.getDeviceByInstallation('tenant','inventory','phone');
+ await client.notifications.revokeDevice('tenant','inventory','device',1);
+ expect(requests[1].url).toBe('https://api.test/tenants/tenant/inventories/inventory/notification-devices/by-installation/phone');
+ expect(requests[2].method).toBe('DELETE');
+ expect(requests[2].url).toBe('https://api.test/tenants/tenant/inventories/inventory/notification-devices/device?revision=1');
+});

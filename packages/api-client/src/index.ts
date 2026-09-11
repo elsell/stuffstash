@@ -4,4 +4,4 @@ export { PerformanceReporter, type PerformanceContext, type PerformanceMeasureme
 export { createApiPerformanceReporter, type ApiPerformanceReporterOptions } from './telemetry/apiPerformanceReporter';
 export { createObservedFetch, type RequestPerformanceObserver } from './telemetry/observedFetch';
 
-export { NotificationsClient, type NotificationPreferences, type UpdateNotificationPreferences, type ExpirationReminderPolicy, type ExpirationNotification } from './notificationsClient';
+export { NotificationsClient, type NotificationDevice, type RegisterNotificationDevice, type NotificationPreferences, type UpdateNotificationPreferences, type ExpirationReminderPolicy, type ExpirationNotification } from './notificationsClient';
