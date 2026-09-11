@@ -6,6 +6,8 @@ type EventName string
 
 const (
 	EventNotificationWorkerFailed                  EventName = "notification_worker.failed"
+	EventNotificationDeviceUpdated                 EventName = "notification_device.updated"
+	EventNotificationDeviceRevoked                 EventName = "notification_device.revoked"
 	EventNotificationCreated                       EventName = "notification.created"
 	EventNotificationPreferencesUpdated            EventName = "notification_preferences.updated"
 	EventThumbnailJobsRetried                      EventName = "thumbnail_jobs.retried"

@@ -29,3 +29,8 @@ type NotificationDeviceRepository interface {
 	ListNotificationDevices(context.Context, NotificationScope, string, int) ([]NotificationDevice, error)
 	SaveNotificationDevice(context.Context, NotificationDevice, int64, audit.Record) error
 }
+
+// NotificationPushTokenValidator performs local provider-specific token validation.
+type NotificationPushTokenValidator interface {
+	ValidateDeviceToken(context.Context, notification.PushTransport, notification.DeviceToken) error
+}
