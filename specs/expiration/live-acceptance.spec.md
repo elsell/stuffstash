@@ -1,0 +1,34 @@
+# Expiration live acceptance evidence
+
+## Scope
+
+The expiration release requires realistic conversation acceptance in addition to deterministic application and WebSocket security tests. These runs use isolated memory-backed inventories, real Google language inference, and typed WebSocket input. They do not establish microphone, speech-recognition, physical-device or push-delivery acceptance. No approval is submitted. The fixture contains Medicine with expiration enabled, Hall closet / Bin 8 / Tylenol, and an exact expiration seven days after the test's UTC date.
+
+## 2026-09-11 baseline and guidance revision
+
+Harness: `TestGoogleLiveExpirationConversationCorpus`. Provider: `gemini-2.5-flash-lite`, `us-central1`. Primary-agent human review; no independent model judge. Raw logs on the remote validation host: `/tmp/expiration-live-corpus-final.log` (baseline) and `/tmp/expiration-live-corpus-v2.log` (guidance revision). Structured events: `/tmp/expiration-live-evidence` and `/tmp/expiration-live-evidence-v2`. These are local diagnostic artifacts, not permanent public URLs.
+
+The initial attempt omitted the evidence-directory environment variable. Its failures are harness failures and not acceptance results. The harness now checks that variable before making provider calls.
+
+| Scenario / request | Guidance-revision deterministic result | Human verdict and evidence |
+| --- | --- | --- |
+| Add aspirin to Bin 8, Medicine, February 29, 2028 | Fail | Fail: vocabulary lookup guessed display-name key `Medicine`, then could not propose the requested item. The baseline exhausted its tool budget. |
+| Add aspirin to Bin 8, Medicine, February 2028 | Fail | Fail: session failed; baseline incorrectly claimed Medicine was unavailable despite the seeded type. |
+| Add aspirin to Bin 8, Medicine, next month | Fail | Fail: session failed. Baseline did obtain the calendar and propose October 2026, showing that this is inconsistent rather than an unsupported date format. |
+| Add aspirin expiring 03/04 | Fail | Fail: did not ask a date clarification. Baseline proposed March 2026, inventing both interpretation and year. Guidance revision incorrectly claimed the type was unavailable. |
+| What medicine expires soon? | Fail | Fail: claimed no matching medicine despite the fixture. Baseline correctly found Tylenol and September 18, 2026. |
+| Where is my Tylenol? | Pass | Fail: correctly identified Bin 8 / Hall closet but said September 2026, losing the recorded exact day. Baseline omitted expiration entirely. Added a stronger date-precision assertion after reviewing this trace. |
+| Change Tylenol expiration to February 2028 | Pass | Pass for this isolated proposal: one update targeted the existing Tylenol with month precision; no write before approval. |
+| Remove Tylenol expiration | Pass | Pass for this isolated proposal: one update targeted the existing Tylenol with explicit null expiration; no write before approval. |
+
+The guidance revision reinforces manifest-first type lookup, clarification for incomplete absolute dates, verified calendar resolution for relative dates, and expiration context in location answers. It is not a proven fix. Target/type/parent and response-reference assertions were strengthened; semantic trace review remains required. The month-only location answer motivated an additional exact-date assertion.
+
+## Required follow-up
+
+- Make vocabulary discovery recoverable without allowing fabricated type IDs or treating malformed lookup as proof of absence.
+- Ensure ambiguous absolute dates require clarification rather than guessed proposals.
+- Preserve the full recorded date in both spoken and written expiration context.
+- Re-run queries, creates and follow-up scenarios until the actual traces satisfy the request; a valid tool envelope is insufficient.
+- Compare stronger model behavior before changing provider defaults. The completed `gemini-2.5-flash` comparison is under `/tmp/expiration-live-corpus-flash.log` with events in `/tmp/expiration-live-evidence-flash`. All three creates timed out at 60 seconds after authorized destination/manifest discovery. The other five cases passed deterministic checks and human trace review: ambiguity asked both year and March 4 versus April 3; query/location named Tylenol, Bin 8, Hall closet and September 18, 2026; correction/removal proposed only the targeted update. The exact-date assertion was added after this binary started, so that assertion was not executed in this run; its date requirement was verified by reading the responses. The comparison does not establish release readiness or justify a silent model switch.
+
+The expiration feature is not ready for release based on these results.
