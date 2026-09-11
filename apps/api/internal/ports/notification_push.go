@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 	"github.com/stuffstash/stuff-stash/internal/domain/notification"
+	"time"
 )
 
 type NotificationPushOutcome string
@@ -22,6 +23,10 @@ type NotificationPushMessage struct {
 	Title          string
 	Body           string
 }
+type NotificationPushResult struct {
+	Outcome       NotificationPushOutcome
+	InvalidatedAt time.Time
+}
 type NotificationPushSender interface {
-	SendNotification(context.Context, NotificationPushMessage) (NotificationPushOutcome, error)
+	SendNotification(context.Context, NotificationPushMessage) (NotificationPushResult, error)
 }

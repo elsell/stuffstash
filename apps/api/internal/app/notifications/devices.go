@@ -33,7 +33,7 @@ func (s Service) RegisterDevice(ctx context.Context, scope ScopeInput, input Reg
 		return ports.NotificationDevice{}, err
 	}
 	same := found && current.Active && current.Transport == input.Transport && current.Token == input.Token
-	if same && (input.Revision == 0 || input.Revision == current.Revision) {
+	if same && input.Revision == 0 {
 		return current, nil
 	}
 	if found && input.Revision != current.Revision || !found && input.Revision != 0 {

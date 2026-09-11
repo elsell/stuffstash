@@ -18,17 +18,18 @@ import (
 )
 
 type pushSenderFake struct {
-	before   func()
-	messages []ports.NotificationPushMessage
-	outcome  ports.NotificationPushOutcome
+	before        func()
+	messages      []ports.NotificationPushMessage
+	outcome       ports.NotificationPushOutcome
+	invalidatedAt time.Time
 }
 
-func (f *pushSenderFake) SendNotification(_ context.Context, message ports.NotificationPushMessage) (ports.NotificationPushOutcome, error) {
+func (f *pushSenderFake) SendNotification(_ context.Context, message ports.NotificationPushMessage) (ports.NotificationPushResult, error) {
 	if f.before != nil {
 		f.before()
 	}
 	f.messages = append(f.messages, message)
-	return f.outcome, nil
+	return ports.NotificationPushResult{Outcome: f.outcome, InvalidatedAt: f.invalidatedAt}, nil
 }
 func deliveryFixture(t *testing.T, sender *pushSenderFake) (Service, *memory.Store, ScopeInput) {
 	ctx := context.Background()
@@ -212,5 +213,27 @@ func TestInvalidTokenDoesNotRetireRotatedRegistration(t *testing.T) {
 	device, _, _ := store.NotificationDeviceByID(ctx, input.Scope(), "device-000")
 	if !device.Active || device.Revision != 2 {
 		t.Fatal("invalid old token retired replacement")
+	}
+}
+
+func TestOldInvalidationDoesNotRetireNewerRegistration(t *testing.T) {
+	sender := &pushSenderFake{outcome: ports.NotificationPushInvalidDevice, invalidatedAt: time.Date(2026, 9, 9, 0, 0, 0, 0, time.UTC)}
+	service, store, input := deliveryFixture(t, sender)
+	if _, err := service.DeliverPage(context.Background(), 10, time.Minute, notification.RetryPolicy{MaxAttempts: 2, InitialDelay: time.Second, MaximumDelay: time.Minute}); err != nil {
+		t.Fatal(err)
+	}
+	device, _, _ := store.NotificationDeviceByID(context.Background(), input.Scope(), "device-000")
+	if !device.Active {
+		t.Fatal("old invalidation retired newer registration")
+	}
+}
+func TestSameTokenFreshRegistrationAdvancesRevision(t *testing.T) {
+	service, store, input := deliveryFixture(t, &pushSenderFake{})
+	service.deps.PushTokens = acceptingPushTokens{}
+	service.deps.Clock = inboxClock{service.deps.Clock.Now().Add(time.Hour)}
+	previous, _, _ := store.NotificationDeviceByID(context.Background(), input.Scope(), "device-000")
+	device, err := service.RegisterDevice(context.Background(), input, RegisterDeviceInput{InstallationID: previous.InstallationID, Transport: previous.Transport, Token: previous.Token, Revision: previous.Revision})
+	if err != nil || device.Revision != previous.Revision+1 || !device.UpdatedAt.Equal(service.deps.Clock.Now()) {
+		t.Fatalf("fresh registration not recorded: %+v %v", device, err)
 	}
 }

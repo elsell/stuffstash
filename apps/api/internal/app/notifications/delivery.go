@@ -83,10 +83,13 @@ func (s Service) deliver(ctx context.Context, job ports.NotificationDelivery) po
 	if err != nil {
 		return ports.NotificationDeliveryRetry
 	}
-	switch result {
+	switch result.Outcome {
 	case ports.NotificationPushAccepted:
 		return ports.NotificationDeliveryAccepted
 	case ports.NotificationPushInvalidDevice:
+		if !result.InvalidatedAt.IsZero() && device.UpdatedAt.After(result.InvalidatedAt) {
+			return ports.NotificationDeliveryRetry
+		}
 		_, err := s.RevokeDevice(ctx, input, job.DeviceID, job.DeviceRevision)
 		if err != nil && !errors.Is(err, ports.ErrConflict) && !errors.Is(err, apperrors.ErrNotFound) {
 			return ports.NotificationDeliveryRetry
