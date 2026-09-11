@@ -48,6 +48,14 @@ class SigningTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.validate(profile)
 
+    def test_maintenance_can_inspect_old_profile_without_push(self):
+        profile = self.profile()
+        del profile['Entitlements']['aps-environment']
+        self.assertEqual(signing.validate_profile(profile, 'TEAM123', 'org.example.app',
+            datetime.datetime(2026, 1, 1), require_push=False), profile['UUID'])
+        with self.assertRaises(ValueError):
+            self.validate(profile)
+
     def test_identity_must_match_profile(self):
         import hashlib
         fingerprint = hashlib.sha1(b'certificate').hexdigest().upper()

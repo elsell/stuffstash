@@ -11,9 +11,9 @@ import secrets
 import subprocess
 
 
-def validate_profile(profile, team, bundle, now):
+def validate_profile(profile, team, bundle, now, *, require_push=True):
     entitlements = profile.get('Entitlements', {})
-    if entitlements.get('aps-environment') != 'production':
+    if require_push and entitlements.get('aps-environment') != 'production':
         raise ValueError('Distribution profile must enable production push notifications')
     prefixes = profile.get('ApplicationIdentifierPrefix', [])
     if (profile.get('TeamIdentifier') != [team]
