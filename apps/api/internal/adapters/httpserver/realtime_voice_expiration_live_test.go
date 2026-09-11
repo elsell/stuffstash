@@ -37,6 +37,7 @@ func TestGoogleLiveExpirationConversationCorpus(t *testing.T) {
 		{"add-relative", "Add a bottle of aspirin to Bin 8, using the Medicine type, expiring next month.", nextMonth, "month", true},
 		{"ambiguous", "Add a bottle of aspirin to Bin 8, using the Medicine type, expiring 03/04.", "", "", false},
 		{"query-soon", "What medicine expires soon?", "", "", false},
+		{"query-tag", "Which items tagged medicine expire soon?", "", "", false},
 		{"whereis", "Where is my Tylenol?", "", "", false},
 		{"correct", "Change my Tylenol expiration date to February 2028.", "2028-02", "month", true},
 		{"clear", "Remove the expiration date from my Tylenol.", "", "", true},
@@ -49,13 +50,25 @@ func TestGoogleLiveExpirationConversationCorpus(t *testing.T) {
 			providers := liveGoogleVoiceProviders(t, ctx)
 			application = application.WithRealtimeVoiceProviders(providers.SpeechToText, providers.ConversationModel, providers.TextToSpeech)
 			principal := identity.Principal{ID: "user-1"}
-			kind, err := application.CreateInventoryCustomAssetType(ctx, app.CreateCustomAssetTypeInput{Principal: principal, TenantID: "tenant-home", InventoryID: "inventory-home", Key: "medicine", DisplayName: "Medicine", ExpirationEnabled: true})
+			typeKey, typeName := "medicine", "Medicine"
+			if scenario.name == "query-tag" {
+				typeKey, typeName = "supplies", "Supplies"
+			}
+			kind, err := application.CreateInventoryCustomAssetType(ctx, app.CreateCustomAssetTypeInput{Principal: principal, TenantID: "tenant-home", InventoryID: "inventory-home", Key: typeKey, DisplayName: typeName, ExpirationEnabled: true})
 			if err != nil {
 				t.Fatal(err)
 			}
+			var tagIDs []string
+			if scenario.name == "query-tag" {
+				tag, err := application.CreateAssetTag(ctx, app.CreateAssetTagInput{Principal: principal, TenantID: "tenant-home", InventoryID: "inventory-home", Key: "medicine", DisplayName: "Medicine"})
+				if err != nil {
+					t.Fatal(err)
+				}
+				tagIDs = []string{tag.ID.String()}
+			}
 			expires := time.Now().UTC().AddDate(0, 0, 7)
 			create := func(title, kindName, parent string, dated bool) string {
-				input := app.CreateAssetInput{Principal: principal, TenantID: "tenant-home", InventoryID: "inventory-home", Kind: kindName, Title: title, ParentAssetID: parent}
+				input := app.CreateAssetInput{Principal: principal, TenantID: "tenant-home", InventoryID: "inventory-home", Kind: kindName, Title: title, ParentAssetID: parent, TagIDs: tagIDs}
 				if dated {
 					input.CustomAssetTypeID = kind.ID.String()
 					input.Expiration = &assetapp.ExpirationInput{Date: expires.Format("2006-01-02"), Precision: "day"}
@@ -69,6 +82,17 @@ func TestGoogleLiveExpirationConversationCorpus(t *testing.T) {
 			closet := create("Hall closet", "location", "", false)
 			bin := create("Bin 8", "container", closet, false)
 			tylenol := create("Tylenol", "item", bin, true)
+			if scenario.name == "query-tag" {
+				upcoming := expires
+				expires = time.Now().UTC().AddDate(0, 0, -5)
+				create("Expired syrup", "item", bin, true)
+				expires = time.Now().UTC().AddDate(0, 0, 120)
+				create("Cold tablets", "item", bin, true)
+				create("Undated ointment", "item", bin, false)
+				expires = upcoming
+				tagIDs = nil
+				create("Untagged supplies", "item", bin, true)
+			}
 			list := app.ListAssetsInput{Principal: principal, TenantID: "tenant-home", InventoryID: "inventory-home", Limit: 100}
 			before, err := application.ListAssets(ctx, list)
 			if err != nil {
@@ -157,6 +181,9 @@ func TestGoogleLiveExpirationConversationCorpus(t *testing.T) {
 					matched := false
 					for _, raw := range artifacts {
 						item, _ := raw.(map[string]any)
+						if scenario.name == "query-tag" && item["type"] == "asset_reference" && item["assetId"] != tylenol {
+							t.Fatalf("tagged upcoming answer included an ineligible item: %+v", item)
+						}
 						if item["assetId"] == tylenol {
 							matched = true
 						}
