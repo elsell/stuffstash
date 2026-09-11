@@ -48,6 +48,9 @@ func (p GoogleGeminiLanguageInference) Converse(ctx context.Context, input ports
 		}
 		if part.FunctionCall != nil {
 			call := part.FunctionCall
+			if strings.TrimSpace(call.Name) == "" {
+				return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
+			}
 			id := call.ID
 			if id == "" {
 				id = fmt.Sprintf("turn-%d-call-%d", len(input.Messages), index)
@@ -56,15 +59,8 @@ func (p GoogleGeminiLanguageInference) Converse(ctx context.Context, input ports
 		}
 	}
 	turn.Text = strings.Join(text, "\n")
-	if len(request.GenerationConfig.ResponseJSONSchema) > 0 {
-		if len(turn.ToolCalls) != 0 {
-			return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
-		}
-		turn.ToolCalls, err = decodeGoogleConversationEnvelope(turn.Text, len(input.Messages))
-		if err != nil {
-			return ports.ConversationModelTurn{}, err
-		}
-		turn.Text = ""
+	if len(turn.ToolCalls) == 0 && request.ToolConfig != nil {
+		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
 	}
 	if len(turn.ToolCalls) == 0 && strings.TrimSpace(turn.Text) == "" {
 		return ports.ConversationModelTurn{}, ports.ErrInvalidProviderInput
@@ -93,32 +89,41 @@ type googleConversationResponse struct {
 	} `json:"candidates"`
 }
 type googleConversationDeclaration struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Parameters  json.RawMessage `json:"parameters"`
+	Name                 string          `json:"name"`
+	Description          string          `json:"description"`
+	Parameters           json.RawMessage `json:"parameters,omitempty"`
+	ParametersJSONSchema json.RawMessage `json:"parametersJsonSchema,omitempty"`
 }
 type googleConversationWireRequest struct {
 	GenerationConfig  *googleConversationGenerationConfig `json:"generationConfig"`
 	Contents          []googleConversationContent         `json:"contents"`
 	SystemInstruction *googleConversationContent          `json:"systemInstruction,omitempty"`
 	Tools             []googleConversationTool            `json:"tools,omitempty"`
+	ToolConfig        *googleConversationToolConfig       `json:"toolConfig,omitempty"`
 }
 type googleConversationGenerationConfig struct {
-	Temperature        float64         `json:"temperature"`
-	ResponseMimeType   string          `json:"responseMimeType,omitempty"`
-	ResponseJSONSchema json.RawMessage `json:"responseJsonSchema,omitempty"`
+	Temperature float64 `json:"temperature"`
 }
 type googleConversationTool struct {
 	FunctionDeclarations []googleConversationDeclaration `json:"functionDeclarations"`
 }
 
+type googleConversationToolConfig struct {
+	FunctionCallingConfig googleConversationFunctionCallingConfig `json:"functionCallingConfig"`
+}
+type googleConversationFunctionCallingConfig struct {
+	Mode string `json:"mode"`
+}
+
 func googleConversationRequest(input ports.ConversationModelInput) (googleConversationWireRequest, error) {
+	requiresResponseTool := false
 	for _, tool := range input.Tools {
-		if tool.ResponseTool {
-			return googleConversationEnvelopeRequest(input)
-		}
+		requiresResponseTool = requiresResponseTool || tool.ResponseTool
 	}
 	request := googleConversationWireRequest{GenerationConfig: &googleConversationGenerationConfig{Temperature: 0}}
+	if requiresResponseTool {
+		request.ToolConfig = &googleConversationToolConfig{FunctionCallingConfig: googleConversationFunctionCallingConfig{Mode: "ANY"}}
+	}
 	if len(input.Messages) == 0 {
 		return request, ports.ErrInvalidProviderInput
 	}
@@ -131,7 +136,17 @@ func googleConversationRequest(input ports.ConversationModelInput) (googleConver
 		if strings.TrimSpace(tool.Name) == "" || !json.Valid(tool.Parameters) {
 			return request, ports.ErrInvalidProviderInput
 		}
-		declarations = append(declarations, googleConversationDeclaration{Name: tool.Name, Description: tool.Description, Parameters: tool.Parameters})
+		declaration := googleConversationDeclaration{Name: tool.Name, Description: tool.Description}
+		if requiresResponseTool {
+			parameters, err := googleConversationParameters(tool.Parameters)
+			if err != nil {
+				return request, err
+			}
+			declaration.ParametersJSONSchema = parameters
+		} else {
+			declaration.Parameters = tool.Parameters
+		}
+		declarations = append(declarations, declaration)
 	}
 	if len(declarations) > 0 {
 		request.Tools = []googleConversationTool{{FunctionDeclarations: declarations}}

@@ -830,3 +830,9 @@ its correction. No builds or tests ran on the developer Mac.
 ## Expiration Feature Integration
 
 The expiration release extends typed inventory reads, structured action plans, review widgets and spoken/display responses according to `../expiration/expiration-tracking.spec.md#conversational-expiration-support`. It must support expiration queries, add/edit/clear dates and relevant location-answer warnings with preserved day/month precision. These behaviors share the asset application authorization and validation boundary; expiration is not an unvalidated custom-field shortcut. Add realistic remote corpus scenarios and inspect full traces before declaring this release complete.
+
+### Native Google response-tool protocol
+
+For a conversation catalog containing a response tool, use Google's native function-calling protocol with `functionCallingConfig.mode=ANY` and `parametersJsonSchema` declarations. The model may select reads, proposals or the answer tool; it cannot bypass cards by completing with plain text. Preserve full native provider continuation parts, including thought signatures. A response-tool catalog returning no function call is invalid provider output. Non-response catalogs retain their existing native automatic mode. Application authorization, budgets, approval and strict command validation remain unchanged. This replaces the structured JSON envelope. The live Gemini Flash expiration corpus passed all eight cases and the API regressions passed; model-specific quality limitations are recorded in the expiration live-acceptance spec.
+
+Native Google JSON-schema declarations use the existing provider-only bounded-union-array count translation: remove only the decoding count bound and retain it as guidance, while application validators keep the strict limit. The initial native request was rejected as schema complexity; this translation is evaluated explicitly in the live corpus.

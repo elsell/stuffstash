@@ -163,3 +163,5 @@ The live corpus also checks that type discovery starts with the vocabulary manif
 ### Recoverable vocabulary lookup
 
 A bounded vocabulary definition request with a recognized kind and nonempty key of at most 80 bytes still returns the authorized manifest when the key has invalid stable-key syntax (for example a display name). Count that definition as unavailable and do not resolve or normalize it to another key. Unknown kinds, empty/oversized keys, unknown fields and oversized arrays remain malformed requests. No guessed key can supply an asset type ID: the model must use the returned scoped manifest. This prevents a mistaken definition lookup from hiding the type-discovery surface.
+
+Controlled live-fixture diagnostics may classify provider HTTP errors using a fixed allowlist of schema-related terms (schema complexity, unknown fields, unsupported JSON-schema parameters or unsupported tool mode). Log only static category labels and status, never raw provider error bodies, credentials or reflected request content. Preserve the original response body for the production adapter to handle normally.

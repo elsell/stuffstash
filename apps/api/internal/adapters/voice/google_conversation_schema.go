@@ -11,7 +11,7 @@ import (
 // Google expands bounded arrays of alternatives into excessive decoding states.
 // Keep the command shapes, but leave this count to the application validator.
 // Work on a decoded copy: the shared catalog and other providers retain bounds.
-func googleConversationEnvelopeParameters(parameters json.RawMessage) (json.RawMessage, error) {
+func googleConversationParameters(parameters json.RawMessage) (json.RawMessage, error) {
 	var schema map[string]any
 	if json.Unmarshal(parameters, &schema) != nil || schema == nil {
 		return nil, ports.ErrInvalidProviderInput

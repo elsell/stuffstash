@@ -17,23 +17,24 @@ func TestGoogleConversationTranslatesBoundedUnionArrayWithoutChangingToolContrac
 	requestSchemas := make(chan map[string]any, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
-			GenerationConfig struct {
-				Schema map[string]any `json:"responseJsonSchema"`
-			} `json:"generationConfig"`
+			Tools []struct {
+				FunctionDeclarations []struct {
+					Schema map[string]any `json:"parametersJsonSchema"`
+				} `json:"functionDeclarations"`
+			} `json:"tools"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			http.Error(w, "bad request", 400)
 			return
 		}
 		// Controlled provider implements the observed rejection of bounded union arrays.
-		encoded, _ := json.Marshal(request.GenerationConfig.Schema)
+		encoded, _ := json.Marshal(request.Tools[0].FunctionDeclarations[0].Schema)
 		if strings.Contains(string(encoded), `"maxItems":10`) {
 			http.Error(w, "schema complexity", 400)
 			return
 		}
-		requestSchemas <- request.GenerationConfig.Schema
-		text := `{"toolCalls":[{"name":"propose","arguments":{"commands":[{"kind":"create","title":"Toolbox"}]}}]}`
-		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{"finishReason": "STOP", "content": map[string]any{"role": "model", "parts": []any{map[string]any{"text": text}}}}}})
+		requestSchemas <- request.Tools[0].FunctionDeclarations[0].Schema
+		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{"finishReason": "STOP", "content": map[string]any{"role": "model", "parts": []any{map[string]any{"functionCall": map[string]any{"name": "propose", "args": map[string]any{"commands": []any{map[string]any{"kind": "create", "title": "Toolbox"}}}}}}}}}})
 	}))
 	defer server.Close()
 	provider := NewGoogleGeminiLanguageInference(GoogleGeminiConfig{BaseURL: server.URL, APIKey: "fixture-key", Model: "fixture-model"})
@@ -48,10 +49,7 @@ func TestGoogleConversationTranslatesBoundedUnionArrayWithoutChangingToolContrac
 	if string(parameters) != original {
 		t.Fatal("shared catalog mutated")
 	}
-	root := <-requestSchemas
-	props := root["properties"].(map[string]any)
-	call := props["toolCalls"].(map[string]any)["items"].(map[string]any)["anyOf"].([]any)[0].(map[string]any)
-	args := call["properties"].(map[string]any)["arguments"].(map[string]any)
+	args := <-requestSchemas
 	actualProps := args["properties"].(map[string]any)
 	commands := actualProps["commands"].(map[string]any)
 	if !strings.Contains(commands["description"].(string), "10") {
