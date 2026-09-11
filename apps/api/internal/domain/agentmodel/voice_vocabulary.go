@@ -29,6 +29,7 @@ func (kind VoiceVocabularyKind) Valid() bool {
 }
 
 type VoiceVocabularyAssetType struct {
+	AssetTypeID       string `json:"assetTypeId,omitempty"`
 	ExpirationEnabled bool   `json:"expirationEnabled"`
 	Key               string `json:"key"`
 	DisplayName       string `json:"displayName"`
@@ -36,7 +37,7 @@ type VoiceVocabularyAssetType struct {
 }
 
 func (value VoiceVocabularyAssetType) Validate() error {
-	if !validVoiceVocabularyKey(value.Key) || !boundedVocabularyText(value.DisplayName, 120, false) || !boundedVocabularyText(value.Description, 500, true) {
+	if !boundedVocabularyText(value.AssetTypeID, 128, true) || !validVoiceVocabularyKey(value.Key) || !boundedVocabularyText(value.DisplayName, 120, false) || !boundedVocabularyText(value.Description, 500, true) {
 		return ErrInvalidVoiceVocabulary
 	}
 	return nil
@@ -100,6 +101,7 @@ func (request VoiceVocabularyRequest) Validate() error {
 }
 
 type VoiceVocabularyDefinition struct {
+	AssetTypeID                   string              `json:"assetTypeId,omitempty"`
 	ExpirationEnabled             bool                `json:"expirationEnabled,omitempty"`
 	Kind                          VoiceVocabularyKind `json:"kind"`
 	Key                           string              `json:"key"`
@@ -114,10 +116,10 @@ type VoiceVocabularyDefinition struct {
 }
 
 func (definition VoiceVocabularyDefinition) Validate() error {
-	if definition.ExpirationEnabled && definition.Kind != VoiceVocabularyKindCustomAssetType {
+	if (definition.ExpirationEnabled || definition.AssetTypeID != "") && definition.Kind != VoiceVocabularyKindCustomAssetType {
 		return ErrInvalidVoiceVocabulary
 	}
-	if !definition.Kind.Valid() || (definition.Kind == VoiceVocabularyKindTag && !validVoiceVocabularyTagKey(definition.Key)) || (definition.Kind != VoiceVocabularyKindTag && !validVoiceVocabularyKey(definition.Key)) || !boundedVocabularyText(definition.DisplayName, 120, false) || !boundedVocabularyText(definition.Description, 500, true) ||
+	if !boundedVocabularyText(definition.AssetTypeID, 128, true) || !definition.Kind.Valid() || (definition.Kind == VoiceVocabularyKindTag && !validVoiceVocabularyTagKey(definition.Key)) || (definition.Kind != VoiceVocabularyKindTag && !validVoiceVocabularyKey(definition.Key)) || !boundedVocabularyText(definition.DisplayName, 120, false) || !boundedVocabularyText(definition.Description, 500, true) ||
 		len(definition.EnumOptions) > MaxVoiceVocabularyEnumOptions || len(definition.ApplicableCustomAssetTypeKeys) > MaxVoiceVocabularyAssetTypes ||
 		!validUniqueVocabularyKeys(definition.EnumOptions) || !validUniqueVocabularyKeys(definition.ApplicableCustomAssetTypeKeys) {
 		return ErrInvalidVoiceVocabulary

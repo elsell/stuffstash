@@ -42,6 +42,9 @@ func (e *realtimeConversationTools) propose(ctx context.Context, call ports.Agen
 	if err != nil {
 		return ports.ConversationToolOutcome{}, err
 	}
+	if err := e.application.validateRealtimeVoiceProposalTypes(ctx, e.session, commands); err != nil {
+		return ports.ConversationToolOutcome{}, err
+	}
 	checked := map[string]bool{}
 	for _, command := range input.Commands {
 		for _, key := range []string{"assetId", "parentAssetId"} {

@@ -58,14 +58,14 @@ func TestVoiceVocabularyExposesExpirationCapability(t *testing.T) {
 	encoded, _ := json.Marshal(manifest.CustomAssetTypes[0])
 	var value map[string]any
 	_ = json.Unmarshal(encoded, &value)
-	if value["expirationEnabled"] != true {
+	if value["expirationEnabled"] != true || value["assetTypeId"] != "medicine" {
 		t.Fatal("manifest omitted capability")
 	}
 	for _, definition := range catalog.definitions {
 		encoded, _ = json.Marshal(definition)
 		value = map[string]any{}
 		_ = json.Unmarshal(encoded, &value)
-		if value["expirationEnabled"] != true {
+		if value["expirationEnabled"] != true || value["assetTypeId"] != "medicine" {
 			t.Fatal("definition omitted capability")
 		}
 	}

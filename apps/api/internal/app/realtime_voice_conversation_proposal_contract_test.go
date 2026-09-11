@@ -33,8 +33,8 @@ func TestConversationProposalCatalogDescribesCommandArgumentFamilies(t *testing.
 		kind             string
 		fields, required []string
 	}{
-		{"create_asset", []string{"title", "kind", "description", "parentAssetId", "parentCommandId"}, []string{"title"}},
-		{"create_location", []string{"title", "kind", "description", "parentAssetId", "parentCommandId"}, []string{"title"}},
+		{"create_asset", []string{"title", "kind", "description", "parentAssetId", "parentCommandId", "customAssetTypeId", "expiration"}, []string{"title"}},
+		{"create_location", []string{"title", "kind", "description", "parentAssetId", "parentCommandId", "customAssetTypeId", "expiration"}, []string{"title"}},
 		{"move_asset", []string{"assetId", "parentAssetId", "parentCommandId"}, []string{"assetId"}},
 		{"archive_asset", []string{"assetId"}, []string{"assetId"}},
 		{"restore_asset", []string{"assetId"}, []string{"assetId"}},

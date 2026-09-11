@@ -137,7 +137,8 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 				UnavailableDefinitionCount int    `json:"unavailableDefinitionCount"`
 				Manifest                   struct {
 					CustomAssetTypes []struct {
-						Key string `json:"key"`
+						AssetTypeID string `json:"assetTypeId"`
+						Key         string `json:"key"`
 					} `json:"customAssetTypes"`
 					CustomFields []struct {
 						Key string `json:"key"`
@@ -160,13 +161,13 @@ func TestModelLedVocabularyReadAtWebSocketBoundary(t *testing.T) {
 			if result.UnavailableDefinitionCount != tc.missing {
 				t.Fatalf("unexpected unavailable count: %s", model.results[0])
 			}
-			for _, hidden := range []string{"private-field", "other-field", "private-type", "other-type", "private-tag", "other-tag", "home-type-id", "home-field-id", "home-tag-id"} {
+			for _, hidden := range []string{"private-field", "other-field", "private-type", "other-type", "private-tag", "other-tag", "home-field-id", "home-tag-id"} {
 				if strings.Contains(model.results[0], hidden) {
 					t.Fatalf("vocabulary disclosed %s", hidden)
 				}
 			}
 			if !tc.wantError {
-				if len(result.Manifest.CustomAssetTypes) != 1 || result.Manifest.CustomAssetTypes[0].Key != "home-type" || len(result.Manifest.CustomFields) != 1 || result.Manifest.CustomFields[0].Key != "home-field" || len(result.Manifest.Tags) != 1 || result.Manifest.Tags[0].Key != "home-tag" {
+				if len(result.Manifest.CustomAssetTypes) != 1 || result.Manifest.CustomAssetTypes[0].Key != "home-type" || result.Manifest.CustomAssetTypes[0].AssetTypeID != "home-type-id" || len(result.Manifest.CustomFields) != 1 || result.Manifest.CustomFields[0].Key != "home-field" || len(result.Manifest.Tags) != 1 || result.Manifest.Tags[0].Key != "home-tag" {
 					t.Fatalf("scoped vocabulary missing: %s", model.results[0])
 				}
 				records, err := store.ListInventoryAuditRecords(context.Background(), "tenant-home", "inventory-home", ports.AuditRecordPageRequest{Limit: 100})

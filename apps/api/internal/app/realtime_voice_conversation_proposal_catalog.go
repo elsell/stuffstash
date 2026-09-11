@@ -70,6 +70,31 @@ func realtimeConversationProposalTool() ports.ConversationToolDefinition {
                   "parentCommandId": {
                     "type": "string",
                     "description": "ID of an earlier create command for the parent. Set at most one of parentAssetId and parentCommandId. Never use command IDs as assetId or parentAssetId."
+                  },
+                  "customAssetTypeId": {
+                    "type": "string",
+                    "description": "Existing assetTypeId from inventory vocabulary. Choose an expiration-enabled type when recording a date."
+                  },
+                  "expiration": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Exact YYYY-MM-DD or month-only YYYY-MM, preserving the user label. Clarify ambiguous or missing years."
+                      },
+                      "precision": {
+                        "type": "string",
+                        "enum": [
+                          "day",
+                          "month"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "precision"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -125,6 +150,31 @@ func realtimeConversationProposalTool() ports.ConversationToolDefinition {
                   "parentCommandId": {
                     "type": "string",
                     "description": "ID of an earlier create command for the parent. Set at most one of parentAssetId and parentCommandId. Never use command IDs as assetId or parentAssetId."
+                  },
+                  "customAssetTypeId": {
+                    "type": "string",
+                    "description": "Existing assetTypeId from inventory vocabulary. Choose an expiration-enabled type when recording a date."
+                  },
+                  "expiration": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Exact YYYY-MM-DD or month-only YYYY-MM, preserving the user label. Clarify ambiguous or missing years."
+                      },
+                      "precision": {
+                        "type": "string",
+                        "enum": [
+                          "day",
+                          "month"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "precision"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [

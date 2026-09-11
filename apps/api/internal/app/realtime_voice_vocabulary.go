@@ -57,9 +57,9 @@ func projectRealtimeVoiceVocabulary(assetTypes []customfield.AssetType, fields [
 	for _, assetType := range assetTypes {
 		key := assetType.Key.String()
 		typeKeysByID[assetType.ID] = key
-		manifest.CustomAssetTypes = append(manifest.CustomAssetTypes, agentmodel.VoiceVocabularyAssetType{ExpirationEnabled: assetType.ExpirationEnabled, Key: key, DisplayName: assetType.DisplayName.String(), Description: assetType.Description.String()})
+		manifest.CustomAssetTypes = append(manifest.CustomAssetTypes, agentmodel.VoiceVocabularyAssetType{AssetTypeID: assetType.ID.String(), ExpirationEnabled: assetType.ExpirationEnabled, Key: key, DisplayName: assetType.DisplayName.String(), Description: assetType.Description.String()})
 		catalog.definitions[realtimeVoiceVocabularyCatalogKey(agentmodel.VoiceVocabularyKindCustomAssetType, key)] = agentmodel.VoiceVocabularyDefinition{
-			ExpirationEnabled: assetType.ExpirationEnabled, Kind: agentmodel.VoiceVocabularyKindCustomAssetType, Key: key, DisplayName: assetType.DisplayName.String(), Description: assetType.Description.String(),
+			AssetTypeID: assetType.ID.String(), ExpirationEnabled: assetType.ExpirationEnabled, Kind: agentmodel.VoiceVocabularyKindCustomAssetType, Key: key, DisplayName: assetType.DisplayName.String(), Description: assetType.Description.String(),
 		}
 	}
 	for _, field := range fields {
