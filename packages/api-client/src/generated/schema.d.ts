@@ -2669,6 +2669,12 @@ export interface components {
             lifecycleState: string;
             name: string;
         };
+        NotificationAncestor: {
+            assetId: string;
+            /** @enum {string} */
+            kind: "item" | "container" | "location";
+            title: string;
+        };
         NotificationReadResponse: {
             id: string;
             read: boolean;
@@ -2685,6 +2691,8 @@ export interface components {
             /** @enum {string} */
             milestone: "upcoming" | "expired";
             parentAssetId: string;
+            parentTrail: components["schemas"]["NotificationAncestor"][] | null;
+            parentTrailIncomplete: boolean;
             /** Format: date-time */
             readAt?: string;
             title: string;

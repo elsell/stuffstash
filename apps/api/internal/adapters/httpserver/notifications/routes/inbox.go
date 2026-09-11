@@ -23,7 +23,7 @@ func registerInbox(api huma.API, application app.App) {
 		}
 		values := make([]dto.NotificationResponse, 0, len(page.Items))
 		for _, view := range page.Items {
-			values = append(values, mapper.NotificationToResponse(view.Notification, view.Asset))
+			values = append(values, mapper.NotificationToResponse(view.Notification, view.Asset, view.ParentTrail, view.ParentTrailIncomplete))
 		}
 		var cursor *string
 		if page.NextCursor != "" {
@@ -40,7 +40,7 @@ func registerInbox(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.NotificationOutput{Body: shared.SuccessEnvelope[dto.NotificationResponse]{Data: mapper.NotificationToResponse(view.Notification, view.Asset), Meta: shared.Meta{TenantID: input.TenantID}}}, nil
+		return &dto.NotificationOutput{Body: shared.SuccessEnvelope[dto.NotificationResponse]{Data: mapper.NotificationToResponse(view.Notification, view.Asset, view.ParentTrail, view.ParentTrailIncomplete), Meta: shared.Meta{TenantID: input.TenantID}}}, nil
 	}, huma.OperationTags("notifications"), shared.SecuredOperation)
 	huma.Put(api, path+"/{notificationId}/read", func(ctx context.Context, input *dto.NotificationInput) (*dto.NotificationReadOutput, error) {
 		scope, err := authenticateScope(ctx, application, &input.ScopeInput)

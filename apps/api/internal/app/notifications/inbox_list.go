@@ -17,6 +17,10 @@ type InboxPage struct {
 }
 
 func (s Service) ListInbox(ctx context.Context, input ScopeInput, beforeID string, limit int, unreadOnly bool) (InboxPage, error) {
+	return s.listInbox(ctx, input, beforeID, limit, unreadOnly, true)
+}
+
+func (s Service) listInbox(ctx context.Context, input ScopeInput, beforeID string, limit int, unreadOnly, includePlacement bool) (InboxPage, error) {
 	if err := s.access(ctx, input); err != nil {
 		return InboxPage{}, err
 	}
@@ -28,6 +32,7 @@ func (s Service) ListInbox(ctx context.Context, input ScopeInput, beforeID strin
 		return InboxPage{}, err
 	}
 	page := InboxPage{Items: make([]NotificationView, 0, limit)}
+	placement := placementCache{}
 	for index, entry := range entries {
 		if index == inboxScanLimit {
 			break
@@ -49,6 +54,11 @@ func (s Service) ListInbox(ctx context.Context, input ScopeInput, beforeID strin
 		}
 		if unreadOnly && view.Notification.ReadAt != nil {
 			continue
+		}
+		if includePlacement {
+			if err := s.enrichPlacement(ctx, input, &view, placement); err != nil {
+				return InboxPage{}, err
+			}
 		}
 		page.Items = append(page.Items, view)
 		if len(page.Items) == limit {

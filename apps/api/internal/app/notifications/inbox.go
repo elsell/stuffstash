@@ -13,14 +13,19 @@ import (
 )
 
 type NotificationView struct {
-	Notification ports.NotificationRecord
-	Asset        asset.Asset
+	ParentTrail           []ports.NotificationAncestor
+	ParentTrailIncomplete bool
+	Notification          ports.NotificationRecord
+	Asset                 asset.Asset
 }
 
 func (s Service) GetNotification(ctx context.Context, input ScopeInput, id string) (NotificationView, error) {
 	view, err := s.currentNotification(ctx, input, id)
 	if err != nil {
 		return view, err
+	}
+	if err := s.enrichPlacement(ctx, input, &view, placementCache{}); err != nil {
+		return NotificationView{}, err
 	}
 	auditInput := s.auditInput(input, audit.ActionNotificationListed, id)
 	auditInput.TargetType = audit.TargetNotification

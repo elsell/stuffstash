@@ -322,3 +322,16 @@ formatting independent of the viewer's UTC offset. Undated items add no empty
 row. The date label remains visible when type tracking is disabled, so stored
 information is not hidden. These date labels do not imply reminder delivery or
 an upcoming/expired state computed from a different user's preferences.
+
+### Current notification placement
+
+Inbox list and detail responses include `parentTrail`, ordered from the outermost
+known ancestor to the immediate parent, with each ancestor's asset ID, title, and
+kind. Resolve this at read time within the recipient's authorized tenant and
+inventory; do not persist location snapshots in notifications. Bound traversal to
+128 ancestors, detect cycles, and never include foreign, missing, or archived
+ancestors. Return `parentTrailIncomplete` when the full chain cannot be resolved,
+so clients can indicate a partial path. Reuse ancestor reads within one inbox
+page. Placement enrichment applies to displayed list/detail results, not delivery,
+unread counts, or marking read. Existing notification read audit covers this
+response metadata.

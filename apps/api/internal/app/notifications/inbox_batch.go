@@ -14,7 +14,7 @@ type UnreadCountPage struct {
 type InboxReadPage struct{ NextCursor string }
 
 func (s Service) CountUnreadPage(ctx context.Context, input ScopeInput, beforeID string) (UnreadCountPage, error) {
-	page, err := s.ListInbox(ctx, input, beforeID, maxInboxPageSize, true)
+	page, err := s.listInbox(ctx, input, beforeID, maxInboxPageSize, true, false)
 	if err != nil {
 		return UnreadCountPage{}, err
 	}
@@ -22,7 +22,7 @@ func (s Service) CountUnreadPage(ctx context.Context, input ScopeInput, beforeID
 }
 
 func (s Service) MarkInboxPageRead(ctx context.Context, input ScopeInput, beforeID string) (InboxReadPage, error) {
-	page, err := s.ListInbox(ctx, input, beforeID, maxInboxPageSize, true)
+	page, err := s.listInbox(ctx, input, beforeID, maxInboxPageSize, true, false)
 	if err != nil {
 		return InboxReadPage{}, err
 	}
