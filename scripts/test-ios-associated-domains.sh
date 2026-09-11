@@ -91,3 +91,29 @@ fi
 
 grep -q 'write-ios-associated-domains.sh' "$repo_root/apps/mobile/ios/StuffStash.xcodeproj/xcshareddata/xcschemes/StuffStash.xcscheme"
 test "$(grep -c 'CODE_SIGN_ENTITLEMENTS = \"$(DERIVED_FILE_DIR)/StuffStash.entitlements\"' "$repo_root/apps/mobile/ios/StuffStash.xcodeproj/project.pbxproj")" -eq 2
+
+CONFIGURATION=Debug "$writer" "$output"
+python3 -c 'import plistlib,sys; assert plistlib.load(open(sys.argv[1],"rb"))["aps-environment"] == "development"' "$output"
+CONFIGURATION=Release "$writer" "$output"
+python3 -c 'import plistlib,sys; assert plistlib.load(open(sys.argv[1],"rb"))["aps-environment"] == "production"' "$output"
+STUFF_STASH_MOBILE_PRODUCTION_BUILD=true "$writer" "$output"
+python3 -c 'import plistlib,sys; assert plistlib.load(open(sys.argv[1],"rb"))["aps-environment"] == "production"' "$output"
+
+if STUFF_STASH_MOBILE_PRODUCTION_BUILD=invalid "$writer" "$output" >/dev/null 2>&1; then
+  echo 'invalid production flag was accepted for push entitlement generation' >&2
+  exit 1
+fi
+EAS_BUILD_PROFILE=production "$writer" "$output"
+python3 -c 'import plistlib,sys; assert plistlib.load(open(sys.argv[1],"rb"))["aps-environment"] == "production"' "$output"
+STUFF_STASH_MOBILE_PRODUCTION_BUILD=false node - "$repo_root/apps/mobile/app.config.js" <<'JS'
+const assert = require('node:assert/strict');
+const config = require(process.argv[2]);
+const plugin = config.expo.plugins.find(value => Array.isArray(value) && value[0] === 'expo-notifications');
+assert.deepEqual(plugin[1], {mode: 'development', defaultChannel: 'expiration', enableBackgroundRemoteNotifications: false});
+JS
+STUFF_STASH_MOBILE_PRODUCTION_BUILD=true STUFF_STASH_MOBILE_RELEASE_TAG=v1.2.3 node - "$repo_root/apps/mobile/app.config.js" <<'JS'
+const assert = require('node:assert/strict');
+const config = require(process.argv[2]);
+const plugin = config.expo.plugins.find(value => Array.isArray(value) && value[0] === 'expo-notifications');
+assert.equal(plugin[1].mode, 'production');
+JS

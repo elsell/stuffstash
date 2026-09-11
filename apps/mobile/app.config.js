@@ -65,6 +65,7 @@ module.exports = {
     plugins: [
       'expo-router',
       'expo-secure-store',
+      ['expo-notifications', { mode: productionBuild ? 'production' : 'development', defaultChannel: 'expiration', enableBackgroundRemoteNotifications: false }],
       'expo-web-browser',
       [
         'expo-image-picker',
