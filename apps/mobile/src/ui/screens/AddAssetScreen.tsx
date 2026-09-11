@@ -475,19 +475,16 @@ function ScopedAddAssetScreen({
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       <View style={styles.dismissRow}>
-        <View style={styles.dismissSpacer} />
-        <Text accessibilityRole="header" style={styles.dismissTitle}>Add</Text>
-        <Pressable
-          accessibilityLabel="Close Add"
-          accessibilityRole="button"
-          onPress={onDismiss}
-          style={styles.dismissButton}
-        >
-          <X color={colors.text} size={22} strokeWidth={2.4} />
+        <Pressable accessibilityLabel="Close Add" accessibilityRole="button" onPress={onDismiss} style={styles.dismissButton}><Text style={{ color: colors.action, fontSize: 17 }}>Cancel</Text></Pressable>
+        <Text accessibilityRole="header" style={styles.dismissTitle}>Add item</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Save item" disabled={!title.trim() || !expirationValid || saveState.status === 'saving' || (loadState.status !== 'ready' || !loadState.context.canAdd)} onPress={saveAsset} style={styles.dismissButton}>
+          {saveState.status === 'saving' ? <ActivityIndicator color={colors.action} /> : <Text style={{ color: colors.action, fontSize: 17, fontWeight: '600' }}>Add</Text>}
         </Pressable>
       </View>
       <ScrollView
         ref={formScrollRef}
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[
           styles.content,
           { paddingBottom: safeAreaInsets.bottom + spacing.lg }
@@ -632,19 +629,7 @@ function ScopedAddAssetScreen({
                   </View>
                 ) : null}
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Save item"
-                  disabled={!expirationValid || saveState.status === 'saving'}
-                  onPress={saveAsset}
-                  style={[styles.saveButton, saveState.status === 'saving' ? styles.disabledButton : null]}
-                >
-                  {saveState.status === 'saving' ? (
-                    <ActivityIndicator color={colors.onAction} />
-                  ) : (
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  )}
-                </Pressable>
+
               </View>
             )}
           </View>
@@ -1058,6 +1043,7 @@ function AssetTagPicker({
   readonly selectedTagIds: readonly string[];
   readonly onChange: (tagIds: readonly string[]) => void;
 }) {
+  const [tagSearch, setTagSearch] = useState('');
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const [newTagName, setNewTagName] = useState('');
@@ -1106,6 +1092,7 @@ function AssetTagPicker({
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.tagPickerTitle}>Tags</Text>
+      <AppTextInput accessibilityLabel="Search tags" placeholder="Find a tag" value={tagSearch} onChangeText={setTagSearch} style={styles.input} />
       <View style={styles.tagOptions}>
         {newTags.map((tag, index) => {
           const colorStyle = assetTagChipStylePresentation(tag);
@@ -1127,7 +1114,7 @@ function AssetTagPicker({
             </Pressable>
           );
         })}
-        {tags.map((tag) => {
+        {tags.filter(tag => selectedTagIds.includes(tag.id) || (tagSearch.length > 0 && tag.displayName.toLocaleLowerCase().includes(tagSearch.toLocaleLowerCase()))).map((tag) => {
           const isSelected = selected.has(tag.id);
           const colorStyle = assetTagChipStylePresentation(tag);
           return (

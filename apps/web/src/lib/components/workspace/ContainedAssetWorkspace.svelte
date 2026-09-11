@@ -238,7 +238,7 @@
               >
                 <AssetThumb {asset} />
                 <span class="contained-asset-copy">
-                  <strong>{asset.title}</strong><AssetExpirationLabel expiration={asset.expiration} />
+                  <strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
                   <small>{assetKindLabel(asset.kind)}{asset.relativePath ? ` · ${asset.relativePath}` : ''}</small>
                   {#if asset.currentCheckout}<CheckoutBadge checkout={asset.currentCheckout} compact />{/if}
                 </span>

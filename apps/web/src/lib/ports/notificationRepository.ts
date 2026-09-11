@@ -14,4 +14,5 @@ export interface NotificationRepository {
   listInbox(tenantId: string, inventoryId: string, options?: InboxOptions): Promise<NotificationPage>;
   getNotification(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal): Promise<ExpirationNotification>;
   markRead(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal): Promise<void>;
+  markUnread(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal): Promise<void>;
 }

@@ -79,6 +79,23 @@ func TestNotificationInboxRepositoryContract(t *testing.T) {
 			if err != nil || !found || current.ReadAt == nil || !current.ReadAt.Equal(now) {
 				t.Fatal("read state lost")
 			}
+			if _, err := repository.MarkNotificationUnread(ctx, scope, value.ID, record); err == nil {
+				t.Fatal("unread audit conflict accepted")
+			}
+			record.ID = "unread"
+			record.Action = audit.ActionNotificationUnread
+			changed, err = repository.MarkNotificationUnread(ctx, scope, value.ID, record)
+			if err != nil || !changed {
+				t.Fatalf("mark unread %v %v", changed, err)
+			}
+			changed, err = repository.MarkNotificationUnread(ctx, scope, value.ID, record)
+			if err != nil || changed {
+				t.Fatal("unread not idempotent")
+			}
+			current, _, err = repository.NotificationByID(ctx, scope, value.ID)
+			if err != nil || current.ReadAt != nil {
+				t.Fatal("unread state lost")
+			}
 			next := value
 			next.ID = "notice-2"
 			next.Milestone.Kind = notification.MilestoneExpired

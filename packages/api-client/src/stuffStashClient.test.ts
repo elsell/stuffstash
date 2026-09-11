@@ -1058,6 +1058,8 @@ describe('StuffStashClient', () => {
                 description: '',
                 parentAssetId: null,
                 lifecycleState: 'archived',
+                expiration: {date: '2026-09-12', precision: 'day'},
+                expirationContext: {state: 'upcoming', timezone: 'America/New_York', advanceDays: 30, trackingEnabled: true},
                 tags: [{ id: 'tag-travel', key: 'travel', displayName: 'Travel', color: '#2F80ED' }],
                 currentCheckout: {
                   id: 'checkout-open',
@@ -1084,6 +1086,8 @@ describe('StuffStashClient', () => {
         asset: {
           id: 'asset-one',
           lifecycleState: 'archived',
+                expiration: {date: '2026-09-12', precision: 'day'},
+                expirationContext: {state: 'upcoming', timezone: 'America/New_York', advanceDays: 30, trackingEnabled: true},
           tags: [{ id: 'tag-travel', key: 'travel', displayName: 'Travel', color: '#2F80ED' }],
           currentCheckout: {
             id: 'checkout-open',

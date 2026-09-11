@@ -1,6 +1,7 @@
 package assets
 
 import (
+	expirationapp "github.com/stuffstash/stuff-stash/internal/app/expiration"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
@@ -137,13 +138,14 @@ type ListCheckedOutAssetsInput struct {
 }
 
 type ListAssetsResult struct {
-	Items         []asset.Asset
-	Tags          map[asset.ID][]assettag.Tag
-	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
-	Checkouts     map[asset.ID]asset.Checkout
-	Limit         int
-	NextCursor    *string
-	HasMore       bool
+	ExpirationContexts map[ports.AttachmentAssetReference]expirationapp.Description
+	Items              []asset.Asset
+	Tags               map[asset.ID][]assettag.Tag
+	PrimaryPhotos      map[ports.AttachmentAssetReference]media.Attachment
+	Checkouts          map[asset.ID]asset.Checkout
+	Limit              int
+	NextCursor         *string
+	HasMore            bool
 }
 
 type AssetCheckoutHistoryResult struct {

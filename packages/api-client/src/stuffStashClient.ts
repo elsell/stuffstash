@@ -2145,6 +2145,8 @@ function mapAssetSearchResult(response: components['schemas']['AssetSearchResult
     tenantId: response.tenantId,
     inventory: response.inventory,
     asset: {
+      expiration: response.asset.expiration ?? undefined,
+      expirationContext: response.asset.expirationContext,
       id: response.asset.id,
       tenantId: response.tenantId,
       inventoryId: response.asset.inventoryId,

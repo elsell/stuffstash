@@ -32,5 +32,6 @@ type NotificationInboxRepository interface {
 	InsertNotification(ctx context.Context, value NotificationRecord, record audit.Record) (NotificationRecord, bool, error)
 	NotificationByID(ctx context.Context, scope NotificationScope, id string) (NotificationRecord, bool, error)
 	ListNotifications(ctx context.Context, scope NotificationScope, beforeID string, limit int) ([]NotificationRecord, error)
+	MarkNotificationUnread(ctx context.Context, scope NotificationScope, id string, record audit.Record) (bool, error)
 	MarkNotificationRead(ctx context.Context, scope NotificationScope, id string, at time.Time, record audit.Record) (bool, error)
 }

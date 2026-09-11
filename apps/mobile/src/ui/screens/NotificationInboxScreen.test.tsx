@@ -10,7 +10,7 @@ it('shows a calendar month and opens only the currently resolved item after mark
   const queries = new NotificationInboxQueries({
     async listInbox() { return { items: [alert], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
     async getNotification() { events.push('resolve'); return { ...alert, assetId: 'current-item' }; },
-    async markRead() { events.push('read'); },
+    async markUnread() { throw new Error('Unread not exercised by this fixture'); }, async markRead() { events.push('read'); },
     async countUnreadPage() { return { count: 1, nextCursor: null }; },
     async markAllReadPage() { return { complete: true, nextCursor: null }; }
   }, { record() {} });
@@ -23,19 +23,19 @@ it('shows a calendar month and opens only the currently resolved item after mark
     await harness.press(harness.byLabel('Open Tylenol'));
     expect(events).toEqual(['resolve', 'read', 'changed', 'current-item']);
     expect(harness.allText()).not.toContain('Unread');
-    expect(harness.allText()).toContain('Read');
+    expect(harness.byLabel('Mark Tylenol unread')).toBeDefined();
   } finally { await harness.unmount(); }
 });
 it('retains a retry surface without claiming an empty inbox after a failed load', async () => {
   const harness = new MobileRenderHarness();
-  const queries = { async list() { throw new Error('private transport error'); }, async open() { return ''; }, async markAllRead() {} };
+  const queries = { async list() { throw new Error('private transport error'); }, async open() { return ''; }, async setRead() { throw new Error('Read state not exercised by this fixture'); }, async markAllRead() {} };
   try {
     await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => undefined} onChanged={() => undefined} onSettings={() => undefined} />);
     await harness.settle();
     expect(harness.allText().join(' ')).toContain('could not be loaded');
     expect(harness.allText().join(' ')).not.toContain('No notifications');
     expect(harness.allText().join(' ')).not.toContain('private transport');
-    expect(harness.byLabel('Refresh notifications')?.props.disabled).toBe(false);
+    expect(harness.byLabel('Retry notifications')?.props.disabled).toBe(false);
   } finally { await harness.unmount(); }
 });
 it('refreshes unread results after marking all alerts read', async () => {
@@ -46,7 +46,7 @@ it('refreshes unread results after marking all alerts read', async () => {
     async list(_tenant: string, _inventory: string, options: { unreadOnly?: boolean } = {}) {
       filters.push(!!options.unreadOnly);
       return { items: read && options.unreadOnly ? [] : [{ ...alert, readAt: read ? '2027-01-02T00:00:00Z' : undefined }], pagination: { limit: 20, hasMore: false, nextCursor: null } };
-    }, async open() { return 'item'; }, async markAllRead() { read = true; }
+    }, async open() { return 'item'; }, async setRead() { throw new Error('Read state not exercised by this fixture'); }, async markAllRead() { read = true; }
   };
   let changes = 0;
   try {
@@ -62,9 +62,46 @@ it('refreshes unread results after marking all alerts read', async () => {
 });
 it('opens the immediate parent separately without marking the alert read',async()=>{
  const events:string[]=[];const harness=new MobileRenderHarness();
- const queries={async list(){return {items:[{...alert,parentTrail:[{assetId:'closet',title:'Hall closet',kind:'location' as const},{assetId:'bin',title:'Bin 8',kind:'container' as const}],parentTrailIncomplete:true}],pagination:{limit:20,hasMore:false,nextCursor:null}};},async open(){events.push('read');return 'item';},async markAllRead(){}};
+ const queries={async list(){return {items:[{...alert,parentTrail:[{assetId:'closet',title:'Hall closet',kind:'location' as const},{assetId:'bin',title:'Bin 8',kind:'container' as const}],parentTrailIncomplete:true}],pagination:{limit:20,hasMore:false,nextCursor:null}};},async open(){events.push('read');return 'item';},async setRead() { throw new Error('Read state not exercised by this fixture'); }, async markAllRead(){}};
  try {await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={id=>events.push(id)} onChanged={()=>{}} onSettings={()=>{}}/>);await harness.settle();
  expect(harness.allText().join(' ')).toContain('Partial location path');
  await harness.press(harness.byLabel('Open location Bin 8'));expect(events).toEqual(['bin']);
  }finally{await harness.unmount();}
+});
+it('marks a read notification unread without opening the asset', async () => {
+  const harness = new MobileRenderHarness();
+  let read = true;
+  let opened = false;
+  let changes = 0;
+  const queries = {
+    async list() { return { items: [{ ...alert, readAt: read ? '2027-01-02T00:00:00Z' : undefined }], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
+    async open() { opened = true; return 'item'; },
+    async markAllRead() {},
+    async setRead(_tenant: string, _inventory: string, id: string, value: boolean) { expect(id).toBe('notice'); read = value; }
+  };
+  try {
+    await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => { opened = true; }} onChanged={() => changes++} onSettings={() => undefined} />);
+    await harness.settle();
+    await harness.press(harness.byLabel('Mark Tylenol unread'));
+    expect(read).toBe(false);
+    expect(opened).toBe(false);
+    expect(changes).toBe(1);
+    expect(harness.byLabel('Open Tylenol')?.props.accessibilityValue).toEqual({text:'Expires February 2027. Unread'});
+  } finally { await harness.unmount(); }
+});
+it('accepts another device marking a previously opened notification unread on refresh', async () => {
+ const harness = new MobileRenderHarness();
+ const queries = {
+  async list() { return { items: [alert], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
+  async open() { return 'item'; }, async markAllRead() {}, async setRead() {}
+ };
+ try {
+  await harness.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => {}} onChanged={() => {}} onSettings={() => {}} />);
+  await harness.settle();
+  await harness.press(harness.byLabel('Open Tylenol'));
+  expect(harness.byLabel('Mark Tylenol unread')).toBeDefined();
+  await harness.run(() => harness.byType('ScrollView')?.props.refreshControl.props.onRefresh());
+  await harness.settle();
+  expect(harness.byLabel('Mark Tylenol read')).toBeDefined();
+ } finally { await harness.unmount(); }
 });

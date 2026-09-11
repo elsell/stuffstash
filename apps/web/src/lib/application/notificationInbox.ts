@@ -48,3 +48,13 @@ export async function openNotification(
     throw error;
   }
 }
+
+export async function setNotificationRead(repository: Pick<NotificationRepository, 'markRead' | 'markUnread'>, observer: WorkspaceObserver, tenantId: string, inventoryId: string, id: string, read: boolean, signal?: AbortSignal): Promise<void> {
+ try {
+  signal?.throwIfAborted();
+  if (read) await repository.markRead(tenantId, inventoryId, id, signal);
+  else await repository.markUnread(tenantId, inventoryId, id, signal);
+  signal?.throwIfAborted();
+  observer.record('workspace.notification_read_state_changed');
+ } catch (error) { observer.record('workspace.notification_read_state_failed'); throw error; }
+}

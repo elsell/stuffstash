@@ -71,7 +71,7 @@
     <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
     {#if route.settingsCollection === 'notifications' && inventory && notifications}
       {#key JSON.stringify([notifications.apiIdentity, principal.id, tenant.id, inventory.id])}
-        <NotificationSettings tenantId={tenant.id} inventoryId={inventory.id} initialTimezone={Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'} repository={notifications.repository} {observer} typeRepository={repository} />
+        <NotificationSettings tenantId={tenant.id} inventoryId={inventory.id} initialTimezone={Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'} repository={notifications.repository} onChanged={notifications.onPreferencesChanged} {observer} typeRepository={repository} />
       {/key}
     {:else if route.settingsCollection === 'conversations' && route.settingsLevel === 'tenant' && conversations}
       {#key JSON.stringify([conversations.apiIdentity, principal.id, tenant.id])}

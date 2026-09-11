@@ -249,7 +249,7 @@
                 <div data-recent-card-media><AssetThumb {asset} size="lg" /></div>
                 <span class="recent-card-copy" data-recent-card-copy>
                   <strong data-recent-card-title>{asset.title}</strong>
-                  <AssetExpirationLabel expiration={asset.expiration} />
+                  <AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
                   <small>{asset.customAssetTypeLabel ?? assetKindLabel(asset.kind)}</small>
                   <small>{asset.containmentTrail}</small>
                   {#if asset.currentCheckout}
@@ -276,7 +276,7 @@
               <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openAsset(event, asset)}>
                 <AssetThumb {asset} />
                 <span class="asset-row-main">
-                  <strong>{asset.title}</strong><AssetExpirationLabel expiration={asset.expiration} />
+                  <strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
                   <small>{asset.description || assetKindLabel(asset.kind)}</small>
                   {#if asset.currentCheckout}
                     <CheckoutBadge checkout={asset.currentCheckout} compact />
@@ -317,7 +317,7 @@
             <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openAsset(event, asset)}>
               <AssetThumb {asset} />
               <span class="asset-row-main">
-                <strong>{asset.title}</strong><AssetExpirationLabel expiration={asset.expiration} />
+                <strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
                 <small>{asset.description || assetKindLabel(asset.kind)}</small>
                 {#if asset.currentCheckout}
                   <CheckoutBadge checkout={asset.currentCheckout} compact />

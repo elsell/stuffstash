@@ -1443,7 +1443,8 @@ export interface paths {
         /** Put tenants by tenant ID inventories by inventory ID notifications by notification ID read */
         put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read"];
         post?: never;
-        delete?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID notifications by notification ID read */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1843,6 +1844,8 @@ export interface components {
                 [key: string]: unknown;
             };
             description: string;
+            expiration?: components["schemas"]["Expiration"];
+            expirationContext?: components["schemas"]["ExpirationContext"];
             id: string;
             inventoryId: string;
             kind: string;
@@ -8348,6 +8351,42 @@ export interface operations {
         };
     };
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeNotificationReadResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
         parameters: {
             query?: never;
             header?: {

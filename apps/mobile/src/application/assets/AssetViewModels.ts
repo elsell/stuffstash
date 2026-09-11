@@ -2,6 +2,7 @@ import type { AssetSummary } from '../../domain/assets/AssetSummary';
 
 export type AssetCardViewModel = {
   readonly expiration?: AssetSummary['expiration'];
+  readonly expirationContext?: AssetSummary['expirationContext'];
   readonly id: string;
   readonly title: string;
   readonly kindLabel: string;
@@ -116,6 +117,7 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     id: asset.id,
     title: asset.title,
     ...(asset.expiration ? { expiration: asset.expiration } : {}),
+    ...(asset.expirationContext ? { expirationContext: asset.expirationContext } : {}),
     kindLabel: labelAssetKind(asset.kind),
     customTypeLabel: asset.customType,
     description: asset.description,

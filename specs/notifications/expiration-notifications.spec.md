@@ -346,3 +346,18 @@ opening an ancestor does not mark the notification read. Disable ancestor action
 while inbox mutations or an item-opening operation are pending. Partial trails
 show an accessible incomplete-location indication. Legacy servers without trail
 fields render no invented breadcrumbs. Empty complete trails add no row.
+
+## Approved native usability revision (2026-09-11)
+
+The user approved implementing all findings in `docs/reports/expiration-ui-ux-audit-2026-09-11.md`, including populated-inbox hierarchy, reliable existing numeric badges, and explicit mark-unread support.
+
+- Inbox uses one navigation title, All/Unread filtering, separated rows instead of outlined cards, native pull-to-refresh on mobile and a compact accessible refresh action on web. Settings and mark-all actions live in navigation/toolbars. Unread entries use a dot and stronger title weight; read entries remain legible. Individual read/unread actions are accessible without opening the item.
+- `PUT .../notifications/{notificationId}/read` preserves the existing mark-read contract. `DELETE` at the same read resource marks unread, idempotently, after current notification visibility and recipient/inventory authorization checks. The state transition and `notification.unread` audit record are atomic. It does not recreate a milestone or push delivery. Cross-principal, cross-tenant, inaccessible/withdrawn and unauthenticated requests must fail at the REST boundary.
+- Preferences use concise grouped default rules and one row per type. Type policy modes are Use defaults, Custom, Off. Inventory defaults remain inheritable, never a global override of type choices. Before expiration combines off/preset/custom-day selection; expired is independent. Hide inactive subordinate editors while preserving saved choices.
+- Clean editor drafts follow refreshed server state; dirty drafts are never silently overwritten. Explicit conflict reload reconciles the displayed values. Simple controls save consistently; focused compound edits have explicit commit/cancel. Readable timezone selection preserves the stored timezone across travel.
+- Push preference, OS permission and server readiness are separate facts. Permission/registration success must not claim verified delivery. Native system settings is the recovery for denied permission.
+- Badge refresh follows mutation, app foreground and inventory scope changes. Failed refresh retains known same-scope counts while announcing unavailable freshness, not false zero. Opening the inbox alone does not mark all read.
+
+Migration 58 expands the PostgreSQL audit action constraint for notification.unread. Its down migration intentionally retains this additive action allowance so historical audit records remain valid; no historical action is deleted or rewritten.
+
+CI records desktop and phone-width browser evidence for personal reminder editing and the read → unread inbox journey. Toolbar and row utility actions use compact, labeled icon buttons. Native device layout verification remains separate.

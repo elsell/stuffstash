@@ -1,3 +1,4 @@
+import { expirationRefreshDelay } from './expirationRefreshDelay';
 import { isAccessFailure } from './isAccessFailure';
 import { useQuery, useQueryClient, type QueryKey, type RefetchOptions, type UseQueryResult } from '@tanstack/react-query';
 import { fetchMobileInventoryServerQuery, readScopedMobileResource } from './fetchMobileInventoryServerQuery';
@@ -36,6 +37,8 @@ export function useMobileInventoryServerQuery<TData>({
     queryKey,
     queryFn: ({ signal }) => readScopedMobileResource(client, serverState.scopeId, inventoryScope.data!, signal, query),
     enabled: enabled && inventoryScope.isSuccess,
+    refetchInterval: state => expirationRefreshDelay(state.state.data, new Date(), new Date(state.state.dataUpdatedAt)),
+    refetchIntervalInBackground: false,
     subscribed: enabled && inventoryScope.isSuccess
   });
   const reconcile = () => fetchMobileInventoryServerQuery({ client, serverState, key, query });

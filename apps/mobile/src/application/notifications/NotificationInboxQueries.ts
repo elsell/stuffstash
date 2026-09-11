@@ -1,7 +1,7 @@
 import { assertReadActive, type ReadRequest } from '../shared/ReadRequest';
 import type { InboxOptions, NotificationRepository } from './NotificationRepository';
 import type { NotificationEvent, NotificationObservability } from './NotificationObservability';
-type InboxRepository = Pick<NotificationRepository, 'listInbox' | 'countUnreadPage' | 'getNotification' | 'markRead' | 'markAllReadPage'>;
+type InboxRepository = Pick<NotificationRepository, 'listInbox' | 'countUnreadPage' | 'getNotification' | 'markRead' | 'markUnread' | 'markAllReadPage'>;
 const maximumPages = 100;
 function incomplete(): Error { return new Error('The notification operation could not be completed. Try again.'); }
 
@@ -48,6 +48,14 @@ export class NotificationInboxQueries {
       await this.repository.markRead(tenantId, inventoryId, current.id, request.signal);
       assertReadActive(request.signal);
       return current.assetId;
+    });
+  }
+  setRead(tenantId: string, inventoryId: string, notificationId: string, read: boolean, request: ReadRequest = {}): Promise<void> {
+    return this.observe('read-state', async () => {
+      assertReadActive(request.signal);
+      if (read) await this.repository.markRead(tenantId, inventoryId, notificationId, request.signal);
+      else await this.repository.markUnread(tenantId, inventoryId, notificationId, request.signal);
+      assertReadActive(request.signal);
     });
   }
   private async *pages<T extends { nextCursor: string | null }>(load: (cursor?: string) => Promise<T>, request: ReadRequest) {

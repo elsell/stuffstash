@@ -110,19 +110,31 @@ func (s Store) ListNotifications(ctx context.Context, scope ports.NotificationSc
 	return values, nil
 }
 func (s Store) MarkNotificationRead(ctx context.Context, scope ports.NotificationScope, id string, at time.Time, record audit.Record) (bool, error) {
+	if at.IsZero() {
+		return false, ports.ErrInvalidProviderInput
+	}
+	at = at.UTC()
+	return s.setNotificationRead(ctx, scope, id, &at, record)
+}
+func (s Store) MarkNotificationUnread(ctx context.Context, scope ports.NotificationScope, id string, record audit.Record) (bool, error) {
+	return s.setNotificationRead(ctx, scope, id, nil, record)
+}
+func (s Store) setNotificationRead(ctx context.Context, scope ports.NotificationScope, id string, at *time.Time, record audit.Record) (bool, error) {
 	if id == "" {
 		return false, ports.ErrInvalidProviderInput
 	}
 	if !notificationAuditScopeMatches(scope, record) {
 		return false, ports.ErrForbidden
 	}
-	if at.IsZero() {
-		return false, ports.ErrInvalidProviderInput
-	}
 	changed := false
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		query := tx.Model(&notificationInboxModel{}).Where(notificationInboxScope(scope)).Where(&notificationInboxModel{ID: id})
-		updated := query.Where(clause.Eq{Column: "read_at", Value: nil}).Update("read_at", at.UTC())
+		if at == nil {
+			query = query.Where(clause.Neq{Column: "read_at", Value: nil})
+		} else {
+			query = query.Where(clause.Eq{Column: "read_at", Value: nil})
+		}
+		updated := query.Update("read_at", at)
 		if updated.Error != nil {
 			return updated.Error
 		}

@@ -52,4 +52,15 @@ func registerInbox(api huma.API, application app.App) {
 		}
 		return &dto.NotificationReadOutput{Body: shared.SuccessEnvelope[dto.NotificationReadResponse]{Data: dto.NotificationReadResponse{ID: input.NotificationID, Read: true}, Meta: shared.Meta{TenantID: input.TenantID}}}, nil
 	}, huma.OperationTags("notifications"), shared.SecuredOperation)
+	huma.Delete(api, path+"/{notificationId}/read", func(ctx context.Context, input *dto.NotificationInput) (*dto.NotificationReadOutput, error) {
+		scope, err := authenticateScope(ctx, application, &input.ScopeInput)
+		if err != nil {
+			return nil, err
+		}
+		if err := application.Notifications().MarkUnread(ctx, scope, input.NotificationID); err != nil {
+			return nil, shared.ToHumaError(err)
+		}
+		return &dto.NotificationReadOutput{Body: shared.SuccessEnvelope[dto.NotificationReadResponse]{Data: dto.NotificationReadResponse{ID: input.NotificationID, Read: false}, Meta: shared.Meta{TenantID: input.TenantID}}}, nil
+	}, huma.OperationTags("notifications"), shared.SecuredOperation)
+
 }

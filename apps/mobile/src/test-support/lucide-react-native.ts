@@ -33,3 +33,15 @@ export const ChevronUp = 'ChevronUpIcon';
 export const MailCheck = 'MailCheckIcon';
 
 export const Bell = 'BellIcon';
+
+export const CheckCheck = 'CheckCheckIcon';
+
+export const Settings = 'SettingsIcon';
+
+export const Mail = 'MailIcon';
+
+export const MailOpen = 'MailOpenIcon';
+
+export const AlertTriangle = 'AlertTriangleIcon';
+
+export const Clock = 'ClockIcon';

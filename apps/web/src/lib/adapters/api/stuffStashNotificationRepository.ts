@@ -38,6 +38,9 @@ export class StuffStashNotificationRepository implements NotificationRepository 
   markRead(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal) {
     return this.client.notifications.markRead(tenantId, inventoryId, notificationId, signal);
   }
+  markUnread(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal) {
+    return this.client.notifications.markUnread(tenantId, inventoryId, notificationId, signal);
+  }
 }
 function mapPreferences(value: WirePreferences): NotificationPreferences {
   return { revision: value.revision, defaults: { ...value.defaults }, timezone: value.timezone, pushEnabled: value.pushEnabled,

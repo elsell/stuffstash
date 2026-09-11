@@ -14,7 +14,7 @@ it('initializes preferences before counting and opens the inbox', async () => {
     </MobileServerStateProvider>);
     await harness.run(() => new Promise((resolve) => setTimeout(resolve, 30)));
     await harness.press(harness.byLabel('Notifications, 4 unread'));
-    expect(calls).toEqual(['initialize', 'count', 'open']);
+    expect(calls).toEqual(['initialize', 'count', 'count', 'open']);
   } finally { await harness.unmount(); }
 });
 it('keeps inbox access when registration fails and does not claim zero unread', async () => {

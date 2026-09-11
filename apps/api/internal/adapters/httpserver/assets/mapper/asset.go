@@ -103,7 +103,9 @@ func AssetsToResponseWithTags(items []asset.Asset, tags map[asset.ID][]assettag.
 		if checkout, ok := currentCheckouts[item.ID]; ok {
 			currentCheckout = &checkout
 		}
-		data = append(data, AssetToResponseWithTags(item, tags[item.ID], primaryPhoto, currentCheckout, checkoutPrincipals))
+		response := AssetToResponseWithTags(item, tags[item.ID], primaryPhoto, currentCheckout, checkoutPrincipals)
+
+		data = append(data, response)
 	}
 	return data
 }

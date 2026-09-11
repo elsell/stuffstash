@@ -12,7 +12,7 @@ import (
 func TestNotificationInboxHTTPAccessAndReadState(t *testing.T) {
 	server, store := notificationHTTPFixture(t)
 	const base = "/tenants/home/inventories/main/notifications"
-	for _, request := range []struct{ method, path string }{{http.MethodGet, base}, {http.MethodGet, base + "/notice"}, {http.MethodPut, base + "/notice/read"}} {
+	for _, request := range []struct{ method, path string }{{http.MethodGet, base}, {http.MethodGet, base + "/notice"}, {http.MethodPut, base + "/notice/read"}, {http.MethodDelete, base + "/notice/read"}} {
 		for _, auth := range []string{"", "Bearer malformed", "Bearer dev:outsider"} {
 			response := performRequest(server, request.method, request.path, auth, nil)
 			if response.Code != http.StatusUnauthorized && response.Code != http.StatusForbidden {
@@ -45,10 +45,32 @@ func TestNotificationInboxHTTPAccessAndReadState(t *testing.T) {
 	if len(body.Data) != 0 {
 		t.Fatal("read state not reflected")
 	}
+	for _, path := range []string{base + "/notice/read", "/tenants/other/inventories/main/notifications/notice/read", "/tenants/home/inventories/other/notifications/notice/read"} {
+		token := "Bearer dev:owner"
+		if path == base+"/notice/read" {
+			token = "Bearer dev:viewer"
+		}
+		response := performRequest(server, http.MethodDelete, path, token, nil)
+		if response.Code != http.StatusNotFound && response.Code != http.StatusForbidden {
+			t.Fatalf("foreign unread accepted: %d", response.Code)
+		}
+	}
+	for i := 0; i < 2; i++ {
+		requireStatus(t, performRequest(server, http.MethodDelete, base+"/notice/read", "Bearer dev:owner", nil), http.StatusOK)
+	}
+	response = performRequest(server, http.MethodGet, base+"?unreadOnly=true", "Bearer dev:owner", nil)
+	requireStatus(t, response, http.StatusOK)
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Data) != 1 {
+		t.Fatal("mark unread did not restore the existing notification")
+	}
 	item, _, _ := store.AssetByID(context.Background(), "home", "main", "bottle")
 	item.Expiration = expirationdate.Date{}
 	if err := store.UpdateAsset(context.Background(), item, []audit.Record{{ID: "clear-expiration"}}, nil); err != nil {
 		t.Fatal(err)
 	}
 	requireStatus(t, performRequest(server, http.MethodGet, base+"/notice", "Bearer dev:owner", nil), http.StatusNotFound)
+	requireStatus(t, performRequest(server, http.MethodDelete, base+"/notice/read", "Bearer dev:owner", nil), http.StatusNotFound)
 }

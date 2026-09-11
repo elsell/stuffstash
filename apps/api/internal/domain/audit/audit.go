@@ -45,6 +45,7 @@ const (
 	ActionNotificationDeviceViewed                  Action = "notification_device.viewed"
 	ActionNotificationCreated                       Action = "notification.created"
 	ActionNotificationRead                          Action = "notification.read"
+	ActionNotificationUnread                        Action = "notification.unread"
 	ActionNotificationListed                        Action = "notification.listed"
 	ActionNotificationPreferencesViewed             Action = "notification_preferences.viewed"
 	ActionNotificationPreferencesUpdated            Action = "notification_preferences.updated"
@@ -149,7 +150,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,
