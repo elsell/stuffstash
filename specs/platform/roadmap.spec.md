@@ -23,7 +23,29 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The approved next feature is optional expiration tracking per custom asset type, personal inventory defaults with type overrides, shared web/mobile notification inbox and mobile push, including full conversational expiration queries, date writes and relevant response warnings. Follow `specs/expiration/expiration-tracking.spec.md` and `specs/notifications/expiration-notifications.spec.md`. Implement specs-first with remote/CI validation, required code critic review, PR merge, infra GitOps rollout and TestFlight upload. The user approved the existing native/shared UI direction on 2026-09-10; no further design gate is pending. This supersedes the earlier restriction to voice-only work below. Live expiration acceptance led to native required Google function calling and a simplified command schema. Flash passed sixteen expiration/audio scenarios plus the mixed tag-query fixture; Flash-Lite failed acceptance, so new server defaults and mobile language recommendations use Flash while explicit configurations remain unchanged. Personal detail status now flows from the server policy through web/native presentation, including staged native loading. See `specs/expiration/live-acceptance.spec.md`. Deployed provider selection, remaining conversation/device acceptance and actual push delivery remain release gates.
+Expiration tracking is implemented and merged in PR 87: optional per-type tracking,
+exact-day and month-only dates, personal inventory defaults and type overrides,
+web/mobile inboxes, native push adapters, and conversational date commands and
+queries. Follow `specs/expiration/expiration-tracking.spec.md` and
+`specs/notifications/expiration-notifications.spec.md`. The user approved the
+existing shared/native UI direction; no additional design gate is pending.
+
+Version **0.22.0** is deployed through GitOps commit `9642b8a`; API and web health
+checks passed and migrations completed. TestFlight release workflow `34563993830`,
+attempt 2, successfully uploaded **0.22.0 (75.2)** on 2026-09-11. The archive's
+production push entitlement was verified. Apple processing and physical-device
+acceptance are not established by upload success. Signing maintenance PRs 89–91
+reused the existing distribution certificate to repair the provisioning profile.
+
+The feature remains open for **actual push delivery**: the deployment still needs
+an APNs signing key and provider configuration, followed by device receipt and tap
+verification. Do not describe push as delivered based on adapter tests or signing
+success. Confirm the deployed language profile uses the accepted model; explicit
+existing profiles are intentionally unchanged. Flash passed sixteen live
+expiration/audio cases plus the mixed tag-query fixture; Flash-Lite failed.
+See `specs/expiration/live-acceptance.spec.md` for the bounded evidence and remaining
+acceptance limits. This expiration work supersedes the older voice-only focus below.
+
 
 Durable background thumbnail generation and cooperative scheduling are implemented
 behind ports with an in-process worker, PostgreSQL queue, fenced publication and
