@@ -55,4 +55,5 @@ func coverNotificationInboxScenarios(t *testing.T, coverage executedScenarioCove
 	coverage.request(t, server, http.MethodPut, template+"/read-all", base+"/read-all", token, nil, status)
 	coverage.request(t, server, http.MethodGet, template+"/{notificationId}", base+"/notice", token, nil, status)
 	coverage.request(t, server, http.MethodPut, template+"/{notificationId}/read", base+"/notice/read", token, nil, status)
+	coverage.request(t, server, http.MethodDelete, template+"/{notificationId}/read", base+"/notice/read", token, nil, status)
 }

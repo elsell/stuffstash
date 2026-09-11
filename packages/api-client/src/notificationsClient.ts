@@ -70,6 +70,9 @@ export class NotificationsClient {
     const result = await this.transport.unwrap(this.client.PUT(`${inboxPath}/read-all`, { params: { path: { tenantId, inventoryId }, query: { cursor } }, headers: await this.transport.headers(), signal }));
     return { complete: result.data.complete, nextCursor: result.meta.pagination?.nextCursor ?? null };
   }
+  async markUnread(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal): Promise<void> {
+    await this.transport.unwrap(this.client.DELETE(`${inboxPath}/{notificationId}/read`, { params: { path: { tenantId, inventoryId, notificationId } }, headers: await this.transport.headers(), signal }));
+  }
   async markRead(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal): Promise<void> {
     await this.transport.unwrap(this.client.PUT(`${inboxPath}/{notificationId}/read`, { params: { path: { tenantId, inventoryId, notificationId } }, headers: await this.transport.headers(), signal }));
   }

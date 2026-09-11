@@ -45,9 +45,12 @@ it('creates with a month expiration and retains the draft when saving fails', as
       parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })} photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     await h.changeText(h.byLabel('Asset name'), 'Tylenol');
+    await h.press(h.byLabel('Item type'));
     await h.press(h.byLabel('Medicine'));
+    await h.press(h.byLabel('Expiration'));
     await h.change(h.byType('NativeSegmentedControl'), 'Month and year');
-    await h.changeText(h.byLabel('Expiration month'), '2');
+    await h.press(h.byLabel('Expiration month'));
+    await h.press(h.byLabel('February'));
     await h.changeText(h.byLabel('Expiration year'), '2028');
     await h.press(h.byLabel('Save item'));
     expect(submissions).toEqual([expect.objectContaining({ customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' } })]);

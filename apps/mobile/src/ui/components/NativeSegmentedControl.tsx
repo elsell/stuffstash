@@ -31,7 +31,7 @@ export function NativeSegmentedControl<Value extends string>({
       if (segment) onChange(segment.value);
     }}
     selectedIndex={selectedIndex}
-    style={[{ minHeight: 44 }, style]}
+    style={[{ height: 44, flexShrink: 0 }, style]}
     tintColor={colors.selected}
     values={segments.map((segment) => segment.label)}
   />;

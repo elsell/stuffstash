@@ -2,6 +2,7 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Asset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
+  import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import AssetThumb from './AssetThumb.svelte';
 
   let {
@@ -64,7 +65,7 @@
         >
           <AssetThumb asset={suggestion} size="sm" />
           <span>
-            <strong>{suggestion.title}</strong>
+            <strong>{suggestion.title}</strong><AssetExpirationLabel expiration={suggestion.expiration} context={suggestion.expirationContext} />
             <small>{suggestion.customAssetTypeLabel ?? assetKindLabel(suggestion.kind)}</small>
             {#if suggestion.photoUnavailable}
               <small id={photoUnavailableId(index)} class="visually-hidden">Photo unavailable</small>

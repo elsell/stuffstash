@@ -36,6 +36,9 @@ export class ApiNotificationRepository implements NotificationRepository {
   markRead(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal) {
     return safeNotificationRequest(() => this.client.notifications.markRead(tenantId, inventoryId, notificationId, signal), signal);
   }
+  markUnread(tenantId: string, inventoryId: string, notificationId: string, signal?: AbortSignal) {
+    return safeNotificationRequest(() => this.client.notifications.markUnread(tenantId, inventoryId, notificationId, signal), signal);
+  }
 
 
 }

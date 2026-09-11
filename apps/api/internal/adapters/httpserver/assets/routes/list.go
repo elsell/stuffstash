@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/dto"
@@ -35,9 +36,17 @@ func RegisterList(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 
+		data := mapper.AssetsToResponseWithTags(result.Items, result.Tags, result.PrimaryPhotos, result.Checkouts, resolveCheckoutPrincipalsFromMap(ctx, application, result.Checkouts))
+		for index := range data {
+			ref := ports.AttachmentAssetReference{InventoryID: inventory.InventoryID(result.Items[index].InventoryID), AssetID: result.Items[index].ID}
+			if value, ok := result.ExpirationContexts[ref]; ok {
+				data[index].ExpirationContext = mapper.ExpirationContextToResponse(value.State, value.TrackingEnabled, value.AdvanceDays, value.Timezone)
+			}
+		}
+
 		return &dto.ListAssetsOutput{
 			Body: shared.SuccessEnvelope[[]dto.AssetResponse]{
-				Data: mapper.AssetsToResponseWithTags(result.Items, result.Tags, result.PrimaryPhotos, result.Checkouts, resolveCheckoutPrincipalsFromMap(ctx, application, result.Checkouts)),
+				Data: data,
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

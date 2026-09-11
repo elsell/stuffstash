@@ -24,13 +24,16 @@ func AssetSearchResultsToResponse(results []ports.AssetSearchResult, primaryPhot
 		if photo, ok := primaryPhotos[ref]; ok {
 			primaryPhoto = &photo
 		}
-		data = append(data, AssetSearchResultToResponse(result, primaryPhoto, checkoutPrincipals))
+		response := AssetSearchResultToResponse(result, primaryPhoto, checkoutPrincipals)
+
+		data = append(data, response)
 	}
 	return data
 }
 
 func AssetSearchResultToResponse(result ports.AssetSearchResult, primaryPhoto *media.Attachment, checkoutPrincipals map[identity.PrincipalID]identity.User) dto.AssetSearchResultResponse {
 	assetSummary := dto.AssetSummary{
+		Expiration:        assetmapper.ExpirationToResponse(result.Asset.Expiration),
 		ID:                result.Asset.ID.String(),
 		InventoryID:       result.Asset.InventoryID.String(),
 		ParentAssetID:     result.Asset.ParentAssetID.String(),

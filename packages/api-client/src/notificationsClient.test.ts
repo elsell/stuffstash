@@ -62,3 +62,14 @@ it('registers, looks up and revokes a scoped device without losing revisions or 
  expect(requests[2].method).toBe('DELETE');
  expect(requests[2].url).toBe('https://api.test/tenants/tenant/inventories/inventory/notification-devices/device?revision=1');
 });
+
+it('marks unread through the authenticated read subresource without sending another notification', async () => {
+ const requests: Request[] = [];
+ const client = new StuffStashClient({baseUrl: 'https://api.test', tokenProvider: () => 'access', fetch: async (input, init) => {
+  requests.push(new Request(input, init)); return Response.json({data: {id: 'notice', read: false}, meta: {}});
+ }});
+ await client.notifications.markUnread('tenant', 'inventory', 'notice');
+ expect(requests[0].method).toBe('DELETE');
+ expect(requests[0].url).toBe('https://api.test/tenants/tenant/inventories/inventory/notifications/notice/read');
+ expect(requests[0].headers.get('Authorization')).toBe('Bearer access');
+});

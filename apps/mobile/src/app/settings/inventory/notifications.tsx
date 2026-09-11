@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { mobileQueryKeys } from '../../../adapters/serverState/MobileQueryClient';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { MobileComposition } from '../../../bootstrap/mobileComposition';
@@ -22,6 +24,8 @@ export default function NotificationSettingsRoute() {
 }
 
 function ScopedNotifications({ services, tenantId, inventoryId }: { readonly services: MobileComposition; readonly tenantId: string; readonly inventoryId: string }) {
+  const client = useQueryClient();
+  const scopeId = useMobileServerStateScopeId();
   const session = useMemo(() => services.createNotificationPreferencesSession(tenantId, inventoryId), [services, tenantId, inventoryId]);
-  return <NotificationSettingsScreen tenantId={tenantId} inventoryId={inventoryId} session={session} assetTypesQuery={services.inventoryAssetTypesQuery} pushSession={services.pushSession} />;
+  return <NotificationSettingsScreen tenantId={tenantId} inventoryId={inventoryId} session={session} onChanged={() => { void client.invalidateQueries({ queryKey: mobileQueryKeys.inventory(scopeId, tenantId, inventoryId) }); }} assetTypesQuery={services.inventoryAssetTypesQuery} pushSession={services.pushSession} />;
 }

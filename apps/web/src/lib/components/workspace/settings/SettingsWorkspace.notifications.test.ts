@@ -27,9 +27,13 @@ it('renders personal settings for viewers and replaces drafts when inventory cha
   } });
   try {
     const days = () => document.querySelector<HTMLInputElement>('input[type="number"]');
+    await vi.waitFor(() => expect(Array.from(document.querySelectorAll('button')).some(button => button.textContent?.includes('Before expiration'))).toBe(true));
+    Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Before expiration'))!.click();
     await vi.waitFor(() => expect(days()?.value).toBe('30'));
     days()!.value = '7'; days()!.dispatchEvent(new Event('input', { bubbles: true }));
     inventoryStore.set(second);
+    await vi.waitFor(() => expect(Array.from(document.querySelectorAll('button')).some(button => button.textContent?.includes('60 days'))).toBe(true));
+    Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Before expiration'))!.click();
     await vi.waitFor(() => expect(days()?.value).toBe('60'));
     expect(requests.some((url) => url.includes('/second/notification-preferences/initialize'))).toBe(true);
   } finally { await unmount(component); document.body.innerHTML = ''; }

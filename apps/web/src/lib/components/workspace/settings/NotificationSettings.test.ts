@@ -1,4 +1,4 @@
-import { mount, unmount } from 'svelte';
+import { mount, unmount, tick } from 'svelte';
 import { expect, it, vi } from 'vitest';
 import NotificationSettings from './NotificationSettings.svelte';
 import { StuffStashNotificationRepository } from '$lib/adapters/api/stuffStashNotificationRepository';
@@ -13,10 +13,13 @@ it('loads personal settings and saves an inventory policy through its scoped rep
   });
   const component = mount(NotificationSettings, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', initialTimezone: 'UTC', repository, observer: new InMemoryWorkspaceObserver(), typeRepository: { async listInventoryCustomAssetTypes() { return { items: [], pagination: { limit: 30, hasMore: false, nextCursor: null } }; } } } });
   try {
-    await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
+    await vi.waitFor(() => expect(Array.from(document.querySelectorAll('button')).some(button => button.textContent?.includes('Before expiration'))).toBe(true));
+    Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Before expiration'))!.click();
+    await tick();
     expect(requests[0].url).toContain('/tenants/tenant/inventories/inventory/notification-preferences/initialize');
     const input = document.querySelector<HTMLInputElement>('input[type="number"]')!;
     input.value = '7'; input.dispatchEvent(new Event('input', { bubbles: true }));
+    await tick();
     const button = Array.from(document.querySelectorAll('button')).find((value) => value.textContent?.includes('Save reminders'))!;
     button.click();
     await vi.waitFor(() => expect(settings.defaults.advanceDays).toBe(7));
@@ -36,6 +39,8 @@ it('shows a retryable type-load failure instead of claiming no types support exp
     expect(document.body.textContent).not.toContain('Enable expiration tracking');
     fail = false;
     Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Retry loading'))!.click();
-    await vi.waitFor(() => expect(document.querySelector('input[type="number"]')).not.toBeNull());
+    await vi.waitFor(() => expect(Array.from(document.querySelectorAll('button')).some(button => button.textContent?.includes('Before expiration'))).toBe(true));
+    Array.from(document.querySelectorAll('button')).find(button => button.textContent?.includes('Before expiration'))!.click();
+    await tick();
   } finally { await unmount(component); document.body.innerHTML = ''; }
 });

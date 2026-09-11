@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ExpirationRefresh from './ExpirationRefresh.svelte';
   import NotificationBell from './NotificationBell.svelte';
   import { settingsResourceHref } from '$lib/application/settingsManagementNavigation';
   import { notificationWorkspaceContext, type NotificationWorkspace } from '$lib/ports/notificationWorkspace';
@@ -120,7 +121,7 @@
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the mounted authenticated workspace.
   setContext(conversationWorkspaceContext, conversations);
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the authenticated workspace.
-  setContext(notificationWorkspaceContext, notifications);
+  setContext(notificationWorkspaceContext, notifications ? { ...notifications, onPreferencesChanged: async () => { await refreshExpirationAssets(); } } : undefined);
 
   // svelte-ignore state_referenced_locally -- the repository is immutable for the mounted workspace session.
   const workspaceRepository = repository;
@@ -1386,6 +1387,11 @@
     });
   }
 
+  async function refreshExpirationAssets(): Promise<boolean> {
+    try { await refreshInventoryAfterImportJob({ tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId }); return true; }
+    catch { observer.record('workspace.expiration_refresh_failed'); return false; }
+  }
+
   async function refreshInventoryAfterImportJob(scope: { tenantId: string; inventoryId: string }): Promise<void> {
     const lifecycleState = data.context.assetLifecycleState;
     if (data.context.selectedTenantId !== scope.tenantId || data.context.selectedInventoryId !== scope.inventoryId) {
@@ -1838,6 +1844,8 @@
   }
 
 </script>
+<ExpirationRefresh assets={data.assets} scope={JSON.stringify([data.context.selectedTenantId,data.context.selectedInventoryId])} onRefresh={refreshExpirationAssets} />
+
 
 {#if data.context.inventories.length === 0 && canCreateStarter}
   <main class="setup-shell">

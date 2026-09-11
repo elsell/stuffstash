@@ -30,7 +30,7 @@ current inventory; other members make their own choices.
 - **Inventory defaults** control reminders for types that inherit them. Choose
   whether to receive upcoming and expired alerts, and how many days ahead to warn.
 - **Asset type reminders** let you override those defaults for an individual
-  type. Choose **Use inventory defaults** to remove an override.
+  type. Choose **Use defaults** to inherit, **Custom** for different reminders, or **Off** for that type.
 - **Calendar timezone** determines when dates end and reminder windows begin.
 
 The initial warning window is 30 days. Turning off the inventory default does
@@ -41,13 +41,15 @@ not turn off a type that has its own enabled override.
 The notification bell opens your inbox on web and mobile. Its unread indicator
 and read status stay in sync. Open an alert to see the item; its location trail
 also helps you find where it belongs. Marking an alert read does not change the
-item or its date.
+item or its date. You can also mark an alert unread to return to it later, without sending another push notification. On mobile, pull down to refresh the inbox.
+
+Expiring and expired items also show a warning beside their date throughout the inventory. Reading a notification does not remove that warning.
 
 Each recorded date can produce one upcoming alert and one expired alert.
 Changing or clearing the date removes obsolete alerts. Already-expired items
 produce an expired alert without sending an old upcoming alert as well.
 
-Enable **Mobile push alerts** in the mobile app and allow notifications when
+Enable **Push notifications** in the mobile app and allow notifications when
 your device asks. Push also requires your server's delivery provider to be
 [configured](../configuration/). Your inbox remains available if device alerts
 are off. The web app does not request browser notification permission.

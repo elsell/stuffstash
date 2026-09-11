@@ -18,10 +18,12 @@ it('loads personal settings and saves a changed threshold without changing timez
   try {
     await harness.render(<NotificationSettingsScreen tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{ async execute() { return []; } }} />);
     await harness.settle();
-    expect(harness.byLabel('Timezone')?.props.value).toBe('America/New_York');
+    await harness.press(harness.byLabel('Time zone'));
+    await harness.press(harness.byLabel('Before expiration'));
+    expect(harness.byLabel('Time zone')?.props.accessibilityValue.text).toContain('New York');
     expect(harness.byLabel('Days before expiration')).toBeDefined();
     await harness.changeText(harness.byLabel('Days before expiration'), '7');
-    await harness.press(harness.byLabel('Save reminders'));
+    await harness.press(harness.byLabel('Save reminder days'));
     expect(preferences.defaults.advanceDays).toBe(7);
     expect(preferences.timezone).toBe('America/New_York');
   } finally { await harness.unmount(); }
@@ -52,13 +54,13 @@ it('handles denied permission, successful enablement and disabling without chang
     allowed=true;
     await harness.press(harness.byLabel('Set up alerts on this device'));
     await harness.settle();
-    expect(harness.byLabel('Mobile push alerts')!.props.value).toBe(true);
-    await harness.run(()=>harness.byLabel('Mobile push alerts')!.props.onValueChange(false));
+    expect(harness.byLabel('Push notifications')!.props.value).toBe(true);
+    await harness.run(()=>harness.byLabel('Push notifications')!.props.onValueChange(false));
     await harness.settle();
     expect(preferences.pushEnabled).toBe(false);
     expect(preferences.defaults).toEqual({enabled:true,upcoming:true,expired:true,advanceDays:30});
     expect(preferences.timezone).toBe('UTC');
-    await harness.run(()=>harness.byLabel('Mobile push alerts')!.props.onValueChange(true));
+    await harness.run(()=>harness.byLabel('Push notifications')!.props.onValueChange(true));
     await harness.settle();
     expect(preferences.pushEnabled).toBe(true);
   } finally {await harness.unmount();}

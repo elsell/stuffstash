@@ -17,12 +17,16 @@
   let day = $state(initial?.precision === 'day' ? initial.date : '');
   let month = $state(initial?.precision === 'month' ? initial.date : '');
   let invalid = $state(false);
+  let awaitingDay = $state(false);
   let value = $derived(precision === 'day' ? day : month);
 
   function publish() {
-    onChange(value ? { date: value, precision } : undefined, !invalid);
+    onChange(value ? { date: value, precision } : undefined, !invalid && !awaitingDay);
   }
   function select(next: string) {
+    if (next === 'month' && day) month = day.slice(0, 7);
+    if (next === 'day' && precision === 'month') { awaitingDay = !!month; day = ''; }
+    else awaitingDay = false;
     precision = next as AssetExpiration['precision'];
     invalid = !validExpirationInput(value, precision);
     publish();
@@ -32,11 +36,11 @@
     if (precision === 'day') day = target.value;
     else month = target.value;
     invalid = !target.validity.valid || !validExpirationInput(target.value, precision);
+    if (precision === 'day' && target.value && !invalid) awaitingDay = false;
     publish();
   }
   function clear() {
-    if (precision === 'day') day = '';
-    else month = '';
+    day = ''; month = ''; awaitingDay = false;
     invalid = false;
     publish();
   }
@@ -48,13 +52,13 @@
     options={[{ value: 'day', label: 'Exact date' }, { value: 'month', label: 'Month and year' }]}
     onSelect={select} />
   <Input {id} type={precision === 'day' ? 'date' : 'month'} {value}
-    oninput={input} aria-invalid={invalid} aria-describedby={`${id}-help`} />
+    oninput={input} aria-invalid={invalid || awaitingDay} aria-describedby={`${id}-help`} />
   <p id={`${id}-help`}>
-    {#if invalid}Enter a complete, valid expiration date.
+    {#if invalid || awaitingDay}Enter a complete, valid expiration date.
     {:else if precision === 'month'}Tracked through the end of this month.
     {:else}Tracked through the end of this day.{/if}
   </p>
-  {#if value || invalid}<Button.Root type="button" variant="ghost" onclick={clear}>Clear expiration</Button.Root>{/if}
+  {#if value || invalid || awaitingDay}<Button.Root type="button" variant="ghost" onclick={clear}>Clear expiration</Button.Root>{/if}
 </div>
 
 <style>

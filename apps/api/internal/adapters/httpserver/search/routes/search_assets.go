@@ -2,6 +2,8 @@ package routes
 
 import (
 	"context"
+	assetmapper "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/mapper"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/search/dto"
@@ -45,9 +47,17 @@ func RegisterSearchAssets(api huma.API, application app.App) {
 			return nil, shared.ToHumaError(err)
 		}
 
+		data := mapper.AssetSearchResultsToResponse(result.Items, result.PrimaryPhotos, resolveSearchCheckoutPrincipals(ctx, application, result.Items))
+		for index := range data {
+			ref := ports.AttachmentAssetReference{InventoryID: inventory.InventoryID(result.Items[index].Asset.InventoryID), AssetID: result.Items[index].Asset.ID}
+			if value, ok := result.ExpirationContexts[ref]; ok {
+				data[index].Asset.ExpirationContext = assetmapper.ExpirationContextToResponse(value.State, value.TrackingEnabled, value.AdvanceDays, value.Timezone)
+			}
+		}
+
 		return &dto.SearchAssetsOutput{
 			Body: shared.SuccessEnvelope[[]dto.AssetSearchResultResponse]{
-				Data: mapper.AssetSearchResultsToResponse(result.Items, result.PrimaryPhotos, resolveSearchCheckoutPrincipals(ctx, application, result.Items)),
+				Data: data,
 				Meta: shared.PaginatedMeta(input.TenantID, result.Limit, result.NextCursor, result.HasMore),
 			},
 		}, nil

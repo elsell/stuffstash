@@ -81,15 +81,22 @@ func (s *Store) ListNotifications(_ context.Context, scope ports.NotificationSco
 	}
 	return result, nil
 }
-func (s *Store) MarkNotificationRead(_ context.Context, scope ports.NotificationScope, id string, at time.Time, record audit.Record) (bool, error) {
+func (s *Store) MarkNotificationRead(ctx context.Context, scope ports.NotificationScope, id string, at time.Time, record audit.Record) (bool, error) {
+	if at.IsZero() {
+		return false, ports.ErrInvalidProviderInput
+	}
+	at = at.UTC()
+	return s.setNotificationRead(ctx, scope, id, &at, record)
+}
+func (s *Store) MarkNotificationUnread(ctx context.Context, scope ports.NotificationScope, id string, record audit.Record) (bool, error) {
+	return s.setNotificationRead(ctx, scope, id, nil, record)
+}
+func (s *Store) setNotificationRead(ctx context.Context, scope ports.NotificationScope, id string, at *time.Time, record audit.Record) (bool, error) {
 	if id == "" {
 		return false, ports.ErrInvalidProviderInput
 	}
 	if !notificationAuditScopeMatches(scope, record) {
 		return false, ports.ErrForbidden
-	}
-	if at.IsZero() {
-		return false, ports.ErrInvalidProviderInput
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -97,14 +104,13 @@ func (s *Store) MarkNotificationRead(_ context.Context, scope ports.Notification
 	if !found || value.Scope != scope {
 		return false, ports.ErrForbidden
 	}
-	if value.ReadAt != nil {
+	if (value.ReadAt != nil) == (at != nil) {
 		return false, nil
 	}
 	if _, exists := s.auditRecords[record.ID]; exists {
 		return false, ports.ErrConflict
 	}
-	at = at.UTC()
-	value.ReadAt = &at
+	value.ReadAt = at
 	s.notificationInbox[id] = value
 	s.auditRecords[record.ID] = record
 	return true, nil

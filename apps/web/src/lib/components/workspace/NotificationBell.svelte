@@ -41,7 +41,7 @@
       const loaded = await countUnreadNotifications(repository, observer, tenantId, inventoryId, request.signal);
       request.signal.throwIfAborted(); count = loaded; error = false;
     } catch {
-      if (!request.signal.aborted) { count = null; error = true; }
+      if (!request.signal.aborted) { error = true; }
     } finally {
       if (!request.signal.aborted && !disposed) timer = setTimeout(() => { if (!document.hidden) void refresh(); }, refreshIntervalMs);
     }
@@ -57,8 +57,7 @@
 <WorkspaceTaskSheet {open} title="Notifications" description="Expiration reminders for this inventory" onOpenChange={(value) => { open = value; }} onCloseAutoFocus={(event) => { event.preventDefault(); if (!navigating) bell?.focus(); }}>
   {#if open}
     {#if error}<p role="alert">The unread count could not be updated.</p><Button.Root variant="outline" onclick={() => refresh()}>Retry unread count</Button.Root>{/if}
-    <NotificationInbox {tenantId} {inventoryId} {repository} {observer} onRead={() => { void refresh(); }} onOpenAsset={(id) => navigate(() => onOpenAsset(id))} />
-    <Button.Root variant="outline" onclick={() => navigate(onOpenSettings)}>Notification settings</Button.Root>
+    <NotificationInbox {tenantId} {inventoryId} {repository} {observer} onRead={() => { void refresh(); }} onOpenSettings={() => navigate(onOpenSettings)} onOpenAsset={(id) => navigate(() => onOpenAsset(id))} />
   {/if}
 </WorkspaceTaskSheet>
 

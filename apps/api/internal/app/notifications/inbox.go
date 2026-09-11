@@ -36,20 +36,36 @@ func (s Service) GetNotification(ctx context.Context, input ScopeInput, id strin
 }
 
 func (s Service) MarkRead(ctx context.Context, input ScopeInput, id string) error {
+	return s.setRead(ctx, input, id, true)
+}
+
+func (s Service) MarkUnread(ctx context.Context, input ScopeInput, id string) error {
+	return s.setRead(ctx, input, id, false)
+}
+
+func (s Service) setRead(ctx context.Context, input ScopeInput, id string, read bool) error {
 	view, err := s.currentNotification(ctx, input, id)
 	if err != nil {
 		return err
 	}
-	if view.Notification.ReadAt != nil {
+	if (view.Notification.ReadAt != nil) == read {
 		return nil
 	}
-	auditInput := s.auditInput(input, audit.ActionNotificationRead, id)
+	action := audit.ActionNotificationRead
+	if !read {
+		action = audit.ActionNotificationUnread
+	}
+	auditInput := s.auditInput(input, action, id)
 	auditInput.TargetType = audit.TargetNotification
 	record, err := appsupport.NewAuditRecord(s.deps.IDs, s.deps.Clock, auditInput)
 	if err != nil {
 		return err
 	}
-	_, err = s.deps.Inbox.MarkNotificationRead(ctx, input.Scope(), id, s.deps.Clock.Now(), record)
+	if read {
+		_, err = s.deps.Inbox.MarkNotificationRead(ctx, input.Scope(), id, s.deps.Clock.Now(), record)
+	} else {
+		_, err = s.deps.Inbox.MarkNotificationUnread(ctx, input.Scope(), id, record)
+	}
 	return err
 }
 

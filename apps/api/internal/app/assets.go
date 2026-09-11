@@ -116,6 +116,10 @@ func (a App) ListAssets(ctx context.Context, input ListAssetsInput) (ListAssetsR
 	if err != nil {
 		return ListAssetsResult{}, err
 	}
+	result.ExpirationContexts, err = a.describeBrowseExpiration(ctx, notificationapp.ScopeInput{Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID, Source: input.Source}, result.Items)
+	if err != nil {
+		return ListAssetsResult{}, err
+	}
 	a.warmPrimarySmallThumbnails(ctx, primaryPhotosForAssets(result.Items, result.PrimaryPhotos))
 	return result, nil
 }

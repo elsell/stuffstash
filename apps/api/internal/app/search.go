@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	expirationapp "github.com/stuffstash/stuff-stash/internal/app/expiration"
+	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,11 +39,12 @@ type SearchAssetsInput struct {
 }
 
 type SearchAssetsResult struct {
-	Items         []ports.AssetSearchResult
-	PrimaryPhotos map[ports.AttachmentAssetReference]media.Attachment
-	Limit         int
-	NextCursor    *string
-	HasMore       bool
+	ExpirationContexts map[ports.AttachmentAssetReference]expirationapp.Description
+	Items              []ports.AssetSearchResult
+	PrimaryPhotos      map[ports.AttachmentAssetReference]media.Attachment
+	Limit              int
+	NextCursor         *string
+	HasMore            bool
 }
 
 func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchAssetsResult, error) {
@@ -156,12 +159,21 @@ func (a App) SearchAssets(ctx context.Context, input SearchAssetsInput) (SearchA
 	}
 	a.warmPrimarySmallThumbnails(ctx, primaryPhotosForSearchResults(items, primaryPhotos))
 
+	browseItems := make([]asset.Asset, 0, len(items))
+	for _, item := range items {
+		browseItems = append(browseItems, item.Asset)
+	}
+	descriptions, err := a.describeBrowseExpiration(ctx, notificationapp.ScopeInput{Principal: input.Principal, TenantID: input.TenantID, Source: input.Source}, browseItems)
+	if err != nil {
+		return SearchAssetsResult{}, err
+	}
 	return SearchAssetsResult{
-		Items:         items,
-		PrimaryPhotos: primaryPhotos,
-		Limit:         limit,
-		NextCursor:    nextCursor,
-		HasMore:       hasMore,
+		ExpirationContexts: descriptions,
+		Items:              items,
+		PrimaryPhotos:      primaryPhotos,
+		Limit:              limit,
+		NextCursor:         nextCursor,
+		HasMore:            hasMore,
 	}, nil
 }
 

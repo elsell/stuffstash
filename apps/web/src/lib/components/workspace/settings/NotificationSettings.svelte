@@ -13,8 +13,8 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import ExpirationReminderEditor from './ExpirationReminderEditor.svelte';
 
-  let { tenantId, inventoryId, initialTimezone, repository, observer, typeRepository }: {
-    tenantId: string; inventoryId: string; initialTimezone: string; repository: NotificationRepository;
+  let { tenantId, inventoryId, initialTimezone, repository, observer, typeRepository, onChanged }: {
+    tenantId: string; inventoryId: string; initialTimezone: string; onChanged?: () => Promise<void>; repository: NotificationRepository;
     observer: WorkspaceObserver; typeRepository: Pick<InventoryCustomizationRepository, 'listInventoryCustomAssetTypes'>;
   } = $props();
   const session = untrack(() => new NotificationPreferencesSession(repository, observer, tenantId, inventoryId));
@@ -24,7 +24,9 @@
   let busy = $state(false);
   let error = $state('');
   let timezone = $state('');
+  const availableZones = (Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('timeZone') ?? ['UTC'];
   let timezoneSaved = $state(false);
+  let timezoneDirty = $state(false);
   let validTimezone = $derived.by(() => {
     try { new Intl.DateTimeFormat('en', { timeZone: timezone }); return timezone.trim().length > 0; }
     catch { return false; }
@@ -40,14 +42,14 @@
       const loadedTypes = await collectSettingsPages((cursor) => typeRepository.listInventoryCustomAssetTypes(tenantId, inventoryId, cursor, 'active'));
       preferences = first ? await session.initialize(initialTimezone) : await session.refresh();
       assetTypes = loadedTypes;
-      if (first) timezone = preferences.timezone;
+      if (first || !timezoneDirty) timezone = preferences.timezone;
     } catch (caught) { error = safeWorkspaceErrorMessage(caught, 'Reminder settings could not be loaded. Try again.'); }
     finally { busy = false; }
   }
   async function save(operation: () => Promise<NotificationPreferences>) {
     if (busy) throw new Error('Another settings request is in progress.');
     busy = true; error = '';
-    try { preferences = await operation(); }
+    try { preferences = await operation(); await onChanged?.(); }
     catch (caught) {
       error = 'Your changes are still here. If settings changed on another device, refresh saved settings before saving again.';
       throw caught;
@@ -57,32 +59,33 @@
     event.preventDefault();
     if (!validTimezone || busy) return;
     timezoneSaved = false;
-    try { await save(() => session.saveTimezone(timezone)); timezoneSaved = true; }
+    try { await save(() => session.saveTimezone(timezone)); timezoneSaved = true; timezoneDirty = false; }
     catch (caught) { error = safeWorkspaceErrorMessage(caught, 'Timezone could not be saved. Refresh saved settings and try again.'); }
   }
 </script>
 
 <section aria-labelledby={`${timezoneId}-title`}>
-  <header><h1 id={`${timezoneId}-title`}>Notifications</h1><p>Your reminders for this inventory. Other members have their own settings.</p></header>
+  <header><h1 id={`${timezoneId}-title`}>Expiration reminders</h1><p>Your reminders for this inventory. Other members have their own settings.</p></header>
   {#if error}<p role="alert">{error}</p>{/if}
   {#if !preferences}
     {#if busy}<p role="status">Loading reminders…</p>{:else}<Button.Root onclick={load}>Retry loading reminders</Button.Root>{/if}
   {:else}
-    <Button.Root variant="outline" disabled={busy} onclick={load}>Refresh saved settings</Button.Root>
+    <Button.Root variant="ghost" disabled={busy} onclick={load}>Refresh saved settings</Button.Root>
     <fieldset disabled={busy}>
       <legend class="sr-only">Personal notification settings</legend>
       <section aria-label="Inventory defaults"><h2>Inventory defaults</h2>
         <ExpirationReminderEditor initialPolicy={preferences.defaults} onSave={async (policy) => { if (policy) await save(() => session.saveDefaults(policy)); }} />
       </section>
-      <section aria-label="Calendar timezone"><h2>Calendar timezone</h2>
+      <details><summary>Time zone · {preferences.timezone.replaceAll('_', ' ').split('/').reverse().join(' · ')}</summary>
         <form onsubmit={saveTimezone}>
           <Label for={timezoneId}>Timezone</Label>
-          <Input id={timezoneId} value={timezone} oninput={(event) => { timezone = event.currentTarget.value; timezoneSaved = false; }} aria-invalid={!validTimezone} aria-describedby={`${timezoneId}-help`} />
+          <Input id={timezoneId} list={`${timezoneId}-choices`} placeholder="Search city or time zone" value={timezone} oninput={(event) => { timezone = event.currentTarget.value; timezoneSaved = false; timezoneDirty = true; }} aria-invalid={!validTimezone} aria-describedby={`${timezoneId}-help`} />
+          <datalist id={`${timezoneId}-choices`}>{#each availableZones as zone}<option value={zone}>{zone.replaceAll('_', ' ').split('/').reverse().join(' · ')}</option>{/each}</datalist>
           <p id={`${timezoneId}-help`}>{validTimezone ? `Saved timezone: ${preferences.timezone}. Dates end at midnight in this timezone.` : 'Enter a timezone such as America/New_York or Europe/London.'}</p>
           <Button.Root type="submit" disabled={!validTimezone}>Save timezone</Button.Root>
           {#if timezoneSaved}<p role="status">Timezone saved.</p>{/if}
         </form>
-      </section>
+      </details>
       <section aria-label="Asset type reminders"><h2>Asset type reminders</h2>
         {#each types as type (type.id)}
           <details><summary>{type.displayName} · {preferences.overrides.some((value) => value.customAssetTypeId === type.id) ? 'Custom' : 'Inherited'}</summary>
