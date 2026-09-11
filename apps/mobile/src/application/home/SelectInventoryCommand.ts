@@ -1,3 +1,4 @@
+import { assertReadActive, type ReadRequest } from '../shared/ReadRequest';
 import { inventoryId } from '../../domain/inventories/InventorySummary';
 import type { InventorySummaryRepository } from './InventorySummaryRepository';
 
@@ -19,10 +20,13 @@ export class SelectInventoryCommand {
     private readonly observer: InventorySelectionObserver = noOpInventorySelectionObserver
   ) {}
 
-  async execute(inventoryIdValue: string): Promise<SelectInventoryCommandResult> {
+  async execute(inventoryIdValue: string, request: ReadRequest = {}): Promise<SelectInventoryCommandResult> {
+    assertReadActive(request.signal);
     const selectedInventoryId = inventoryId(inventoryIdValue);
-    await this.inventories.selectInventory(selectedInventoryId);
+    await this.inventories.selectInventory(selectedInventoryId, request);
+    assertReadActive(request.signal);
     await this.observer.onInventorySelected();
+    assertReadActive(request.signal);
 
     return { selectedInventoryId };
   }

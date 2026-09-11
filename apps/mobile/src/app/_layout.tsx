@@ -1,3 +1,4 @@
+import { PushNotificationNavigation } from '../ui/navigation/PushNotificationNavigation';
 import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
@@ -141,6 +142,7 @@ function ThemedApp() {
           }}
         />
       </Stack>
+      <PushNotificationNavigation />
       <VoiceConversationReturn />
       <AppKeyboardAccessory />
     </AppServicesProvider>

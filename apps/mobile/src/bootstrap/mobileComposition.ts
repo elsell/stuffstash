@@ -1,3 +1,6 @@
+import { OpenPushNotification } from '../application/notifications/OpenPushNotification';
+import type { PushNotificationResponses } from '../application/notifications/PushNotificationResponses';
+import { ExpoPushNotificationResponses } from '../adapters/notifications/ExpoPushNotificationResponses';
 import { PushReconciliationController } from '../application/notifications/PushReconciliationController';
 import { ExpoPushReconciliationEvents } from '../adapters/notifications/ExpoPushReconciliationEvents';
 import * as Notifications from 'expo-notifications';
@@ -119,6 +122,9 @@ import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/netwo
 
 export type MobileComposition = {
   readonly pushReconciliation: PushReconciliationController;
+  readonly pushNotificationResponses: PushNotificationResponses;
+  readonly openPushNotification: OpenPushNotification;
+  readonly notificationObserver: {record(event: NotificationEvent):void};
   readonly pushSession: PushSession;
   readonly createNotificationPreferencesSession: (tenantId: string, inventoryId: string) => NotificationPreferencesSession;
   readonly notificationInboxQueries: NotificationInboxQueries;
@@ -189,6 +195,7 @@ export type MobileCompositionOptions = {
   readonly onCustomizationEvent?: (event: CustomizationEvent) => void;
 };
 
+const pushNotificationResponses = new ExpoPushNotificationResponses(Notifications, Notifications.DEFAULT_ACTION_IDENTIFIER);
 const pushJournal = new ExpoPushRegistrationJournal(SecureStore, () => Crypto.randomUUID());
 const connectionProfiles = new FileSystemConnectionProfileStore();
 const appearancePreferences = new AppearancePreferenceController(
@@ -284,6 +291,7 @@ export function createMobileComposition(
   const pushDevice = new ExpoPushDevice(Notifications, Platform.OS, Notifications.AndroidImportance.DEFAULT);
   const pushSetup = new PushSetup(pushDevice, pushJournal, new ApiNotificationDeviceRepository(client), notificationObserver);
   const pushSession = new PushSession(normalizeInstanceUrl(profile.apiBaseUrl), principals, pushSetup, (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId));
+  const selectInventoryCommand = new SelectInventoryCommand(inventorySummaries, new QueryClientInventorySelectionObserver(queryClient, serviceScopeId));
   const notificationInboxQueries = new NotificationInboxQueries(notificationRepository, notificationObserver);
   const customization = new ObservedCustomizationRepository(new ApiCustomizationRepository(client), new QueryClientCustomizationMutationObserver(queryClient, serviceScopeId));
   const customizationObservability = new BufferedCustomizationObservability(100, options.onCustomizationEvent);
@@ -295,6 +303,9 @@ export function createMobileComposition(
     createNotificationPreferencesSession: (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId),
     notificationInboxQueries,
     pushSession,
+    pushNotificationResponses,
+    notificationObserver,
+    openPushNotification: new OpenPushNotification(normalizeInstanceUrl(profile.apiBaseUrl), principals, notificationInboxQueries, selectInventoryCommand),
     pushReconciliation: new PushReconciliationController(new ExpoPushReconciliationEvents(AppState, Notifications, pushDevice), pushSession, notificationObserver),
     serviceScopeId,
     performanceObserver: performanceSession.observer,
@@ -304,10 +315,7 @@ export function createMobileComposition(
     connectivitySource: new ExpoConnectivitySource(Network),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     currentInventoryScopeQuery: new CurrentInventoryScopeQuery(inventorySummaries),
-    selectInventoryCommand: new SelectInventoryCommand(
-      inventorySummaries,
-      new QueryClientInventorySelectionObserver(queryClient, serviceScopeId)
-    ),
+    selectInventoryCommand,
     searchAssetsQuery: new SearchAssetsQuery(inventorySummaries),
     inventoryContextQuery: new InventoryContextQuery(inventorySummaries),
     assetActivityQuery: new AssetActivityQuery(assetActivity),

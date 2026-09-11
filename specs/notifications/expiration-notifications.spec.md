@@ -294,3 +294,21 @@ notification observability without including tokens.
 
 Native token events carry the new token into a validated in-memory adapter cache. Reconciliation caused by that event uses the supplied token rather than requesting another native token, preventing Expo token-fetch event feedback. Foreground transitions invalidate the cache before reconciliation; tokens are never persisted in the registration journal.
 A native token read that finishes after a newer token event or foreground invalidation must not overwrite that newer state.
+
+### Native notification taps
+
+Handle the launch notification and later default-action taps through the native
+notification adapter. Deduplicate a launch response also delivered by the live
+listener. Treat payloads as untrusted routing hints: require bounded nonempty
+server, principal, tenant, inventory, and notification identifiers. Match the
+configured server and authenticated principal before any notification request.
+Never use an asset identifier or URL supplied by the payload. Resolve the current
+notification through the authorized inbox API, mark it read, select its inventory
+through the existing inventory selection command, and open the returned item in
+its normal native detail screen. Inventory selection must honor cancellation
+before changing the composition-local selection. Cancel superseded taps and
+pending work on composition unmount; cancelled work must not navigate or show
+feedback. Unavailable, expired, or inaccessible notifications show a native
+message, without changing account or server automatically.
+
+Suppress duplicate delivery while a tap is being handled and suppress previously consumed launch responses. A later explicit tap on the same notification is a new attempt and must remain usable after a transient failure.

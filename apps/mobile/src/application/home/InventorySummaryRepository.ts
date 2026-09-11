@@ -33,7 +33,7 @@ export interface InventorySummaryRepository {
   getInventoryWorkspace(): Promise<InventoryWorkspace>;
   getDefaultInventorySummary(): Promise<InventorySummary>;
   getAssetDetail?(input: GetInventoryAssetDetailInput, request?: ReadRequest): Promise<AssetSummary>;
-  selectInventory(inventoryId: InventoryId): Promise<void>;
+  selectInventory(inventoryId: InventoryId, request?: ReadRequest): Promise<void>;
   createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary>;
   createAssetTag?(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary>;
   addAssetPhoto(assetId: AssetId, input: CreateInventoryAssetPhotoInput): Promise<void>;
