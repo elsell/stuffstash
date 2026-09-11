@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {formatAssetExpiration} from '$lib/application/expirationPresentation';
   import { tick } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -698,6 +699,7 @@
 	          </span>
         </div>
         <dl class="detail-list">
+	          {#if asset.expiration}<div><dt>Expiration</dt><dd>{formatAssetExpiration(asset.expiration)}</dd></div>{/if}
 	          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
 	          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
 	          {#if asset.currentCheckout}

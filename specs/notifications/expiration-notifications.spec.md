@@ -312,3 +312,13 @@ feedback. Unavailable, expired, or inaccessible notifications show a native
 message, without changing account or server automatically.
 
 Suppress duplicate delivery while a tap is being handled and suppress previously consumed launch responses. A later explicit tap on the same notification is a new attempt and must remain usable after a transient failure.
+
+### Expiration visibility in inventory browsing
+
+Web and mobile item details and shared inventory cards show a compact expiration
+label whenever a stored date is present. Preserve day versus month precision in
+localized formatting; month-only labels must not invent a day. Use calendar-date
+formatting independent of the viewer's UTC offset. Undated items add no empty
+row. The date label remains visible when type tracking is disabled, so stored
+information is not hidden. These date labels do not imply reminder delivery or
+an upcoming/expired state computed from a different user's preferences.

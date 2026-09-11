@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {formatAssetExpiration} from '$lib/application/expirationPresentation';
   import { onMount } from 'svelte';
   import type { ExpirationNotification } from '$lib/domain/notification';
   import type { NotificationRepository } from '$lib/ports/notificationRepository';
@@ -30,10 +31,7 @@
   let openController: AbortController | undefined;
   onMount(() => { void load(); return () => { loadController?.abort(); openController?.abort(); markingController?.abort(); }; });
 
-  function dateLabel(item: ExpirationNotification): string {
-    const date = item.expiration.date + (item.expiration.precision === 'month' ? '-01' : '');
-    return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', ...(item.expiration.precision === 'day' ? { day: 'numeric' as const } : {}), timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
-  }
+  function dateLabel(item: ExpirationNotification): string { return formatAssetExpiration(item.expiration); }
   async function load(append = false) {
     loadController?.abort();
     const controller = new AbortController(); loadController = controller;
