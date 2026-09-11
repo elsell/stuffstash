@@ -30,6 +30,7 @@ func googleConversationSchemaArrayLimits(schema map[string]any) {
 			delete(schema, "maxItems")
 		}
 	}
+	googleConversationCommandUnion(schema)
 	// Traverse schema locations only, never names or data inside examples/enums.
 	for _, keyword := range []string{"properties", "$defs", "definitions"} {
 		children, _ := schema[keyword].(map[string]any)
