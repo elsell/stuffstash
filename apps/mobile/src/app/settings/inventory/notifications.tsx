@@ -23,5 +23,5 @@ export default function NotificationSettingsRoute() {
 
 function ScopedNotifications({ services, tenantId, inventoryId }: { readonly services: MobileComposition; readonly tenantId: string; readonly inventoryId: string }) {
   const session = useMemo(() => services.createNotificationPreferencesSession(tenantId, inventoryId), [services, tenantId, inventoryId]);
-  return <NotificationSettingsScreen tenantId={tenantId} inventoryId={inventoryId} session={session} assetTypesQuery={services.inventoryAssetTypesQuery} />;
+  return <NotificationSettingsScreen tenantId={tenantId} inventoryId={inventoryId} session={session} assetTypesQuery={services.inventoryAssetTypesQuery} pushSession={services.pushSession} />;
 }

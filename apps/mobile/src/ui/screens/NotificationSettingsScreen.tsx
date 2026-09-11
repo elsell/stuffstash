@@ -1,3 +1,5 @@
+import type { PushSession } from '../../application/notifications/PushSession';
+import { AppSwitchField } from '../components/AppSwitchField';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NotificationPreferencesSession } from '../../application/notifications/NotificationPreferencesSession';
@@ -10,9 +12,10 @@ import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing } from '../theme/tokens';
 
-export function NotificationSettingsScreen({ tenantId, inventoryId, session, assetTypesQuery }: {
+export function NotificationSettingsScreen({ tenantId, inventoryId, session, assetTypesQuery, pushSession }: {
   readonly tenantId: string; readonly inventoryId: string;
   readonly session: NotificationPreferencesSession;
+  readonly pushSession?: Pick<PushSession, 'enable'>;
   readonly assetTypesQuery: Pick<InventoryAssetTypesQuery, 'execute'>;
 }) {
   const colors = useAppearancePalette();
@@ -20,6 +23,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const [types, setTypes] = useState<readonly CustomAssetTypeDefinition[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [pushMessage, setPushMessage] = useState('');
   const [timezone, setTimezone] = useState('');
   const [timezoneSaved, setTimezoneSaved] = useState(false);
   const timezoneInitialized = useRef(false);
@@ -56,6 +60,22 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
       throw caught;
     } finally { pending.current = false; if (mounted.current) setBusy(false); }
   }
+  async function changePush(enabled: boolean) {
+    if (!pushSession || pending.current) return;
+    setPushMessage('');
+    try {
+      await save(async (signal) => {
+        if (!enabled) return session.savePushEnabled(false, { signal });
+        const result = await pushSession.enable(tenantId, inventoryId, { signal });
+        if (result === 'denied' && mounted.current && !signal.aborted) {
+          setPushMessage('Allow notifications for Stuff Stash in your device settings, then try again.');
+        }
+        const refreshed = await session.refresh({ signal });
+        if (result === 'enabled' && mounted.current && !signal.aborted) setPushMessage('Alerts enabled on this device.');
+        return refreshed;
+      });
+    } catch { /* The shared save path presents errors without changing the switch optimistically. */ }
+  }
   async function saveTimezone() {
     if (!validTimezone || pending.current) return;
     setTimezoneSaved(false);
@@ -69,6 +89,12 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
     {busy && !preferences ? <ActivityIndicator accessibilityLabel="Loading reminders" color={colors.action} /> : null}
     <Pressable accessibilityRole="button" accessibilityLabel={preferences ? 'Refresh saved settings' : 'Retry loading reminders'} disabled={busy} onPress={load} style={buttonStyle}><Text style={{ color: colors.text }}>{preferences ? 'Refresh saved settings' : 'Retry loading reminders'}</Text></Pressable>
     {preferences ? <>
+      {pushSession ? <>
+        <AppSwitchField label="Mobile push alerts" description="Allow mobile alerts for this inventory on your registered devices. Inbox reminders stay available when this is off." value={preferences.pushEnabled} disabled={busy} onValueChange={(enabled) => { void changePush(enabled); }} />
+        {preferences.pushEnabled ? <Pressable accessibilityRole="button" accessibilityLabel="Set up alerts on this device" disabled={busy} onPress={() => { void changePush(true); }} style={buttonStyle}><Text style={{ color: colors.text }}>Set up alerts on this device</Text></Pressable> : null}
+        {busy ? <ActivityIndicator accessibilityLabel="Saving notification settings" color={colors.action} /> : null}
+        {pushMessage ? <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{pushMessage}</Text> : null}
+      </> : null}
       <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>Inventory defaults</Text>
       <ExpirationReminderEditor initialPolicy={preferences.defaults} disabled={busy} onSave={async (policy) => { if (policy) await save((signal) => session.saveDefaults(policy, { signal })); }} />
       <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>Calendar timezone</Text>
