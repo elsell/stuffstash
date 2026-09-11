@@ -121,7 +121,9 @@ profiles, disable other capabilities, or silently change signing secrets.
   already present in the stored profile, enable only `PUSH_NOTIFICATIONS` when
   absent, and create an App Store profile with that same certificate.
 - All Apple requests use the fixed official API origin, bounded timeouts and
-  bounded pagination; follow-up URLs must retain the same origin. Do not retry
+  bounded pagination using Apple-selected page sizes; follow-up URLs must retain
+  the same origin. Explicit list limits are omitted because the live bundle-ID
+  endpoint rejects them for the configured account. Do not retry
   ambiguous profile-creation writes automatically.
 - Validate the resulting profile's team, explicit bundle identifier, production
   push entitlement, distribution type, expiration and certificate membership
