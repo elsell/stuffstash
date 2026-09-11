@@ -216,6 +216,7 @@ type realtimeVoiceAssetToolOutput struct {
 }
 
 type realtimeVoiceAssetToolItem struct {
+	Expiration      *realtimeVoiceExpiration           `json:"expiration"`
 	TagNames        []string                           `json:"tagNames"`
 	AssetID         string                             `json:"assetId,omitempty"`
 	Title           string                             `json:"title"`

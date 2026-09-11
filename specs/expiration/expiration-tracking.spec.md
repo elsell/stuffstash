@@ -111,3 +111,9 @@ The native edit route loads type choices under the current inventory query cache
 ### Native Creation Integration
 
 The native add form uses the shared type/expiration editor and scoped type query. Valid chosen dates and initial type IDs join the existing per-principal/inventory draft and create command. Failed saves retain them; successful saves and Clear draft reset them. Invalid dates block submission without clearing other inputs. Date/type controls remain visible outside the optional description/tag section. Partial invalid date text stays in the mounted field; reopening restores the last structured draft and fresh validation state.
+
+### Conversation expiration facts
+
+Authorized asset tool results include a nullable expiration object with original date/precision, calendar status (current/upcoming/expired), trackingEnabled, effective advanceDays, and recipient timezone. Read status uses the personal type window even when notifications are disabled. A retained date on a disabled/archived type still has a factual calendar status, but trackingEnabled is false. Missing dates remain null. Type vocabulary explicitly exposes expirationEnabled so the model can resolve a suitable existing type without inventing capability. Invalid personal calendar configuration fails the read rather than substituting a misleading timezone. Calendar projection belongs to the expiration application package; conversation orchestration only maps its result.
+
+Conversation read-facts implementation evidence: remote targeted tests reproduced missing tool expiration and type capability, then passed with the projections. The remote full Go API suite and structural checks passed; required code critic review found no actionable issues. This covers data supplied to the model and calendar rules, not completion of expiration query tools, action-plan writes, card rendering or live-corpus acceptance.

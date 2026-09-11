@@ -230,6 +230,10 @@ func (a App) realtimeVoiceAssetToolItemWithCheckout(ctx context.Context, session
 		ContainmentPath: path,
 		MatchFields:     matchFields,
 	}
+	toolItem.Expiration, err = a.realtimeVoiceExpiration(ctx, session, item)
+	if err != nil {
+		return realtimeVoiceAssetToolItem{}, err
+	}
 	if includeAssetID {
 		toolItem.AssetID = item.ID.String()
 	}

@@ -29,9 +29,10 @@ func (kind VoiceVocabularyKind) Valid() bool {
 }
 
 type VoiceVocabularyAssetType struct {
-	Key         string `json:"key"`
-	DisplayName string `json:"displayName"`
-	Description string `json:"description,omitempty"`
+	ExpirationEnabled bool   `json:"expirationEnabled"`
+	Key               string `json:"key"`
+	DisplayName       string `json:"displayName"`
+	Description       string `json:"description,omitempty"`
 }
 
 func (value VoiceVocabularyAssetType) Validate() error {
@@ -99,6 +100,7 @@ func (request VoiceVocabularyRequest) Validate() error {
 }
 
 type VoiceVocabularyDefinition struct {
+	ExpirationEnabled             bool                `json:"expirationEnabled,omitempty"`
 	Kind                          VoiceVocabularyKind `json:"kind"`
 	Key                           string              `json:"key"`
 	DisplayName                   string              `json:"displayName"`
@@ -112,6 +114,9 @@ type VoiceVocabularyDefinition struct {
 }
 
 func (definition VoiceVocabularyDefinition) Validate() error {
+	if definition.ExpirationEnabled && definition.Kind != VoiceVocabularyKindCustomAssetType {
+		return ErrInvalidVoiceVocabulary
+	}
 	if !definition.Kind.Valid() || (definition.Kind == VoiceVocabularyKindTag && !validVoiceVocabularyTagKey(definition.Key)) || (definition.Kind != VoiceVocabularyKindTag && !validVoiceVocabularyKey(definition.Key)) || !boundedVocabularyText(definition.DisplayName, 120, false) || !boundedVocabularyText(definition.Description, 500, true) ||
 		len(definition.EnumOptions) > MaxVoiceVocabularyEnumOptions || len(definition.ApplicableCustomAssetTypeKeys) > MaxVoiceVocabularyAssetTypes ||
 		!validUniqueVocabularyKeys(definition.EnumOptions) || !validUniqueVocabularyKeys(definition.ApplicableCustomAssetTypeKeys) {
