@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/notification"
+	"strings"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type NotificationDevice struct {
 }
 
 func (d NotificationDevice) Valid() bool {
-	return d.ID != "" && d.Scope.Valid() && d.InstallationID != "" && len(d.InstallationID) <= 128 && d.Transport.Valid() && !d.Token.Empty() && d.Revision > 0 && !d.CreatedAt.IsZero() && !d.UpdatedAt.Before(d.CreatedAt)
+	return (d.Transport != notification.PushAPNS || d.Token.Secret() == strings.ToLower(d.Token.Secret())) && d.ID != "" && d.Scope.Valid() && d.InstallationID != "" && len(d.InstallationID) <= 128 && d.Transport.Valid() && !d.Token.Empty() && d.Revision > 0 && !d.CreatedAt.IsZero() && !d.UpdatedAt.Before(d.CreatedAt)
 }
 
 type NotificationDeviceRepository interface {
@@ -32,5 +33,5 @@ type NotificationDeviceRepository interface {
 
 // NotificationPushTokenValidator performs local provider-specific token validation.
 type NotificationPushTokenValidator interface {
-	ValidateDeviceToken(context.Context, notification.PushTransport, notification.DeviceToken) error
+	NormalizeDeviceToken(context.Context, notification.PushTransport, notification.DeviceToken) (notification.DeviceToken, error)
 }

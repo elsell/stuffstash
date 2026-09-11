@@ -38,6 +38,12 @@ func TestNotificationDeviceScopeRevisionAndAtomicAudit(t *testing.T) {
 	if err != nil || !found || !actual.Active || actual.Revision != 1 {
 		t.Fatal("audit failure changed device")
 	}
+	uppercase := device
+	uppercase.ID = "uppercase-device"
+	uppercase.Token, _ = notification.ParseDeviceToken("ABAB")
+	if err := store.SaveNotificationDevice(ctx, uppercase, 0, record); !errors.Is(err, ports.ErrInvalidProviderInput) {
+		t.Fatalf("noncanonical token persisted: %v", err)
+	}
 	duplicate := device
 	duplicate.ID = "other-device"
 	duplicate.Scope = other

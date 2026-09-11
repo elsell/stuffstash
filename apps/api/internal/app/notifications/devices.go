@@ -23,9 +23,11 @@ func (s Service) RegisterDevice(ctx context.Context, scope ScopeInput, input Reg
 	if s.deps.Devices == nil || s.deps.PushTokens == nil || s.deps.IDs == nil || s.deps.Clock == nil || input.Revision < 0 || input.InstallationID == "" || len(input.InstallationID) > 128 || !input.Transport.Valid() || input.Token.Empty() {
 		return ports.NotificationDevice{}, apperrors.ErrInvalidInput
 	}
-	if err := s.deps.PushTokens.ValidateDeviceToken(ctx, input.Transport, input.Token); err != nil {
+	normalized, err := s.deps.PushTokens.NormalizeDeviceToken(ctx, input.Transport, input.Token)
+	if err != nil {
 		return ports.NotificationDevice{}, apperrors.ErrInvalidInput
 	}
+	input.Token = normalized
 	current, found, err := s.deps.Devices.NotificationDeviceByInstallation(ctx, scope.Scope(), input.InstallationID)
 	if err != nil {
 		return ports.NotificationDevice{}, err

@@ -16,8 +16,8 @@ import (
 
 type acceptingPushTokens struct{}
 
-func (acceptingPushTokens) ValidateDeviceToken(context.Context, notification.PushTransport, notification.DeviceToken) error {
-	return nil
+func (acceptingPushTokens) NormalizeDeviceToken(_ context.Context, _ notification.PushTransport, token notification.DeviceToken) (notification.DeviceToken, error) {
+	return token, nil
 }
 func TestDeviceCommandsAuthorizeReviseAndRevoke(t *testing.T) {
 	ctx := context.Background()

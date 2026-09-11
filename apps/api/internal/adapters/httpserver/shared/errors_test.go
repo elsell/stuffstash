@@ -140,3 +140,11 @@ func TestToHumaErrorMapsInvitationErrorsWithoutLeakingIdentity(t *testing.T) {
 		})
 	}
 }
+
+func TestSchemaValidationDoesNotReflectSubmittedValues(t *testing.T) {
+	response := NewErrorEnvelope(http.StatusUnprocessableEntity, "validation failed", &huma.ErrorDetail{Message: "expected string", Location: "body.token", Value: []string{"private-token"}})
+	envelope := response.(*ErrorEnvelope)
+	if len(envelope.BodyError.Details) != 1 || envelope.BodyError.Details[0].Message != "expected string (body.token)" {
+		t.Fatalf("unsafe validation detail: %+v", envelope.BodyError.Details)
+	}
+}

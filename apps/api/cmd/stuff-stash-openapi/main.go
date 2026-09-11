@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/stuffstash/stuff-stash/internal/adapters/push"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -35,6 +36,8 @@ func run() error {
 		InventoryAccess:           store,
 		InventoryAccessUnitOfWork: store,
 		NotificationPreferences:   store,
+		NotificationDevices:       store,
+		NotificationPushTokens:    push.NativeTokens{},
 		NotificationInbox:         store,
 		CustomAssetTypes:          store,
 		CustomAssetTypeUnitOfWork: store,

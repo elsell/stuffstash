@@ -16,6 +16,7 @@ import (
 
 func Register(api huma.API, application app.App) {
 	registerInbox(api, application)
+	registerDevices(api, application)
 	const path = "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences"
 	huma.Get(api, path, func(ctx context.Context, input *dto.ScopeInput) (*dto.PreferencesOutput, error) {
 		scope, err := authenticateScope(ctx, application, input)

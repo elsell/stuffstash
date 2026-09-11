@@ -1260,6 +1260,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID notification devices */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices/by-installation/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID notification devices by installation by installation ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-installation-by-installation-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID inventories by inventory ID notification devices by device ID */
+        delete: operations["delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-device-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences": {
         parameters: {
             query?: never;
@@ -2071,6 +2122,14 @@ export interface components {
             tenantId: string;
             type: string;
         };
+        DeviceResponse: {
+            active: boolean;
+            id: string;
+            installationId: string;
+            /** Format: int64 */
+            revision: number;
+            transport: string;
+        };
         DirectUploadResponse: {
             attachmentId: string;
             expiresAt: string;
@@ -2717,6 +2776,20 @@ export interface components {
             targetType: string;
             tenantId: string;
         };
+        RegisterDeviceBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RegisterDeviceBody.json
+             */
+            readonly $schema?: string;
+            installationId: string;
+            /** Format: int64 */
+            revision: number;
+            token: string;
+            /** @enum {string} */
+            transport: "apns" | "fcm";
+        };
         ReplaceProviderProfileCredentialBody: {
             /**
              * Format: uri
@@ -2847,6 +2920,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["DefinitionResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeDeviceResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeDeviceResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["DeviceResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeDirectUploadResponse: {
@@ -7781,6 +7864,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDeviceBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDeviceResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-installation-by-installation-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDeviceResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-device-id": {
+        parameters: {
+            query: {
+                revision: number;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeDeviceResponse"];
                 };
             };
             /** @description Error */
