@@ -169,6 +169,7 @@ type ListAssetsOutput struct {
 }
 
 type AssetResponse struct {
+	ExpirationContext   *ExpirationContext `json:"expirationContext,omitempty"`
 	Expiration          *Expiration        `json:"expiration"`
 	ID                  string             `json:"id"`
 	TenantID            string             `json:"tenantId"`

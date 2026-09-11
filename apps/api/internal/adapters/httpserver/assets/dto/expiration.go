@@ -37,3 +37,10 @@ func (AssetResponse) TransformSchema(_ huma.Registry, schema *huma.Schema) *huma
 	schema.Properties["expiration"] = &huma.Schema{AnyOf: []*huma.Schema{schema.Properties["expiration"], {Type: "null"}}}
 	return schema
 }
+
+type ExpirationContext struct {
+	State           string `json:"state" enum:"current,upcoming,expired"`
+	TrackingEnabled bool   `json:"trackingEnabled"`
+	AdvanceDays     int    `json:"advanceDays" minimum:"0" maximum:"3650"`
+	Timezone        string `json:"timezone"`
+}

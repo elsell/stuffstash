@@ -123,7 +123,10 @@ export type AssetListSort = 'id_asc' | 'updated_desc';
 
 export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
 
+export type AssetExpirationContext = components["schemas"]["ExpirationContext"];
+
 export interface Asset {
+  expirationContext?: AssetExpirationContext;
   expiration?: AssetExpiration;
   id: string;
   tenantId: string;
@@ -2092,6 +2095,7 @@ function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
 function mapAsset(response: AssetResponse): Asset {
   return {
     expiration: response.expiration ?? undefined,
+    ...(response.expirationContext ? { expirationContext: response.expirationContext } : {}),
     id: response.id,
     tenantId: response.tenantId,
     inventoryId: response.inventoryId,

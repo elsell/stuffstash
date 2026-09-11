@@ -35,8 +35,12 @@ func RegisterDetail(api huma.API, application app.App) {
 		if result.CurrentCheckout != nil {
 			checkouts = []asset.Checkout{*result.CurrentCheckout}
 		}
+		response := mapper.AssetToResponseWithTags(result.Item, result.Tags, result.PrimaryPhoto, result.CurrentCheckout, resolveCheckoutPrincipals(ctx, application, checkouts))
+		if value := result.ExpirationContext; value != nil {
+			response.ExpirationContext = mapper.ExpirationContextToResponse(value.State, value.TrackingEnabled, value.AdvanceDays, value.Timezone)
+		}
 		return &dto.GetAssetOutput{Body: shared.SuccessEnvelope[dto.AssetResponse]{
-			Data: mapper.AssetToResponseWithTags(result.Item, result.Tags, result.PrimaryPhoto, result.CurrentCheckout, resolveCheckoutPrincipals(ctx, application, checkouts)),
+			Data: response,
 			Meta: shared.Meta{TenantID: input.TenantID},
 		}}, nil
 	}, huma.OperationTags("assets"), shared.SecuredOperation)

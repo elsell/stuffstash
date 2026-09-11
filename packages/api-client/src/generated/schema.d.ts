@@ -1814,6 +1814,7 @@ export interface components {
             };
             description: string;
             expiration: components["schemas"]["Expiration"] | null;
+            expirationContext?: components["schemas"]["ExpirationContext"];
             id: string;
             inventoryId: string;
             kind: string;
@@ -2348,6 +2349,14 @@ export interface components {
             date: string;
             /** @enum {string} */
             precision: "day" | "month";
+        };
+        ExpirationContext: {
+            /** Format: int64 */
+            advanceDays: number;
+            /** @enum {string} */
+            state: "current" | "upcoming" | "expired";
+            timezone: string;
+            trackingEnabled: boolean;
         };
         ExpirationPolicy: {
             /** Format: int64 */

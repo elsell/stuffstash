@@ -11,3 +11,7 @@ func ExpirationToResponse(value expirationdate.Date) *dto.Expiration {
 	}
 	return &dto.Expiration{Date: value.Value(), Precision: string(value.Precision())}
 }
+
+func ExpirationContextToResponse(state expirationdate.State, enabled bool, days int, timezone string) *dto.ExpirationContext {
+	return &dto.ExpirationContext{State: string(state), TrackingEnabled: enabled, AdvanceDays: days, Timezone: timezone}
+}
