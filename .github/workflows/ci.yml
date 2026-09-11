@@ -203,7 +203,7 @@ jobs:
       - name: Install pinned browser
         run: pnpm --dir apps/web exec playwright install --with-deps chromium
       - name: Exercise conversation settings
-        run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts
+        run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts expiration-workspace.spec.ts
       - name: Retain browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -80,7 +80,7 @@ it('marks all pages read before refreshing the inbox', async () => {
   const component = mount(NotificationInbox, { target: document.body, props: { tenantId: 'tenant', inventoryId: 'inventory', repository, observer: new InMemoryWorkspaceObserver(), onOpenAsset() {} } });
   try {
     await vi.waitFor(() => expect(document.body.textContent).toContain('No expiration notifications'));
-    Array.from(document.querySelectorAll('button')).find((button) => button.textContent === 'Mark all read')!.click();
+    Array.from(document.querySelectorAll('button')).find((button) => button.getAttribute('aria-label') === 'Mark all read')!.click();
     await vi.waitFor(() => expect(refreshed).toBe(2));
     expect(batches).toBe(2);
   } finally { await unmount(component); document.body.innerHTML = ''; }

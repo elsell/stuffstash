@@ -359,3 +359,5 @@ The user approved implementing all findings in `docs/reports/expiration-ui-ux-au
 - Badge refresh follows mutation, app foreground and inventory scope changes. Failed refresh retains known same-scope counts while announcing unavailable freshness, not false zero. Opening the inbox alone does not mark all read.
 
 Migration 58 expands the PostgreSQL audit action constraint for notification.unread. Its down migration intentionally retains this additive action allowance so historical audit records remain valid; no historical action is deleted or rewritten.
+
+CI records desktop and phone-width browser evidence for personal reminder editing and the read → unread inbox journey. Toolbar and row utility actions use compact, labeled icon buttons. Native device layout verification remains separate.

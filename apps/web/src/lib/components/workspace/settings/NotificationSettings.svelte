@@ -88,7 +88,7 @@
       </details>
       <section aria-label="Asset type reminders"><h2>Asset type reminders</h2>
         {#each types as type (type.id)}
-          <details><summary>{type.displayName} · {preferences.overrides.some((value) => value.customAssetTypeId === type.id) ? 'Custom' : 'Inherited'}</summary>
+          <details><summary>{type.displayName} · {preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings.enabled === false ? 'Off' : preferences.overrides.some((value) => value.customAssetTypeId === type.id) ? 'Custom' : 'Uses defaults'}</summary>
             <ExpirationReminderEditor initialPolicy={preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings ?? null} inheritedPolicy={preferences.defaults} onSave={(policy) => save(() => session.saveTypeOverride(type.id, policy))} />
           </details>
         {:else}<p>Enable expiration tracking on an asset type to customize its reminders here.</p>{/each}

@@ -1,4 +1,9 @@
 <script lang="ts">
+  import Settings from '@lucide/svelte/icons/settings';
+  import CheckCheck from '@lucide/svelte/icons/check-check';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import Mail from '@lucide/svelte/icons/mail';
+  import MailOpen from '@lucide/svelte/icons/mail-open';
   import AssetLocationTrail from './AssetLocationTrail.svelte';
   import {formatAssetExpiration} from '$lib/application/expirationPresentation';
   import { onMount } from 'svelte';
@@ -95,9 +100,9 @@
 <section aria-label="Notification inbox">
   <div class="toolbar">
     <SegmentedControl label="Notification filter" value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
-    <Button.Root variant="ghost" disabled={loading || !!opening || marking} onclick={markAll}>{marking ? 'Marking read…' : 'Mark all read'}</Button.Root>
-    <Button.Root variant="ghost" disabled={loading || !!opening || marking} onclick={() => load()}>Refresh</Button.Root>
-    {#if onOpenSettings}<Button.Root variant="ghost" onclick={onOpenSettings}>Notification settings</Button.Root>{/if}
+    <Button.Root variant="ghost" size="icon" aria-label="Mark all read" title="Mark all read" disabled={loading || !!opening || marking} onclick={markAll}><CheckCheck aria-hidden="true" /></Button.Root>
+    <Button.Root variant="ghost" size="icon" aria-label="Refresh" title="Refresh" disabled={loading || !!opening || marking} onclick={() => load()}><RefreshCw aria-hidden="true" /></Button.Root>
+    {#if onOpenSettings}<Button.Root variant="ghost" size="icon" aria-label="Notification settings" title="Notification settings" onclick={onOpenSettings}><Settings aria-hidden="true" /></Button.Root>{/if}
   </div>
   {#if openError}<p role="alert">{openError}</p>{/if}
   {#if loading && items.length === 0}<p role="status">Loading notifications…</p>
@@ -110,7 +115,7 @@
           <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? 'Expired' : 'Expires'} {dateLabel(item)}</span></span>
           {#if opening === item.id}<span>Opening…</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">Unread</span>{/if}
         </Button.Root>
-          <Button.Root variant="ghost" disabled={!!opening || marking} aria-label={`Mark ${item.title} ${item.readAt || readIds.has(item.id) ? 'unread' : 'read'}`} onclick={() => toggleRead(item)}>{item.readAt || readIds.has(item.id) ? 'Mark unread' : 'Mark read'}</Button.Root>
+          <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={`Mark ${item.title} ${item.readAt || readIds.has(item.id) ? 'unread' : 'read'}`} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
           <AssetLocationTrail segments={item.parentTrail} incomplete={item.parentTrailIncomplete} disabled={!!opening || marking} onOpen={onOpenAsset} />
         </li>
       {/each}
@@ -127,7 +132,8 @@
   li strong { font-weight: 400; }
   li.unread strong { font-weight: 650; }
   li .unread-dot { display: inline-block; width: 0.5rem; height: 0.5rem; margin-inline-end: 0.5rem; border-radius: 50%; background: var(--primary); }
-  li { border-bottom: 1px solid var(--border); }
+  li { position: relative; border-bottom: 1px solid var(--border); padding-inline-end: 2.75rem; }
+  li :global(.read-action) { position: absolute; inset-inline-end: 0; top: 1rem; }
   li :global(.notification-row) { display: flex; justify-content: space-between; width: 100%; height: auto; min-height: 3.5rem; padding: 1rem; text-align: start; white-space: normal; }
   li span span { display: block; font-size: var(--text-metadata-size); color: var(--muted-foreground); }
   [role='alert'] { color: var(--destructive); }
