@@ -50,6 +50,14 @@ func ParseDate(value string, precision Precision) (Date, error) {
 func (d Date) Value() string        { return d.value }
 func (d Date) Precision() Precision { return d.precision }
 
+// LastValidDate returns the printed last-valid calendar day without timezone conversion.
+func (d Date) LastValidDate() string {
+	if d.value == "" {
+		return ""
+	}
+	return d.endCalendar().AddDate(0, 0, -1).Format("2006-01-02")
+}
+
 // Boundary is the first instant after the recorded day or month in the recipient's timezone.
 func (d Date) Boundary(zone *time.Location) time.Time {
 	if d.value == "" {

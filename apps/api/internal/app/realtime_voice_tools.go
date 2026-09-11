@@ -22,6 +22,9 @@ func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoice
 	toolCtx, cancel := context.WithTimeout(ctx, a.realtimeVoiceToolCallTimeout)
 	defer cancel()
 	switch call.Name {
+	case RealtimeVoiceToolQueryExpiringAssets:
+		result, err := a.executeRealtimeVoiceExpirationQuery(toolCtx, session, call)
+		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
 	case RealtimeVoiceToolGetInventoryVocabulary:
 		result, err := a.executeRealtimeVoiceVocabularyTool(toolCtx, session, call)
 		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)

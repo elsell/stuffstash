@@ -8,6 +8,8 @@ import (
 
 func realtimeVoiceToolLabel(name string) string {
 	switch name {
+	case RealtimeVoiceToolQueryExpiringAssets:
+		return "Check expiration dates"
 	case RealtimeVoiceToolGetInventoryVocabulary:
 		return "Read inventory vocabulary"
 	case RealtimeVoiceToolGetAssetDetail:
