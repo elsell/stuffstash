@@ -27,6 +27,9 @@ func validateExecutableActionPlanArguments(kind actionplan.CommandKind, argument
 	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 		_, err := parseActionPlanCreateArguments(command)
 		return err
+	case actionplan.CommandKindUpdateAsset:
+		_, err := parseActionPlanExpirationArguments(command)
+		return err
 	case actionplan.CommandKindMoveAsset:
 		_, err := parseActionPlanMoveArguments(command)
 		return err

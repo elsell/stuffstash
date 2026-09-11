@@ -246,12 +246,12 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 			Record:         executed,
 			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "create")},
 		}, nil
-	case actionplan.CommandKindMoveAsset:
-		moveInput, err := actionPlanMoveAssetInput(input, command)
+	case actionplan.CommandKindMoveAsset, actionplan.CommandKindUpdateAsset:
+		updateInput, operation, err := actionPlanAssetUpdateInput(input, command)
 		if err != nil {
 			return ActionPlanExecutionResult{}, err
 		}
-		prepared, err := a.assetService.PrepareUpdateAsset(ctx, moveInput)
+		prepared, err := a.assetService.PrepareUpdateAsset(ctx, updateInput)
 		if err != nil {
 			return ActionPlanExecutionResult{}, err
 		}
@@ -273,7 +273,7 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 		a.assetService.RecordAssetUpdated(ctx, prepared.Asset, input.Principal.ID)
 		return ActionPlanExecutionResult{
 			Record:         executed,
-			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, "move")},
+			CommandResults: []ActionPlanCommandExecutionResult{actionPlanCommandAssetResult(command, prepared.Asset, operation)},
 		}, nil
 	case actionplan.CommandKindArchiveAsset:
 		archiveInput, err := actionPlanLifecycleAssetInput(input, command)
