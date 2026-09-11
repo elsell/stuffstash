@@ -51,6 +51,14 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	if err != nil {
 		return err
 	}
+	pushConfig, err := config.LoadNotificationPush()
+	if err != nil {
+		return err
+	}
+	pushSender, err := buildNotificationPush(pushConfig, ports.SystemClock{})
+	if err != nil {
+		return err
+	}
 	thumbnailConfig, err := config.LoadThumbnails()
 	if err != nil {
 		return err
@@ -60,7 +68,7 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	repositories.thumbnailReader = reader
-	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories)
+	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories, pushSender)
 	if err != nil {
 		return err
 	}
@@ -97,6 +105,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	defer stopEvaluations()
 	stopNotifications := startNotificationWorker(ctx, application.Notifications(), observer, notificationConfig)
 	defer stopNotifications()
+	stopPush := startNotificationPushWorker(ctx, application.Notifications(), observer, pushConfig)
+	defer stopPush()
 	startOutboxWorkers(ctx, application, observer, cfg)
 	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
 	defer stopThumbnails()

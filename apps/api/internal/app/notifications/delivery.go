@@ -14,15 +14,22 @@ func (s Service) DeliverPage(ctx context.Context, limit int, lease time.Duration
 	if s.deps.Authorizer == nil || s.deps.Inventories == nil || s.deps.Preferences == nil || s.deps.Inbox == nil || s.deps.Assets == nil || s.deps.Types == nil || s.deps.Deliveries == nil || s.deps.PushSender == nil || s.deps.Devices == nil || s.deps.IDs == nil || s.deps.Clock == nil {
 		return 0, apperrors.ErrInvalidInput
 	}
-	jobs, err := s.deps.Deliveries.ClaimNotificationDeliveries(ctx, s.deps.Clock.Now(), s.deps.IDs.NewID(), lease, policy, limit)
-	if err != nil {
-		return 0, err
+	if limit < 1 || limit > 100 {
+		return 0, apperrors.ErrInvalidInput
 	}
 	completed := 0
-	for _, job := range jobs {
+	for completed < limit {
 		if err := ctx.Err(); err != nil {
 			return completed, err
 		}
+		jobs, err := s.deps.Deliveries.ClaimNotificationDeliveries(ctx, s.deps.Clock.Now(), s.deps.IDs.NewID(), lease, policy, 1)
+		if err != nil {
+			return completed, err
+		}
+		if len(jobs) == 0 {
+			break
+		}
+		job := jobs[0]
 		outcome, notBefore := s.deliver(ctx, job)
 		if err := ctx.Err(); err != nil {
 			return completed, err

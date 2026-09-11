@@ -32,7 +32,7 @@ func (f *pushSenderFake) SendNotification(_ context.Context, message ports.Notif
 	f.messages = append(f.messages, message)
 	return ports.NotificationPushResult{Outcome: f.outcome, InvalidatedAt: f.invalidatedAt, RetryNotBefore: f.retryNotBefore}, nil
 }
-func deliveryFixture(t *testing.T, sender *pushSenderFake) (Service, *memory.Store, ScopeInput) {
+func deliveryFixture(t *testing.T, sender *pushSenderFake, deviceCounts ...int) (Service, *memory.Store, ScopeInput) {
 	ctx := context.Background()
 	store := memory.NewStore()
 	auth := memory.NewAuthorizer()
@@ -74,7 +74,11 @@ func deliveryFixture(t *testing.T, sender *pushSenderFake) (Service, *memory.Sto
 	if err := store.SaveNotificationPreferences(ctx, preferences, preferences.Revision-1, audit.Record{ID: "enable-push", TenantID: "home", InventoryID: "main", PrincipalID: "owner"}); err != nil {
 		t.Fatal(err)
 	}
-	for i := 0; i < 1; i++ {
+	deviceCount := 1
+	if len(deviceCounts) > 0 {
+		deviceCount = deviceCounts[0]
+	}
+	for i := 0; i < deviceCount; i++ {
 		token, _ := notification.ParseDeviceToken(fmt.Sprintf("token-%03d", i))
 		device := ports.NotificationDevice{ID: fmt.Sprintf("device-%03d", i), Scope: input.Scope(), InstallationID: fmt.Sprint(i), Transport: notification.PushFCM, Token: token, Active: true, Revision: 1, CreatedAt: now, UpdatedAt: now}
 		if err := store.SaveNotificationDevice(ctx, device, 0, audit.Record{ID: audit.ID(fmt.Sprintf("device-audit-%03d", i)), TenantID: "home", InventoryID: "main", PrincipalID: "owner"}); err != nil {
@@ -260,5 +264,32 @@ func TestDeliveryWaitsForProviderDeadlineBeyondBackoffCap(t *testing.T) {
 	}
 	if len(sender.messages) != 2 {
 		t.Fatal("delivery not resumed at deadline")
+	}
+}
+
+func TestCancelledDeliveryDoesNotConsumeUnstartedJobAttempts(t *testing.T) {
+	sender := &pushSenderFake{outcome: ports.NotificationPushAccepted}
+	service, _, _ := deliveryFixture(t, sender, 10)
+	policy := notification.RetryPolicy{MaxAttempts: 2, InitialDelay: time.Second, MaximumDelay: time.Minute}
+	for i := 0; i < 2; i++ {
+		ctx, cancel := context.WithCancel(context.Background())
+		sender.before = cancel
+		_, err := service.DeliverPage(ctx, 10, time.Minute, policy)
+		cancel()
+		if err != context.Canceled {
+			t.Fatalf("expected page cancellation, got %v", err)
+		}
+		service.deps.Clock = inboxClock{service.deps.Clock.Now().Add(2 * time.Minute)}
+	}
+	sender.before = nil
+	sender.messages = nil
+	count, err := service.DeliverPage(context.Background(), 10, time.Minute, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	more, err := service.DeliverPage(context.Background(), 10, time.Minute, policy)
+	count += more
+	if err != nil || count < 8 || len(sender.messages) < 8 {
+		t.Fatalf("unsent jobs lost their retry budget: processed=%d sent=%d err=%v", count, len(sender.messages), err)
 	}
 }

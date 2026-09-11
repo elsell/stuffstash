@@ -298,3 +298,34 @@ The API checks registered users' expiration reminders in the background. It does
 | `STUFF_STASH_NOTIFICATION_PAGE_TIMEOUT` | `30s` | Time allowed for one page; minimum `1s`. |
 
 Larger inventories take multiple pages. Restarts and retries preserve existing notifications without generating duplicate milestones. These controls govern inbox generation; mobile push delivery requires separate provider configuration.
+
+## Mobile expiration push
+
+The notification inbox works independently of mobile push. Push delivery is off
+until a provider is configured. Mount credentials as read-only secret files; do
+not put their contents in environment variables or source control.
+
+Set `STUFF_STASH_PUSH_SERVER_ID` to the public API URL used by the mobile app.
+For iOS, enable `STUFF_STASH_PUSH_APNS_ENABLED` and provide
+`STUFF_STASH_PUSH_APNS_KEY_ID`, `STUFF_STASH_PUSH_APNS_TEAM_ID`,
+`STUFF_STASH_PUSH_APNS_TOPIC` (the app bundle identifier), and
+`STUFF_STASH_PUSH_APNS_KEY_FILE` (a mounted APNs signing key). Production APNs
+is the default, including TestFlight. Set `STUFF_STASH_PUSH_APNS_PRODUCTION=false`
+only for a development app signed for the APNs sandbox.
+
+For Android, enable `STUFF_STASH_PUSH_FCM_ENABLED` and provide
+`STUFF_STASH_PUSH_FCM_PROJECT_ID` and `STUFF_STASH_PUSH_FCM_CREDENTIALS_FILE`.
+The latter must contain a Google service account credential authorized to send
+Firebase Cloud Messaging messages for that project. The default
+`STUFF_STASH_PUSH_FCM_CHANNEL_ID` is `expiration`, matching the mobile app.
+Enabled providers with missing or invalid credentials prevent startup.
+
+Delivery polls every five seconds, claims ten notifications per page, and allows
+30 seconds per page under a one-minute lease. These can be configured with
+`STUFF_STASH_PUSH_POLL_INTERVAL`, `STUFF_STASH_PUSH_PAGE_SIZE`,
+`STUFF_STASH_PUSH_PAGE_TIMEOUT`, and `STUFF_STASH_PUSH_LEASE`. The page timeout
+must be shorter than the lease. Retries default to six attempts, starting at one
+minute with a 15-minute backoff cap. Configure these with
+`STUFF_STASH_PUSH_MAX_ATTEMPTS`, `STUFF_STASH_PUSH_RETRY_INITIAL_DELAY`, and
+`STUFF_STASH_PUSH_RETRY_MAXIMUM_DELAY`. Provider retry deadlines may extend that
+backoff. Duration values use Go notation, such as `30s` or `5m`.

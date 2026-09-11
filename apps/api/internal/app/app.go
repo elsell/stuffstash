@@ -102,6 +102,7 @@ type Dependencies struct {
 	NotificationDeliveries           ports.NotificationDeliveryRepository
 	NotificationDevices              ports.NotificationDeviceRepository
 	NotificationPushTokens           ports.NotificationPushTokenValidator
+	NotificationPushSender           ports.NotificationPushSender
 	NotificationInbox                ports.NotificationInboxRepository
 	ConversationContextBytes         int
 	Observer                         ports.Observer
@@ -300,7 +301,7 @@ func New(deps Dependencies) App {
 		DefaultPageLimit:    app.defaultPageLimit,
 		MaxPageLimit:        app.maxPageLimit,
 	})
-	app.notificationService = notificationapp.New(notificationapp.Dependencies{Deliveries: deps.NotificationDeliveries, Devices: deps.NotificationDevices, PushTokens: deps.NotificationPushTokens, Authorizer: app.authorizer, Inventories: app.inventories, Types: app.customAssetTypes, Assets: app.assets, Inbox: deps.NotificationInbox, Preferences: deps.NotificationPreferences, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer})
+	app.notificationService = notificationapp.New(notificationapp.Dependencies{PushSender: deps.NotificationPushSender, Deliveries: deps.NotificationDeliveries, Devices: deps.NotificationDevices, PushTokens: deps.NotificationPushTokens, Authorizer: app.authorizer, Inventories: app.inventories, Types: app.customAssetTypes, Assets: app.assets, Inbox: deps.NotificationInbox, Preferences: deps.NotificationPreferences, Audit: app.audit, IDs: app.ids, Clock: app.clock, Observer: app.observer})
 
 	app.customFieldService = customfieldapp.New(customfieldapp.Dependencies{
 		Observer:                  app.observer,

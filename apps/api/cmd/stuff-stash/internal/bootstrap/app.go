@@ -14,7 +14,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories) (app.App, error) {
+func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories, pushSender ports.NotificationPushSender) (app.App, error) {
 	evaluationSettings, err := cfg.ConversationEvaluations.Settings()
 	if err != nil {
 		return app.App{}, err
@@ -50,6 +50,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		NotificationPreferences:          repositories.notificationPreferences,
 		NotificationDevices:              repositories.notificationDevices,
 		NotificationPushTokens:           push.NativeTokens{},
+		NotificationPushSender:           pushSender,
 		NotificationInbox:                repositories.notificationInbox,
 		NotificationDeliveries:           repositories.notificationDeliveries,
 		ConversationContextBytes:         contextBytes,
