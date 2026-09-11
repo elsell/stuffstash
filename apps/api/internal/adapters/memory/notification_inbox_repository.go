@@ -9,14 +9,17 @@ import (
 )
 
 func (s *Store) InsertNotification(_ context.Context, value ports.NotificationRecord, record audit.Record) (ports.NotificationRecord, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.insertNotificationLocked(value, record)
+}
+func (s *Store) insertNotificationLocked(value ports.NotificationRecord, record audit.Record) (ports.NotificationRecord, bool, error) {
 	if !value.Valid() || value.ReadAt != nil {
 		return ports.NotificationRecord{}, false, ports.ErrInvalidProviderInput
 	}
 	if !notificationAuditScopeMatches(value.Scope, record) {
 		return ports.NotificationRecord{}, false, ports.ErrForbidden
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	inv, found := s.inventories[value.Scope.InventoryID]
 	if !found || inv.TenantID.String() != value.Scope.TenantID.String() {
 		return ports.NotificationRecord{}, false, ports.ErrForbidden

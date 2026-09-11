@@ -16,6 +16,7 @@ import (
 )
 
 type Store struct {
+	notificationDeliveries  map[string]ports.NotificationDelivery
 	notificationDevices     map[string]ports.NotificationDevice
 	notificationInbox       map[string]ports.NotificationRecord
 	notificationPreferences map[ports.NotificationScope]ports.NotificationPreferencesRecord
