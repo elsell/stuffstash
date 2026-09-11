@@ -220,3 +220,7 @@ Error responses must use a consistent envelope:
 - Scenario coverage does not replace focused domain tests. Focused tests may still cover edge cases, but the scenario registry is the contract that the complete public API surface remains exercised in realistic and hostile flows.
 
 REST request body schemas must have domain-specific names when multiple adapter packages use the same input type name. Huma's shared schema registry does not scope anonymous body names by Go package. Server-construction/OpenAPI tests and CI generation must reject duplicate schema names before release.
+
+### Browser method parity (2026-09-11)
+
+The configured browser origin must be able to invoke every published REST method, including PUT for reminder preferences, individual read state and mark-all-read. Advertised preflight methods and preflight validation use one shared allowlist. Add an HTTP contract test that compares published OpenAPI operation methods with accepted preflights so future method additions cannot silently break browser clients. TRACE and unknown headers remain denied; exact origins, bearer authentication and tenant/recipient authorization are unchanged. Test the notification flow with browser Origin/preflight headers at the HTTP boundary, not only intercepted browser fixture responses.

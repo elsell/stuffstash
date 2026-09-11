@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func notificationHTTPFixture(t *testing.T) (*http.Server, *memory.Store) {
+func notificationHTTPFixture(t *testing.T, options ...Options) (*http.Server, *memory.Store) {
 	t.Helper()
 	ctx := context.Background()
 	store := memory.NewStore()
@@ -37,6 +37,9 @@ func notificationHTTPFixture(t *testing.T) (*http.Server, *memory.Store) {
 	value := ports.NotificationRecord{ID: "notice", Scope: ports.NotificationScope{TenantID: "home", InventoryID: "main", PrincipalID: "owner"}, Milestone: notification.Milestone{AssetID: "bottle", Date: date, Kind: notification.MilestoneExpired}, CreatedAt: time.Date(2001, 2, 1, 0, 0, 0, 0, time.UTC)}
 	if _, _, err := store.InsertNotification(ctx, value, audit.Record{ID: "seed-notice", TenantID: "home", InventoryID: "main", PrincipalID: "owner"}); err != nil {
 		t.Fatal(err)
+	}
+	if len(options) > 0 {
+		return NewServerWithOptions(":0", application, options[0]), store
 	}
 	return NewServer(":0", application), store
 }
