@@ -16,6 +16,7 @@ import (
 
 type Service struct{ deps Dependencies }
 type Dependencies struct {
+	PushSender  ports.NotificationPushSender
 	Deliveries  ports.NotificationDeliveryRepository
 	Devices     ports.NotificationDeviceRepository
 	PushTokens  ports.NotificationPushTokenValidator
