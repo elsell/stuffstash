@@ -72,7 +72,7 @@ current inventory; other members make their own choices.</p>
 <li><strong>Inventory defaults</strong> control reminders for types that inherit them. Choose
 whether to receive upcoming and expired alerts, and how many days ahead to warn.</li>
 <li><strong>Asset type reminders</strong> let you override those defaults for an individual
-type. Choose <strong>Use inventory defaults</strong> to remove an override.</li>
+type. Choose <strong>Use defaults</strong> to inherit, <strong>Custom</strong> for different reminders, or <strong>Off</strong> for that type.</li>
 <li><strong>Calendar timezone</strong> determines when dates end and reminder windows begin.</li>
 </ul>
 <p>The initial warning window is 30 days. Turning off the inventory default does
@@ -81,11 +81,12 @@ not turn off a type that has its own enabled override.</p>
 <p>The notification bell opens your inbox on web and mobile. Its unread indicator
 and read status stay in sync. Open an alert to see the item; its location trail
 also helps you find where it belongs. Marking an alert read does not change the
-item or its date.</p>
+item or its date. You can also mark an alert unread to return to it later, without sending another push notification. On mobile, pull down to refresh the inbox.</p>
+<p>Expiring and expired items also show a warning beside their date throughout the inventory. Reading a notification does not remove that warning.</p>
 <p>Each recorded date can produce one upcoming alert and one expired alert.
 Changing or clearing the date removes obsolete alerts. Already-expired items
 produce an expired alert without sending an old upcoming alert as well.</p>
-<p>Enable <strong>Mobile push alerts</strong> in the mobile app and allow notifications when
+<p>Enable <strong>Push notifications</strong> in the mobile app and allow notifications when
 your device asks. Push also requires your server’s delivery provider to be
 <a href="../configuration/">configured</a>. Your inbox remains available if device alerts
 are off. The web app does not request browser notification permission.</p>
