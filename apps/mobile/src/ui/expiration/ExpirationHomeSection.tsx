@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { ExpirationMode } from '../../application/expiration/ExpirationRepository';
 import type { ExpirationWorkspaceQuery } from '../../application/expiration/ExpirationWorkspaceQuery';
+import { SelectionRow } from '../components/SelectionRow';
 import { AssetCard } from '../components/AssetCard';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { createHomeScreenStyles } from '../screens/HomeScreen.styles';
@@ -23,9 +24,9 @@ export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetr
   {error ? <View><Text accessibilityRole="alert" style={styles.stateText}>{error}</Text><Pressable accessibilityRole="button" accessibilityLabel="Retry expiration" onPress={onRetry} style={styles.sectionActionButton}><Text style={styles.sectionAction}>Retry</Text></Pressable></View> : null}
   {!data && !error ? <ActivityIndicator accessibilityLabel="Loading expiration" color={colors.action} /> : null}
   {data ? <>
-   {data.counts.soon + data.counts.expired === 0 ? <Text style={styles.emptyText}>None expiring soon</Text> : <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
-    <Pressable accessibilityRole="button" accessibilityLabel={`View ${data.counts.expired} expired items`} style={styles.sectionActionButton} onPress={() => onOpen('expired')}><Text style={styles.sectionAction}>Expired · {data.counts.expired}</Text></Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel={`View ${data.counts.soon} items expiring soon`} style={styles.sectionActionButton} onPress={() => onOpen('soon')}><Text style={styles.sectionAction}>Expiring soon · {data.counts.soon}</Text></Pressable>
+   {data.counts.soon + data.counts.expired === 0 ? <Text style={styles.emptyText}>None expiring soon</Text> : <View>
+    <SelectionRow label="Expired" value={String(data.counts.expired)} accessibilityLabel={`View ${data.counts.expired} expired items`} onPress={() => onOpen('expired')} />
+    <SelectionRow label="Expiring soon" value={String(data.counts.soon)} accessibilityLabel={`View ${data.counts.soon} items expiring soon`} onPress={() => onOpen('soon')} />
    </View>}
    {data.items.map(item => <AssetCard key={item.id} asset={item} density="row" palette={colors} showTags={false} onPress={() => onOpenAsset(item.id)} onParentLocationPress={parent => onOpenAsset(parent.id)} />)}
   </> : null}

@@ -305,3 +305,16 @@ The live health and expiration-contract checks passed, including unauthenticated
 Apple processing and physical native acceptance remain separate from its upload
 result. See the workspace spec for detailed validation evidence and the measured
 query-strategy tradeoff.
+
+
+### Native expiration controls follow-through
+
+Device feedback requires replacing loose text actions with a native search bar,
+a system filter toolbar button, Home disclosure rows, and a full-height filter
+sheet with bottom native actions. Remove double insets and use compact system
+date pickers; preserve staged filters and settle pending search before navigation.
+Implementation follows the native control refinement in the expiration workspace
+spec. Remote full mobile tests (1,286), typecheck, targeted regressions and mobile
+structural checks passed; critic findings are addressed. CI and signed TestFlight
+delivery remain the release gate. Physical touch/keyboard
+acceptance is separate from automated evidence.
