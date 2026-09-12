@@ -23,6 +23,6 @@
 <style>
  .expiry-rows {min-width:0;} .month {font-size:var(--text-body-size);font-weight:600;margin:1.75rem 0 .5rem;color:var(--muted-foreground);}
  .expiry-row {display:flex;align-items:center;gap:1rem;min-height:5.5rem;padding:1rem 0;border-bottom:1px solid var(--border);color:var(--foreground);text-decoration:none;}
- .expiry-row:hover {background:var(--muted);} .expiry-row:focus-visible {outline:2px solid var(--ring);outline-offset:4px;border-radius:.5rem;}
- .details {display:grid;gap:.35rem;flex:1;min-width:0;} strong {font-size:var(--text-body-size);overflow-wrap:anywhere;} .placement {font-size:var(--text-metadata-size);color:var(--muted-foreground);overflow-wrap:anywhere;} .arrow {font-size:1.5rem;color:var(--muted-foreground);}
+ .expiry-row:hover {background:var(--muted);} .expiry-row:focus-visible {outline:2px solid var(--ring);outline-offset:4px;border-radius:var(--radius-control);}
+ .details {display:grid;gap:.35rem;flex:1;min-width:0;} strong {font-size:var(--text-body-size);overflow-wrap:anywhere;} .placement {font-size:var(--text-metadata-size);color:var(--muted-foreground);overflow-wrap:anywhere;} .arrow {font-size:var(--text-title-size);color:var(--muted-foreground);}
 </style>
