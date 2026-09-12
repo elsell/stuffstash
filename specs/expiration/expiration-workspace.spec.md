@@ -122,7 +122,7 @@ optional `kind` and `checkoutState` and applies them before counts and paginatio
 using batch checkout reads. Ordinary Browse sorting and lifecycle are restored on
 Back. Date ordering supersedes relevance/updated-time ordering in this refinement.
 
-### Validation evidence in progress
+### Validation and release evidence
 
 - Direct APNs response repair released as v0.23.3 (83.1), workflow 34693391123;
   signing and TestFlight upload succeeded. Physical notification-tap acceptance
@@ -133,7 +133,22 @@ Back. Date ordering supersedes relevance/updated-time ordering in this refinemen
   binding and complete multi-page counts. A 4,097-dated-item in-memory HTTP fixture
   returned exact counts and a 30-item page in 37 ms on the remote validation host.
   This measures the application strategy, not production Postgres latency.
-- Remote mobile: 1,278 tests and typecheck passed. Web browser acceptance passed
-  desktop Chromium and Pixel-7-sized Chromium for Home, all dates, pagination,
-  shared item detail/Back, filtering and reload. Visual inspection led to Home
-  spacing and heading refinements; rerun evidence follows with the final build.
+- [Final CI](https://github.com/elsell/stuffstash/actions/runs/34696475443)
+  passed all six jobs: required checks, web image, self-host runtime, browser
+  journey, iOS dependency lock and PostgreSQL search benchmark. The required suite
+  passed API tests, 1,279 mobile tests, 1,119 web tests and 67 SDK tests. Remote
+  complete web checks and desktop/Pixel-7-sized browser acceptance passed after
+  the final shared-control and visual-token corrections. The browser journey
+  covers Home, all dates, pagination, shared detail/Back, filters and reload.
+- [PR #101](https://github.com/elsell/stuffstash/pull/101) merged as
+  `f7463fdb1e1be12a7c49a8bd29b2f2906a75df95` after required critic review.
+  [v0.24.0](https://github.com/elsell/stuffstash/releases/tag/v0.24.0) publishes
+  the exact API and web images. Infrastructure commit
+  `5afd902c668d6b40a4a4d60109235c89e05b5119` pins them; Flux reported that
+  revision Ready and Healthy, with both deployments 1/1 ready. Live `/healthz`
+  returned healthy, the new expiration contract was present, the unauthenticated
+  expiration endpoint returned 401, and the web root returned 200.
+- Signed native delivery for 0.24.0 (84.1) is tracked by the
+  [release workflow](https://github.com/elsell/stuffstash/actions/runs/34696764927).
+  Its upload step is the delivery evidence; Apple processing and physical-device
+  notification-tap/layout acceptance are separate.
