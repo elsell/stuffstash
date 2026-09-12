@@ -287,3 +287,14 @@ Home, complete date-grouped review, search/filters and Browse integration. Follo
 through remote/CI tests, critic review, PR merge, GitOps and signed TestFlight
 release. Calendar grids remain deferred; physical-device acceptance is recorded
 separately from automated release evidence.
+
+Notification tapping is repaired and uploaded in v0.23.3 (83.1), release workflow
+34693391123. The full expiration workspace is implemented across native/web:
+Home preview, date groups, all/soon/expired modes, combined filters, Browse entry,
+complete authorized counts and pagination, refresh/cancellation and shared detail
+navigation. Remote API tests, SDK 67 tests/typecheck, mobile 1,278 tests plus the
+Home refresh regression, web 1,118 tests plus cache-revocation regression, web
+build/typecheck and four desktop/phone browser acceptance runs passed. Required
+critic found no blocking findings. CI merge, pinned deployment and the feature's
+signed TestFlight upload are the remaining delivery steps; no physical native
+acceptance is claimed by this evidence.
