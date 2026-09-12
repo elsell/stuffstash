@@ -51,6 +51,8 @@ function ThemedApp() {
           }
         }}
       >
+        <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
+        <Stack.Screen name="expiration-filters" options={{ ...sheetOptions.move, headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="voice"

@@ -181,3 +181,13 @@ describe('QueryClientInventoryMutationObserver', () => {
   });
 
 });
+
+it('refreshes expiry previews, pages and choices after scoped inventory edits',()=>{
+ const client=createMobileQueryClient();
+ const affected=['home','list','choices'].map(part=>[...mobileQueryKeys.inventory('scope','tenant','inventory'),'expiration',part]);
+ const other=[...mobileQueryKeys.inventory('other','tenant','inventory'),'expiration','home'];
+ for(const key of [...affected,other])client.setQueryData(key,{items:[]});
+ new QueryClientInventoryMutationObserver(client,'scope').onInventoryMutation({kind:'asset_updated',tenantId:'tenant',inventoryId:'inventory',assetId:'item'});
+ for(const key of affected)expect(client.getQueryState(key)?.isInvalidated).toBe(true);
+ expect(client.getQueryState(other)?.isInvalidated).toBe(false);client.clear();
+});

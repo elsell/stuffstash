@@ -1,3 +1,6 @@
+import { ExpirationWorkspaceQuery } from '../application/expiration/ExpirationWorkspaceQuery';
+import type { ExpirationEvent } from '../application/expiration/ExpirationRepository';
+import { ApiExpirationRepository } from '../adapters/expiration/ApiExpirationRepository';
 import { OpenPushNotification } from '../application/notifications/OpenPushNotification';
 import type { PushNotificationResponses } from '../application/notifications/PushNotificationResponses';
 import { ExpoPushNotificationResponses } from '../adapters/notifications/ExpoPushNotificationResponses';
@@ -121,6 +124,7 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+ readonly expirationWorkspaceQuery: ExpirationWorkspaceQuery;
   readonly pushReconciliation: PushReconciliationController;
   readonly pushNotificationResponses: PushNotificationResponses;
   readonly openPushNotification: OpenPushNotification;
@@ -190,6 +194,7 @@ export type MobileComposition = {
 };
 
 export type MobileCompositionOptions = {
+  readonly onExpirationEvent?: (event: ExpirationEvent) => void;
   readonly onNotificationEvent?: (event: NotificationEvent) => void;
   readonly onAuthenticationRequired?: () => void;
   readonly onCustomizationEvent?: (event: CustomizationEvent) => void;
@@ -313,6 +318,7 @@ export function createMobileComposition(
     acquirePerformance: performanceSession.acquire,
     queryClient,
     connectivitySource: new ExpoConnectivitySource(Network),
+    expirationWorkspaceQuery: new ExpirationWorkspaceQuery(new ApiExpirationRepository(client), { record: (event) => options.onExpirationEvent?.(event) }),
     homeDashboardQuery: new HomeDashboardQuery(inventorySummaries),
     currentInventoryScopeQuery: new CurrentInventoryScopeQuery(inventorySummaries),
     selectInventoryCommand,

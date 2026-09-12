@@ -1,3 +1,5 @@
+import { browseExpirationFilter } from '../expiration/BrowseExpirationFilter';
+import { expirationRouteParams } from '../expiration/ExpirationRouteState';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
@@ -409,6 +411,7 @@ export function SearchScreen({
         onRefresh={() => void refreshResults()}
         ListHeaderComponent={
           <SearchHeader
+            onExpiration={identity ? mode => router.push({pathname:'/expiration',params:expirationRouteParams(identity.tenantId,identity.inventoryId,browseExpirationFilter(mode,{query:submittedQuery,scope,tagIds:selectedTagIds,checkoutState}))}) : undefined}
             canAdd={inventoryContext?.canAdd ?? false}
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}

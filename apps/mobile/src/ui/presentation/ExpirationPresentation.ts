@@ -20,3 +20,15 @@ export function expirationStatusLabel(context?: AssetExpirationContext): string 
  if (context.state === 'expired') return 'Expired';
  return undefined;
 }
+
+export function expirationDateLabel(value: AssetExpiration, context?: AssetExpirationContext, now = new Date(), locale?: string): string {
+ const formatted = formatAssetExpiration(value, locale);
+ const precision = value.precision === 'month' ? `${formatted} (end of month)` : formatted;
+ if (!context) return `Expiration: ${precision}`;
+ if (!context.trackingEnabled) return `Expiration tracking disabled: ${precision}`;
+ const parts = new Intl.DateTimeFormat('en-US', { timeZone: context.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+ const part = (name: string) => parts.find(part => part.type === name)?.value ?? '';
+ const today = `${part('year')}-${part('month')}-${part('day')}`;
+ const last = value.precision === 'month' ? new Date(Date.UTC(Number(value.date.slice(0,4)), Number(value.date.slice(5,7)), 0)).toISOString().slice(0,10) : value.date;
+ return `${last === today ? 'Expires today' : expirationStatusLabel(context) ?? 'Expiration'}: ${precision}`;
+}

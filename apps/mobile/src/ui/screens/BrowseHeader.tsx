@@ -42,6 +42,7 @@ export type BrowseDraftFilters = {
 };
 
 export type SearchHeaderProps = {
+  readonly onExpiration?: (mode: 'soon' | 'expired' | 'all') => void;
   readonly canAdd?: boolean;
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
@@ -85,6 +86,7 @@ export type SearchHeaderProps = {
 };
 
 export function SearchHeader({
+  onExpiration,
   canAdd = false,
   isLoading,
   lifecycleState,
@@ -208,6 +210,7 @@ export function SearchHeader({
         {isLoading ? <ActivityIndicator color={palette.accent} size="small" /> : null}
       </View>
 
+      {onExpiration ? <NativeActionMenu accessibilityLabel="Browse expiration dates for active items" groups={[{id:'expiration',items:([{id:'soon',label:'Expiring soon'},{id:'expired',label:'Expired'},{id:'all',label:'All dates'}] as const).map(option=>({...option,onPress:()=>onExpiration(option.id)}))}]} trigger={{kind:'label',label:'Expiration · Active items'}} /> : null}
       <View style={styles.resultToolsRow}>
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}
