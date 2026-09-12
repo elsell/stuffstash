@@ -289,12 +289,19 @@ release. Calendar grids remain deferred; physical-device acceptance is recorded
 separately from automated release evidence.
 
 Notification tapping is repaired and uploaded in v0.23.3 (83.1), release workflow
-34693391123. The full expiration workspace is implemented across native/web:
-Home preview, date groups, all/soon/expired modes, combined filters, Browse entry,
-complete authorized counts and pagination, refresh/cancellation and shared detail
-navigation. Remote API tests, SDK 67 tests/typecheck, mobile 1,278 tests plus the
-Home refresh regression, web 1,118 tests plus cache-revocation regression, web
-build/typecheck and four desktop/phone browser acceptance runs passed. Required
-critic found no blocking findings. CI merge, pinned deployment and the feature's
-signed TestFlight upload are the remaining delivery steps; no physical native
-acceptance is claimed by this evidence.
+34693391123. The full expiration workspace merged through
+[PR #101](https://github.com/elsell/stuffstash/pull/101) and is published as
+[v0.24.0](https://github.com/elsell/stuffstash/releases/tag/v0.24.0): Home preview,
+date groups, all/soon/expired modes, combined filters, Browse entry, complete
+scoped counts and pagination, refresh/cancellation and shared detail navigation.
+All six final CI jobs passed, including API checks, 1,279 mobile tests, 1,119 web
+tests and 67 SDK tests. Final remote desktop/phone browser acceptance and complete
+web checks passed; required critic found no blockers. Infrastructure commit
+`5afd902c668d6b40a4a4d60109235c89e05b5119` deployed the released images, and Flux
+reported that exact revision Ready and Healthy with both deployments ready.
+The live health and expiration-contract checks passed, including unauthenticated
+401 denial. Signed iOS 0.24.0 (84.1) delivery is tracked by
+[release run 34696764927](https://github.com/elsell/stuffstash/actions/runs/34696764927).
+Apple processing and physical native acceptance remain separate from its upload
+result. See the workspace spec for detailed validation evidence and the measured
+query-strategy tradeoff.
