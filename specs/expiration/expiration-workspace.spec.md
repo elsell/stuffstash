@@ -152,3 +152,41 @@ Back. Date ordering supersedes relevance/updated-time ordering in this refinemen
   [release workflow](https://github.com/elsell/stuffstash/actions/runs/34696764927).
   Its upload step is the delivery evidence; Apple processing and physical-device
   notification-tap/layout acceptance are separate.
+
+## Native control refinement (2026-09-12 device feedback)
+
+- Prefer actual platform controls and familiar native patterns over custom text
+  actions. Keep the existing system segmented control for mutually exclusive
+  expiration modes, with the native menu fallback at accessibility text sizes.
+- Use the native navigation search bar (UISearchController on iOS), including
+  system clear/cancel and keyboard Search. Search changes update results after
+  a 300ms pause; clear/cancel and keyboard Search apply immediately. Preserve
+  route query when returning from detail or filters; cancel pending work on
+  unmount and do not allow stale search callbacks to undo newer route filters.
+- Put Filters in the native navigation toolbar using
+  `line.3.horizontal.decrease.circle` (filled when refinements are active), with
+  an accessible label describing active filters. Search text alone does not
+  mark the filter button active. Reuse the existing filter form sheet.
+- Home status shortcuts use standard full-width disclosure rows with neutral
+  labels, trailing numeric counts and chevrons, reusing the shared selection row.
+  Whole rows open the corresponding mode; See all still opens All dates.
+- Remove the separate Search submit link, in-content Filters link and redundant
+  ordering sentence. Put the segmented control in the list header so the list
+  is the native inset-adjusted scroll surface. Keep full-height pull to refresh,
+  keyboard dismissal, empty/error states and shared asset navigation.
+- Validate live-search/cancel/restoration, native header action semantics, and
+  Home disclosure navigation with controlled renderer tests. Run remote checks,
+  critic and CI before a signed TestFlight release. Device screenshots remain
+  distinct from renderer verification.
+
+### Filter-sheet device correction
+
+Use a full-height native form sheet with a system title. Put Apply filters and
+Cancel (or Back within a choice page) in a persistent bottom safe-area action
+area using platform-native buttons; never place custom touch targets over the
+sheet's top drag region. The scroll area has a single standard horizontal inset,
+and the footer remains reachable above the keyboard. Choice searches use the
+native navigation search bar. Date bounds use system switches for optional bounds
+and compact native date pickers, avoiding a permanently expanded inline calendar.
+Reset remains a standard grouped action. Applying a reversed range is disabled;
+Cancel/dismiss never applies staged changes. Back retains the staged selections.

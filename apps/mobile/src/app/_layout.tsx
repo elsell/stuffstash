@@ -52,7 +52,7 @@ function ThemedApp() {
         }}
       >
         <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
-        <Stack.Screen name="expiration-filters" options={{ ...sheetOptions.move, headerShown: false }} />
+        <Stack.Screen name="expiration-filters" options={{ ...sheetOptions.move, sheetAllowedDetents: [1], sheetInitialDetentIndex: 0, headerShown: true, title: 'Filters' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="voice"

@@ -217,6 +217,7 @@ These instructions are binding for all agents and contributors working in this r
 - Mobile applications:
   - Use React Native with Expo.
   - Target iOS and Android.
+- Prefer actual platform-native controls and navigation/search/toolbar patterns for mobile UI. Reuse existing native adapters before creating custom controls; any custom substitute needs a concrete platform limitation documented in the relevant spec.
 - API contracts:
   - REST endpoints must follow standard REST conventions.
   - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.

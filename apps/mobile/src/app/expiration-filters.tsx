@@ -20,5 +20,5 @@ export default function ExpirationFiltersRoute() {
  } });
  if (state.isPending) return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading filters" color={palette.action} /></View>;
  if (state.isError) return <View style={styles.shell}><Text accessibilityRole="alert" style={styles.errorMessage}>Filters could not be loaded.</Text><Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => { void state.refetch(); }}><Text style={styles.retryText}>Retry</Text></Pressable><Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => router.back()}><Text style={styles.retryText}>Cancel</Text></Pressable></View>;
- return <><Stack.Screen options={{ headerShown: false }} /><ExpirationFiltersScreen key={JSON.stringify([scope.scopeId, tenantId, inventoryId])} initial={filter} choices={state.data} onCancel={() => router.back()} onApply={draft => router.dismissTo({ pathname: '/expiration', params: expirationRouteParams(tenantId, inventoryId, draft) })} /></>;
+ return <><Stack.Screen options={{ headerShown: true }} /><ExpirationFiltersScreen key={JSON.stringify([scope.scopeId, tenantId, inventoryId])} initial={filter} choices={state.data} onCancel={() => router.back()} onApply={draft => router.dismissTo({ pathname: '/expiration', params: expirationRouteParams(tenantId, inventoryId, draft) })} /></>;
 }
