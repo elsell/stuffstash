@@ -66,4 +66,5 @@ func Register(api huma.API, application app.App) {
 	RegisterCheckoutHistory(api, application)
 	RegisterCheckedOutAssets(api, application)
 	RegisterList(api, application)
+	RegisterExpirationWorkspace(api, application)
 }

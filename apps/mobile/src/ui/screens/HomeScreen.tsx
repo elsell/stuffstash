@@ -27,11 +27,14 @@ import { useMobileInventoryServerQuery } from '../serverState/useMobileInventory
 
 type HomeScreenProps = {
   readonly notificationAction?: ReactNode;
+  readonly expirationSection?: ReactNode;
+  readonly onRefreshAdditional?: () => Promise<void>;
+  readonly refreshingAdditional?: boolean;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
 };
 
-export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationAction }: HomeScreenProps) {
+export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationAction, expirationSection, onRefreshAdditional, refreshingAdditional = false }: HomeScreenProps) {
   const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   const feedback = useAppFeedback();
   const dashboardState = useMobileInventoryServerQuery({
@@ -41,7 +44,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
 
   async function refreshDashboard(): Promise<void> {
     try {
-      await dashboardState.refetch({ throwOnError: true });
+      await Promise.all([dashboardState.refetch({ throwOnError: true }), onRefreshAdditional?.()]);
     } catch (error) {
       feedback.showNotice({
         tone: 'error',
@@ -63,9 +66,10 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       {dashboardState.data ? (
         <Dashboard
           notificationAction={notificationAction}
+          expirationSection={expirationSection}
           assetCheckoutCommand={assetCheckoutCommand}
           dashboard={dashboardState.data}
-          isRefreshing={dashboardState.isRefetching}
+          isRefreshing={refreshingAdditional || dashboardState.isRefetching}
           onRefresh={refreshDashboard}
         />
       ) : null}
@@ -108,12 +112,14 @@ function readableError(error: unknown, fallback: string): string {
 
 function Dashboard({
   notificationAction,
+  expirationSection,
   assetCheckoutCommand,
   dashboard,
   isRefreshing,
   onRefresh
 }: {
   readonly notificationAction?: ReactNode;
+  readonly expirationSection?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
   readonly isRefreshing: boolean;
@@ -137,6 +143,7 @@ function Dashboard({
     >
       <DashboardHeader
         notificationAction={notificationAction}
+          expirationSection={expirationSection}
         assetCheckoutCommand={assetCheckoutCommand}
         dashboard={dashboard}
         onDashboardChanged={onRefresh}
@@ -155,11 +162,13 @@ type PendingReturnState = {
 
 function DashboardHeader({
   notificationAction,
+  expirationSection,
   assetCheckoutCommand,
   dashboard,
   onDashboardChanged
 }: {
   readonly notificationAction?: ReactNode;
+  readonly expirationSection?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
   readonly onDashboardChanged: () => void | Promise<void>;
@@ -287,6 +296,7 @@ function DashboardHeader({
         </View>
       </View>
 
+      {expirationSection}
       <View style={styles.sectionHeader}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>Recently changed</Text>
         <Pressable

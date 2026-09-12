@@ -3,7 +3,7 @@
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ChevronLeft from '@lucide/svelte/icons/chevron-left';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
-  import { onMount } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import {
@@ -72,6 +72,7 @@
   });
 
   let {
+    expirationSection,
     tenantId,
     inventoryId,
     lifecycleState,
@@ -89,6 +90,7 @@
     onSelectLifecycle,
     onTagSearch
   }: {
+    expirationSection?: Snippet;
     tenantId: string;
     inventoryId: string;
     lifecycleState: AssetLifecycleFilter;
@@ -215,6 +217,7 @@
   </div>
 
   {#if lifecycleState === 'active'}
+    {@render expirationSection?.()}
     <section class="recent-section" aria-labelledby="recent-title">
       <div class="section-heading compact recent-heading">
         <h2 id="recent-title">Recently changed</h2>

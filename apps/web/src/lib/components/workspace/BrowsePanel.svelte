@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import Search from '@lucide/svelte/icons/search';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
@@ -42,10 +43,11 @@
   };
 
   let {
-    tenantId, inventoryId, inventoryName, assets, placementAssets, results, suggestions, assetTags, query = $bindable(''), submitted,
+    expirationRefinement, tenantId, inventoryId, inventoryName, assets, placementAssets, results, suggestions, assetTags, query = $bindable(''), submitted,
     error, busy, surface, scope, lifecycleState, searchMode: _searchMode, checkoutState, sort,
     selectedTagIds, canCreateAsset, inventoryEmpty, hasMore, loadingMore, errorPhase, onStateChange, onLoadMore, onRetry, onSearch, onOpenAsset, onOpenAdd
   }: {
+    expirationRefinement?: Snippet;
     tenantId: string | null;
     inventoryId: string | null;
     inventoryName: string;
@@ -320,6 +322,7 @@
       {/each}
     </div>
 
+    {@render expirationRefinement?.()}
     <div class="browse-tools">
       <Button.Root variant="outline" class="browse-filter-trigger" onclick={() => setFiltersOpen(true)}><SlidersHorizontal aria-hidden="true" /> Filters{filterCount ? ` (${filterCount})` : ''}</Button.Root>
       {#if filterOpen}

@@ -561,6 +561,10 @@ func (s *Store) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inv
 		sortOrder = ports.AssetListSortIDAsc
 	}
 	for _, item := range s.assets {
+		if page.OnlyDated && item.Expiration.Value() == "" {
+			continue
+		}
+
 		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && assetListCursorMatches(item, page, sortOrder) && assetLifecycleMatches(item.LifecycleState, page.LifecycleFilter) {
 			items = append(items, item)
 		}

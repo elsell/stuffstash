@@ -1,4 +1,6 @@
 export type WorkspaceEventName =
+  | 'workspace.expiration_loaded'
+  | 'workspace.expiration_load_failed'
   | 'workspace.notification_count_loaded'
   | 'workspace.notification_count_failed'
   | 'workspace.expiration_refresh_failed'

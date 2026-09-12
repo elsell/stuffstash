@@ -22,6 +22,22 @@ You can edit or clear the date later. Turning off a type's tracking keeps its
 recorded dates but stops reminders for that type. A missing date means no date
 has been recorded.
 
+## Review All Dates
+
+Home shows a small **Expiration** preview with separate expired and expiring-soon
+counts. Open either count to review that group, or **See all** to review every
+recorded date. You can also open **Expiration** from Browse.
+
+The list groups dates by month. Search item names and descriptions, or filter by
+type, tags, location, availability, kind, and date range. Location filters include
+items stored inside that location. Selected tags must all match. Open an item to
+edit its date or archive it; Back returns to your list.
+
+**Expiring soon** uses your reminder window. **All dates** also includes dates
+whose type has tracking turned off, marked **Expiration tracking disabled**.
+Archived items are excluded. Reading an alert or turning push off does not remove
+items from this list.
+
 ## Choose Your Reminders
 
 Open **Notifications** in inventory settings. Settings belong to you and the

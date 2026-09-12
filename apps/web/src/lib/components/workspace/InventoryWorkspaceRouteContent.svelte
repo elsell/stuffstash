@@ -60,6 +60,7 @@
   };
 
   export type RouteContentRouteState = {
+    expirationFilter?: import('$lib/ports/expirationRepository').ExpirationFilter;
     routeUnavailable: string;
     assetDetailLoading: boolean;
     mode: WorkspaceMode;
@@ -104,6 +105,7 @@
   };
 
   export type RouteContentHandlers = {
+    onNavigate?: (route: Partial<WorkspaceRouteState>) => void;
     onHome: (event: MouseEvent) => void;
     onOpenLocation: (asset: Asset) => void;
     onOpenLocations?: () => void;
@@ -182,6 +184,9 @@
   import * as Button from '$lib/components/ui/button/index.js';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import AssetDetail from './AssetDetail.svelte';
+  import ExpirationWorkspace from './expiration/ExpirationWorkspace.svelte';
+  import ExpirationBrowseEntry from './expiration/ExpirationBrowseEntry.svelte';
+  import ExpirationHome from './expiration/ExpirationHome.svelte';
   import BrowsePanel from './BrowsePanel.svelte';
   import HomeWorkspace from './HomeWorkspace.svelte';
   import LocationView from './LocationView.svelte';
@@ -287,8 +292,14 @@
     onDeleteAttachment={handlers.onAssetDeleteAttachment}
     onTagSearch={handlers.onAssetTagSearch}
   />
+{:else if route.mode === 'expiration'}
+  <ExpirationWorkspace tenantId={workspace.data.context.selectedTenantId} inventoryId={workspace.data.context.selectedInventoryId} filter={route.expirationFilter ?? {mode:'all'}} onNavigate={handlers.onNavigate ?? (() => {})} onOpenAsset={asset => {void handlers.onOpenAsset(asset);}} />
 {:else if route.mode === 'browse'}
+  {#snippet expirationRefinement()}
+  <ExpirationBrowseEntry tenantId={workspace.data.context.selectedTenantId} inventoryId={workspace.data.context.selectedInventoryId} query={searchQuery} tagIds={route.browseTagIds} scope={route.browseScope} checkoutState={searchCheckoutState} onNavigate={handlers.onNavigate} />
+  {/snippet}
   <BrowsePanel
+    {expirationRefinement}
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
     inventoryName={workspace.selectedInventory?.name ?? 'Inventory'}
@@ -372,7 +383,11 @@
   />
   {/await}
 {:else}
+  {#snippet expirationSection()}
+  <ExpirationHome tenantId={workspace.data.context.selectedTenantId} inventoryId={workspace.data.context.selectedInventoryId} onNavigate={handlers.onNavigate} onOpenAsset={asset => {void handlers.onOpenAsset(asset);}} />
+  {/snippet}
   <HomeWorkspace
+    {expirationSection}
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
     lifecycleState={workspace.data.context.assetLifecycleState}

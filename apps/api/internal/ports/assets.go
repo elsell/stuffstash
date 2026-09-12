@@ -108,6 +108,7 @@ const (
 )
 
 type AssetListPageRequest struct {
+	OnlyDated       bool
 	AfterAssetID    asset.ID
 	AfterUpdatedAt  time.Time
 	Limit           int

@@ -1174,6 +1174,23 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/expiration-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID expiration assets */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-expiration-assets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs": {
         parameters: {
             query?: never;
@@ -2368,6 +2385,46 @@ export interface components {
             expired: boolean;
             upcoming: boolean;
         };
+        ExpirationWorkspaceAncestor: {
+            id: string;
+            title: string;
+        };
+        ExpirationWorkspaceAsset: {
+            ancestorPath: components["schemas"]["ExpirationWorkspaceAncestor"][] | null;
+            createdAt: string;
+            currentCheckout?: components["schemas"]["CurrentCheckout"];
+            customAssetTypeId?: string;
+            customFields: {
+                [key: string]: unknown;
+            };
+            description: string;
+            expiration: components["schemas"]["Expiration"] | null;
+            expirationContext?: components["schemas"]["ExpirationContext"];
+            id: string;
+            inventoryId: string;
+            kind: string;
+            lifecycleState: string;
+            parentAssetId?: string;
+            primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
+            tags: components["schemas"]["CompactTag"][] | null;
+            tenantId: string;
+            title: string;
+            undoableOperationId?: string;
+            updatedAt: string;
+        };
+        ExpirationWorkspaceCounts: {
+            /** Format: int64 */
+            all: number;
+            /** Format: int64 */
+            expired: number;
+            /** Format: int64 */
+            soon: number;
+        };
+        ExpirationWorkspaceData: {
+            counts: components["schemas"]["ExpirationWorkspaceCounts"];
+            items: components["schemas"]["ExpirationWorkspaceAsset"][] | null;
+            timezone: string;
+        };
         GrantBody: {
             /**
              * Format: uri
@@ -2980,6 +3037,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["EvaluationRun"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeExpirationWorkspaceData: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeExpirationWorkspaceData.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ExpirationWorkspaceData"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeGrantResponse: {
@@ -7636,6 +7703,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeDefinitionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-expiration-assets": {
+        parameters: {
+            query?: {
+                kind?: "item" | "container" | "location";
+                checkoutState?: "any" | "available" | "checked_out";
+                mode?: "soon" | "expired" | "all";
+                q?: string;
+                customAssetTypeId?: string;
+                tagIds?: string[] | null;
+                locationId?: string;
+                fromDate?: string;
+                throughDate?: string;
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeExpirationWorkspaceData"];
                 };
             };
             /** @description Error */

@@ -1,3 +1,5 @@
+import type { ExpirationFilter } from '$lib/ports/expirationRepository';
+import { parseExpirationFilter, writeExpirationFilter } from './expirationRoute';
 import type {
   AssetKind,
   AssetLifecycleFilter,
@@ -25,6 +27,7 @@ export type ImportSourceRoute = 'homebox' | 'homebox-csv' | null;
 export type ImportDetailTabRoute = 'overview' | 'issues' | 'plan' | 'records' | 'timeline';
 
 export interface WorkspaceRouteState {
+  expirationFilter?: ExpirationFilter;
   mode: WorkspaceMode;
   tenantId: string | null;
   inventoryId: string | null;
@@ -170,6 +173,7 @@ export function parseWorkspaceRoute(url: URL): WorkspaceRouteState {
 
   const section = segments[inventoryOffset.nextIndex];
   const remaining = segments.length - inventoryOffset.nextIndex;
+  if (section === 'expiration' && remaining === 1) return { ...route, mode: 'expiration', expirationFilter: parseExpirationFilter(url.searchParams) };
   if (section === 'browse' && remaining === 1) {
     return { ...route, mode: 'browse', lifecycleState: 'active' };
   }
@@ -396,7 +400,10 @@ export function workspaceRouteHref(
     path = `/inventories/${encodeURIComponent(inventoryId)}`;
   }
 
-  if (inventoryId && next.mode === 'browse') {
+  if (inventoryId && next.mode === 'expiration') {
+    path += '/expiration';
+    writeExpirationFilter(search, next.expirationFilter ?? { mode: 'all' });
+  } else if (inventoryId && next.mode === 'browse') {
     path += '/browse';
     if (next.browseSurface !== 'list') search.set('surface', next.browseSurface);
     if (next.browseScope !== 'all') search.set('scope', next.browseScope);
