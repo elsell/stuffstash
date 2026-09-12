@@ -190,3 +190,13 @@ native navigation search bar. Date bounds use system switches for optional bound
 and compact native date pickers, avoiding a permanently expanded inline calendar.
 Reset remains a standard grouped action. Applying a reversed range is disabled;
 Cancel/dismiss never applies staged changes. Back retains the staged selections.
+
+
+Native refinement release evidence: [PR #104](https://github.com/elsell/stuffstash/pull/104)
+merged as `7498ced92897d76ed9d9862a989dd061619bcfbc` after all six CI jobs passed
+in run 34698884326. Remote validation passed 1,286 mobile tests, 13 targeted
+native-control regressions, typecheck and mobile structural rules. Critic findings
+for Android date reopening and pending search during filter navigation were fixed.
+The [signed release workflow](https://github.com/elsell/stuffstash/actions/runs/34699160120)
+records the archive/upload result. These checks do not establish physical-device
+touch, keyboard, VoiceOver or layout acceptance.
