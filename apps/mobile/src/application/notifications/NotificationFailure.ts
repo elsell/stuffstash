@@ -1,9 +1,10 @@
-export type NotificationFailureKind = 'authentication-required' | 'permission-denied' | 'not-found' | 'conflict' | 'invalid' | 'unavailable' | 'wrong-recipient';
+export type NotificationFailureKind = 'authentication-required' | 'permission-denied' | 'not-found' | 'conflict' | 'invalid' | 'unavailable' | 'wrong-recipient' | 'invalid-payload';
 const messages: Record<NotificationFailureKind, string> = {
   'authentication-required': 'Sign in again to access your notifications.',
   'permission-denied': 'You no longer have access to notifications for this inventory.',
   'not-found': 'This notification or setting is no longer available.',
   'conflict': 'Your settings changed on another device. Refresh before saving again.',
+  'invalid-payload': 'This notification could not be opened. Open your notifications inbox to find the item.',
   'invalid': 'Review your notification settings and try again.',
   'wrong-recipient': 'This notification belongs to a different account or server. Sign in to its account to open it.',
   'unavailable': 'Notifications could not be updated. Try again.'

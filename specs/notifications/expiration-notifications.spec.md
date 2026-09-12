@@ -297,6 +297,18 @@ A native token read that finishes after a newer token event or foreground invali
 
 ### Native notification taps
 
+Direct APNs compatibility (2026-09-12): the pinned Expo Notifications 55.0.23
+iOS serializer exposes direct APNs custom fields in the push trigger's `payload`;
+`content.data` reads the Expo-specific nested `body` dictionary and may be null.
+The native adapter must use the raw payload only for an explicitly identified
+`push` trigger when content data is absent. Do not merge routing fields across
+payload sources or fall back from present malformed content data. Both launch
+and live responses must enter the same application validation and authorized
+notification lookup. Cover real direct-APNs response shapes, ordinary content
+data, non-push triggers, wrong server/account, malformed fields, cancellation,
+and unavailable notifications. Invalid routing hints must give notification-open
+guidance, not tell the user to change reminder settings.
+
 Handle the launch notification and later default-action taps through the native
 notification adapter. Deduplicate a launch response also delivered by the live
 listener. Treat payloads as untrusted routing hints: require bounded nonempty
@@ -372,3 +384,13 @@ CI records desktop and phone-width browser evidence for personal reminder editin
 - A focused edit loads the same authorized personal inventory preferences through existing ports. Returning to the overview refreshes current settings; dirty focused fields are not overwritten by refresh. No draft or preference state crosses tenant/inventory/account scopes.
 - Timezone selection uses a searchable, checked list with clear empty and failed-save states. It preserves the stored timezone across travel. Device permission status stays distinct from server delivery readiness; use concise status and supporting section footers rather than repeated setup prose in the primary form.
 - Tests cover empty/short refresh, preset and custom timing, cancellation, save failures, inheritance, singular labels and retained personal scope. Device geometry/gestures require native CI evidence separately from renderer assertions.
+
+### Direct APNs tap repair evidence (2026-09-12)
+
+Native response regressions reproduced the reported settings error for both cold
+launch and live direct APNs taps. The adapter now extracts absent content data
+from explicit push-trigger payloads without merging sources, then preserves the
+existing server/account/authorized inbox checks. Malformed routing has dedicated
+notification-open guidance. Remote mobile typecheck, 1,261 tests and mobile
+structural checks passed; required critic found no substantive issues. Actual
+phone tap acceptance follows the signed release; receipt was already user-verified.
