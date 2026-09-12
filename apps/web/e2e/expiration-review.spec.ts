@@ -26,7 +26,8 @@ test('reviews every date, retains filters and returns from item detail at narrow
  await page.getByRole('link',{name:/Contact lens solution 33/}).click();await expect(page).toHaveURL(/assets\/expiry-33/);
  await page.getByRole('link',{name:'Back',exact:true}).click();await expect(page).toHaveURL(/\/expiration\?expiration=all/);await expect(page.getByRole('link',{name:/Contact lens solution 33/})).toBeVisible();
  await page.getByRole('button',{name:'Filters',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
- await page.getByLabel('From',{exact:true}).fill('2026-10-01');await page.getByRole('button',{name:'Apply filters',exact:true}).click();await expect(page).toHaveURL(/from=2026-10-01/);
+ await page.getByRole('button',{name:'Kind',exact:true}).click();await page.getByRole('option',{name:'Items',exact:true}).click();
+ await page.getByLabel('From',{exact:true}).fill('2026-10-01');await page.getByRole('button',{name:'Apply filters',exact:true}).click();await expect(page).toHaveURL(/from=2026-10-01/);await expect(page).toHaveURL(/kind=item/);
  await page.reload();await expect(page.getByText('From 2026-10-01',{exact:false})).toBeVisible();await expect(page.getByText('ANUCORT-HC 25MG Rectal Suppository',{exact:true})).toHaveCount(0);
  await page.screenshot({path:testInfo.outputPath('expiration-filtered.png'),fullPage:true});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
