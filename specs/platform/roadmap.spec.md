@@ -275,3 +275,15 @@ Implement the approved expiration UI/UX audit across native and web, mark-unread
 The first usability release exposed a browser transport gap: PUT preflights were rejected despite public PUT endpoints. The hotfix adds method parity between the published API and CORS, with real HTTP regression coverage; intercepted UI fixtures alone do not validate cross-origin transport.
 
 Device feedback on the first usability release requires a second native settings pass: reuse grouped settings components, replace expanding inline editors with focused navigation, and make inbox refresh cover blank space. The browser CORS hotfix is deployed as v0.23.1 with successful live PUT preflight and preserved authentication denial. Continue native verification and release for the settings pass.
+
+## Current focus: complete expiration workspace and notification taps (2026-09-12)
+
+The user confirmed production push receipt and found TestFlight 0.23.2 (82.1).
+Earlier missing-APNs/release blockers above are superseded. A direct APNs native
+payload mismatch causes notification taps to show a settings error; repair this
+with launch/live regression and authorization checks. Then implement the full
+approved `../expiration/expiration-workspace.spec.md` across native/web, including
+Home, complete date-grouped review, search/filters and Browse integration. Follow
+through remote/CI tests, critic review, PR merge, GitOps and signed TestFlight
+release. Calendar grids remain deferred; physical-device acceptance is recorded
+separately from automated release evidence.
