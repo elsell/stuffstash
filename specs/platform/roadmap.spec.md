@@ -315,6 +315,7 @@ sheet with bottom native actions. Remove double insets and use compact system
 date pickers; preserve staged filters and settle pending search before navigation.
 Implementation follows the native control refinement in the expiration workspace
 spec. Remote full mobile tests (1,286), typecheck, targeted regressions and mobile
-structural checks passed; critic findings are addressed. CI and signed TestFlight
-delivery remain the release gate. Physical touch/keyboard
+structural checks passed; critic findings are addressed. [PR #104](https://github.com/elsell/stuffstash/pull/104) merged after all six CI
+jobs passed in run 34698884326. Signed TestFlight delivery is tracked by
+[release run 34699160120](https://github.com/elsell/stuffstash/actions/runs/34699160120). Physical touch/keyboard
 acceptance is separate from automated evidence.
