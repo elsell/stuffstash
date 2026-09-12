@@ -1,12 +1,12 @@
 <script lang="ts">
  import { onMount } from 'svelte';
  import type { Asset } from '$lib/domain/inventory';
- let {assets, scope, onRefresh}: {assets: Asset[]; scope: string; onRefresh: () => Promise<boolean>} = $props();
+ let {assets, timezone, scope, onRefresh}: {assets: Asset[]; timezone?: string; scope: string; onRefresh: () => Promise<boolean>} = $props();
  onMount(() => {
   let previous = '', pending = false, retry = false;
   async function check(force = false) {
    if (document.hidden || pending) return;
-   const zones = [...new Set(assets.flatMap(asset => asset.expirationContext ? [asset.expirationContext.timezone] : []))].sort();
+   const zones = [...new Set([...(timezone ? [timezone] : []), ...assets.flatMap(asset => asset.expirationContext ? [asset.expirationContext.timezone] : [])])].sort();
    const key = JSON.stringify([scope, ...zones.map(timeZone => new Intl.DateTimeFormat('en-CA', {timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()))]);
    const changed = !!previous && previous !== key;
    if (!previous) previous = key;

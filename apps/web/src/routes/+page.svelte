@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { StuffStashExpirationRepository } from '$lib/adapters/api/stuffStashExpirationRepository';
+  import type { ExpirationWorkspace } from '$lib/ports/expirationRepository';
   import { StuffStashNotificationRepository } from '$lib/adapters/api/stuffStashNotificationRepository';
   import type { NotificationWorkspace } from '$lib/ports/notificationWorkspace';
   import { conversationWorkspaceRepositories } from '$lib/adapters/api/conversations/workspaceRepositories';
@@ -37,6 +39,7 @@
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
   let repository = $state<WorkspaceRepository | null>(null);
+  let expiration = $state<ExpirationWorkspace | undefined>();
   let notifications = $state<NotificationWorkspace | undefined>();
   let conversations = $state<ConversationWorkspaceRepositories | undefined>();
   let workspaceData = $state<WorkspaceData | null>(null);
@@ -86,6 +89,7 @@
             nextWorkspace = await provisionPersonalWorkspace(nextRepository, nextWorkspace.context.principal);
           }
           if (!mounted) return;
+          expiration = { repository: new StuffStashExpirationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
           notifications = { apiIdentity: loadedConfig.apiBaseUrl, repository: new StuffStashNotificationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
           conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
           repository = nextRepository;
@@ -181,7 +185,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {expiration} {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>

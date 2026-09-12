@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { expirationWorkspaceContext, type ExpirationWorkspace, type ExpirationFilter } from '$lib/ports/expirationRepository';
   import ExpirationRefresh from './ExpirationRefresh.svelte';
   import NotificationBell from './NotificationBell.svelte';
   import { settingsResourceHref } from '$lib/application/settingsManagementNavigation';
@@ -104,6 +105,7 @@
     repository,
     conversations,
     notifications,
+    expiration,
     observer = { record: () => {} },
     initialData,
     onSignOut,
@@ -112,6 +114,7 @@
     repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
     conversations?: ConversationWorkspaceRepositories;
     notifications?: NotificationWorkspace;
+    expiration?: ExpirationWorkspace;
     observer?: WorkspaceObserver;
     initialData: WorkspaceData;
     onSignOut: () => void;
@@ -120,6 +123,8 @@
 
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the mounted authenticated workspace.
   setContext(conversationWorkspaceContext, conversations);
+  // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
+  setContext(expirationWorkspaceContext, expiration ? { ...expiration, observer, positions: new Map(), cache: new Map(), revision: () => data } : undefined);
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the authenticated workspace.
   setContext(notificationWorkspaceContext, notifications ? { ...notifications, onPreferencesChanged: async () => { await refreshExpirationAssets(); } } : undefined);
 
@@ -135,6 +140,7 @@
   const startingRoute = currentWorkspaceRoute();
   let data = $state(startingData);
   let mode = $state<WorkspaceMode>(startingData.context.inventories.length > 0 ? startingRoute.mode : 'settings');
+  let expirationDetailReturn: Partial<WorkspaceRouteState> | null = null;
   let selectedLocationId = $state<string | null>(null);
   let selectedAssetId = $state<string | null>(null);
   let addOpen = $state(false);
@@ -155,6 +161,7 @@
   let searchMode = $state<SearchMode>('fuzzy');
   let searchCheckoutState = $state<SearchCheckoutFilter>('any');
   let searchTagIds = $state<string[]>([]);
+  let expirationFilter = $state<ExpirationFilter>(startingRoute.expirationFilter ?? {mode:'all'});
   let browseSurface = $state<BrowseSurface>(startingRoute.browseSurface);
   let browseScope = $state<BrowseScope>(startingRoute.browseScope);
   let browseSort = $state<BrowseSort>(startingRoute.browseSort);
@@ -916,6 +923,8 @@
   }
 
   async function openAsset(asset: Asset): Promise<void> {
+    if (mode === 'expiration') expirationDetailReturn = {mode:'expiration',tenantId:data.context.selectedTenantId,inventoryId:data.context.selectedInventoryId,expirationFilter};
+    else if (mode !== 'asset') expirationDetailReturn = null;
     const returnLocationId = mode === 'location' ? selectedLocationId : null;
     await applyRoute(
       pushWorkspaceRoute(
@@ -1008,6 +1017,7 @@
       attachmentAction = route.attachmentAction;
       searchQuery = route.searchQuery;
       searchTagIds = route.browseTagIds;
+      expirationFilter = route.expirationFilter ?? {mode:'all'};
       browseSurface = route.browseSurface;
       browseScope = route.browseScope;
       browseSort = route.browseSort;
@@ -1199,7 +1209,7 @@
         return;
       }
 
-      if (route.mode === 'settings' || route.mode === 'import') {
+      if (route.mode === 'settings' || route.mode === 'import' || route.mode === 'expiration') {
         mode = route.mode;
         settingsSection = route.settingsSection;
         importSource = route.importSource;
@@ -1807,6 +1817,11 @@
   }
 
   function closeDetailToPrevious(): void {
+    if (!applyingRoute && expirationDetailReturn?.tenantId === data.context.selectedTenantId && expirationDetailReturn?.inventoryId === data.context.selectedInventoryId) {
+      replaceRoute(expirationDetailReturn);
+      void applyRoute(currentWorkspaceRoute());
+      return;
+    }
     invalidateAssetDetailLoad();
     mode = selectedLocationId ? 'location' : 'home';
     selectedAssetId = null;
@@ -1819,6 +1834,7 @@
   }
 
   function assetDetailBackHref(): string {
+    if (expirationDetailReturn?.tenantId === data.context.selectedTenantId && expirationDetailReturn?.inventoryId === data.context.selectedInventoryId) return workspaceRouteHref(expirationDetailReturn,data.context.selectedTenantId,data.context.selectedInventoryId);
     return workspaceAssetDetailBackHref(data.context, selectedLocationId);
   }
 
@@ -1926,6 +1942,7 @@
       browseSurface,
       browseScope,
       browseSort,
+      expirationFilter,
       browseTagIds: searchTagIds,
       browseAssets: browseSurface === 'map' ? browseMapAssets : browseAssets,
       browseInventoryEmpty,
@@ -1966,6 +1983,7 @@
       onBrowseLoadMore: () => loadBrowsePage(true),
       onBrowseRetry: () => browseErrorPhase === 'append' ? loadBrowsePage(true) : browseErrorPhase === 'map' ? loadBrowseMap() : loadBrowsePage(false),
       onEditLocation: openLocationEdit,
+      onNavigate: navigateTo,
       onOpenAsset: openAsset,
       onOpenAdd: openAdd,
       onCloseLocation: closeLocationToLocations,
