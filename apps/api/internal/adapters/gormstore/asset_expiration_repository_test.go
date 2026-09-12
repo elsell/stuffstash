@@ -57,3 +57,28 @@ func TestStoreExpirationDateRoundTripAndUndo(t *testing.T) {
 		t.Fatalf("undo lost date: %+v %v", restored, err)
 	}
 }
+
+func TestDatedAssetScanIsScopedAndExcludesUndated(t *testing.T) {
+	ctx := context.Background()
+	store := newUndoableOperationTestStore(t, ctx)
+	dated := assetItem("dated", "tenant-one", "inventory-one", asset.KindItem, "")
+	dated.Expiration, _ = expirationdate.ParseDate("2028-02", expirationdate.Month)
+	undated := assetItem("undated", "tenant-one", "inventory-one", asset.KindItem, "")
+	for _, item := range []asset.Asset{dated, undated} {
+		if err := createAsset(t, ctx, store, item); err != nil {
+			t.Fatal(err)
+		}
+	}
+	items, err := store.ListAssetsByInventory(ctx, "tenant-one", "inventory-one", ports.AssetListPageRequest{OnlyDated: true, Limit: 10})
+	if err != nil || len(items) != 1 || items[0].ID != dated.ID {
+		t.Fatalf("dated scan: %+v %v", items, err)
+	}
+	items, err = store.ListAssetsByInventory(ctx, "other", "inventory-one", ports.AssetListPageRequest{OnlyDated: true, Limit: 10})
+	if err != nil || len(items) != 0 {
+		t.Fatal("cross-tenant dated scan leaked")
+	}
+	items, err = store.ListAssetsByInventory(ctx, "tenant-one", "inventory-one", ports.AssetListPageRequest{OnlyDated: true, AfterAssetID: dated.ID, Limit: 10})
+	if err != nil || len(items) != 0 {
+		t.Fatal("dated cursor ignored")
+	}
+}

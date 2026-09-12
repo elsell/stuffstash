@@ -431,6 +431,10 @@ func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, in
 		TenantID:    tenantID.String(),
 		InventoryID: inventoryID.String(),
 	})
+	if page.OnlyDated {
+		query = query.Where(clause.Neq{Column: clause.Column{Name: "expiration_date"}, Value: ""})
+	}
+
 	switch page.LifecycleFilter {
 	case "", ports.AssetLifecycleFilterActive:
 		query = query.Where(&assetModel{LifecycleState: asset.LifecycleStateActive.String()})

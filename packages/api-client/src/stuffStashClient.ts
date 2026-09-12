@@ -1,3 +1,4 @@
+import { ExpirationClient } from './expirationClient';
 import { NotificationsClient } from './notificationsClient';
 import createClient, { type Client } from 'openapi-fetch';
 import type { components, paths } from './generated/schema';
@@ -688,6 +689,7 @@ export class StuffStashAPIError extends Error {
 
 export class StuffStashClient {
   readonly notifications: NotificationsClient;
+  readonly expiration: ExpirationClient;
   private readonly client: Client<paths>;
   private readonly baseUrl: string;
   private readonly tokenProvider: TokenProvider;
@@ -699,6 +701,7 @@ export class StuffStashClient {
       baseUrl: this.baseUrl,
       fetch: options.fetch
     });
+    this.expiration = new ExpirationClient(this.client, { headers: () => this.authHeaders(), unwrap: (request) => this.unwrap(request) });
     this.notifications = new NotificationsClient(this.client, { headers: () => this.authHeaders(), unwrap: (request) => this.unwrap(request) });
   }
 

@@ -96,3 +96,44 @@ checks do not establish physical-device acceptance. Run tests remotely/CI, relea
 through normal atomic PRs and signed TestFlight workflow, apply pinned API/web
 images through GitOps and record exact evidence. Notification delivery was confirmed
 by the user; tapping repair needs a released native build and user acceptance.
+
+### Initial query execution strategy
+
+Use the existing scoped asset repository with an explicit dated-only read filter.
+Scan keyset batches of at most 256 active dated assets, applying personal calendar
+state and combined filters in the expiration application package. Keep at most the
+requested result page plus lookahead in the sorted selection, and count the full
+matching stream. This avoids duplicating personal policy/calendar logic in database
+expressions. Bound a request to 1,000 batches and fail visibly if exhausted; never
+return partial counts as complete. This is an operational guard, not an inventory
+size promise. Add a supporting scoped dated-asset index where measurement warrants.
+The acknowledged tradeoff is O(dated assets) count evaluation per request; measure
+with dense fixtures before release. All production reads remain cancellation-aware.
+
+### Browse composition
+
+Browse offers Expiration as a date-ordered refinement. Opening it preserves the
+submitted text, tags, asset kind and availability filters and the prior Browse
+route for Back. Expiration always reviews active assets; label that restriction
+when entering from archived/all lifecycle Browse. The full shared expiration
+workspace owns its additional type, location and date-range refinements. Kind and
+availability remain editable there and clear with other filters. The API accepts
+optional `kind` and `checkoutState` and applies them before counts and pagination,
+using batch checkout reads. Ordinary Browse sorting and lifecycle are restored on
+Back. Date ordering supersedes relevance/updated-time ordering in this refinement.
+
+### Validation evidence in progress
+
+- Direct APNs response repair released as v0.23.3 (83.1), workflow 34693391123;
+  signing and TestFlight upload succeeded. Physical notification-tap acceptance
+  remains separate from upload evidence.
+- Expiration HTTP tests cover owner/viewer access, outsiders, unauthenticated and
+  malformed tokens, tenant/inventory mismatch, combined filtering, disabled
+  tracking, availability transitions, archive, cursor principal/filter/settings
+  binding and complete multi-page counts. A 4,097-dated-item in-memory HTTP fixture
+  returned exact counts and a 30-item page in 37 ms on the remote validation host.
+  This measures the application strategy, not production Postgres latency.
+- Remote mobile: 1,278 tests and typecheck passed. Web browser acceptance passed
+  desktop Chromium and Pixel-7-sized Chromium for Home, all dates, pagination,
+  shared item detail/Back, filtering and reload. Visual inspection led to Home
+  spacing and heading refinements; rerun evidence follows with the final build.

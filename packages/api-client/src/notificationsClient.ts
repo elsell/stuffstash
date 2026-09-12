@@ -1,3 +1,4 @@
+import type { ClientTransport } from './clientTransport';
 import type { Client } from 'openapi-fetch';
 import type { components, paths } from './generated/schema';
 import type { Page } from './stuffStashClient';
@@ -8,17 +9,12 @@ export type ExpirationNotification = components['schemas']['NotificationResponse
 export type UpdateNotificationPreferences = components['schemas']['UpdateBody'];
 export type NotificationDevice = components['schemas']['DeviceResponse'];
 export type RegisterNotificationDevice = components['schemas']['RegisterDeviceBody'];
-type Result<T> = { data?: T; error?: components['schemas']['ErrorEnvelope']; response: Response };
-export interface NotificationClientTransport {
-  headers(): Promise<Record<string, string>>;
-  unwrap<T>(request: Promise<Result<T>>): Promise<T>;
-}
 const preferencesPath = '/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences';
 const devicesPath = '/tenants/{tenantId}/inventories/{inventoryId}/notification-devices';
 const inboxPath = '/tenants/{tenantId}/inventories/{inventoryId}/notifications';
 
 export class NotificationsClient {
-  constructor(private readonly client: Client<paths>, private readonly transport: NotificationClientTransport) {}
+  constructor(private readonly client: Client<paths>, private readonly transport: ClientTransport) {}
   async registerDevice(tenantId: string, inventoryId: string, input: RegisterNotificationDevice, signal?: AbortSignal): Promise<NotificationDevice> {
     const { installationId, transport, token, revision } = input;
     const result = await this.transport.unwrap(this.client.POST(devicesPath, { params: { path: { tenantId, inventoryId } }, body: { installationId, transport, token, revision }, headers: await this.transport.headers(), signal }));

@@ -5,3 +5,5 @@ export { createApiPerformanceReporter, type ApiPerformanceReporterOptions } from
 export { createObservedFetch, type RequestPerformanceObserver } from './telemetry/observedFetch';
 
 export { NotificationsClient, type NotificationDevice, type RegisterNotificationDevice, type NotificationPreferences, type UpdateNotificationPreferences, type ExpirationReminderPolicy, type ExpirationNotification } from './notificationsClient';
+
+export { ExpirationClient, type ExpirationWorkspaceOptions, type ExpirationWorkspaceAsset, type ExpirationWorkspacePage } from './expirationClient';
