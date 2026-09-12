@@ -20,11 +20,11 @@ export class OpenPushNotification {
  }
 }
 function parseTarget(payload:unknown){
- if(!payload || typeof payload!=='object' || Array.isArray(payload))throw new NotificationFailure('invalid');
+ if(!payload || typeof payload!=='object' || Array.isArray(payload))throw new NotificationFailure('invalid-payload');
  const value=payload as Record<string,unknown>;
- const read=(key:string)=>{const field=value[key];if(typeof field!=='string'||field.length>2048||!field.length||field.trim()!==field||/[\x00-\x1f\x7f]/.test(field))throw new NotificationFailure('invalid');return field;};
+ const read=(key:string)=>{const field=value[key];if(typeof field!=='string'||field.length>2048||!field.length||field.trim()!==field||/[\x00-\x1f\x7f]/.test(field))throw new NotificationFailure('invalid-payload');return field;};
  const serverId=read('serverId');
  try {const url=new URL(serverId);if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)throw new Error();}
- catch {throw new NotificationFailure('invalid');}
+ catch {throw new NotificationFailure('invalid-payload');}
  return {serverId:normalizeInstanceUrl(serverId),principalId:read('principalId'),tenantId:read('tenantId'),inventoryId:read('inventoryId'),notificationId:read('notificationId')};
 }
