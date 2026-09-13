@@ -200,3 +200,14 @@ for Android date reopening and pending search during filter navigation were fixe
 The [signed release workflow](https://github.com/elsell/stuffstash/actions/runs/34699160120)
 records the archive/upload result. These checks do not establish physical-device
 touch, keyboard, VoiceOver or layout acceptance.
+
+### Sheet action sizing correction (2026-09-13)
+
+Device evidence shows compact native refinement controls collapsing the footer's
+Cancel/Apply labels to ellipses. Sheet actions must use a dedicated full-width
+native layout: a prominent Apply filters button and a secondary Cancel/Back
+button, stacked vertically. React Native owns available width; the native host
+measures height only, preventing intrinsic-width feedback. Native labels may
+wrap for large text; do not clamp to an icon-sized or fixed-height host. Keep
+bottom safe-area handling and disabled Apply for invalid ranges. Add platform
+adapter contract and action regressions in addition to the existing sheet tests.
