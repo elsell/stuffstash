@@ -1,3 +1,5 @@
+import { useInventoryMapSearch } from './useInventoryMapSearch';
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { createStyles } from './InventoryMapScreen.styles';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -18,7 +20,7 @@ import {
   useWindowDimensions,
   View
 } from 'react-native';
-import { ChevronRight, Info, Package, Plus, Search, X } from 'lucide-react-native';
+import { ChevronRight, Info, Package, Plus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
   InventoryMapAssetViewModel,
@@ -52,9 +54,11 @@ import type { InventoryMapColumnViewModel } from './InventoryMapPresentation';
 import { addHereRouteParams } from './AddAssetInitialParent';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { useAppFeedback } from '../feedback/AppFeedback';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 
 type InventoryMapScreenProps = {
+  readonly searchQuery?: string;
+  readonly onChangeSearchQuery?: (query:string)=>void;
   readonly canAdd: boolean;
   readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
@@ -89,6 +93,8 @@ const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 
 export function InventoryMapScreen({
   canAdd,
+  searchQuery,
+  onChangeSearchQuery,
   inventoryMapQuery,
   pathStore,
   selectedSurface,
@@ -119,7 +125,9 @@ export function InventoryMapScreen({
       ? { status: 'error', message: 'Inventory map could not load.' }
       : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
-  const [query, setQuery] = useState('');
+  const [localQuery, setLocalQuery] = useState('');
+  const query = searchQuery ?? localQuery;
+  const setQuery = onChangeSearchQuery ?? setLocalQuery;
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingScrollLevel, setPendingScrollLevel] = useState<number | undefined>();
@@ -350,6 +358,7 @@ export function InventoryMapScreen({
   }
 
   function selectBranch(asset: InventoryMapAssetViewModel): void {
+    mapSearch.cancel();
     if (!map) {
       return;
     }
@@ -366,6 +375,7 @@ export function InventoryMapScreen({
   }
 
   function beginBranchSwipe(asset: InventoryMapAssetViewModel, dragX: number): void {
+    mapSearch.cancel();
     if (!map || !asset.canContainAssets || activeBranchSwipe.current?.assetId === asset.id) {
       return;
     }
@@ -438,18 +448,20 @@ export function InventoryMapScreen({
   }
 
   function openBreadcrumb(level: number): void {
+    mapSearch.cancel();
     const nextPath = pathForBreadcrumbLevel(openPath, level);
     setOpenPath(nextPath);
     setHighlightedAssetId(preserveInventoryMapHighlightForPath(nextPath, highlightedAssetId));
     setPendingScrollLevel(level);
   }
 
-  function submitSearch(): void {
+  function submitSearch(text = query): void {
+    if (!text.trim()) { setHighlightedAssetId(undefined); return; }
     if (!map) {
       return;
     }
 
-    const match = findInventoryMapSearchMatch(map, query);
+    const match = findInventoryMapSearchMatch(map, text);
     if (!match) {
       setHighlightedAssetId(undefined);
       return;
@@ -460,12 +472,16 @@ export function InventoryMapScreen({
     setPendingScrollLevel(match.openPath.length);
   }
 
+  const mapSearch = useInventoryMapSearch(query, !!map, submitSearch);
+
   function clearSearch(): void {
+    mapSearch.cancel();
     setQuery('');
     setHighlightedAssetId(undefined);
   }
 
   function openAddHere(asset: InventoryMapAssetViewModel): void {
+    mapSearch.cancel();
     router.push({
       pathname: '/add',
       params: addHereRouteParams({
@@ -487,6 +503,7 @@ export function InventoryMapScreen({
           dy: gestureState.dy
         }),
       onPanResponderGrant: () => {
+        mapSearch.cancel();
         mapOffset.stopAnimation();
         mapPanStartOffset.current = mapOffsetValue.current;
       },
@@ -526,7 +543,6 @@ export function InventoryMapScreen({
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.titleBlock}>
-            <Text style={styles.title}>Browse</Text>
             {state.status === 'ready' ? (
               <Text numberOfLines={1} style={styles.overviewText}>{mapOverviewLabel(state.map)}</Text>
             ) : null}
@@ -535,35 +551,11 @@ export function InventoryMapScreen({
             canAdd={canAdd}
             palette={colors}
             selectedSurface={selectedSurface}
-            onAdd={onAdd}
+            onAdd={() => { mapSearch.cancel(); onAdd(); }}
             onChangeSurface={onChangeSurface}
           />
         </View>
-        <View style={styles.searchBar}>
-          <Search color={colors.textMuted} size={19} strokeWidth={2.5} />
-          <AppTextInput
-            accessibilityLabel="Find in inventory map"
-            autoCapitalize="none"
-            onChangeText={setQuery}
-            onSubmitEditing={submitSearch}
-            placeholder="Find and expand path"
-            placeholderTextColor={colors.textMuted}
-            returnKeyType="search"
-            style={styles.searchInput}
-            value={query}
-          />
-          {query.length > 0 ? (
-            <Pressable
-              accessibilityLabel="Clear map search"
-              accessibilityRole="button"
-              hitSlop={10}
-              onPress={clearSearch}
-              style={styles.iconButton}
-            >
-              <X color={colors.textMuted} size={18} strokeWidth={2.5} />
-            </Pressable>
-          ) : null}
-        </View>
+        <NativeNavigationSearch query={query} placeholder="Find and expand path" onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
         {state.status === 'ready' ? (
           <>
             <ScrollView
@@ -639,7 +631,7 @@ export function InventoryMapScreen({
                 onAddHere={openAddHere}
                 onBranchSwipeFinish={finishBranchSwipe}
                 onBranchSwipeProgress={driveBranchSwipeScroll}
-                onOpenInfo={(asset) => router.push(assetDetailHref(asset.id))}
+                onOpenInfo={(asset) => { mapSearch.cancel(); router.push(assetDetailHref(asset.id)); }}
                 onPressAsset={selectBranch}
                 onRefresh={refreshMap}
                 openPath={openPath}

@@ -41,22 +41,6 @@ export function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0,
     lineHeight: 30
   },
-  searchBar: {
-    alignItems: 'center',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 44,
-    paddingHorizontal: spacing.sm
-  },
-  searchInput: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 15,
-    minHeight: 44,
-    paddingVertical: 0
-  },
   iconButton: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -27,7 +27,6 @@ import { SearchHeader } from './SearchScreen';
 import { browseSortMenuGroups, createBrowseHeaderStyles } from './BrowseHeader';
 import { InventoryMapHeaderActions } from './InventoryMapScreen';
 import { darkPalette, lightPalette } from '../theme/tokens';
-import { AppTextInput } from '../components/AppTextInput';
 
 vi.mock('expo-router', () => ({
   router: { navigate: vi.fn(), push: vi.fn() },
@@ -116,9 +115,7 @@ describe('SearchScreen presentation helpers', () => {
   it('uses calm Browse fields while native controls own refinement styling', () => {
     const styles = createBrowseHeaderStyles(darkPalette);
 
-    expect(styles.searchBar.backgroundColor).toBe(darkPalette.surfaceMuted);
-    expect(styles.searchBar).not.toHaveProperty('borderWidth');
-    expect(styles.searchBarFocused.borderWidth).toBe(2);
+    expect(styles).not.toHaveProperty('searchBar');
     expect(styles.resultToolsRow).toMatchObject({ alignItems: 'center', minHeight: 44 });
     expect(styles.activeFilterToken).toMatchObject({ minHeight: 44 });
     expect(styles.activeFilterTokenPill).toMatchObject({ minHeight: 32 });
@@ -374,18 +371,13 @@ describe('SearchScreen presentation helpers', () => {
   });
 
   it('renders Browse as a content-first inventory surface with Type disclosed through Filters', () => {
-    const inputRef = { current: null } as RefObject<TextInput | null>;
     const header = renderHeader({
-      query: 'bike pump',
-      searchInputFocused: true,
-      searchInputRef: inputRef
+      query: 'bike pump'
     });
-    const input = findFirstByProp(header, 'accessibilityLabel', 'Search names, places, or tags');
+    const input = findFirstByProp(header, 'placeholder', 'Search names, places, or tags');
     const text = collectText(header);
 
-    expect(input?.type).toBe(AppTextInput);
-    expect(input?.props?.ref).toBe(inputRef);
-    expect(input?.props?.value).toBe('bike pump');
+    expect(input).toBeUndefined();
     expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
     expect(header.props?.style).toMatchObject({ marginBottom: 16 });
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse view')?.props?.accessibilityRole).toBe('tablist');
@@ -393,10 +385,8 @@ describe('SearchScreen presentation helpers', () => {
     expect(findFirstByProp(header, 'accessibilityLabel', 'Filter by type')).toBeUndefined();
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by kind')).toBeUndefined();
     expect(text).toEqual(expect.arrayContaining([
-      'Browse',
       'Home inventory'
     ]));
-    expect(input?.props?.placeholder).toBe('Search names, places, or tags');
     expect(text).not.toContain('No tags');
     expect(text).not.toContain('Any');
   });
@@ -662,8 +652,6 @@ function renderHeader(
     selectedSurface: 'list',
     selectedTagIds: [],
     filtersExpanded: false,
-    searchInputFocused: false,
-    searchInputRef: { current: null } as RefObject<TextInput | null>,
     sort: 'updated_desc',
     submittedQuery: '',
     onChangeSurface: vi.fn(),
@@ -672,15 +660,10 @@ function renderHeader(
     onChangeDraftCheckoutState: vi.fn(),
     onChangeDraftScope: vi.fn(),
     onChangeDraftTagIds: vi.fn(),
-    onChangeQuery: vi.fn(),
     onChangeSort: vi.fn(),
-    onClearQuery: vi.fn(),
     onClearFilters: vi.fn(),
     onRemoveFilter: vi.fn(),
     onToggleFilters: vi.fn(),
-    onSearchBlur: vi.fn(),
-    onSearchFocus: vi.fn(),
-    onSubmit: vi.fn(),
     ...overrides
   });
 }
