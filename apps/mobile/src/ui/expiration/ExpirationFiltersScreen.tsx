@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { SearchBarCommands } from 'react-native-screens';
-import { NativeRefinementButton } from '../components/NativeRefinementButton';
+import { ExpirationSheetActions } from './ExpirationSheetActions';
 import type { ExpirationFilter } from '../../application/expiration/ExpirationRepository';
 import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, useSettingsListStyles } from '../screens/SettingsList';
 import { ExpirationDateRange } from './ExpirationDateRange';
@@ -44,10 +44,10 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
   </ScrollView>
   <SafeAreaView edges={['bottom']} style={{backgroundColor:palette.background}}>
    <View testID="expiration-filter-footer" style={styles.footer}>
-    <NativeRefinementButton label={page === 'overview' ? 'Cancel' : 'Back'} accessibilityLabel="Cancel or return to filters" onPress={() => page === 'overview' ? onCancel() : open('overview')} />
-    <NativeRefinementButton label="Apply filters" accessibilityLabel="Apply expiration filters" disabled={rangeError} onPress={() => onApply(draft)} />
+    <ExpirationSheetActions secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'} disabled={rangeError}
+      onBack={() => page === 'overview' ? onCancel() : open('overview')} onApply={() => onApply(draft)} />
    </View>
   </SafeAreaView>
  </KeyboardAvoidingView>;
 }
-const styles = StyleSheet.create({ shell: { flex: 1 }, content: { paddingBottom: 20 }, footer: { paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 } });
+const styles = StyleSheet.create({ shell: { flex: 1 }, content: { paddingBottom: 20 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });
