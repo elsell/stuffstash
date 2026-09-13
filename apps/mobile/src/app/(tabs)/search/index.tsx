@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useAppServices } from '../../ui/navigation/AppServicesContext';
-import { parseBrowseRouteParams } from '../../ui/screens/BrowseRouteParams';
-import { SearchScreen } from '../../ui/screens/SearchScreen';
+import { useAppServices } from '../../../ui/navigation/AppServicesContext';
+import { parseBrowseRouteParams } from '../../../ui/screens/BrowseRouteParams';
+import { SearchScreen } from '../../../ui/screens/SearchScreen';
 
 export default function SearchRoute() {
   const {

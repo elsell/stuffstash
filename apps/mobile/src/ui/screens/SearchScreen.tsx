@@ -1,3 +1,4 @@
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { browseExpirationFilter } from '../expiration/BrowseExpirationFilter';
 import { expirationRouteParams } from '../expiration/ExpirationRouteState';
 import { isAccessFailure } from '../serverState/isAccessFailure';
@@ -11,7 +12,6 @@ import {
   useWindowDimensions,
   View
 } from 'react-native';
-import type { TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
@@ -149,10 +149,8 @@ export function SearchScreen({
   });
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const queryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mapPathStore = useRef(new Map<string, readonly string[]>());
-  const searchInputRef = useRef<TextInput>(null);
   const lastRequestedQuery = useRef(initialQuery.trim());
   const identity = inventoryScope.data;
   const scopeIdentity = identity ? JSON.stringify([serverState.scopeId, identity.tenantId, identity.inventoryId]) : undefined;
@@ -304,8 +302,10 @@ export function SearchScreen({
 
   function updateSurface(nextSurface: InventoryMapSurface): void {
     if (nextSurface === surface) return;
+    const nextQuery = cancelPendingSearch();
+    setSubmittedQuery(nextQuery);
     setSurface(nextSurface);
-    syncBrowseRoute({ surface: nextSurface });
+    syncBrowseRoute({ surface: nextSurface, query: nextQuery });
   }
 
   function openFilters(expanded: boolean): void {
@@ -380,11 +380,13 @@ export function SearchScreen({
 
   if (surface === 'map') {
     return (
-      <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.shell} edges={['left', 'right']}>
         <InventoryMapScreen
           key={scopeIdentity}
           canAdd={inventoryContext?.canAdd ?? false}
           inventoryMapQuery={inventoryMapQuery}
+          searchQuery={query}
+          onChangeSearchQuery={setQuery}
           pathStore={mapPathStore}
           selectedSurface={surface}
           onAdd={() => router.navigate('/add')}
@@ -395,13 +397,15 @@ export function SearchScreen({
   }
 
   return (
-    <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList
         key={`${resultScope}:${numColumns.toString()}`}
         data={listItems}
         keyExtractor={keyBrowseListItem}
         columnWrapperStyle={numColumns === 2 ? styles.cardRow : undefined}
         contentContainerStyle={styles.content}
+        contentInsetAdjustmentBehavior="automatic"
         keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
         numColumns={numColumns}
@@ -426,8 +430,6 @@ export function SearchScreen({
             scope={scope}
             selectedSurface={surface}
             selectedTagIds={selectedTagIds}
-            searchInputRef={searchInputRef}
-            searchInputFocused={isSearchFocused}
             sort={sort}
             statusMessage={state.status === 'error' && state.phase === 'replacement'
               ? state.message
@@ -441,18 +443,13 @@ export function SearchScreen({
             onChangeDraftLifecycleState={(value) => setFilterDraft((draft) => ({ ...draft, lifecycleState: value }))}
             onChangeDraftScope={(value) => setFilterDraft((draft) => ({ ...draft, scope: value }))}
             onChangeDraftTagIds={(value) => setFilterDraft((draft) => ({ ...draft, tagIds: value }))}
-            onChangeQuery={scheduleSearch}
             onChangeSort={updateSort}
             onChangeSurface={updateSurface}
             onClearFilters={clearFilters}
-            onClearQuery={clearSearch}
             onRemoveFilter={removeFilter}
             onRetryResults={retryResults}
             onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })}
             onRetryTags={() => void tags.refetch({ cancelRefetch: false })}
-            onSearchBlur={() => setIsSearchFocused(false)}
-            onSearchFocus={() => setIsSearchFocused(true)}
-            onSubmit={() => submitQuery()}
             onToggleFilters={openFilters}
           />
         }

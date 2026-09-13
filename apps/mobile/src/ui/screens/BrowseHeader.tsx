@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from 'react';
+import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -7,8 +7,7 @@ import {
   Text,
   View
 } from 'react-native';
-import type { TextInput } from 'react-native';
-import { Check, Plus, Search, X } from 'lucide-react-native';
+import { Check, Plus, X } from 'lucide-react-native';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type {
   AssetBrowseCheckoutFilter,
@@ -57,8 +56,6 @@ export type SearchHeaderProps = {
   readonly scope: BrowseScope;
   readonly selectedSurface: InventoryMapSurface;
   readonly selectedTagIds: readonly string[];
-  readonly searchInputRef: RefObject<TextInput | null>;
-  readonly searchInputFocused: boolean;
   readonly sort: AssetBrowseSort;
   readonly statusMessage?: string;
   readonly submittedQuery: string;
@@ -70,18 +67,13 @@ export type SearchHeaderProps = {
   readonly onChangeDraftLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
   readonly onChangeDraftScope: (scope: BrowseScope) => void;
   readonly onChangeDraftTagIds: (tagIds: readonly string[]) => void;
-  readonly onChangeQuery: (query: string) => void;
   readonly onChangeSort: (sort: AssetBrowseSort) => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onClearFilters: () => void;
-  readonly onClearQuery: () => void;
   readonly onRemoveFilter: (token: BrowseFilterToken) => void;
   readonly onRetryInventoryContext?: () => void;
   readonly onRetryResults?: () => void;
   readonly onRetryTags?: () => void;
-  readonly onSearchBlur: () => void;
-  readonly onSearchFocus: () => void;
-  readonly onSubmit: () => void;
   readonly onToggleFilters: (expanded: boolean) => void;
 };
 
@@ -101,8 +93,6 @@ export function SearchHeader({
   scope,
   selectedSurface,
   selectedTagIds,
-  searchInputRef,
-  searchInputFocused,
   sort,
   statusMessage,
   submittedQuery,
@@ -114,18 +104,13 @@ export function SearchHeader({
   onChangeDraftLifecycleState,
   onChangeDraftScope,
   onChangeDraftTagIds,
-  onChangeQuery,
   onChangeSort,
   onChangeSurface,
   onClearFilters,
-  onClearQuery,
   onRemoveFilter,
   onRetryInventoryContext,
   onRetryResults,
   onRetryTags,
-  onSearchBlur,
-  onSearchFocus,
-  onSubmit,
   onToggleFilters
 }: SearchHeaderProps) {
   const styles = stylesForPalette(palette);
@@ -150,7 +135,6 @@ export function SearchHeader({
     <View style={baseStyles.header}>
       <View style={styles.headerTopRow}>
         <View style={styles.titleBlock}>
-          <Text accessibilityRole="header" style={styles.title}>Browse</Text>
           {inventoryContext ? (
             <Text numberOfLines={1} style={styles.inventoryContext}>{inventoryContext}</Text>
           ) : inventoryContextStatus === 'loading' ? (
@@ -181,37 +165,10 @@ export function SearchHeader({
         </View>
       </View>
 
-      <View style={[styles.searchBar, searchInputFocused ? styles.searchBarFocused : null]}>
-        <Search color={palette.textMuted} size={19} strokeWidth={2.25} />
-        <AppTextInput
-          accessibilityLabel="Search names, places, or tags"
-          autoCapitalize="none"
-          ref={searchInputRef}
-          onBlur={onSearchBlur}
-          onChangeText={onChangeQuery}
-          onFocus={onSearchFocus}
-          onSubmitEditing={onSubmit}
-          placeholder="Search names, places, or tags"
-          placeholderTextColor={palette.textMuted}
-          returnKeyType="search"
-          style={styles.searchInput}
-          value={query}
-        />
-        {query.length > 0 ? (
-          <Pressable
-            accessibilityLabel="Clear search"
-            accessibilityRole="button"
-            onPress={onClearQuery}
-            style={({ pressed }) => [styles.iconButton, pressed ? styles.controlPressed : null]}
-          >
-            <X color={palette.textMuted} size={18} strokeWidth={2.5} />
-          </Pressable>
-        ) : null}
-        {isLoading ? <ActivityIndicator color={palette.accent} size="small" /> : null}
-      </View>
 
       {onExpiration ? <NativeActionMenu accessibilityLabel="Browse expiration dates for active items" groups={[{id:'expiration',items:([{id:'soon',label:'Expiring soon'},{id:'expired',label:'Expired'},{id:'all',label:'All dates'}] as const).map(option=>({...option,onPress:()=>onExpiration(option.id)}))}]} trigger={{kind:'label',label:'Expiration · Active items'}} /> : null}
       <View style={styles.resultToolsRow}>
+        {isLoading ? <ActivityIndicator accessibilityLabel="Searching inventory" color={palette.accent} size="small" /> : null}
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}
         </Text>
@@ -510,9 +467,6 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     inventoryContextError: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
     inventoryContextRetryButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
     inventoryContextRetry: { color: palette.action, fontSize: 13, fontWeight: '700', paddingVertical: spacing.xs },
-    searchBar: { alignItems: 'center', backgroundColor: palette.surfaceMuted, borderRadius: radius.lg, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingLeft: spacing.md, paddingRight: 2 },
-    searchBarFocused: { borderColor: palette.action, borderWidth: 2 },
-    searchInput: { color: palette.text, flex: 1, fontSize: 16, minHeight: 48, paddingVertical: 0 },
     iconButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
     resultToolsRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm, minHeight: 44 },
     resultSummary: { color: palette.textMuted, flex: 1, fontSize: 13, fontWeight: '600' },

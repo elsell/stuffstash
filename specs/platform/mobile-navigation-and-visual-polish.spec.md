@@ -123,3 +123,24 @@ gesture-driven containment exploration.
   appearance, and the Map gesture states on a real native build in CI or on a
   device. This repository must not require a local native build on a
   disk-constrained development host.
+
+## Browse native search (2026-09-13)
+
+- Browse has a nested native stack inside its existing tab, retaining the `/search`
+  route and tab identity. A system navigation search bar serves both list and map;
+  remove custom in-content search boxes and duplicate Browse titles.
+- Use the Expiration search convention: visible stacked native search, system
+  clear/cancel and keyboard Search, no focus on entry. Keep list debounce and
+  authorized result/filter/pagination semantics. Map search still finds an item
+  and opens its containment path; update it after a short typing pause as well as
+  explicit keyboard submission. Native callbacks must submit their event text.
+- Carry current text across list/map switches, settling pending list search before
+  the switch so delayed callbacks cannot restore the old surface. Existing list
+  refinements and map path state remain intact. Clearing search clears map highlight
+  without discarding the current map path. Restore route text in the native field.
+- A shared native navigation-search adapter owns native clear/cancel/field sync;
+  domain search behavior remains in the corresponding screen/application query.
+  Do not add dependencies or change backend/security contracts.
+- Validate field restoration, clear/submit semantics, switch races, map path
+  behavior and existing Browse regressions remotely/CI; run critic before merge
+  and follow the signed TestFlight workflow through upload.

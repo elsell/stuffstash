@@ -1,3 +1,7 @@
+import { navigationOptions, dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { AppFeedbackProvider } from '../feedback/AppFeedback';
+import { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
+import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { SearchScreen } from './SearchScreen';
@@ -180,4 +184,24 @@ it('retries unavailable context before showing cached Browse results again', asy
     const retry = h.allByType('Pressable').find(node => node.queryAll(child => child.type === 'Text' && child.children.includes('Retry')).length > 0);
     await h.press(retry!); await settle(h); expect(h.allText()).toContain('Verified row');
   } finally { await h.unmount(); }
+});
+
+it('keeps native search and refinements across an immediate List/Map switch',async()=>{
+ const h=new MobileRenderHarness();const client=createMobileQueryClient();resetNavigation();
+ const props=propsFor({initialTagIds:['tag'],inventoryMapQuery:new InventoryMapQuery({listActiveInventoryMapAssets:async()=>({sessionScopeId:'scope',tenantId:tenantId('tenant'),inventoryId:inventoryId('inventory'),inventoryName:'Home',permissions:['view'],assets:[]})})});
+ const nativeSearch=()=> (navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void;onCancelButtonPress:()=>void;placeholder:string}}).headerSearchBarOptions;
+ const switchTo=async(label:string)=>h.run(()=>h.allByType('NativeSegmentedControl').find(node=>node.props.values?.includes('Map'))?.props.onValueChange(label));
+ try{
+  await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);
+  await settle(h);await settle(h);
+  await h.run(()=>nativeSearch().onChangeText({nativeEvent:{text:'Tent'}}));
+  await switchTo('Map');await settle(h);
+  expect(nativeSearch().placeholder).toBe('Find and expand path');
+  await h.run(()=>new Promise(resolve=>setTimeout(resolve,320)));
+  expect(dispatchedActions().filter(action=>action.type==='setParams').at(-1)).toMatchObject({params:{surface:'map',query:'Tent',tagId:['tag']}});
+  await switchTo('List');await settle(h);
+  expect(nativeSearch().placeholder).toBe('Search names, places, or tags');
+  expect(h.byLabel('Filters, 1 applied')).toBeDefined();
+  await h.run(()=>nativeSearch().onCancelButtonPress());await settle(h);
+ }finally{await h.unmount();}
 });
