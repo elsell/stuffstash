@@ -2639,9 +2639,9 @@ S110,Settings / dirty editor exit,privacy,"Account scope, data use and permissio
 S110,Settings / dirty editor exit,notifications,System notification entry and state,pending,,
 S110,Settings / dirty editor exit,media,"Camera, library, files and audio",pending,,
 S110,Settings / dirty editor exit,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S111,Reminders / defaults,task,Task clarity and platform-pattern fit,pending,,
-S111,Reminders / defaults,navigation,"Navigation, hierarchy and return",pending,,
-S111,Reminders / defaults,selection,Value selection and current value,pending,,
+S111,Reminders / defaults,task,Task clarity and platform-pattern fit,source-reviewed,Defaults use a switch; type mode uses native picker; timing allows presets and custom numeric entry. Native runtime pending.,
+S111,Reminders / defaults,navigation,"Navigation, hierarchy and return",source-reviewed,Type page groups override and timing; simple mode choice remains in place; timing route supports custom value. Native runtime pending.,
+S111,Reminders / defaults,selection,Value selection and current value,source-reviewed,Current defaults/custom/off mode visible; same-value selection does not save; inheritance restores correctly (6 focused remote tests). Native runtime pending.,
 S111,Reminders / defaults,modality,Presentation and dismissal,pending,,
 S111,Reminders / defaults,layout,"Safe areas, scroll edges and overlays",pending,,
 S111,Reminders / defaults,adaptation,Phone/tablet/window reflow,pending,,
@@ -2656,16 +2656,16 @@ S111,Reminders / defaults,accessibility,"VoiceOver/TalkBack names, roles, states
 S111,Reminders / defaults,motion,Reduced motion and feedback alternatives,pending,,
 S111,Reminders / defaults,content,"Lists, hierarchy, density and pagination",pending,,
 S111,Reminders / defaults,search,"Search, scope and filters",pending,,
-S111,Reminders / defaults,loading,"Loading, background refresh and progress",pending,,
-S111,Reminders / defaults,recovery,"Empty, error, denied and retry",pending,,
-S111,Reminders / defaults,editing,"Draft, save, cancel, undo and interruption",pending,,
+S111,Reminders / defaults,loading,"Loading, background refresh and progress",source-reviewed,Editor locks selection and timing while saving; parent busy state disables competitors. Native runtime pending.,
+S111,Reminders / defaults,recovery,"Empty, error, denied and retry",source-reviewed,Failed mode remains visible with Retry/Discard; remote test proves saved inheritance restored on Discard. Native runtime pending.,
+S111,Reminders / defaults,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Submitted mode retained on failure; explicit discard restores original; pending ref prevents duplicate save. Native runtime pending.,
 S111,Reminders / defaults,privacy,"Account scope, data use and permissions",pending,,
 S111,Reminders / defaults,notifications,System notification entry and state,pending,,
 S111,Reminders / defaults,media,"Camera, library, files and audio",pending,,
 S111,Reminders / defaults,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S112,Reminders / type override,task,Task clarity and platform-pattern fit,pending,,
-S112,Reminders / type override,navigation,"Navigation, hierarchy and return",pending,,
-S112,Reminders / type override,selection,Value selection and current value,pending,,
+S112,Reminders / type override,task,Task clarity and platform-pattern fit,source-reviewed,Defaults use a switch; type mode uses native picker; timing allows presets and custom numeric entry. Native runtime pending.,M36
+S112,Reminders / type override,navigation,"Navigation, hierarchy and return",source-reviewed,Type page groups override and timing; simple mode choice remains in place; timing route supports custom value. Native runtime pending.,M36
+S112,Reminders / type override,selection,Value selection and current value,source-reviewed,Current defaults/custom/off mode visible; same-value selection does not save; inheritance restores correctly (6 focused remote tests). Native runtime pending.,M36
 S112,Reminders / type override,modality,Presentation and dismissal,pending,,
 S112,Reminders / type override,layout,"Safe areas, scroll edges and overlays",pending,,
 S112,Reminders / type override,adaptation,Phone/tablet/window reflow,pending,,
@@ -2680,9 +2680,9 @@ S112,Reminders / type override,accessibility,"VoiceOver/TalkBack names, roles, s
 S112,Reminders / type override,motion,Reduced motion and feedback alternatives,pending,,
 S112,Reminders / type override,content,"Lists, hierarchy, density and pagination",pending,,
 S112,Reminders / type override,search,"Search, scope and filters",pending,,
-S112,Reminders / type override,loading,"Loading, background refresh and progress",pending,,
-S112,Reminders / type override,recovery,"Empty, error, denied and retry",pending,,
-S112,Reminders / type override,editing,"Draft, save, cancel, undo and interruption",pending,,
+S112,Reminders / type override,loading,"Loading, background refresh and progress",source-reviewed,Editor locks selection and timing while saving; parent busy state disables competitors. Native runtime pending.,M36
+S112,Reminders / type override,recovery,"Empty, error, denied and retry",source-reviewed,Failed mode remains visible with Retry/Discard; remote test proves saved inheritance restored on Discard. Native runtime pending.,M36
+S112,Reminders / type override,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Submitted mode retained on failure; explicit discard restores original; pending ref prevents duplicate save. Native runtime pending.,M36
 S112,Reminders / type override,privacy,"Account scope, data use and permissions",pending,,
 S112,Reminders / type override,notifications,System notification entry and state,pending,,
 S112,Reminders / type override,media,"Camera, library, files and audio",pending,,

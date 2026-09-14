@@ -11,6 +11,8 @@ import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersS
 import { OnboardingScreen } from '../src/ui/screens/OnboardingScreen';
 import { OnboardingCommand, type OnboardingStartState } from '../src/application/onboarding/OnboardingCommand';
 import { onboardingFakes } from '../src/application/onboarding/OnboardingTestSupport';
+import { ExpirationReminderEditor } from '../src/ui/components/ExpirationReminderEditor';
+import type { ExpirationReminderPolicy } from '../src/domain/notifications/Notification';
 import { AppearancePicker } from '../src/ui/components/AppearancePicker';
 import { TagColorPicker } from '../src/ui/components/TagColorPicker';
 import { ExpirationField } from '../src/ui/components/ExpirationField';
@@ -134,6 +136,7 @@ function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
   const { preference } = useAppearance();
   const [color, setColor] = useState('');
   const [expiration, setExpiration] = useState('No expiration');
+  const [reminder, setReminder] = useState<ExpirationReminderPolicy | null>(null);
   return <FixturePage>
     <Button title="Back to audit menu" onPress={onBack} />
     <AppearancePicker />
@@ -142,6 +145,10 @@ function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
     <Text>{`Color value: ${color || 'none'}`}</Text>
     <ExpirationField initialPickerDate={new Date(2026, 8, 14, 12)} onChange={value => setExpiration(value?.date ?? 'No expiration')} />
     <Text>{`Expiration value: ${expiration}`}</Text>
+    <ExpirationReminderEditor initialPolicy={reminder}
+      inheritedPolicy={{ enabled: true, upcoming: true, expired: true, advanceDays: 7 }}
+      onSave={async value => setReminder(value)} onEditDays={() => {}} />
+    <Text>{`Reminder mode: ${reminder === null ? 'defaults' : reminder.enabled ? 'custom' : 'off'}`}</Text>
   </FixturePage>;
 }
 

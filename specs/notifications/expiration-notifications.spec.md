@@ -400,3 +400,9 @@ control, opened from the system search affordance. Search matches readable city
 names and accepts valid explicit IANA identifiers. Clearing/cancelling search
 restores available choices without saving. A failed time-zone save retains the
 previous saved selection and displays recovery feedback.
+
+A type's reminder inheritance mode is a single native in-place picker labeled
+Reminders, with Use defaults, Custom, and Off choices. Keep the current mode
+visible and preserve the existing inherited-policy explanation. Saving locks the
+picker; failure retains the attempted mode with explicit Retry/Discard actions.
+Discard restores the saved mode, and choosing the current mode does not resave.

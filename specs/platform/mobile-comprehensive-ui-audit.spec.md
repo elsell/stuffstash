@@ -236,3 +236,7 @@ runner and recent simulator logs restricted to the StuffStash process. Collectio
 runs after failures and must not change a failed test result to success or prevent
 already available screenshots/results from being uploaded. These synthetic,
 credential-free audit jobs retain artifacts for the existing fourteen-day window.
+
+The native settings fixture must verify reminder mode selection in place: choose
+Custom, observe its timing controls and saved mode, then restore Use defaults
+and observe inherited mode without a navigation transition.

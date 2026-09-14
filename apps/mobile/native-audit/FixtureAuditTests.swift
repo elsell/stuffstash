@@ -227,6 +227,22 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testReminderModeUsesMenuWithoutNavigation() {
+    openSettingsControls()
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch
+    for _ in 0..<4 where !choice.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(choice.isHittable)
+    choice.tap()
+    app.buttons["Custom"].tap()
+    XCTAssertTrue(app.staticTexts["Reminder mode: custom"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Before expiration"].exists)
+    choice.tap()
+    app.buttons["Use defaults"].tap()
+    XCTAssertTrue(app.staticTexts["Reminder mode: defaults"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Before expiration"].exists)
+    capture("reminder-mode-in-place")
+  }
+
   func testColorPickerOpensDirectlyAndClearPreservesParentDraft() {
     openSettingsControls()
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
