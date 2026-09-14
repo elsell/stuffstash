@@ -7,6 +7,8 @@ on:
       - '.github/workflows/mobile-native-audit.yml'
       - 'apps/mobile/native-audit/**'
       - 'scripts/prepare-ios-audit-target.rb'
+      - 'scripts/prepare-mobile-audit-fixtures.py'
+      - 'scripts/test-prepare-mobile-audit-fixtures.py'
 
 permissions:
   contents: read
@@ -22,15 +24,17 @@ env:
 
 jobs:
   ios:
-    name: iOS simulator (${{ matrix.device }})
+    name: iOS ${{ matrix.suite }} (${{ matrix.device }})
     runs-on: macos-26
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         device: ['iPhone 17', 'iPad mini (A17 Pro)']
+        suite: ['onboarding', 'fixtures']
     env:
       NODE_ENV: production
+      AUDIT_SUITE: ${{ matrix.suite }}
       EX_DEV_CLIENT_NETWORK_INSPECTOR: 'false'
       STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: 'true'
       EXPO_PUBLIC_STUFF_STASH_API_BASE_URL: ''
@@ -49,11 +53,15 @@ jobs:
           pnpm install --frozen-lockfile
           test "$(xcodebuild -version | sed -n '1p')" = 'Xcode 26.6'
           test "$(pod --version)" = '1.17.0'
+          python3 scripts/test-prepare-mobile-audit-fixtures.py
       - name: Install native dependencies
         working-directory: apps/mobile/ios
         run: pod install --deployment
       - name: Add runner-only XCTest target
         run: ruby scripts/prepare-ios-audit-target.rb
+      - name: Install isolated fixture routes
+        if: matrix.suite == 'fixtures'
+        run: python3 scripts/prepare-mobile-audit-fixtures.py
       - name: Run native interaction audit
         env:
           AUDIT_DEVICE: ${{ matrix.device }}
@@ -82,7 +90,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: native-audit-${{ matrix.device }}-${{ github.sha }}
+          name: native-audit-${{ matrix.suite }}-${{ matrix.device }}-${{ github.sha }}
           path: ${{ runner.temp }}/native-audit
           retention-days: 14
           if-no-files-found: warn

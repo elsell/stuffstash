@@ -60,6 +60,22 @@ controlled test backend; no production authentication bypass, user inventory dat
 or signing secret may be used to make UI tests convenient. Expand scenarios and
 record actual runtime evidence in the surface ledger as the audit proceeds.
 
+The native audit may additionally build a runner-only fixture application. Its
+route root must be installed only in an ephemeral GitHub Actions checkout, with
+an explicit fixture suite selection and an untouched copy of the production
+routes retained. The ordinary onboarding suite still uses the production root.
+Fixture routes compose production UI components with synthetic props and in-memory
+ports, using the real Expo Router stack, native control adapters, theme, keyboard,
+and feedback providers. They must not import production credentials or connect to
+an inventory service. No fixture entrypoint, authentication exception, or runtime
+fixture flag may enter the distribution bundle. Include fixture sources in
+TypeScript checks and record the suite separately in native artifacts.
+
+Begin fixture runtime coverage with Browse/expiration filter sheets and feedback;
+verify menu selection stays in place, bottom actions remain hittable, draft values
+reach the caller, and date-range and tag pages retain accessible return actions.
+This is component/native integration evidence, not authenticated end-to-end coverage.
+
 Workflow timeouts bound failed builds. Use scheduled sleep intervals while waiting
 for GitHub jobs; do not cancel a healthy build because it is slow.
 

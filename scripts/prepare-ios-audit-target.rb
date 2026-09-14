@@ -11,7 +11,10 @@ abort 'Audit target already exists' if project.targets.any? { |target| target.na
 
 target = project.new_target(:ui_test_bundle, 'StuffStashAuditTests', :ios, '15.1')
 target.add_dependency(app)
-source = project.main_group.new_file('../native-audit/OnboardingAuditTests.swift')
+suite = ENV.fetch('AUDIT_SUITE', 'onboarding')
+abort 'Unknown audit suite' unless %w[onboarding fixtures].include?(suite)
+test_source = suite == 'fixtures' ? 'FixtureAuditTests.swift' : 'OnboardingAuditTests.swift'
+source = project.main_group.new_file("../native-audit/#{test_source}")
 target.source_build_phase.add_file_reference(source)
 target.build_configurations.each do |configuration|
   configuration.build_settings.merge!({
