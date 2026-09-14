@@ -43,6 +43,7 @@ const AppFeedbackContext = createContext<AppFeedbackContextValue | null>(null);
 
 export function AppFeedbackProvider({ children }: { readonly children: ReactNode }) {
   const [activeNotice, setActiveNotice] = useState<ActiveNotice | null>(null);
+  const noticeSequence = useRef(0);
   const insets = useSafeAreaInsets();
 
   const value = useMemo<AppFeedbackContextValue>(() => ({
@@ -69,15 +70,15 @@ export function AppFeedbackProvider({ children }: { readonly children: ReactNode
       );
     },
     showNotice: (input) => {
-      setActiveNotice((current) => ({
+      setActiveNotice({
         ...input,
-        id: (current?.id ?? 0) + 1
-      }));
+        id: ++noticeSequence.current
+      });
     }
   }), []);
 
-  const dismissNotice = useCallback(() => {
-    setActiveNotice(null);
+  const dismissNotice = useCallback((id: number) => {
+    setActiveNotice(current => current?.id === id ? null : current);
   }, []);
 
   return (
@@ -85,6 +86,7 @@ export function AppFeedbackProvider({ children }: { readonly children: ReactNode
       {children}
       {activeNotice ? (
         <AppNotice
+          key={activeNotice.id}
           notice={activeNotice}
           topOffset={insets.top + spacing.sm}
           onDismiss={dismissNotice}
@@ -109,7 +111,7 @@ function AppNotice({
 }: {
   readonly topOffset: number;
   readonly notice: ActiveNotice;
-  readonly onDismiss: () => void;
+  readonly onDismiss: (id: number) => void;
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
@@ -141,10 +143,10 @@ function AppNotice({
         useNativeDriver: true
       })
     ]).start(() => {
-      onDismiss();
+      onDismiss(notice.id);
       afterDismiss?.();
     });
-  }, [onDismiss, opacity, translateY]);
+  }, [notice.id, onDismiss, opacity, translateY]);
 
   useEffect(() => {
     Animated.parallel([

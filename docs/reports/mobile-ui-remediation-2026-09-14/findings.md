@@ -14,7 +14,7 @@
 
 | M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
 | M11 | Newly selected custom-field applicability targets cannot be removed before saving | Investigating contract | CustomizationEditorFields only appends targets and displays selected targets as static Existing text, including unsaved additions; distinguish immutable saved scope from editable draft |
-| M12 | Replacement notices can inherit the prior notice timer/animation lifecycle | Open | AppFeedback reuses unkeyed AppNotice and callback clears whichever notice is current; old dismissal must not remove newer feedback |
+| M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Open | InventoryAssetsRouteScreen/LocationAssetsRouteScreen/LocationsScreen ErrorState renders text only; preserve context and offer retry |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;

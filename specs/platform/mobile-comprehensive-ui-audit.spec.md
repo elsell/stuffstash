@@ -106,3 +106,10 @@ from the already authorized active inventory tree through the location summary
 and view model; do not fetch unrelated inventories or expose unavailable ancestors.
 Indicate a partial path when the supplied tree cannot resolve the full ancestry.
 Keep filtering by stable location ID and preserve draft/apply behavior.
+
+## Notice replacement lifecycle
+
+Each global notice owns its timer and animation lifecycle. Replacing a notice
+starts a fresh display interval. A delayed dismissal from a replaced notice must
+not remove its successor. Use stable monotonic notice identity and clean up the
+old timer on replacement.
