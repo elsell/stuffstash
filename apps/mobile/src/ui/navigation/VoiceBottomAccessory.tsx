@@ -68,7 +68,7 @@ export function VoiceBottomAccessory() {
     >
       {isInline ? null : (
         <Pressable
-          accessibilityLabel="Open voice session"
+          accessibilityLabel={`Open voice session. ${presentation.title}. ${presentation.subtitle}`}
           accessibilityRole="button"
           onPress={openVoiceSheet}
           style={styles.statusRegion}
@@ -105,7 +105,7 @@ export function VoiceBottomAccessory() {
           <ActivityIndicator color={palette.onAction} size="small" />
         ) : state.stage === 'listening' ? (
           <View style={styles.sendButtonContent}>
-            <VoiceLevelMeter
+            <VoiceLevelMeter onAction
               level={state.status === 'ready' ? state.realtime?.recordingLevel ?? 0 : 0}
               size="compact"
             />

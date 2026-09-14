@@ -102,3 +102,13 @@ approval/cancellation and staged-photo metadata as an initial-turn proposal.
 Exactly one decision is sent; completion settles the active turn. Socket errors
 and invalid response frames must reject the active follow-up and clear review
 availability, even when the initial turn's promise has already completed.
+
+### Voice accessory and composer audit corrections
+
+Recording-level indicators outside an action button use the semantic action
+foreground against the surface; indicators inside an action button use its
+on-action foreground. Do not reuse an on-action color on an unrelated background.
+The voice accessory's status target includes the complete presentation title and
+subtitle in its accessible name, even when its compact visible text truncates.
+These label/color corrections require native light/dark and assistive-technology
+review; source checks alone do not certify their runtime presentation.
