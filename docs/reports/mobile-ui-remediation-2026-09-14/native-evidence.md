@@ -71,3 +71,7 @@ universal across devices/runs.
 Production onboarding URL entry still failed on both devices; keyboard dismissal
 was consequently not reached. The iPad landscape adaptation scenario passed.
 No additional whole-surface or accessibility claims follow from these scenarios.
+
+Inspected the [iPhone medium-detent screenshot](evidence/expiration-phone-medium-34903318947.png):
+all six filter rows and the Apply/Cancel footer are visible. This is diagnostic
+presentation evidence, not evidence of expansion or date/keyboard completion.
