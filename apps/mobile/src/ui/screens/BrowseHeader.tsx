@@ -30,8 +30,6 @@ export type SearchHeaderProps = {
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly inventoryContext?: string;
-  readonly inventoryContextStatus?: 'loading' | 'ready' | 'error';
   readonly palette: MobileColorPalette;
   readonly resultCount: number;
   readonly scope: BrowseScope;
@@ -44,7 +42,6 @@ export type SearchHeaderProps = {
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onClearFilters: () => void;
   readonly onRemoveFilter: (token: BrowseFilterToken) => void;
-  readonly onRetryInventoryContext?: () => void;
   readonly onRetryResults?: () => void;
   readonly onToggleFilters: () => void;
 };
@@ -53,8 +50,6 @@ export function SearchHeader({
   isLoading,
   lifecycleState,
   checkoutState,
-  inventoryContext,
-  inventoryContextStatus = 'ready',
   palette,
   resultCount,
   scope,
@@ -67,7 +62,6 @@ export function SearchHeader({
   onChangeSurface,
   onClearFilters,
   onRemoveFilter,
-  onRetryInventoryContext,
   onRetryResults,
   onToggleFilters
 }: SearchHeaderProps) {
@@ -89,30 +83,8 @@ export function SearchHeader({
 
   return (
     <View style={baseStyles.header}>
-      <View style={styles.headerTopRow}>
-        <View style={styles.titleBlock}>
-          {inventoryContext ? (
-            <Text numberOfLines={1} style={styles.inventoryContext}>{inventoryContext}</Text>
-          ) : inventoryContextStatus === 'loading' ? (
-            <Text numberOfLines={1} style={styles.inventoryContext}>Loading inventory…</Text>
-          ) : (
-            <View style={styles.inventoryContextError}>
-              <Text numberOfLines={1} style={styles.inventoryContext}>Inventory context unavailable</Text>
-              {onRetryInventoryContext ? (
-                <Pressable accessibilityLabel="Retry inventory context" accessibilityRole="button" onPress={onRetryInventoryContext} style={styles.inventoryContextRetryButton}>
-                  <Text style={styles.inventoryContextRetry}>Retry</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          )}
-        </View>
-        <View style={styles.headerActions}>
-          <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
-        </View>
-      </View>
-
-
       <View style={styles.resultToolsRow}>
+        <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
         {isLoading ? <ActivityIndicator accessibilityLabel="Searching inventory" color={palette.accent} size="small" /> : null}
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}
@@ -187,16 +159,6 @@ const baseStyles = StyleSheet.create({
 
 export function createBrowseHeaderStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
-    headerTopRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
-    headerActions: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs },
-    headerIconButton: { alignItems: 'center', borderRadius: 22, justifyContent: 'center', minHeight: 44, minWidth: 44 },
-    titleBlock: { flex: 1, minWidth: 0 },
-    title: { color: palette.text, fontSize: 30, fontWeight: '700', lineHeight: 36 },
-    inventoryContext: { color: palette.textMuted, fontSize: 13, fontWeight: '600', marginTop: 1 },
-    inventoryContextError: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
-    inventoryContextRetryButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
-    inventoryContextRetry: { color: palette.action, fontSize: 13, fontWeight: '700', paddingVertical: spacing.xs },
-    iconButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
     resultToolsRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm, minHeight: 44 },
     resultSummary: { color: palette.textMuted, flex: 1, fontSize: 13, fontWeight: '600' },
     activeFilterRow: { alignItems: 'center', gap: spacing.xs, paddingBottom: spacing.xs, paddingTop: spacing.sm },
