@@ -143,3 +143,12 @@ done
 python3 "$repo_root/scripts/test-ios-signing.py"
 
 bash "$repo_root/scripts/test-cleanup-ios-signing.sh"
+
+"$runtime_node" --test "$repo_root/scripts/test-testflight-notes.mjs"
+notes_workflow="$repo_root/.github/workflows/testflight-notes.yml"
+grep -q "if: github.ref == 'refs/heads/main'" "$notes_workflow"
+grep -q 'ref: main' "$notes_workflow"
+grep -q 'needs: publish' "$workflow"
+grep -q 'uses: ./.github/workflows/testflight-notes.yml' "$workflow"
+grep -q 'build_number: ${{ needs.publish.outputs.build_number }}' "$workflow"
+grep -q 'build_number: ${{ steps.uploaded_build.outputs.build_number }}' "$workflow"
