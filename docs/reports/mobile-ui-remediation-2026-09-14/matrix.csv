@@ -377,7 +377,7 @@ R016,browse-filters.tsx,motion,Reduced motion and feedback alternatives,pending,
 R016,browse-filters.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R016,browse-filters.tsx,search,"Search, scope and filters",pending,,
 R016,browse-filters.tsx,loading,"Loading, background refresh and progress",pending,,
-R016,browse-filters.tsx,recovery,"Empty, error, denied and retry",pending,,
+R016,browse-filters.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R016,browse-filters.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R016,browse-filters.tsx,privacy,"Account scope, data use and permissions",pending,,
 R016,browse-filters.tsx,notifications,System notification entry and state,pending,,
@@ -401,7 +401,7 @@ R017,expiration-filters.tsx,motion,Reduced motion and feedback alternatives,pend
 R017,expiration-filters.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R017,expiration-filters.tsx,search,"Search, scope and filters",pending,,
 R017,expiration-filters.tsx,loading,"Loading, background refresh and progress",pending,,
-R017,expiration-filters.tsx,recovery,"Empty, error, denied and retry",pending,,
+R017,expiration-filters.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R017,expiration-filters.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R017,expiration-filters.tsx,privacy,"Account scope, data use and permissions",pending,,
 R017,expiration-filters.tsx,notifications,System notification entry and state,pending,,
@@ -521,7 +521,7 @@ R022,notifications.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R022,notifications.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R022,notifications.tsx,search,"Search, scope and filters",pending,,
 R022,notifications.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R022,notifications.tsx,recovery,"Empty, error, denied and retry",pending,,
+R022,notifications.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R022,notifications.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R022,notifications.tsx,privacy,"Account scope, data use and permissions",pending,,
 R022,notifications.tsx,notifications,System notification entry and state,pending,,
@@ -665,7 +665,7 @@ R028,settings/household/asset-types/[resourceId].tsx,motion,Reduced motion and f
 R028,settings/household/asset-types/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",pending,,
+R028,settings/household/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R028,settings/household/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
@@ -689,7 +689,7 @@ R029,settings/household/asset-types/index.tsx,motion,Reduced motion and feedback
 R029,settings/household/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R029,settings/household/asset-types/index.tsx,search,"Search, scope and filters",pending,,
 R029,settings/household/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R029,settings/household/asset-types/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R029,settings/household/asset-types/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R029,settings/household/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R029,settings/household/asset-types/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R029,settings/household/asset-types/index.tsx,notifications,System notification entry and state,pending,,
@@ -713,7 +713,7 @@ R030,settings/household/asset-types/new.tsx,motion,Reduced motion and feedback a
 R030,settings/household/asset-types/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R030,settings/household/asset-types/new.tsx,search,"Search, scope and filters",pending,,
 R030,settings/household/asset-types/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R030,settings/household/asset-types/new.tsx,recovery,"Empty, error, denied and retry",pending,,
+R030,settings/household/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R030,settings/household/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R030,settings/household/asset-types/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R030,settings/household/asset-types/new.tsx,notifications,System notification entry and state,pending,,
@@ -737,7 +737,7 @@ R031,settings/household/fields/[resourceId].tsx,motion,Reduced motion and feedba
 R031,settings/household/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R031,settings/household/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R031,settings/household/fields/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R031,settings/household/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",pending,,
+R031,settings/household/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R031,settings/household/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R031,settings/household/fields/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R031,settings/household/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
@@ -761,7 +761,7 @@ R032,settings/household/fields/index.tsx,motion,Reduced motion and feedback alte
 R032,settings/household/fields/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R032,settings/household/fields/index.tsx,search,"Search, scope and filters",pending,,
 R032,settings/household/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R032,settings/household/fields/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R032,settings/household/fields/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R032,settings/household/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R032,settings/household/fields/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R032,settings/household/fields/index.tsx,notifications,System notification entry and state,pending,,
@@ -785,7 +785,7 @@ R033,settings/household/fields/new.tsx,motion,Reduced motion and feedback altern
 R033,settings/household/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R033,settings/household/fields/new.tsx,search,"Search, scope and filters",pending,,
 R033,settings/household/fields/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R033,settings/household/fields/new.tsx,recovery,"Empty, error, denied and retry",pending,,
+R033,settings/household/fields/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R033,settings/household/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R033,settings/household/fields/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R033,settings/household/fields/new.tsx,notifications,System notification entry and state,pending,,
@@ -857,7 +857,7 @@ R036,settings/inventory/asset-types/[resourceId].tsx,motion,Reduced motion and f
 R036,settings/inventory/asset-types/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",pending,,
+R036,settings/inventory/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R036,settings/inventory/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
@@ -881,7 +881,7 @@ R037,settings/inventory/asset-types/index.tsx,motion,Reduced motion and feedback
 R037,settings/inventory/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R037,settings/inventory/asset-types/index.tsx,search,"Search, scope and filters",pending,,
 R037,settings/inventory/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R037,settings/inventory/asset-types/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R037,settings/inventory/asset-types/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R037,settings/inventory/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R037,settings/inventory/asset-types/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R037,settings/inventory/asset-types/index.tsx,notifications,System notification entry and state,pending,,
@@ -905,7 +905,7 @@ R038,settings/inventory/asset-types/new.tsx,motion,Reduced motion and feedback a
 R038,settings/inventory/asset-types/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R038,settings/inventory/asset-types/new.tsx,search,"Search, scope and filters",pending,,
 R038,settings/inventory/asset-types/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R038,settings/inventory/asset-types/new.tsx,recovery,"Empty, error, denied and retry",pending,,
+R038,settings/inventory/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R038,settings/inventory/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R038,settings/inventory/asset-types/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R038,settings/inventory/asset-types/new.tsx,notifications,System notification entry and state,pending,,
@@ -929,7 +929,7 @@ R039,settings/inventory/fields/[resourceId].tsx,motion,Reduced motion and feedba
 R039,settings/inventory/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R039,settings/inventory/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
@@ -953,7 +953,7 @@ R040,settings/inventory/fields/index.tsx,motion,Reduced motion and feedback alte
 R040,settings/inventory/fields/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R040,settings/inventory/fields/index.tsx,search,"Search, scope and filters",pending,,
 R040,settings/inventory/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R040,settings/inventory/fields/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R040,settings/inventory/fields/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R040,settings/inventory/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R040,settings/inventory/fields/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R040,settings/inventory/fields/index.tsx,notifications,System notification entry and state,pending,,
@@ -977,7 +977,7 @@ R041,settings/inventory/fields/new.tsx,motion,Reduced motion and feedback altern
 R041,settings/inventory/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R041,settings/inventory/fields/new.tsx,search,"Search, scope and filters",pending,,
 R041,settings/inventory/fields/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R041,settings/inventory/fields/new.tsx,recovery,"Empty, error, denied and retry",pending,,
+R041,settings/inventory/fields/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R041,settings/inventory/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R041,settings/inventory/fields/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R041,settings/inventory/fields/new.tsx,notifications,System notification entry and state,pending,,
@@ -1025,7 +1025,7 @@ R043,settings/inventory/notification-editor.tsx,motion,Reduced motion and feedba
 R043,settings/inventory/notification-editor.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R043,settings/inventory/notification-editor.tsx,search,"Search, scope and filters",pending,,
 R043,settings/inventory/notification-editor.tsx,loading,"Loading, background refresh and progress",pending,,
-R043,settings/inventory/notification-editor.tsx,recovery,"Empty, error, denied and retry",pending,,
+R043,settings/inventory/notification-editor.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R043,settings/inventory/notification-editor.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R043,settings/inventory/notification-editor.tsx,privacy,"Account scope, data use and permissions",pending,,
 R043,settings/inventory/notification-editor.tsx,notifications,System notification entry and state,pending,,
@@ -1049,7 +1049,7 @@ R044,settings/inventory/notifications.tsx,motion,Reduced motion and feedback alt
 R044,settings/inventory/notifications.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R044,settings/inventory/notifications.tsx,search,"Search, scope and filters",pending,,
 R044,settings/inventory/notifications.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R044,settings/inventory/notifications.tsx,recovery,"Empty, error, denied and retry",pending,,
+R044,settings/inventory/notifications.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R044,settings/inventory/notifications.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R044,settings/inventory/notifications.tsx,privacy,"Account scope, data use and permissions",pending,,
 R044,settings/inventory/notifications.tsx,notifications,System notification entry and state,pending,,
@@ -1073,7 +1073,7 @@ R045,settings/inventory/tags/[resourceId].tsx,motion,Reduced motion and feedback
 R045,settings/inventory/tags/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,recovery,"Empty, error, denied and retry",pending,,
+R045,settings/inventory/tags/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R045,settings/inventory/tags/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,notifications,System notification entry and state,pending,,
@@ -1097,7 +1097,7 @@ R046,settings/inventory/tags/index.tsx,motion,Reduced motion and feedback altern
 R046,settings/inventory/tags/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R046,settings/inventory/tags/index.tsx,search,"Search, scope and filters",pending,,
 R046,settings/inventory/tags/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R046,settings/inventory/tags/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R046,settings/inventory/tags/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R046,settings/inventory/tags/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R046,settings/inventory/tags/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R046,settings/inventory/tags/index.tsx,notifications,System notification entry and state,pending,,
@@ -1121,7 +1121,7 @@ R047,settings/inventory/tags/new.tsx,motion,Reduced motion and feedback alternat
 R047,settings/inventory/tags/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R047,settings/inventory/tags/new.tsx,search,"Search, scope and filters",pending,,
 R047,settings/inventory/tags/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R047,settings/inventory/tags/new.tsx,recovery,"Empty, error, denied and retry",pending,,
+R047,settings/inventory/tags/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
 R047,settings/inventory/tags/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R047,settings/inventory/tags/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R047,settings/inventory/tags/new.tsx,notifications,System notification entry and state,pending,,

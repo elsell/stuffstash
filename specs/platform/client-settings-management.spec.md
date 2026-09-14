@@ -385,3 +385,8 @@ Horizontal settings rows must constrain long values to available width and allow
 wrapping; values must not force labels or disclosure controls outside the row.
 The existing stacked layout for enlarged text remains in use. Apply this to both
 read-only values (including server URLs) and navigation-row trailing values.
+
+The same scrollable recovery requirement applies to customization collection and
+editor failures, notification route loading failures, stale or invalid reminder
+links, and filter loading failures. Retry and dismissal actions remain in their
+existing context; route validation and authorization behavior must not change.
