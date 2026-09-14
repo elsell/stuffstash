@@ -7,6 +7,7 @@ export default defineConfig({
   test: { setupFiles: ['./native-runtime.setup.ts'] },
   resolve: {
     alias: [
+      { find: /^@react-navigation\/elements$/, replacement: support('react-navigation-elements.ts') },
       { find: /^@expo\/ui\/swift-ui$/, replacement: support('expo-swift-ui.ts') },
       { find: /^@expo\/ui\/swift-ui\/modifiers$/, replacement: support('expo-swift-ui-modifiers.ts') },
       { find: /^expo-notifications$/, replacement: support('expo-notifications.ts') },

@@ -1,3 +1,4 @@
+import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import { navigationOptions, dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
@@ -197,6 +198,10 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
   await h.run(()=>nativeSearch().onChangeText({nativeEvent:{text:'Tent'}}));
   await switchTo('Map');await settle(h);
   expect(nativeSearch().placeholder).toBe('Find and expand path');
+  expect(h.byTestId('browse-map-frame')?.props.style).toContainEqual({ paddingTop: 144 });
+  await h.run(() => setNativeHeaderHeight(210));
+  expect(h.byTestId('browse-map-frame')?.props.style).toContainEqual({ paddingTop: 210 });
+  await h.run(() => setNativeHeaderHeight(144));
   await h.run(()=>new Promise(resolve=>setTimeout(resolve,320)));
   expect(dispatchedActions().filter(action=>action.type==='setParams').at(-1)).toMatchObject({params:{surface:'map',query:'Tent',tagId:['tag']}});
   await switchTo('List');await settle(h);

@@ -162,3 +162,15 @@ gesture-driven containment exploration.
   and latest search text; cancel pending debounce before navigation. Browse's
   applied filters remain unchanged when returning, while its latest query is
   settled into the route and result state.
+
+### Map navigation-header clearance (2026-09-14)
+
+- Native search makes the iOS header translucent. Browse List continues using
+  automatic scroll insets; Map must instead offset its entire fixed header and
+  column layout by the native navigation header's measured height.
+- Read the reactive header height through @react-navigation/elements 2.9.20,
+  promoting the already locked navigation dependency to an explicit dependency.
+  Do not hard-code status/search-bar heights. Android's opaque header already
+  positions content below itself and receives no additional top padding.
+- Map columns and horizontal breadcrumbs must not each apply automatic navigation
+  insets. Keep existing bottom dock clearance and horizontal gestures unchanged.

@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { browseExpirationFilter } from '../expiration/BrowseExpirationFilter';
 import { expirationRouteParams } from '../expiration/ExpirationRouteState';
@@ -6,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
+  Platform,
   FlatList,
   Pressable,
   Text,
@@ -124,6 +126,7 @@ export function SearchScreen({
   searchAssetsQuery
 }: SearchScreenProps) {
   const { fontScale, width } = useWindowDimensions();
+  const navigationHeaderHeight = useHeaderHeight();
   const palette = useAppearancePalette();
   const serverState = useMobileServerStateScope();
   const inventoryScope = useQuery({
@@ -380,7 +383,7 @@ export function SearchScreen({
 
   if (surface === 'map') {
     return (
-      <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <SafeAreaView testID="browse-map-frame" style={[styles.shell, { paddingTop: Platform.OS === 'ios' ? navigationHeaderHeight : 0 }]} edges={['left', 'right']}>
         <InventoryMapScreen
           key={scopeIdentity}
           canAdd={inventoryContext?.canAdd ?? false}
