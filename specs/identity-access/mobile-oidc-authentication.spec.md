@@ -349,3 +349,14 @@ Local Dex must include a public mobile client for development builds.
 - The invitation acceptance surface must honor the full platform Dynamic Type range without font-size caps. At accessibility sizes it must switch to a top-aligned, scrollable, reduced-chrome layout whose headings, metadata, and action labels wrap without clipping or hiding the primary action.
 - Mobile must expose inventory sharing from a permission-gated Settings destination. Inviting must support viewer/editor selection, creation, one-time link copy, the native Share sheet, expiration context, and safe retry/error behavior in light, dark, high-contrast, VoiceOver, and accessibility Dynamic Type layouts.
 - Mobile invitation tests must cover parser adversaries, deep-link routing before and after onboarding, matching and mismatched identities, every terminal invitation state, explicit acceptance, context refresh, one-time link visibility, clipboard/share behavior, and token redaction.
+
+### Onboarding text-entry ownership
+
+The onboarding native text field owns the text being edited. JavaScript receives
+changes for validation and submission without writing each keystroke back into
+the native field. This addresses the character loss reproduced by the iPhone
+controlled/uncontrolled comparison in native audit run 34903318947. Seed each
+field when its form step mounts; preserve the entered value through errors and
+initialize the next step from the current draft. Start-over creates clean fields.
+Do not apply this policy indiscriminately to search or externally controlled
+editors. Keep the full-address native assertion and verify both devices again.
