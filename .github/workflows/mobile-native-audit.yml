@@ -77,7 +77,7 @@ jobs:
             -destination "platform=iOS Simulator,name=$AUDIT_DEVICE" \
             -resultBundlePath "$RUNNER_TEMP/native-audit/results.xcresult" \
             CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES \
-            | tee "$RUNNER_TEMP/native-audit/xcodebuild.log"
+            2>&1 | tee "$RUNNER_TEMP/native-audit/xcodebuild.log"
       - name: Export screenshots for review
         if: always()
         run: |
@@ -86,6 +86,34 @@ jobs:
               --path "$RUNNER_TEMP/native-audit/results.xcresult" \
               --output-path "$RUNNER_TEMP/native-audit/screenshots"
           fi
+      - name: Collect application crash evidence
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+
+          output = Path(os.environ["RUNNER_TEMP"]) / "native-audit" / "diagnostics"
+          output.mkdir(parents=True, exist_ok=True)
+          reports = Path.home() / "Library/Logs/DiagnosticReports"
+          for report in reports.glob("StuffStash*"):
+              if report.is_file():
+                  shutil.copy2(report, output / report.name)
+          devices = subprocess.run(["xcrun", "simctl", "list", "devices", "booted", "--json"], capture_output=True, text=True, check=True)
+          for runtime in json.loads(devices.stdout).get("devices", {}).values():
+              for device in runtime:
+                  if device.get("state") != "Booted":
+                      continue
+                  with (output / (device["udid"] + "-application.log")).open("w") as log:
+                      try:
+                          subprocess.run(["xcrun", "simctl", "spawn", device["udid"], "log", "show", "--last", "1h", "--style", "compact", "--predicate", 'process == "StuffStash"'], stdout=log, stderr=subprocess.STDOUT, timeout=60, check=False)
+                      except subprocess.TimeoutExpired:
+                          log.write("Application log collection timed out for this simulator.\n")
+          PYTHON
       - name: Save native evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

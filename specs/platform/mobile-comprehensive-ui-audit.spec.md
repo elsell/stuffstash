@@ -229,3 +229,10 @@ system color picker's lowercase close label. The onboarding command-submission
 fixture dismisses the keyboard through its explicit accessory before submission;
 keyboard-obscured action reachability remains a separate layout finding and may
 not be considered fixed by changing the test sequence.
+
+Native audit artifacts must retain xcodebuild standard error as well as standard
+output. After a run, collect StuffStash-named diagnostic reports from the ephemeral
+runner and recent simulator logs restricted to the StuffStash process. Collection
+runs after failures and must not change a failed test result to success or prevent
+already available screenshots/results from being uploaded. These synthetic,
+credential-free audit jobs retain artifacts for the existing fourteen-day window.
