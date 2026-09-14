@@ -73,3 +73,11 @@ and customization collections. Clear presentation on navigation blur and ignore 
 late completion from a previous focus session. Keep query access/error handling
 unchanged. Background updates must remain functional without shifting the list or
 presenting a pull spinner. Prevent direct query-activity binding mechanically.
+
+## Custom field choices
+
+New custom field Type and Applies to choices use the shared native menu picker,
+with the existing immutable edit values retained. A picker must not publish changes
+after its containing form becomes read-only, including an option opened before
+permissions change. Retain outer field draft/save semantics and validate selected
+values against the supplied options.

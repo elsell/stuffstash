@@ -3,7 +3,7 @@
 | ID | Finding | Status | Evidence / next verification |
 | --- | --- | --- | --- |
 | M01 | Short filter choices cause unnecessary drilldown | Implemented; runtime pending | Existing audit F01; in-place choices, draft/apply/cancel tests and iOS/Android adapter contracts pass remotely; full suite 1319 plus 3 added adapter tests; critic found no draft/navigation blocker |
-| M02 | Inconsistent custom/native choice controls | Open | F02; platform adapter and consumers |
+| M02 | Custom field short choices use bespoke disclosure radios | Implemented; runtime pending | Shared native Type/Applies to menus, read-only transition guard; 34 focused tests and typecheck/structural; critic found no blockers |
 | M03 | Redundant exact-date staging | Open | F03; preserve precision and parent draft semantics |
 | M04 | Standard header actions remain custom on some screens | Open | F04; verify native adapters and toolbar consumers |
 | M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; runtime pending | Shared focus-aware lifecycle across all refresh owners; real query-cache and inbox blur tests; 1324 remote tests/typecheck/structural green; critic found no blockers |

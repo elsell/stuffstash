@@ -110,7 +110,8 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).toContain('Name is required.');
     expect(screen.byLabel('Choose Type. Current value Text')).toBeDefined();
     expect(screen.byLabel('Choose Applies to. Current value All assets')).toBeDefined();
-    expect(screen.all().filter((node) => node.props.accessibilityRole === 'radio')).toHaveLength(0);
+    expect(screen.byLabel('Choose Type. Current value Text')?.props.accessibilityState.expanded).toBe(false);
+    expect(screen.byLabel('Choose Applies to. Current value All assets')?.props.accessibilityState.expanded).toBe(false);
   });
 
   it('reveals invalid generated stable-key validation and keeps save unavailable', async () => {
