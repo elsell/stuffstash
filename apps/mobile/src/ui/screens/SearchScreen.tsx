@@ -190,7 +190,6 @@ export function SearchScreen({
       : { status: 'ready', results };
   const tagFilters = tags.data ?? [];
   const inventoryContext = context.data;
-  const inventoryContextStatus = context.isError ? 'error' : context.data ? 'ready' : 'loading';
   const isLoadingMore = browse.isFetchingNextPage;
   const localRouteEffectKeys = useRef(new Set<string>());
   useEffect(() => () => {
@@ -372,9 +371,6 @@ export function SearchScreen({
         <InventoryMapScreen
           key={scopeIdentity}
           canAdd={inventoryContext?.canAdd ?? false}
-          inventoryContext={inventoryContext?.inventoryName}
-          inventoryContextStatus={inventoryContextStatus}
-          onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })}
           inventoryMapQuery={inventoryMapQuery}
           searchQuery={query}
           onChangeSearchQuery={setQuery}
@@ -389,7 +385,7 @@ export function SearchScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      <BrowseAddHeader inventoryContext={inventoryContext?.inventoryName} inventoryContextStatus={inventoryContextStatus} onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })} canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
+      <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
       <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList
         key={`${resultScope}:${numColumns.toString()}`}

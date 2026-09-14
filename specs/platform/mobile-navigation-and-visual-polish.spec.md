@@ -227,18 +227,6 @@ gesture-driven containment exploration.
   a late response must not navigate after the sheet closes. Serialize submissions
   synchronously so repeated taps cannot produce duplicate navigation.
 
-## Browse inventory context in navigation (2026-09-14)
-
-- Browse shows the selected inventory in its leading native navigation slot, like
-  Home, instead of repeating it beneath a Browse title in scrolling content.
-  Keep the full inventory name accessible and truncate the visible label to fit
-  alongside Add and compact Search. Tapping the context opens the inventory switcher.
-- List and Map use the same context header. Loading and failed context states clear
-  old inventory names; failed context remains retryable. Preserve native actions
-  and Map's measured header clearance.
-- List combines its List/Map control with the result summary and Filters in one
-  compact content row. Applied filters and error recovery stay in scrolling content.
-
 ## Native tab-header scroll appearance (2026-09-14)
 
 - Home and Browse navigation bars float over scrolling content on iOS. Remove
@@ -249,7 +237,16 @@ gesture-driven containment exploration.
   header clearance around Browse Map's fixed controls. Android keeps its opaque
   native navigation bar and existing layout.
 - This corrects scroll appearance, not navigation placement. Preserve current
-  inventory selectors, permission-aware actions, notifications and compact search.
+  Home inventory selector, permission-aware actions, notifications and compact search.
 - Follow Apple's TN3106 navigation-bar appearance guidance and the pinned native
   stack adapter's scrollEdgeEffects API. Do not combine headerBlurEffect with the
   iOS 26 native scroll-edge material.
+
+## Inventory switching remains on Home (2026-09-14)
+
+- Keep the inventory switcher only on Home. Browse returns to its native Browse
+  title, Add and compact Search, without a leading inventory control or repeated
+  inventory row in content. Clear any prior leading header item explicitly.
+- Preserve the native transparent scroll-edge appearance and compact Browse
+  controls. Existing scoped queries, permission checks and result error recovery
+  remain responsible for loading the selected inventory.
