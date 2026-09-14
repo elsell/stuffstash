@@ -1,7 +1,6 @@
+import { BrowseAddHeader } from './BrowseAddHeader';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
-import { browseExpirationFilter } from '../expiration/BrowseExpirationFilter';
-import { expirationRouteParams } from '../expiration/ExpirationRouteState';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
@@ -43,10 +42,8 @@ import {
   BrowseLoadError,
   BrowsePaginationRetry
 } from './BrowseResultStates';
-import {
-  BrowseDraftFilters,
-  SearchHeader
-} from './BrowseHeader';
+import { SearchHeader } from './BrowseHeader';
+import type { BrowseDraftFilters } from './BrowseFilterState';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
 import { InventoryMapScreen } from './InventoryMapScreen';
 import {
@@ -59,7 +56,6 @@ import {
   cancelPendingBrowseSearch,
   commitBrowseFilterDraft,
   locationRowsFromAssetCards,
-  openBrowseFilterDraft,
   removeBrowseFilter
 } from './SearchScreenPresentation';
 import { createSearchScreenStyles } from './SearchScreen.styles';
@@ -144,13 +140,6 @@ export function SearchScreen({
   const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>(initialCheckoutState);
   const [sort, setSort] = useState<AssetBrowseSort>(initialSort);
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(normalizedInitialTags);
-  const [filterDraft, setFilterDraft] = useState<BrowseDraftFilters>({
-    scope: initialScope,
-    lifecycleState: initialLifecycleState,
-    checkoutState: initialCheckoutState,
-    tagIds: normalizedInitialTags
-  });
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mapPathStore = useRef(new Map<string, readonly string[]>());
@@ -200,7 +189,6 @@ export function SearchScreen({
       ? { status: 'loading', results, isInitial: !data }
       : { status: 'ready', results };
   const tagFilters = tags.data ?? [];
-  const tagFilterStatus = tags.isError ? 'error' : tags.data ? 'ready' : 'loading';
   const inventoryContext = context.data;
   const inventoryContextStatus = context.isError ? 'error' : context.data ? 'ready' : 'loading';
   const isLoadingMore = browse.isFetchingNextPage;
@@ -236,7 +224,6 @@ export function SearchScreen({
     setCheckoutState(initialCheckoutState);
     setSort(initialSort);
     setSelectedTagIds(nextTags);
-    setFilterDraft({ scope: initialScope, lifecycleState: initialLifecycleState, checkoutState: initialCheckoutState, tagIds: nextTags });
     lastRequestedQuery.current = nextQuery;
     loadFirstPage({ query: nextQuery });
   }, [
@@ -296,13 +283,6 @@ export function SearchScreen({
     submitQuery('');
   }
 
-  function updateSort(nextSort: AssetBrowseSort): void {
-    const nextQuery = cancelPendingSearch();
-    setSort(nextSort);
-    syncBrowseRoute({ query: nextQuery, sort: nextSort });
-    loadFirstPage({ query: nextQuery });
-  }
-
   function updateSurface(nextSurface: InventoryMapSurface): void {
     if (nextSurface === surface) return;
     const nextQuery = cancelPendingSearch();
@@ -311,9 +291,15 @@ export function SearchScreen({
     syncBrowseRoute({ surface: nextSurface, query: nextQuery });
   }
 
-  function openFilters(expanded: boolean): void {
-    if (expanded) setFilterDraft(openBrowseFilterDraft({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds }));
-    setFiltersExpanded(expanded);
+  function openFilters(): void {
+    if (!identity) return;
+    const nextQuery = cancelPendingSearch();
+    syncBrowseRoute({ query: nextQuery });
+    loadFirstPage({ query: nextQuery });
+    router.push({ pathname: '/browse-filters', params: {
+      ...browseRouteParamsForState({ surface, scope, lifecycleState, checkoutState, sort, tagIds: selectedTagIds, query: nextQuery }),
+      tenantId: identity.tenantId, inventoryId: identity.inventoryId, sessionScope: serverState.scopeId
+    } });
   }
 
   function applyFilters(filters: BrowseDraftFilters): void {
@@ -323,7 +309,6 @@ export function SearchScreen({
     setCheckoutState(committed.checkoutState);
     setScope(committed.scope);
     setSelectedTagIds(committed.tagIds);
-    setFiltersExpanded(false);
     syncBrowseRoute({ ...committed, query: nextQuery });
     loadFirstPage({ query: nextQuery });
   }
@@ -401,6 +386,7 @@ export function SearchScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
       <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList
         key={`${resultScope}:${numColumns.toString()}`}
@@ -418,24 +404,12 @@ export function SearchScreen({
         onRefresh={() => void refreshResults()}
         ListHeaderComponent={
           <SearchHeader
-            onExpiration={identity ? (mode, draft) => {
-              const nextQuery = cancelPendingSearch();
-              syncBrowseRoute({ query: nextQuery });
-              void loadFirstPage({ query: nextQuery });
-              router.push({ pathname: '/expiration', params: expirationRouteParams(
-                identity.tenantId, identity.inventoryId, browseExpirationFilter(mode, { ...draft, query: nextQuery })
-              ) });
-            } : undefined}
-            canAdd={inventoryContext?.canAdd ?? false}
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}
             checkoutState={checkoutState}
-            filtersExpanded={filtersExpanded}
-            filterDraft={filterDraft}
             inventoryContext={inventoryContext?.inventoryName}
             inventoryContextStatus={inventoryContextStatus}
             palette={palette}
-            query={query}
             resultCount={listItems.length}
             scope={scope}
             selectedSurface={surface}
@@ -446,20 +420,11 @@ export function SearchScreen({
               : scope === 'places' && places.isError ? 'Place summaries could not load. Your places are still available.' : undefined}
             submittedQuery={state.results.query}
             tagFilters={tagFilters}
-            tagFilterStatus={tagFilterStatus}
-            onApplyFilters={applyFilters}
-            onAdd={() => router.navigate('/add')}
-            onChangeDraftCheckoutState={(value) => setFilterDraft((draft) => ({ ...draft, checkoutState: value }))}
-            onChangeDraftLifecycleState={(value) => setFilterDraft((draft) => ({ ...draft, lifecycleState: value }))}
-            onChangeDraftScope={(value) => setFilterDraft((draft) => ({ ...draft, scope: value }))}
-            onChangeDraftTagIds={(value) => setFilterDraft((draft) => ({ ...draft, tagIds: value }))}
-            onChangeSort={updateSort}
             onChangeSurface={updateSurface}
             onClearFilters={clearFilters}
             onRemoveFilter={removeFilter}
             onRetryResults={retryResults}
             onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })}
-            onRetryTags={() => void tags.refetch({ cancelRefetch: false })}
             onToggleFilters={openFilters}
           />
         }

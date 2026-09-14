@@ -154,12 +154,12 @@ export function SettingsSwitchRow({ label, value, disabled = false, onValueChang
   </View></View>;
 }
 
-export function SettingsChoiceRow({ label, accessibilityLabel = label, selected, disabled = false, onPress }: {
+export function SettingsChoiceRow({ label, accessibilityLabel = label, selected, multiple = false, disabled = false, onPress }: {
   readonly label: string; readonly accessibilityLabel?: string; readonly selected: boolean;
-  readonly disabled?: boolean; readonly onPress: () => void;
+  readonly disabled?: boolean; readonly multiple?: boolean; readonly onPress: () => void;
 }) {
   const { palette, styles } = useSettingsListStyles();
-  return <Pressable accessibilityRole="radio" accessibilityLabel={accessibilityLabel} accessibilityState={{ checked: selected, disabled }} disabled={disabled} onPress={onPress}
+  return <Pressable accessibilityRole={multiple ? "checkbox" : "radio"} accessibilityLabel={accessibilityLabel} accessibilityState={{ checked: selected, disabled }} disabled={disabled} onPress={onPress}
     style={({ pressed }) => [styles.choiceRow, pressed && !disabled && styles.navigationRowPressed, disabled && { opacity: 0.55 }]}>
     <View style={styles.navigationRowContent}><Text style={[styles.rowLabel, styles.rowText]}>{label}</Text>
       {selected ? <Check size={20} color={palette.action} /> : null}

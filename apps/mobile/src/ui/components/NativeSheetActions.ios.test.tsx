@@ -1,11 +1,11 @@
 import React from 'react';
 import { expect,it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
-import { ExpirationSheetActions } from './ExpirationSheetActions.ios';
+import { NativeSheetActions } from './NativeSheetActions.ios';
 it('gives native sheet actions the full proposed width and content-driven height',async()=>{
  const h=new MobileRenderHarness();const actions:string[]=[];
  try{
-  await h.render(<ExpirationSheetActions secondaryLabel="Cancel" disabled={false} onApply={()=>actions.push('apply')} onBack={()=>actions.push('cancel')} />);
+  await h.render(<NativeSheetActions primaryLabel="Apply filters" secondaryLabel="Cancel" disabled={false} onApply={()=>actions.push('apply')} onBack={()=>actions.push('cancel')} />);
   expect(h.byType('SwiftUIHost')?.props.matchContents).toEqual({vertical:true});
   expect(h.byType('SwiftUIHost')?.props.style).toMatchObject({width:'100%'});
   const buttons=h.allByType('SwiftUIButton');expect(buttons).toHaveLength(2);
@@ -19,7 +19,7 @@ it('disables Apply for an invalid range while keeping Back available', async () 
   const h = new MobileRenderHarness();
   const actions: string[] = [];
   try {
-    await h.render(<ExpirationSheetActions secondaryLabel="Back" disabled onApply={() => actions.push('apply')} onBack={() => actions.push('back')} />);
+    await h.render(<NativeSheetActions primaryLabel="Apply filters" secondaryLabel="Back" disabled onApply={() => actions.push('apply')} onBack={() => actions.push('back')} />);
     const buttons = h.allByType('SwiftUIButton');
     expect(buttons[0].props.modifiers).toContainEqual({ type: 'disabled', value: true });
     await h.press(buttons[0]);

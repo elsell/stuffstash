@@ -174,3 +174,55 @@ gesture-driven containment exploration.
   positions content below itself and receives no additional top padding.
 - Map columns and horizontal breadcrumbs must not each apply automatic navigation
   insets. Keep existing bottom dock clearance and horizontal gestures unchanged.
+
+## Native Home and Browse actions (2026-09-14)
+
+- Browse moves Add out of its List/Map content rows into the native trailing
+  navigation bar beside compact system search. Keep the List/Map control in
+  content. Hide Add when inventory permissions disallow creation; preserve the
+  existing Add route and cancel any pending map search before opening it.
+- Home gains its own native stack within the existing Home tab, preserving its
+  root route through a pathless (home) route group. Keep the inventory dropdown's title/subtitle and switch behavior
+  as a custom leading header item. Bound its width and truncate visually while
+  keeping full accessible context. Do not add a duplicate Home heading.
+- Notifications, Add and Account become trailing native bar items. UIKit owns
+  symbols, grouping, backgrounds and hit targets. Use the real iOS 26 bar-item
+  badge for unread counts; retain full spoken count and loading/error labels.
+  Pre-26 systems retain the accessible count even when native badges are absent.
+- Preserve notification registration, inventory-scoped query identity, polling
+  and retry-on-open behavior. Present native toolbar data without duplicating
+  queries or introducing notification state into domain services.
+- Reuse a focused platform header-action adapter. iOS uses UIBarButtonItem via
+  native-stack items. Android's native-stack binding lacks that item API, so
+  place native Compose IconButtons in its headerRight slot. Non-mobile renderers
+  use accessible React Native controls for previews and tests.
+- Home content uses automatic scroll insets with no duplicate top safe-area
+  padding. Preserve Browse's measured map-header inset. Native bar options must
+  update on permission, notification count and scope changes.
+
+## Browse filter sheet (2026-09-14)
+
+- Replace Browse's inline expanded filter panel with a native form sheet,
+  initially about 70% height and expandable to full height. Keep a scrollable
+  overview of Type, Status, Availability, Tags, Sort and Expiration summary rows.
+  Use existing settings disclosure/checkmark patterns; show selections as row
+  context and drill into one choice category at a time.
+- Reset all changes only the sheet draft. Show results is a prominent full-width
+  native bottom action; Cancel/dismiss discards the draft and Back returns from a
+  choice page without losing choices. Share the native sheet-action adapter with
+  Expiration. Sort lives in this sheet instead of a second Browse toolbar icon;
+  indicate Relevance and disable explicit ordering while text/tags drive search.
+- Tags use native navigation search and multi-select checkmarks; other categories
+  use single-selection rows. Expiration offers its existing date-mode destinations
+  using current draft and query. Keep the explanation that expiration reviews
+  active assets, even when Browse lifecycle includes archived assets.
+- Pass canonical Browse route state plus tenant/inventory identity into the sheet.
+  Settle pending search before opening. Applying explicitly replaces every filter
+  parameter, including empty/default values, so Reset cannot retain old URL state.
+- Resolve tag choices through scoped server-query adapters. Reject wrong inventory,
+  tenant or session targets before and after loading, and revalidate scope before
+  Apply or expiration navigation. Cross-scope sheets must not display stale choices
+  or apply to a newly selected inventory.
+- Cancel, native dismissal and scope replacement abort pending Apply verification;
+  a late response must not navigate after the sheet closes. Serialize submissions
+  synchronously so repeated taps cannot produce duplicate navigation.

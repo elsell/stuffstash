@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
-import homeScreenSource from '../screens/HomeScreen.tsx?raw';
+import homeScreenSource from '../screens/HomeNavigationHeader.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import browseScreenSource from '../screens/SearchScreen.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
@@ -34,7 +34,9 @@ const nativeTabTriggerNames = (source: string): string[] =>
 
 describe('mobile navigation contract', () => {
   it('uses native tabs for Home and Browse navigation only', () => {
-    expect(nativeTabTriggerNames(tabLayoutSource)).toEqual(['index', 'search']);
+    expect(nativeTabTriggerNames(tabLayoutSource)).toEqual(['(home)', 'search']);
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home)/index.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home)/_layout.tsx');
     expect(tabLayoutSource).not.toContain('name="add"');
     expect(tabLayoutSource).not.toContain('name="settings"');
   });

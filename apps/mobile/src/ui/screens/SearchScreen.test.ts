@@ -24,7 +24,7 @@ import {
   shouldAutoFocusSearchInput
 } from './SearchScreenPresentation';
 import { SearchHeader } from './SearchScreen';
-import { browseSortMenuGroups, createBrowseHeaderStyles } from './BrowseHeader';
+import { createBrowseHeaderStyles } from './BrowseHeader';
 import { InventoryMapHeaderActions } from './InventoryMapScreen';
 import { darkPalette, lightPalette } from '../theme/tokens';
 
@@ -34,6 +34,8 @@ vi.mock('expo-router', () => ({
 }));
 
 vi.mock('lucide-react-native', () => ({
+  Bell: 'BellIcon',
+  UserCircle: 'UserCircleIcon',
   Camera: 'CameraIcon',
   Check: 'CheckIcon',
   CheckCircle2: 'CheckCircle2Icon',
@@ -372,13 +374,12 @@ describe('SearchScreen presentation helpers', () => {
 
   it('renders Browse as a content-first inventory surface with Type disclosed through Filters', () => {
     const header = renderHeader({
-      query: 'bike pump'
+
     });
     const input = findFirstByProp(header, 'placeholder', 'Search names, places, or tags');
     const text = collectText(header);
 
     expect(input).toBeUndefined();
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
     expect(header.props?.style).toMatchObject({ marginBottom: 16 });
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse view')?.props?.accessibilityRole).toBe('tablist');
     expect(findFirstByProp(header, 'selectedIndex', 0)?.props?.values).toEqual(['List', 'Map']);
@@ -391,79 +392,13 @@ describe('SearchScreen presentation helpers', () => {
     expect(text).not.toContain('Any');
   });
 
-  it('offers permitted users a full-size Add action from a populated Browse header', () => {
-    const permittedHeader = renderHeader({
-      canAdd: true,
-      resultCount: 3,
-      onAdd: () => router.navigate('/add')
-    });
-    const add = findFirstByProp(permittedHeader, 'accessibilityLabel', 'Add an asset');
-
-    expect(add?.props?.accessibilityRole).toBe('button');
-    expect(controlSize(add, 'minHeight')).toBeGreaterThanOrEqual(44);
-    expect(controlSize(add, 'minWidth')).toBeGreaterThanOrEqual(44);
-
-    const onPress = add?.props?.onPress;
-    if (typeof onPress !== 'function') throw new Error('Missing Browse Add handler');
-    onPress();
-
-    expect(router.navigate).toHaveBeenCalledWith('/add');
-    expect(findFirstByProp(
-      renderHeader({ canAdd: false, resultCount: 3 }),
-      'accessibilityLabel',
-      'Add an asset'
-    )).toBeUndefined();
+  it('keeps creation actions out of List and Map content headers', () => {
+    expect(findFirstByProp(renderHeader(), 'accessibilityLabel', 'Add an asset')).toBeUndefined();
+    expect(findFirstByProp(InventoryMapHeaderActions({
+      palette: lightPalette, selectedSurface: 'map', onChangeSurface: () => {}
+    }), 'accessibilityLabel', 'Add an asset')).toBeUndefined();
   });
 
-  it('keeps the permission-aware Add action when Browse switches to Map', () => {
-    const permittedActions = InventoryMapHeaderActions({
-      canAdd: true,
-      palette: lightPalette,
-      selectedSurface: 'map',
-      onAdd: () => router.navigate('/add'),
-      onChangeSurface: vi.fn()
-    });
-    const add = findFirstByProp(permittedActions, 'accessibilityLabel', 'Add an asset');
-
-    expect(add?.props?.accessibilityRole).toBe('button');
-    expect(controlSize(add, 'minHeight')).toBeGreaterThanOrEqual(44);
-    (add?.props?.onPress as (() => void) | undefined)?.();
-    expect(router.navigate).toHaveBeenCalledWith('/add');
-
-    expect(findFirstByProp(
-      InventoryMapHeaderActions({
-        canAdd: false,
-        palette: lightPalette,
-        selectedSurface: 'map',
-        onAdd: () => router.navigate('/add'),
-        onChangeSurface: vi.fn()
-      }),
-      'accessibilityLabel',
-      'Add an asset'
-    )).toBeUndefined();
-  });
-
-  it('uses native Type, Status, and Availability controls plus a selectable Tags list', () => {
-    const header = renderHeader({
-      filtersExpanded: true,
-      scope: 'places',
-      filterDraft: { scope: 'items', lifecycleState: 'active', checkoutState: 'any', tagIds: [] }
-    });
-    const text = collectText(header);
-
-    const type = findFirstByProp(header, 'accessibilityLabel', 'Filter by type');
-    expect(findFirstByProp(type, 'selectedIndex', 3)?.props?.values).toEqual(['All', 'Places', 'Containers', 'Items']);
-    const status = findFirstByProp(header, 'accessibilityLabel', 'Filter by status');
-    expect(findFirstByProp(status, 'selectedIndex', 0)?.props?.values).toEqual(['Active', 'Archived', 'All']);
-    const availability = findFirstByProp(header, 'accessibilityLabel', 'Filter by availability');
-    expect(findFirstByProp(availability, 'selectedIndex', 0)?.props?.values).toEqual(['Any', 'Available', 'Checked out']);
-    expect(text).toContain('Type');
-    expect(text).toContain('Status');
-    expect(text).toContain('Availability');
-    expect(text).toContain('Tags');
-    expect(text).not.toContain('Checkout');
-    expect(text).not.toContain('Stable');
-  });
 
   it('commits an applied Type and restores the applied Type after cancelling a later draft', () => {
     const initialApplied = { scope: 'places' as const, lifecycleState: 'active' as const, checkoutState: 'any' as const, tagIds: ['tag-tools'] };
@@ -480,88 +415,25 @@ describe('SearchScreen presentation helpers', () => {
 
   it('describes submitted search results without presenting a false total', () => {
     const header = renderHeader({
-      query: 'mug',
+
       resultCount: 20,
       submittedQuery: 'mug'
     });
     const text = collectText(header);
 
     expect(text).toContain('20 shown for “mug” · relevance');
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
   });
 
-  it('renders colored multi-select tag filters alphabetically in the filter sheet', () => {
-    const selectedTags: string[][] = [];
-    const header = renderHeader({
-      filtersExpanded: true,
-      selectedTagIds: ['tag-tools'],
-      filterDraft: { scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: ['tag-tools'] },
-      tagFilters: [
-        { id: 'tag-tools', key: 'tools', label: 'Tools', color: '#2F80ED' },
-        { id: 'tag-camping', key: 'camping', label: 'Camping', color: '#2E7D32' },
-        { id: 'tag-kids', key: 'kids', label: 'Kids' },
-        { id: 'tag-office', key: 'office', label: 'Office' },
-        { id: 'tag-travel', key: 'travel', label: 'Travel' }
-      ],
-      onChangeDraftTagIds: (tagIds) => {
-        selectedTags.push([...tagIds]);
-      }
-    });
 
-    const text = collectText(header);
-    expect(text).toEqual(expect.arrayContaining(['Tags', 'Status', 'Availability']));
-    expect(text).toContain('Tags');
-    expect(text).toContain('Tools');
-    const tagFilters = findFirstByProp(header, 'accessibilityLabel', 'Tag filters');
-    const tagText = collectText(tagFilters);
-    expect(tagText.indexOf('Camping')).toBeLessThan(tagText.indexOf('Kids'));
-    expect(tagText.indexOf('Kids')).toBeLessThan(tagText.indexOf('Office'));
-    expect(tagText.indexOf('Office')).toBeLessThan(tagText.indexOf('Tools'));
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Tag filters')).toBeTruthy();
-    expect(findFirstByProp(header, 'accessibilityLabel', 'Sort unavailable during search')?.props?.disabled).toBe(true);
-
-    const tools = findFirstByProp(header, 'accessibilityLabel', 'Filter by tag Tools');
-    expect(tools).toBeTruthy();
-    expect(tools?.props?.accessibilityRole).toBe('checkbox');
-    expect(tools?.props?.accessibilityState).toMatchObject({ checked: true });
-    expect(controlSize(tools, 'minHeight')).toBeGreaterThanOrEqual(44);
-    expect(findFirstByProp(tools, 'testID', 'tag-color-tag-tools')).toBeTruthy();
-    const kids = findFirstByProp(header, 'accessibilityLabel', 'Filter by tag Kids');
-    expect(kids?.props?.accessibilityState).toMatchObject({ checked: false });
-    expect(findFirstByProp(kids, 'testID', 'tag-color-tag-kids')).toBeTruthy();
-    const onPress = tools?.props?.onPress;
-    if (typeof onPress !== 'function') {
-      throw new Error('Missing tag filter press handler');
-    }
-    onPress();
-
-    expect(selectedTags).toEqual([[]]);
-  });
-
-  it('models Browse sort as an anchored native single-selection menu', () => {
-    const selected: string[] = [];
-    const groups = browseSortMenuGroups('updated_desc', (sort) => selected.push(sort));
-
-    expect(groups).toHaveLength(1);
-    expect(groups[0]?.items.map((item) => ({ id: item.id, selected: item.isSelected }))).toEqual([
-      { id: 'updated_desc', selected: true },
-      { id: 'id_asc', selected: false }
-    ]);
-    groups[0]?.items[1]?.onPress();
-    expect(selected).toEqual(['id_asc']);
-  });
 
   it('uses a compact native filter disclosure', () => {
-    const toggles: boolean[] = [];
+    let toggles = 0;
     const header = renderHeader({
-      filtersExpanded: false,
-      onToggleFilters: (expanded) => {
-        toggles.push(expanded);
-      }
+
+      onToggleFilters: () => { toggles++; }
     });
 
     const filters = findFirstByProp(header, 'accessibilityLabel', 'Filters');
-    expect(filters?.props?.accessibilityState).toMatchObject({ expanded: false });
     expect(filters?.props?.label).toBe('Filters');
     expect(filters?.props?.systemImage).toBe('line.3.horizontal.decrease');
 
@@ -571,10 +443,10 @@ describe('SearchScreen presentation helpers', () => {
     }
     onPress();
 
-    expect(toggles).toEqual([true]);
+    expect(toggles).toBe(1);
   });
 
-  it('presents filters and sort as one aligned native refinement toolbar', () => {
+  it('presents one native filter button with applied-count feedback', () => {
     const header = renderHeader({
       scope: 'containers',
       lifecycleState: 'archived',
@@ -588,8 +460,7 @@ describe('SearchScreen presentation helpers', () => {
     expect(filters?.props?.iconOnly).toBe(true);
     expect(filters?.props?.label).toBe('Filters');
     expect(filters?.props?.systemImage).toBe('line.3.horizontal.decrease');
-    expect(sort).toBeTruthy();
-    expect(sort?.props?.trigger).toEqual({ androidIcon: 'sort', kind: 'icon', systemImage: 'arrow.up.arrow.down' });
+    expect(sort).toBeUndefined();
     expect(styles.resultToolsRow).toMatchObject({ alignItems: 'center', minHeight: 44 });
     expect(styles).not.toHaveProperty('toolButton');
     expect(styles).not.toHaveProperty('toolButtonDisabled');
@@ -615,7 +486,7 @@ describe('SearchScreen presentation helpers', () => {
   it('shows removable applied-filter labels and clear all when multiple refinements are active', () => {
     const clears: string[] = [];
     const header = renderHeader({
-      filtersExpanded: true,
+
       lifecycleState: 'archived',
       selectedTagIds: ['tag-tools'],
       tagFilters: [{ id: 'tag-tools', key: 'tools', label: 'Tools' }],
@@ -643,24 +514,19 @@ function renderHeader(
     isLoading: false,
     lifecycleState: 'active',
     checkoutState: 'any',
-    filterDraft: { scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [] },
+
     inventoryContext: 'Home inventory',
     palette: lightPalette,
-    query: '',
+
     resultCount: 0,
     scope: 'all',
     selectedSurface: 'list',
     selectedTagIds: [],
-    filtersExpanded: false,
+
     sort: 'updated_desc',
     submittedQuery: '',
     onChangeSurface: vi.fn(),
-    onApplyFilters: vi.fn(),
-    onChangeDraftLifecycleState: vi.fn(),
-    onChangeDraftCheckoutState: vi.fn(),
-    onChangeDraftScope: vi.fn(),
-    onChangeDraftTagIds: vi.fn(),
-    onChangeSort: vi.fn(),
+
     onClearFilters: vi.fn(),
     onRemoveFilter: vi.fn(),
     onToggleFilters: vi.fn(),

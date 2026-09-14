@@ -33,3 +33,19 @@ it('keeps inbox access when registration fails and does not claim zero unread', 
     expect(opened).toBe(true);
   } finally { await harness.unmount(); }
 });
+it('provides the same scoped unread count and retry action to a native header', async () => {
+  const client = createMobileQueryClient(); const h = new MobileRenderHarness();
+  let action: import('./NativeHeaderActions.types').NativeHeaderAction | undefined;
+  let opened = 0;
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="server-user" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <NotificationBell tenantId="tenant" inventoryId="inventory" initialize={async () => {}} count={async () => 7}
+        onOpen={() => opened++} renderAction={value => { action = value; return null; }} />
+    </MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(action).toMatchObject({ kind: 'notifications', label: 'Notifications, 7 unread', badgeCount: 7 });
+    expect(h.allByType('Pressable')).toHaveLength(0);
+    await h.run(() => action?.onPress());
+    expect(opened).toBe(1);
+  } finally { await h.unmount(); }
+});
