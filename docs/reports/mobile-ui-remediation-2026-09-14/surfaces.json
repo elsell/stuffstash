@@ -287,376 +287,649 @@
   {
     "id": "S058",
     "surface": "onboarding / server entry",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
   },
   {
     "id": "S059",
     "surface": "onboarding / browser sign-in return",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
   },
   {
     "id": "S060",
     "surface": "onboarding / household setup",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
   },
   {
     "id": "S061",
     "surface": "onboarding / first inventory",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
   },
   {
     "id": "S062",
     "surface": "onboarding / partial setup recovery",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
   },
   {
     "id": "S063",
     "surface": "Home / expiration summary",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationHomeSection.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationHomeSection.tsx",
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
   },
   {
     "id": "S064",
     "surface": "Home / recent changes",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
   },
   {
     "id": "S065",
     "surface": "Home / checked-out return",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
   },
   {
     "id": "S066",
     "surface": "Home / native action header",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/HomeNavigationHeader.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeNavigationHeader.tsx",
+      "apps/mobile/src/ui/components/NativeHeaderActions.ios.tsx",
+      "apps/mobile/src/ui/components/NativeHeaderActions.android.tsx"
+    ]
   },
   {
     "id": "S067",
     "surface": "Browse / list grid",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/SearchScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/SearchScreen.tsx",
+      "apps/mobile/src/ui/components/AssetCard.tsx",
+      "apps/mobile/src/ui/components/NativeNavigationSearch.tsx"
+    ]
   },
   {
     "id": "S068",
     "surface": "Browse / containment map columns",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+      "apps/mobile/src/ui/screens/useInventoryMapSearch.ts"
+    ]
   },
   {
     "id": "S069",
     "surface": "Browse / map search path",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+      "apps/mobile/src/ui/screens/useInventoryMapSearch.ts"
+    ]
   },
   {
     "id": "S070",
     "surface": "Browse / list search",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/SearchScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/SearchScreen.tsx",
+      "apps/mobile/src/ui/components/AssetCard.tsx",
+      "apps/mobile/src/ui/components/NativeNavigationSearch.tsx"
+    ]
   },
   {
     "id": "S071",
     "surface": "Browse / filter overview",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "apps/mobile/src/ui/components/SettingsPickerRow.tsx",
+      "apps/mobile/src/ui/components/NativeSheetActions.ios.tsx"
+    ]
   },
   {
     "id": "S072",
     "surface": "Browse / tag selection",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "apps/mobile/src/ui/components/SettingsPickerRow.tsx",
+      "apps/mobile/src/ui/components/NativeSheetActions.ios.tsx"
+    ]
   },
   {
     "id": "S073",
     "surface": "Browse / expiration handoff",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "apps/mobile/src/ui/components/SettingsPickerRow.tsx",
+      "apps/mobile/src/ui/components/NativeSheetActions.ios.tsx"
+    ]
   },
   {
     "id": "S074",
     "surface": "Expiration / soon expired all dates",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationWorkspaceScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationWorkspaceScreen.tsx"
+    ]
   },
   {
     "id": "S075",
     "surface": "Expiration / filter overview",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
   },
   {
     "id": "S076",
     "surface": "Expiration / types selection",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
   },
   {
     "id": "S077",
     "surface": "Expiration / tags selection",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
   },
   {
     "id": "S078",
     "surface": "Expiration / locations selection",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
   },
   {
     "id": "S079",
     "surface": "Expiration / date range",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/expiration/ExpirationDateRange.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationDateRange.tsx"
+    ]
   },
   {
     "id": "S080",
     "surface": "Inventory switcher / inventory list",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
   },
   {
     "id": "S081",
     "surface": "Inventory switcher / household list",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
   },
   {
     "id": "S082",
     "surface": "Inventory switcher / load failure",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
   },
   {
     "id": "S083",
     "surface": "Inventory switcher / selection pending failure",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
   },
   {
     "id": "S084",
     "surface": "Add / main draft",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S085",
     "surface": "Add / kind choice",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S086",
     "surface": "Add / parent search",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S087",
     "surface": "Add / quick parent creation",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S088",
     "surface": "Add / type choice",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S089",
     "surface": "Add / tags select create",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S090",
     "surface": "Add / photo selection",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S091",
     "surface": "Add / custom fields",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S092",
     "surface": "Add / expiration exact date",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/ExpirationField.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationField.tsx",
+      "apps/mobile/src/ui/components/AssetExpirationEditor.tsx"
+    ]
   },
   {
     "id": "S093",
     "surface": "Add / expiration month year",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/ExpirationField.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationField.tsx",
+      "apps/mobile/src/ui/components/AssetExpirationEditor.tsx"
+    ]
   },
   {
     "id": "S094",
     "surface": "Add / draft recovery",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
   },
   {
     "id": "S095",
     "surface": "Asset / overflow commands",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+      "apps/mobile/src/ui/screens/AssetOverflowMenu.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
   },
   {
     "id": "S096",
     "surface": "Asset / checkout form",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
   },
   {
     "id": "S097",
     "surface": "Asset / return action",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
   },
   {
     "id": "S098",
     "surface": "Asset / archive restore delete",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+      "apps/mobile/src/ui/screens/AssetOverflowMenu.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
   },
   {
     "id": "S099",
     "surface": "Asset / photo gallery",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/AssetDetailPhotoGallery.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/AssetDetailPhotoGallery.tsx"
+    ]
   },
   {
     "id": "S100",
     "surface": "Asset / full screen viewer",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/FullScreenPhotoViewer.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/FullScreenPhotoViewer.tsx",
+      "apps/mobile/src/ui/screens/AssetPhotoViewerSheet.tsx"
+    ]
   },
   {
     "id": "S101",
     "surface": "Asset / upload retry",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetPhotoUploadProgressPresentation.ts"
+    ]
   },
   {
     "id": "S102",
     "surface": "Asset / contained items",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/AssetContainedWorkspace.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/AssetContainedWorkspace.tsx"
+    ]
   },
   {
     "id": "S103",
     "surface": "Asset / history revert",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetHistoryRevertAction.ts"
+    ]
   },
   {
     "id": "S104",
     "surface": "Settings / appearance selection",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx"
+    ]
   },
   {
     "id": "S105",
     "surface": "Settings / field type choice",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
   },
   {
     "id": "S106",
     "surface": "Settings / field applicability",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
   },
   {
     "id": "S107",
     "surface": "Settings / enum options",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
   },
   {
     "id": "S108",
     "surface": "Settings / tag color",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/TagColorPicker.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/TagColorPicker.tsx",
+      "apps/mobile/src/ui/components/NativeTagColorPicker.ios.tsx",
+      "apps/mobile/src/ui/components/FullSpectrumTagColorPicker.tsx"
+    ]
   },
   {
     "id": "S109",
     "surface": "Settings / inherited definition",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
   },
   {
     "id": "S110",
     "surface": "Settings / dirty editor exit",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
   },
   {
     "id": "S111",
     "surface": "Reminders / defaults",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx"
+    ]
   },
   {
     "id": "S112",
     "surface": "Reminders / type override",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx"
+    ]
   },
   {
     "id": "S113",
     "surface": "Reminders / preset timing",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/ReminderTimingEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ReminderTimingEditor.tsx"
+    ]
   },
   {
     "id": "S114",
     "surface": "Reminders / custom timing",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/ReminderTimingEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ReminderTimingEditor.tsx"
+    ]
   },
   {
     "id": "S115",
     "surface": "Reminders / timezone search",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/TimeZonePicker.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/TimeZonePicker.tsx"
+    ]
   },
   {
     "id": "S116",
     "surface": "Reminders / push permissions",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+      "apps/mobile/src/ui/navigation/PushRegistrationLifecycle.tsx"
+    ]
   },
   {
     "id": "S117",
     "surface": "Voice / accessory",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/navigation/VoiceBottomAccessory.tsx",
+    "sources": [
+      "apps/mobile/src/ui/navigation/VoiceBottomAccessory.tsx"
+    ]
   },
   {
     "id": "S118",
     "surface": "Voice / typed composer",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoiceConversationComposer.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceConversationComposer.tsx"
+    ]
   },
   {
     "id": "S119",
     "surface": "Voice / recording",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+    ]
   },
   {
     "id": "S120",
     "surface": "Voice / processing",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+    ]
   },
   {
     "id": "S121",
     "surface": "Voice / response",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx",
+      "apps/mobile/src/ui/screens/VoiceResponseEntityText.tsx"
+    ]
   },
   {
     "id": "S122",
     "surface": "Voice / plan approval edits",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx"
+    ]
   },
   {
     "id": "S123",
     "surface": "Voice / plan progress recovery",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoicePlanProgress.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoicePlanProgress.tsx"
+    ]
   },
   {
     "id": "S124",
     "surface": "Voice / provider readiness",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/VoiceSettingsScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceSettingsScreens.tsx",
+      "apps/mobile/src/ui/screens/ProviderProfilesVoiceSetupPresentation.ts"
+    ]
   },
   {
     "id": "S125",
     "surface": "Voice / credential editor",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx"
+    ]
   },
   {
     "id": "S126",
     "surface": "Voice / prompt editor",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx"
+    ]
   },
   {
     "id": "S127",
     "surface": "System / keyboard accessory",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/components/AppKeyboardAccessory.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/AppKeyboardAccessory.tsx",
+      "apps/mobile/src/ui/components/AppKeyboardProvider.tsx"
+    ]
   },
   {
     "id": "S128",
     "surface": "System / global notice",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+    "sources": [
+      "apps/mobile/src/ui/feedback/AppFeedback.tsx"
+    ]
   },
   {
     "id": "S129",
     "surface": "System / confirmation alert",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+    "sources": [
+      "apps/mobile/src/ui/feedback/AppFeedback.tsx"
+    ]
   },
   {
     "id": "S130",
     "surface": "System / push cold warm tap",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx",
+    "sources": [
+      "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx"
+    ]
   },
   {
     "id": "S131",
     "surface": "System / invitation link",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/navigation/InventoryInvitationLinkContext.tsx",
+    "sources": [
+      "apps/mobile/src/ui/navigation/InventoryInvitationLinkContext.tsx",
+      "apps/mobile/src/ui/screens/InventoryInvitationScreen.tsx"
+    ]
   },
   {
     "id": "S132",
     "surface": "System / permission denied recovery",
-    "source": "Shared implementation; resolve in findings ledger"
+    "source": "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteErrorState.tsx"
+    ]
   }
 ]
