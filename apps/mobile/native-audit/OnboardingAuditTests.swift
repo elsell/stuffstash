@@ -18,7 +18,7 @@ final class OnboardingAuditTests: XCTestCase {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      keyboard.keys.firstMatch.exists && keyboard.keys.firstMatch.isHittable
+      keyboard.keys.allElementsBoundByIndex.contains { $0.isHittable }
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
   }

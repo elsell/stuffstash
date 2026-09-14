@@ -147,3 +147,24 @@ recording ends around Add activation. This needs crash diagnostics; it does not
 prove a form layout cause. The queued keyboard-readiness run34907820613 has now
 started. Later source fixes and the isolated sheet diagnostic were pushed only
 after it started, preserving that run.
+
+### Run 34907820613: partial results and keyboard procedure correction
+
+[Run](https://github.com/elsell/stuffstash/actions/runs/34907820613), source
+a01407dc (merge cac89c8f), still had its phone fixture job running when reviewed.
+Both onboarding jobs failed before typing at the new keyboard-readiness condition.
+The inspected phone hierarchy exposes a zero-size `Padding-Left` Key before real
+letter keys. The [screenshot](evidence/onboarding-keyboard-ready-34907820613.png)
+shows a visible keyboard and focused field. Therefore the first-key hittability
+assumption was invalid. Both test helpers now require any hittable key; exact
+full displayed/submitted text assertions remain. Critic found no blocker;
+compilation and native execution of this correction remain pending.
+
+The completed iPad fixture job passed appearance menu selection, Browse
+availability/apply, draft option removal, compact expiration dates, actionable
+feedback, and the corrected date-page calendar dismissal/action scenario.
+Expiration expansion still lost its body. Add still failed before Asset name
+appeared. Color still hit the previously identified uppercase Close selector
+mistake (the correction was not in this run). Keyboard scenarios stopped at the
+readiness test mistake and provide no new evidence about typing preservation or
+keyboard/footer layout. Production iPad landscape passed.
