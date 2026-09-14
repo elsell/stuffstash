@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { BrowseAddHeader } from './BrowseAddHeader';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -140,7 +141,6 @@ export function SearchScreen({
   const [checkoutState, setCheckoutState] = useState<AssetBrowseCheckoutFilter>(initialCheckoutState);
   const [sort, setSort] = useState<AssetBrowseSort>(initialSort);
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(normalizedInitialTags);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const queryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mapPathStore = useRef(new Map<string, readonly string[]>());
   const lastRequestedQuery = useRef(initialQuery.trim());
@@ -241,15 +241,12 @@ export function SearchScreen({
     setSubmittedQuery((next.query ?? query).trim());
   }
 
-  async function refreshResults(): Promise<void> {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([
-        browse.refetch({ cancelRefetch: false }),
-        ...(scope === 'places' ? [places.refetch({ cancelRefetch: false })] : [])
-      ]);
-    } finally { setIsRefreshing(false); }
-  }
+  const { refreshing: isRefreshing, refresh: refreshResults } = usePullRefresh(async () => {
+    await Promise.all([
+      browse.refetch({ cancelRefetch: false }),
+      ...(scope === 'places' ? [places.refetch({ cancelRefetch: false })] : [])
+    ]);
+  });
 
   async function loadNextPage(): Promise<void> {
     if (!browse.data || browse.isFetching || !browse.hasNextPage || isRefreshing) return;

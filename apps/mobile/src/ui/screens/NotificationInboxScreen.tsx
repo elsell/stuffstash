@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { Stack } from 'expo-router';
 import { CheckCheck, Settings, Mail, MailOpen } from 'lucide-react-native';
 import { AssetBreadcrumbTrail } from '../components/AssetCard';
@@ -25,7 +26,6 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const [cursor, setCursor] = useState<string | null>(null);
   const [locallyRead, setLocallyRead] = useState<ReadonlySet<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const pending = useRef(false);
@@ -52,12 +52,9 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     setCursor(page.pagination.hasMore ? page.pagination.nextCursor : null); setLoaded(true); setFilter(selected);
   }
   function load(selected: Filter, after?: string) { return run((signal) => fetchPage(selected, signal, after), 'Notifications could not be loaded. Try refreshing.'); }
-  async function refresh() {
-    if (pending.current) return;
-    setRefreshing(true);
-    try { await load(filter); }
-    finally { if (mounted.current) setRefreshing(false); }
-  }
+  const { refreshing, refresh } = usePullRefresh(async () => {
+    if (!pending.current) await load(filter);
+  });
   function open(row: ExpirationNotification) {
     return run(async (signal) => {
       const assetId = await queries.open(tenantId, inventoryId, row.id, { signal });

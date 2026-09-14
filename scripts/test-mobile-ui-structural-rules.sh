@@ -159,4 +159,17 @@ fi
 grep -F "UnsupportedAbort.ts" "$workdir/output" >/dev/null
 rm "$workdir/apps/mobile/src/application/UnsupportedAbort.ts"
 "$checker" "$workdir/apps/mobile/src"
+
+cat > "$workdir/apps/mobile/src/BackgroundPull.tsx" <<'CASE'
+export const screen = <FlatList refreshing={query.isRefetching && !query.isFetchingNextPage} />;
+CASE
+if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+  echo "expected background query activity bound to a pull indicator to fail" >&2
+  exit 1
+fi
+grep -F "pull gesture" "$workdir/output" >/dev/null
+cat > "$workdir/apps/mobile/src/BackgroundPull.tsx" <<'CASE'
+export const screen = <FlatList refreshing={pullRefresh.refreshing} />;
+CASE
+"$checker" "$workdir/apps/mobile/src"
 echo "mobile UI structural rule tests passed"

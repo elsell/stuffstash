@@ -47,6 +47,9 @@ def violations(path: Path) -> list[tuple[int, str]]:
     source = path.read_text(encoding="utf-8")
     findings: list[tuple[int, str]] = []
 
+    for match in re.finditer(r"\b(?:refreshing|isRefreshing)\s*=\s*\{[^}]*\.\s*is(?:Refetching|Fetching|Pending|Loading)\b", source):
+        findings.append((line_number(source, match.start()), "binds query activity to a pull indicator; use a focused pull gesture lifecycle"))
+
     if path.name != "FullScreenPhotoViewer.tsx":
         match = RAW_PRODUCT_MODAL_PATTERN.search(source)
         if match:

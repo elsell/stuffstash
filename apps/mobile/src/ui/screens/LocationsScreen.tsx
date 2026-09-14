@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -32,9 +33,7 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
     query: (signal) => locationsQuery.execute({ signal })
   });
 
-  async function refreshLocations(): Promise<void> {
-    await locations.refetch();
-  }
+  const pullRefresh = usePullRefresh(async () => { await locations.refetch(); });
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
@@ -44,9 +43,9 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
       ) : null}
       {locations.data ? (
         <LocationsList
-          isRefreshing={locations.isRefetching}
+          isRefreshing={pullRefresh.refreshing}
           locations={locations.data}
-          onRefresh={() => { void refreshLocations(); }}
+          onRefresh={() => { void pullRefresh.refresh(); }}
         />
       ) : null}
     </SafeAreaView>

@@ -6,7 +6,7 @@
 | M02 | Inconsistent custom/native choice controls | Open | F02; platform adapter and consumers |
 | M03 | Redundant exact-date staging | Open | F03; preserve precision and parent draft semantics |
 | M04 | Standard header actions remain custom on some screens | Open | F04; verify native adapters and toolbar consumers |
-| M05 | Background queries control pull indicators outside Home | Open | F05; scan all RefreshControl/FlatList consumers |
+| M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; runtime pending | Shared focus-aware lifecycle across all refresh owners; real query-cache and inbox blur tests; 1324 remote tests/typecheck/structural green; critic found no blockers |
 | M06 | Notice motion/timing/targets need accessibility adaptation | Open | F06; persistent recovery and preference-aware feedback |
 | M07 | Switcher lacks bounded scroll/explicit dismissal | Open | F07; also investigate selection failure and duplicate household names |
 | M08 | Adaptive/assistive-tech runtime matrix unverified | Investigating access | F09; phone/iPad/Android runtime needed |

@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
 import {
@@ -35,9 +36,7 @@ export function InventoryAssetsRouteScreen({
     query: (signal) => inventoryAssetsQuery.execute({ signal })
   });
 
-  async function refreshInventoryAssets(): Promise<void> {
-    await inventoryAssets.refetch();
-  }
+  const pullRefresh = usePullRefresh(async () => { await inventoryAssets.refetch(); });
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
@@ -48,8 +47,8 @@ export function InventoryAssetsRouteScreen({
       {inventoryAssets.data ? (
         <InventoryAssetList
           inventoryAssets={inventoryAssets.data}
-          isRefreshing={inventoryAssets.isRefetching}
-          onRefresh={() => { void refreshInventoryAssets(); }}
+          isRefreshing={pullRefresh.refreshing}
+          onRefresh={() => { void pullRefresh.refresh(); }}
         />
       ) : null}
     </SafeAreaView>

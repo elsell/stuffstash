@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
@@ -68,6 +69,7 @@ export function InventorySharingScreen({
     enabled: canShare,
     subscribed: canShare
   });
+  const pullRefresh = usePullRefresh(async () => { await list.refetch({ cancelRefetch: false }); });
   const denied = !canShare || isAccessFailure(list.error);
   const visibleInvitations = denied ? [] : list.data?.pages.flatMap(page => page.items) ?? [];
   const visibleCreated = !denied && createdScopeKey === scopeKey ? created : undefined;
@@ -145,7 +147,7 @@ export function InventorySharingScreen({
       contentContainerStyle={settingsStyles.content}
       keyboardDismissMode={appKeyboardDismissMode()}
       keyboardShouldPersistTaps="handled"
-      refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch({ cancelRefetch: false })} tintColor={palette.action} />}
+      refreshControl={<RefreshControl refreshing={pullRefresh.refreshing} onRefresh={() => void pullRefresh.refresh()} tintColor={palette.action} />}
       style={settingsStyles.shell}
     >
       <View style={settingsStyles.detailHeader}>

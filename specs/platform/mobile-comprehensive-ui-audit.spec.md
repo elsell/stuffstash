@@ -62,3 +62,14 @@ record actual runtime evidence in the surface ledger as the audit proceeds.
 
 Workflow timeouts bound failed builds. Use scheduled sleep intervals while waiting
 for GitHub jobs; do not cancel a healthy build because it is slow.
+
+## Pull refresh lifecycle
+
+All list refresh controls represent an explicit pull gesture, not background query
+invalidation, polling, pagination or focus reconciliation. Reuse Home's focused
+pull lifecycle across inventory assets, location assets, locations, sharing and
+expiration, plus existing gesture-driven Browse, Map, detail/history, notifications
+and customization collections. Clear presentation on navigation blur and ignore duplicate pulls and
+late completion from a previous focus session. Keep query access/error handling
+unchanged. Background updates must remain functional without shifting the list or
+presenting a pull spinner. Prevent direct query-activity binding mechanically.
