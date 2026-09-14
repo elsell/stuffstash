@@ -49,7 +49,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
   function closeCustom(): void { setCustomOpen(false); }
 
   function applyCustom(): void {
-    if (!validDraft) return;
+    if (disabled || !validDraft) return;
     onChange(normalizedDraft ?? '');
     setCustomOpen(false);
   }
@@ -62,7 +62,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           accessibilityRole="button"
           accessibilityState={{ disabled, selected: !hasTypedColor }}
           disabled={disabled}
-          onPress={() => onChange('')}
+          onPress={() => { if (!disabled) onChange(''); }}
           style={[styles.clearSwatch, !hasTypedColor ? styles.selectedSwatch : null, disabled ? styles.disabled : null]}
         >
           <X color={colors.textMuted} size={15} strokeWidth={2.6} />
@@ -76,7 +76,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
               accessibilityState={{ disabled, selected }}
               disabled={disabled}
               key={color}
-              onPress={() => onChange(color)}
+              onPress={() => { if (!disabled) onChange(color); }}
               style={[
                 styles.swatch,
                 { backgroundColor: color },
@@ -107,17 +107,17 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
         <View onLayout={(event) => setCustomPanelHeight(event.nativeEvent.layout.height)} style={styles.customPanel} testID="custom-tag-color-panel">
           <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>Custom color</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : 'No color'}</Text></View></View>
           <View style={styles.pickerSurface}>
-            <FullSpectrumTagColorPicker compact={customPanelLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={setCustomDraft} />
+            <FullSpectrumTagColorPicker disabled={disabled} compact={customPanelLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={value => { if (!disabled) setCustomDraft(value); }} />
           </View>
           <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.supplementaryContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.supplementaryScroll}>
             <Text style={styles.inputLabel}>Hex color</Text>
-            <AppTextInput accessibilityLabel="Custom tag color hex value" autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder="#2F80ED" placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
+            <AppTextInput editable={!disabled} accessibilityLabel="Custom tag color hex value" autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder="#2F80ED" placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
             {!validDraft ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Enter a #RRGGBB color.</Text> : null}
-            <Pressable accessibilityRole="button" onPress={() => setCustomDraft('')} style={styles.clearAction}><Text style={styles.clearActionText}>Clear color</Text></Pressable>
+            <Pressable accessibilityRole="button" disabled={disabled} onPress={() => { if (!disabled) setCustomDraft(''); }} style={styles.clearAction}><Text style={styles.clearActionText}>Clear color</Text></Pressable>
           </ScrollView>
           <View style={styles.modalActions}>
             <Pressable accessibilityRole="button" onPress={closeCustom} style={styles.cancelAction}><Text style={styles.cancelActionText}>Cancel</Text></Pressable>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: !validDraft }} disabled={!validDraft} onPress={applyCustom} style={[styles.doneAction, !validDraft ? styles.disabled : null]}><Text style={styles.doneActionText}>Done</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: disabled || !validDraft }} disabled={disabled || !validDraft} onPress={applyCustom} style={[styles.doneAction, !validDraft ? styles.disabled : null]}><Text style={styles.doneActionText}>Done</Text></Pressable>
           </View>
         </View>
       ) : null}

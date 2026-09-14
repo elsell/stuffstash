@@ -20,7 +20,7 @@
 | M14 | Native onboarding run shows a shortened typed server address | Investigating runtime evidence | Run34882515267 iPhone screenshot shows h.invalid after typing https://example.invalid; add explicit value assertion and reproduce before classifying simulator input vs app loss |
 
 | M15 | Unsaved enum options cannot be removed before saving | Open | Same saved-versus-draft distinction needed for CustomizationEditorFields enum option adder |
-| M16 | Customization controls remain editable while Save is pending | Open | Critic: editorMutable lacks saving/lifecycleBusy; captured submission can complete and discard later edits |
+| M16 | Customization controls remain editable while Save is pending | Implemented; runtime pending | Pending-save inputs stay visible/disabled; open picker guarded; 53 focused tests including all editor kinds and failed-save recovery, check/structural green; critic found no blocker |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.

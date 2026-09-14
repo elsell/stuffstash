@@ -337,6 +337,41 @@ describe('rendered mobile customization production states', () => {
     expect(dispatchedActions()).toEqual([action]);
   });
 
+  it.each(['tag', 'field', 'asset-type'] as const)('disables %s draft controls while saving without removing the fields', async kind => {
+    const pending = deferred<Record<string, unknown>>();
+    const manager = managerFake({ create: async () => { await pending.promise; throw new Error('Offline'); } });
+    const screen = await renderEditor({ kind, manageFields: manager, manageTags: manager, manageAssetTypes: manager });
+    await screen.changeText(screen.byLabel('Name'), 'Reviewed draft');
+    if (kind !== 'tag') await screen.press(screen.byText('Show technical details')?.parent ?? undefined);
+    await screen.press(screen.byText('Save')?.parent ?? undefined);
+    expect(screen.byLabel('Name')?.props.value).toBe('Reviewed draft');
+    expect(screen.byLabel('Name')?.props.editable).toBe(false);
+    if (kind !== 'tag') expect(screen.byLabel('Stable key')?.props.editable).toBe(false);
+    if (kind === 'tag') expect(screen.byLabel('Choose a custom tag color')?.props.disabled).toBe(true);
+    if (kind === 'field') expect(screen.byLabel('Choose Type. Current value Text')?.props.disabled).toBe(true);
+    if (kind === 'asset-type') expect(screen.byLabel('Description')?.props.editable).toBe(false);
+    pending.resolve({}); await settleQueries(screen);
+    expect(screen.byLabel('Name')?.props.editable).toBe(true);
+    expect(screen.byLabel('Name')?.props.value).toBe('Reviewed draft');
+  });
+
+  it('freezes an open color draft during save and resumes it after failure', async () => {
+    const pending = deferred<Record<string, unknown>>();
+    const manager = managerFake({ create: async () => { await pending.promise; throw new Error('Offline'); } });
+    const screen = await renderEditor({ manageTags: manager });
+    await screen.changeText(screen.byLabel('Name'), 'Tools');
+    await screen.press(screen.byLabel('Choose a custom tag color'));
+    await screen.changeText(screen.byLabel('Custom tag color hex value'), '#123456');
+    await screen.press(screen.byText('Save')?.parent ?? undefined);
+    expect(screen.byText('Done')?.parent?.props.disabled).toBe(true);
+    await screen.press(screen.byText('Done')?.parent ?? undefined);
+    expect(screen.byLabel('No tag color')?.props.accessibilityState.selected).toBe(true);
+    pending.resolve({}); await settleQueries(screen);
+    expect(screen.byText('Done')?.parent?.props.disabled).toBe(false);
+    await screen.press(screen.byText('Done')?.parent ?? undefined);
+    expect(screen.byLabel('Choose a custom tag color')?.props.accessibilityState.selected).toBe(true);
+  });
+
   it('keeps lifecycle mutations single-flight through confirmation and network completion', async () => {
     const pending = deferred<ReturnType<typeof field>>();
     let archives = 0;
