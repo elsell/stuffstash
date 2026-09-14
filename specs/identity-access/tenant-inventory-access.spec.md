@@ -304,3 +304,8 @@ two flat choices. While creation is pending, preserve and disable the email and
 access draft; reject stale edit callbacks and duplicate submission. A failed
 creation retains the submitted values and re-enables editing. This changes no
 permission checks or invitation authority.
+
+Invitation acceptance and inventory-opening actions retain a visible task label
+and stable accessible name during progress, alongside the indicator. Expose busy
+and disabled state; joining and opening must remain distinguishable to assistive
+technology. Failed opening preserves accepted access and offers an explicit retry.
