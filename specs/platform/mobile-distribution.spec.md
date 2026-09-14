@@ -203,3 +203,35 @@ profiles, disable other capabilities, or silently change signing secrets.
 - GitHub Actions secret `APP_STORE_CONNECT_ISSUER_ID`.
 - The API key must be authorized to upload builds and use Apple cloud-managed
   distribution certificates for `org.stuffstash.mobile`.
+
+## TestFlight changelogs (2026-09-14)
+
+- After signed upload, publish English (en-US) build-specific What to Test notes
+  through App Store Connect betaBuildLocalizations. Release notes are part of
+  successful TestFlight publication; failure is visible and can be retried without
+  rebuilding or uploading another binary.
+- Generate plain-text notes from first-parent feat/fix/perf commit subjects between
+  the previous stable ancestor tag and the target tag. Remove Conventional Commit
+  prefixes, retain meaningful descriptions, deduplicate, and bound notes to 4,000
+  characters. Include version/build and a release link; omit image digests,
+  credentials, internal workflow output and unrelated maintenance commits.
+- Operational tooling uses pinned Node's built-in crypto, fetch and test APIs;
+  introduce no dependency. Sign short-lived ES256 App Store Connect tokens using
+  the existing dedicated team key, never log credentials/tokens or API bodies.
+- Resolve the app by configured bundle ID, then require the exact iOS marketing
+  version and build number. Never select the newest build implicitly. Poll with
+  30-second sleeps for up to 30 minutes for processing, reject failed/invalid,
+  mismatched or ambiguous builds, and fail promptly on authorization denial.
+- Create or update only the target build's en-US localization, preserving other
+  locales. Verify stored notes after mutation. Retry safe transient HTTP failures
+  with bounded backoff; do not automatically retry ambiguous writes.
+- A dedicated notes-only workflow supports backfill/retry by tag/build, runs only
+  from trusted main, checks out main tooling, and accepts no arbitrary notes or
+  executable ref. Require the target stable tag to be an ancestor of main.
+  The upload workflow calls this workflow with only the three Apple API secrets.
+- Tests use a controlled HTTP server to verify JWT signing, exact app/version/build
+  scoping, processing wait, create/update/readback, unauthorized/mismatched failures
+  and preservation of other locales. Include these checks in mobile-release tests.
+- The upload job exposes its exact uploaded build number as a job output. Notes
+  consume that output, not the retrying workflow attempt, so re-running failed
+  notes jobs still updates the already uploaded build.

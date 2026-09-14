@@ -178,3 +178,18 @@ external testing, finish the remaining App Store Connect gates: export
 compliance, app privacy answers, beta description, feedback address, review
 contact and credentials, **What to Test**, and tester groups. External groups
 may require TestFlight App Review.
+
+## Changelogs For Testers
+
+Each uploaded build gets English **What to Test** notes automatically. The notes
+list features, fixes, and performance changes since the previous release, plus a
+link to the full GitHub changelog. Clear commit titles make these notes useful.
+
+Publication waits for Apple to process the exact version and build, then writes
+and verifies its notes. A notes failure leaves the uploaded binary intact and
+fails the release workflow.
+
+To retry notes or add them to an existing build, run **TestFlight changelog** from
+the **main** branch in GitHub Actions. Enter the stable release tag (for example,
+`v0.24.4`) and exact build number (`90.1`). This updates notes without rebuilding,
+uploading another binary, or changing other languages.
