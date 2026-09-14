@@ -1,3 +1,4 @@
+import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
 import { useState } from 'react';
@@ -36,7 +37,6 @@ import {
   moveDestinationRow,
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
-  moveDestinationCreateKindLabel,
   moveDestinationCreatePlacement,
   moveDestinationCreatePlacementLabel,
   type MoveDestinationCreateKind,
@@ -336,20 +336,10 @@ export function MoveAssetSheet({
       <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
-            <View style={styles.createKindSegment} accessibilityRole="tablist">
-              <CreateKindOption
-                kind="location"
-                disabled={isSaving}
-                selectedKind={createKind}
-                onPress={onChangeCreateKind}
-              />
-              <CreateKindOption
-                kind="container"
-                disabled={isSaving}
-                selectedKind={createKind}
-                onPress={onChangeCreateKind}
-              />
-            </View>
+            <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
+              value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+              includeEmptyOption={false} disabled={isSaving}
+              onChange={value => { if (!isSaving && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
             <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
             <Text style={styles.createPlacementText}>
               {moveDestinationCreatePlacementLabel(createPlacement)}
@@ -454,34 +444,6 @@ export function MoveThingsHereSheet({
         onSave={onSave}
       />
     </KeyboardAvoidingView>
-  );
-}
-
-function CreateKindOption({
-  disabled,
-  kind,
-  onPress,
-  selectedKind
-}: {
-  readonly disabled: boolean;
-  readonly kind: MoveDestinationCreateKind;
-  readonly onPress: (kind: MoveDestinationCreateKind) => void;
-  readonly selectedKind: MoveDestinationCreateKind;
-}) {
-  const styles = useStyles();
-  const isSelected = kind === selectedKind;
-  return (
-    <Pressable
-      accessibilityRole="tab"
-      accessibilityState={{ disabled, selected: isSelected }}
-      disabled={disabled}
-      onPress={() => onPress(kind)}
-      style={[styles.createKindOption, isSelected ? styles.createKindOptionSelected : null, disabled ? styles.disabledAction : null]}
-    >
-      <Text style={[styles.createKindOptionText, isSelected ? styles.createKindOptionTextSelected : null]}>
-        {moveDestinationCreateKindLabel(kind)}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -756,34 +718,6 @@ function createStyles(colors: MobileColorPalette) {
     gap: spacing.sm,
     marginVertical: spacing.xs,
     padding: spacing.sm
-  },
-  createKindSegment: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    padding: 4
-  },
-  createKindOption: {
-    alignItems: 'center',
-    borderRadius: radius.sm,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 36
-  },
-  createKindOptionSelected: {
-    backgroundColor: colors.action
-  },
-  createKindOptionText: {
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  createKindOptionTextSelected: {
-    color: colors.onAction
   },
   createKindHelp: {
     color: colors.textMuted,

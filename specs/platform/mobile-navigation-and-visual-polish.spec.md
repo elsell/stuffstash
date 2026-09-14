@@ -269,3 +269,8 @@ gesture-driven containment exploration.
   retaining full accessible inventory/tenant names. Add symmetric 12-point inner
   horizontal padding and compact vertical padding. Use a single label at enlarged
   text sizes instead of compressing two lines into the navigation bar.
+
+Move destination creation chooses Location or Container through the shared native
+value picker labeled Kind. It is a form value, not a tab or navigation target.
+Keep the selected kind's explanation and proposed placement visible, and use that
+kind in the create command. Pending creation disables the choice.

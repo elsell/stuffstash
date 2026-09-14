@@ -48,6 +48,10 @@
 
 | M36 | Type reminder mode uses custom choice rows for three flat values | Implemented; native pending | Shared native Reminders picker preserves inheritance, failed selection and Discard. Six focused remote tests, typecheck/structural pass; critic no blockers. Native Custom/defaults scenario added |
 
+| M37 | Asset Move allows destination changes and Cancel during submission | Open; source-confirmed | ParentRow ignores isSaving; SheetActions Cancel stays enabled; route save/create handlers lack synchronous operation guard. Audit all Edit/Move/Move here consumers and preserve draft/command identity on failure |
+
+| M38 | Move destination kind uses custom tab semantics for a form value | Implemented; native pending | Shared native Kind picker replaces tab semantics; create command receives selected kind. 52 remote tests/check/structural pass; critic no blockers. Native menu rendering remains pending |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

@@ -67,3 +67,24 @@ it('submits an expiration clear through the native edit route', async () => {
     expect(saved).toEqual([expect.objectContaining({ assetId: 'asset', expiration: null })]);
   } finally { await harness.unmount(); }
 });
+
+it('creates the move destination with the kind selected in the native menu', async () => {
+  const client = createMobileQueryClient(); const h = new MobileRenderHarness(); const created: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core}
+        createAssetCommand={{ execute: async input => { created.push(input); return { id: 'box', title: 'Camping box', message: 'Created' }; } }}
+        moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => [] }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.allByType('TextInput').find(input => input.props.placeholder === 'Search places, boxes, shelves'), 'Camping box');
+    await settle(h);
+    await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
+    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "Camping box"')?.parent;
+    await h.press(create ?? undefined);
+    expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'Camping box' })]);
+    expect(h.allText().join(' ')).toContain('Camping box');
+  } finally { await h.unmount(); }
+});

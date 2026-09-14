@@ -622,19 +622,17 @@
   },
   {
     "id": "S096",
-    "surface": "Asset / checkout form",
-    "source": "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+    "surface": "Asset / checkout action",
+    "source": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
     "sources": [
-      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
       "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
     ]
   },
   {
     "id": "S097",
     "surface": "Asset / return action",
-    "source": "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+    "source": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
     "sources": [
-      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
       "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
     ]
   },
@@ -938,6 +936,42 @@
       "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
       "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
       "apps/mobile/src/ui/screens/AssetDetailRouteErrorState.tsx"
+    ]
+  },
+  {
+    "id": "S133",
+    "surface": "Asset Edit / tag selection and creation",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S134",
+    "surface": "Asset Move / destination search and selection",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S135",
+    "surface": "Asset Move / destination creation",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S136",
+    "surface": "Asset Move here / asset search and selection",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
     ]
   }
 ]

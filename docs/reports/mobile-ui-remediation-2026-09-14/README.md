@@ -2,7 +2,8 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Inventory: **132 route/layout and nested-task surfaces × 24 axes = 3168 initial review cells**.
+Inventory: **136 route/layout and nested-task surfaces × 24 axes = 3264 review cells**
+(initial inventory: 132 surfaces; four asset editing/moving subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
 are intentional: route coverage and interaction coverage are independent.
 
