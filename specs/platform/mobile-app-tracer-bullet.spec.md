@@ -489,3 +489,15 @@ the existing scoped query; it does not navigate, switch inventory, clear a draft
 or activate a pull-to-refresh indicator. Disable Retry while its read is pending,
 and preserve an actionable error if that read fails again. Native platform text
 buttons implement the command through the shared command adapter.
+
+
+### Native editor and inbox header commands
+
+Add item uses the native navigation title and native leading Cancel/Close and
+trailing Save command, replacing the hand-built content header. Its existing
+draft and dismissal semantics remain intact; pending save is indicated in the
+form and disables Save. The inbox uses native Mark all read and Reminder settings
+bar items. Custom reminder timing uses the same native Save command rather than a
+custom header Pressable. Native disabled state and handler guards prevent pending
+or invalid actions. Shared header adapters support both leading and trailing
+placement without changing the Home Add/notifications/profile order.

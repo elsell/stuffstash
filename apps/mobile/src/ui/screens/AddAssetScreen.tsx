@@ -1,3 +1,4 @@
+import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
 import type { AssetExpiration } from '../../domain/assets/AssetSummary';
@@ -6,7 +7,7 @@ import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProv
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -473,14 +474,12 @@ function ScopedAddAssetScreen({
   }
 
   return (
-    <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
-      <View style={styles.dismissRow}>
-        <Pressable accessibilityLabel="Close Add" accessibilityRole="button" onPress={onDismiss} style={styles.dismissButton}><Text style={{ color: colors.action, fontSize: 17 }}>Cancel</Text></Pressable>
-        <Text accessibilityRole="header" style={styles.dismissTitle}>Add item</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Save item" disabled={!title.trim() || !expirationValid || saveState.status === 'saving' || (loadState.status !== 'ready' || !loadState.context.canAdd)} onPress={saveAsset} style={styles.dismissButton}>
-          {saveState.status === 'saving' ? <ActivityIndicator color={colors.action} /> : <Text style={{ color: colors.action, fontSize: 17, fontWeight: '600' }}>Add</Text>}
-        </Pressable>
-      </View>
+    <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <Stack.Screen options={{ headerShown: true, headerBackVisible: false, title: 'Add item',
+        ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', onPress: onDismiss }], 'left'),
+        ...nativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
+          disabled: !title.trim() || !expirationValid || saveState.status === 'saving' || loadState.status !== 'ready' || !loadState.context.canAdd,
+          onPress: () => void saveAsset() }]) }} />
       <ScrollView
         ref={formScrollRef}
         style={{ flex: 1 }}
@@ -493,6 +492,7 @@ function ScopedAddAssetScreen({
         keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
       >
+        {saveState.status === 'saving' ? <ActivityIndicator accessibilityLabel="Saving item" color={colors.action} /> : null}
         {loadState.status === 'loading' ? (
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} />
@@ -1257,31 +1257,6 @@ function createStyles(colors: MobileColorPalette) {
   shell: {
     flex: 1,
     backgroundColor: colors.background
-  },
-  dismissRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    minHeight: 44,
-    paddingHorizontal: spacing.sm
-  },
-  dismissTitle: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
-    textAlign: 'center'
-  },
-  dismissSpacer: {
-    minHeight: 44,
-    minWidth: 44
-  },
-  dismissButton: {
-    alignItems: 'center',
-    borderRadius: 22,
-    justifyContent: 'center',
-    minHeight: 44,
-    minWidth: 44
   },
   content: {
     padding: spacing.lg,

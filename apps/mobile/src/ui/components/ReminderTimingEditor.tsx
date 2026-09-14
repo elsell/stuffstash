@@ -1,6 +1,7 @@
+import { nativeHeaderActionOptions } from './NativeHeaderActions';
 import { useEffect, useRef, useState } from 'react';
 import { Stack } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import type { ExpirationReminderPolicy } from '../../domain/notifications/Notification';
 import { AppTextInput } from './AppTextInput';
 import { reminderDaysLabel } from './ExpirationReminderEditor';
@@ -31,14 +32,14 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
     finally { pending.current = false; if (mounted.current) setSaving(false); }
   }
   return <>
-    <Stack.Screen options={{ title: 'Before expiration', gestureEnabled: !saving, headerBackVisible: !saving, headerRight: () => custom ?
-      <Pressable accessibilityRole="button" accessibilityLabel="Save reminder days" accessibilityState={{ disabled: locked || !valid }} disabled={locked || !valid} onPress={() => void save(true, Number(days))} style={[styles.iconButton, { opacity: locked || !valid ? 0.5 : 1 }]}><Text style={styles.actionText}>Done</Text></Pressable> : null }} />
+    <Stack.Screen options={{ title: 'Before expiration', gestureEnabled: !saving, headerBackVisible: !saving,
+      ...nativeHeaderActionOptions(custom ? [{ kind: 'save', label: 'Save reminder days', disabled: locked || !valid, onPress: () => void save(true, Number(days)) }] : []) }} />
     <SettingsSection footer="Choose when to remind you before the expiration date. Expired reminders are set separately.">
       <SettingsChoiceRow label="Off" selected={!selection.upcoming && !custom} disabled={locked} onPress={() => { setCustom(false); void save(false, policy.advanceDays); }} />
       {presets.map(value => <View key={value}><SettingsSeparator /><SettingsChoiceRow label={value === 0 ? 'On the expiration date' : `${reminderDaysLabel(value)} before`} selected={!custom && selection.upcoming && selection.advanceDays === value} disabled={locked} onPress={() => { setCustom(false); void save(true, value); }} /></View>)}
       <SettingsSeparator /><SettingsChoiceRow label="Custom…" accessibilityLabel="Custom days" selected={custom} disabled={locked} onPress={() => { setCustom(true); setDirty(true); }} />
     </SettingsSection>
-    {custom ? <SettingsSection footer="Enter 0–3650 days. Tap Done to save; go back to cancel.">
+    {custom ? <SettingsSection footer="Enter 0–3650 days. Save your changes, or go back to cancel.">
       <View style={styles.navigationRow}><View style={styles.navigationRowContent}>
         <Text style={[styles.rowLabel, styles.rowText]}>Days before</Text>
         <AppTextInput accessibilityLabel="Days before expiration" keyboardType="number-pad" editable={!locked} value={days} selectTextOnFocus onChangeText={value => { setDays(value); setDirty(true); }} style={{ color: palette.text, fontSize: 17, minHeight: 44, minWidth: 88, textAlign: 'right' }} />
