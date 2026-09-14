@@ -560,6 +560,7 @@ export function InventoryMapScreen({
           <>
             <ScrollView
               horizontal
+              contentInsetAdjustmentBehavior="never"
               ref={breadcrumbScrollRef}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.breadcrumbs}
@@ -858,6 +859,7 @@ function InventoryMapColumn({
     >
       <Text numberOfLines={1} style={styles.columnTitle}>{displayedColumn.title}</Text>
       <FlatList
+        contentInsetAdjustmentBehavior="never"
         data={displayedColumn.assets}
         keyExtractor={(asset) => asset.id}
         keyboardDismissMode={appKeyboardDismissMode()}

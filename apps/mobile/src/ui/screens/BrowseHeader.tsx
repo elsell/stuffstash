@@ -22,6 +22,7 @@ import {
   sortLabel
 } from './SearchScreenPresentation';
 import type { BrowseFilterToken, BrowseScope } from './SearchScreenPresentation';
+import { SettingsNavigationRow, SettingsSection } from './SettingsList';
 import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
 import { radius, spacing } from '../theme/tokens';
@@ -41,7 +42,7 @@ export type BrowseDraftFilters = {
 };
 
 export type SearchHeaderProps = {
-  readonly onExpiration?: (mode: 'soon' | 'expired' | 'all') => void;
+  readonly onExpiration?: (mode: 'soon' | 'expired' | 'all', filters: BrowseDraftFilters) => void;
   readonly canAdd?: boolean;
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
@@ -166,7 +167,6 @@ export function SearchHeader({
       </View>
 
 
-      {onExpiration ? <NativeActionMenu accessibilityLabel="Browse expiration dates for active items" groups={[{id:'expiration',items:([{id:'soon',label:'Expiring soon'},{id:'expired',label:'Expired'},{id:'all',label:'All dates'}] as const).map(option=>({...option,onPress:()=>onExpiration(option.id)}))}]} trigger={{kind:'label',label:'Expiration · Active items'}} /> : null}
       <View style={styles.resultToolsRow}>
         {isLoading ? <ActivityIndicator accessibilityLabel="Searching inventory" color={palette.accent} size="small" /> : null}
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
@@ -239,6 +239,7 @@ export function SearchHeader({
 
       {filtersExpanded ? (
         <BrowseFilterSheet
+          onExpiration={onExpiration ? mode => onExpiration(mode, filterDraft) : undefined}
           draft={filterDraft}
           palette={palette}
           tagFilters={tagFilters}
@@ -263,6 +264,7 @@ export function SearchHeader({
 }
 
 function BrowseFilterSheet({
+  onExpiration,
   draft,
   palette,
   tagFilters,
@@ -276,6 +278,7 @@ function BrowseFilterSheet({
   onReset,
   onRetryTags
 }: {
+  readonly onExpiration?: (mode: 'soon' | 'expired' | 'all') => void;
   readonly draft: BrowseDraftFilters;
   readonly palette: MobileColorPalette;
   readonly tagFilters: readonly AssetTagOptionViewModel[];
@@ -304,6 +307,11 @@ function BrowseFilterSheet({
           </Pressable>
         </View>
         <View style={styles.sheetContent}>
+          {onExpiration ? <SettingsSection title="Expiration" footer="Review active items by expiration date.">
+            <SettingsNavigationRow label="Expiring soon" accessibilityLabel="Review expiring soon items" onPress={() => onExpiration('soon')} />
+            <SettingsNavigationRow label="Expired" accessibilityLabel="Review expired items" onPress={() => onExpiration('expired')} />
+            <SettingsNavigationRow label="All dates" accessibilityLabel="Review all expiration dates" onPress={() => onExpiration('all')} />
+          </SettingsSection> : null}
           <FilterSection palette={palette} title="Type">
             <View accessibilityLabel="Filter by type">
               <NativeSegmentedControl

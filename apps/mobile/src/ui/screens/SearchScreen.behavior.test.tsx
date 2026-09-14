@@ -1,3 +1,4 @@
+import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import { navigationOptions, dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
@@ -197,6 +198,10 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
   await h.run(()=>nativeSearch().onChangeText({nativeEvent:{text:'Tent'}}));
   await switchTo('Map');await settle(h);
   expect(nativeSearch().placeholder).toBe('Find and expand path');
+  expect(h.byTestId('browse-map-frame')?.props.style).toContainEqual({ paddingTop: 144 });
+  await h.run(() => setNativeHeaderHeight(210));
+  expect(h.byTestId('browse-map-frame')?.props.style).toContainEqual({ paddingTop: 210 });
+  await h.run(() => setNativeHeaderHeight(144));
   await h.run(()=>new Promise(resolve=>setTimeout(resolve,320)));
   expect(dispatchedActions().filter(action=>action.type==='setParams').at(-1)).toMatchObject({params:{surface:'map',query:'Tent',tagId:['tag']}});
   await switchTo('List');await settle(h);
@@ -204,4 +209,25 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
   expect(h.byLabel('Filters, 1 applied')).toBeDefined();
   await h.run(()=>nativeSearch().onCancelButtonPress());await settle(h);
  }finally{await h.unmount();}
+});
+
+it('carries current filter draft and pending search into expiration navigation', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation();
+  const props = propsFor({ inventoryAssetTagsQuery: { execute: async () => [{ id: 'new-tag', key: 'new', label: 'New tag' }] } });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    const search = (navigationOptions().at(-1) as { headerSearchBarOptions: { onChangeText: (e: { nativeEvent: { text: string } }) => void } }).headerSearchBarOptions;
+    await h.run(() => search.onChangeText({ nativeEvent: { text: 'Fresh query' } }));
+    await h.press(h.byLabel('Filters'));
+    await h.press(h.byLabel('Filter by tag New tag'));
+    await h.run(() => h.allByType('NativeSegmentedControl').find(node => node.props.values?.includes('Checked out'))?.props.onValueChange('Checked out'));
+    await h.press(h.byLabel('Review expiring soon items'));
+    expect(dispatchedActions().filter(action => action.type === 'push').at(-1)).toMatchObject({
+      href: { pathname: '/expiration', params: { query: 'Fresh query', mode: 'soon', tagIds: ['new-tag'], checkoutState: 'checked_out' } }
+    });
+    const count = dispatchedActions().length;
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 320)));
+    expect(dispatchedActions()).toHaveLength(count);
+  } finally { await h.unmount(); }
 });
