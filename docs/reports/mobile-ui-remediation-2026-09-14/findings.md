@@ -38,6 +38,8 @@
 
 | M31 | Voice service choice uses custom action rows and conflates selection with test progress | Implemented; native pending | Shared native service picker retains current choice, excludes other archived services, and ignores same-value selection. Distinct select/test/enable progress with guarded competing navigation. Eighteen remote tests, check/structural pass; critic no blockers |
 
+| M32 | Some settings errors and permission-denied states cannot scroll | Implemented; native pending | Scoped settings, shared customization denial and sharing error content now use ScrollView with growing content; focus/retry preserved. Fifty-eight existing remote behavior tests, check/structural pass; critic no blockers. Large-text runtime remains pending |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

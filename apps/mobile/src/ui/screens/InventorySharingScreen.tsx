@@ -133,13 +133,13 @@ export function InventorySharingScreen({
   }
   if (denied || (list.isError && !list.data)) {
     return (
-      <View style={[settingsStyles.shell, settingsStyles.errorContainer]}>
+      <ScrollView style={settingsStyles.shell} contentContainerStyle={settingsStyles.errorContainer}>
         <Text accessibilityRole="header" style={settingsStyles.errorTitle}>Could not load invitations</Text>
         <Text style={settingsStyles.errorMessage}>Your invitation settings are still safe. Try again.</Text>
         <Pressable accessibilityRole="button" onPress={() => list.refetch({ cancelRefetch: false })} style={settingsStyles.retryButton}>
           <Text style={settingsStyles.retryText}>Retry</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     );
   }
 

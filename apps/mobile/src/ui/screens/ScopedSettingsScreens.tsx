@@ -21,7 +21,7 @@ export function HouseholdSettingsScreen({ onNavigate, settingsQuery }: { readonl
 function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<typeof useSettingsModel>; readonly onNavigate: (destination: ScopedDestination) => void; readonly scope: 'tenant' | 'inventory' }) {
   const { palette, styles } = useSettingsListStyles();
   if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
-  if (model.state.status === 'error') return <View style={[styles.shell, styles.errorContainer]}><Text accessibilityRole="header" style={styles.errorTitle}>Could not load settings</Text><Text style={styles.errorMessage}>{model.state.message}</Text><Pressable accessibilityRole="button" onPress={() => void model.load()} style={styles.retryButton}><Text style={styles.retryText}>Retry</Text></Pressable></View>;
+  if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>Could not load settings</Text><Text style={styles.errorMessage}>{model.state.message}</Text><Pressable accessibilityRole="button" onPress={() => void model.load()} style={styles.retryButton}><Text style={styles.retryText}>Retry</Text></Pressable></ScrollView>;
   const settings = model.state.settings;
   const name = scope === 'tenant' ? settings.selectedTenant.name : settings.selectedInventory.name;
   const tenantCanConfigure = settings.selectedTenant.permissions.includes('configure');
@@ -54,7 +54,7 @@ export function DeniedSettingsState({ message }: { readonly message: string }) {
     if (target) AccessibilityInfo.setAccessibilityFocus(target);
     else AccessibilityInfo.announceForAccessibility(`Settings unavailable. ${message}`);
   }, [message]);
-  return <View accessibilityLiveRegion="assertive" style={[styles.shell, styles.errorContainer]}><Text accessibilityRole="header" ref={headingRef} style={styles.errorTitle}>Settings unavailable</Text><Text style={styles.errorMessage}>{message}</Text></View>;
+  return <ScrollView accessibilityLiveRegion="assertive" style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" ref={headingRef} style={styles.errorTitle}>Settings unavailable</Text><Text style={styles.errorMessage}>{message}</Text></ScrollView>;
 }
 
 function scopeIcon(id: ScopedDestination, color: string) {

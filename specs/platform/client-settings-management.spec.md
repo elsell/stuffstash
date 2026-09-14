@@ -374,3 +374,9 @@ Use an ordinary platform text button for the Remove command, with the option in
 its accessible name. A command is not a checkbox or navigation destination. The
 shared native command adapter uses the same pinned SwiftUI/Compose integration as
 sheet actions, with no new dependency, and lets native text wrap and grow.
+
+Settings error and permission-denied content must use a scrollable container so
+messages and retry actions remain reachable with enlarged text or short windows.
+Preserve the denied heading's accessibility focus and announcement behavior. This
+includes shared denial states used by customization lists/editors and inventory
+sharing's load failures; loading-only indicators need no scroll conversion.
