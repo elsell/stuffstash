@@ -1370,8 +1370,8 @@ R057,voice.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pendi
 S058,onboarding / server entry,task,Task clarity and platform-pattern fit,pending,,
 S058,onboarding / server entry,navigation,"Navigation, hierarchy and return",pending,,
 S058,onboarding / server entry,selection,Value selection and current value,pending,,
-S058,onboarding / server entry,modality,Presentation and dismissal,pending,,
-S058,onboarding / server entry,layout,"Safe areas, scroll edges and overlays",pending,,
+S058,onboarding / server entry,modality,Presentation and dismissal,runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",
+S058,onboarding / server entry,layout,"Safe areas, scroll edges and overlays",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",
 S058,onboarding / server entry,adaptation,Phone/tablet/window reflow,pending,,
 S058,onboarding / server entry,typography,"Dynamic Type, wrapping and legibility",pending,,
 S058,onboarding / server entry,appearance,"Light/dark, contrast and materials",pending,,
@@ -1379,14 +1379,14 @@ S058,onboarding / server entry,localization,"Locale, timezone, RTL and long stri
 S058,onboarding / server entry,imagery,"Icons, photos and missing media",pending,,
 S058,onboarding / server entry,targets,Touch target size and reachability,pending,,
 S058,onboarding / server entry,gestures,Gestures and explicit alternatives,pending,,
-S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",pending,,
+S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",M14
 S058,onboarding / server entry,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S058,onboarding / server entry,motion,Reduced motion and feedback alternatives,pending,,
 S058,onboarding / server entry,content,"Lists, hierarchy, density and pagination",pending,,
 S058,onboarding / server entry,search,"Search, scope and filters",pending,,
 S058,onboarding / server entry,loading,"Loading, background refresh and progress",pending,,
 S058,onboarding / server entry,recovery,"Empty, error, denied and retry",pending,,
-S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",pending,,
+S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",M14
 S058,onboarding / server entry,privacy,"Account scope, data use and permissions",pending,,
 S058,onboarding / server entry,notifications,System notification entry and state,pending,,
 S058,onboarding / server entry,media,"Camera, library, files and audio",pending,,
@@ -2521,7 +2521,7 @@ S105,Settings / field type choice,media,"Camera, library, files and audio",pendi
 S105,Settings / field type choice,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S106,Settings / field applicability,navigation,"Navigation, hierarchy and return",pending,,
-S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
+S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
 S106,Settings / field applicability,modality,Presentation and dismissal,pending,,
 S106,Settings / field applicability,layout,"Safe areas, scroll edges and overlays",pending,,
 S106,Settings / field applicability,adaptation,Phone/tablet/window reflow,pending,,
@@ -2532,13 +2532,13 @@ S106,Settings / field applicability,imagery,"Icons, photos and missing media",pe
 S106,Settings / field applicability,targets,Touch target size and reachability,pending,,
 S106,Settings / field applicability,gestures,Gestures and explicit alternatives,pending,,
 S106,Settings / field applicability,keyboard,"Keyboard, text entry and focus",pending,,
-S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
+S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
 S106,Settings / field applicability,motion,Reduced motion and feedback alternatives,pending,,
 S106,Settings / field applicability,content,"Lists, hierarchy, density and pagination",pending,,
 S106,Settings / field applicability,search,"Search, scope and filters",pending,,
 S106,Settings / field applicability,loading,"Loading, background refresh and progress",pending,,
-S106,Settings / field applicability,recovery,"Empty, error, denied and retry",pending,,
-S106,Settings / field applicability,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
+S106,Settings / field applicability,recovery,"Empty, error, denied and retry",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
+S106,Settings / field applicability,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
 S106,Settings / field applicability,privacy,"Account scope, data use and permissions",pending,,
 S106,Settings / field applicability,notifications,System notification entry and state,pending,,
 S106,Settings / field applicability,media,"Camera, library, files and audio",pending,,
@@ -3053,24 +3053,24 @@ S128,System / global notice,selection,Value selection and current value,pending,
 S128,System / global notice,modality,Presentation and dismissal,pending,,
 S128,System / global notice,layout,"Safe areas, scroll edges and overlays",pending,,
 S128,System / global notice,adaptation,Phone/tablet/window reflow,pending,,
-S128,System / global notice,typography,"Dynamic Type, wrapping and legibility",pending,,
+S128,System / global notice,typography,"Dynamic Type, wrapping and legibility",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
 S128,System / global notice,appearance,"Light/dark, contrast and materials",pending,,
 S128,System / global notice,localization,"Locale, timezone, RTL and long strings",pending,,
 S128,System / global notice,imagery,"Icons, photos and missing media",pending,,
-S128,System / global notice,targets,Touch target size and reachability,pending,,
+S128,System / global notice,targets,Touch target size and reachability,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
 S128,System / global notice,gestures,Gestures and explicit alternatives,pending,,
 S128,System / global notice,keyboard,"Keyboard, text entry and focus",pending,,
-S128,System / global notice,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S128,System / global notice,motion,Reduced motion and feedback alternatives,pending,,
+S128,System / global notice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
+S128,System / global notice,motion,Reduced motion and feedback alternatives,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
 S128,System / global notice,content,"Lists, hierarchy, density and pagination",pending,,
 S128,System / global notice,search,"Search, scope and filters",pending,,
-S128,System / global notice,loading,"Loading, background refresh and progress",pending,,
-S128,System / global notice,recovery,"Empty, error, denied and retry",pending,,
+S128,System / global notice,loading,"Loading, background refresh and progress",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
+S128,System / global notice,recovery,"Empty, error, denied and retry",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
 S128,System / global notice,editing,"Draft, save, cancel, undo and interruption",pending,,
 S128,System / global notice,privacy,"Account scope, data use and permissions",pending,,
 S128,System / global notice,notifications,System notification entry and state,pending,,
 S128,System / global notice,media,"Camera, library, files and audio",pending,,
-S128,System / global notice,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S128,System / global notice,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
 S129,System / confirmation alert,task,Task clarity and platform-pattern fit,pending,,
 S129,System / confirmation alert,navigation,"Navigation, hierarchy and return",pending,,
 S129,System / confirmation alert,selection,Value selection and current value,pending,,

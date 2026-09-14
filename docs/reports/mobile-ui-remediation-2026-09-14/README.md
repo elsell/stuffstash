@@ -11,9 +11,10 @@ are intentional: route coverage and interaction coverage are independent.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
 
-Runtime availability: validation host paul is Linux with adb installed; attached
-Android devices and Mac/simulator access are being investigated. Prior CUA attempt
-had no enabled surfaces. No local builds/tests, per session constraint.
+Runtime availability: macOS GitHub runners build and launch the genuine application
+on iPhone and iPad simulators. The first native run failed; see `native-evidence.md`
+for inspected screenshots and the distinction between procedure and app findings.
+Android runtime remains unavailable. No local builds/tests, per session constraint.
 
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
