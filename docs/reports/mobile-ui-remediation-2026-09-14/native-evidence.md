@@ -54,3 +54,20 @@ Revision `254f5820c2c9c3c23ad4d2d8ca7b84f60a73c617` (PR merge of
 
 These scenarios establish only their named interactions. They do not establish
 whole-screen accessibility, larger text, dark mode, Android or physical-device behavior.
+
+
+### Diagnostic run 34903318947
+
+[Run](https://github.com/elsell/stuffstash/actions/runs/34903318947), source
+`eeeefd5b`, completed with failures. All eight iPad fixture scenarios passed.
+On iPhone, Browse filter selection/apply, persistent feedback, draft enum removal,
+medium-detent expiration body and uncontrolled URL entry passed. The full-height
+expiration body remained absent in both scenarios; controlled URL entry lost
+characters (`hs://example.invalid`). This isolates a detent-sensitive sheet failure
+and an input synchronization suspect; it does not prove a framework root cause.
+The same controlled-input fixture passed on iPad, so the input problem is not
+universal across devices/runs.
+
+Production onboarding URL entry still failed on both devices; keyboard dismissal
+was consequently not reached. The iPad landscape adaptation scenario passed.
+No additional whole-surface or accessibility claims follow from these scenarios.
