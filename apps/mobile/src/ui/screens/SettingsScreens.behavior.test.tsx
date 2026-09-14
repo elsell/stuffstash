@@ -1,5 +1,7 @@
 import { ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
+import { AppearanceProvider } from '../theme/AppearanceContext';
+import { AppearancePreferenceController, type AppearancePreference } from '../../application/settings/AppearancePreference';
 import { describe, expect, it } from 'vitest';
 import { ManageProviderProfileCommand } from '../../application/providerProfiles/ManageProviderProfileCommand';
 import type {
@@ -54,9 +56,28 @@ describe('mounted Settings behavior', () => {
   it('orders appearance choices and marks the selected radio', async () => {
     const { harness } = await mount(<AppearanceSettingsScreen />);
     try {
+      await harness.press(harness.byLabel('Choose appearance'));
       const choices = harness.allByType('Pressable').filter((node) => node.props.accessibilityRole === 'radio');
-      expect(choices.map((node) => node.props.accessibilityLabel)).toEqual(['System appearance', 'Light appearance', 'Dark appearance']);
+      expect(choices.map((node) => node.props.accessibilityLabel)).toEqual(['System', 'Light', 'Dark']);
       expect(choices.map((node) => node.props.accessibilityState)).toEqual([{ checked: true }, { checked: false }, { checked: false }]);
+    } finally { await harness.unmount(); }
+  });
+  it('changes appearance in place and restores the saved choice after persistence failure', async () => {
+    let saved: AppearancePreference = 'system'; let fail = false;
+    const controller = new AppearancePreferenceController({ load: async () => saved, save: async next => { if (fail) throw new Error('Storage unavailable'); saved = next; } });
+    const navigation: string[] = [];
+    const { harness } = await mount(<AppearanceProvider controller={controller}><SettingsScreen settingsQuery={settingsQuery()} onNavigate={destination => navigation.push(destination)} /></AppearanceProvider>);
+    try {
+      await harness.press(harness.byLabel('Choose appearance'));
+      await harness.press(harness.byLabel('Dark'));
+      expect(saved).toBe('dark'); expect(navigation).toEqual([]);
+      fail = true;
+      await harness.press(harness.byLabel('Choose appearance'));
+      await harness.press(harness.byLabel('Light'));
+      expect(saved).toBe('dark'); expect(navigation).toEqual([]);
+      expect(harness.byText('Appearance not saved')).toBeDefined();
+      await harness.press(harness.byLabel('Choose appearance'));
+      expect(harness.byLabel('Dark')?.props.accessibilityState.checked).toBe(true);
     } finally { await harness.unmount(); }
   });
   it.each(['signOut', 'server'] as const)('confirms %s and reports a rejected action', async (kind) => {

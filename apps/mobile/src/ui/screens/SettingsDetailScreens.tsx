@@ -1,14 +1,9 @@
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { Check } from 'lucide-react-native';
+import { AppearancePicker } from '../components/AppearancePicker';
 import type { SettingsQuery, SettingsViewModel } from '../../application/settings/SettingsQuery';
-import {
-  appearancePreferences,
-  type AppearancePreference
-} from '../../application/settings/AppearancePreference';
 import { useAppFeedback } from '../feedback/AppFeedback';
-import { useAppearance } from '../theme/AppearanceContext';
 import {
   SettingsActionRow,
   SettingsSection,
@@ -16,7 +11,7 @@ import {
   SettingsValueRow,
   useSettingsListStyles
 } from './SettingsList';
-import { appearanceLabel, serverHostname } from './SettingsScreenPresentation';
+import { serverHostname } from './SettingsScreenPresentation';
 import { useSettingsModel } from './SettingsScreenState';
 
 export function AccountSettingsScreen({
@@ -69,50 +64,12 @@ export function AccountSettingsScreen({
 }
 
 export function AppearanceSettingsScreen() {
-  const { preference, setPreference } = useAppearance();
-  const feedback = useAppFeedback();
-  const { palette, styles } = useSettingsListStyles();
-
-  async function select(next: AppearancePreference): Promise<void> {
-    if (next === preference) return;
-    try {
-      await setPreference(next);
-    } catch {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Appearance not saved',
-        message: 'Stuff Stash could not save the appearance setting.'
-      });
-    }
-  }
-
-  return (
-    <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-      <SettingsSection footer="System follows the appearance selected in iPhone Settings.">
-        {appearancePreferences.map((option, index) => {
-          const selected = option === preference;
-          const label = appearanceLabel(option);
-          return (
-            <View key={option}>
-              {index > 0 ? <SettingsSeparator /> : null}
-              <Pressable
-                accessibilityLabel={`${label} appearance`}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                onPress={() => void select(option)}
-                style={({ pressed }) => [styles.choiceRow, pressed && styles.navigationRowPressed]}
-              >
-                <View style={styles.navigationRowContent}>
-                  <Text style={styles.rowLabel}>{label}</Text>
-                  {selected ? <Check color={palette.action} size={22} /> : null}
-                </View>
-              </Pressable>
-            </View>
-          );
-        })}
-      </SettingsSection>
-    </ScrollView>
-  );
+  const { styles } = useSettingsListStyles();
+  return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+    <SettingsSection footer="System follows your device’s appearance setting.">
+      <AppearancePicker />
+    </SettingsSection>
+  </ScrollView>;
 }
 
 export function ConnectionSettingsScreen({

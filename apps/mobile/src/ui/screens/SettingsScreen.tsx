@@ -1,3 +1,4 @@
+import { AppearancePicker } from '../components/AppearancePicker';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
@@ -61,14 +62,14 @@ export function SettingsScreen({
           {section.rows.map((row, index) => (
             <View key={row.id}>
               {index > 0 ? <SettingsSeparator /> : null}
-              <SettingsNavigationRow
+              {row.id === 'appearance' ? <AppearancePicker /> : <SettingsNavigationRow
                 accessibilityLabel={row.accessibilityLabel}
                 context={row.context}
                 icon={iconForRow(row.id, palette.action)}
                 label={row.label}
                 onPress={() => onNavigate(row.destination)}
                 value={row.value}
-              />
+              />}
             </View>
           ))}
         </SettingsSection>
