@@ -75,3 +75,9 @@ No additional whole-surface or accessibility claims follow from these scenarios.
 Inspected the [iPhone medium-detent screenshot](evidence/expiration-phone-medium-34903318947.png):
 all six filter rows and the Apply/Cancel footer are visible. This is diagnostic
 presentation evidence, not evidence of expansion or date/keyboard completion.
+
+Remote source regression verification after native settings/input candidates:
+1,353 tests in 242 files passed on paul, followed by TypeScript and the mobile
+structural check. This includes mounted header tests replacing legacy module
+mocks; code critic found no meaningful behavioral coverage lost. Native runtime
+results remain separate from this source verification.
