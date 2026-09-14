@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
@@ -42,7 +43,7 @@ export function InventoryAssetsRouteScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {inventoryAssets.isPending && !inventoryAssets.data ? <LoadingState /> : null}
       {inventoryAssets.isError && !inventoryAssets.data ? (
-        <ErrorState message={readableError(inventoryAssets.error, 'Could not load assets.')} />
+        <ErrorState retrying={inventoryAssets.isFetching} onRetry={() => { if (!inventoryAssets.isFetching) void inventoryAssets.refetch(); }} message={readableError(inventoryAssets.error, 'Could not load assets.')} />
       ) : null}
       {inventoryAssets.data ? (
         <InventoryAssetList
@@ -115,13 +116,14 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ message }: { readonly message: string }) {
+function ErrorState({ message, retrying, onRetry }: { readonly message: string; readonly retrying: boolean; readonly onRetry: () => void }) {
   const palette = useAppearancePalette();
   const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>{message}</Text>
+      <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
+      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
     </View>
   );
 }

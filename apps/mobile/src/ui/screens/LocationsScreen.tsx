@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { router } from 'expo-router';
 import {
@@ -39,7 +40,7 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       {locations.isPending && !locations.data ? <LoadingState /> : null}
       {locations.isError && !locations.data ? (
-        <ErrorState message={readableError(locations.error, 'Stuff Stash could not load locations.')} />
+        <ErrorState retrying={locations.isFetching} onRetry={() => { if (!locations.isFetching) void locations.refetch(); }} message={readableError(locations.error, 'Stuff Stash could not load locations.')} />
       ) : null}
       {locations.data ? (
         <LocationsList
@@ -63,12 +64,13 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ message }: { readonly message: string }) {
+function ErrorState({ message, retrying, onRetry }: { readonly message: string; readonly retrying: boolean; readonly onRetry: () => void }) {
   const styles = createStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>{message}</Text>
+      <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
+      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
     </View>
   );
 }

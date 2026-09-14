@@ -479,3 +479,13 @@ This spec defines camera behavior only for attaching still photos during the Add
 - `pnpm --dir apps/mobile test` must run focused mobile application tests.
 - The Expo development server should start with `pnpm --dir apps/mobile start`.
 - iPhone verification is manual: install Expo Go, run the mobile dev server, scan the QR code, and confirm the Stuff Stash home screen appears.
+
+
+### Initial list recovery
+
+Inventory asset, location-content, and location-browser screens offer an in-place
+Retry command when the first query fails and no rows are available. Retry uses
+the existing scoped query; it does not navigate, switch inventory, clear a draft,
+or activate a pull-to-refresh indicator. Disable Retry while its read is pending,
+and preserve an actionable error if that read fails again. Native platform text
+buttons implement the command through the shared command adapter.

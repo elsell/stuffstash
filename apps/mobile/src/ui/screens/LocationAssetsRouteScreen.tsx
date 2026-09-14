@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
@@ -45,7 +46,7 @@ export function LocationAssetsRouteScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {locationAssets.isPending && !locationAssets.data ? <LoadingState /> : null}
       {locationAssets.isError && !locationAssets.data ? (
-        <ErrorState message={readableError(locationAssets.error, 'Could not load location.')} />
+        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={readableError(locationAssets.error, 'Could not load location.')} />
       ) : null}
       {locationAssets.data ? (
         <LocationAssetList
@@ -118,13 +119,14 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ message }: { readonly message: string }) {
+function ErrorState({ message, retrying, onRetry }: { readonly message: string; readonly retrying: boolean; readonly onRetry: () => void }) {
   const palette = useAppearancePalette();
   const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>{message}</Text>
+      <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
+      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
     </View>
   );
 }

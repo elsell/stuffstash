@@ -352,8 +352,8 @@ R015,assets/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and
 R015,assets/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R015,assets/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R015,assets/index.tsx,search,"Search, scope and filters",pending,,
-R015,assets/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R015,assets/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R015,assets/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,"M13; scoped in-place retry, repeated failure and scope recovery; 1349 remote tests/check/structural; native pending",M13
+R015,assets/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,"M13; scoped in-place retry, repeated failure and scope recovery; 1349 remote tests/check/structural; native pending",M13
 R015,assets/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R015,assets/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R015,assets/index.tsx,notifications,System notification entry and state,pending,,
@@ -496,8 +496,8 @@ R021,locations/[locationId]/index.tsx,accessibility,"VoiceOver/TalkBack names, r
 R021,locations/[locationId]/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R021,locations/[locationId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R021,locations/[locationId]/index.tsx,search,"Search, scope and filters",pending,,
-R021,locations/[locationId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R021,locations/[locationId]/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R021,locations/[locationId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,"M13; scoped in-place retry, repeated failure and scope recovery; 1349 remote tests/check/structural; native pending",M13
+R021,locations/[locationId]/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,"M13; scoped in-place retry, repeated failure and scope recovery; 1349 remote tests/check/structural; native pending",M13
 R021,locations/[locationId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R021,locations/[locationId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R021,locations/[locationId]/index.tsx,notifications,System notification entry and state,pending,,

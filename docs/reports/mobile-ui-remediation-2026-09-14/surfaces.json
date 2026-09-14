@@ -72,7 +72,11 @@
   {
     "id": "R015",
     "surface": "assets/index.tsx",
-    "source": "apps/mobile/src/app/assets/index.tsx"
+    "source": "apps/mobile/src/app/assets/index.tsx",
+    "sources": [
+      "apps/mobile/src/app/assets/index.tsx",
+      "apps/mobile/src/ui/screens/InventoryAssetsRouteScreen.tsx"
+    ]
   },
   {
     "id": "R016",
@@ -102,7 +106,11 @@
   {
     "id": "R021",
     "surface": "locations/[locationId]/index.tsx",
-    "source": "apps/mobile/src/app/locations/[locationId]/index.tsx"
+    "source": "apps/mobile/src/app/locations/[locationId]/index.tsx",
+    "sources": [
+      "apps/mobile/src/app/locations/[locationId]/index.tsx",
+      "apps/mobile/src/ui/screens/LocationAssetsRouteScreen.tsx"
+    ]
   },
   {
     "id": "R022",
