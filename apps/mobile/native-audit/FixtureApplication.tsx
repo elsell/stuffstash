@@ -18,6 +18,8 @@ import { AppTextInput } from '../src/ui/components/AppTextInput';
 import { CustomizationFieldControls } from '../src/ui/components/CustomizationEditorFields';
 import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeSheetOptions';
 
+export { SheetLayoutFixture } from './SheetLayoutFixture';
+
 export { AddAssetFixture } from './AddAssetFixture';
 
 // Runner-only composition. No production session, service, or credentials are loaded.
@@ -44,6 +46,7 @@ function FixtureNavigation() {
   return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
+      <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
@@ -79,6 +82,8 @@ export function FixtureMenu() {
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
+    {['direct', 'nested', 'footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
+      onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Text>{result}</Text>
   </FixturePage>;
 }

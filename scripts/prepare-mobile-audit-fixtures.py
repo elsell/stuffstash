@@ -20,6 +20,7 @@ routes.mkdir()
 exports = {
     "_layout": "FixtureLayout",
     "index": "FixtureMenu",
+    "audit-sheet-diagnostic": "SheetLayoutFixture",
     "audit-add": "AddAssetFixture",
     "audit-browse": "BrowseFilterFixture",
     "audit-expiration": "ExpirationFilterFixture",

@@ -31,6 +31,23 @@ final class FixtureAuditTests: XCTestCase {
     hierarchy.lifetime = .keepAlways
     add(hierarchy)
   }
+  private func verifyFullSheetLayout(_ variant: String) {
+    let open = app.buttons["Audit \(variant) sheet"]
+    for _ in 0..<5 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.navigationBars["Sheet diagnostic"].waitForExistence(timeout: 5))
+    capture("sheet-\(variant)-layout")
+    let row = app.buttons["Diagnostic Tags"]
+    XCTAssertTrue(row.waitForExistence(timeout: 5))
+    XCTAssertTrue(row.isHittable)
+    if variant == "footer" { XCTAssertTrue(app.buttons["Finish diagnostic"].isHittable) }
+  }
+
+  func testDirectFullSheetLayout() { verifyFullSheetLayout("direct") }
+  func testNestedFullSheetLayout() { verifyFullSheetLayout("nested") }
+  func testFooterFullSheetLayout() { verifyFullSheetLayout("footer") }
+
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
     let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch

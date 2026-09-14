@@ -216,3 +216,10 @@ mask lost characters with replacement typing or weaker matching. Calendar
 popover dismissal must target outside its bounds and verify dismissal before
 checking the underlying action's reachability. A failed test gesture is not
 evidence that a product control is unreachable.
+
+The form-sheet diagnostic compares a direct ScrollView, the same ScrollView
+inside a background/flex container, and that container with the existing native
+action footer. All use identical synthetic rows and full-height native sheet
+presentation. This fixture isolates layout integration; it must not replace the
+production filter or count as filter completion. Require visible, hittable rows
+and export native hierarchy for each independently executed variant.
