@@ -53,8 +53,8 @@ describe('rendered mobile customization production states', () => {
     types = [assetType('new', 'New type', 'inventory')];
     await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'asset-type', 'active') })); await settleQueries(screen);
     expect(screen.byLabel('Name')?.props.value).toBe('My dirty field');
-    expect(screen.allText()).toContain('Add New type');
-    expect(screen.allText()).not.toContain('Add Old type');
+    expect(screen.allText()).toContain('New type');
+    expect(screen.allText()).not.toContain('Old type');
   });
 
   it('aligns collection chrome and editor actions to the shared 16-point content column', async () => {

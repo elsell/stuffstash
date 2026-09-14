@@ -5,19 +5,38 @@ import type { CustomAssetTypeDefinition, CustomFieldApplicability, CustomFieldTy
 import { suggestedCustomizationKey } from '../../domain/customization/Customization';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { SettingsChoiceRow } from '../screens/SettingsList';
 import { NativeChoicePicker } from './NativeChoicePicker';
 import { AppTextInput } from './AppTextInput';
 
-export function CustomizationFieldControls(props: { readonly applicability: CustomFieldApplicability; readonly canMutate: boolean; readonly eligibleTypes: readonly CustomAssetTypeDefinition[]; readonly enumOptions: readonly string[]; readonly fieldType: CustomFieldType; readonly mode: 'create' | 'edit'; readonly newOption: string; readonly onApplicability: (value: CustomFieldApplicability) => void; readonly onEnumOptions: (value: readonly string[]) => void; readonly onFieldType: (value: CustomFieldType) => void; readonly onNewOption: (value: string) => void; readonly onTargets: (value: readonly string[]) => void; readonly targetIds: readonly string[] }) {
+export function CustomizationFieldControls(props: { readonly applicability: CustomFieldApplicability; readonly canMutate: boolean; readonly eligibleTypes: readonly CustomAssetTypeDefinition[]; readonly enumOptions: readonly string[]; readonly fieldType: CustomFieldType; readonly mode: 'create' | 'edit'; readonly newOption: string; readonly onApplicability: (value: CustomFieldApplicability) => void; readonly onEnumOptions: (value: readonly string[]) => void; readonly onFieldType: (value: CustomFieldType) => void; readonly onNewOption: (value: string) => void; readonly onTargets: (value: readonly string[]) => void; readonly persistedTargetIds: readonly string[]; readonly targetIds: readonly string[] }) {
   const styles = createStyles(useAppearancePalette()); const types: readonly CustomFieldType[] = ['text', 'number', 'boolean', 'date', 'url', 'enum'];
-  const selectedTypes = props.eligibleTypes.filter((type) => props.targetIds.includes(type.id));
-  const availableTypes = props.eligibleTypes.filter((type) => !props.targetIds.includes(type.id));
-  const unavailableTargetCount = props.targetIds.length - selectedTypes.length;
+  const unavailableTargets = props.targetIds.filter(id => !props.eligibleTypes.some(type => type.id === id));
+  const unavailableSavedCount = unavailableTargets.filter(id => props.persistedTargetIds.includes(id)).length;
+  const unavailableDraftTargets = unavailableTargets.filter(id => !props.persistedTargetIds.includes(id));
   return <>
     <View style={styles.formRow}>{props.mode === 'edit' ? <Text style={styles.label}>Type</Text> : null}{props.mode === 'edit' ? <Text style={styles.lockedValue}>{capitalize(props.fieldType)}</Text> : <SingleChoicePicker disabled={!props.canMutate} label="Type" onChange={props.onFieldType} options={types.map((value) => ({ label: capitalize(value), value }))} value={props.fieldType} />}</View>
     {props.fieldType === 'enum' ? <View style={styles.formRow}><Text style={styles.label}>Options</Text>{props.enumOptions.map((option) => <Text key={option} style={styles.lockedValue}>{option}{props.mode === 'edit' ? ' · Existing' : ''}</Text>)}{props.enumOptions.length === 0 ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Add at least one option.</Text> : null}{props.canMutate ? <View style={styles.inline}><AppTextInput accessibilityLabel="New enum option" onChangeText={props.onNewOption} placeholder="Add option" style={styles.input} value={props.newOption} /><Pressable accessibilityRole="button" onPress={() => { const next = suggestedCustomizationKey(props.newOption); if (next && !props.enumOptions.includes(next)) props.onEnumOptions([...props.enumOptions, next]); props.onNewOption(''); }} style={styles.inlineAction}><Text style={styles.inlineActionText}>Add</Text></Pressable></View> : null}</View> : null}
     <View style={styles.formRow}>{props.mode === 'edit' ? <Text style={styles.label}>Applies to</Text> : null}{props.mode === 'edit' ? props.applicability === 'all_assets' ? <Text style={styles.lockedValue}>All assets</Text> : <><Text style={styles.lockedValue}>Selected asset types</Text>{props.canMutate ? <Choice disabled={false} label="Expand to all assets" onPress={() => props.onApplicability('all_assets')} selected={false} /> : null}</> : <SingleChoicePicker disabled={!props.canMutate} label="Applies to" onChange={props.onApplicability} options={[{ label: 'All assets', value: 'all_assets' }, { label: 'Selected asset types', value: 'custom_asset_types' }]} value={props.applicability} />}</View>
-    {props.applicability === 'custom_asset_types' ? <View style={styles.formRow}><Text style={styles.label}>Asset types</Text>{selectedTypes.map((type) => <Text key={type.id} style={styles.lockedValue}>{`${type.displayName}${type.scope === 'tenant' ? ' · Inherited' : ''}${props.mode === 'edit' ? ' · Existing' : ''}`}</Text>)}{unavailableTargetCount > 0 ? <Text style={styles.lockedValue}>{`${unavailableTargetCount} existing asset ${unavailableTargetCount === 1 ? 'type is' : 'types are'} unavailable`}</Text> : null}{props.canMutate ? availableTypes.map((type) => <Choice disabled={false} key={type.id} label={`${props.mode === 'edit' ? 'Add ' : ''}${type.displayName}${type.scope === 'tenant' ? ' · Inherited' : ''}`} onPress={() => props.onTargets([...props.targetIds, type.id])} selected={false} />) : null}{props.targetIds.length === 0 && props.canMutate ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Choose at least one asset type.</Text> : null}{props.eligibleTypes.length === 0 && props.targetIds.length === 0 ? <Text style={styles.readOnly}>No active asset types are available.</Text> : null}</View> : null}
+    {props.applicability === 'custom_asset_types' ? <View style={styles.formRow}>
+      <Text style={styles.label}>Asset types</Text>
+      {props.eligibleTypes.map(type => {
+        const persisted = props.persistedTargetIds.includes(type.id);
+        const selected = props.targetIds.includes(type.id);
+        const label = `${type.displayName}${type.scope === 'tenant' ? ' · Inherited' : ''}`;
+        if (persisted) return <Text key={type.id} style={styles.lockedValue}>{`${label} · Existing`}</Text>;
+        if (!props.canMutate) return selected ? <Text key={type.id} style={styles.lockedValue}>{label}</Text> : null;
+        return <SettingsChoiceRow key={type.id} label={label} multiple selected={selected}
+          onPress={() => {
+            if (props.canMutate) props.onTargets(selected ? props.targetIds.filter(id => id !== type.id) : [...props.targetIds, type.id]);
+          }} />;
+      })}
+      {unavailableSavedCount > 0 ? <Text style={styles.lockedValue}>{`${unavailableSavedCount} existing asset ${unavailableSavedCount === 1 ? 'type is' : 'types are'} unavailable`}</Text> : null}
+      {unavailableDraftTargets.length > 0 ? <SettingsChoiceRow label="Unavailable selections" accessibilityLabel="Include unavailable draft selections" multiple selected disabled={!props.canMutate}
+        onPress={() => { if (props.canMutate) props.onTargets(props.targetIds.filter(id => !unavailableDraftTargets.includes(id))); }} /> : null}
+      {props.targetIds.length === 0 && props.canMutate ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Choose at least one asset type.</Text> : null}
+      {props.eligibleTypes.length === 0 && props.targetIds.length === 0 ? <Text style={styles.readOnly}>No active asset types are available.</Text> : null}
+    </View> : null}
   </>;
 }
 

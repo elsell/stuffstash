@@ -133,3 +133,9 @@ explicit labels and at least 48-point targets; enlarged text stacks the action
 below the message. On iOS, announce a new message without moving focus; Android
 uses the live region. Retain the shared nonmodal banner pattern because the native
 alert dialog would interrupt ordinary saved-state/undo feedback.
+
+## Custom-field target drafts
+
+Apply the saved-versus-draft target distinction from client settings management.
+Keep persisted targets immutable; allow unsaved additions to be deselected in both
+create and edit. Preserve permissions and scoped eligible-type loading.

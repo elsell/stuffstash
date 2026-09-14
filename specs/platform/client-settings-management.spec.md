@@ -88,7 +88,7 @@ Lifecycle view and selected-record subroutes or query state must be canonical an
 - The custom-color modal uses the same horizontal inset, bottom safe-area clearance, fixed non-scrolling picker area, and aligned full-width actions. Its Cancel, Done, and Clear controls remain at least 44 points and usable with the keyboard visible.
 - Read-only, inherited, and archived mobile detail uses static labeled values rather than disabled text inputs, color pickers, or other controls that imply mutation.
 - Mobile create forms identify required values neutrally on first presentation. Field-level errors become assertive only after the user has interacted with the affected control or attempted submission; a blank untouched form must not open by announcing errors.
-- Custom-field type and applicability use compact value/disclosure rows that open a focused single-selection surface. The editor must not render a viewport-tall grid of radio cards for these single-value choices.
+- Custom-field type and applicability use the shared native menu-style picker in place. The editor must not render a viewport-tall grid of radio cards for these single-value choices.
 - The custom-color surface may scroll its overall content at large Dynamic Type or while the Android keyboard is visible, but the spectrum and hue controls retain gesture ownership and do not scroll during color gestures.
 
 ## Settings Information Architecture
@@ -163,6 +163,7 @@ Tenant and inventory lists must expose concise metadata: display name, field typ
 - Field and asset-type clients must use the same stable-key validator as their application managers. If a generated or manually entered key is invalid while technical details are collapsed, the form must reveal and focus that control, explain the accepted format, and keep Save unavailable.
 - Edit supports only compatibility-preserving operations already defined by the domain: display-name change, adding enum options, adding active eligible custom asset type targets, and expanding targeted applicability to all assets.
 - Immutable values must render as read-only details. Unsupported narrowing or removal controls must not be rendered as disabled editable controls.
+- Target selection distinguishes saved immutable targets from unsaved additions. During creation every selected target can be deselected; during editing only draft additions can be deselected. Saved targets remain identified as existing and cannot be removed. Eligible draft targets use shared multiple-choice rows with checked state, without leaving the editor. Removing a draft choice does not narrow persisted applicability. If a draft target becomes unavailable, provide a safe aggregate deselection without revealing hidden names or removing saved targets.
 - Enum option and custom asset type target adders must prevent duplicate selections and explain why archived or wrong-scope targets are unavailable without exposing unauthorized records.
 
 ### Lifecycle

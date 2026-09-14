@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { CustomizationFieldControls } from './CustomizationEditorFields';
 
 it('does not change a field type from an option opened before the form became read-only', async () => {
   const h = new MobileRenderHarness(); const changes: string[] = [];
-  const form = (canMutate: boolean) => <CustomizationFieldControls applicability="all_assets" canMutate={canMutate} eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="create" newOption=""
+  const form = (canMutate: boolean) => <CustomizationFieldControls persistedTargetIds={[]} applicability="all_assets" canMutate={canMutate} eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="create" newOption=""
     onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={value => changes.push(value)} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />;
   try {
     await h.render(form(true));
@@ -12,5 +13,64 @@ it('does not change a field type from an option opened before the form became re
     await h.render(form(false));
     await h.press(h.byText('Number')?.parent ?? undefined);
     expect(changes).toEqual([]);
+  } finally { await h.unmount(); }
+});
+
+
+it('allows a newly selected asset type to be deselected before creating a field', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [targets, setTargets] = useState<readonly string[]>([]);
+    return <CustomizationFieldControls persistedTargetIds={[]} applicability="custom_asset_types" canMutate eligibleTypes={[{ kind: 'asset-type', id: 'type-1', tenantId: 'tenant', scope: 'inventory', key: 'tools', displayName: 'Tools', description: '', lifecycle: 'active' }]} enumOptions={[]} fieldType="text" mode="create" newOption=""
+      onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={setTargets} targetIds={targets} />;
+  }
+  try {
+    await h.render(<Form />);
+    await h.press(h.byLabel('Tools'));
+    expect(h.byText('Choose at least one asset type.')).toBeUndefined();
+    await h.press(h.byLabel('Tools'));
+    expect(h.byText('Choose at least one asset type.')).toBeDefined();
+  } finally { await h.unmount(); }
+});
+
+
+it('preserves saved targets while allowing draft additions to be removed during editing', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [targets, setTargets] = useState<readonly string[]>(['saved']);
+    return <CustomizationFieldControls applicability="custom_asset_types" canMutate
+      eligibleTypes={['saved', 'draft'].map(id => ({ kind: 'asset-type', id, tenantId: 'tenant', scope: 'inventory', key: id, displayName: id, description: '', lifecycle: 'active' }))}
+      enumOptions={[]} fieldType="text" mode="edit" newOption="" persistedTargetIds={['saved']}
+      onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={setTargets} targetIds={targets} />;
+  }
+  try {
+    await h.render(<Form />);
+    expect(h.byText('saved · Existing')).toBeDefined();
+    expect(h.byLabel('saved')).toBeUndefined();
+    await h.press(h.byLabel('draft'));
+    expect(h.byLabel('draft')?.props.accessibilityState.checked).toBe(true);
+    await h.press(h.byLabel('draft'));
+    expect(h.byLabel('draft')?.props.accessibilityState.checked).toBe(false);
+    expect(h.byText('saved · Existing')).toBeDefined();
+    expect(h.byText('Choose at least one asset type.')).toBeUndefined();
+  } finally { await h.unmount(); }
+});
+
+
+it('can remove unavailable draft targets without removing saved targets or revealing IDs', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [targets, setTargets] = useState<readonly string[]>(['private-saved', 'private-draft']);
+    return <CustomizationFieldControls applicability="custom_asset_types" canMutate eligibleTypes={[]}
+      enumOptions={[]} fieldType="text" mode="edit" newOption="" persistedTargetIds={['private-saved']}
+      onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={setTargets} targetIds={targets} />;
+  }
+  try {
+    await h.render(<Form />);
+    await h.press(h.byLabel('Include unavailable draft selections'));
+    expect(h.byLabel('Include unavailable draft selections')).toBeUndefined();
+    expect(h.byText('1 existing asset type is unavailable')).toBeDefined();
+    expect(h.byText('Choose at least one asset type.')).toBeUndefined();
+    expect(h.allText()).not.toContain('private-');
   } finally { await h.unmount(); }
 });

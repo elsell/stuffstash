@@ -13,11 +13,14 @@
 | M09 | Expiration location labels omit ancestry | Implemented; runtime pending | Authorized active-tree path labels, partial paths and duplicate-name fixture; full1331 tests/structural plus typecheck green; critic found no blockers |
 
 | M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
-| M11 | Newly selected custom-field applicability targets cannot be removed before saving | Investigating contract | CustomizationEditorFields only appends targets and displays selected targets as static Existing text, including unsaved additions; distinguish immutable saved scope from editable draft |
+| M11 | Newly selected custom-field applicability targets cannot be removed before saving | Implemented; runtime pending | Saved targets stay immutable; draft checkbox choices can be deselected, including safe unavailable-draft removal; create/edit/scoped-name tests, 37 focused tests/check/structural green; critic found no further blocker |
 | M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Open | InventoryAssetsRouteScreen/LocationAssetsRouteScreen/LocationsScreen ErrorState renders text only; preserve context and offer retry |
 
 | M14 | Native onboarding run shows a shortened typed server address | Investigating runtime evidence | Run34882515267 iPhone screenshot shows h.invalid after typing https://example.invalid; add explicit value assertion and reproduce before classifying simulator input vs app loss |
+
+| M15 | Unsaved enum options cannot be removed before saving | Open | Same saved-versus-draft distinction needed for CustomizationEditorFields enum option adder |
+| M16 | Customization controls remain editable while Save is pending | Open | Critic: editorMutable lacks saving/lifecycleBusy; captured submission can complete and discard later edits |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
