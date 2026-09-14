@@ -10,6 +10,7 @@ it('installs real native bar items with system symbols, badges and actions', () 
   ]);
   const items = options.unstable_headerRightItems?.({ canGoBack: false });
   expect(items?.map(item => item.type)).toEqual(['button', 'button', 'button']);
+  expect(items?.map(item => item.type === 'button' ? item.width : undefined)).toEqual([44, 44, 44]);
   expect(items?.[0]).toMatchObject({ accessibilityLabel: 'Notifications, 3 unread', badge: { value: 3 }, icon: { type: 'sfSymbol', name: 'bell' } });
   expect(items?.[1]).toMatchObject({ icon: { type: 'sfSymbol', name: 'plus' } });
   items?.forEach(item => { if (item.type === 'button') item.onPress?.(); });

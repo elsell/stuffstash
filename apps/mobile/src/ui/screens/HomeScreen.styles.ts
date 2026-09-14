@@ -56,8 +56,9 @@ export function createHomeScreenStyles(colors: MobileColorPalette) {
       flex: 1,
       flexDirection: 'row',
       gap: spacing.sm,
-      minHeight: 48,
-      paddingRight: spacing.sm
+      minHeight: 44,
+      paddingHorizontal: 12,
+      paddingVertical: 4
     },
     contextText: {
       flex: 1,
@@ -65,13 +66,15 @@ export function createHomeScreenStyles(colors: MobileColorPalette) {
     },
     contextInventory: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: 17,
+      lineHeight: 20,
       fontWeight: '700',
       letterSpacing: 0
     },
     contextTenantPrefix: {
       color: colors.textMuted,
-      fontSize: 13,
+      fontSize: 12,
+      lineHeight: 14,
       fontWeight: '500',
       letterSpacing: 0
     },

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
+import { useHomePullRefresh } from './useHomePullRefresh';
 import { HomeNavigationHeader } from './HomeNavigationHeader';
 import type { NativeHeaderAction } from '../components/NativeHeaderActions.types';
 import {
@@ -30,12 +31,11 @@ type HomeScreenProps = {
   readonly notificationAction?: NativeHeaderAction;
   readonly expirationSection?: ReactNode;
   readonly onRefreshAdditional?: () => Promise<void>;
-  readonly refreshingAdditional?: boolean;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
 };
 
-export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationAction, expirationSection, onRefreshAdditional, refreshingAdditional = false }: HomeScreenProps) {
+export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationAction, expirationSection, onRefreshAdditional }: HomeScreenProps) {
   const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   const feedback = useAppFeedback();
   const dashboardState = useMobileInventoryServerQuery({
@@ -55,6 +55,8 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
     }
   }
 
+  const pullRefresh = useHomePullRefresh(refreshDashboard);
+
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <HomeNavigationHeader dashboard={dashboardState.data} notificationAction={notificationAction} />
@@ -70,8 +72,9 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
           expirationSection={expirationSection}
           assetCheckoutCommand={assetCheckoutCommand}
           dashboard={dashboardState.data}
-          isRefreshing={refreshingAdditional || dashboardState.isRefetching}
-          onRefresh={refreshDashboard}
+          isRefreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.refresh}
+          onDashboardChanged={refreshDashboard}
         />
       ) : null}
     </SafeAreaView>
@@ -116,13 +119,15 @@ function Dashboard({
   assetCheckoutCommand,
   dashboard,
   isRefreshing,
-  onRefresh
+  onRefresh,
+  onDashboardChanged
 }: {
   readonly expirationSection?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
   readonly isRefreshing: boolean;
   readonly onRefresh: () => void | Promise<void>;
+  readonly onDashboardChanged: () => void | Promise<void>;
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
@@ -144,7 +149,7 @@ function Dashboard({
           expirationSection={expirationSection}
         assetCheckoutCommand={assetCheckoutCommand}
         dashboard={dashboard}
-        onDashboardChanged={onRefresh}
+        onDashboardChanged={onDashboardChanged}
       />
     </ScrollView>
   );
