@@ -56,7 +56,6 @@ describe('mobile navigation contract', () => {
     expect(addScreenSource).toContain('nestedScrollEnabled');
     expect(addScreenSource).toContain('parentMenuResults');
     expect(addScreenSource).toContain('onSearchFocus');
-    expect(addScreenSource).toContain('accessibilityRole="header"');
   });
 
   it('keeps Settings as a non-tab stack route', () => {

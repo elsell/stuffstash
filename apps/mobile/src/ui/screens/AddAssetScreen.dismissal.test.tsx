@@ -10,6 +10,7 @@ import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
+import { navigationOptions } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
 it('keeps dirty Add parent/title across metadata refresh and exposes dismissal', async () => {
@@ -22,6 +23,7 @@ it('keeps dirty Add parent/title across metadata refresh and exposes dismissal',
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={query} addDraftScopeQuery={scope} addAssetDraftStore={store} createAssetCommand={{ execute: async () => ({ id: 'new', title: 'New', message: 'Saved' }) }} parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })} photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} initialParent={{ id: 'initial', title: 'Initial', kind: 'container', pathLabel: 'Initial', selectionHint: '', subtitle: '', willPromoteToContainer: false }} onDismiss={() => { dismissed++; }} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(); await settle();
+    expect(navigationOptions().at(-1)).toMatchObject({ headerShown: true, title: 'Add item' });
     await h.changeText(h.byLabel('Asset name'), 'My dirty draft');
     // The draft store is a persistence port, not a live source of form state.
     store.save({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' }, { title: 'Stale stored draft', description: '', parentQuery: '', selectedPhotos: [], showDetails: false });
