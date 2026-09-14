@@ -2,7 +2,7 @@ import { OnboardingPartialSetupError } from '../../application/onboarding/Househ
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo, ActivityIndicator, findNodeHandle, KeyboardAvoidingView,
-  Platform, Pressable, ScrollView, Text, View
+  Platform, Pressable, ScrollView, Text, View, type TextInputProps
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
@@ -101,7 +101,7 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   function input(label: string, value: string, onChangeText: (value: string) => void, placeholder: string, url = false) {
     return <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <AppTextInput accessibilityLabel={label} value={value} onChangeText={onChangeText}
+      <OnboardingTextInput key={label} accessibilityLabel={label} initialValue={value} onChangeText={onChangeText}
         placeholder={placeholder} placeholderTextColor={colors.textMuted} autoCorrect={false}
         autoCapitalize={url ? 'none' : 'sentences'} keyboardType={url ? 'url' : 'default'}
         editable={!submitting} returnKeyType="go" onSubmitEditing={() => void proceed()} style={styles.input} />
@@ -143,4 +143,12 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
       </ScrollView>
     </KeyboardAvoidingView>
   </SafeAreaView>;
+}
+
+
+function OnboardingTextInput({ initialValue, ...props }: TextInputProps & { readonly initialValue: string }) {
+  // Preserve native editing state across validation/submission renders. A new
+  // field key seeds a new form step; ordinary keystrokes never replace its text.
+  const seed = useRef(initialValue);
+  return <AppTextInput {...props} defaultValue={seed.current} />;
 }
