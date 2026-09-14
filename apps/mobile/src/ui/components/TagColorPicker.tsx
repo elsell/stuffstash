@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Check, Palette, X } from 'lucide-react-native';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
+import { expoUIColorPickerAvailable } from './FullSpectrumTagColorPickerPresentation';
 import { FullSpectrumTagColorPicker } from './FullSpectrumTagColorPicker';
 import { tagColorModalLayout } from './TagColorPickerPresentation';
 import { AppTextInput, appKeyboardDismissMode } from './AppTextInput';
@@ -28,6 +29,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
   const contextPalette = useAppearancePalette();
   const colors = palette ?? contextPalette;
   const styles = createStyles(colors);
+  const nativePicker = expoUIColorPickerAvailable(Platform.OS);
   const normalizedValue = normalizeColor(value);
   const hasTypedColor = value.trim().length > 0;
   const invalidTypedColor = hasTypedColor && normalizedValue === undefined;
@@ -89,7 +91,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           );
         })}
       </View>
-      <Pressable
+      {nativePicker ? <FullSpectrumTagColorPicker disabled={disabled} value={normalizedValue ?? ''} onChange={next => { if (!disabled) onChange(next); }} /> : <Pressable
         accessibilityLabel="Choose a custom tag color"
         accessibilityRole="button"
         accessibilityState={{ disabled, selected: customSelected }}
@@ -101,8 +103,8 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           {customSelected && normalizedValue ? <Check color={swatchForeground(normalizedValue)} size={14} strokeWidth={2.8} /> : <Palette color={colors.textMuted} size={16} />}
         </View>
         <Text style={styles.customLabel}>Custom…</Text>
-      </Pressable>
-      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Choose Custom… to correct this color.</Text> : null}
+      </Pressable>}
+      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>{nativePicker ? 'Choose a color to correct this value.' : 'Choose Custom… to correct this color.'}</Text> : null}
       {customOpen ? (
         <View onLayout={(event) => setCustomPanelHeight(event.nativeEvent.layout.height)} style={styles.customPanel} testID="custom-tag-color-panel">
           <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>Custom color</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : 'No color'}</Text></View></View>
