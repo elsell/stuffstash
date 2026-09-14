@@ -81,3 +81,13 @@ with the existing immutable edit values retained. A picker must not publish chan
 after its containing form becomes read-only, including an option opened before
 permissions change. Retain outer field draft/save semantics and validate selected
 values against the supplied options.
+
+## Inventory switcher
+
+Present the inventory switcher as a bounded, scrollable native sheet with a native
+Close action available during loading, error and ready states. Determine the
+current household by tenant identity, never its display name. Preserve the
+household/inventory hierarchy and current selection. Empty households explain that
+no inventories are available. Prevent duplicate selection requests, report a failed
+switch in place, and retain the sheet for retry. Dismiss only after a successful
+selection; suppress late navigation after the sheet has unmounted.

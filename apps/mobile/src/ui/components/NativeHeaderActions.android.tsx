@@ -6,7 +6,8 @@ import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.ty
 const icons = {
   notifications: require('./android-icons/header-notifications.xml'),
   add: require('./android-icons/header-add.xml'),
-  account: require('./android-icons/header-account.xml')
+  account: require('./android-icons/header-account.xml'),
+  close: require('./android-icons/header-close.xml')
 };
 function Actions({ actions }: { readonly actions: readonly NativeHeaderAction[] }) {
   const palette = useAppearanceAwarePalette();

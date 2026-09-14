@@ -138,9 +138,9 @@ function ThemedApp() {
           name="tenant-switcher"
           options={{
             contentStyle: { backgroundColor: palette.surface },
-            headerShown: false,
+            headerShown: true,
             presentation: 'formSheet',
-            sheetAllowedDetents: 'fitToContents',
+            sheetAllowedDetents: [0.5, 1],
             sheetCornerRadius: 24,
             sheetGrabberVisible: true
           }}

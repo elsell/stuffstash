@@ -1,8 +1,8 @@
 import React from 'react';
-import { Bell, Plus, UserCircle } from 'lucide-react-native';
+import { Bell, Plus, UserCircle, X } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';
-const icons = { notifications: Bell, add: Plus, account: UserCircle };
+const icons = { notifications: Bell, add: Plus, account: UserCircle, close: X };
 /** Non-mobile preview renderer. Native platforms supply their own adapter. */
 export function nativeHeaderActionOptions(actions: readonly NativeHeaderAction[]): HeaderOptions {
   return { headerRight: () => <View style={{ flexDirection: 'row' }}>{actions.map(action => {

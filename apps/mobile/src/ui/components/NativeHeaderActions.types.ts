@@ -2,7 +2,7 @@ import type { StackScreenProps } from 'expo-router';
 type NonFunction<T> = T extends (...args: any[]) => unknown ? never : T;
 export type HeaderOptions = NonFunction<NonNullable<StackScreenProps['options']>>;
 export type NativeHeaderAction = {
-  readonly kind: 'notifications' | 'add' | 'account';
+  readonly kind: 'notifications' | 'add' | 'account' | 'close';
   readonly label: string;
   readonly badgeCount?: number;
   readonly onPress: () => void;

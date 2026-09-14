@@ -1,5 +1,5 @@
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';
-const symbols = { notifications: 'bell', add: 'plus', account: 'person.crop.circle' } as const;
+const symbols = { notifications: 'bell', add: 'plus', account: 'person.crop.circle', close: 'xmark' } as const;
 export function nativeHeaderActionOptions(actions: readonly NativeHeaderAction[]): HeaderOptions {
   return { unstable_headerRightItems: () => actions.map(action => ({
     type: 'button', width: 44, label: action.label, accessibilityLabel: action.label,

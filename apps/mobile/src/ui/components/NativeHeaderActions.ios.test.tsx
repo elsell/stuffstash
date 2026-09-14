@@ -21,3 +21,10 @@ it('removes stale native actions when permission or scope changes', () => {
   const item = nativeHeaderActionOptions([{ kind: 'notifications', label: 'Notifications, loading unread count', onPress: () => {} }]).unstable_headerRightItems?.({ canGoBack: false })[0];
   expect(item).not.toHaveProperty('badge');
 });
+it('provides a system close action for native sheets', () => {
+  let closed = false;
+  const item = nativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => { closed = true; } }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ accessibilityLabel: 'Close inventory switcher', icon: { type: 'sfSymbol', name: 'xmark' } });
+  if (item?.type === 'button') item.onPress?.();
+  expect(closed).toBe(true);
+});
