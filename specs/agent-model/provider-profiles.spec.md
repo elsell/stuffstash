@@ -301,3 +301,12 @@ The database vault rejects records outside the requested full credential scope, 
 Evaluation configuration fingerprints are SHA-256 identities over a versioned canonical JSON record of tenant/profile ID, capability, provider kind, endpoint, model, runtime options, capability options, prompt, credential purpose, immutable credential record ID, and adapter-supplied runtime identity. Secret material, display names, lifecycle timestamps and test timestamps are excluded. Object key ordering must not affect identity. Runtime identity is required; unsupported factories fail rather than report a partial identity.
 
 For the Google adapter, runtime identity covers adapter contract version and, for server ADC, effective project, region, quota project and an explicit non-secret operator credential revision. The revision is supplied through `STUFF_STASH_GOOGLE_ADC_CREDENTIAL_VERSION` and must change whenever the mounted ADC account/credential changes. An absent revision prevents ADC evaluation pinning but does not break ordinary voice use. Token refresh alone does not change the revision. The same factory identity computation is used at queue and worker resolution; changing any effective configuration invalidates the queued binding. ADC profile overrides conflicting with operator bounds remain rejected.
+
+### Mobile profile operation feedback
+
+Profile detail identifies the one pending operation: testing, enabling/disabling,
+or archiving. Only that action changes its visible label to progress; unrelated
+actions must not imply they are executing. Disable credential/prompt navigation
+and all competing profile actions until completion. Failure preserves the profile
+and restores the available actions. Keep duplicate-operation guards independent
+of rendered disabled state.

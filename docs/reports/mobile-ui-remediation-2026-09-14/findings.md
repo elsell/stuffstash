@@ -32,6 +32,8 @@
 | M27 | Sharing uses custom access choices and editable pending invitation drafts | Implemented; native pending | Shared native Access menu, email/access freeze and stale callback guards. Remote behavior checks cover failure retention and existing scope isolation; native menu rendering remains pending |
 | M28 | Invitation acceptance/opening buttons lose their accessible names while busy | Implemented; native pending | Stable Join/Open accessible names, busy/disabled states and visible progress text. Ten focused remote tests, typecheck and structural check pass; critic no blocker. Screen-reader runtime remains pending |
 
+| M29 | Provider detail implies three operations run at once and allows competing editors | Implemented; native pending | Typed active operation identifies only its progress label; all competing actions and editor navigation disabled/guarded. Fifteen remote tests plus typecheck/structural pass; critic no blocker |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

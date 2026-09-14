@@ -1,4 +1,4 @@
-import { ProviderProfileListScreen } from './ProviderProfileScreens';
+import { ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
 import { AppearanceProvider } from '../theme/AppearanceContext';
 import { AppearancePreferenceController, type AppearancePreference } from '../../application/settings/AppearancePreference';
@@ -199,3 +199,25 @@ function slot(recommendedAction: VoiceProviderRecommendedAction) {
 function testResult(): ProviderProfileTestResult { return { providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status: 'success', message: 'Succeeded.', testedAt: '2026-07-14T12:00:00Z' }; }
 
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((done) => { resolve = done; }); return { promise, resolve }; }
+
+ it.each(['test', 'enable', 'archive'] as const)('shows only the pending %s profile operation and restores actions after failure', async operation => {
+  const repository = new FakeProviderRepository();
+  let rejectAction: ((error: Error) => void) | undefined;
+  repository.pendingAction = new Promise((_resolve, reject) => { rejectAction = reject; });
+  const { harness, client } = await mount(<ProviderProfileDetailScreen profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => {}} onEditPrompt={() => {}} />);
+  try {
+    const label = operation === 'test' ? 'Test connection for Gemini language' : operation === 'enable' ? 'enable Gemini language' : 'Archive Gemini language';
+    await harness.press(harness.byLabel(label));
+    if (operation === 'archive') await harness.run(() => pressAlertButton('Archive'));
+    expect(harness.allText()).toContain(operation === 'test' ? 'Testing…' : operation === 'enable' ? 'Updating…' : 'Archiving…');
+    for (const [kind, text] of [['test', 'Testing…'], ['enable', 'Updating…'], ['archive', 'Archiving…']]) {
+      if (kind !== operation) expect(harness.allText()).not.toContain(text);
+    }
+    expect(harness.byLabel('Replace credential for Gemini language')?.props.disabled).toBe(true);
+    expect(harness.byLabel('Edit prompt guidance for Gemini language')?.props.disabled).toBe(true);
+    await harness.run(() => rejectAction?.(new Error('offline')));
+    expect(harness.byLabel(label)?.props.disabled).toBe(false);
+    expect(harness.byLabel('Replace credential for Gemini language')?.props.disabled).toBe(false);
+    expect(harness.allText()).toContain('Gemini language');
+  } finally { await harness.unmount(); client.clear(); }
+});

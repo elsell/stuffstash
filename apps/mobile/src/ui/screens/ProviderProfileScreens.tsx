@@ -152,7 +152,8 @@ export function ProviderProfileDetailScreen({
   const { styles } = useSettingsListStyles();
   const feedback = useAppFeedback();
   const providers = useProviderProfileModel(query);
-  const [working, setWorking] = useState(false);
+  const [operation, setOperation] = useState<'test' | 'lifecycle' | 'archive'>();
+  const working = operation !== undefined;
   const workingRef = useRef(false);
   if (providers.state.status !== 'ready') {
     return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
@@ -168,10 +169,10 @@ export function ProviderProfileDetailScreen({
   }
   const profileDisplayName = profile.displayName;
 
-  async function act(action: () => Promise<unknown>, title: string): Promise<void> {
+  async function act(kind: 'test' | 'lifecycle' | 'archive', action: () => Promise<unknown>, title: string): Promise<void> {
     if (workingRef.current) return;
     workingRef.current = true;
-    setWorking(true);
+    setOperation(kind);
     try {
       await action();
       feedback.showNotice({
@@ -188,7 +189,7 @@ export function ProviderProfileDetailScreen({
       });
     } finally {
       workingRef.current = false;
-      setWorking(false);
+      setOperation(undefined);
     }
   }
 
@@ -210,14 +211,14 @@ export function ProviderProfileDetailScreen({
         <SettingsValueRow label="Last tested" value={formatProviderProfileTestStatusLabel(profile.lastTestedAt)} />
       </SettingsSection>
       <SettingsSection title="Actions">
-        {profile.credentialPurpose ? <><SettingsActionRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label="Replace Credential" onPress={onEditCredential} /><SettingsSeparator /></> : null}
-        {profile.capability === 'language_inference' ? <><SettingsActionRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label="Prompt Guidance" onPress={onEditPrompt} /><SettingsSeparator /></> : null}
-        <SettingsActionRow accessibilityLabel={`Test connection for ${profile.displayName}`} disabled={working} label={working ? 'Testing…' : 'Test Connection'} onPress={() => void act(() => testCommand.execute(profile.id), 'Connection tested')} />
-        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={`${lifecycleAction} ${profile.displayName}`} disabled={working} label={working ? 'Updating…' : lifecycleAction === 'enable' ? 'Enable Profile' : 'Disable Profile'} onPress={() => void act(() => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
+        {profile.credentialPurpose ? <><SettingsActionRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label="Replace Credential" disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
+        {profile.capability === 'language_inference' ? <><SettingsActionRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label="Prompt Guidance" disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
+        <SettingsActionRow accessibilityLabel={`Test connection for ${profile.displayName}`} disabled={working} label={operation === 'test' ? 'Testing…' : 'Test Connection'} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
+        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={`${lifecycleAction} ${profile.displayName}`} disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? 'Enable Profile' : 'Disable Profile'} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
       </SettingsSection>
       {profile.lifecycleState !== 'archived' ? (
         <SettingsSection footer="Archived profiles remain in history but can’t be selected for voice.">
-          <SettingsActionRow accessibilityLabel={`Archive ${profile.displayName}`} destructive disabled={working} label={working ? 'Archiving…' : 'Archive Profile'} onPress={() => confirmArchive(profile, () => act(() => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived'))} />
+          <SettingsActionRow accessibilityLabel={`Archive ${profile.displayName}`} destructive disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => confirmArchive(profile, () => act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived'))} />
         </SettingsSection>
       ) : null}
     </ScrollView>
