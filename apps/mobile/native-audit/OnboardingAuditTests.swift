@@ -39,7 +39,12 @@ final class OnboardingAuditTests: XCTestCase {
     address.typeText("https://example.invalid")
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("onboarding-keyboard")
-    app.swipeUp()
+    XCTAssertEqual(address.value as? String, "https://example.invalid", "Typing must preserve the complete server address")
+    // Interactive keyboard dismissal follows a downward drag from scroll content.
+    let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
+    let start = origin.withOffset(CGVector(dx: app.frame.midX, dy: app.keyboards.firstMatch.frame.minY - 24))
+    let end = origin.withOffset(CGVector(dx: app.frame.midX, dy: app.frame.maxY - 24))
+    start.press(forDuration: 0.1, thenDragTo: end)
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
     let connect = app.buttons["Connect and sign in"]
     XCTAssertTrue(connect.isHittable, "Connection action must remain reachable after dismissing the keyboard by scrolling")

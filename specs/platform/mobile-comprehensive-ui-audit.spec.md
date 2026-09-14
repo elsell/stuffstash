@@ -63,6 +63,13 @@ record actual runtime evidence in the surface ledger as the audit proceeds.
 Workflow timeouts bound failed builds. Use scheduled sleep intervals while waiting
 for GitHub jobs; do not cancel a healthy build because it is slow.
 
+Native keyboard checks must use the platform's actual dismissal gesture: iOS
+interactive dismissal drags downward from scroll content above the keyboard.
+An upward whole-application swipe is not evidence of a broken dismissal. Assert
+the entered field value as well as keyboard presence so input loss cannot pass
+unnoticed. Preserve failed-run artifacts and distinguish test-procedure failures
+from confirmed application defects.
+
 ## Pull refresh lifecycle
 
 All list refresh controls represent an explicit pull gesture, not background query

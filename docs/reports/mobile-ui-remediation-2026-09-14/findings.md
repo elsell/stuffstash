@@ -17,5 +17,7 @@
 | M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Open | InventoryAssetsRouteScreen/LocationAssetsRouteScreen/LocationsScreen ErrorState renders text only; preserve context and offer retry |
 
+| M14 | Native onboarding run shows a shortened typed server address | Investigating runtime evidence | Run34882515267 iPhone screenshot shows h.invalid after typing https://example.invalid; add explicit value assertion and reproduce before classifying simulator input vs app loss |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
