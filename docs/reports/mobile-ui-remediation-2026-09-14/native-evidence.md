@@ -114,3 +114,8 @@ vanished. The pinned screens implementation coerces form-sheet scroll frames by
 searching direct children (or its own safe-area wrapper); its footer option is
 explicitly Android-only. A nested-body versus direct-scroll diagnostic is needed
 before adopting another production layout workaround.
+
+Run34906713382: the iPhone onboarding job104186247263 terminated with an Xcode
+application-launch timeout before its keyboard scenario could execute. This is
+an infrastructure/launch failure, not confirmation or rejection of M14. The run's
+other jobs were still active when this job log was inspected.
