@@ -380,3 +380,8 @@ messages and retry actions remain reachable with enlarged text or short windows.
 Preserve the denied heading's accessibility focus and announcement behavior. This
 includes shared denial states used by customization lists/editors and inventory
 sharing's load failures; loading-only indicators need no scroll conversion.
+
+Horizontal settings rows must constrain long values to available width and allow
+wrapping; values must not force labels or disclosure controls outside the row.
+The existing stacked layout for enlarged text remains in use. Apply this to both
+read-only values (including server URLs) and navigation-row trailing values.

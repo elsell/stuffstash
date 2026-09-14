@@ -40,6 +40,8 @@
 
 | M32 | Some settings errors and permission-denied states cannot scroll | Implemented; native pending | Scoped settings, shared customization denial and sharing error content now use ScrollView with growing content; focus/retry preserved. Fifty-eight existing remote behavior tests, check/structural pass; critic no blockers. Large-text runtime remains pending |
 
+| M33 | Shared settings values do not shrink within horizontal rows | Implemented; native pending | Read-only and trailing navigation values can shrink/wrap within available width; stacked large-text layout retained. Both style consumers inspected, check/structural pass; critic no blockers. Native long-string verification remains pending |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
