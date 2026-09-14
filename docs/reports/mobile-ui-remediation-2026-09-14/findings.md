@@ -29,6 +29,9 @@
 | M25 | Standalone recording meter uses an on-action foreground against the surface | Implemented; check/structural pass; native pending | Both consumers inspected: standalone uses action foreground; inside-button meter explicitly uses onAction. Critic no blocker. Native light/dark contrast remains pending |
 | M26 | Voice accessory accessibility label omits its changing status and context | Implemented; check/structural pass; native pending | Accessible name includes complete title and subtitle, preserving clipped status/context. Critic no blocker; screen-reader verification remains pending |
 
+| M27 | Sharing uses custom access choices and editable pending invitation drafts | Implemented; native pending | Shared native Access menu, email/access freeze and stale callback guards. Remote behavior checks cover failure retention and existing scope isolation; native menu rendering remains pending |
+| M28 | Invitation acceptance/opening buttons lose their accessible names while busy | Open; source-confirmed | InventoryInvitationScreen replaces the complete button label with a spinner without an explicit accessible name/state. Preserve task name and expose progress while joining/opening |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

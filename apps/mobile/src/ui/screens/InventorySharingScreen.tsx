@@ -1,3 +1,4 @@
+import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -15,7 +16,7 @@ import {
   Text,
   View
 } from 'react-native';
-import { Check, Copy, Send, X } from 'lucide-react-native';
+import { Copy, Send, X } from 'lucide-react-native';
 import type {
   CancelInventoryInvitationCommand,
   CreatedInventoryInvitation,
@@ -47,7 +48,7 @@ export function InventorySharingScreen({
 }) {
   const feedback = useAppFeedback();
   const palette = useAppearancePalette();
-  const { layout, styles: settingsStyles } = useSettingsListStyles();
+  const { styles: settingsStyles } = useSettingsListStyles();
   const styles = createStyles(palette);
   const compositionScopeId = useMobileServerStateScopeId();
   const scopeKey = `${compositionScopeId}:${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
@@ -164,33 +165,16 @@ export function InventorySharingScreen({
             autoComplete="email"
             accessibilityLabel="Invitee email"
             keyboardType="email-address"
-            onChangeText={setEmail}
+            editable={!working}
+            onChangeText={value => { if (!workingRef.current) setEmail(value); }}
             placeholder="friend@example.com"
             placeholderTextColor={palette.textMuted}
             style={styles.input}
             value={email}
           />
-          <Text style={styles.label}>Access</Text>
-          <View
-            accessibilityRole="radiogroup"
-            style={[styles.roleGroup, layout.stacksChoiceRows && styles.roleGroupStacked]}
-          >
-            {(['viewer', 'editor'] as const).map((role) => {
-              const selected = relationship === role;
-              return (
-                <Pressable
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                  key={role}
-                  onPress={() => setRelationship(role)}
-                  style={[styles.roleButton, selected && styles.roleButtonSelected]}
-                >
-                  {selected ? <Check color={palette.action} size={17} /> : null}
-                  <Text style={[styles.roleText, selected && styles.roleTextSelected]}>{titleCase(role)}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SettingsPickerRow label="Access" accessibilityLabel="Choose invitation access" value={relationship}
+            options={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }] as const}
+            disabled={working} onChange={value => { if (!workingRef.current) setRelationship(value); }} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Create Invitation"
@@ -301,12 +285,6 @@ function createStyles(colors: MobileColorPalette) {
     form: { gap: spacing.sm, padding: spacing.md },
     label: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
     input: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, color: colors.text, fontSize: 17, minHeight: 48, paddingHorizontal: spacing.md },
-    roleGroup: { flexDirection: 'row', gap: spacing.sm },
-    roleGroupStacked: { flexDirection: 'column' },
-    roleButton: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, flex: 1, flexDirection: 'row', gap: spacing.xs, justifyContent: 'center', minHeight: 44 },
-    roleButtonSelected: { backgroundColor: colors.selected, borderColor: colors.action },
-    roleText: { color: colors.textMuted, fontSize: 16, fontWeight: '600' },
-    roleTextSelected: { color: colors.action },
     primaryButton: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', marginTop: spacing.xs, minHeight: 48, paddingHorizontal: spacing.md },
     primaryButtonText: { color: colors.onAction, fontSize: 17, fontWeight: '700' },
     disabled: { opacity: 0.5 },
