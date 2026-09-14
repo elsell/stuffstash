@@ -10,7 +10,7 @@
 | M06 | Notice motion/timing/targets need accessibility adaptation | Open | F06; persistent recovery and preference-aware feedback |
 | M07 | Switcher lacks bounded scroll/explicit dismissal and identifies households by name | Implemented; runtime pending | Bounded sheet/native Close; identity collision, safe retry, duplicate and late navigation tests; full1329 tests/check/structural green; critic found no blockers |
 | M08 | Adaptive/assistive-tech runtime matrix unverified | Investigating access | F09; phone/iPad/Android runtime needed |
-| M09 | Expiration location labels omit ancestry | Open | F10; duplicate-name selection fixture |
+| M09 | Expiration location labels omit ancestry | Implemented; runtime pending | Authorized active-tree path labels, partial paths and duplicate-name fixture; full1331 tests/structural plus typecheck green; critic found no blockers |
 
 | M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
 | M11 | Newly selected custom-field applicability targets cannot be removed before saving | Investigating contract | CustomizationEditorFields only appends targets and displays selected targets as static Existing text, including unsaved additions; distinguish immutable saved scope from editable draft |

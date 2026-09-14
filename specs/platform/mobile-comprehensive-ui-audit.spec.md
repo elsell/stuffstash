@@ -97,3 +97,12 @@ selection; suppress late navigation after the sheet has unmounted.
 Expiration tag choices expose independent checked states and checkbox semantics.
 Users can select and remove multiple tags in the filter draft without replacing
 the other selections. Type and location remain single-choice controls.
+
+## Location choice identity
+
+Expiration location choices display and search the known containment path so
+same-named places in different rooms are distinguishable. Carry parent ancestry
+from the already authorized active inventory tree through the location summary
+and view model; do not fetch unrelated inventories or expose unavailable ancestors.
+Indicate a partial path when the supplied tree cannot resolve the full ancestry.
+Keep filtering by stable location ID and preserve draft/apply behavior.

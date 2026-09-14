@@ -256,13 +256,13 @@ R011,assets/[assetId]/history/index.tsx,accessibility,"VoiceOver/TalkBack names,
 R011,assets/[assetId]/history/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R011,assets/[assetId]/history/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R011,assets/[assetId]/history/index.tsx,search,"Search, scope and filters",pending,,
-R011,assets/[assetId]/history/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R011,assets/[assetId]/history/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R011,assets/[assetId]/history/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R011,assets/[assetId]/history/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R011,assets/[assetId]/history/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R011,assets/[assetId]/history/index.tsx,notifications,System notification entry and state,pending,,
 R011,assets/[assetId]/history/index.tsx,media,"Camera, library, files and audio",pending,,
-R011,assets/[assetId]/history/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R011,assets/[assetId]/history/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R012,assets/[assetId]/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R012,assets/[assetId]/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R012,assets/[assetId]/index.tsx,selection,Value selection and current value,pending,,
@@ -280,13 +280,13 @@ R012,assets/[assetId]/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, 
 R012,assets/[assetId]/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R012,assets/[assetId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R012,assets/[assetId]/index.tsx,search,"Search, scope and filters",pending,,
-R012,assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R012,assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R012,assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R012,assets/[assetId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R012,assets/[assetId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R012,assets/[assetId]/index.tsx,notifications,System notification entry and state,pending,,
 R012,assets/[assetId]/index.tsx,media,"Camera, library, files and audio",pending,,
-R012,assets/[assetId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R012,assets/[assetId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R013,assets/[assetId]/move-here.tsx,task,Task clarity and platform-pattern fit,pending,,
 R013,assets/[assetId]/move-here.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R013,assets/[assetId]/move-here.tsx,selection,Value selection and current value,pending,,
@@ -352,13 +352,13 @@ R015,assets/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and
 R015,assets/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R015,assets/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R015,assets/index.tsx,search,"Search, scope and filters",pending,,
-R015,assets/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R015,assets/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R015,assets/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R015,assets/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R015,assets/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R015,assets/index.tsx,notifications,System notification entry and state,pending,,
 R015,assets/index.tsx,media,"Camera, library, files and audio",pending,,
-R015,assets/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R015,assets/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R016,browse-filters.tsx,task,Task clarity and platform-pattern fit,pending,,
 R016,browse-filters.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R016,browse-filters.tsx,selection,Value selection and current value,pending,,
@@ -496,13 +496,13 @@ R021,locations/[locationId]/index.tsx,accessibility,"VoiceOver/TalkBack names, r
 R021,locations/[locationId]/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R021,locations/[locationId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R021,locations/[locationId]/index.tsx,search,"Search, scope and filters",pending,,
-R021,locations/[locationId]/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R021,locations/[locationId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R021,locations/[locationId]/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R021,locations/[locationId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R021,locations/[locationId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R021,locations/[locationId]/index.tsx,notifications,System notification entry and state,pending,,
 R021,locations/[locationId]/index.tsx,media,"Camera, library, files and audio",pending,,
-R021,locations/[locationId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R021,locations/[locationId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R022,notifications.tsx,task,Task clarity and platform-pattern fit,pending,,
 R022,notifications.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R022,notifications.tsx,selection,Value selection and current value,pending,,
@@ -520,13 +520,13 @@ R022,notifications.tsx,accessibility,"VoiceOver/TalkBack names, roles, states an
 R022,notifications.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R022,notifications.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R022,notifications.tsx,search,"Search, scope and filters",pending,,
-R022,notifications.tsx,loading,"Loading, background refresh and progress",pending,,
+R022,notifications.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R022,notifications.tsx,recovery,"Empty, error, denied and retry",pending,,
 R022,notifications.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R022,notifications.tsx,privacy,"Account scope, data use and permissions",pending,,
 R022,notifications.tsx,notifications,System notification entry and state,pending,,
 R022,notifications.tsx,media,"Camera, library, files and audio",pending,,
-R022,notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R022,notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R023,settings/about.tsx,task,Task clarity and platform-pattern fit,pending,,
 R023,settings/about.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R023,settings/about.tsx,selection,Value selection and current value,pending,,
@@ -688,13 +688,13 @@ R029,settings/household/asset-types/index.tsx,accessibility,"VoiceOver/TalkBack 
 R029,settings/household/asset-types/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R029,settings/household/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R029,settings/household/asset-types/index.tsx,search,"Search, scope and filters",pending,,
-R029,settings/household/asset-types/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R029,settings/household/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R029,settings/household/asset-types/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R029,settings/household/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R029,settings/household/asset-types/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R029,settings/household/asset-types/index.tsx,notifications,System notification entry and state,pending,,
 R029,settings/household/asset-types/index.tsx,media,"Camera, library, files and audio",pending,,
-R029,settings/household/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R029,settings/household/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R030,settings/household/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R030,settings/household/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R030,settings/household/asset-types/new.tsx,selection,Value selection and current value,pending,,
@@ -760,13 +760,13 @@ R032,settings/household/fields/index.tsx,accessibility,"VoiceOver/TalkBack names
 R032,settings/household/fields/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R032,settings/household/fields/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R032,settings/household/fields/index.tsx,search,"Search, scope and filters",pending,,
-R032,settings/household/fields/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R032,settings/household/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R032,settings/household/fields/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R032,settings/household/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R032,settings/household/fields/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R032,settings/household/fields/index.tsx,notifications,System notification entry and state,pending,,
 R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",pending,,
-R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R033,settings/household/fields/new.tsx,selection,Value selection and current value,pending,,
@@ -880,13 +880,13 @@ R037,settings/inventory/asset-types/index.tsx,accessibility,"VoiceOver/TalkBack 
 R037,settings/inventory/asset-types/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R037,settings/inventory/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R037,settings/inventory/asset-types/index.tsx,search,"Search, scope and filters",pending,,
-R037,settings/inventory/asset-types/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R037,settings/inventory/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R037,settings/inventory/asset-types/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R037,settings/inventory/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R037,settings/inventory/asset-types/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R037,settings/inventory/asset-types/index.tsx,notifications,System notification entry and state,pending,,
 R037,settings/inventory/asset-types/index.tsx,media,"Camera, library, files and audio",pending,,
-R037,settings/inventory/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R037,settings/inventory/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R038,settings/inventory/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R038,settings/inventory/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R038,settings/inventory/asset-types/new.tsx,selection,Value selection and current value,pending,,
@@ -952,13 +952,13 @@ R040,settings/inventory/fields/index.tsx,accessibility,"VoiceOver/TalkBack names
 R040,settings/inventory/fields/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R040,settings/inventory/fields/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R040,settings/inventory/fields/index.tsx,search,"Search, scope and filters",pending,,
-R040,settings/inventory/fields/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R040,settings/inventory/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R040,settings/inventory/fields/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R040,settings/inventory/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R040,settings/inventory/fields/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R040,settings/inventory/fields/index.tsx,notifications,System notification entry and state,pending,,
 R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",pending,,
-R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,pending,,
@@ -1048,13 +1048,13 @@ R044,settings/inventory/notifications.tsx,accessibility,"VoiceOver/TalkBack name
 R044,settings/inventory/notifications.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R044,settings/inventory/notifications.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R044,settings/inventory/notifications.tsx,search,"Search, scope and filters",pending,,
-R044,settings/inventory/notifications.tsx,loading,"Loading, background refresh and progress",pending,,
+R044,settings/inventory/notifications.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R044,settings/inventory/notifications.tsx,recovery,"Empty, error, denied and retry",pending,,
 R044,settings/inventory/notifications.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R044,settings/inventory/notifications.tsx,privacy,"Account scope, data use and permissions",pending,,
 R044,settings/inventory/notifications.tsx,notifications,System notification entry and state,pending,,
 R044,settings/inventory/notifications.tsx,media,"Camera, library, files and audio",pending,,
-R044,settings/inventory/notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R044,settings/inventory/notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R045,settings/inventory/tags/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
 R045,settings/inventory/tags/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,selection,Value selection and current value,pending,,
@@ -1096,13 +1096,13 @@ R046,settings/inventory/tags/index.tsx,accessibility,"VoiceOver/TalkBack names, 
 R046,settings/inventory/tags/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R046,settings/inventory/tags/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R046,settings/inventory/tags/index.tsx,search,"Search, scope and filters",pending,,
-R046,settings/inventory/tags/index.tsx,loading,"Loading, background refresh and progress",pending,,
+R046,settings/inventory/tags/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R046,settings/inventory/tags/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R046,settings/inventory/tags/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R046,settings/inventory/tags/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R046,settings/inventory/tags/index.tsx,notifications,System notification entry and state,pending,,
 R046,settings/inventory/tags/index.tsx,media,"Camera, library, files and audio",pending,,
-R046,settings/inventory/tags/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R046,settings/inventory/tags/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R047,settings/inventory/tags/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R047,settings/inventory/tags/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R047,settings/inventory/tags/new.tsx,selection,Value selection and current value,pending,,
@@ -1144,13 +1144,13 @@ R048,settings/sharing.tsx,accessibility,"VoiceOver/TalkBack names, roles, states
 R048,settings/sharing.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R048,settings/sharing.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R048,settings/sharing.tsx,search,"Search, scope and filters",pending,,
-R048,settings/sharing.tsx,loading,"Loading, background refresh and progress",pending,,
+R048,settings/sharing.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",pending,,
 R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",pending,,
 R048,settings/sharing.tsx,notifications,System notification entry and state,pending,,
 R048,settings/sharing.tsx,media,"Camera, library, files and audio",pending,,
-R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R049,settings/voice/[capability].tsx,task,Task clarity and platform-pattern fit,pending,,
 R049,settings/voice/[capability].tsx,navigation,"Navigation, hierarchy and return",pending,,
 R049,settings/voice/[capability].tsx,selection,Value selection and current value,pending,,
@@ -1600,13 +1600,13 @@ S067,Browse / list grid,accessibility,"VoiceOver/TalkBack names, roles, states a
 S067,Browse / list grid,motion,Reduced motion and feedback alternatives,pending,,
 S067,Browse / list grid,content,"Lists, hierarchy, density and pagination",pending,,
 S067,Browse / list grid,search,"Search, scope and filters",pending,,
-S067,Browse / list grid,loading,"Loading, background refresh and progress",pending,,
+S067,Browse / list grid,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 S067,Browse / list grid,recovery,"Empty, error, denied and retry",pending,,
 S067,Browse / list grid,editing,"Draft, save, cancel, undo and interruption",pending,,
 S067,Browse / list grid,privacy,"Account scope, data use and permissions",pending,,
 S067,Browse / list grid,notifications,System notification entry and state,pending,,
 S067,Browse / list grid,media,"Camera, library, files and audio",pending,,
-S067,Browse / list grid,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S067,Browse / list grid,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 S068,Browse / containment map columns,task,Task clarity and platform-pattern fit,pending,,
 S068,Browse / containment map columns,navigation,"Navigation, hierarchy and return",pending,,
 S068,Browse / containment map columns,selection,Value selection and current value,pending,,
@@ -1624,13 +1624,13 @@ S068,Browse / containment map columns,accessibility,"VoiceOver/TalkBack names, r
 S068,Browse / containment map columns,motion,Reduced motion and feedback alternatives,pending,,
 S068,Browse / containment map columns,content,"Lists, hierarchy, density and pagination",pending,,
 S068,Browse / containment map columns,search,"Search, scope and filters",pending,,
-S068,Browse / containment map columns,loading,"Loading, background refresh and progress",pending,,
+S068,Browse / containment map columns,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 S068,Browse / containment map columns,recovery,"Empty, error, denied and retry",pending,,
 S068,Browse / containment map columns,editing,"Draft, save, cancel, undo and interruption",pending,,
 S068,Browse / containment map columns,privacy,"Account scope, data use and permissions",pending,,
 S068,Browse / containment map columns,notifications,System notification entry and state,pending,,
 S068,Browse / containment map columns,media,"Camera, library, files and audio",pending,,
-S068,Browse / containment map columns,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S068,Browse / containment map columns,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 S069,Browse / map search path,task,Task clarity and platform-pattern fit,pending,,
 S069,Browse / map search path,navigation,"Navigation, hierarchy and return",pending,,
 S069,Browse / map search path,selection,Value selection and current value,pending,,
@@ -1679,9 +1679,9 @@ S070,Browse / list search,privacy,"Account scope, data use and permissions",pend
 S070,Browse / list search,notifications,System notification entry and state,pending,,
 S070,Browse / list search,media,"Camera, library, files and audio",pending,,
 S070,Browse / list search,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S071,Browse / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,M01 native picker implementation; remote draft/apply/cancel and adapter tests; native runtime pending,M01
-S071,Browse / filter overview,navigation,"Navigation, hierarchy and return",pending,,
-S071,Browse / filter overview,selection,Value selection and current value,source-reviewed,M01 native picker implementation; remote draft/apply/cancel and adapter tests; native runtime pending,M01
+S071,Browse / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S071,Browse / filter overview,navigation,"Navigation, hierarchy and return",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S071,Browse / filter overview,selection,Value selection and current value,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S071,Browse / filter overview,modality,Presentation and dismissal,pending,,
 S071,Browse / filter overview,layout,"Safe areas, scroll edges and overlays",pending,,
 S071,Browse / filter overview,adaptation,Phone/tablet/window reflow,pending,,
@@ -1698,7 +1698,7 @@ S071,Browse / filter overview,content,"Lists, hierarchy, density and pagination"
 S071,Browse / filter overview,search,"Search, scope and filters",pending,,
 S071,Browse / filter overview,loading,"Loading, background refresh and progress",pending,,
 S071,Browse / filter overview,recovery,"Empty, error, denied and retry",pending,,
-S071,Browse / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M01 native picker implementation; remote draft/apply/cancel and adapter tests; native runtime pending,M01
+S071,Browse / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S071,Browse / filter overview,privacy,"Account scope, data use and permissions",pending,,
 S071,Browse / filter overview,notifications,System notification entry and state,pending,,
 S071,Browse / filter overview,media,"Camera, library, files and audio",pending,,
@@ -1768,16 +1768,16 @@ S074,Expiration / soon expired all dates,accessibility,"VoiceOver/TalkBack names
 S074,Expiration / soon expired all dates,motion,Reduced motion and feedback alternatives,pending,,
 S074,Expiration / soon expired all dates,content,"Lists, hierarchy, density and pagination",pending,,
 S074,Expiration / soon expired all dates,search,"Search, scope and filters",pending,,
-S074,Expiration / soon expired all dates,loading,"Loading, background refresh and progress",pending,,
+S074,Expiration / soon expired all dates,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 S074,Expiration / soon expired all dates,recovery,"Empty, error, denied and retry",pending,,
 S074,Expiration / soon expired all dates,editing,"Draft, save, cancel, undo and interruption",pending,,
 S074,Expiration / soon expired all dates,privacy,"Account scope, data use and permissions",pending,,
 S074,Expiration / soon expired all dates,notifications,System notification entry and state,pending,,
 S074,Expiration / soon expired all dates,media,"Camera, library, files and audio",pending,,
-S074,Expiration / soon expired all dates,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S075,Expiration / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,M01 native picker implementation; remote draft/apply/cancel and adapter tests; native runtime pending,M01
-S075,Expiration / filter overview,navigation,"Navigation, hierarchy and return",pending,,
-S075,Expiration / filter overview,selection,Value selection and current value,source-reviewed,M01 native picker implementation; remote draft/apply/cancel and adapter tests; native runtime pending,M01
+S074,Expiration / soon expired all dates,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+S075,Expiration / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S075,Expiration / filter overview,navigation,"Navigation, hierarchy and return",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S075,Expiration / filter overview,selection,Value selection and current value,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S075,Expiration / filter overview,modality,Presentation and dismissal,pending,,
 S075,Expiration / filter overview,layout,"Safe areas, scroll edges and overlays",pending,,
 S075,Expiration / filter overview,adaptation,Phone/tablet/window reflow,pending,,
@@ -1794,7 +1794,7 @@ S075,Expiration / filter overview,content,"Lists, hierarchy, density and paginat
 S075,Expiration / filter overview,search,"Search, scope and filters",pending,,
 S075,Expiration / filter overview,loading,"Loading, background refresh and progress",pending,,
 S075,Expiration / filter overview,recovery,"Empty, error, denied and retry",pending,,
-S075,Expiration / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M01 native picker implementation; remote draft/apply/cancel and adapter tests; native runtime pending,M01
+S075,Expiration / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S075,Expiration / filter overview,privacy,"Account scope, data use and permissions",pending,,
 S075,Expiration / filter overview,notifications,System notification entry and state,pending,,
 S075,Expiration / filter overview,media,"Camera, library, files and audio",pending,,
@@ -1825,7 +1825,7 @@ S076,Expiration / types selection,media,"Camera, library, files and audio",pendi
 S076,Expiration / types selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S077,Expiration / tags selection,task,Task clarity and platform-pattern fit,pending,,
 S077,Expiration / tags selection,navigation,"Navigation, hierarchy and return",pending,,
-S077,Expiration / tags selection,selection,Value selection and current value,pending,,
+S077,Expiration / tags selection,selection,Value selection and current value,source-reviewed,ExpirationFiltersScreen tags branch uses independent checkbox checked states; select2/remove1/apply test. VoiceOver/TalkBack pending.,M10
 S077,Expiration / tags selection,modality,Presentation and dismissal,pending,,
 S077,Expiration / tags selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S077,Expiration / tags selection,adaptation,Phone/tablet/window reflow,pending,,
@@ -1836,20 +1836,20 @@ S077,Expiration / tags selection,imagery,"Icons, photos and missing media",pendi
 S077,Expiration / tags selection,targets,Touch target size and reachability,pending,,
 S077,Expiration / tags selection,gestures,Gestures and explicit alternatives,pending,,
 S077,Expiration / tags selection,keyboard,"Keyboard, text entry and focus",pending,,
-S077,Expiration / tags selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S077,Expiration / tags selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,ExpirationFiltersScreen tags branch uses independent checkbox checked states; select2/remove1/apply test. VoiceOver/TalkBack pending.,M10
 S077,Expiration / tags selection,motion,Reduced motion and feedback alternatives,pending,,
 S077,Expiration / tags selection,content,"Lists, hierarchy, density and pagination",pending,,
 S077,Expiration / tags selection,search,"Search, scope and filters",pending,,
 S077,Expiration / tags selection,loading,"Loading, background refresh and progress",pending,,
 S077,Expiration / tags selection,recovery,"Empty, error, denied and retry",pending,,
-S077,Expiration / tags selection,editing,"Draft, save, cancel, undo and interruption",pending,,
+S077,Expiration / tags selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,ExpirationFiltersScreen tags branch uses independent checkbox checked states; select2/remove1/apply test. VoiceOver/TalkBack pending.,M10
 S077,Expiration / tags selection,privacy,"Account scope, data use and permissions",pending,,
 S077,Expiration / tags selection,notifications,System notification entry and state,pending,,
 S077,Expiration / tags selection,media,"Camera, library, files and audio",pending,,
 S077,Expiration / tags selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S078,Expiration / locations selection,task,Task clarity and platform-pattern fit,pending,,
 S078,Expiration / locations selection,navigation,"Navigation, hierarchy and return",pending,,
-S078,Expiration / locations selection,selection,Value selection and current value,pending,,
+S078,Expiration / locations selection,selection,Value selection and current value,source-reviewed,"Expiration choices use LocationsQuery pathLabel from authorized active-tree ancestry, with partial-path indication and stable IDs. Integration fixture covers duplicate names; runtime pending.",M09
 S078,Expiration / locations selection,modality,Presentation and dismissal,pending,,
 S078,Expiration / locations selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S078,Expiration / locations selection,adaptation,Phone/tablet/window reflow,pending,,
@@ -1862,8 +1862,8 @@ S078,Expiration / locations selection,gestures,Gestures and explicit alternative
 S078,Expiration / locations selection,keyboard,"Keyboard, text entry and focus",pending,,
 S078,Expiration / locations selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S078,Expiration / locations selection,motion,Reduced motion and feedback alternatives,pending,,
-S078,Expiration / locations selection,content,"Lists, hierarchy, density and pagination",pending,,
-S078,Expiration / locations selection,search,"Search, scope and filters",pending,,
+S078,Expiration / locations selection,content,"Lists, hierarchy, density and pagination",source-reviewed,"Expiration choices use LocationsQuery pathLabel from authorized active-tree ancestry, with partial-path indication and stable IDs. Integration fixture covers duplicate names; runtime pending.",M09
+S078,Expiration / locations selection,search,"Search, scope and filters",source-reviewed,"Expiration choices use LocationsQuery pathLabel from authorized active-tree ancestry, with partial-path indication and stable IDs. Integration fixture covers duplicate names; runtime pending.",M09
 S078,Expiration / locations selection,loading,"Loading, background refresh and progress",pending,,
 S078,Expiration / locations selection,recovery,"Empty, error, denied and retry",pending,,
 S078,Expiration / locations selection,editing,"Draft, save, cancel, undo and interruption",pending,,
@@ -1896,16 +1896,16 @@ S079,Expiration / date range,notifications,System notification entry and state,p
 S079,Expiration / date range,media,"Camera, library, files and audio",pending,,
 S079,Expiration / date range,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S080,Inventory switcher / inventory list,task,Task clarity and platform-pattern fit,pending,,
-S080,Inventory switcher / inventory list,navigation,"Navigation, hierarchy and return",pending,,
-S080,Inventory switcher / inventory list,selection,Value selection and current value,pending,,
+S080,Inventory switcher / inventory list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S080,Inventory switcher / inventory list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S080,Inventory switcher / inventory list,modality,Presentation and dismissal,pending,,
-S080,Inventory switcher / inventory list,layout,"Safe areas, scroll edges and overlays",pending,,
+S080,Inventory switcher / inventory list,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S080,Inventory switcher / inventory list,adaptation,Phone/tablet/window reflow,pending,,
 S080,Inventory switcher / inventory list,typography,"Dynamic Type, wrapping and legibility",pending,,
 S080,Inventory switcher / inventory list,appearance,"Light/dark, contrast and materials",pending,,
 S080,Inventory switcher / inventory list,localization,"Locale, timezone, RTL and long strings",pending,,
 S080,Inventory switcher / inventory list,imagery,"Icons, photos and missing media",pending,,
-S080,Inventory switcher / inventory list,targets,Touch target size and reachability,pending,,
+S080,Inventory switcher / inventory list,targets,Touch target size and reachability,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S080,Inventory switcher / inventory list,gestures,Gestures and explicit alternatives,pending,,
 S080,Inventory switcher / inventory list,keyboard,"Keyboard, text entry and focus",pending,,
 S080,Inventory switcher / inventory list,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -1913,23 +1913,23 @@ S080,Inventory switcher / inventory list,motion,Reduced motion and feedback alte
 S080,Inventory switcher / inventory list,content,"Lists, hierarchy, density and pagination",pending,,
 S080,Inventory switcher / inventory list,search,"Search, scope and filters",pending,,
 S080,Inventory switcher / inventory list,loading,"Loading, background refresh and progress",pending,,
-S080,Inventory switcher / inventory list,recovery,"Empty, error, denied and retry",pending,,
+S080,Inventory switcher / inventory list,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S080,Inventory switcher / inventory list,editing,"Draft, save, cancel, undo and interruption",pending,,
 S080,Inventory switcher / inventory list,privacy,"Account scope, data use and permissions",pending,,
 S080,Inventory switcher / inventory list,notifications,System notification entry and state,pending,,
 S080,Inventory switcher / inventory list,media,"Camera, library, files and audio",pending,,
-S080,Inventory switcher / inventory list,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S080,Inventory switcher / inventory list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,task,Task clarity and platform-pattern fit,pending,,
-S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",pending,,
-S081,Inventory switcher / household list,selection,Value selection and current value,pending,,
+S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S081,Inventory switcher / household list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,modality,Presentation and dismissal,pending,,
-S081,Inventory switcher / household list,layout,"Safe areas, scroll edges and overlays",pending,,
+S081,Inventory switcher / household list,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,adaptation,Phone/tablet/window reflow,pending,,
 S081,Inventory switcher / household list,typography,"Dynamic Type, wrapping and legibility",pending,,
 S081,Inventory switcher / household list,appearance,"Light/dark, contrast and materials",pending,,
 S081,Inventory switcher / household list,localization,"Locale, timezone, RTL and long strings",pending,,
 S081,Inventory switcher / household list,imagery,"Icons, photos and missing media",pending,,
-S081,Inventory switcher / household list,targets,Touch target size and reachability,pending,,
+S081,Inventory switcher / household list,targets,Touch target size and reachability,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,gestures,Gestures and explicit alternatives,pending,,
 S081,Inventory switcher / household list,keyboard,"Keyboard, text entry and focus",pending,,
 S081,Inventory switcher / household list,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -1937,23 +1937,23 @@ S081,Inventory switcher / household list,motion,Reduced motion and feedback alte
 S081,Inventory switcher / household list,content,"Lists, hierarchy, density and pagination",pending,,
 S081,Inventory switcher / household list,search,"Search, scope and filters",pending,,
 S081,Inventory switcher / household list,loading,"Loading, background refresh and progress",pending,,
-S081,Inventory switcher / household list,recovery,"Empty, error, denied and retry",pending,,
+S081,Inventory switcher / household list,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,editing,"Draft, save, cancel, undo and interruption",pending,,
 S081,Inventory switcher / household list,privacy,"Account scope, data use and permissions",pending,,
 S081,Inventory switcher / household list,notifications,System notification entry and state,pending,,
 S081,Inventory switcher / household list,media,"Camera, library, files and audio",pending,,
-S081,Inventory switcher / household list,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S081,Inventory switcher / household list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,task,Task clarity and platform-pattern fit,pending,,
-S082,Inventory switcher / load failure,navigation,"Navigation, hierarchy and return",pending,,
-S082,Inventory switcher / load failure,selection,Value selection and current value,pending,,
+S082,Inventory switcher / load failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S082,Inventory switcher / load failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,modality,Presentation and dismissal,pending,,
-S082,Inventory switcher / load failure,layout,"Safe areas, scroll edges and overlays",pending,,
+S082,Inventory switcher / load failure,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,adaptation,Phone/tablet/window reflow,pending,,
 S082,Inventory switcher / load failure,typography,"Dynamic Type, wrapping and legibility",pending,,
 S082,Inventory switcher / load failure,appearance,"Light/dark, contrast and materials",pending,,
 S082,Inventory switcher / load failure,localization,"Locale, timezone, RTL and long strings",pending,,
 S082,Inventory switcher / load failure,imagery,"Icons, photos and missing media",pending,,
-S082,Inventory switcher / load failure,targets,Touch target size and reachability,pending,,
+S082,Inventory switcher / load failure,targets,Touch target size and reachability,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,gestures,Gestures and explicit alternatives,pending,,
 S082,Inventory switcher / load failure,keyboard,"Keyboard, text entry and focus",pending,,
 S082,Inventory switcher / load failure,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -1961,23 +1961,23 @@ S082,Inventory switcher / load failure,motion,Reduced motion and feedback altern
 S082,Inventory switcher / load failure,content,"Lists, hierarchy, density and pagination",pending,,
 S082,Inventory switcher / load failure,search,"Search, scope and filters",pending,,
 S082,Inventory switcher / load failure,loading,"Loading, background refresh and progress",pending,,
-S082,Inventory switcher / load failure,recovery,"Empty, error, denied and retry",pending,,
+S082,Inventory switcher / load failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,editing,"Draft, save, cancel, undo and interruption",pending,,
 S082,Inventory switcher / load failure,privacy,"Account scope, data use and permissions",pending,,
 S082,Inventory switcher / load failure,notifications,System notification entry and state,pending,,
 S082,Inventory switcher / load failure,media,"Camera, library, files and audio",pending,,
-S082,Inventory switcher / load failure,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S082,Inventory switcher / load failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,task,Task clarity and platform-pattern fit,pending,,
-S083,Inventory switcher / selection pending failure,navigation,"Navigation, hierarchy and return",pending,,
-S083,Inventory switcher / selection pending failure,selection,Value selection and current value,pending,,
+S083,Inventory switcher / selection pending failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S083,Inventory switcher / selection pending failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,modality,Presentation and dismissal,pending,,
-S083,Inventory switcher / selection pending failure,layout,"Safe areas, scroll edges and overlays",pending,,
+S083,Inventory switcher / selection pending failure,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,adaptation,Phone/tablet/window reflow,pending,,
 S083,Inventory switcher / selection pending failure,typography,"Dynamic Type, wrapping and legibility",pending,,
 S083,Inventory switcher / selection pending failure,appearance,"Light/dark, contrast and materials",pending,,
 S083,Inventory switcher / selection pending failure,localization,"Locale, timezone, RTL and long strings",pending,,
 S083,Inventory switcher / selection pending failure,imagery,"Icons, photos and missing media",pending,,
-S083,Inventory switcher / selection pending failure,targets,Touch target size and reachability,pending,,
+S083,Inventory switcher / selection pending failure,targets,Touch target size and reachability,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,gestures,Gestures and explicit alternatives,pending,,
 S083,Inventory switcher / selection pending failure,keyboard,"Keyboard, text entry and focus",pending,,
 S083,Inventory switcher / selection pending failure,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -1985,12 +1985,12 @@ S083,Inventory switcher / selection pending failure,motion,Reduced motion and fe
 S083,Inventory switcher / selection pending failure,content,"Lists, hierarchy, density and pagination",pending,,
 S083,Inventory switcher / selection pending failure,search,"Search, scope and filters",pending,,
 S083,Inventory switcher / selection pending failure,loading,"Loading, background refresh and progress",pending,,
-S083,Inventory switcher / selection pending failure,recovery,"Empty, error, denied and retry",pending,,
+S083,Inventory switcher / selection pending failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,editing,"Draft, save, cancel, undo and interruption",pending,,
 S083,Inventory switcher / selection pending failure,privacy,"Account scope, data use and permissions",pending,,
 S083,Inventory switcher / selection pending failure,notifications,System notification entry and state,pending,,
 S083,Inventory switcher / selection pending failure,media,"Camera, library, files and audio",pending,,
-S083,Inventory switcher / selection pending failure,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S083,Inventory switcher / selection pending failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S084,Add / main draft,task,Task clarity and platform-pattern fit,pending,,
 S084,Add / main draft,navigation,"Navigation, hierarchy and return",pending,,
 S084,Add / main draft,selection,Value selection and current value,pending,,
@@ -2495,9 +2495,9 @@ S104,Settings / appearance selection,privacy,"Account scope, data use and permis
 S104,Settings / appearance selection,notifications,System notification entry and state,pending,,
 S104,Settings / appearance selection,media,"Camera, library, files and audio",pending,,
 S104,Settings / appearance selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S105,Settings / field type choice,task,Task clarity and platform-pattern fit,pending,,
+S105,Settings / field type choice,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S105,Settings / field type choice,navigation,"Navigation, hierarchy and return",pending,,
-S105,Settings / field type choice,selection,Value selection and current value,pending,,
+S105,Settings / field type choice,selection,Value selection and current value,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S105,Settings / field type choice,modality,Presentation and dismissal,pending,,
 S105,Settings / field type choice,layout,"Safe areas, scroll edges and overlays",pending,,
 S105,Settings / field type choice,adaptation,Phone/tablet/window reflow,pending,,
@@ -2508,20 +2508,20 @@ S105,Settings / field type choice,imagery,"Icons, photos and missing media",pend
 S105,Settings / field type choice,targets,Touch target size and reachability,pending,,
 S105,Settings / field type choice,gestures,Gestures and explicit alternatives,pending,,
 S105,Settings / field type choice,keyboard,"Keyboard, text entry and focus",pending,,
-S105,Settings / field type choice,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S105,Settings / field type choice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S105,Settings / field type choice,motion,Reduced motion and feedback alternatives,pending,,
 S105,Settings / field type choice,content,"Lists, hierarchy, density and pagination",pending,,
 S105,Settings / field type choice,search,"Search, scope and filters",pending,,
 S105,Settings / field type choice,loading,"Loading, background refresh and progress",pending,,
 S105,Settings / field type choice,recovery,"Empty, error, denied and retry",pending,,
-S105,Settings / field type choice,editing,"Draft, save, cancel, undo and interruption",pending,,
+S105,Settings / field type choice,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S105,Settings / field type choice,privacy,"Account scope, data use and permissions",pending,,
 S105,Settings / field type choice,notifications,System notification entry and state,pending,,
 S105,Settings / field type choice,media,"Camera, library, files and audio",pending,,
 S105,Settings / field type choice,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S106,Settings / field applicability,task,Task clarity and platform-pattern fit,pending,,
+S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S106,Settings / field applicability,navigation,"Navigation, hierarchy and return",pending,,
-S106,Settings / field applicability,selection,Value selection and current value,pending,,
+S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S106,Settings / field applicability,modality,Presentation and dismissal,pending,,
 S106,Settings / field applicability,layout,"Safe areas, scroll edges and overlays",pending,,
 S106,Settings / field applicability,adaptation,Phone/tablet/window reflow,pending,,
@@ -2532,13 +2532,13 @@ S106,Settings / field applicability,imagery,"Icons, photos and missing media",pe
 S106,Settings / field applicability,targets,Touch target size and reachability,pending,,
 S106,Settings / field applicability,gestures,Gestures and explicit alternatives,pending,,
 S106,Settings / field applicability,keyboard,"Keyboard, text entry and focus",pending,,
-S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S106,Settings / field applicability,motion,Reduced motion and feedback alternatives,pending,,
 S106,Settings / field applicability,content,"Lists, hierarchy, density and pagination",pending,,
 S106,Settings / field applicability,search,"Search, scope and filters",pending,,
 S106,Settings / field applicability,loading,"Loading, background refresh and progress",pending,,
 S106,Settings / field applicability,recovery,"Empty, error, denied and retry",pending,,
-S106,Settings / field applicability,editing,"Draft, save, cancel, undo and interruption",pending,,
+S106,Settings / field applicability,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
 S106,Settings / field applicability,privacy,"Account scope, data use and permissions",pending,,
 S106,Settings / field applicability,notifications,System notification entry and state,pending,,
 S106,Settings / field applicability,media,"Camera, library, files and audio",pending,,

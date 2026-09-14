@@ -6,6 +6,22 @@ import { assetId } from '../../domain/assets/AssetSummary';
 import { inventoryId } from '../../domain/inventories/InventorySummary';
 import { ApiInventorySummaryRepository } from './ApiInventorySummaryRepository';
 import { FakeInventoryApiClient } from './testing/InventoryApiClient';
+import { LocationsQuery } from '../../application/locations/LocationsQuery';
+
+it('distinguishes same-named locations by authorized ancestry and marks unresolved paths', async () => {
+  const client = new FakeInventoryApiClient();
+  const base = client.assets[0];
+  client.assets = [base, { ...base, id: 'kitchen', title: 'Kitchen' },
+    { ...base, id: 'garage-cabinet', title: 'Cabinet', parentAssetId: base.id },
+    { ...base, id: 'kitchen-cabinet', title: 'Cabinet', parentAssetId: 'kitchen' },
+    { ...base, id: 'partial', title: 'Cabinet', parentAssetId: 'unavailable-parent' }];
+  const result = await new LocationsQuery(new ApiInventorySummaryRepository(client, 'tenant-home')).execute();
+  expect(result.locations.find(location => location.id === 'garage-cabinet')).toMatchObject({ pathLabel: 'Garage / Cabinet' });
+  expect(result.locations.find(location => location.id === 'kitchen-cabinet')).toMatchObject({ pathLabel: 'Kitchen / Cabinet' });
+  expect(result.locations.find(location => location.id === 'partial')).toMatchObject({ pathLabel: 'Cabinet (partial location path)' });
+  expect(client.getAssetRequests).toEqual([]);
+  expect(client.listAssetRequests.every(request => request.inventoryId === 'inventory-home')).toBe(true);
+});
 
 it('maps generated API client responses into mobile inventory summaries', async () => {
     const client = new FakeInventoryApiClient();
