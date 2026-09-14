@@ -2009,12 +2009,12 @@ S084,Add / main draft,motion,Reduced motion and feedback alternatives,pending,,
 S084,Add / main draft,content,"Lists, hierarchy, density and pagination",pending,,
 S084,Add / main draft,search,"Search, scope and filters",pending,,
 S084,Add / main draft,loading,"Loading, background refresh and progress",pending,,
-S084,Add / main draft,recovery,"Empty, error, denied and retry",pending,,
-S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",pending,,
+S084,Add / main draft,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S084,Add / main draft,privacy,"Account scope, data use and permissions",pending,,
 S084,Add / main draft,notifications,System notification entry and state,pending,,
 S084,Add / main draft,media,"Camera, library, files and audio",pending,,
-S084,Add / main draft,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S084,Add / main draft,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S085,Add / kind choice,task,Task clarity and platform-pattern fit,pending,,
 S085,Add / kind choice,navigation,"Navigation, hierarchy and return",pending,,
 S085,Add / kind choice,selection,Value selection and current value,pending,,
@@ -2057,12 +2057,12 @@ S086,Add / parent search,motion,Reduced motion and feedback alternatives,pending
 S086,Add / parent search,content,"Lists, hierarchy, density and pagination",pending,,
 S086,Add / parent search,search,"Search, scope and filters",pending,,
 S086,Add / parent search,loading,"Loading, background refresh and progress",pending,,
-S086,Add / parent search,recovery,"Empty, error, denied and retry",pending,,
-S086,Add / parent search,editing,"Draft, save, cancel, undo and interruption",pending,,
+S086,Add / parent search,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S086,Add / parent search,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S086,Add / parent search,privacy,"Account scope, data use and permissions",pending,,
 S086,Add / parent search,notifications,System notification entry and state,pending,,
 S086,Add / parent search,media,"Camera, library, files and audio",pending,,
-S086,Add / parent search,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S086,Add / parent search,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S087,Add / quick parent creation,task,Task clarity and platform-pattern fit,pending,,
 S087,Add / quick parent creation,navigation,"Navigation, hierarchy and return",pending,,
 S087,Add / quick parent creation,selection,Value selection and current value,pending,,
@@ -2081,12 +2081,12 @@ S087,Add / quick parent creation,motion,Reduced motion and feedback alternatives
 S087,Add / quick parent creation,content,"Lists, hierarchy, density and pagination",pending,,
 S087,Add / quick parent creation,search,"Search, scope and filters",pending,,
 S087,Add / quick parent creation,loading,"Loading, background refresh and progress",pending,,
-S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",pending,,
-S087,Add / quick parent creation,editing,"Draft, save, cancel, undo and interruption",pending,,
+S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S087,Add / quick parent creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S087,Add / quick parent creation,privacy,"Account scope, data use and permissions",pending,,
 S087,Add / quick parent creation,notifications,System notification entry and state,pending,,
 S087,Add / quick parent creation,media,"Camera, library, files and audio",pending,,
-S087,Add / quick parent creation,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S087,Add / quick parent creation,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S088,Add / type choice,task,Task clarity and platform-pattern fit,pending,,
 S088,Add / type choice,navigation,"Navigation, hierarchy and return",pending,,
 S088,Add / type choice,selection,Value selection and current value,pending,,
@@ -2129,12 +2129,12 @@ S089,Add / tags select create,motion,Reduced motion and feedback alternatives,pe
 S089,Add / tags select create,content,"Lists, hierarchy, density and pagination",pending,,
 S089,Add / tags select create,search,"Search, scope and filters",pending,,
 S089,Add / tags select create,loading,"Loading, background refresh and progress",pending,,
-S089,Add / tags select create,recovery,"Empty, error, denied and retry",pending,,
-S089,Add / tags select create,editing,"Draft, save, cancel, undo and interruption",pending,,
+S089,Add / tags select create,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S089,Add / tags select create,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S089,Add / tags select create,privacy,"Account scope, data use and permissions",pending,,
 S089,Add / tags select create,notifications,System notification entry and state,pending,,
 S089,Add / tags select create,media,"Camera, library, files and audio",pending,,
-S089,Add / tags select create,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S089,Add / tags select create,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S090,Add / photo selection,task,Task clarity and platform-pattern fit,pending,,
 S090,Add / photo selection,navigation,"Navigation, hierarchy and return",pending,,
 S090,Add / photo selection,selection,Value selection and current value,pending,,
@@ -2153,12 +2153,12 @@ S090,Add / photo selection,motion,Reduced motion and feedback alternatives,pendi
 S090,Add / photo selection,content,"Lists, hierarchy, density and pagination",pending,,
 S090,Add / photo selection,search,"Search, scope and filters",pending,,
 S090,Add / photo selection,loading,"Loading, background refresh and progress",pending,,
-S090,Add / photo selection,recovery,"Empty, error, denied and retry",pending,,
-S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",pending,,
+S090,Add / photo selection,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S090,Add / photo selection,privacy,"Account scope, data use and permissions",pending,,
 S090,Add / photo selection,notifications,System notification entry and state,pending,,
 S090,Add / photo selection,media,"Camera, library, files and audio",pending,,
-S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S091,Add / custom fields,task,Task clarity and platform-pattern fit,pending,,
 S091,Add / custom fields,navigation,"Navigation, hierarchy and return",pending,,
 S091,Add / custom fields,selection,Value selection and current value,pending,,
@@ -2249,12 +2249,12 @@ S094,Add / draft recovery,motion,Reduced motion and feedback alternatives,pendin
 S094,Add / draft recovery,content,"Lists, hierarchy, density and pagination",pending,,
 S094,Add / draft recovery,search,"Search, scope and filters",pending,,
 S094,Add / draft recovery,loading,"Loading, background refresh and progress",pending,,
-S094,Add / draft recovery,recovery,"Empty, error, denied and retry",pending,,
-S094,Add / draft recovery,editing,"Draft, save, cancel, undo and interruption",pending,,
+S094,Add / draft recovery,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S094,Add / draft recovery,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S094,Add / draft recovery,privacy,"Account scope, data use and permissions",pending,,
 S094,Add / draft recovery,notifications,System notification entry and state,pending,,
 S094,Add / draft recovery,media,"Camera, library, files and audio",pending,,
-S094,Add / draft recovery,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S094,Add / draft recovery,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S095,Asset / overflow commands,task,Task clarity and platform-pattern fit,pending,,
 S095,Asset / overflow commands,navigation,"Navigation, hierarchy and return",pending,,
 S095,Asset / overflow commands,selection,Value selection and current value,pending,,
@@ -2471,9 +2471,9 @@ S103,Asset / history revert,privacy,"Account scope, data use and permissions",pe
 S103,Asset / history revert,notifications,System notification entry and state,pending,,
 S103,Asset / history revert,media,"Camera, library, files and audio",pending,,
 S103,Asset / history revert,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S104,Settings / appearance selection,task,Task clarity and platform-pattern fit,pending,,
-S104,Settings / appearance selection,navigation,"Navigation, hierarchy and return",pending,,
-S104,Settings / appearance selection,selection,Value selection and current value,pending,,
+S104,Settings / appearance selection,task,Task clarity and platform-pattern fit,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
+S104,Settings / appearance selection,navigation,"Navigation, hierarchy and return",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
+S104,Settings / appearance selection,selection,Value selection and current value,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
 S104,Settings / appearance selection,modality,Presentation and dismissal,pending,,
 S104,Settings / appearance selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S104,Settings / appearance selection,adaptation,Phone/tablet/window reflow,pending,,
@@ -2489,7 +2489,7 @@ S104,Settings / appearance selection,motion,Reduced motion and feedback alternat
 S104,Settings / appearance selection,content,"Lists, hierarchy, density and pagination",pending,,
 S104,Settings / appearance selection,search,"Search, scope and filters",pending,,
 S104,Settings / appearance selection,loading,"Loading, background refresh and progress",pending,,
-S104,Settings / appearance selection,recovery,"Empty, error, denied and retry",pending,,
+S104,Settings / appearance selection,recovery,"Empty, error, denied and retry",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
 S104,Settings / appearance selection,editing,"Draft, save, cancel, undo and interruption",pending,,
 S104,Settings / appearance selection,privacy,"Account scope, data use and permissions",pending,,
 S104,Settings / appearance selection,notifications,System notification entry and state,pending,,
@@ -2567,10 +2567,10 @@ S107,Settings / enum options,privacy,"Account scope, data use and permissions",p
 S107,Settings / enum options,notifications,System notification entry and state,pending,,
 S107,Settings / enum options,media,"Camera, library, files and audio",pending,,
 S107,Settings / enum options,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S108,Settings / tag color,task,Task clarity and platform-pattern fit,pending,,
+S108,Settings / tag color,task,Task clarity and platform-pattern fit,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,navigation,"Navigation, hierarchy and return",pending,,
 S108,Settings / tag color,selection,Value selection and current value,pending,,
-S108,Settings / tag color,modality,Presentation and dismissal,pending,,
+S108,Settings / tag color,modality,Presentation and dismissal,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,layout,"Safe areas, scroll edges and overlays",pending,,
 S108,Settings / tag color,adaptation,Phone/tablet/window reflow,pending,,
 S108,Settings / tag color,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2586,7 +2586,7 @@ S108,Settings / tag color,content,"Lists, hierarchy, density and pagination",pen
 S108,Settings / tag color,search,"Search, scope and filters",pending,,
 S108,Settings / tag color,loading,"Loading, background refresh and progress",pending,,
 S108,Settings / tag color,recovery,"Empty, error, denied and retry",pending,,
-S108,Settings / tag color,editing,"Draft, save, cancel, undo and interruption",pending,,
+S108,Settings / tag color,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,privacy,"Account scope, data use and permissions",pending,,
 S108,Settings / tag color,notifications,System notification entry and state,pending,,
 S108,Settings / tag color,media,"Camera, library, files and audio",pending,,
@@ -2735,9 +2735,9 @@ S114,Reminders / custom timing,privacy,"Account scope, data use and permissions"
 S114,Reminders / custom timing,notifications,System notification entry and state,pending,,
 S114,Reminders / custom timing,media,"Camera, library, files and audio",pending,,
 S114,Reminders / custom timing,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S115,Reminders / timezone search,task,Task clarity and platform-pattern fit,pending,,
+S115,Reminders / timezone search,task,Task clarity and platform-pattern fit,source-reviewed,"TimeZonePicker searches large Intl zone list, marks current choice, serializes save, reports retryable error and guards unmounted updates; native keyboard/assistive verification pending.",
 S115,Reminders / timezone search,navigation,"Navigation, hierarchy and return",pending,,
-S115,Reminders / timezone search,selection,Value selection and current value,pending,,
+S115,Reminders / timezone search,selection,Value selection and current value,source-reviewed,"TimeZonePicker searches large Intl zone list, marks current choice, serializes save, reports retryable error and guards unmounted updates; native keyboard/assistive verification pending.",
 S115,Reminders / timezone search,modality,Presentation and dismissal,pending,,
 S115,Reminders / timezone search,layout,"Safe areas, scroll edges and overlays",pending,,
 S115,Reminders / timezone search,adaptation,Phone/tablet/window reflow,pending,,
@@ -2752,8 +2752,8 @@ S115,Reminders / timezone search,accessibility,"VoiceOver/TalkBack names, roles,
 S115,Reminders / timezone search,motion,Reduced motion and feedback alternatives,pending,,
 S115,Reminders / timezone search,content,"Lists, hierarchy, density and pagination",pending,,
 S115,Reminders / timezone search,search,"Search, scope and filters",pending,,
-S115,Reminders / timezone search,loading,"Loading, background refresh and progress",pending,,
-S115,Reminders / timezone search,recovery,"Empty, error, denied and retry",pending,,
+S115,Reminders / timezone search,loading,"Loading, background refresh and progress",source-reviewed,"TimeZonePicker searches large Intl zone list, marks current choice, serializes save, reports retryable error and guards unmounted updates; native keyboard/assistive verification pending.",
+S115,Reminders / timezone search,recovery,"Empty, error, denied and retry",source-reviewed,"TimeZonePicker searches large Intl zone list, marks current choice, serializes save, reports retryable error and guards unmounted updates; native keyboard/assistive verification pending.",
 S115,Reminders / timezone search,editing,"Draft, save, cancel, undo and interruption",pending,,
 S115,Reminders / timezone search,privacy,"Account scope, data use and permissions",pending,,
 S115,Reminders / timezone search,notifications,System notification entry and state,pending,,

@@ -30,3 +30,5 @@ Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
 This establishes retention and action reachability for that fixture, not full
 assistive-technology or enlarged-text verification. Its iPad onboarding entry
 still lost characters (`h//example.invalid`); M14 remains unresolved.
+| M22 | Appearance uses navigation for three flat choices | Implemented; 12 remote tests/check/structural pass; native pending | Settings now uses the shared native menu; older route reuses it. Immediate selection and storage-failure rollback are preserved; native menu rendering remains pending |
+| M23 | iOS custom tag color requires an extra custom editor around the native picker | Open; source-confirmed | TagColorPicker opens an inline Custom color panel with its own Done/Cancel before NativeTagColorPicker opens the system picker. Use the native color picker directly against the parent draft on iOS; preserve Android spectrum/hex fallback and parent Save ownership |
