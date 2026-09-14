@@ -46,3 +46,9 @@ export const AlertTriangle = 'AlertTriangleIcon';
 
 export const Clock = 'ClockIcon';
 export const UserCircle = 'UserCircleIcon';
+
+export const Mic = 'MicIcon';
+
+export const ArrowUp = 'ArrowUpIcon';
+
+export const Square = 'SquareIcon';

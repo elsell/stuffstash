@@ -112,3 +112,11 @@ The voice accessory's status target includes the complete presentation title and
 subtitle in its accessible name, even when its compact visible text truncates.
 These label/color corrections require native light/dark and assistive-technology
 review; source checks alone do not certify their runtime presentation.
+
+The composer presents one primary command at a time: Record for an empty draft,
+Send for typed text or a completed recording, and a native icon-only Cancel
+command while a cancellable request is processing. Use the familiar stop-square
+symbol with the accessible name “Cancel request”; do not squeeze a text label
+into an icon-sized frame or show an additional disabled Send command. During a
+non-cancellable action-plan commit, preserve its owned progress and expose no
+misleading cancellation action. Native command targets remain at least 48 points.
