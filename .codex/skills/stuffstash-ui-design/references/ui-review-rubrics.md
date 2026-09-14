@@ -2,6 +2,13 @@
 
 Use these rubrics as independent adversarial review passes. Report concrete issues, user impact, and the smallest practical fix.
 
+## Platform pattern fit comes first
+
+Use `platform-interaction-decisions.md` before these lenses. Check whether the
+interaction is appropriate before assessing its styling or implementation. A
+working native control can still introduce unnecessary navigation or modality.
+Use browser semantics for web and native conventions for each mobile platform.
+
 ## Clarity And Cognitive Load
 
 Inspired by "do not make users think" usability principles.

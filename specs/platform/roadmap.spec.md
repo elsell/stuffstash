@@ -23,6 +23,21 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+The 2026-09-14 platform interaction audit updates the UI design skill to select
+appropriate platform patterns before components. See
+`specs/platform/platform-interaction-review.spec.md` and
+`docs/reports/platform-ui-audit-2026-09-14.md`. Prioritize draft recovery and
+switcher reachability, then short-choice selection, shared refresh presentation,
+toolbar consistency and accessibility. This is a source/design audit; native and
+browser acceptance evidence remains pending. Remediation is not yet implemented.
+The latest released Home refresh/header fix is 0.24.9 (96.1); the separately
+requested Add/Notifications/Profile reorder is merged in PR 124.
+
+The older expiration rollout notes below are historical baseline context. The user
+has since verified notifications work; do not treat the old APNs setup gap as a
+current blocker without rechecking deployment state.
+
+
 Expiration tracking is implemented and merged in PR 87: optional per-type tracking,
 exact-day and month-only dates, personal inventory defaults and type overrides,
 web/mobile inboxes, native push adapters, and conversational date commands and
