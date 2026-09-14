@@ -181,7 +181,13 @@ Back. Date ordering supersedes relevance/updated-time ordering in this refinemen
 
 ### Filter-sheet device correction
 
-Use a full-height native form sheet with a system title. Put Apply filters and
+Use a resizable native form sheet with a system title, initially at the same
+70% height as Browse filters and expandable to full height. The initial height
+is a project layout choice, not an Apple requirement. Native audit run
+34903318947 reproduced a missing iPhone body with the single full-height detent
+and visible content with the same screen at medium/large detents. Reuse one
+filter-sheet presentation configuration; verify initial content, expansion,
+keyboard and footer actions on both iPhone and iPad before release. Put Apply filters and
 Cancel (or Back within a choice page) in a persistent bottom safe-area action
 area using platform-native buttons; never place custom touch targets over the
 sheet's top drag region. The scroll area has a single standard horizontal inset,

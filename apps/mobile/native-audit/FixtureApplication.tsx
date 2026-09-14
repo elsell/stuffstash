@@ -36,9 +36,9 @@ function FixtureNavigation() {
   return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
-      <Stack.Screen name="audit-browse" options={{ ...sheets.move, headerShown: true, sheetAllowedDetents: [0.7, 1], title: 'Filters' }} />
-      <Stack.Screen name="audit-expiration-medium" options={{ ...sheets.move, headerShown: true, sheetAllowedDetents: [0.7, 1], title: 'Filters' }} />
-      <Stack.Screen name="audit-expiration" options={{ ...sheets.move, headerShown: true, sheetAllowedDetents: [1], title: 'Filters' }} />
+      <Stack.Screen name="audit-browse" options={sheets.filters} />
+      <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
+      <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     <AppKeyboardAccessory />
   </AppFeedbackProvider></ResultContext.Provider>;

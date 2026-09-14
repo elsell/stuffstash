@@ -182,3 +182,8 @@ M19 diagnostics retain the production full-height filter fixture and add the sam
 screen at medium/large detents in a separate runner-only route. A diagnostic pass
 must not replace or conceal failure at the production presentation. Export native
 hierarchy alongside screenshots to compare scroll and footer geometry.
+
+Run 34903318947 completed the detent comparison: medium/large showed the
+iPhone body while full-only did not. The next candidate shares the medium/large
+production filter configuration with fixtures and additionally checks expansion.
+Prior full-only failure remains recorded in the audit evidence.

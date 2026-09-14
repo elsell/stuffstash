@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class FixtureAuditTests: XCTestCase {
   private let app = XCUIApplication(bundleIdentifier: "org.stuffstash.mobile")
@@ -40,10 +41,22 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Browse availability: available"].waitForExistence(timeout: 5))
     capture("browse-applied")
   }
-  func testMediumExpirationSheetBody() {
+  func testExpirationSheetBodySurvivesExpansion() {
     app.buttons["Audit medium expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
     capture("expiration-medium-body")
+    let bar = app.navigationBars["Filters"]
+    let initialTop = bar.frame.minY
+    bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)))
+    if UIDevice.current.userInterfaceIdiom == .phone {
+      let expanded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        bar.frame.minY < initialTop - 40
+      }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [expanded], timeout: 5), .completed, "The sheet must actually expand")
+    }
+    XCTAssertTrue(app.buttons["Choose tags"].isHittable)
+    capture("expiration-expanded-body")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 

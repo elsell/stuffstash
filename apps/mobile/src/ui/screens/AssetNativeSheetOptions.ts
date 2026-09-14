@@ -29,6 +29,12 @@ function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
 export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
   const baseOptions = baseAssetNativeSheetOptions(palette);
   return {
+    filters: {
+      ...baseOptions,
+      headerShown: true,
+      sheetAllowedDetents: [0.7, 1],
+      title: 'Filters'
+    },
     edit: {
       ...baseOptions,
       gestureEnabled: false,
