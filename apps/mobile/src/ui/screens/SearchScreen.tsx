@@ -415,7 +415,14 @@ export function SearchScreen({
         onRefresh={() => void refreshResults()}
         ListHeaderComponent={
           <SearchHeader
-            onExpiration={identity ? mode => router.push({pathname:'/expiration',params:expirationRouteParams(identity.tenantId,identity.inventoryId,browseExpirationFilter(mode,{query:submittedQuery,scope,tagIds:selectedTagIds,checkoutState}))}) : undefined}
+            onExpiration={identity ? (mode, draft) => {
+              const nextQuery = cancelPendingSearch();
+              syncBrowseRoute({ query: nextQuery });
+              void loadFirstPage({ query: nextQuery });
+              router.push({ pathname: '/expiration', params: expirationRouteParams(
+                identity.tenantId, identity.inventoryId, browseExpirationFilter(mode, { ...draft, query: nextQuery })
+              ) });
+            } : undefined}
             canAdd={inventoryContext?.canAdd ?? false}
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}

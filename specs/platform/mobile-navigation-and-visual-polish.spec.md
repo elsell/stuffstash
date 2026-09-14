@@ -129,7 +129,7 @@ gesture-driven containment exploration.
 - Browse has a nested native stack inside its existing tab, retaining the `/search`
   route and tab identity. A system navigation search bar serves both list and map;
   remove custom in-content search boxes and duplicate Browse titles.
-- Use the Expiration search convention: visible stacked native search, system
+- Use compact native navigation search (updated 2026-09-14), system
   clear/cancel and keyboard Search, no focus on entry. Keep list debounce and
   authorized result/filter/pagination semantics. Map search still finds an item
   and opens its containment path; update it after a short typing pause as well as
@@ -144,3 +144,21 @@ gesture-driven containment exploration.
 - Validate field restoration, clear/submit semantics, switch races, map path
   behavior and existing Browse regressions remotely/CI; run critic before merge
   and follow the signed TestFlight workflow through upload.
+
+### Compact Browse controls (2026-09-14)
+
+- Browse list and map use native integrated-button search at the trailing edge
+  of the navigation bar, expanding on interaction. Disable toolbar integration
+  so iPhone does not move search into the bottom toolbar. iOS before 26 uses the
+  library's native inline fallback; Android retains its native search action.
+- Keep existing query restoration, clear/cancel, submit and debounce semantics.
+  Search results remain described by the result summary when search is inactive.
+- Remove the standalone Expiration pill from the result header: it is navigation,
+  not an applied filter. Within expanded Browse Filters, expose standard disclosure
+  rows for Expiring soon, Expired and All dates in an Expiration section. Explain
+  that these review active items by expiration date. Preserve existing query and
+  applied refinement handoff to the expiration workspace.
+- Entering expiration from Filters uses the currently displayed draft selections
+  and latest search text; cancel pending debounce before navigation. Browse's
+  applied filters remain unchanged when returning, while its latest query is
+  settled into the route and result state.

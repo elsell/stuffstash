@@ -13,7 +13,7 @@ export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onCl
  useEffect(()=>{if(query!==nativeText.current){nativeText.current=query;ref.current?.setText(query);}},[query]);
  function clear(){nativeText.current='';ref.current?.clearText();onClear();}
  return <Stack.Screen options={{headerSearchBarOptions:{
-  ref,placeholder,placement:'stacked',hideWhenScrolling:false,hideNavigationBar:false,obscureBackground:false,autoCapitalize:'none',
+  ref,placeholder,placement:'integratedButton',allowToolbarIntegration:false,hideWhenScrolling:false,hideNavigationBar:false,obscureBackground:false,autoCapitalize:'none',
   onChangeText:event=>{nativeText.current=event.nativeEvent.text;if(!event.nativeEvent.text.trim())onClear();else onChange(event.nativeEvent.text);},
   onSearchButtonPress:event=>{nativeText.current=event.nativeEvent.text;onSubmit(event.nativeEvent.text);ref.current?.blur();},
   onCancelButtonPress:clear,onClose:clear,

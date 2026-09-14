@@ -7,8 +7,8 @@ it('uses native search callbacks, submits current event text and clears immediat
  resetNavigation();const h=new MobileRenderHarness();const events:string[]=[];
  try{
   await h.render(<NativeNavigationSearch query="saved" placeholder="Search inventory" onChange={q=>events.push(`change:${q}`)} onSubmit={q=>events.push(`submit:${q}`)} onClear={()=>events.push('clear')} />);
-  const options=navigationOptions().at(-1) as {headerSearchBarOptions:{placement:string;hideWhenScrolling:boolean;onChangeText:(event:{nativeEvent:{text:string}})=>void;onSearchButtonPress:(event:{nativeEvent:{text:string}})=>void;onCancelButtonPress:()=>void}};const search=options.headerSearchBarOptions;
-  expect(search.placement).toBe('stacked');expect(search.hideWhenScrolling).toBe(false);
+  const options=navigationOptions().at(-1) as {headerSearchBarOptions:{placement:string;hideWhenScrolling:boolean;allowToolbarIntegration:boolean;onChangeText:(event:{nativeEvent:{text:string}})=>void;onSearchButtonPress:(event:{nativeEvent:{text:string}})=>void;onCancelButtonPress:()=>void}};const search=options.headerSearchBarOptions;
+  expect(search.placement).toBe('integratedButton');expect(search.allowToolbarIntegration).toBe(false);expect(search.hideWhenScrolling).toBe(false);
   await h.run(()=>search.onChangeText({nativeEvent:{text:'new'}}));
   await h.run(()=>search.onSearchButtonPress({nativeEvent:{text:'newest'}}));
   await h.run(()=>search.onChangeText({nativeEvent:{text:''}}));
