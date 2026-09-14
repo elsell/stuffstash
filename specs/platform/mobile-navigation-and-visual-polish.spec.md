@@ -226,3 +226,15 @@ gesture-driven containment exploration.
 - Cancel, native dismissal and scope replacement abort pending Apply verification;
   a late response must not navigate after the sheet closes. Serialize submissions
   synchronously so repeated taps cannot produce duplicate navigation.
+
+## Browse inventory context in navigation (2026-09-14)
+
+- Browse shows the selected inventory in its leading native navigation slot, like
+  Home, instead of repeating it beneath a Browse title in scrolling content.
+  Keep the full inventory name accessible and truncate the visible label to fit
+  alongside Add and compact Search. Tapping the context opens the inventory switcher.
+- List and Map use the same context header. Loading and failed context states clear
+  old inventory names; failed context remains retryable. Preserve native actions
+  and Map's measured header clearance.
+- List combines its List/Map control with the result summary and Filters in one
+  compact content row. Applied filters and error recovery stay in scrolling content.

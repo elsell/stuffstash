@@ -372,6 +372,9 @@ export function SearchScreen({
         <InventoryMapScreen
           key={scopeIdentity}
           canAdd={inventoryContext?.canAdd ?? false}
+          inventoryContext={inventoryContext?.inventoryName}
+          inventoryContextStatus={inventoryContextStatus}
+          onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })}
           inventoryMapQuery={inventoryMapQuery}
           searchQuery={query}
           onChangeSearchQuery={setQuery}
@@ -386,7 +389,7 @@ export function SearchScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
+      <BrowseAddHeader inventoryContext={inventoryContext?.inventoryName} inventoryContextStatus={inventoryContextStatus} onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })} canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
       <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList
         key={`${resultScope}:${numColumns.toString()}`}
@@ -407,8 +410,6 @@ export function SearchScreen({
             isLoading={state.status === 'loading'}
             lifecycleState={lifecycleState}
             checkoutState={checkoutState}
-            inventoryContext={inventoryContext?.inventoryName}
-            inventoryContextStatus={inventoryContextStatus}
             palette={palette}
             resultCount={listItems.length}
             scope={scope}
@@ -424,7 +425,6 @@ export function SearchScreen({
             onClearFilters={clearFilters}
             onRemoveFilter={removeFilter}
             onRetryResults={retryResults}
-            onRetryInventoryContext={() => void context.refetch({ cancelRefetch: false })}
             onToggleFilters={openFilters}
           />
         }

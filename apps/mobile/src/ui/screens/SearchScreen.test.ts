@@ -385,9 +385,7 @@ describe('SearchScreen presentation helpers', () => {
     expect(findFirstByProp(header, 'selectedIndex', 0)?.props?.values).toEqual(['List', 'Map']);
     expect(findFirstByProp(header, 'accessibilityLabel', 'Filter by type')).toBeUndefined();
     expect(findFirstByProp(header, 'accessibilityLabel', 'Browse by kind')).toBeUndefined();
-    expect(text).toEqual(expect.arrayContaining([
-      'Home inventory'
-    ]));
+    expect(text).not.toContain('Home inventory');
     expect(text).not.toContain('No tags');
     expect(text).not.toContain('Any');
   });
@@ -466,21 +464,8 @@ describe('SearchScreen presentation helpers', () => {
     expect(styles).not.toHaveProperty('toolButtonDisabled');
   });
 
-  it('keeps selected-inventory context recoverable when its metadata request fails', () => {
-    const retry = vi.fn();
-    const header = renderHeader({
-      inventoryContext: undefined,
-      inventoryContextStatus: 'error',
-      onRetryInventoryContext: retry
-    });
-
-    expect(collectText(header)).toContain('Inventory context unavailable');
-    const retryControl = findFirstByProp(header, 'accessibilityLabel', 'Retry inventory context');
-    expect(retryControl).toBeTruthy();
-    const onPress = retryControl?.props?.onPress;
-    if (typeof onPress !== 'function') throw new Error('Missing inventory-context retry handler');
-    onPress();
-    expect(retry).toHaveBeenCalledTimes(1);
+  it('does not repeat inventory context in scrolling content', () => {
+    expect(collectText(renderHeader())).not.toContain('Home inventory');
   });
 
   it('shows removable applied-filter labels and clear all when multiple refinements are active', () => {
@@ -515,7 +500,6 @@ function renderHeader(
     lifecycleState: 'active',
     checkoutState: 'any',
 
-    inventoryContext: 'Home inventory',
     palette: lightPalette,
 
     resultCount: 0,
