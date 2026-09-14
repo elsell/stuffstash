@@ -210,7 +210,7 @@ R009,assets/[assetId]/edit.tsx,content,"Lists, hierarchy, density and pagination
 R009,assets/[assetId]/edit.tsx,search,"Search, scope and filters",pending,,
 R009,assets/[assetId]/edit.tsx,loading,"Loading, background refresh and progress",pending,,
 R009,assets/[assetId]/edit.tsx,recovery,"Empty, error, denied and retry",pending,,
-R009,assets/[assetId]/edit.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Operation ownership gaps: duplicate invocation, destination changes and cancellation during pending submission need guarded state transitions; native runtime pending.",M37
+R009,assets/[assetId]/edit.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R009,assets/[assetId]/edit.tsx,privacy,"Account scope, data use and permissions",pending,,
 R009,assets/[assetId]/edit.tsx,notifications,System notification entry and state,pending,,
 R009,assets/[assetId]/edit.tsx,media,"Camera, library, files and audio",pending,,
@@ -306,7 +306,7 @@ R013,assets/[assetId]/move-here.tsx,content,"Lists, hierarchy, density and pagin
 R013,assets/[assetId]/move-here.tsx,search,"Search, scope and filters",pending,,
 R013,assets/[assetId]/move-here.tsx,loading,"Loading, background refresh and progress",pending,,
 R013,assets/[assetId]/move-here.tsx,recovery,"Empty, error, denied and retry",pending,,
-R013,assets/[assetId]/move-here.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Operation ownership gaps: duplicate invocation, destination changes and cancellation during pending submission need guarded state transitions; native runtime pending.",M37
+R013,assets/[assetId]/move-here.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R013,assets/[assetId]/move-here.tsx,privacy,"Account scope, data use and permissions",pending,,
 R013,assets/[assetId]/move-here.tsx,notifications,System notification entry and state,pending,,
 R013,assets/[assetId]/move-here.tsx,media,"Camera, library, files and audio",pending,,
@@ -330,7 +330,7 @@ R014,assets/[assetId]/move.tsx,content,"Lists, hierarchy, density and pagination
 R014,assets/[assetId]/move.tsx,search,"Search, scope and filters",pending,,
 R014,assets/[assetId]/move.tsx,loading,"Loading, background refresh and progress",pending,,
 R014,assets/[assetId]/move.tsx,recovery,"Empty, error, denied and retry",pending,,
-R014,assets/[assetId]/move.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Operation ownership gaps: duplicate invocation, destination changes and cancellation during pending submission need guarded state transitions; native runtime pending.",M37
+R014,assets/[assetId]/move.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R014,assets/[assetId]/move.tsx,privacy,"Account scope, data use and permissions",pending,,
 R014,assets/[assetId]/move.tsx,notifications,System notification entry and state,pending,,
 R014,assets/[assetId]/move.tsx,media,"Camera, library, files and audio",pending,,
@@ -3210,7 +3210,7 @@ S134,Asset Move / destination search and selection,content,"Lists, hierarchy, de
 S134,Asset Move / destination search and selection,search,"Search, scope and filters",pending,,
 S134,Asset Move / destination search and selection,loading,"Loading, background refresh and progress",pending,,
 S134,Asset Move / destination search and selection,recovery,"Empty, error, denied and retry",pending,,
-S134,Asset Move / destination search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Operation ownership gaps: duplicate invocation, destination changes and cancellation during pending submission need guarded state transitions; native runtime pending.",M37
+S134,Asset Move / destination search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 S134,Asset Move / destination search and selection,privacy,"Account scope, data use and permissions",pending,,
 S134,Asset Move / destination search and selection,notifications,System notification entry and state,pending,,
 S134,Asset Move / destination search and selection,media,"Camera, library, files and audio",pending,,
@@ -3234,7 +3234,7 @@ S135,Asset Move / destination creation,content,"Lists, hierarchy, density and pa
 S135,Asset Move / destination creation,search,"Search, scope and filters",pending,,
 S135,Asset Move / destination creation,loading,"Loading, background refresh and progress",pending,,
 S135,Asset Move / destination creation,recovery,"Empty, error, denied and retry",pending,,
-S135,Asset Move / destination creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Operation ownership gaps: duplicate invocation, destination changes and cancellation during pending submission need guarded state transitions; native runtime pending.",M37
+S135,Asset Move / destination creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 S135,Asset Move / destination creation,privacy,"Account scope, data use and permissions",pending,,
 S135,Asset Move / destination creation,notifications,System notification entry and state,pending,,
 S135,Asset Move / destination creation,media,"Camera, library, files and audio",pending,,
@@ -3258,7 +3258,7 @@ S136,Asset Move here / asset search and selection,content,"Lists, hierarchy, den
 S136,Asset Move here / asset search and selection,search,"Search, scope and filters",pending,,
 S136,Asset Move here / asset search and selection,loading,"Loading, background refresh and progress",pending,,
 S136,Asset Move here / asset search and selection,recovery,"Empty, error, denied and retry",pending,,
-S136,Asset Move here / asset search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Operation ownership gaps: duplicate invocation, destination changes and cancellation during pending submission need guarded state transitions; native runtime pending.",M37
+S136,Asset Move here / asset search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 S136,Asset Move here / asset search and selection,privacy,"Account scope, data use and permissions",pending,,
 S136,Asset Move here / asset search and selection,notifications,System notification entry and state,pending,,
 S136,Asset Move here / asset search and selection,media,"Camera, library, files and audio",pending,,

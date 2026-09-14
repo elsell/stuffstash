@@ -48,7 +48,7 @@
 
 | M36 | Type reminder mode uses custom choice rows for three flat values | Implemented; native pending | Shared native Reminders picker preserves inheritance, failed selection and Discard. Six focused remote tests, typecheck/structural pass; critic no blockers. Native Custom/defaults scenario added |
 
-| M37 | Asset Move allows destination changes and Cancel during submission | Open; source-confirmed | ParentRow ignores isSaving; SheetActions Cancel stays enabled; route save/create handlers lack synchronous operation guard. Audit all Edit/Move/Move here consumers and preserve draft/command identity on failure |
+| M37 | Asset Move allows destination changes and Cancel during submission | Implemented; native pending | Shared synchronous operation guard freezes draft/Cancel/selection and blocks system Back; successful return explicitly allowed, unavoidable teardown suppresses late navigation. Full1372 remote tests (245 files), check/structural pass; critic removal finding fixed and rereviewed. Native dismissal verification remains pending |
 
 | M38 | Move destination kind uses custom tab semantics for a form value | Implemented; native pending | Shared native Kind picker replaces tab semantics; create command receives selected kind. 52 remote tests/check/structural pass; critic no blockers. Native menu rendering remains pending |
 

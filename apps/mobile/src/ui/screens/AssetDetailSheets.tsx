@@ -123,6 +123,7 @@ export function EditAssetSheet({
         />
       </ScrollView>
       <SheetActions
+        busy={isSaving}
         disabled={!canSave}
         primaryLabel={isSaving ? 'Saving' : 'Save'}
         onClose={onClose}
@@ -281,7 +282,7 @@ function EditTagPicker({
 }
 
 export function MoveAssetSheet({
-  asset,
+  isCreatingDestination = false, asset,
   draft,
   isSaving,
   onChangeQuery,
@@ -295,6 +296,7 @@ export function MoveAssetSheet({
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
   readonly isSaving: boolean;
+  readonly isCreatingDestination?: boolean;
   readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
@@ -316,7 +318,7 @@ export function MoveAssetSheet({
         matches: draft.matches,
         parentAssetId: createPlacement.parentAssetId,
         query: draft.query
-      }) && !isSaving
+      })
     : false;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
@@ -357,6 +359,7 @@ export function MoveAssetSheet({
           </View>
         ) : null}
         <ParentRow
+          disabled={isSaving}
           isSelected={draft?.selectedParent === null}
           row={{
             title: 'No parent',
@@ -367,6 +370,7 @@ export function MoveAssetSheet({
         />
         {draft?.matches.map((match) => (
           <ParentRow
+            disabled={isSaving}
             key={match.id}
             isSelected={draft.selectedParent?.id === match.id}
             row={moveDestinationRow(match)}
@@ -375,8 +379,9 @@ export function MoveAssetSheet({
         ))}
       </ScrollView>
       <SheetActions
+        busy={isSaving}
         disabled={!canSaveMove}
-        primaryLabel={isSaving ? 'Moving' : 'Move'}
+        primaryLabel={isCreatingDestination ? 'Creating destination…' : isSaving ? 'Moving' : 'Move'}
         onClose={onClose}
         onSave={onSave}
       />
@@ -426,6 +431,7 @@ export function MoveThingsHereSheet({
         ) : null}
         {draft?.matches.map((match) => (
           <ParentRow
+            disabled={isSaving}
             key={match.id}
             isSelected={draft.selectedAsset?.id === match.id}
             row={moveIntoCandidateRow(match)}
@@ -438,6 +444,7 @@ export function MoveThingsHereSheet({
         right={draft?.target.title ?? 'Here'}
       />
       <SheetActions
+        busy={isSaving}
         disabled={!canSave}
         primaryLabel={isSaving ? 'Moving' : 'Move here'}
         onClose={onClose}
@@ -448,17 +455,18 @@ export function MoveThingsHereSheet({
 }
 
 function ParentRow({
-  isSelected,
+  disabled, isSelected,
   onPress,
   row
 }: {
+  readonly disabled: boolean;
   readonly isSelected: boolean;
   readonly onPress: () => void;
   readonly row: MoveDestinationRow;
 }) {
   const styles = useStyles();
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null]}>
+    <Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{ disabled, selected: isSelected }} onPress={() => { if (!disabled) onPress(); }} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null, disabled && styles.disabledAction]}>
       <View style={styles.parentTextColumn}>
         <View style={styles.parentTitleRow}>
           <Text style={styles.parentTitle}>{row.title}</Text>
@@ -510,7 +518,7 @@ function MovePreview({ left, right }: { readonly left: string; readonly right: s
 }
 
 function SheetActions({
-  disabled,
+  busy, disabled,
   onClose,
   onSave,
   primaryLabel
@@ -519,11 +527,12 @@ function SheetActions({
   readonly onClose: () => void;
   readonly onSave: () => void;
   readonly primaryLabel: string;
+  readonly busy: boolean;
 }) {
   const styles = useStyles();
   return (
     <View style={styles.sheetActions}>
-      <Pressable accessibilityRole="button" onPress={onClose} style={styles.sheetSecondary}>
+      <Pressable accessibilityRole="button" disabled={busy} accessibilityState={{ disabled: busy }} onPress={() => { if (!busy) onClose(); }} style={[styles.sheetSecondary, busy && styles.disabledAction]}>
         <Text style={styles.sheetSecondaryText}>Cancel</Text>
       </Pressable>
       <Pressable

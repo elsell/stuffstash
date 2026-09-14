@@ -274,3 +274,15 @@ Move destination creation chooses Location or Container through the shared nativ
 value picker labeled Kind. It is a form value, not a tab or navigation target.
 Keep the selected kind's explanation and proposed placement visible, and use that
 kind in the create command. Pending creation disables the choice.
+
+Asset Edit, Move, and Move here sheets own one pending mutation at a time. A
+synchronous guard rejects duplicate save/create callbacks and freezes all draft
+changes, destination selections, Cancel, and sheet gestures until completion.
+Failure restores editing with the submitted draft intact. Destination creation
+shares the same operation lock as Move. Completion after unmount must not navigate
+or display an alert in a different screen. Keep disabled controls visibly present
+and expose their disabled state to assistive technology.
+
+The pending sheet lock also prevents system Back/navigation removal. Successful
+submission explicitly permits its own return navigation; unavoidable teardown
+still suppresses late navigation and alerts.
