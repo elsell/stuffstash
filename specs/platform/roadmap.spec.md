@@ -23,6 +23,13 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+The user now authorizes full mobile audit **and remediation**, beyond the previous
+source-only report. Follow `specs/platform/mobile-comprehensive-ui-audit.spec.md`
+and the surface/axis ledger under `docs/reports/mobile-ui-remediation-2026-09-14/`.
+Completion requires tracking every applicable cell and confirmed finding; do not
+close the effort after only fixing the original ten audit examples.
+
+
 The 2026-09-14 platform interaction audit updates the UI design skill to select
 appropriate platform patterns before components. See
 `specs/platform/platform-interaction-review.spec.md` and

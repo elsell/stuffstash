@@ -1,0 +1,662 @@
+[
+  {
+    "id": "R001",
+    "surface": "(tabs)/(home)/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home)/_layout.tsx"
+  },
+  {
+    "id": "R002",
+    "surface": "(tabs)/(home)/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home)/index.tsx"
+  },
+  {
+    "id": "R003",
+    "surface": "(tabs)/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/_layout.tsx"
+  },
+  {
+    "id": "R004",
+    "surface": "(tabs)/search/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/search/_layout.tsx"
+  },
+  {
+    "id": "R005",
+    "surface": "(tabs)/search/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/search/index.tsx"
+  },
+  {
+    "id": "R006",
+    "surface": "_layout.tsx",
+    "source": "apps/mobile/src/app/_layout.tsx"
+  },
+  {
+    "id": "R007",
+    "surface": "add.tsx",
+    "source": "apps/mobile/src/app/add.tsx"
+  },
+  {
+    "id": "R008",
+    "surface": "assets/[assetId]/checkouts.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/checkouts.tsx"
+  },
+  {
+    "id": "R009",
+    "surface": "assets/[assetId]/edit.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/edit.tsx"
+  },
+  {
+    "id": "R010",
+    "surface": "assets/[assetId]/history/[activityId].tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/history/[activityId].tsx"
+  },
+  {
+    "id": "R011",
+    "surface": "assets/[assetId]/history/index.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/history/index.tsx"
+  },
+  {
+    "id": "R012",
+    "surface": "assets/[assetId]/index.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/index.tsx"
+  },
+  {
+    "id": "R013",
+    "surface": "assets/[assetId]/move-here.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/move-here.tsx"
+  },
+  {
+    "id": "R014",
+    "surface": "assets/[assetId]/move.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/move.tsx"
+  },
+  {
+    "id": "R015",
+    "surface": "assets/index.tsx",
+    "source": "apps/mobile/src/app/assets/index.tsx"
+  },
+  {
+    "id": "R016",
+    "surface": "browse-filters.tsx",
+    "source": "apps/mobile/src/app/browse-filters.tsx"
+  },
+  {
+    "id": "R017",
+    "surface": "expiration-filters.tsx",
+    "source": "apps/mobile/src/app/expiration-filters.tsx"
+  },
+  {
+    "id": "R018",
+    "surface": "expiration.tsx",
+    "source": "apps/mobile/src/app/expiration.tsx"
+  },
+  {
+    "id": "R019",
+    "surface": "invitations/accept.tsx",
+    "source": "apps/mobile/src/app/invitations/accept.tsx"
+  },
+  {
+    "id": "R020",
+    "surface": "locations/[locationId]/assets/[assetId]/index.tsx",
+    "source": "apps/mobile/src/app/locations/[locationId]/assets/[assetId]/index.tsx"
+  },
+  {
+    "id": "R021",
+    "surface": "locations/[locationId]/index.tsx",
+    "source": "apps/mobile/src/app/locations/[locationId]/index.tsx"
+  },
+  {
+    "id": "R022",
+    "surface": "notifications.tsx",
+    "source": "apps/mobile/src/app/notifications.tsx"
+  },
+  {
+    "id": "R023",
+    "surface": "settings/about.tsx",
+    "source": "apps/mobile/src/app/settings/about.tsx"
+  },
+  {
+    "id": "R024",
+    "surface": "settings/account.tsx",
+    "source": "apps/mobile/src/app/settings/account.tsx"
+  },
+  {
+    "id": "R025",
+    "surface": "settings/appearance.tsx",
+    "source": "apps/mobile/src/app/settings/appearance.tsx"
+  },
+  {
+    "id": "R026",
+    "surface": "settings/connection.tsx",
+    "source": "apps/mobile/src/app/settings/connection.tsx"
+  },
+  {
+    "id": "R027",
+    "surface": "settings/diagnostics.tsx",
+    "source": "apps/mobile/src/app/settings/diagnostics.tsx"
+  },
+  {
+    "id": "R028",
+    "surface": "settings/household/asset-types/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/household/asset-types/[resourceId].tsx"
+  },
+  {
+    "id": "R029",
+    "surface": "settings/household/asset-types/index.tsx",
+    "source": "apps/mobile/src/app/settings/household/asset-types/index.tsx"
+  },
+  {
+    "id": "R030",
+    "surface": "settings/household/asset-types/new.tsx",
+    "source": "apps/mobile/src/app/settings/household/asset-types/new.tsx"
+  },
+  {
+    "id": "R031",
+    "surface": "settings/household/fields/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/household/fields/[resourceId].tsx"
+  },
+  {
+    "id": "R032",
+    "surface": "settings/household/fields/index.tsx",
+    "source": "apps/mobile/src/app/settings/household/fields/index.tsx"
+  },
+  {
+    "id": "R033",
+    "surface": "settings/household/fields/new.tsx",
+    "source": "apps/mobile/src/app/settings/household/fields/new.tsx"
+  },
+  {
+    "id": "R034",
+    "surface": "settings/household/index.tsx",
+    "source": "apps/mobile/src/app/settings/household/index.tsx"
+  },
+  {
+    "id": "R035",
+    "surface": "settings/index.tsx",
+    "source": "apps/mobile/src/app/settings/index.tsx"
+  },
+  {
+    "id": "R036",
+    "surface": "settings/inventory/asset-types/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/inventory/asset-types/[resourceId].tsx"
+  },
+  {
+    "id": "R037",
+    "surface": "settings/inventory/asset-types/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/asset-types/index.tsx"
+  },
+  {
+    "id": "R038",
+    "surface": "settings/inventory/asset-types/new.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/asset-types/new.tsx"
+  },
+  {
+    "id": "R039",
+    "surface": "settings/inventory/fields/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/inventory/fields/[resourceId].tsx"
+  },
+  {
+    "id": "R040",
+    "surface": "settings/inventory/fields/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/fields/index.tsx"
+  },
+  {
+    "id": "R041",
+    "surface": "settings/inventory/fields/new.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/fields/new.tsx"
+  },
+  {
+    "id": "R042",
+    "surface": "settings/inventory/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/index.tsx"
+  },
+  {
+    "id": "R043",
+    "surface": "settings/inventory/notification-editor.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/notification-editor.tsx"
+  },
+  {
+    "id": "R044",
+    "surface": "settings/inventory/notifications.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/notifications.tsx"
+  },
+  {
+    "id": "R045",
+    "surface": "settings/inventory/tags/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/inventory/tags/[resourceId].tsx"
+  },
+  {
+    "id": "R046",
+    "surface": "settings/inventory/tags/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/tags/index.tsx"
+  },
+  {
+    "id": "R047",
+    "surface": "settings/inventory/tags/new.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/tags/new.tsx"
+  },
+  {
+    "id": "R048",
+    "surface": "settings/sharing.tsx",
+    "source": "apps/mobile/src/app/settings/sharing.tsx"
+  },
+  {
+    "id": "R049",
+    "surface": "settings/voice/[capability].tsx",
+    "source": "apps/mobile/src/app/settings/voice/[capability].tsx"
+  },
+  {
+    "id": "R050",
+    "surface": "settings/voice/index.tsx",
+    "source": "apps/mobile/src/app/settings/voice/index.tsx"
+  },
+  {
+    "id": "R051",
+    "surface": "settings/voice/profiles/[providerProfileId]/credential.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/credential.tsx"
+  },
+  {
+    "id": "R052",
+    "surface": "settings/voice/profiles/[providerProfileId]/index.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/index.tsx"
+  },
+  {
+    "id": "R053",
+    "surface": "settings/voice/profiles/[providerProfileId]/prompt.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/prompt.tsx"
+  },
+  {
+    "id": "R054",
+    "surface": "settings/voice/profiles/add.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/add.tsx"
+  },
+  {
+    "id": "R055",
+    "surface": "settings/voice/profiles/index.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/index.tsx"
+  },
+  {
+    "id": "R056",
+    "surface": "tenant-switcher.tsx",
+    "source": "apps/mobile/src/app/tenant-switcher.tsx"
+  },
+  {
+    "id": "R057",
+    "surface": "voice.tsx",
+    "source": "apps/mobile/src/app/voice.tsx"
+  },
+  {
+    "id": "S058",
+    "surface": "onboarding / server entry",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S059",
+    "surface": "onboarding / browser sign-in return",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S060",
+    "surface": "onboarding / household setup",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S061",
+    "surface": "onboarding / first inventory",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S062",
+    "surface": "onboarding / partial setup recovery",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S063",
+    "surface": "Home / expiration summary",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S064",
+    "surface": "Home / recent changes",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S065",
+    "surface": "Home / checked-out return",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S066",
+    "surface": "Home / native action header",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S067",
+    "surface": "Browse / list grid",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S068",
+    "surface": "Browse / containment map columns",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S069",
+    "surface": "Browse / map search path",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S070",
+    "surface": "Browse / list search",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S071",
+    "surface": "Browse / filter overview",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S072",
+    "surface": "Browse / tag selection",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S073",
+    "surface": "Browse / expiration handoff",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S074",
+    "surface": "Expiration / soon expired all dates",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S075",
+    "surface": "Expiration / filter overview",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S076",
+    "surface": "Expiration / types selection",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S077",
+    "surface": "Expiration / tags selection",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S078",
+    "surface": "Expiration / locations selection",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S079",
+    "surface": "Expiration / date range",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S080",
+    "surface": "Inventory switcher / inventory list",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S081",
+    "surface": "Inventory switcher / household list",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S082",
+    "surface": "Inventory switcher / load failure",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S083",
+    "surface": "Inventory switcher / selection pending failure",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S084",
+    "surface": "Add / main draft",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S085",
+    "surface": "Add / kind choice",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S086",
+    "surface": "Add / parent search",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S087",
+    "surface": "Add / quick parent creation",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S088",
+    "surface": "Add / type choice",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S089",
+    "surface": "Add / tags select create",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S090",
+    "surface": "Add / photo selection",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S091",
+    "surface": "Add / custom fields",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S092",
+    "surface": "Add / expiration exact date",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S093",
+    "surface": "Add / expiration month year",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S094",
+    "surface": "Add / draft recovery",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S095",
+    "surface": "Asset / overflow commands",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S096",
+    "surface": "Asset / checkout form",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S097",
+    "surface": "Asset / return action",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S098",
+    "surface": "Asset / archive restore delete",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S099",
+    "surface": "Asset / photo gallery",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S100",
+    "surface": "Asset / full screen viewer",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S101",
+    "surface": "Asset / upload retry",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S102",
+    "surface": "Asset / contained items",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S103",
+    "surface": "Asset / history revert",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S104",
+    "surface": "Settings / appearance selection",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S105",
+    "surface": "Settings / field type choice",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S106",
+    "surface": "Settings / field applicability",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S107",
+    "surface": "Settings / enum options",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S108",
+    "surface": "Settings / tag color",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S109",
+    "surface": "Settings / inherited definition",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S110",
+    "surface": "Settings / dirty editor exit",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S111",
+    "surface": "Reminders / defaults",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S112",
+    "surface": "Reminders / type override",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S113",
+    "surface": "Reminders / preset timing",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S114",
+    "surface": "Reminders / custom timing",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S115",
+    "surface": "Reminders / timezone search",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S116",
+    "surface": "Reminders / push permissions",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S117",
+    "surface": "Voice / accessory",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S118",
+    "surface": "Voice / typed composer",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S119",
+    "surface": "Voice / recording",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S120",
+    "surface": "Voice / processing",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S121",
+    "surface": "Voice / response",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S122",
+    "surface": "Voice / plan approval edits",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S123",
+    "surface": "Voice / plan progress recovery",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S124",
+    "surface": "Voice / provider readiness",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S125",
+    "surface": "Voice / credential editor",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S126",
+    "surface": "Voice / prompt editor",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S127",
+    "surface": "System / keyboard accessory",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S128",
+    "surface": "System / global notice",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S129",
+    "surface": "System / confirmation alert",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S130",
+    "surface": "System / push cold warm tap",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S131",
+    "surface": "System / invitation link",
+    "source": "Shared implementation; resolve in findings ledger"
+  },
+  {
+    "id": "S132",
+    "surface": "System / permission denied recovery",
+    "source": "Shared implementation; resolve in findings ledger"
+  }
+]

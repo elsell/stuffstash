@@ -26,3 +26,17 @@ it('keeps sheet actions outside the scroll area and preserves staged choices on 
   expect(applied).toHaveLength(1);
  }finally{await harness.unmount()}
 });
+
+it('chooses availability in place and only commits with Apply', async () => {
+ const h = new MobileRenderHarness(); const applied: unknown[] = [];
+ try {
+  await h.render(<ExpirationFiltersScreen initial={{mode:'all'}} choices={{types:[],tags:[],locations:[]}} onApply={value=>applied.push(value)} onCancel={()=>{}} />);
+  await h.press(h.byLabel('Choose availability'));
+  expect(h.byLabel('Choose date range')).toBeDefined();
+  await h.press(h.byLabel('Checked out'));
+  expect(h.byLabel('Choose date range')).toBeDefined();
+  expect(applied).toEqual([]);
+  await h.press(h.byLabel('Apply expiration filters'));
+  expect(applied).toEqual([{mode:'all',checkoutState:'checked_out'}]);
+ } finally { await h.unmount(); }
+});
