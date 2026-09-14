@@ -105,3 +105,12 @@ explicitly verifying keyboard readiness. Full-string assertions remain required.
 
 Browse menu/apply, feedback retention, and draft-option removal passed on both
 devices. These results certify those scenarios only, not whole surfaces.
+
+Hierarchy inspection of run34905451368 distinguishes the expanded failure from
+ordinary scrolling: the initial sheet contains its ScrollView and Choose tags
+button, while the expanded sheet subtree no longer exposes a ScrollView or its
+rows. The footer still has a valid frame. This does not establish why the view
+vanished. The pinned screens implementation coerces form-sheet scroll frames by
+searching direct children (or its own safe-area wrapper); its footer option is
+explicitly Android-only. A nested-body versus direct-scroll diagnostic is needed
+before adopting another production layout workaround.
