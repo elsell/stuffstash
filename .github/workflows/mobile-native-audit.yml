@@ -1,0 +1,80 @@
+name: Mobile native audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/mobile-native-audit.yml'
+      - 'apps/mobile/native-audit/**'
+      - 'scripts/prepare-ios-audit-target.rb'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-native-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24.17.0'
+  PNPM_VERSION: '11.0.7'
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+
+jobs:
+  ios:
+    name: iOS simulator (${{ matrix.device }})
+    runs-on: macos-26
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ['iPhone 17', 'iPad mini (A17 Pro)']
+    env:
+      NODE_ENV: production
+      EX_DEV_CLIENT_NETWORK_INSPECTOR: 'false'
+      STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: 'true'
+      EXPO_PUBLIC_STUFF_STASH_API_BASE_URL: ''
+      EXPO_PUBLIC_STUFF_STASH_TENANT_ID: ''
+      EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN: ''
+      EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install pinned toolchain and dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+          pnpm install --frozen-lockfile
+          test "$(xcodebuild -version | sed -n '1p')" = 'Xcode 26.6'
+          test "$(pod --version)" = '1.17.0'
+      - name: Install native dependencies
+        working-directory: apps/mobile/ios
+        run: pod install --deployment
+      - name: Add runner-only XCTest target
+        run: ruby scripts/prepare-ios-audit-target.rb
+      - name: Run native interaction audit
+        env:
+          AUDIT_DEVICE: ${{ matrix.device }}
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/native-audit"
+          xcrun simctl list devices available > "$RUNNER_TEMP/native-audit/simulators.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/native-audit/revision.txt"
+          xcodebuild test \
+            -workspace apps/mobile/ios/StuffStash.xcworkspace \
+            -scheme StuffStashAudit \
+            -configuration Release \
+            -destination "platform=iOS Simulator,name=$AUDIT_DEVICE" \
+            -resultBundlePath "$RUNNER_TEMP/native-audit/results.xcresult" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/native-audit/xcodebuild.log"
+      - name: Save native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-audit-${{ matrix.device }}-${{ github.sha }}
+          path: ${{ runner.temp }}/native-audit
+          retention-days: 14
+          if-no-files-found: warn

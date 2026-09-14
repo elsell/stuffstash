@@ -43,3 +43,22 @@ searchable-choice navigation, platform adapter selected-state behavior, and all
 shared consumers. Run checks remotely or in CI under the session constraint against
 local builds/tests. Each implementation pass requires the code critic. Release
 mobile fixes through TestFlight with changelog under existing authorization.
+
+## Native audit runner
+
+Use macOS GitHub runners with the release workflow's pinned Node, pnpm, Xcode and
+CocoaPods versions. Build the committed native application for the simulator in
+Release configuration, without signing credentials. An ephemeral XCTest UI target
+may be added to the runner checkout; it must not enter the distribution project.
+Capture XCTest result bundles and screenshots on success and failure, identified
+by source revision and simulator. Begin with genuine unauthenticated onboarding
+entry, help, keyboard and reachable completion controls on phone and iPad.
+
+This initial smoke test establishes runner access, not full application coverage.
+Authenticated task coverage requires synthetic data through existing ports or a
+controlled test backend; no production authentication bypass, user inventory data,
+or signing secret may be used to make UI tests convenient. Expand scenarios and
+record actual runtime evidence in the surface ledger as the audit proceeds.
+
+Workflow timeouts bound failed builds. Use scheduled sleep intervals while waiting
+for GitHub jobs; do not cancel a healthy build because it is slow.
