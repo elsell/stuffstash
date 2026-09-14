@@ -1,5 +1,13 @@
 # UI Design Workshop Spec
 
+## Platform interaction review
+
+`platform-interaction-review.spec.md` extends the repo UI skill to mobile and
+whole-product audits. The web candidate workflow below applies to substantial
+web design workshops; it does not require a Svelte candidate for mobile work or
+a read-only audit. Existing user direction supplies authorization; routine
+platform choices do not require repeated approval.
+
 ## Purpose
 
 Stuff Stash needs a repeatable UI design workflow before the web frontend expands beyond the current tracer-bullet screens.

@@ -1,5 +1,9 @@
 # Frontend Engineering Principles
 
+General product and engineering principles apply across clients. Web-specific
+SvelteKit, shadcn, CSS, and browser guidance applies only to web; native mobile
+uses its platform adapters and interaction conventions.
+
 Use these principles for temporary SvelteKit candidates and promoted `apps/web` implementation. A candidate may be temporary, but it must reveal the same architectural tradeoffs the production app will face.
 
 ## Domain-Driven UI

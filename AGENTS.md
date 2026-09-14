@@ -218,6 +218,7 @@ These instructions are binding for all agents and contributors working in this r
   - Use React Native with Expo.
   - Target iOS and Android.
 - Prefer actual platform-native controls and navigation/search/toolbar patterns for mobile UI. Reuse existing native adapters before creating custom controls; any custom substitute needs a concrete platform limitation documented in the relevant spec.
+- Choose the platform interaction before its component. Apply `.codex/skills/stuffstash-ui-design` to mobile and web UI decisions; record task/pattern fit and justify extra navigation, modality, or custom controls. Shared UI fixes must inspect affected consumers. Keep source/test evidence distinct from native runtime verification; follow `specs/platform/platform-interaction-review.spec.md`.
 - API contracts:
   - REST endpoints must follow standard REST conventions.
   - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.

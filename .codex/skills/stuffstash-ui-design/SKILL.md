@@ -1,141 +1,71 @@
 ---
 name: stuffstash-ui-design
-description: Production-grade Stuff Stash web UI brainstorming, design, review, and implementation workflow. Use when Codex is asked to design, redesign, critique, brainstorm, workshop, prototype, build, or implement substantial Stuff Stash web UI surfaces, SvelteKit screens, responsive layouts, user journeys, visual direction, accessibility behavior, or shadcn-svelte component composition.
+description: Design, review, audit, and implement Stuff Stash mobile and web UI using appropriate platform interactions. Use for screens, controls, navigation, forms, accessibility, and whole-product UI audits; includes iOS HIG review and SvelteKit candidate workflows.
 ---
 
-# StuffStash UI Design
+# Stuff Stash UI Design
 
-## Overview
+Choose the familiar platform interaction before its implementation. A native
+component can implement the wrong interaction; a custom component can resemble a
+native control without providing its behavior. Review both questions independently.
 
-Use this skill to run a spec-grounded UI design workshop for Stuff Stash before expanding the real web app. Produce concrete design artifacts, build a working SvelteKit candidate when the direction needs review, and use the product owner as the decision gate before promotion into `apps/web`.
+## Grounding and mode
 
-## Required References
+Read `specs/platform/platform-interaction-review.spec.md`, the relevant workflow
+spec, and the applicable brand/client/navigation specs. User instructions and
+existing authorization govern scope. Do not turn an audit into UI implementation
+or require a new approval for an already authorized change.
 
-Read these files before starting substantial UI work:
+- **Design or implementation:** read [platform interaction decisions](references/platform-interaction-decisions.md).
+  Establish the task and pattern before routes, screen layout, or component choice.
+- **Audit:** also read [whole-product audit](references/platform-audit.md).
+  A full audit needs a coverage inventory, not just a list of obvious problems.
+- **Substantial new web direction:** use [web workshop](references/web-workshop.md)
+  and [SvelteKit candidate workflow](references/sveltekit-candidate-workflow.md).
+  A Svelte candidate is not evidence of native mobile behavior.
+- **All modes:** use the relevant lenses in [review rubrics](references/ui-review-rubrics.md),
+  [product principles](references/stuffstash-ui-principles.md), and
+  [engineering principles](references/frontend-engineering-principles.md).
 
-- `specs/platform/ui-design-workshop.spec.md`
-- `specs/platform/brand-guidelines.spec.md`
-- `specs/platform/client-technology.spec.md`
-- `specs/platform/web-frontend-tracer-bullet.spec.md`
-- Relevant domain specs for the workflow being designed
+## Decision standard
 
-Read bundled references as needed:
+For each changed interaction, establish:
 
-- `references/ui-review-rubrics.md` for adversarial review lenses.
-- `references/stuffstash-ui-principles.md` for Stuff Stash-specific UI constraints.
-- `references/frontend-engineering-principles.md` for domain, architecture, observability, typing, DRY, and configuration expectations.
-- `references/sveltekit-candidate-workflow.md` before building a temporary SvelteKit candidate.
+1. The user's task: navigate, choose a value, issue a command, edit content, or
+   inspect status. Do not let an existing generic component answer this question.
+2. The expected platform pattern and why it fits option count, descriptions,
+   hierarchy, frequency, risk, and available space. Cite relevant current guidance
+   when the choice is disputed, novel, or part of an audit.
+3. Commit/cancel semantics, return destination, focus, keyboard behavior, and
+   loading/error/empty/denied states. Preserve work across accidental dismissal.
+4. The existing native adapter or accessible web primitive. Search its consumers
+   before extending it. Document concrete limitations before a custom substitute.
+5. Evidence that verifies the interaction choice and its actual implementation.
 
-## Workflow
+Do not impose a universal menu, bottom button, sheet, or navigation rule from one
+screenshot. Small flat single choices usually belong in place; searchable,
+hierarchical, descriptive, or complex choices may justify a selection view.
 
-### 1. Ground The Work
+Apple's guidance governs iOS/iPadOS. Android follows Android conventions; web
+follows browser semantics and accessible web patterns. Brand styling must not
+replace the platform's interaction vocabulary. Preserve explicit user preferences
+and record intentional departures as project choices rather than Apple rules.
 
-Identify the workflow being designed and read the relevant specs before proposing UI behavior. Do not invent product behavior, domain concepts, dependencies, or architecture that the specs do not support.
+## Review and completion
 
-Summarize:
+Review in this order: task/pattern fit, state and recovery, accessibility/adaptation,
+visual execution, then engineering correctness. Apply the same standard to all
+consumers of shared controls. Spec before code; meaningful tests before changes;
+code critic before finalization, per repository instructions.
 
-- Primary user and job to be done.
-- Entry points and expected success state.
-- Known domain constraints.
-- Open questions that affect design direction.
-- Whether the current request needs a real SvelteKit candidate.
+For native visual or lifecycle changes, verify a named build on a native runtime:
+entry, scrolling, keyboard, navigation return, dismissal, and the affected states.
+Use narrow and enlarged-text layouts; include iPad when the affected layout ships
+there. Simulator checks do not establish physical push, audio, or camera behavior.
+If access is unavailable, finish independent work and explicitly report the missing
+evidence. Never equate prop tests, a successful archive, or upload with device QA.
 
-### 2. Use The Product Owner As Decision Gate
-
-Ask the product owner for decisions when direction materially affects the product:
-
-- Workflow priority.
-- Mental model or domain-language choice.
-- Navigation model.
-- Visual density.
-- Risk tolerance for destructive or state-changing actions.
-- Whether to build, iterate, or promote a candidate.
-
-Prefer one compact decision prompt at a time. Continue with reasonable assumptions only for low-risk details.
-
-### 3. Design The Interaction Model
-
-Before building, define:
-
-- Routes and major states.
-- Mobile and desktop layout behavior.
-- Main components and their responsibilities.
-- Loading, empty, error, denied, saved, and undo states.
-- Keyboard, focus, and screen-reader expectations.
-- Data shape for realistic mock records.
-- Frontend domain types, adapter boundaries, configuration needs, and observability points.
-- File ownership and split points so no route, component, adapter, helper, or mock-data file becomes a catch-all.
-
-Keep the first screen as the usable product surface, not a marketing page.
-
-### 4. Build A Real Candidate When Direction Needs Review
-
-If visual or interaction direction needs product-owner feedback, create a temporary working SvelteKit candidate instead of a static mockup.
-
-Requirements:
-
-- Use SvelteKit.
-- Use Svelte-compatible shadcn-style primitives or local equivalents matching that composition model.
-- Use realistic mock data, not lorem ipsum.
-- Include mobile and desktop responsive behavior.
-- Include meaningful interactive states.
-- Run the candidate locally when possible and provide the URL.
-- Treat the candidate as production-shaped design evidence, not a disposable tracer bullet.
-
-Read `references/sveltekit-candidate-workflow.md` before creating the candidate.
-
-### 5. Run Adversarial Reviews
-
-After a candidate or detailed design exists, run separate review passes using `references/ui-review-rubrics.md`.
-
-Minimum lenses:
-
-- Clarity and cognitive load.
-- Usability heuristics.
-- Accessibility and inclusive interaction.
-- Mobile ergonomics.
-- Information architecture.
-- Visual system.
-- Implementation feasibility.
-- Frontend engineering discipline.
-- File organization and separation of concerns.
-
-State findings as concrete issues with risks and fixes. Do not impersonate living people; use named schools of thought only as shorthand for principles.
-
-### 6. Synthesize And Gate
-
-Group review output into:
-
-- Must fix before approval.
-- Should fix during iteration.
-- Acceptable tradeoffs.
-- Open product decisions.
-
-Ask the product owner whether to iterate, redirect, or approve the direction.
-
-### 7. Promote Only After Approval
-
-Before modifying `apps/web`, update the relevant spec first. Then implement through the existing web architecture:
-
-- Keep generated API DTOs behind adapter boundaries.
-- Keep frontend domain models separate when product behavior needs them.
-- Use typed domain concepts and enums instead of meaningful loose strings.
-- Use shadcn-svelte primitives for generic controls.
-- Preserve runtime configuration boundaries.
-- Preserve domain-oriented observability through explicit, injectable helpers or ports.
-- Keep files cohesive; split routes, components, adapters, mappers, state helpers, fixtures, and observability helpers before they become catch-all files.
-- Verify with tests, responsive checks, accessibility checks, and the code critic agent.
-
-## Non-Negotiables
-
-- Do not treat brainstorming prose as sufficient for a major UI direction.
-- Do not promote temporary candidate code into `apps/web` without spec updates and product-owner approval.
-- Do not expand the current tracer-bullet UI as if it were the final product direction.
-- Do not use React shadcn components in the SvelteKit web app.
-- Do not use decorative AI gradients, mascot-like behavior, beige/rustic palettes, enterprise inventory styling, or marketing-first landing pages for product workflows.
-- Do not hide destructive, saved, denied, or failed states.
-- Do not use in-product copy to pitch, explain, or narrate the UI. Design the surface so available actions and state are apparent.
-- Do not bypass frontend ports, adapters, generated-client boundaries, auth boundaries, runtime configuration, or observability boundaries for convenience.
-- Do not hard-code environment-specific URLs, tenant IDs, inventory IDs, OIDC values, feature flags, or operational settings.
-- Do not use raw `console.log`, `print`, or one-off diagnostics in production candidate paths.
-- Do not create "god" files that mix unrelated UI, state, adapter, config, observability, mock-data, and mapping concerns.
+Report concrete findings with source locations, user impact, intended pattern,
+priority, evidence level, and acceptance scenario. Distinguish Apple guidance,
+project preferences, engineering inference, and observed behavior. Report coverage
+and omissions; never certify an entire app from sampled screenshots.
