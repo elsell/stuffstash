@@ -157,6 +157,9 @@ describe('mounted voice settings actions', () => {
 
 class FakeProviderRepository implements ProviderProfileRepository {
   readonly profile = profile({});
+  extraProfiles: ProviderProfileSummary[] = [];
+  pendingSelection?: Promise<VoiceProviderConfiguration>;
+  selectionInputs: UpdateVoiceProviderConfigurationInput[] = [];
   readonly configuration: VoiceProviderConfiguration;
   credentialInputs: ReplaceProviderProfileCredentialInput[] = [];
   lifecycleCalls: Array<{ id: string; action: ProviderProfileLifecycleAction }> = [];
@@ -171,9 +174,9 @@ class FakeProviderRepository implements ProviderProfileRepository {
       profileIds: { languageInference: voiceSlot.selectedProfileId }, slots: [voiceSlot]
     };
   }
-  async listProviderProfiles() { return [this.profile]; }
+  async listProviderProfiles() { return [this.profile, ...this.extraProfiles]; }
   async getVoiceProviderConfiguration() { return this.configuration; }
-  async updateVoiceProviderConfiguration(_input: UpdateVoiceProviderConfigurationInput) { return this.configuration; }
+  async updateVoiceProviderConfiguration(input: UpdateVoiceProviderConfigurationInput) { this.selectionInputs.push(input); return this.pendingSelection ?? this.configuration; }
   async createProviderProfile(_input: CreateProviderProfileInput) { return this.profile; }
   async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.pendingPrompt ?? this.profile; }
   async replaceProviderProfileCredential(input: ReplaceProviderProfileCredentialInput) {
@@ -241,5 +244,29 @@ it.each(['credential', 'prompt'] as const)('preserves the submitted %s draft aft
     expect(harness.byLabel(label)?.props.editable).toBe(true);
     expect(harness.byLabel(label)?.props.value).toBe('original draft');
     expect(JSON.stringify(client.getQueryCache().getAll().map(query => query.state.data))).not.toContain('original draft');
+  } finally { await harness.unmount(); client.clear(); }
+});
+
+it('selects a voice service in place without implying a connection test is running', async () => {
+  const repository = new FakeProviderRepository(slot('test_profile'));
+  repository.extraProfiles = [profile({ id: 'other', displayName: 'Other language' }), profile({ id: 'archived', displayName: 'Archived language', lifecycleState: 'archived' })];
+  let rejectSelection: ((error: Error) => void) | undefined;
+  repository.pendingSelection = new Promise((_resolve, reject) => { rejectSelection = reject; });
+  const { harness, client } = await mount(<VoiceCapabilityScreen capability="language_inference" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} testCommand={new TestProviderProfileCommand(repository)} onAddProfile={() => {}} onEditProfile={() => {}} onEditCredential={() => {}} />);
+  try {
+    await harness.press(harness.byLabel('Choose voice service'));
+    expect(harness.byLabel('Archived language')).toBeUndefined();
+    await harness.press(harness.byLabel('Gemini language'));
+    expect(repository.selectionInputs).toEqual([]);
+    await harness.press(harness.byLabel('Choose voice service'));
+    await harness.press(harness.byLabel('Other language'));
+    expect(repository.selectionInputs).toHaveLength(1);
+    expect(repository.selectionInputs[0]?.languageInferenceProfileId).toBe('other');
+    expect(harness.allText()).toContain('Selecting service…');
+    expect(harness.allText()).not.toContain('Testing…');
+    expect(harness.byLabel('Open provider profile Gemini language')?.props.disabled).toBe(true);
+    await harness.run(() => rejectSelection?.(new Error('offline')));
+    expect(harness.byLabel('Choose voice service')?.props.disabled).toBe(false);
+    expect(harness.allText()).toContain('Gemini language');
   } finally { await harness.unmount(); client.clear(); }
 });

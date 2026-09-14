@@ -36,6 +36,8 @@
 
 | M30 | Provider credential/prompt drafts remain editable during Save | Implemented; native pending | Native editable state and ref guards preserve submitted draft; failure restores editing, successful credential save clears secret. Seventeen remote tests plus check/structural pass; critic no blocker |
 
+| M31 | Voice service choice uses custom action rows and conflates selection with test progress | Implemented; native pending | Shared native service picker retains current choice, excludes other archived services, and ignores same-value selection. Distinct select/test/enable progress with guarded competing navigation. Eighteen remote tests, check/structural pass; critic no blockers |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

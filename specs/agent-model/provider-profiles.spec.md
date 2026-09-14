@@ -315,3 +315,12 @@ Credential and prompt editors preserve the submitted draft during Save. Disable
 text entry and reject stale edit callbacks while saving. Failure re-enables the
 same draft for correction/retry; successful credential replacement clears the
 secret. Raw secrets and prompt drafts remain outside the query cache.
+
+Voice-stage service selection uses the shared in-place native value picker. Show
+the currently selected service and include non-archived alternatives for the
+same capability. Preserve a currently selected archived service as the current
+value, without offering other archived profiles. Keep profile configuration as
+separate navigation. Selecting the existing value does not submit a command.
+Selection, connection testing and enablement expose distinct progress; disable
+competing controls/navigation until the operation settles. Selection failures
+retain the previous server-confirmed choice.
