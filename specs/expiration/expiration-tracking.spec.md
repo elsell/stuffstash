@@ -183,3 +183,19 @@ Implement the complete expiration UX audit in `docs/reports/expiration-ui-ux-aud
 - Shared item status appears in home/recent, inventory lists/grids, search, containment, detail and conversation previews. Upcoming uses a compact warning icon/text and semantic warning color; expired is distinct; current dates remain neutral; absent dates never imply safety. Color is supplementary. Parent assets do not inherit descendant expired status.
 - Browse status uses authoritative recipient-scoped expiration context and the same personal window/timezone as detail/query, independently of delivery switches and notification read state. Batch enrichment must avoid per-card API requests and preserve authorization. Refresh on date/type/preference changes, foreground, scope changes and calendar boundaries. Retained dates on disabled types clearly distinguish disabled tracking.
 - Shared controls and application presentation rules prevent platform/surface drift. Verify small phones, dynamic type, keyboard, many tags/types, date precision transitions, dark/light, VoiceOver and web keyboard/focus. CI component tests are not a substitute for measured native layout evidence.
+
+
+## Mobile date draft interaction
+
+On iOS, an existing exact-date draft uses the compact native date picker in
+place. Native calendar changes update the containing form draft directly; there
+is no separate app-owned Use date/Cancel pair inside the editor. The containing
+form's Save/Cancel remains the persistence boundary. This follows the compact
+pattern described in [Apple Pickers](https://developer.apple.com/design/human-interface-guidelines/pickers).
+
+An absent exact date stays absent on mount and when expanding the expiration
+section. An explicit Add expiration date command initializes a visible draft
+from the injected initial picker date; it does not save the asset. The user can
+change it with the compact picker or Clear expiration before saving. Android
+retains its system date dialog confirmation/dismissal semantics. Month/year
+precision remains separate and must never silently become an invented exact day.

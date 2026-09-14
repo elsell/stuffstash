@@ -2183,9 +2183,9 @@ S091,Add / custom fields,privacy,"Account scope, data use and permissions",pendi
 S091,Add / custom fields,notifications,System notification entry and state,pending,,
 S091,Add / custom fields,media,"Camera, library, files and audio",pending,,
 S091,Add / custom fields,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S092,Add / expiration exact date,task,Task clarity and platform-pattern fit,pending,,
+S092,Add / expiration exact date,task,Task clarity and platform-pattern fit,source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending",M03
 S092,Add / expiration exact date,navigation,"Navigation, hierarchy and return",pending,,
-S092,Add / expiration exact date,selection,Value selection and current value,pending,,
+S092,Add / expiration exact date,selection,Value selection and current value,source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending",M03
 S092,Add / expiration exact date,modality,Presentation and dismissal,pending,,
 S092,Add / expiration exact date,layout,"Safe areas, scroll edges and overlays",pending,,
 S092,Add / expiration exact date,adaptation,Phone/tablet/window reflow,pending,,
@@ -2202,7 +2202,7 @@ S092,Add / expiration exact date,content,"Lists, hierarchy, density and paginati
 S092,Add / expiration exact date,search,"Search, scope and filters",pending,,
 S092,Add / expiration exact date,loading,"Loading, background refresh and progress",pending,,
 S092,Add / expiration exact date,recovery,"Empty, error, denied and retry",pending,,
-S092,Add / expiration exact date,editing,"Draft, save, cancel, undo and interruption",pending,,
+S092,Add / expiration exact date,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending",M03
 S092,Add / expiration exact date,privacy,"Account scope, data use and permissions",pending,,
 S092,Add / expiration exact date,notifications,System notification entry and state,pending,,
 S092,Add / expiration exact date,media,"Camera, library, files and audio",pending,,

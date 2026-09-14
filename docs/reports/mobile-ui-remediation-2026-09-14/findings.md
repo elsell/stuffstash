@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | M01 | Short filter choices cause unnecessary drilldown | Implemented; runtime pending | Existing audit F01; in-place choices, draft/apply/cancel tests and iOS/Android adapter contracts pass remotely; full suite 1319 plus 3 added adapter tests; critic found no draft/navigation blocker |
 | M02 | Custom field short choices use bespoke disclosure radios | Implemented; runtime pending | Shared native Type/Applies to menus, read-only transition guard; 34 focused tests and typecheck/structural; critic found no blockers |
-| M03 | Redundant exact-date staging | Open | F03; preserve precision and parent draft semantics |
+| M03 | Redundant exact-date staging | Implemented; native pending | Compact iOS picker edits parent draft directly; explicit Add initializes absent date; Android cancel remains non-mutating; 5 focused tests/check/structural, critic no blockers |
 | M04 | Standard header actions remain custom on some screens | Open | F04; verify native adapters and toolbar consumers |
 | M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; runtime pending | Shared focus-aware lifecycle across all refresh owners; real query-cache and inbox blur tests; 1324 remote tests/typecheck/structural green; critic found no blockers |
 | M06 | Notice motion/timing/targets need accessibility adaptation | Implemented; runtime pending | Persistent actions/warnings/errors and screen-reader notices; live Reduce Motion, readable labels, 48-point controls and enlarged-text stacking; 8 focused tests/typecheck green; critic requested motion regression, added and passed |
