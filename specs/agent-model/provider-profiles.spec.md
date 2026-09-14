@@ -310,3 +310,8 @@ actions must not imply they are executing. Disable credential/prompt navigation
 and all competing profile actions until completion. Failure preserves the profile
 and restores the available actions. Keep duplicate-operation guards independent
 of rendered disabled state.
+
+Credential and prompt editors preserve the submitted draft during Save. Disable
+text entry and reject stale edit callbacks while saving. Failure re-enables the
+same draft for correction/retry; successful credential replacement clears the
+secret. Raw secrets and prompt drafts remain outside the query cache.

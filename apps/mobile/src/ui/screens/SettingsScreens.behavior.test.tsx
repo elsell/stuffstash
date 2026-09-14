@@ -28,6 +28,7 @@ import {
 import { SettingsScreen } from './SettingsScreen';
 import {
   ProviderCredentialScreen,
+  ProviderPromptScreen,
   VoiceCapabilityScreen
 } from './VoiceSettingsScreens';
 
@@ -162,6 +163,7 @@ class FakeProviderRepository implements ProviderProfileRepository {
   testCalls: string[] = [];
   pendingAction?: Promise<ProviderProfileSummary | ProviderProfileTestResult>;
   pendingCredential?: Promise<ProviderProfileSummary>;
+  pendingPrompt?: Promise<ProviderProfileSummary>;
 
   constructor(voiceSlot = slot('none')) {
     this.configuration = {
@@ -173,7 +175,7 @@ class FakeProviderRepository implements ProviderProfileRepository {
   async getVoiceProviderConfiguration() { return this.configuration; }
   async updateVoiceProviderConfiguration(_input: UpdateVoiceProviderConfigurationInput) { return this.configuration; }
   async createProviderProfile(_input: CreateProviderProfileInput) { return this.profile; }
-  async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.profile; }
+  async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.pendingPrompt ?? this.profile; }
   async replaceProviderProfileCredential(input: ReplaceProviderProfileCredentialInput) {
     this.credentialInputs.push(input);
     return this.pendingCredential ?? this.profile;
@@ -219,5 +221,25 @@ function deferred<T>() { let resolve!: (value: T) => void; const promise = new P
     expect(harness.byLabel(label)?.props.disabled).toBe(false);
     expect(harness.byLabel('Replace credential for Gemini language')?.props.disabled).toBe(false);
     expect(harness.allText()).toContain('Gemini language');
+  } finally { await harness.unmount(); client.clear(); }
+});
+
+it.each(['credential', 'prompt'] as const)('preserves the submitted %s draft after rejected save', async kind => {
+  const repository = new FakeProviderRepository();
+  let rejectSave: ((error: Error) => void) | undefined;
+  const pending = new Promise<ProviderProfileSummary>((_resolve, reject) => { rejectSave = reject; });
+  if (kind === 'credential') repository.pendingCredential = pending; else repository.pendingPrompt = pending;
+  const Editor = kind === 'credential' ? ProviderCredentialScreen : ProviderPromptScreen;
+  const { harness, client } = await mount(<Editor profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} onCancel={() => {}} onSaved={() => {}} />);
+  const label = kind === 'credential' ? 'API key' : 'New prompt guidance';
+  try {
+    await harness.changeText(harness.byLabel(label), 'original draft');
+    await harness.press(textButton(harness, kind === 'credential' ? 'Save Credential' : 'Save Guidance'));
+    expect(harness.byLabel(label)?.props.editable).toBe(false);
+    await harness.changeText(harness.byLabel(label), 'later edit');
+    await harness.run(() => rejectSave?.(new Error('offline')));
+    expect(harness.byLabel(label)?.props.editable).toBe(true);
+    expect(harness.byLabel(label)?.props.value).toBe('original draft');
+    expect(JSON.stringify(client.getQueryCache().getAll().map(query => query.state.data))).not.toContain('original draft');
   } finally { await harness.unmount(); client.clear(); }
 });
