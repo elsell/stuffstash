@@ -68,8 +68,16 @@ jobs:
             -configuration Release \
             -destination "platform=iOS Simulator,name=$AUDIT_DEVICE" \
             -resultBundlePath "$RUNNER_TEMP/native-audit/results.xcresult" \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES \
             | tee "$RUNNER_TEMP/native-audit/xcodebuild.log"
+      - name: Export screenshots for review
+        if: always()
+        run: |
+          if [ -d "$RUNNER_TEMP/native-audit/results.xcresult" ]; then
+            xcrun xcresulttool export attachments \
+              --path "$RUNNER_TEMP/native-audit/results.xcresult" \
+              --output-path "$RUNNER_TEMP/native-audit/screenshots"
+          fi
       - name: Save native evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
