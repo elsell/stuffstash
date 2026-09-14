@@ -11,25 +11,21 @@
 | M07 | Switcher lacks bounded scroll/explicit dismissal and identifies households by name | Implemented; runtime pending | Bounded sheet/native Close; identity collision, safe retry, duplicate and late navigation tests; full1329 tests/check/structural green; critic found no blockers |
 | M08 | Adaptive/assistive-tech runtime matrix unverified | Investigating access | F09; phone/iPad/Android runtime needed |
 | M09 | Expiration location labels omit ancestry | Implemented; runtime pending | Authorized active-tree path labels, partial paths and duplicate-name fixture; full1331 tests/structural plus typecheck green; critic found no blockers |
-
 | M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
 | M11 | Newly selected custom-field applicability targets cannot be removed before saving | Implemented; runtime pending | Saved targets stay immutable; draft checkbox choices can be deselected, including safe unavailable-draft removal; create/edit/scoped-name tests, 37 focused tests/check/structural green; critic found no further blocker |
 | M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Implemented; native pending | Scoped Retry in both routed lists and legacy unrouted LocationsScreen; repeat-failure and scope-recovery tests; full1349/check/structural green; critic found no blocker |
-
 | M14 | Native onboarding run shows a shortened typed server address | Investigating runtime evidence | Run34882515267 iPhone screenshot shows h.invalid after typing https://example.invalid; add explicit value assertion and reproduce before classifying simulator input vs app loss |
-
 | M15 | Unsaved enum options cannot be removed before saving | Implemented; native rerun pending | Saved/draft distinction with native Remove command; 43 focused tests/check/structural green, critic found no blockers; native removal fixture added |
 | M16 | Customization controls remain editable while Save is pending | Implemented; runtime pending | Pending-save inputs stay visible/disabled; open picker guarded; 53 focused tests including all editor kinds and failed-save recovery, check/structural green; critic found no blocker |
-
-The prior web draft finding is outside this mobile-only task. This list is a seed;
-the full surface/axis review must discover and track further findings.
-
 | M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Implemented; native rerun pending | Centered 600-point form column and adjacent action; typecheck/structural green, critic found no blockers; iPad landscape fixture added, enlarged text still pending |
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
 | M19 | Expiration filter sheet renders no body content | Open; phone failure persists | Run34887652455 iPhone screenshot and accessibility hierarchy contain footer only; run34897215957 disproves KAV cause; iPad passes, phone remains blank; detent comparison pending |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
+| M21 | Add fields can change while the submitted item is being saved | Open; source-confirmed | AddAssetScreen freezes only expiration while name/description/tags/parent/photos remain mutable; success clears those states. Freeze submitted draft mutations and guard late callbacks, then verify failed-save recovery and dismissal ownership |
 
+The prior web draft finding is outside this mobile-only task. This list is a seed;
+the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
 This establishes retention and action reachability for that fixture, not full
 assistive-technology or enlarged-text verification. Its iPad onboarding entry
