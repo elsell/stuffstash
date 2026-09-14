@@ -14,6 +14,15 @@ final class OnboardingAuditTests: XCTestCase {
     app.terminate()
   }
 
+  private func waitForKeyboard() {
+    let keyboard = app.keyboards.firstMatch
+    XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+    let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      keyboard.keys.firstMatch.exists && keyboard.keys.firstMatch.isHittable
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
+  }
+
   private func capture(_ name: String) {
     let attachment = XCTAttachment(screenshot: app.screenshot())
     attachment.name = name
@@ -56,6 +65,7 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: helpText)], timeout: 5), .completed)
 
     address.tap()
+    waitForKeyboard()
     address.typeText("https://example.invalid")
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("onboarding-keyboard")

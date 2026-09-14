@@ -209,3 +209,10 @@ ScrollView bounds and above the keyboard/accessory, rather than infer the scroll
 edge from the keyboard position. Export hierarchy to verify those bounds. A
 corrected gesture must still demonstrate dismissal; changing coordinates alone
 does not resolve the finding.
+
+Native typing scenarios must wait for the keyboard and a hittable key before
+injecting text. Preserve exact displayed and submitted value assertions; do not
+mask lost characters with replacement typing or weaker matching. Calendar
+popover dismissal must target outside its bounds and verify dismissal before
+checking the underlying action's reachability. A failed test gesture is not
+evidence that a product control is unreachable.

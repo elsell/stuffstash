@@ -12,6 +12,15 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  private func waitForKeyboard() {
+    let keyboard = app.keyboards.firstMatch
+    XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+    let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      keyboard.keys.firstMatch.exists && keyboard.keys.firstMatch.isHittable
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
+  }
+
   private func capture(_ name: String) {
     let attachment = XCTAttachment(screenshot: app.screenshot())
     attachment.name = name
@@ -70,7 +79,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(date.waitForExistence(timeout: 5))
     date.tap()
     capture("expiration-native-calendar")
-    app.navigationBars["Date range"].tap()
+    let dismiss = app.buttons["PopoverDismissRegion"]
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    dismiss.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: dismiss)], timeout: 5), .completed)
+    capture("expiration-calendar-dismissed")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
     let back = app.buttons["Cancel or return to filters"]
     XCTAssertTrue(back.isHittable)
@@ -87,6 +100,7 @@ final class FixtureAuditTests: XCTestCase {
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     search.tap()
+    waitForKeyboard()
     search.typeText("Tools")
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("expiration-search-keyboard")
@@ -116,6 +130,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(input.waitForExistence(timeout: 5))
     if !input.isHittable { app.scrollViews.firstMatch.swipeUp() }
     input.tap()
+    waitForKeyboard()
     input.typeText("https://example.invalid")
     capture("\(mode)-address-entry")
     XCTAssertEqual(input.value as? String, "https://example.invalid")
@@ -134,6 +149,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Add item"].exists)
     capture("add-native-header")
     name.tap()
+    waitForKeyboard()
     name.typeText("Native draft name")
     XCTAssertEqual(name.value as? String, "Native draft name")
     let save = app.buttons["Save item"]
@@ -160,6 +176,7 @@ final class FixtureAuditTests: XCTestCase {
     let address = app.textFields["Server address"]
     XCTAssertTrue(address.waitForExistence(timeout: 5))
     address.tap()
+    waitForKeyboard()
     address.typeText("https://example.invalid")
     XCTAssertEqual(address.value as? String, "https://example.invalid")
     let connect = app.buttons["Connect and sign in"]
