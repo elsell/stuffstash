@@ -18,8 +18,8 @@ export function HomeNavigationHeader({ dashboard, notificationAction }: {
   const { width, fontScale } = useWindowDimensions();
   const actions: NativeHeaderAction[] = [
     ...(dashboard?.canAdd ? [{ kind: 'add' as const, label: 'Add an asset', onPress: () => router.push('/add') }] : []),
-    { kind: 'account', label: 'Open account and settings', onPress: () => router.push('/settings') },
-    ...(notificationAction ? [notificationAction] : [])
+    ...(notificationAction ? [notificationAction] : []),
+    { kind: 'account', label: 'Open account and settings', onPress: () => router.push('/settings') }
   ];
   return <Stack.Screen options={{
     title: dashboard ? '' : 'Home',

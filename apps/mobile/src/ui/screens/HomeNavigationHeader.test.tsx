@@ -4,11 +4,11 @@ import { MobileRenderHarness } from '../../test-support/render';
 import { navigationOptions, resetNavigation } from '../../test-support/navigation';
 import { HomeNavigationHeader } from './HomeNavigationHeader';
 
-it('prioritizes Add and Account and gives the inventory selector padded, bounded space', async () => {
+it('orders Add, Notifications, Profile and gives the inventory selector padded, bounded space', async () => {
   const h = new MobileRenderHarness(); resetNavigation();
   try {
     await h.render(<HomeNavigationHeader dashboard={{ inventoryName: 'A long household inventory', tenantName: 'Home', canAdd: true }} notificationAction={{ kind: 'notifications', label: 'Notifications', onPress: () => {} }} />);
-    expect(h.allByType('Pressable').map(node => node.props.accessibilityLabel)).toEqual(['Add an asset', 'Open account and settings', 'Notifications']);
+    expect(h.allByType('Pressable').map(node => node.props.accessibilityLabel)).toEqual(['Add an asset', 'Notifications', 'Open account and settings']);
     const options = navigationOptions().at(-1) as { headerLeft: () => React.ReactElement };
     await h.render(options.headerLeft());
     const selector = h.byLabel('Current inventory A long household inventory, tenant Home. Switch inventory');

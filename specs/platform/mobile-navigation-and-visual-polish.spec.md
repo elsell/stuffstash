@@ -263,8 +263,8 @@ gesture-driven containment exploration.
   just to reset the control. Suppress duplicate pulls while one is active.
 - Reserve space for Home's native action buttons before sizing its inventory
   selector, including native group/margin allowance. Use explicit 44-point iOS
-  bar-item widths. Prioritize Add and Account before Notifications in native item
-  order so the primary actions remain available at constrained widths.
+  bar-item widths. Arrange Home actions in this order: Add, Notifications,
+  Profile (Account). Preserve this order when optional actions are absent.
 - Bound selector width rather than crowding buttons; truncate its text while
   retaining full accessible inventory/tenant names. Add symmetric 12-point inner
   horizontal padding and compact vertical padding. Use a single label at enlarged
