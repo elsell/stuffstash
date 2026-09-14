@@ -238,3 +238,18 @@ gesture-driven containment exploration.
   and Map's measured header clearance.
 - List combines its List/Map control with the result summary and Filters in one
   compact content row. Applied filters and error recovery stay in scrolling content.
+
+## Native tab-header scroll appearance (2026-09-14)
+
+- Home and Browse navigation bars float over scrolling content on iOS. Remove
+  opaque custom bar backgrounds and separators: on iOS 26 use the native soft top
+  scroll-edge effect, with no additional blur layer; older iOS uses native system
+  material blur. Do not simulate scrolling transparency with JS opacity or gradients.
+- Preserve system automatic content insets on Home and Browse List, and measured
+  header clearance around Browse Map's fixed controls. Android keeps its opaque
+  native navigation bar and existing layout.
+- This corrects scroll appearance, not navigation placement. Preserve current
+  inventory selectors, permission-aware actions, notifications and compact search.
+- Follow Apple's TN3106 navigation-bar appearance guidance and the pinned native
+  stack adapter's scrollEdgeEffects API. Do not combine headerBlurEffect with the
+  iOS 26 native scroll-edge material.
