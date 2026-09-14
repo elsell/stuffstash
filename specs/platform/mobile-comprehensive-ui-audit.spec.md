@@ -223,3 +223,9 @@ action footer. All use identical synthetic rows and full-height native sheet
 presentation. This fixture isolates layout integration; it must not replace the
 production filter or count as filter completion. Require visible, hittable rows
 and export native hierarchy for each independently executed variant.
+
+Native fixture selectors must use observed accessibility labels, including the
+system color picker's lowercase close label. The onboarding command-submission
+fixture dismisses the keyboard through its explicit accessory before submission;
+keyboard-obscured action reachability remains a separate layout finding and may
+not be considered fixed by changing the test sequence.

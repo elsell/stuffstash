@@ -196,6 +196,10 @@ final class FixtureAuditTests: XCTestCase {
     waitForKeyboard()
     address.typeText("https://example.invalid")
     XCTAssertEqual(address.value as? String, "https://example.invalid")
+    let dismissKeyboard = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismissKeyboard.isHittable)
+    dismissKeyboard.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
     let connect = app.buttons["Connect and sign in"]
     for _ in 0..<3 where !connect.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(connect.isHittable)
@@ -230,9 +234,9 @@ final class FixtureAuditTests: XCTestCase {
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     picker.tap()
-    XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 5), "The system color picker should open directly")
+    XCTAssertTrue(app.buttons["close"].waitForExistence(timeout: 5), "The system color picker should open directly")
     capture("native-color-picker")
-    app.buttons["Close"].tap()
+    app.buttons["close"].tap()
     XCTAssertTrue(app.staticTexts["Color value: none"].exists, "Opening and closing must not invent a color")
     app.buttons["Choose Green tag color"].tap()
     XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)

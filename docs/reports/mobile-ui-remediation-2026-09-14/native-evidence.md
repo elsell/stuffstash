@@ -119,3 +119,31 @@ Run34906713382: the iPhone onboarding job104186247263 terminated with an Xcode
 application-launch timeout before its keyboard scenario could execute. This is
 an infrastructure/launch failure, not confirmation or rejection of M14. The run's
 other jobs were still active when this job log was inspected.
+
+### Run 34906713382 completed
+
+[Run](https://github.com/elsell/stuffstash/actions/runs/34906713382), source
+73ff5bad, failed. Appearance menu selection, compact expiration date entry,
+Browse menu/apply, draft option removal and feedback passed on both devices.
+The full expiration expansion failure persists on both, with phone keyboard
+footer failure and the already identified calendar dismissal test mistake.
+
+The [color picker screenshot](evidence/color-picker-open-34906713382.png) proves
+it opened directly. The test incorrectly requested `Close`; the native hierarchy
+labels it `close`. Close/clear checks still need completion after correction.
+
+Uncontrolled input preserved the full URL on both devices this run; controlled
+phone input still lost initial characters. The onboarding submission fixture
+passed on iPad. On phone it preserved the full displayed URL, but its submitted
+value remained `none`. The [screenshot](evidence/onboarding-keyboard-action-34906713382.png)
+shows most of Connect behind the keyboard despite XCTest reporting hittability.
+The command test will explicitly dismiss the keyboard; keyboard layout remains
+unresolved. Production phone onboarding failed at app launch; iPad production
+stopped at the help-collapse assertion before typing, so neither verifies M14.
+
+Add failed before Asset name appeared on both devices. Phone log checks for an
+unexpected app termination and lacks the usual final screenshot/hierarchy. The
+recording ends around Add activation. This needs crash diagnostics; it does not
+prove a form layout cause. The queued keyboard-readiness run34907820613 has now
+started. Later source fixes and the isolated sheet diagnostic were pushed only
+after it started, preserving that run.
