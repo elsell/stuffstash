@@ -1,6 +1,6 @@
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { SearchBarCommands } from 'react-native-screens';
@@ -19,11 +19,11 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const open = (next: Page) => { searchRef.current?.clearText(); setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
  const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
- return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.shell, { backgroundColor: palette.background }]}>
+ return <View style={[styles.shell, { backgroundColor: palette.background }]}>
   <Stack.Screen options={{ headerShown: true, title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
    headerSearchBarOptions: searchable ? { ref:searchRef, placeholder:`Search ${page}`, placement:'stacked', hideWhenScrolling:false, hideNavigationBar:false, obscureBackground:false, autoCapitalize:'none', onChangeText:event=>setSearch(event.nativeEvent.text), onCancelButtonPress:()=>setSearch('') } : undefined,
   }} />
-  <ScrollView style={styles.shell} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
+  <ScrollView automaticallyAdjustKeyboardInsets style={styles.shell} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
    {page === 'overview' ? <>
     <SettingsSection>
      <SettingsPickerRow label="Kind" accessibilityLabel="Choose item kind" value={draft.kind ?? ''} options={[{value:'',label:'Any kind'},{value:'item',label:'Items'},{value:'container',label:'Containers'},{value:'location',label:'Places'}] as const} onChange={value => setDraft({...draft,kind:value || undefined})} />
@@ -49,6 +49,6 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
       onBack={() => page === 'overview' ? onCancel() : open('overview')} onApply={() => onApply(draft)} />
    </View>
   </SafeAreaView>
- </KeyboardAvoidingView>;
+ </View>;
 }
 const styles = StyleSheet.create({ shell: { flex: 1 }, content: { paddingBottom: 20 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });

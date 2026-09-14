@@ -19,8 +19,9 @@ final class FixtureAuditTests: XCTestCase {
   }
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
-    let availability = app.buttons["Choose availability"]
+    let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
     XCTAssertTrue(availability.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Availability"].exists, "The value must retain its visible field label")
     capture("browse-filter-overview")
     availability.tap()
     let available = app.buttons["Available"]
@@ -53,6 +54,23 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Choose date range"].waitForExistence(timeout: 5))
     back.tap()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 5))
+  }
+  func testExpirationSearchKeepsActionsReachableWithKeyboard() throws {
+    app.buttons["Audit Expiration filters"].tap()
+    let tags = app.buttons["Choose tags"]
+    XCTAssertTrue(tags.waitForExistence(timeout: 5))
+    tags.tap()
+    let search = app.searchFields.firstMatch
+    XCTAssertTrue(search.waitForExistence(timeout: 5))
+    search.tap()
+    search.typeText("Tools")
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    capture("expiration-search-keyboard")
+    XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
+    let back = app.buttons["Cancel or return to filters"]
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
   }
   func testActionableFeedbackStaysAvailable() throws {
     app.buttons["Audit feedback"].tap()

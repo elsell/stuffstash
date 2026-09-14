@@ -24,3 +24,13 @@
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
+
+| M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Open | Run34884708793 iPad screenshot; bound the readable form column and verify landscape/enlarged text |
+| M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
+| M19 | Expiration filter sheet renders no body content | Candidate fix; native rerun pending | Run34887652455 iPhone screenshot and accessibility hierarchy contain footer only; replace unnecessary root KeyboardAvoidingView with bounded View and native scroll keyboard insets |
+| M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
+
+Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
+This establishes retention and action reachability for that fixture, not full
+assistive-technology or enlarged-text verification. Its iPad onboarding entry
+still lost characters (`h//example.invalid`); M14 remains unresolved.

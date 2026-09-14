@@ -155,3 +155,19 @@ alert dialog would interrupt ordinary saved-state/undo feedback.
 Apply the saved-versus-draft target distinction from client settings management.
 Keep persisted targets immutable; allow unsaved additions to be deselected in both
 create and edit. Preserve permissions and scoped eligible-type loading.
+
+## Native fixture findings
+
+Short menu choices must retain a visible field label beside the current value.
+On iOS use SwiftUI LabeledContent around the native menu picker when it is outside
+a native Form; a centered value without its field name is not an acceptable row.
+Accessibility may combine the native field name with its explicit action label;
+runtime tests should locate that semantic label without requiring an exact
+platform-generated concatenation.
+
+Expiration filter sheets use a bounded View/ScrollView arrangement like Browse.
+Their text search belongs to the native navigation bar and date entry uses native
+date controls, so a root KeyboardAvoidingView is unnecessary. Keep automatic
+keyboard insets on the scroller and verify actual sheet content plus bottom
+actions on phone and iPad. Native run 34887652455 showed a blank body with the
+previous keyboard-avoiding root; treat the replacement as unverified until rerun.
