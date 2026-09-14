@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
-import { ChevronDown, Plus, UserCircle } from 'lucide-react-native';
+import { HomeNavigationHeader } from './HomeNavigationHeader';
+import type { NativeHeaderAction } from '../components/NativeHeaderActions.types';
 import {
   ActivityIndicator,
   Pressable,
@@ -26,7 +27,7 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type HomeScreenProps = {
-  readonly notificationAction?: ReactNode;
+  readonly notificationAction?: NativeHeaderAction;
   readonly expirationSection?: ReactNode;
   readonly onRefreshAdditional?: () => Promise<void>;
   readonly refreshingAdditional?: boolean;
@@ -55,7 +56,8 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
   }
 
   return (
-    <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <HomeNavigationHeader dashboard={dashboardState.data} notificationAction={notificationAction} />
       {dashboardState.isPending && !dashboardState.data ? <LoadingState /> : null}
       {dashboardState.isError && !dashboardState.data ? (
         <ErrorState
@@ -65,7 +67,6 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       ) : null}
       {dashboardState.data ? (
         <Dashboard
-          notificationAction={notificationAction}
           expirationSection={expirationSection}
           assetCheckoutCommand={assetCheckoutCommand}
           dashboard={dashboardState.data}
@@ -111,14 +112,12 @@ function readableError(error: unknown, fallback: string): string {
 }
 
 function Dashboard({
-  notificationAction,
   expirationSection,
   assetCheckoutCommand,
   dashboard,
   isRefreshing,
   onRefresh
 }: {
-  readonly notificationAction?: ReactNode;
   readonly expirationSection?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
@@ -142,7 +141,6 @@ function Dashboard({
       }
     >
       <DashboardHeader
-        notificationAction={notificationAction}
           expirationSection={expirationSection}
         assetCheckoutCommand={assetCheckoutCommand}
         dashboard={dashboard}
@@ -161,13 +159,11 @@ type PendingReturnState = {
 };
 
 function DashboardHeader({
-  notificationAction,
   expirationSection,
   assetCheckoutCommand,
   dashboard,
   onDashboardChanged
 }: {
-  readonly notificationAction?: ReactNode;
   readonly expirationSection?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
@@ -260,41 +256,6 @@ function DashboardHeader({
 
   return (
     <View>
-      <View style={styles.homeTopBar}>
-        <Pressable
-          accessibilityLabel={`Current inventory ${dashboard.inventoryName}, tenant ${dashboard.tenantName}. Switch inventory`}
-          accessibilityRole="button"
-          onPress={() => router.push('/tenant-switcher')}
-          style={styles.contextControl}
-        >
-          <View style={styles.contextText}>
-            <Text style={styles.contextInventory}>{dashboard.inventoryName}</Text>
-            <Text style={styles.contextTenantPrefix}>{dashboard.tenantName}</Text>
-          </View>
-          <ChevronDown color={colors.textMuted} size={18} strokeWidth={2} />
-        </Pressable>
-        <View style={styles.topBarActions}>
-          {notificationAction}
-          {dashboard.canAdd ? (
-            <Pressable
-              accessibilityLabel="Add an asset"
-              accessibilityRole="button"
-              onPress={() => router.push('/add')}
-              style={styles.settingsButton}
-            >
-              <Plus color={colors.action} size={24} strokeWidth={2.2} />
-            </Pressable>
-          ) : null}
-          <Pressable
-            accessibilityLabel="Open account and settings"
-            accessibilityRole="button"
-            onPress={() => router.push('/settings')}
-            style={styles.settingsButton}
-          >
-            <UserCircle color={colors.text} size={24} strokeWidth={2} />
-          </Pressable>
-        </View>
-      </View>
 
       {expirationSection}
       <View style={styles.sectionHeader}>

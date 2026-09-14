@@ -85,8 +85,9 @@ describe('mounted Browse server state', () => {
       expect(requests).toEqual(['old', 'new']);
       expect(catalogRequests).toBe(0);
       await harness.press(harness.byLabel('Filters'));
-      expect(harness.byLabel('Filter by tag new')).toBeDefined();
-      expect(harness.byLabel('Filter by tag old')).toBeUndefined();
+      expect(dispatchedActions().filter(action => action.type === 'push').at(-1)).toMatchObject({
+        href: { pathname: '/browse-filters', params: { inventoryId: 'new' } }
+      });
     } finally { await harness.unmount(); }
   });
   it('keeps Places rows available when summaries fail and retries only summaries', async () => {
@@ -211,20 +212,17 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
  }finally{await h.unmount();}
 });
 
-it('carries current filter draft and pending search into expiration navigation', async () => {
+it('settles pending search and opens a scoped native filter sheet', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation();
-  const props = propsFor({ inventoryAssetTagsQuery: { execute: async () => [{ id: 'new-tag', key: 'new', label: 'New tag' }] } });
+  const props = propsFor({ initialTagIds: ['tag'] });
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>);
     await settle(h); await settle(h);
     const search = (navigationOptions().at(-1) as { headerSearchBarOptions: { onChangeText: (e: { nativeEvent: { text: string } }) => void } }).headerSearchBarOptions;
     await h.run(() => search.onChangeText({ nativeEvent: { text: 'Fresh query' } }));
-    await h.press(h.byLabel('Filters'));
-    await h.press(h.byLabel('Filter by tag New tag'));
-    await h.run(() => h.allByType('NativeSegmentedControl').find(node => node.props.values?.includes('Checked out'))?.props.onValueChange('Checked out'));
-    await h.press(h.byLabel('Review expiring soon items'));
+    await h.press(h.byLabel('Filters, 1 applied'));
     expect(dispatchedActions().filter(action => action.type === 'push').at(-1)).toMatchObject({
-      href: { pathname: '/expiration', params: { query: 'Fresh query', mode: 'soon', tagIds: ['new-tag'], checkoutState: 'checked_out' } }
+      href: { pathname: '/browse-filters', params: { query: 'Fresh query', tagId: ['tag'], tenantId: 'tenant', inventoryId: 'inventory', sessionScope: 'scope' } }
     });
     const count = dispatchedActions().length;
     await h.run(() => new Promise(resolve => setTimeout(resolve, 320)));

@@ -25,6 +25,9 @@ vi.mock('react', async (importOriginal) => ({
 }));
 
 vi.mock('expo-router', () => ({
+  Stack: { Screen: ({ options }: { options: { headerLeft?: () => unknown; headerRight?: () => unknown } }) => ({
+    type: 'NativeHeader', props: { children: [options.headerLeft?.(), options.headerRight?.()] }
+  }) },
   router: {
     navigate: vi.fn(),
     push: routerPush
@@ -36,6 +39,7 @@ vi.mock('../serverState/useMobileInventoryServerQuery', () => ({
 }));
 
 vi.mock('lucide-react-native', () => ({
+  Bell: 'BellIcon',
   ChevronDown: 'ChevronDownIcon',
   Plus: 'PlusIcon',
   UserCircle: 'UserCircleIcon',
@@ -47,6 +51,7 @@ vi.mock('react-native-safe-area-context', () => ({
 }));
 
 vi.mock('react-native', () => ({
+  useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
   ActivityIndicator: 'ActivityIndicator',
   Image: 'Image',
   Modal: 'Modal',
@@ -173,8 +178,8 @@ describe('HomeScreen asset cards', () => {
     const add = findByAccessibilityLabel(tree, 'Add an asset');
 
     expect(context?.props?.accessibilityRole).toBe('button');
-    expect(findTextNode(tree, 'Home Inventory')?.props?.numberOfLines).toBeUndefined();
-    expect(findTextNode(tree, 'Home')?.props?.numberOfLines).toBeUndefined();
+    expect(findTextNode(tree, 'Home Inventory')?.props?.numberOfLines).toBe(1);
+    expect(findTextNode(tree, 'Home')?.props?.numberOfLines).toBe(1);
     expect(account?.props?.accessibilityRole).toBe('button');
     expect(add?.props?.accessibilityRole).toBe('button');
     expect(controlSize(context, 'minHeight')).toBeGreaterThanOrEqual(44);

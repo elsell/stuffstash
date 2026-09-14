@@ -1,3 +1,4 @@
+import { BrowseAddHeader } from './BrowseAddHeader';
 import { useInventoryMapSearch } from './useInventoryMapSearch';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { createStyles } from './InventoryMapScreen.styles';
@@ -540,6 +541,7 @@ export function InventoryMapScreen({
 
   return (
     <View style={styles.shell}>
+      <BrowseAddHeader canAdd={canAdd} onAdd={() => { mapSearch.cancel(); onAdd(); }} />
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.titleBlock}>
@@ -548,10 +550,8 @@ export function InventoryMapScreen({
             ) : null}
           </View>
           <InventoryMapHeaderActions
-            canAdd={canAdd}
             palette={colors}
             selectedSurface={selectedSurface}
-            onAdd={() => { mapSearch.cancel(); onAdd(); }}
             onChangeSurface={onChangeSurface}
           />
         </View>
@@ -648,38 +648,15 @@ export function InventoryMapScreen({
 }
 
 export function InventoryMapHeaderActions({
-  canAdd,
-  palette,
-  selectedSurface,
-  onAdd,
-  onChangeSurface
+  palette, selectedSurface, onChangeSurface
 }: {
-  readonly canAdd: boolean;
   readonly palette: MobileColorPalette;
   readonly selectedSurface: InventoryMapSurface;
-  readonly onAdd: () => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
 }) {
-  const styles = createStyles(palette);
-  return (
-    <View style={styles.headerActions}>
-      {canAdd ? (
-        <Pressable
-          accessibilityLabel="Add an asset"
-          accessibilityRole="button"
-          onPress={onAdd}
-          style={styles.headerAddButton}
-        >
-          <Plus color={palette.action} size={24} strokeWidth={2.2} />
-        </Pressable>
-      ) : null}
-      <BrowseSurfaceControl
-        palette={palette}
-        selectedSurface={selectedSurface}
-        onChangeSurface={onChangeSurface}
-      />
-    </View>
-  );
+  return <View style={createStyles(palette).headerActions}>
+    <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
+  </View>;
 }
 
 function InventoryMapColumn({

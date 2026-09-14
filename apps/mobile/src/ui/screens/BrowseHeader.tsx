@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -7,7 +6,7 @@ import {
   Text,
   View
 } from 'react-native';
-import { Check, Plus, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type {
   AssetBrowseCheckoutFilter,
@@ -16,43 +15,24 @@ import type {
 } from '../../application/home/InventorySummaryRepository';
 import {
   buildBrowseFilterTokens,
-  buildBrowseScopeOptions,
   browseFilterCount,
-  searchResultSummaryLabel,
-  sortLabel
+  searchResultSummaryLabel
 } from './SearchScreenPresentation';
 import type { BrowseFilterToken, BrowseScope } from './SearchScreenPresentation';
-import { SettingsNavigationRow, SettingsSection } from './SettingsList';
 import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapSurface } from './InventoryMapPresentation';
 import { radius, spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
-import { AppTextInput } from '../components/AppTextInput';
-import { NativeActionMenu, type NativeActionMenuGroup } from '../components/NativeActionMenu';
 import { NativeRefinementButton } from '../components/NativeRefinementButton';
-import { NativeSegmentedControl } from '../components/NativeSegmentedControl';
 
-type TagFilterStatus = 'loading' | 'ready' | 'error';
-
-export type BrowseDraftFilters = {
-  readonly scope: BrowseScope;
-  readonly lifecycleState: AssetBrowseLifecycleFilter;
-  readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly tagIds: readonly string[];
-};
 
 export type SearchHeaderProps = {
-  readonly onExpiration?: (mode: 'soon' | 'expired' | 'all', filters: BrowseDraftFilters) => void;
-  readonly canAdd?: boolean;
   readonly isLoading: boolean;
   readonly lifecycleState: AssetBrowseLifecycleFilter;
   readonly checkoutState: AssetBrowseCheckoutFilter;
-  readonly filtersExpanded: boolean;
-  readonly filterDraft: BrowseDraftFilters;
   readonly inventoryContext?: string;
   readonly inventoryContextStatus?: 'loading' | 'ready' | 'error';
   readonly palette: MobileColorPalette;
-  readonly query: string;
   readonly resultCount: number;
   readonly scope: BrowseScope;
   readonly selectedSurface: InventoryMapSurface;
@@ -61,35 +41,21 @@ export type SearchHeaderProps = {
   readonly statusMessage?: string;
   readonly submittedQuery: string;
   readonly tagFilters?: readonly AssetTagOptionViewModel[];
-  readonly tagFilterStatus?: TagFilterStatus;
-  readonly onApplyFilters: (filters: BrowseDraftFilters) => void;
-  readonly onAdd?: () => void;
-  readonly onChangeDraftCheckoutState: (checkoutState: AssetBrowseCheckoutFilter) => void;
-  readonly onChangeDraftLifecycleState: (lifecycleState: AssetBrowseLifecycleFilter) => void;
-  readonly onChangeDraftScope: (scope: BrowseScope) => void;
-  readonly onChangeDraftTagIds: (tagIds: readonly string[]) => void;
-  readonly onChangeSort: (sort: AssetBrowseSort) => void;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onClearFilters: () => void;
   readonly onRemoveFilter: (token: BrowseFilterToken) => void;
   readonly onRetryInventoryContext?: () => void;
   readonly onRetryResults?: () => void;
-  readonly onRetryTags?: () => void;
-  readonly onToggleFilters: (expanded: boolean) => void;
+  readonly onToggleFilters: () => void;
 };
 
 export function SearchHeader({
-  onExpiration,
-  canAdd = false,
   isLoading,
   lifecycleState,
   checkoutState,
-  filtersExpanded,
-  filterDraft,
   inventoryContext,
   inventoryContextStatus = 'ready',
   palette,
-  query,
   resultCount,
   scope,
   selectedSurface,
@@ -98,20 +64,11 @@ export function SearchHeader({
   statusMessage,
   submittedQuery,
   tagFilters = [],
-  tagFilterStatus = 'ready',
-  onApplyFilters,
-  onAdd,
-  onChangeDraftCheckoutState,
-  onChangeDraftLifecycleState,
-  onChangeDraftScope,
-  onChangeDraftTagIds,
-  onChangeSort,
   onChangeSurface,
   onClearFilters,
   onRemoveFilter,
   onRetryInventoryContext,
   onRetryResults,
-  onRetryTags,
   onToggleFilters
 }: SearchHeaderProps) {
   const styles = stylesForPalette(palette);
@@ -128,9 +85,7 @@ export function SearchHeader({
     scope,
     sort
   });
-  const isSearchMode = query.trim().length > 0
-    || submittedQuery.trim().length > 0
-    || selectedTagIds.length > 0;
+
 
   return (
     <View style={baseStyles.header}>
@@ -152,16 +107,6 @@ export function SearchHeader({
           )}
         </View>
         <View style={styles.headerActions}>
-          {canAdd && onAdd ? (
-            <Pressable
-              accessibilityLabel="Add an asset"
-              accessibilityRole="button"
-              onPress={onAdd}
-              style={({ pressed }) => [styles.headerIconButton, pressed ? styles.controlPressed : null]}
-            >
-              <Plus color={palette.action} size={24} strokeWidth={2.2} />
-            </Pressable>
-          ) : null}
           <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
         </View>
       </View>
@@ -174,19 +119,13 @@ export function SearchHeader({
         </Text>
         <NativeRefinementButton
           accessibilityLabel={activeFilterCount > 0 ? `Filters, ${activeFilterCount.toString()} applied` : 'Filters'}
-          accessibilityState={{ expanded: filtersExpanded }}
           badgeCount={activeFilterCount}
           iconOnly
           label="Filters"
-          onPress={() => onToggleFilters(true)}
+          onPress={onToggleFilters}
           systemImage="line.3.horizontal.decrease"
         />
-        <NativeActionMenu
-          accessibilityLabel={isSearchMode ? 'Sort unavailable during search' : `Sort, ${sortLabel(sort)}`}
-          disabled={isSearchMode}
-          groups={browseSortMenuGroups(sort, onChangeSort)}
-          trigger={{ androidIcon: 'sort', kind: 'icon', systemImage: 'arrow.up.arrow.down' }}
-        />
+
       </View>
 
       {activeTokens.length > 0 ? (
@@ -237,231 +176,13 @@ export function SearchHeader({
         </View>
       ) : null}
 
-      {filtersExpanded ? (
-        <BrowseFilterSheet
-          onExpiration={onExpiration ? mode => onExpiration(mode, filterDraft) : undefined}
-          draft={filterDraft}
-          palette={palette}
-          tagFilters={tagFilters}
-          tagFilterStatus={tagFilterStatus}
-          onApply={() => onApplyFilters(filterDraft)}
-          onChangeCheckoutState={onChangeDraftCheckoutState}
-          onChangeLifecycleState={onChangeDraftLifecycleState}
-          onChangeScope={onChangeDraftScope}
-          onChangeTagIds={onChangeDraftTagIds}
-          onClose={() => onToggleFilters(false)}
-          onReset={() => {
-            onChangeDraftScope('all');
-            onChangeDraftLifecycleState('active');
-            onChangeDraftCheckoutState('any');
-            onChangeDraftTagIds([]);
-          }}
-          onRetryTags={onRetryTags}
-        />
-      ) : null}
+
     </View>
   );
-}
-
-function BrowseFilterSheet({
-  onExpiration,
-  draft,
-  palette,
-  tagFilters,
-  tagFilterStatus,
-  onApply,
-  onChangeCheckoutState,
-  onChangeLifecycleState,
-  onChangeScope,
-  onChangeTagIds,
-  onClose,
-  onReset,
-  onRetryTags
-}: {
-  readonly onExpiration?: (mode: 'soon' | 'expired' | 'all') => void;
-  readonly draft: BrowseDraftFilters;
-  readonly palette: MobileColorPalette;
-  readonly tagFilters: readonly AssetTagOptionViewModel[];
-  readonly tagFilterStatus: TagFilterStatus;
-  readonly onApply: () => void;
-  readonly onChangeCheckoutState: (state: AssetBrowseCheckoutFilter) => void;
-  readonly onChangeLifecycleState: (state: AssetBrowseLifecycleFilter) => void;
-  readonly onChangeScope: (scope: BrowseScope) => void;
-  readonly onChangeTagIds: (ids: readonly string[]) => void;
-  readonly onClose: () => void;
-  readonly onReset: () => void;
-  readonly onRetryTags?: () => void;
-}) {
-  const styles = stylesForPalette(palette);
-  const sortedTags = [...tagFilters].sort((left, right) => left.label.localeCompare(right.label, undefined, { sensitivity: 'base' }));
-  const selectedTags = new Set(draft.tagIds);
-  return (
-    <View style={styles.filterSheet}>
-        <View style={styles.sheetHeader}>
-          <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.sheetHeaderButton, pressed ? styles.controlPressed : null]}>
-            <Text style={styles.sheetHeaderSecondary}>Cancel</Text>
-          </Pressable>
-          <Text accessibilityRole="header" style={styles.sheetTitle}>Filters</Text>
-          <Pressable accessibilityRole="button" onPress={onReset} style={({ pressed }) => [styles.sheetHeaderButton, pressed ? styles.controlPressed : null]}>
-            <Text style={styles.sheetHeaderSecondary}>Reset</Text>
-          </Pressable>
-        </View>
-        <View style={styles.sheetContent}>
-          {onExpiration ? <SettingsSection title="Expiration" footer="Review active items by expiration date.">
-            <SettingsNavigationRow label="Expiring soon" accessibilityLabel="Review expiring soon items" onPress={() => onExpiration('soon')} />
-            <SettingsNavigationRow label="Expired" accessibilityLabel="Review expired items" onPress={() => onExpiration('expired')} />
-            <SettingsNavigationRow label="All dates" accessibilityLabel="Review all expiration dates" onPress={() => onExpiration('all')} />
-          </SettingsSection> : null}
-          <FilterSection palette={palette} title="Type">
-            <View accessibilityLabel="Filter by type">
-              <NativeSegmentedControl
-                colors={palette}
-                onChange={onChangeScope}
-                segments={buildBrowseScopeOptions()}
-                style={styles.sheetSegmentedControl}
-                value={draft.scope}
-              />
-            </View>
-          </FilterSection>
-          <FilterSection palette={palette} title="Status">
-            <View accessibilityLabel="Filter by status">
-              <NativeSegmentedControl
-                colors={palette}
-                onChange={onChangeLifecycleState}
-                segments={lifecycleFilterSegments}
-                style={styles.sheetSegmentedControl}
-                value={draft.lifecycleState}
-              />
-            </View>
-          </FilterSection>
-          <FilterSection palette={palette} title="Availability">
-            <View accessibilityLabel="Filter by availability">
-              <NativeSegmentedControl
-                colors={palette}
-                onChange={onChangeCheckoutState}
-                segments={availabilityFilterSegments}
-                style={styles.sheetSegmentedControl}
-                value={draft.checkoutState}
-              />
-            </View>
-          </FilterSection>
-          <FilterSection palette={palette} title="Tags">
-            {tagFilterStatus === 'loading' ? <ActivityIndicator color={palette.accent} /> : null}
-            {tagFilterStatus === 'error' ? (
-              <View style={styles.tagError}>
-                <Text style={styles.sheetSupportingText}>Tags could not be loaded.</Text>
-                {onRetryTags ? (
-                  <Pressable accessibilityRole="button" onPress={onRetryTags} style={({ pressed }) => [styles.retryButton, pressed ? styles.controlPressed : null]}>
-                    <Text style={styles.retryText}>Retry</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : null}
-            {tagFilterStatus === 'ready' && sortedTags.length === 0 ? <Text style={styles.sheetSupportingText}>No tags in this inventory.</Text> : null}
-            {tagFilterStatus === 'ready' && sortedTags.length > 0 ? (
-              <View accessibilityLabel="Tag filters" style={styles.tagList}>
-                {sortedTags.map((tag, index) => {
-                  const selected = selectedTags.has(tag.id);
-                  return (
-                    <View key={tag.id}>
-                      {index > 0 ? <View accessibilityElementsHidden style={styles.tagSeparator} /> : null}
-                      <Pressable
-                        accessibilityLabel={`Filter by tag ${tag.label}`}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: selected }}
-                        onPress={() => onChangeTagIds(toggleValue(draft.tagIds, tag.id))}
-                        style={({ pressed }) => [styles.tagRow, pressed ? styles.controlPressed : null]}
-                      >
-                        <View
-                          accessibilityElementsHidden
-                          style={[styles.tagColor, tag.color ? { backgroundColor: tag.color } : styles.emptyTagColor]}
-                          testID={`tag-color-${tag.id}`}
-                        />
-                        <Text style={styles.tagLabel}>{tag.label}</Text>
-                        <View accessibilityElementsHidden style={styles.tagCheckSpace}>
-                          {selected ? <Check color={palette.action} size={20} strokeWidth={2.5} /> : null}
-                        </View>
-                      </Pressable>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : null}
-          </FilterSection>
-        </View>
-        <View style={styles.sheetFooter}>
-          <Pressable accessibilityRole="button" onPress={onApply} style={({ pressed }) => [styles.applyButton, pressed ? styles.applyButtonPressed : null]}>
-            <Text style={styles.applyButtonText}>Show results</Text>
-          </Pressable>
-        </View>
-    </View>
-  );
-}
-
-function FilterSection({
-  title,
-  children,
-  palette
-}: {
-  readonly title: string;
-  readonly children: ReactNode;
-  readonly palette: MobileColorPalette;
-}) {
-  return (
-    <View style={baseStyles.filterSection}>
-      <Text accessibilityRole="header" style={[baseStyles.filterSectionTitle, { color: palette.text }]}>{title}</Text>
-      {children}
-    </View>
-  );
-}
-
-const lifecycleFilterSegments = [
-  { label: 'Active', value: 'active' },
-  { label: 'Archived', value: 'archived' },
-  { label: 'All', value: 'all' }
-] as const;
-
-const availabilityFilterSegments = [
-  { label: 'Any', value: 'any' },
-  { label: 'Available', value: 'available' },
-  { label: 'Checked out', value: 'checked_out' }
-] as const;
-
-export function browseSortMenuGroups(
-  sort: AssetBrowseSort,
-  onChangeSort: (sort: AssetBrowseSort) => void
-): readonly NativeActionMenuGroup[] {
-  return [{
-    id: 'sort',
-    items: [
-      {
-        id: 'updated_desc',
-        label: 'Recently changed',
-        isSelected: sort === 'updated_desc',
-        onPress: () => {
-          if (sort !== 'updated_desc') onChangeSort('updated_desc');
-        }
-      },
-      {
-        id: 'id_asc',
-        label: 'Default order',
-        isSelected: sort === 'id_asc',
-        onPress: () => {
-          if (sort !== 'id_asc') onChangeSort('id_asc');
-        }
-      }
-    ]
-  }];
-}
-
-function toggleValue(values: readonly string[], value: string): readonly string[] {
-  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }
 
 const baseStyles = StyleSheet.create({
-  header: { marginBottom: spacing.md },
-  filterSection: { gap: spacing.sm },
-  filterSectionTitle: { fontSize: 17, fontWeight: '700' }
+  header: { marginBottom: spacing.md }
 });
 
 export function createBrowseHeaderStyles(palette: MobileColorPalette) {
@@ -489,26 +210,6 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     errorText: { color: palette.warning, flex: 1, fontSize: 14, lineHeight: 20 },
     retryButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm },
     retryText: { color: palette.action, fontSize: 14, fontWeight: '700' },
-    filterSheet: { backgroundColor: palette.background, borderColor: palette.border, borderRadius: radius.md, borderWidth: 1, marginTop: spacing.sm },
-    sheetHeader: { alignItems: 'center', borderBottomColor: palette.border, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', minHeight: 56, paddingHorizontal: spacing.sm },
-    sheetHeaderButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 72 },
-    sheetHeaderSecondary: { color: palette.action, fontSize: 16, fontWeight: '600' },
-    sheetTitle: { color: palette.text, fontSize: 17, fontWeight: '700' },
-    sheetContent: { gap: spacing.lg, padding: spacing.md },
-    sheetSegmentedControl: { width: '100%' },
-    tagList: { backgroundColor: palette.surface, borderRadius: radius.md, overflow: 'hidden' },
-    tagRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, minHeight: 52, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-    tagColor: { borderRadius: 8, height: 16, width: 16 },
-    emptyTagColor: { backgroundColor: 'transparent', borderColor: palette.controlBorder, borderWidth: 1.5 },
-    tagLabel: { color: palette.text, flex: 1, fontSize: 16 },
-    tagCheckSpace: { alignItems: 'center', height: 24, justifyContent: 'center', width: 24 },
-    tagSeparator: { backgroundColor: palette.border, height: StyleSheet.hairlineWidth, marginLeft: 48 },
-    sheetSupportingText: { color: palette.textMuted, fontSize: 15, lineHeight: 21 },
-    tagError: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-    sheetFooter: { borderTopColor: palette.border, borderTopWidth: 1, padding: spacing.md },
-    applyButton: { alignItems: 'center', backgroundColor: palette.action, borderRadius: radius.md, justifyContent: 'center', minHeight: 50 },
-    applyButtonPressed: { backgroundColor: palette.actionPressed },
-    applyButtonText: { color: palette.onAction, fontSize: 16, fontWeight: '700' },
     controlPressed: { opacity: 0.82 }
   });
 }
