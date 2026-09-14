@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class OnboardingAuditTests: XCTestCase {
   private let app = XCUIApplication(bundleIdentifier: "org.stuffstash.mobile")
@@ -18,6 +19,21 @@ final class OnboardingAuditTests: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
+  }
+
+  func testOnboardingAdaptsToLandscape() throws {
+    try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The shipped iPhone app supports portrait only")
+    XCUIDevice.shared.orientation = .landscapeLeft
+    defer { XCUIDevice.shared.orientation = .portrait }
+    let address = app.textFields["Server address"]
+    XCTAssertTrue(address.waitForExistence(timeout: 30))
+    XCTAssertTrue(address.isHittable)
+    XCTAssertGreaterThan(app.frame.width, app.frame.height, "The iPad window must actually rotate")
+    capture("onboarding-landscape-entry")
+    let connect = app.buttons["Connect and sign in"]
+    if !connect.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(connect.isHittable, "The form action must remain reachable in landscape")
+    capture("onboarding-landscape-action")
   }
 
   func testConnectionHelpAndKeyboardKeepActionsReachable() throws {

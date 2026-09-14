@@ -25,7 +25,7 @@
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 
-| M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Open | Run34884708793 iPad screenshot; bound the readable form column and verify landscape/enlarged text |
+| M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Implemented; native rerun pending | Centered 600-point form column and adjacent action; typecheck/structural green, critic found no blockers; iPad landscape fixture added, enlarged text still pending |
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
 | M19 | Expiration filter sheet renders no body content | Candidate fix; native rerun pending | Run34887652455 iPhone screenshot and accessibility hierarchy contain footer only; replace unnecessary root KeyboardAvoidingView with bounded View and native scroll keyboard insets |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |

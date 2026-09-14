@@ -125,6 +125,18 @@ This replaces the separate Instance, Sign in, Tenant, and Inventory screen
 sequence. Internal application states may remain distinct; they must not force
 separate user-facing screens.
 
+### Adaptive form layout
+
+The connection and setup forms use one centered, readable column, up to 600
+points wide including its margins, and shrink to the available safe width.
+Their primary action follows the fields and help/error content with ordinary
+section spacing; spare tablet height must not create a large gap between the
+form and its action. Content remains vertically scrollable for small windows,
+landscape and enlarged text. The 600-point bound is a project layout choice,
+not an Apple-mandated measurement. This applies Apple's guidance to group related
+controls and adapt layouts across sizes:
+[Layout](https://developer.apple.com/design/human-interface-guidelines/layout).
+
 ### Connection and sign-in
 
 - Heading: `Connect to Stuff Stash`.
