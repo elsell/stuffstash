@@ -1,5 +1,9 @@
 # Stuff Stash UI Principles
 
+General product and engineering principles apply across clients. Web-specific
+SvelteKit, shadcn, CSS, and browser guidance applies only to web; native mobile
+uses its platform adapters and interaction conventions.
+
 Use these constraints when shaping web UI direction.
 
 ## Product Feel
