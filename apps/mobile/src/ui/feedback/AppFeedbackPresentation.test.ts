@@ -16,12 +16,13 @@ describe('buildAppNoticePresentation', () => {
     });
   });
 
-  it('keeps actionable notices visible longer', () => {
+  it('keeps actionable and error notices available until dismissal', () => {
     expect(buildAppNoticePresentation({
       tone: 'error',
       title: 'Photo upload failed',
       actionLabel: 'Retry'
-    }, lightPalette).durationMs).toBe(6500);
+    }, lightPalette).durationMs).toBeNull();
+    expect(buildAppNoticePresentation({ tone: 'warning', title: 'Some items could not load' }, lightPalette).durationMs).toBeNull();
   });
 
   it('uses semantic dark notice surfaces instead of light-only literals', () => {

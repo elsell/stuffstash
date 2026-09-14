@@ -53,8 +53,10 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Shared mobile notices must render as native-feeling compact top banners below
   the safe-area/status-bar region so they remain visible while forms and the
   keyboard are active. Users must be able to dismiss a notice by tapping it or
-  swiping it upward. Notices must animate in and out with short, native-feeling
-  motion, including auto-dismiss and gesture-dismiss paths. Notices must support
+  swiping it upward. Respect Reduce Motion in entrance, dismissal and gesture
+  recovery. Actionable notices, warnings and errors remain until dismissed or
+  replaced; plain status notices may expire unless a screen reader is enabled.
+  Notices must support
   semantic tones for success, info, warning, and error; concise text; and at
   most one action such as `Retry`, `Undo`, or `Sign in`.
 - Blocking native dialogs remain appropriate for destructive confirmations,

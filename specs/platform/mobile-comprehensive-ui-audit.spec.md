@@ -113,3 +113,16 @@ Each global notice owns its timer and animation lifecycle. Replacing a notice
 starts a fresh display interval. A delayed dismissal from a replaced notice must
 not remove its successor. Use stable monotonic notice identity and clean up the
 old timer on replacement.
+
+## Accessible feedback
+
+Global notices with actions, warnings or errors remain until dismissed or replaced.
+Plain informational/success notices may expire after the normal display interval,
+but remain while a screen reader is enabled. Read accessibility preferences
+conservatively and respond to changes during display. With Reduce Motion enabled,
+show and dismiss without sliding or spring motion, including gesture recovery.
+The dismiss control's accessible name contains the actual message. Actions have
+explicit labels and at least 48-point targets; enlarged text stacks the action
+below the message. On iOS, announce a new message without moving focus; Android
+uses the live region. Retain the shared nonmodal banner pattern because the native
+alert dialog would interrupt ordinary saved-state/undo feedback.
