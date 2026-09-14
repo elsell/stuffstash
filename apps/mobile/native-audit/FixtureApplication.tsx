@@ -8,6 +8,7 @@ import { AppKeyboardAccessory } from '../src/ui/components/AppKeyboardAccessory'
 import { AppFeedbackProvider, useAppFeedback } from '../src/ui/feedback/AppFeedback';
 import { BrowseFiltersScreen } from '../src/ui/screens/BrowseFiltersScreen';
 import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersScreen';
+import { AppTextInput } from '../src/ui/components/AppTextInput';
 import { CustomizationFieldControls } from '../src/ui/components/CustomizationEditorFields';
 import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeSheetOptions';
 
@@ -36,6 +37,7 @@ function FixtureNavigation() {
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-browse" options={{ ...sheets.move, headerShown: true, sheetAllowedDetents: [0.7, 1], title: 'Filters' }} />
+      <Stack.Screen name="audit-expiration-medium" options={{ ...sheets.move, headerShown: true, sheetAllowedDetents: [0.7, 1], title: 'Filters' }} />
       <Stack.Screen name="audit-expiration" options={{ ...sheets.move, headerShown: true, sheetAllowedDetents: [1], title: 'Filters' }} />
     </Stack>
     <AppKeyboardAccessory />
@@ -47,15 +49,20 @@ export function FixtureMenu() {
   const { result, setResult } = useContext(ResultContext);
   const feedback = useAppFeedback();
   const [showDraftOptions, setShowDraftOptions] = useState(false);
+  const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled'>();
   return <FixturePage>
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />
+    <Button title="Audit medium expiration filters" onPress={() => router.push('/audit-expiration-medium' as Href)} />
     <Button title="Audit feedback" onPress={() => feedback.showNotice({
       tone: 'error', title: 'Audit action needs attention', message: 'This is synthetic audit data.',
       action: { label: 'Retry audit action', onPress: () => setResult('Audit retry completed') }
     })} />
     <Button title="Audit draft options" onPress={() => setShowDraftOptions(true)} />
     {showDraftOptions ? <DraftOptionsFixture /> : null}
+    <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
+    <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
+    {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
     <Text>{result}</Text>
   </FixturePage>;
 }
@@ -91,4 +98,12 @@ function DraftOptionsFixture() {
     enumOptions={options} persistedEnumOptions={['saved']} fieldType="enum" mode="edit"
     newOption={newOption} onNewOption={setNewOption} onEnumOptions={setOptions}
     persistedTargetIds={[]} targetIds={[]} onTargets={() => {}} onApplicability={() => {}} onFieldType={() => {}} />;
+}
+
+function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' }) {
+  const [value, setValue] = useState('');
+  return <AppTextInput accessibilityLabel={`Audit ${mode} address`} keyboardType="url"
+    autoCorrect={false} autoCapitalize="none" onChangeText={setValue}
+    {...(mode === 'controlled' ? { value } : { defaultValue: '' })}
+    style={{ minHeight: 54, borderWidth: 1, padding: 12 }} />;
 }

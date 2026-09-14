@@ -22,6 +22,7 @@ exports = {
     "index": "FixtureMenu",
     "audit-browse": "BrowseFilterFixture",
     "audit-expiration": "ExpirationFilterFixture",
+    "audit-expiration-medium": "ExpirationFilterFixture",
 }
 for route, component in exports.items():
     (routes / f"{route}.tsx").write_text(

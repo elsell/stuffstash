@@ -16,6 +16,10 @@ final class FixtureAuditTests: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
+    let hierarchy = XCTAttachment(string: app.debugDescription)
+    hierarchy.name = "\(name)-hierarchy"
+    hierarchy.lifetime = .keepAlways
+    add(hierarchy)
   }
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
@@ -36,6 +40,13 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Browse availability: available"].waitForExistence(timeout: 5))
     capture("browse-applied")
   }
+  func testMediumExpirationSheetBody() {
+    app.buttons["Audit medium expiration filters"].tap()
+    XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
+    capture("expiration-medium-body")
+    XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
+  }
+
   func testExpirationDatePageKeepsBottomActionsReachable() throws {
     app.buttons["Audit Expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose date range"].waitForExistence(timeout: 5))
@@ -85,6 +96,20 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Remove saved"].exists)
     capture("enum-draft-option-removed")
   }
+
+  private func verifyAddressEntry(_ mode: String) {
+    app.buttons["Audit \(mode) input"].tap()
+    let input = app.textFields["Audit \(mode) address"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    if !input.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    input.tap()
+    input.typeText("https://example.invalid")
+    capture("\(mode)-address-entry")
+    XCTAssertEqual(input.value as? String, "https://example.invalid")
+  }
+
+  func testControlledAddressEntry() { verifyAddressEntry("controlled") }
+  func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
 
   func testActionableFeedbackStaysAvailable() throws {
     app.buttons["Audit feedback"].tap()

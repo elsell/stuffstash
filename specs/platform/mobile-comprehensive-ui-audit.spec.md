@@ -171,3 +171,14 @@ date controls, so a root KeyboardAvoidingView is unnecessary. Keep automatic
 keyboard insets on the scroller and verify actual sheet content plus bottom
 actions on phone and iPad. Native run 34887652455 showed a blank body with the
 previous keyboard-avoiding root; treat the replacement as unverified until rerun.
+
+
+The native fixture suite also compares controlled and uncontrolled text entry
+using the same project text-input primitive and URL keyboard. This is a diagnostic
+for M14; neither a fixture pass nor an upstream issue alone establishes the cause
+of lost onboarding characters. Keep the production full-address assertion intact.
+
+M19 diagnostics retain the production full-height filter fixture and add the same
+screen at medium/large detents in a separate runner-only route. A diagnostic pass
+must not replace or conceal failure at the production presentation. Export native
+hierarchy alongside screenshots to compare scroll and footer geometry.

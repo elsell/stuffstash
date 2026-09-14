@@ -27,3 +27,30 @@ Do not infer a React input defect until reproduced against simulator typing beha
 
 PNG files are unmodified screenshot payloads extracted from the XCTest result bundle.
 Future runs export named attachments with xcresulttool directly on the macOS runner.
+
+
+## Filter rerun 34897215957
+
+Revision `254f5820c2c9c3c23ad4d2d8ca7b84f60a73c617` (PR merge of
+`b0d7ce0c`). iPhone17 and iPad mini(A17 Pro), default text, light appearance.
+
+- Browse visible labels, native availability selection, and Apply/Cancel passed
+  on both devices. Inspected phone screenshot:
+  [visible labels](evidence/browse-visible-labels-34897215957.png).
+- Persistent actionable feedback passed on both devices.
+- Expiration date-page and search-keyboard scenarios passed on iPad. Inspected
+  [keyboard screenshot](evidence/expiration-ipad-keyboard-34897215957.png)
+  shows both actions above the keyboard.
+- Both expiration scenarios fail on iPhone before reaching their task: the
+  body is absent. [Blank sheet](evidence/expiration-phone-blank-34897215957.png)
+  and native hierarchy confirm the footer is present but ScrollView is absent.
+  Removing KeyboardAvoidingView did not resolve M19; the prior causal hypothesis
+  is rejected. A separate medium-detent diagnostic retains the failing full-height
+  production fixture to avoid masking the issue.
+- Onboarding full-string entry fails on both devices (`hmple.invalid` phone,
+  `hs://example.invalid` tablet). Gesture dismissal is not reached in this run.
+  Controlled/uncontrolled fixture comparison is pending; no production input
+  workaround is justified yet.
+
+These scenarios establish only their named interactions. They do not establish
+whole-screen accessibility, larger text, dark mode, Android or physical-device behavior.
