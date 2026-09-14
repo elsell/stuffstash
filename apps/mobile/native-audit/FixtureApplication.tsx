@@ -8,6 +8,7 @@ import { AppKeyboardAccessory } from '../src/ui/components/AppKeyboardAccessory'
 import { AppFeedbackProvider, useAppFeedback } from '../src/ui/feedback/AppFeedback';
 import { BrowseFiltersScreen } from '../src/ui/screens/BrowseFiltersScreen';
 import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersScreen';
+import { CustomizationFieldControls } from '../src/ui/components/CustomizationEditorFields';
 import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeSheetOptions';
 
 // Runner-only composition. No production session, service, or credentials are loaded.
@@ -45,6 +46,7 @@ export function FixtureMenu() {
   const router = useRouter();
   const { result, setResult } = useContext(ResultContext);
   const feedback = useAppFeedback();
+  const [showDraftOptions, setShowDraftOptions] = useState(false);
   return <FixturePage>
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />
@@ -52,6 +54,8 @@ export function FixtureMenu() {
       tone: 'error', title: 'Audit action needs attention', message: 'This is synthetic audit data.',
       action: { label: 'Retry audit action', onPress: () => setResult('Audit retry completed') }
     })} />
+    <Button title="Audit draft options" onPress={() => setShowDraftOptions(true)} />
+    {showDraftOptions ? <DraftOptionsFixture /> : null}
     <Text>{result}</Text>
   </FixturePage>;
 }
@@ -78,4 +82,13 @@ export function ExpirationFilterFixture() {
     tags: [{ id: 'audit-tools', label: 'Tools' }, { id: 'audit-holiday', label: 'Holiday supplies' }],
     locations: [{ id: 'audit-kitchen', label: 'Kitchen / Cabinet' }, { id: 'audit-garage', label: 'Garage / Cabinet' }]
   }} onApply={filter => { setResult(`Expiration mode: ${filter.mode}`); router.back(); }} onCancel={() => router.back()} />;
+}
+
+function DraftOptionsFixture() {
+  const [options, setOptions] = useState<readonly string[]>(['saved', 'draft']);
+  const [newOption, setNewOption] = useState('');
+  return <CustomizationFieldControls applicability="all_assets" canMutate eligibleTypes={[]}
+    enumOptions={options} persistedEnumOptions={['saved']} fieldType="enum" mode="edit"
+    newOption={newOption} onNewOption={setNewOption} onEnumOptions={setOptions}
+    persistedTargetIds={[]} targetIds={[]} onTargets={() => {}} onApplicability={() => {}} onFieldType={() => {}} />;
 }

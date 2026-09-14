@@ -360,3 +360,17 @@ Each implementation pass must run the relevant type checks, unit/application tes
 - Tags have no archived-list, restore, or hard-delete contract. The active-only manager must make archive consequences clear without suggesting recovery that the domain cannot perform.
 - Complete client-side search over a paginated settings collection requires loading all pages until a server-side search contract exists; implementations must remain bounded and honest about progress.
 - Tenant-scoped customization lists require `tenant.configure`, so non-configuring tenant viewers cannot inspect tenant definitions directly even when they can see inherited definitions through an inventory effective list.
+
+
+### Reversible enum option drafts
+
+Persisted enum options remain immutable. Options added in the current create or
+edit draft can be removed in place before Save; they must not be labeled Existing.
+Removing a draft option changes only local state and requires no confirmation.
+Read-only and pending-save forms expose no enabled draft mutation. The final
+validated draft is the only value submitted through the existing application port.
+
+Use an ordinary platform text button for the Remove command, with the option in
+its accessible name. A command is not a checkbox or navigation destination. The
+shared native command adapter uses the same pinned SwiftUI/Compose integration as
+sheet actions, with no new dependency, and lets native text wrap and grow.

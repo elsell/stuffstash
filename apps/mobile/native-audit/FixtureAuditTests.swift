@@ -72,6 +72,20 @@ final class FixtureAuditTests: XCTestCase {
     back.tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
   }
+  func testDraftOptionRemovalPreservesSavedOptions() throws {
+    app.buttons["Audit draft options"].tap()
+    let remove = app.buttons["Remove draft"]
+    XCTAssertTrue(remove.waitForExistence(timeout: 5))
+    if !remove.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(remove.isHittable)
+    capture("enum-draft-option")
+    remove.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: remove)], timeout: 5), .completed)
+    XCTAssertTrue(app.staticTexts["saved · Existing"].exists)
+    XCTAssertFalse(app.buttons["Remove saved"].exists)
+    capture("enum-draft-option-removed")
+  }
+
   func testActionableFeedbackStaysAvailable() throws {
     app.buttons["Audit feedback"].tap()
     let retry = app.buttons["Retry audit action"]

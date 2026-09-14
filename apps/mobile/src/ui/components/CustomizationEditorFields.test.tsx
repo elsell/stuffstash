@@ -5,7 +5,7 @@ import { CustomizationFieldControls } from './CustomizationEditorFields';
 
 it('does not change a field type from an option opened before the form became read-only', async () => {
   const h = new MobileRenderHarness(); const changes: string[] = [];
-  const form = (canMutate: boolean) => <CustomizationFieldControls persistedTargetIds={[]} applicability="all_assets" canMutate={canMutate} eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="create" newOption=""
+  const form = (canMutate: boolean) => <CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability="all_assets" canMutate={canMutate} eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="create" newOption=""
     onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={value => changes.push(value)} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />;
   try {
     await h.render(form(true));
@@ -21,7 +21,7 @@ it('allows a newly selected asset type to be deselected before creating a field'
   const h = new MobileRenderHarness();
   function Form() {
     const [targets, setTargets] = useState<readonly string[]>([]);
-    return <CustomizationFieldControls persistedTargetIds={[]} applicability="custom_asset_types" canMutate eligibleTypes={[{ kind: 'asset-type', id: 'type-1', tenantId: 'tenant', scope: 'inventory', key: 'tools', displayName: 'Tools', description: '', lifecycle: 'active' }]} enumOptions={[]} fieldType="text" mode="create" newOption=""
+    return <CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability="custom_asset_types" canMutate eligibleTypes={[{ kind: 'asset-type', id: 'type-1', tenantId: 'tenant', scope: 'inventory', key: 'tools', displayName: 'Tools', description: '', lifecycle: 'active' }]} enumOptions={[]} fieldType="text" mode="create" newOption=""
       onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={setTargets} targetIds={targets} />;
   }
   try {
@@ -38,7 +38,7 @@ it('preserves saved targets while allowing draft additions to be removed during 
   const h = new MobileRenderHarness();
   function Form() {
     const [targets, setTargets] = useState<readonly string[]>(['saved']);
-    return <CustomizationFieldControls applicability="custom_asset_types" canMutate
+    return <CustomizationFieldControls persistedEnumOptions={[]} applicability="custom_asset_types" canMutate
       eligibleTypes={['saved', 'draft'].map(id => ({ kind: 'asset-type', id, tenantId: 'tenant', scope: 'inventory', key: id, displayName: id, description: '', lifecycle: 'active' }))}
       enumOptions={[]} fieldType="text" mode="edit" newOption="" persistedTargetIds={['saved']}
       onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={setTargets} targetIds={targets} />;
@@ -61,7 +61,7 @@ it('can remove unavailable draft targets without removing saved targets or revea
   const h = new MobileRenderHarness();
   function Form() {
     const [targets, setTargets] = useState<readonly string[]>(['private-saved', 'private-draft']);
-    return <CustomizationFieldControls applicability="custom_asset_types" canMutate eligibleTypes={[]}
+    return <CustomizationFieldControls persistedEnumOptions={[]} applicability="custom_asset_types" canMutate eligibleTypes={[]}
       enumOptions={[]} fieldType="text" mode="edit" newOption="" persistedTargetIds={['private-saved']}
       onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={setTargets} targetIds={targets} />;
   }
@@ -72,5 +72,40 @@ it('can remove unavailable draft targets without removing saved targets or revea
     expect(h.byText('1 existing asset type is unavailable')).toBeDefined();
     expect(h.byText('Choose at least one asset type.')).toBeUndefined();
     expect(h.allText()).not.toContain('private-');
+  } finally { await h.unmount(); }
+});
+
+
+it('removes unsaved enum additions while preserving saved options', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [options, setOptions] = useState<readonly string[]>(['saved', 'draft']);
+    return <CustomizationFieldControls persistedEnumOptions={['saved']} persistedTargetIds={[]} applicability="all_assets" canMutate
+      eligibleTypes={[]} enumOptions={options} fieldType="enum" mode="edit" newOption=""
+      onApplicability={() => {}} onEnumOptions={setOptions} onFieldType={() => {}} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />;
+  }
+  try {
+    await h.render(<Form />);
+    expect(h.byText('saved · Existing')).toBeDefined();
+    expect(h.byLabel('Remove saved')).toBeUndefined();
+    await h.press(h.byLabel('Remove draft'));
+    expect(h.byText('draft')).toBeUndefined();
+    expect(h.byLabel('Remove draft')).toBeUndefined();
+    expect(h.byText('saved · Existing')).toBeDefined();
+  } finally { await h.unmount(); }
+});
+
+it('can remove the last option from a create draft and shows validation', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [options, setOptions] = useState<readonly string[]>(['draft']);
+    return <CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability="all_assets" canMutate
+      eligibleTypes={[]} enumOptions={options} fieldType="enum" mode="create" newOption=""
+      onApplicability={() => {}} onEnumOptions={setOptions} onFieldType={() => {}} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />;
+  }
+  try {
+    await h.render(<Form />);
+    await h.press(h.byLabel('Remove draft'));
+    expect(h.byText('Add at least one option.')).toBeDefined();
   } finally { await h.unmount(); }
 });
