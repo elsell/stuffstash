@@ -18,6 +18,8 @@ import { AppTextInput } from '../src/ui/components/AppTextInput';
 import { CustomizationFieldControls } from '../src/ui/components/CustomizationEditorFields';
 import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeSheetOptions';
 
+export { AddAssetFixture } from './AddAssetFixture';
+
 // Runner-only composition. No production session, service, or credentials are loaded.
 const ResultContext = createContext({ result: '', setResult: (_value: string) => {} });
 
@@ -42,6 +44,7 @@ function FixtureNavigation() {
   return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
+      <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
@@ -73,6 +76,7 @@ export function FixtureMenu() {
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
     {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
+    <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
     <Text>{result}</Text>

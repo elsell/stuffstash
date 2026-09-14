@@ -124,6 +124,34 @@ final class FixtureAuditTests: XCTestCase {
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
 
+  func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
+    let open = app.buttons["Audit Add draft"]
+    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let name = app.textFields["Asset name"]
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars["Add item"].exists)
+    capture("add-native-header")
+    name.tap()
+    name.typeText("Native draft name")
+    XCTAssertEqual(name.value as? String, "Native draft name")
+    let save = app.buttons["Save item"]
+    let close = app.buttons["Close Add"]
+    XCTAssertTrue(save.isHittable)
+    save.tap()
+    XCTAssertFalse(save.isEnabled)
+    XCTAssertFalse(close.isEnabled)
+    let rejected = app.staticTexts["Rejected draft: Native draft name"]
+    XCTAssertTrue(rejected.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Native draft name")
+    XCTAssertTrue(save.isEnabled)
+    XCTAssertTrue(close.isEnabled)
+    capture("add-rejected-draft-retained")
+    close.tap()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 5))
+  }
+
   func testOnboardingSubmitsTheCompleteNativeAddress() {
     let open = app.buttons["Audit onboarding submission"]
     for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

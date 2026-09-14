@@ -197,3 +197,15 @@ An isolated onboarding fixture uses the real screen and command with in-memory
 API/auth/profile ports to assert the complete native-entered address reaches the
 authentication command. It must not contact an external service. Production-root
 onboarding continues to test real layout and keyboard behavior independently.
+
+The Add fixture must mount the real Add screen at its production full-height
+form-sheet presentation with controlled in-memory query and command ports. Check
+native header visibility, complete typed draft submission, disabled Save/Close
+while pending, failure retention, and dismissal recovery. A rejected fake save
+is intentional and must never create an asset in an external inventory.
+
+Keyboard-dismissal audit gestures must originate inside the actual native
+ScrollView bounds and above the keyboard/accessory, rather than infer the scroll
+edge from the keyboard position. Export hierarchy to verify those bounds. A
+corrected gesture must still demonstrate dismissal; changing coordinates alone
+does not resolve the finding.

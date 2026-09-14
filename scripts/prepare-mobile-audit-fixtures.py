@@ -20,6 +20,7 @@ routes.mkdir()
 exports = {
     "_layout": "FixtureLayout",
     "index": "FixtureMenu",
+    "audit-add": "AddAssetFixture",
     "audit-browse": "BrowseFilterFixture",
     "audit-expiration": "ExpirationFilterFixture",
     "audit-expiration-medium": "ExpirationFilterFixture",

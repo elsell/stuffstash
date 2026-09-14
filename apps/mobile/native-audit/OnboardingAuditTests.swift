@@ -19,6 +19,10 @@ final class OnboardingAuditTests: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
+    let hierarchy = XCTAttachment(string: app.debugDescription)
+    hierarchy.name = "\(name)-hierarchy"
+    hierarchy.lifetime = .keepAlways
+    add(hierarchy)
   }
 
   func testOnboardingAdaptsToLandscape() throws {
@@ -58,8 +62,12 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertEqual(address.value as? String, "https://example.invalid", "Typing must preserve the complete server address")
     // Interactive keyboard dismissal follows a downward drag from scroll content.
     let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
-    let start = origin.withOffset(CGVector(dx: app.frame.midX, dy: app.keyboards.firstMatch.frame.minY - 24))
-    let end = origin.withOffset(CGVector(dx: app.frame.midX, dy: app.frame.maxY - 24))
+    let scroll = app.scrollViews.firstMatch
+    XCTAssertTrue(scroll.exists)
+    let startPoint = CGPoint(x: scroll.frame.minX + 8, y: min(scroll.frame.maxY, app.keyboards.firstMatch.frame.minY) - 80)
+    XCTAssertTrue(scroll.frame.contains(startPoint), "Dismissal drag must begin inside the scroll surface")
+    let start = origin.withOffset(CGVector(dx: startPoint.x, dy: startPoint.y))
+    let end = origin.withOffset(CGVector(dx: startPoint.x, dy: min(app.frame.maxY - 24, startPoint.y + 300)))
     start.press(forDuration: 0.1, thenDragTo: end)
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
     let connect = app.buttons["Connect and sign in"]
