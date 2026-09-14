@@ -91,3 +91,9 @@ household/inventory hierarchy and current selection. Empty households explain th
 no inventories are available. Prevent duplicate selection requests, report a failed
 switch in place, and retain the sheet for retry. Dismiss only after a successful
 selection; suppress late navigation after the sheet has unmounted.
+
+## Multiple tag selection
+
+Expiration tag choices expose independent checked states and checkbox semantics.
+Users can select and remove multiple tags in the filter draft without replacing
+the other selections. Type and location remain single-choice controls.

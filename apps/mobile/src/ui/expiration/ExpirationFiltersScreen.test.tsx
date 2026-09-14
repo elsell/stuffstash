@@ -40,3 +40,20 @@ it('chooses availability in place and only commits with Apply', async () => {
   expect(applied).toEqual([{mode:'all',checkoutState:'checked_out'}]);
  } finally { await h.unmount(); }
 });
+
+it('exposes tags as independent checkbox selections and applies the remaining draft', async () => {
+ const h = new MobileRenderHarness(); const applied: unknown[] = [];
+ try {
+  await h.render(<ExpirationFiltersScreen initial={{mode:'all'}} choices={{types:[],tags:[{id:'one',label:'Medicine'},{id:'two',label:'Travel'}],locations:[]}} onApply={value=>applied.push(value)} onCancel={()=>{}} />);
+  await h.press(h.byLabel('Choose tags'));
+  expect(h.byLabel('Medicine')?.props.accessibilityRole).toBe('checkbox');
+  await h.press(h.byLabel('Medicine')); await h.press(h.byLabel('Travel'));
+  expect(h.byLabel('Medicine')?.props.accessibilityState.checked).toBe(true);
+  expect(h.byLabel('Travel')?.props.accessibilityState.checked).toBe(true);
+  await h.press(h.byLabel('Medicine'));
+  expect(h.byLabel('Travel')?.props.accessibilityState.checked).toBe(true);
+  expect(applied).toEqual([]);
+  await h.press(h.byLabel('Apply expiration filters'));
+  expect(applied).toEqual([{mode:'all',tagIds:['two']}]);
+ } finally { await h.unmount(); }
+});

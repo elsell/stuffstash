@@ -12,5 +12,10 @@
 | M08 | Adaptive/assistive-tech runtime matrix unverified | Investigating access | F09; phone/iPad/Android runtime needed |
 | M09 | Expiration location labels omit ancestry | Open | F10; duplicate-name selection fixture |
 
+| M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
+| M11 | Newly selected custom-field applicability targets cannot be removed before saving | Investigating contract | CustomizationEditorFields only appends targets and displays selected targets as static Existing text, including unsaved additions; distinguish immutable saved scope from editable draft |
+| M12 | Replacement notices can inherit the prior notice timer/animation lifecycle | Open | AppFeedback reuses unkeyed AppNotice and callback clears whichever notice is current; old dismissal must not remove newer feedback |
+| M13 | Initial asset/location list load errors have no in-place retry | Open | InventoryAssetsRouteScreen/LocationAssetsRouteScreen/LocationsScreen ErrorState renders text only; preserve context and offer retry |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
