@@ -27,3 +27,9 @@ export function attemptNavigation(action: PreventedAction) { fakeNavigation.disp
 export function dispatchedActions() { return [...dispatched]; }
 export function navigationOptions() { return [...options]; }
 export function resetNavigation() { active = false; preventCallback = undefined; dispatching = false; dispatched.length = 0; options.length = 0; }
+
+let screenFocused = true;
+const focusListeners = new Set<() => void>();
+export const getScreenFocused = () => screenFocused;
+export function subscribeScreenFocus(listener: () => void) { focusListeners.add(listener); return () => { focusListeners.delete(listener); }; }
+export function setScreenFocused(value: boolean) { screenFocused = value; focusListeners.forEach(listener => listener()); }

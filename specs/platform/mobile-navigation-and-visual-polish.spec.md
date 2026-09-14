@@ -250,3 +250,22 @@ gesture-driven containment exploration.
 - Preserve the native transparent scroll-edge appearance and compact Browse
   controls. Existing scoped queries, permission checks and result error recovery
   remain responsible for loading the selected inventory.
+
+## Home refresh and header fit (2026-09-14)
+
+- Home's native pull-to-refresh control represents only a user-started pull.
+  Background dashboard/expiration refetches and post-edit refreshes must not open
+  or hold the pull control. Blur/unmount clears its presentation; late completion
+  cannot clear a newer pull. Ignore late native pull events while Home is not
+  focused. Keep ordinary scroll position when returning.
+- Keep refreshing dashboard and expiration data together for an explicit pull;
+  retain existing query/error recovery and do not cancel shared background reads
+  just to reset the control. Suppress duplicate pulls while one is active.
+- Reserve space for Home's native action buttons before sizing its inventory
+  selector, including native group/margin allowance. Use explicit 44-point iOS
+  bar-item widths. Prioritize Add and Account before Notifications in native item
+  order so the primary actions remain available at constrained widths.
+- Bound selector width rather than crowding buttons; truncate its text while
+  retaining full accessible inventory/tenant names. Add symmetric 12-point inner
+  horizontal padding and compact vertical padding. Use a single label at enlarged
+  text sizes instead of compressing two lines into the navigation bar.

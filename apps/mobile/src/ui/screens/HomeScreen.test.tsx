@@ -25,6 +25,7 @@ vi.mock('react', async (importOriginal) => ({
 }));
 
 vi.mock('expo-router', () => ({
+  useFocusEffect: () => {},
   Stack: { Screen: ({ options }: { options: { headerLeft?: () => unknown; headerRight?: () => unknown } }) => ({
     type: 'NativeHeader', props: { children: [options.headerLeft?.(), options.headerRight?.()] }
   }) },
@@ -140,7 +141,7 @@ describe('HomeScreen asset cards', () => {
   beforeEach(() => {
     testState.stateIndex = 0;
     testState.stateSetters = [];
-    testState.stateValues = [undefined, undefined];
+    testState.stateValues = [false, undefined, undefined];
     serverQueryState.current = readyServerQuery(dashboard);
     routerPush.mockClear();
   });
@@ -240,6 +241,13 @@ describe('HomeScreen asset cards', () => {
     });
   });
 
+  it('does not open the native pull control for a background dashboard refetch', () => {
+    serverQueryState.current = { ...readyServerQuery(dashboard), isRefetching: true };
+    const scroll = findAllByType(renderHome(), 'ScrollView')[0];
+    const refresh = scroll.props?.refreshControl as ElementNode;
+    expect(refresh.props?.refreshing).toBe(false);
+  });
+
   it('connects Return to the checkout command and disables the action while returning', async () => {
     const execute = vi.fn().mockResolvedValue({
       id: 'checkout-one',
@@ -255,7 +263,7 @@ describe('HomeScreen asset cards', () => {
     expect(execute).toHaveBeenCalledWith({ action: 'return', assetId: 'asset-checked-out' });
 
     testState.stateIndex = 0;
-    testState.stateValues = ['asset-checked-out', undefined];
+    testState.stateValues = [false, 'asset-checked-out', undefined];
     const returningCard = renderHomeCards(execute).find((card) => card.props?.asset === checkedOutAsset);
 
     expect(returningCard?.props?.footerAction).toMatchObject({ disabled: true, label: 'Returning...' });
@@ -277,7 +285,7 @@ describe('HomeScreen asset cards', () => {
     await Promise.resolve();
 
     expect(dashboardExecute).toHaveBeenCalledTimes(1);
-    expect(testState.stateSetters[1]).toHaveBeenCalledWith(expect.objectContaining({
+    expect(testState.stateSetters[2]).toHaveBeenCalledWith(expect.objectContaining({
       checkoutId: 'checkout-one',
       asset: checkedOutAsset
     }));
@@ -299,7 +307,7 @@ describe('HomeScreen asset cards', () => {
     await Promise.resolve();
 
     expect(dashboardExecute).toHaveBeenCalledTimes(1);
-    expect(testState.stateSetters[1]).toHaveBeenCalledWith(expect.objectContaining({
+    expect(testState.stateSetters[2]).toHaveBeenCalledWith(expect.objectContaining({
       checkoutId: 'checkout-one',
       undoableOperationId: undefined
     }));
@@ -340,7 +348,7 @@ function renderHomeCards(execute = vi.fn()): readonly ElementNode[] {
 
 function renderReadyHome(readyDashboard: HomeDashboardViewModel = dashboard): unknown {
   testState.stateIndex = 0;
-  testState.stateValues = [undefined, undefined];
+  testState.stateValues = [false, undefined, undefined];
   serverQueryState.current = readyServerQuery(readyDashboard);
   return renderHome();
 }

@@ -6,30 +6,31 @@ import type { HomeDashboardViewModel } from '../../application/home/HomeDashboar
 import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
 import type { NativeHeaderAction } from '../components/NativeHeaderActions.types';
 import { useAppearanceAwarePalette } from '../theme/appearance';
+import { homeInventoryControlWidth } from './HomeHeaderLayout';
 import { createHomeScreenStyles } from './HomeScreen.styles';
 
 export function HomeNavigationHeader({ dashboard, notificationAction }: {
-  readonly dashboard?: HomeDashboardViewModel;
+  readonly dashboard?: Pick<HomeDashboardViewModel, 'inventoryName' | 'tenantName' | 'canAdd'>;
   readonly notificationAction?: NativeHeaderAction;
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
   const actions: NativeHeaderAction[] = [
-    ...(notificationAction ? [notificationAction] : []),
     ...(dashboard?.canAdd ? [{ kind: 'add' as const, label: 'Add an asset', onPress: () => router.push('/add') }] : []),
-    { kind: 'account', label: 'Open account and settings', onPress: () => router.push('/settings') }
+    { kind: 'account', label: 'Open account and settings', onPress: () => router.push('/settings') },
+    ...(notificationAction ? [notificationAction] : [])
   ];
   return <Stack.Screen options={{
     title: dashboard ? '' : 'Home',
     headerLeft: dashboard ? () => <Pressable
       accessibilityLabel={`Current inventory ${dashboard.inventoryName}, tenant ${dashboard.tenantName}. Switch inventory`}
       accessibilityRole="button" onPress={() => router.push('/tenant-switcher')}
-      style={[styles.contextControl, { flex: 0, width: Math.max(100, Math.min(260, width - actions.length * 48 - 48)) }]}
+      style={[styles.contextControl, { flex: 0, width: homeInventoryControlWidth(width, actions.length) }]}
     >
       <View style={styles.contextText}>
         <Text numberOfLines={1} style={styles.contextInventory}>{dashboard.inventoryName}</Text>
-        <Text numberOfLines={1} style={styles.contextTenantPrefix}>{dashboard.tenantName}</Text>
+        {fontScale <= 1.05 ? <Text numberOfLines={1} style={styles.contextTenantPrefix}>{dashboard.tenantName}</Text> : null}
       </View>
       <ChevronDown color={colors.textMuted} size={18} strokeWidth={2} />
     </Pressable> : undefined,

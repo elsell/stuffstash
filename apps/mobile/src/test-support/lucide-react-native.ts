@@ -45,3 +45,4 @@ export const MailOpen = 'MailOpenIcon';
 export const AlertTriangle = 'AlertTriangleIcon';
 
 export const Clock = 'ClockIcon';
+export const UserCircle = 'UserCircleIcon';
