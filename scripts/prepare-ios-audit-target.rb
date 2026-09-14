@@ -16,11 +16,13 @@ target.source_build_phase.add_file_reference(source)
 target.build_configurations.each do |configuration|
   configuration.build_settings.merge!({
     'PRODUCT_BUNDLE_IDENTIFIER' => 'org.stuffstash.mobile.audit-tests',
+    'PRODUCT_NAME' => '$(TARGET_NAME)',
     'SWIFT_VERSION' => '5.0',
     'GENERATE_INFOPLIST_FILE' => 'YES',
     'TEST_TARGET_NAME' => 'StuffStash',
     'TARGETED_DEVICE_FAMILY' => '1,2',
-    'CODE_SIGNING_ALLOWED' => 'NO'
+    'CODE_SIGNING_ALLOWED' => 'NO',
+    'ONLY_ACTIVE_ARCH' => 'YES'
   })
 end
 project.save
