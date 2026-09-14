@@ -1,4 +1,4 @@
-import { BrowseAddHeader, type BrowseHeaderContextProps } from './BrowseAddHeader';
+import { BrowseAddHeader } from './BrowseAddHeader';
 import { useInventoryMapSearch } from './useInventoryMapSearch';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { createStyles } from './InventoryMapScreen.styles';
@@ -57,7 +57,7 @@ import { assetDetailHref } from './AssetDetailNavigation';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { appKeyboardDismissMode } from '../components/AppTextInput';
 
-type InventoryMapScreenProps = BrowseHeaderContextProps & {
+type InventoryMapScreenProps = {
   readonly searchQuery?: string;
   readonly onChangeSearchQuery?: (query:string)=>void;
   readonly canAdd: boolean;
@@ -93,7 +93,6 @@ const horizontalInset = spacing.lg;
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 
 export function InventoryMapScreen({
-  inventoryContext, inventoryContextStatus, onRetryInventoryContext,
   canAdd,
   searchQuery,
   onChangeSearchQuery,
@@ -542,7 +541,7 @@ export function InventoryMapScreen({
 
   return (
     <View style={styles.shell}>
-      <BrowseAddHeader inventoryContext={inventoryContext} inventoryContextStatus={inventoryContextStatus} onRetryInventoryContext={onRetryInventoryContext} canAdd={canAdd} onAdd={() => { mapSearch.cancel(); onAdd(); }} />
+      <BrowseAddHeader canAdd={canAdd} onAdd={() => { mapSearch.cancel(); onAdd(); }} />
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.titleBlock}>
