@@ -187,3 +187,8 @@ Run 34903318947 completed the detent comparison: medium/large showed the
 iPhone body while full-only did not. The next candidate shares the medium/large
 production filter configuration with fixtures and additionally checks expansion.
 Prior full-only failure remains recorded in the audit evidence.
+
+Native settings-control fixtures exercise the shared Appearance menu, direct
+iOS color picker opening/closing and explicit color clearing, and compact asset
+expiration date entry/clearing. These isolate native controls; parent editor
+cancel/save and actual Add-sheet navigation require their own runtime scenarios.

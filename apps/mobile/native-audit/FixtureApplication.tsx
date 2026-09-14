@@ -8,6 +8,9 @@ import { AppKeyboardAccessory } from '../src/ui/components/AppKeyboardAccessory'
 import { AppFeedbackProvider, useAppFeedback } from '../src/ui/feedback/AppFeedback';
 import { BrowseFiltersScreen } from '../src/ui/screens/BrowseFiltersScreen';
 import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersScreen';
+import { AppearancePicker } from '../src/ui/components/AppearancePicker';
+import { TagColorPicker } from '../src/ui/components/TagColorPicker';
+import { ExpirationField } from '../src/ui/components/ExpirationField';
 import { AppTextInput } from '../src/ui/components/AppTextInput';
 import { CustomizationFieldControls } from '../src/ui/components/CustomizationEditorFields';
 import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeSheetOptions';
@@ -49,7 +52,9 @@ export function FixtureMenu() {
   const { result, setResult } = useContext(ResultContext);
   const feedback = useAppFeedback();
   const [showDraftOptions, setShowDraftOptions] = useState(false);
+  const [settingsControls, setSettingsControls] = useState(false);
   const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled'>();
+  if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />
@@ -63,6 +68,7 @@ export function FixtureMenu() {
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
     {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
+    <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
     <Text>{result}</Text>
   </FixturePage>;
 }
@@ -106,4 +112,20 @@ function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' }
     autoCorrect={false} autoCapitalize="none" onChangeText={setValue}
     {...(mode === 'controlled' ? { value } : { defaultValue: '' })}
     style={{ minHeight: 54, borderWidth: 1, padding: 12 }} />;
+}
+
+
+function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
+  const { preference } = useAppearance();
+  const [color, setColor] = useState('');
+  const [expiration, setExpiration] = useState('No expiration');
+  return <FixturePage>
+    <Button title="Back to audit menu" onPress={onBack} />
+    <AppearancePicker />
+    <Text>{`Appearance value: ${preference}`}</Text>
+    <TagColorPicker value={color} onChange={setColor} />
+    <Text>{`Color value: ${color || 'none'}`}</Text>
+    <ExpirationField initialPickerDate={new Date(2026, 8, 14, 12)} onChange={value => setExpiration(value?.date ?? 'No expiration')} />
+    <Text>{`Expiration value: ${expiration}`}</Text>
+  </FixturePage>;
 }

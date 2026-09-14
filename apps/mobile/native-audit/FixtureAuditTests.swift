@@ -124,6 +124,60 @@ final class FixtureAuditTests: XCTestCase {
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
 
+  private func openSettingsControls() {
+    let button = app.buttons["Audit settings controls"]
+    for _ in 0..<4 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(button.isHittable)
+    button.tap()
+    XCTAssertTrue(app.buttons["Back to audit menu"].waitForExistence(timeout: 5))
+  }
+
+  func testAppearanceUsesMenuWithoutNavigation() {
+    openSettingsControls()
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose appearance")).firstMatch
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    choice.tap()
+    app.buttons["Dark"].tap()
+    XCTAssertTrue(app.staticTexts["Appearance value: dark"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Back to audit menu"].isHittable)
+    capture("appearance-in-place-dark")
+  }
+
+  func testColorPickerOpensDirectlyAndClearPreservesParentDraft() {
+    openSettingsControls()
+    XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+    XCTAssertFalse(app.buttons["Choose a custom tag color"].exists)
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    picker.tap()
+    XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 5), "The system color picker should open directly")
+    capture("native-color-picker")
+    app.buttons["Close"].tap()
+    XCTAssertTrue(app.staticTexts["Color value: none"].exists, "Opening and closing must not invent a color")
+    app.buttons["Choose Green tag color"].tap()
+    XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)
+    app.buttons["No tag color"].tap()
+    XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+  }
+
+  func testExactExpirationUsesCompactNativePicker() {
+    openSettingsControls()
+    app.buttons["Expiration"].tap()
+    XCTAssertTrue(app.staticTexts["Expiration value: No expiration"].exists)
+    app.buttons["Add expiration date"].tap()
+    let picker = app.datePickers.firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Use date"].exists)
+    picker.tap()
+    capture("compact-asset-expiration-calendar")
+    app.navigationBars.firstMatch.tap()
+    let clear = app.buttons["Clear expiration"]
+    if !clear.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(clear.isHittable)
+    clear.tap()
+    XCTAssertTrue(app.staticTexts["Expiration value: No expiration"].exists)
+  }
+
   func testActionableFeedbackStaysAvailable() throws {
     app.buttons["Audit feedback"].tap()
     let retry = app.buttons["Retry audit action"]

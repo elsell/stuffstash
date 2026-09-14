@@ -23,6 +23,8 @@
 | M19 | Expiration filter sheet renders no body content | Candidate implemented; native retest pending | Run34903318947 isolates full-only blank body versus medium/large visible body on iPhone. Shared resizable filter configuration now matches Browse; native candidate verifies actual expansion, date and keyboard actions. No fixed claim until retest |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
 | M21 | Add fields can change while the submitted item is being saved | Implemented; source tests pass; native pending | Exclusive save/parent/photo operation ownership guards draft edits, duplicate submission and dismissal. Five remote tests cover save failure, parent failure and photo cancellation with draft retention and editing recovery; native verification remains pending |
+| M22 | Appearance uses navigation for three flat choices | Implemented; 12 remote tests/check/structural pass; native pending | Settings now uses the shared native menu; older route reuses it. Immediate selection and storage-failure rollback are preserved; native menu rendering remains pending |
+| M23 | iOS custom tag color requires an extra custom editor around the native picker | Implemented; 15 remote tests/check/structural pass; native pending | Available iOS native picker edits parent draft directly; swatches/Clear, disabled guards and Android/unavailable-native fallback preserved. Critic no blockers; native open/close/clear fixture added |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
@@ -30,5 +32,3 @@ Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
 This establishes retention and action reachability for that fixture, not full
 assistive-technology or enlarged-text verification. Its iPad onboarding entry
 still lost characters (`h//example.invalid`); M14 remains unresolved.
-| M22 | Appearance uses navigation for three flat choices | Implemented; 12 remote tests/check/structural pass; native pending | Settings now uses the shared native menu; older route reuses it. Immediate selection and storage-failure rollback are preserved; native menu rendering remains pending |
-| M23 | iOS custom tag color requires an extra custom editor around the native picker | Open; source-confirmed | TagColorPicker opens an inline Custom color panel with its own Done/Cancel before NativeTagColorPicker opens the system picker. Use the native color picker directly against the parent draft on iOS; preserve Android spectrum/hex fallback and parent Save ownership |
