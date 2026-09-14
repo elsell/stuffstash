@@ -37,6 +37,8 @@ jobs:
   publish:
     name: Build and upload tagged iOS release
     runs-on: macos-26
+    outputs:
+      build_number: ${{ steps.uploaded_build.outputs.build_number }}
     env:
       NODE_ENV: production
       STUFF_STASH_MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
@@ -183,7 +185,9 @@ jobs:
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
 
       - name: Report upload
+        id: uploaded_build
         run: |
+          printf 'build_number=%s\n' "$MOBILE_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
           printf 'Uploaded Stuff Stash `%s` (`%s`) to App Store Connect for TestFlight processing.\n' \
             "$STUFF_STASH_MOBILE_RELEASE_TAG" "$MOBILE_BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
 
@@ -192,3 +196,15 @@ jobs:
         env:
           KEY_PATH: ${{ runner.temp }}/private_keys/AuthKey.p8
         run: bash scripts/cleanup-ios-signing.sh
+
+  changelog:
+    name: Publish build changelog
+    needs: publish
+    uses: ./.github/workflows/testflight-notes.yml
+    with:
+      release_tag: ${{ inputs.release_tag }}
+      build_number: ${{ needs.publish.outputs.build_number }}
+    secrets:
+      APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
