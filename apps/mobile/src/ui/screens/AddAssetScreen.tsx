@@ -1,3 +1,4 @@
+import { usePreventRemove } from '@react-navigation/native';
 import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
@@ -143,6 +144,17 @@ function ScopedAddAssetScreen({
   const [draggingPhotoId, setDraggingPhotoId] = useState<string | undefined>();
   const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | undefined>();
   const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' });
+  const draftOperation = useRef<'save' | 'parent' | 'photo' | null>(null);
+  const [draftBusy, setDraftBusy] = useState(false);
+  usePreventRemove(draftBusy, () => {});
+  function beginDraftOperation(operation: 'save' | 'parent' | 'photo') {
+    if (draftOperation.current) return false;
+    draftOperation.current = operation; setDraftBusy(true); Keyboard.dismiss();
+    return true;
+  }
+  function endDraftOperation() { draftOperation.current = null; setDraftBusy(false); }
+  function editDraft(change: () => void) { if (!draftOperation.current) change(); }
+
   const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
   const candidates = useParentCandidates(parentQuery, parentLookupQuery, isParentMenuOpen);
@@ -238,7 +250,7 @@ function ScopedAddAssetScreen({
   }, []);
 
   async function saveAsset(): Promise<void> {
-    if (!expirationValid || saveState.status === 'saving') return;
+    if (!expirationValid || !beginDraftOperation('save')) return;
     setSaveState({ status: 'saving' });
 
     try {
@@ -317,7 +329,7 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'idle' });
       await refreshDashboardAfterTagCreation(newTags);
       feedback.showNotice({ tone: 'error', title: 'Could not save asset', message });
-    }
+    } finally { endDraftOperation(); }
   }
 
   async function refreshDashboardAfterTagCreation(stagedTags: readonly CreateAssetTagDraft[]): Promise<void> {
@@ -344,6 +356,7 @@ function ScopedAddAssetScreen({
       return;
     }
 
+    if (!beginDraftOperation('parent')) return;
     setIsCreatingParent(true);
     setSaveState({ status: 'idle' });
     try {
@@ -372,11 +385,12 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'idle' });
       feedback.showNotice({ tone: 'error', title: 'Could not create parent', message });
     } finally {
-      setIsCreatingParent(false);
+      setIsCreatingParent(false); endDraftOperation();
     }
   }
 
   async function addPhotosFromLibrary(): Promise<void> {
+    if (!beginDraftOperation('photo')) return;
     try {
       const photos = await photoSelectionQuery.selectFromLibrary(selectedPhotos.length);
       if (photos.length === 0) {
@@ -390,10 +404,11 @@ function ScopedAddAssetScreen({
       const message = readableError(error, 'Could not select photos.');
       setSaveState({ status: 'idle' });
       feedback.showNotice({ tone: 'error', title: 'Could not select photos', message });
-    }
+    } finally { endDraftOperation(); }
   }
 
   async function takePhoto(): Promise<void> {
+    if (!beginDraftOperation('photo')) return;
     try {
       const photos = await photoSelectionQuery.captureFromCamera(selectedPhotos.length);
       if (photos.length === 0) {
@@ -407,10 +422,11 @@ function ScopedAddAssetScreen({
       const message = readableError(error, 'Could not take photo.');
       setSaveState({ status: 'idle' });
       feedback.showNotice({ tone: 'error', title: 'Could not take photo', message });
-    }
+    } finally { endDraftOperation(); }
   }
 
   function removePhoto(photoId: string): void {
+    if (draftOperation.current) return;
     setSelectedPhotos((current) => current.filter((photo) => photo.id !== photoId));
     setPreviewPhotoIndex((current) => {
       if (current === undefined) {
@@ -427,6 +443,7 @@ function ScopedAddAssetScreen({
   }
 
   function choosePhotoSource(): void {
+    if (draftOperation.current) return;
     showPhotoSourceChooser({
       onCamera: () => void takePhoto(),
       onLibrary: () => void addPhotosFromLibrary()
@@ -434,6 +451,7 @@ function ScopedAddAssetScreen({
   }
 
   function movePhoto(photoId: string, direction: number): void {
+    if (draftOperation.current) return;
     setSelectedPhotos((current) => {
       const index = current.findIndex((photo) => photo.id === photoId);
       const targetIndex = index + direction;
@@ -449,6 +467,7 @@ function ScopedAddAssetScreen({
   }
 
   function clearDraft(): void {
+    if (draftOperation.current) return;
     const clearedDraft = { ...emptyDraft };
     applyDraft(clearedDraft);
     if (draftContext) {
@@ -475,10 +494,10 @@ function ScopedAddAssetScreen({
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      <Stack.Screen options={{ headerShown: true, headerBackVisible: false, title: 'Add item',
-        ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', onPress: onDismiss }], 'left'),
+      <Stack.Screen options={{ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: 'Add item',
+        ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left'),
         ...nativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
-          disabled: !title.trim() || !expirationValid || saveState.status === 'saving' || loadState.status !== 'ready' || !loadState.context.canAdd,
+          disabled: draftBusy || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
           onPress: () => void saveAsset() }]) }} />
       <ScrollView
         ref={formScrollRef}
@@ -532,13 +551,13 @@ function ScopedAddAssetScreen({
               </View>
             ) : (
               <View>
-                <PhotoCapture
+                <PhotoCapture disabled={draftBusy}
                   draggingPhotoId={draggingPhotoId}
-                  onBeginPhotoDrag={setDraggingPhotoId}
+                  onBeginPhotoDrag={id => editDraft(() => setDraggingPhotoId(id))}
                   onEndPhotoDrag={() => setDraggingPhotoId(undefined)}
                   onAddPhotos={choosePhotoSource}
                   onMovePhoto={movePhoto}
-                  onOpenPhoto={(index) => setPreviewPhotoIndex(index)}
+                  onOpenPhoto={(index) => editDraft(() => setPreviewPhotoIndex(index))}
                   onRemovePhoto={removePhoto}
                   photos={selectedPhotos}
                 />
@@ -546,7 +565,8 @@ function ScopedAddAssetScreen({
                 <Text style={styles.fieldLabel}>Name</Text>
                 <AppTextInput
                   accessibilityLabel="Asset name"
-                  onChangeText={setTitle}
+                  editable={!draftBusy}
+                  onChangeText={value => editDraft(() => setTitle(value))}
                   placeholder="Furnace filter, passport, camping bin"
                   placeholderTextColor={colors.textMuted}
                   style={styles.input}
@@ -555,13 +575,14 @@ function ScopedAddAssetScreen({
 
                 {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
                 {isParentMenuOpen && candidates.isError ? <Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text style={styles.fieldLabel}>Retry suggestions</Text></Pressable> : null}
-                <ParentPicker
+                <ParentPicker disabled={draftBusy}
                   isCreatingParent={isCreatingParent}
                   createdParent={createdParent}
                   matches={parentMatches}
                   isOpen={isParentMenuOpen}
                   lastParent={lastParent}
                   onChangeQuery={(value) => {
+                    if (draftOperation.current) return;
                     setParentQuery(value);
                     setParentAssetId(undefined);
                     setCreatedParent(undefined);
@@ -571,8 +592,9 @@ function ScopedAddAssetScreen({
                     setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 0);
                   }}
                   onCreateParent={createParent}
-                  onOpenChange={setIsParentMenuOpen}
+                  onOpenChange={open => editDraft(() => setIsParentMenuOpen(open))}
                   onSelectParent={(parent) => {
+                    if (draftOperation.current) return;
                     setParentAssetId(parent?.id);
                     setParentQuery(parent?.title ?? '');
                     setLastParent(parent);
@@ -585,8 +607,9 @@ function ScopedAddAssetScreen({
 
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityState={{ expanded: showDetails }}
-                  onPress={() => setShowDetails((current) => !current)}
+                  disabled={draftBusy}
+                  accessibilityState={{ expanded: showDetails, disabled: draftBusy }}
+                  onPress={() => editDraft(() => setShowDetails((current) => !current))}
                   style={styles.moreDetailsButton}
                 >
                   <Text style={styles.moreDetailsText}>More details</Text>
@@ -598,29 +621,31 @@ function ScopedAddAssetScreen({
                 </Pressable>
 
                 {types.isError ? <Pressable accessibilityRole="button" accessibilityLabel="Retry asset types" onPress={() => void types.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.text }}>Asset types could not be loaded. Retry.</Text></Pressable> : null}
-                <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={saveState.status === 'saving'}
+                <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
                   draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
-                  onChange={(draft) => { setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} />
+                  onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} />
                 {showDetails ? (
                   <View>
                     <AppTextInput
                       accessibilityLabel="Asset description"
                       multiline
-                      onChangeText={setDescription}
+                      editable={!draftBusy}
+                      onChangeText={value => editDraft(() => setDescription(value))}
                       placeholder="Description"
                       placeholderTextColor={colors.textMuted}
                       style={[styles.input, styles.textArea]}
                       value={description}
                     />
-                    <AssetTagPicker
+                    <AssetTagPicker disabled={draftBusy}
                       tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
-                      onChange={setSelectedTagIds}
+                      onChange={ids => editDraft(() => setSelectedTagIds(ids))}
                       newTags={newTags}
-                      onNewTagsChange={setNewTags}
+                      onNewTagsChange={tags => editDraft(() => setNewTags(tags))}
                     />
                     <Pressable
                       accessibilityRole="button"
+                      disabled={draftBusy}
                       onPress={clearDraft}
                       style={styles.clearDraftButton}
                     >
@@ -651,6 +676,7 @@ function ScopedAddAssetScreen({
 }
 
 function PhotoCapture({
+  disabled,
   draggingPhotoId,
   onAddPhotos,
   onBeginPhotoDrag,
@@ -660,6 +686,7 @@ function PhotoCapture({
   onRemovePhoto,
   photos
 }: {
+  readonly disabled: boolean;
   readonly draggingPhotoId: string | undefined;
   readonly onAddPhotos: () => void;
   readonly onBeginPhotoDrag: (photoId: string) => void;
@@ -683,13 +710,14 @@ function PhotoCapture({
         <Pressable
           accessibilityHint="Choose camera or photo library"
           accessibilityRole="button"
+          disabled={disabled}
           onPress={onAddPhotos}
           style={styles.addPhotoTile}
         >
           <ImagePlus color={colors.action} size={28} strokeWidth={2.2} />
         </Pressable>
         {photos.map((photo, index) => (
-          <PhotoPreviewItem
+          <PhotoPreviewItem disabled={disabled}
             draggingPhotoId={draggingPhotoId}
             index={index}
             key={photo.id}
@@ -708,6 +736,7 @@ function PhotoCapture({
 }
 
 function PhotoPreviewItem({
+  disabled,
   draggingPhotoId,
   index,
   onBeginPhotoDrag,
@@ -718,6 +747,7 @@ function PhotoPreviewItem({
   photo,
   photoCount
 }: {
+  readonly disabled: boolean;
   readonly draggingPhotoId: string | undefined;
   readonly index: number;
   readonly onBeginPhotoDrag: (photoId: string) => void;
@@ -738,7 +768,7 @@ function PhotoPreviewItem({
       PanResponder.create({
         onStartShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponder: (_event, gestureState) =>
-          dragState.current.isDragging &&
+          !disabled && dragState.current.isDragging &&
           Math.abs(gestureState.dx) > 6 &&
           Math.abs(gestureState.dx) > Math.abs(gestureState.dy),
         onPanResponderMove: (_event, gestureState) => {
@@ -764,13 +794,15 @@ function PhotoPreviewItem({
           onEndPhotoDrag();
         }
       }),
-    [index, onBeginPhotoDrag, onEndPhotoDrag, onMovePhoto, onOpenPhoto, photo.id, photoCount]
+    [disabled, index, onBeginPhotoDrag, onEndPhotoDrag, onMovePhoto, onOpenPhoto, photo.id, photoCount]
   );
 
   return (
     <View style={styles.photoPreviewShell}>
       <Pressable
         {...panResponder.panHandlers}
+        disabled={disabled}
+        accessibilityState={{ disabled }}
         accessibilityActions={[
           { name: 'activate', label: 'Preview photo' },
           { name: 'decrement', label: 'Move earlier' },
@@ -782,6 +814,7 @@ function PhotoPreviewItem({
         accessibilityValue={{ text: `${(index + 1).toString()} of ${photoCount.toString()}` }}
         delayLongPress={220}
         onAccessibilityAction={(event) => {
+          if (disabled) return;
           if (event.nativeEvent.actionName === 'activate') {
             onOpenPhoto(index);
           }
@@ -796,11 +829,13 @@ function PhotoPreviewItem({
           }
         }}
         onLongPress={() => {
+          if (disabled) return;
           dragState.current = { isDragging: true, didMove: false };
           suppressNextPress.current = true;
           onBeginPhotoDrag(photo.id);
         }}
         onPress={() => {
+          if (disabled) return;
           if (suppressNextPress.current) {
             return;
           }
@@ -830,6 +865,7 @@ function PhotoPreviewItem({
       <Pressable
         accessibilityLabel={`Remove ${photo.fileName}`}
         accessibilityRole="button"
+        disabled={disabled}
         onPress={() => onRemovePhoto(photo.id)}
         style={styles.removePhotoButton}
       >
@@ -893,6 +929,7 @@ function PhotoPreviewModal({
 }
 
 function ParentPicker({
+  disabled,
   createdParent,
   isCreatingParent,
   isOpen,
@@ -906,6 +943,7 @@ function ParentPicker({
   parentAssetId,
   query
 }: {
+  readonly disabled: boolean;
   readonly createdParent: ParentSelection | undefined;
   readonly isCreatingParent: boolean;
   readonly isOpen: boolean;
@@ -934,7 +972,8 @@ function ParentPicker({
       <Text style={styles.sectionTitle}>Put in</Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ expanded: isOpen }}
+        disabled={disabled}
+        accessibilityState={{ expanded: isOpen, disabled }}
         onPress={() => onOpenChange(!isOpen)}
         style={styles.parentSelectButton}
       >
@@ -956,6 +995,7 @@ function ParentPicker({
         <View style={styles.parentMenu}>
           <AppTextInput
             accessibilityLabel="Search parent"
+            editable={!disabled}
             autoFocus
             onChangeText={onChangeQuery}
             onFocus={onSearchFocus}
@@ -976,7 +1016,7 @@ function ParentPicker({
             {canCreateParent ? (
               <Pressable
                 accessibilityRole="button"
-                disabled={isCreatingParent}
+                disabled={disabled || isCreatingParent}
                 onPress={onCreateParent}
                 style={[styles.createParentButton, isCreatingParent ? styles.disabledButton : null]}
               >
@@ -988,7 +1028,7 @@ function ParentPicker({
               </Pressable>
             ) : null}
             {createdParent ? (
-              <ParentOption
+              <ParentOption disabled={disabled}
                 isSelected
                 label={createdParent.title}
                 leading="created"
@@ -996,7 +1036,7 @@ function ParentPicker({
                 onPress={() => onSelectParent(createdParent)}
               />
             ) : null}
-            <ParentOption
+            <ParentOption disabled={disabled}
               identityKind="inventory"
               isSelected={parentAssetId === undefined && query.trim().length === 0}
               label="No parent"
@@ -1005,7 +1045,7 @@ function ParentPicker({
             />
             {matches.filter((parent) => parent.id !== createdParentId).map((parent) => (
               <ParentOption
-                disabled={parent.canSelectAsParent === false}
+                disabled={disabled || parent.canSelectAsParent === false}
                 isSelected={parentAssetId === parent.id}
                 key={parent.id}
                 label={parent.title}
@@ -1031,12 +1071,14 @@ function ParentPicker({
 }
 
 function AssetTagPicker({
+  disabled,
   newTags,
   onNewTagsChange,
   tags,
   selectedTagIds,
   onChange
 }: {
+  readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
   readonly onNewTagsChange: (tags: readonly CreateAssetTagDraft[]) => void;
   readonly tags: readonly AssetTagSummary[];
@@ -1051,6 +1093,7 @@ function AssetTagPicker({
   const selected = new Set(selectedTagIds);
 
   function toggleTag(tagId: string): void {
+    if (disabled) return;
     if (selected.has(tagId)) {
       onChange(selectedTagIds.filter((current) => current !== tagId));
       return;
@@ -1059,6 +1102,7 @@ function AssetTagPicker({
   }
 
   function addNewTag(): void {
+    if (disabled) return;
     const displayName = newTagName.trim();
     if (displayName.length === 0) {
       return;
@@ -1092,12 +1136,13 @@ function AssetTagPicker({
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.tagPickerTitle}>Tags</Text>
-      <AppTextInput accessibilityLabel="Search tags" placeholder="Find a tag" value={tagSearch} onChangeText={setTagSearch} style={styles.input} />
+      <AppTextInput editable={!disabled} accessibilityLabel="Search tags" placeholder="Find a tag" value={tagSearch} onChangeText={setTagSearch} style={styles.input} />
       <View style={styles.tagOptions}>
         {newTags.map((tag, index) => {
           const colorStyle = assetTagChipStylePresentation(tag);
           return (
             <Pressable
+              disabled={disabled}
               accessibilityRole="button"
               key={`${tag.displayName}-${index.toString()}`}
               onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
@@ -1119,6 +1164,7 @@ function AssetTagPicker({
           const colorStyle = assetTagChipStylePresentation(tag);
           return (
             <Pressable
+              disabled={disabled}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               key={tag.id}
@@ -1138,7 +1184,7 @@ function AssetTagPicker({
         })}
       </View>
       <View style={styles.newTagRow}>
-        <AppTextInput
+        <AppTextInput editable={!disabled}
           accessibilityLabel="New tag name"
           onChangeText={setNewTagName}
           placeholder="New tag"
@@ -1148,14 +1194,14 @@ function AssetTagPicker({
         />
         <Pressable
           accessibilityRole="button"
-          disabled={!canAddNewTag}
+          disabled={disabled || !canAddNewTag}
           onPress={addNewTag}
           style={[styles.newTagButton, !canAddNewTag ? styles.disabledButton : null]}
         >
           <Text style={styles.newTagButtonText}>Add</Text>
         </Pressable>
       </View>
-      <TagColorPicker palette={colors} value={newTagColor} onChange={setNewTagColor} />
+      <TagColorPicker disabled={disabled} palette={colors} value={newTagColor} onChange={setNewTagColor} />
     </View>
   );
 }

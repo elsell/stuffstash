@@ -501,3 +501,13 @@ bar items. Custom reminder timing uses the same native Save command rather than 
 custom header Pressable. Native disabled state and handler guards prevent pending
 or invalid actions. Shared header adapters support both leading and trailing
 placement without changing the Home Add/notifications/profile order.
+
+### Add draft operation ownership
+
+Add keeps one draft-changing operation active at a time: saving an item, creating
+its parent, or collecting photos. While it is pending, retain the visible draft
+and disable edits, clear/reorder commands, Save, and dismissal. Guard callbacks
+as well as native disabled props so a previously opened control cannot alter the
+submitted draft. A failed operation restores editing with the same draft; success
+performs the existing transition. Scope/query refresh remains independent of this
+operation lock. Do not use background loading as a reason to lock the form.

@@ -22,7 +22,7 @@
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
 | M19 | Expiration filter sheet renders no body content | Open; phone failure persists | Run34887652455 iPhone screenshot and accessibility hierarchy contain footer only; run34897215957 disproves KAV cause; iPad passes, phone remains blank; detent comparison pending |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
-| M21 | Add fields can change while the submitted item is being saved | Open; source-confirmed | AddAssetScreen freezes only expiration while name/description/tags/parent/photos remain mutable; success clears those states. Freeze submitted draft mutations and guard late callbacks, then verify failed-save recovery and dismissal ownership |
+| M21 | Add fields can change while the submitted item is being saved | Implemented; source tests pass; native pending | Exclusive save/parent/photo operation ownership guards draft edits, duplicate submission and dismissal. Five remote tests cover save failure, parent failure and photo cancellation with draft retention and editing recovery; native verification remains pending |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
