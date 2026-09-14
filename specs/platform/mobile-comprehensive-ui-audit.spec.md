@@ -192,3 +192,8 @@ Native settings-control fixtures exercise the shared Appearance menu, direct
 iOS color picker opening/closing and explicit color clearing, and compact asset
 expiration date entry/clearing. These isolate native controls; parent editor
 cancel/save and actual Add-sheet navigation require their own runtime scenarios.
+
+An isolated onboarding fixture uses the real screen and command with in-memory
+API/auth/profile ports to assert the complete native-entered address reaches the
+authentication command. It must not contact an external service. Production-root
+onboarding continues to test real layout and keyboard behavior independently.

@@ -8,6 +8,9 @@ import { AppKeyboardAccessory } from '../src/ui/components/AppKeyboardAccessory'
 import { AppFeedbackProvider, useAppFeedback } from '../src/ui/feedback/AppFeedback';
 import { BrowseFiltersScreen } from '../src/ui/screens/BrowseFiltersScreen';
 import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersScreen';
+import { OnboardingScreen } from '../src/ui/screens/OnboardingScreen';
+import { OnboardingCommand, type OnboardingStartState } from '../src/application/onboarding/OnboardingCommand';
+import { onboardingFakes } from '../src/application/onboarding/OnboardingTestSupport';
 import { AppearancePicker } from '../src/ui/components/AppearancePicker';
 import { TagColorPicker } from '../src/ui/components/TagColorPicker';
 import { ExpirationField } from '../src/ui/components/ExpirationField';
@@ -52,8 +55,10 @@ export function FixtureMenu() {
   const { result, setResult } = useContext(ResultContext);
   const feedback = useAppFeedback();
   const [showDraftOptions, setShowDraftOptions] = useState(false);
+  const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState(false);
   const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled'>();
+  if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
@@ -68,6 +73,7 @@ export function FixtureMenu() {
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
     {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
+    <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
     <Text>{result}</Text>
   </FixturePage>;
@@ -128,4 +134,15 @@ function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
     <ExpirationField initialPickerDate={new Date(2026, 8, 14, 12)} onChange={value => setExpiration(value?.date ?? 'No expiration')} />
     <Text>{`Expiration value: ${expiration}`}</Text>
   </FixturePage>;
+}
+
+
+function OnboardingSubmissionFixture() {
+  const [fakes] = useState(onboardingFakes);
+  const [command] = useState(() => new OnboardingCommand(fakes.profiles, () => fakes.api, fakes.auth));
+  const [state, setState] = useState<OnboardingStartState>({ step: 'instance' });
+  return <View style={{ flex: 1 }}>
+    <OnboardingScreen command={command} initialState={state} onStateChange={setState} onComplete={() => {}} />
+    <Text>{`Submitted address: ${fakes.auth.signIns.at(-1) ?? 'none'}`}</Text>
+  </View>;
 }

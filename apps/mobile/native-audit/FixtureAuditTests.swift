@@ -124,6 +124,24 @@ final class FixtureAuditTests: XCTestCase {
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
 
+  func testOnboardingSubmitsTheCompleteNativeAddress() {
+    let open = app.buttons["Audit onboarding submission"]
+    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let address = app.textFields["Server address"]
+    XCTAssertTrue(address.waitForExistence(timeout: 5))
+    address.tap()
+    address.typeText("https://example.invalid")
+    XCTAssertEqual(address.value as? String, "https://example.invalid")
+    let connect = app.buttons["Connect and sign in"]
+    for _ in 0..<3 where !connect.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(connect.isHittable)
+    connect.tap()
+    XCTAssertTrue(app.staticTexts["Submitted address: https://example.invalid"].waitForExistence(timeout: 5))
+    capture("onboarding-complete-address-submission")
+  }
+
   private func openSettingsControls() {
     let button = app.buttons["Audit settings controls"]
     for _ in 0..<4 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
