@@ -81,3 +81,27 @@ Remote source regression verification after native settings/input candidates:
 structural check. This includes mounted header tests replacing legacy module
 mocks; code critic found no meaningful behavioral coverage lost. Native runtime
 results remain separate from this source verification.
+
+### Resizable-sheet run 34905451368
+
+[Run](https://github.com/elsell/stuffstash/actions/runs/34905451368), source
+`8bada3d9`, failed. Initial medium-detent content is visible, but expansion
+removes the body on both devices. The iPhone expansion assertion confirms actual
+upward movement before content reachability fails. The iPhone search keyboard
+also removes the body and footer; iPad search action reachability passes.
+See the [expanded sheet](evidence/expiration-expanded-empty-34905451368.png).
+This rejects the detent configuration as a sufficient fix for M19.
+
+The [calendar screenshot](evidence/expiration-calendar-open-34905451368.png)
+shows the popover still open: the test's navigation-bar tap selected a date
+inside it. That action-reachability failure does not independently establish
+a product defect. Correct the dismissal target before evaluating it again.
+
+Controlled and uncontrolled phone URL fixtures both lost initial characters;
+iPad uncontrolled passed while controlled failed. Production onboarding also
+lost characters on both devices. This weakens the earlier synchronization
+hypothesis and does not establish a cause. Tests currently begin typing before
+explicitly verifying keyboard readiness. Full-string assertions remain required.
+
+Browse menu/apply, feedback retention, and draft-option removal passed on both
+devices. These results certify those scenarios only, not whole surfaces.
