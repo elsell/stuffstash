@@ -920,3 +920,23 @@ The run predates M82 error fixes. Logs are /tmp/native349397-fixtures-phone.log
 and /tmp/native349397-fixtures-ipad.log. Native screenshots for iPad fixtures
 still need inspection. The onboarding waiter change passed remote structural
 checks; critic found no blockers, macOS compilation/execution pending.
+
+### Run 34944106312 — completed, partial Add recovery evidence
+
+Actual checkout24b7473cc410f066c1b1cd621b32681aa759808e merges cee11dd9
+into eca1ad7e. Phone fixtures25/34; iPad29/34. Both onboarding jobs passed.
+The configured-header Add rejection test passes on iPad: screenshot
+[evidence/ipad-add-error-349441.png](evidence/ipad-add-error-349441.png) shows
+retained Native draft name and the inline rejection message. Its error heading is
+partly obscured beneath the native navigation bar, so this does not close M82's
+layout acceptance. The phone variant failed while typing Ndraft name, before save.
+Add navigation typing/keyboard and original sheet readiness still fail; original
+History hit test fails while its bounds/pagination/dismissal comparison passes.
+Color-picker direct-opening assertion fails on both devices in this run. Phone
+Return details loses the end of Returned clean; iPad controlled URL loses text.
+Phone footer/nested sheet assertions and expiration accessibility still fail.
+These are recorded failures, not newly inferred root causes. Full logs are in
+/tmp/native349441-fixtures-phone.log and /tmp/native349441-fixtures-ipad.log;
+iPad artifacts are /tmp/native349441-fixtures-ipad. No photo recovery or motion
+patch is included in this checkout. The subsequent run34947056524 was confirmed
+in progress and left running.
