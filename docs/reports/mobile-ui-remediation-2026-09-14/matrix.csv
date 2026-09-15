@@ -147,7 +147,7 @@ R007,add.tsx,task,Task clarity and platform-pattern fit,pending,,
 R007,add.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R007,add.tsx,selection,Value selection and current value,pending,,
 R007,add.tsx,modality,Presentation and dismissal,pending,,
-R007,add.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
+R007,add.tsx,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 R007,add.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R007,add.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R007,add.tsx,appearance,"Light/dark, contrast and materials",pending,,
@@ -155,13 +155,13 @@ R007,add.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R007,add.tsx,imagery,"Icons, photos and missing media",pending,,
 R007,add.tsx,targets,Touch target size and reachability,pending,,
 R007,add.tsx,gestures,Gestures and explicit alternatives,pending,,
-R007,add.tsx,keyboard,"Keyboard, text entry and focus",pending,,
+R007,add.tsx,keyboard,"Keyboard, text entry and focus",finding,Run349397 Add navigation name Ne draft name; seeded field did not resolve all typing failures (native-evidence.md),M74
 R007,add.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R007,add.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R007,add.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R007,add.tsx,search,"Search, scope and filters",pending,,
 R007,add.tsx,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
-R007,add.tsx,recovery,"Empty, error, denied and retry",pending,,
+R007,add.tsx,recovery,"Empty, error, denied and retry",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 R007,add.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R007,add.tsx,privacy,"Account scope, data use and permissions",pending,,
 R007,add.tsx,notifications,System notification entry and state,pending,,
@@ -201,7 +201,7 @@ R009,assets/[assetId]/edit.tsx,typography,"Dynamic Type, wrapping and legibility
 R009,assets/[assetId]/edit.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R009,assets/[assetId]/edit.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R009,assets/[assetId]/edit.tsx,imagery,"Icons, photos and missing media",pending,,
-R009,assets/[assetId]/edit.tsx,targets,Touch target size and reachability,pending,,
+R009,assets/[assetId]/edit.tsx,targets,Touch target size and reachability,finding,; M87 native query retry candidate; runtime pending,M87
 R009,assets/[assetId]/edit.tsx,gestures,Gestures and explicit alternatives,pending,,
 R009,assets/[assetId]/edit.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R009,assets/[assetId]/edit.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
@@ -209,7 +209,7 @@ R009,assets/[assetId]/edit.tsx,motion,Reduced motion and feedback alternatives,p
 R009,assets/[assetId]/edit.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R009,assets/[assetId]/edit.tsx,search,"Search, scope and filters",pending,,
 R009,assets/[assetId]/edit.tsx,loading,"Loading, background refresh and progress",pending,,
-R009,assets/[assetId]/edit.tsx,recovery,"Empty, error, denied and retry",pending,,
+R009,assets/[assetId]/edit.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
 R009,assets/[assetId]/edit.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R009,assets/[assetId]/edit.tsx,privacy,"Account scope, data use and permissions",pending,,
 R009,assets/[assetId]/edit.tsx,notifications,System notification entry and state,pending,,
@@ -297,7 +297,7 @@ R013,assets/[assetId]/move-here.tsx,typography,"Dynamic Type, wrapping and legib
 R013,assets/[assetId]/move-here.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R013,assets/[assetId]/move-here.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R013,assets/[assetId]/move-here.tsx,imagery,"Icons, photos and missing media",pending,,
-R013,assets/[assetId]/move-here.tsx,targets,Touch target size and reachability,pending,,
+R013,assets/[assetId]/move-here.tsx,targets,Touch target size and reachability,finding,; M87 native query retry candidate; runtime pending,M87
 R013,assets/[assetId]/move-here.tsx,gestures,Gestures and explicit alternatives,pending,,
 R013,assets/[assetId]/move-here.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R013,assets/[assetId]/move-here.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
@@ -305,7 +305,7 @@ R013,assets/[assetId]/move-here.tsx,motion,Reduced motion and feedback alternati
 R013,assets/[assetId]/move-here.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R013,assets/[assetId]/move-here.tsx,search,"Search, scope and filters",pending,,
 R013,assets/[assetId]/move-here.tsx,loading,"Loading, background refresh and progress",pending,,
-R013,assets/[assetId]/move-here.tsx,recovery,"Empty, error, denied and retry",pending,,
+R013,assets/[assetId]/move-here.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
 R013,assets/[assetId]/move-here.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R013,assets/[assetId]/move-here.tsx,privacy,"Account scope, data use and permissions",pending,,
 R013,assets/[assetId]/move-here.tsx,notifications,System notification entry and state,pending,,
@@ -321,7 +321,7 @@ R014,assets/[assetId]/move.tsx,typography,"Dynamic Type, wrapping and legibility
 R014,assets/[assetId]/move.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R014,assets/[assetId]/move.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R014,assets/[assetId]/move.tsx,imagery,"Icons, photos and missing media",pending,,
-R014,assets/[assetId]/move.tsx,targets,Touch target size and reachability,pending,,
+R014,assets/[assetId]/move.tsx,targets,Touch target size and reachability,finding,; M87 native query retry candidate; runtime pending,M87
 R014,assets/[assetId]/move.tsx,gestures,Gestures and explicit alternatives,pending,,
 R014,assets/[assetId]/move.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R014,assets/[assetId]/move.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
@@ -329,7 +329,7 @@ R014,assets/[assetId]/move.tsx,motion,Reduced motion and feedback alternatives,p
 R014,assets/[assetId]/move.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R014,assets/[assetId]/move.tsx,search,"Search, scope and filters",pending,,
 R014,assets/[assetId]/move.tsx,loading,"Loading, background refresh and progress",pending,,
-R014,assets/[assetId]/move.tsx,recovery,"Empty, error, denied and retry",pending,,
+R014,assets/[assetId]/move.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
 R014,assets/[assetId]/move.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R014,assets/[assetId]/move.tsx,privacy,"Account scope, data use and permissions",pending,,
 R014,assets/[assetId]/move.tsx,notifications,System notification entry and state,pending,,
@@ -401,7 +401,7 @@ R017,expiration-filters.tsx,motion,Reduced motion and feedback alternatives,pend
 R017,expiration-filters.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R017,expiration-filters.tsx,search,"Search, scope and filters",pending,,
 R017,expiration-filters.tsx,loading,"Loading, background refresh and progress",pending,,
-R017,expiration-filters.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R017,expiration-filters.tsx,recovery,"Empty, error, denied and retry",finding,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M32;M81
 R017,expiration-filters.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R017,expiration-filters.tsx,privacy,"Account scope, data use and permissions",pending,,
 R017,expiration-filters.tsx,notifications,System notification entry and state,pending,,
@@ -833,7 +833,7 @@ R035,settings/index.tsx,motion,Reduced motion and feedback alternatives,source-r
 R035,settings/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,"Finite grouped rows, no pagination; scope names and current values visible.",
 R035,settings/index.tsx,search,"Search, scope and filters",not-applicable,Root has a small finite settings index and no search/filter interaction.,
 R035,settings/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Initial loading label/indicator separate from background SettingsRefreshNotice; no refresh spinner binding.; account-connection-axis.md source/controlled recovery; native pending,M73
-R035,settings/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Scrollable initial error with Retry; background read failures retain existing scope content and show notice.; account-connection-axis.md source/controlled recovery; native pending,M73
+R035,settings/index.tsx,recovery,"Empty, error, denied and retry",finding,Scrollable initial error with Retry; background read failures retain existing scope content and show notice.; account-connection-axis.md source/controlled recovery; native pending; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M73;M81
 R035,settings/index.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Only appearance mutates in place; dedicated controller preserves saved preference on failure. No root text draft.,
 R035,settings/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Names selected account/household/inventory/server; principal read failures show neutral Signed in plus notice; no secret rendered.; account-connection-axis.md source/controlled recovery; native pending,
 R035,settings/index.tsx,notifications,System notification entry and state,not-applicable,Root does not receive or configure notifications; inventory notification routes are separately enumerated.,
@@ -1049,7 +1049,7 @@ R044,settings/inventory/notifications.tsx,motion,Reduced motion and feedback alt
 R044,settings/inventory/notifications.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R044,settings/inventory/notifications.tsx,search,"Search, scope and filters",pending,,
 R044,settings/inventory/notifications.tsx,loading,"Loading, background refresh and progress",source-reviewed,"Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",M05
-R044,settings/inventory/notifications.tsx,recovery,"Empty, error, denied and retry",source-reviewed,"M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",M32
+R044,settings/inventory/notifications.tsx,recovery,"Empty, error, denied and retry",finding,"M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md)",M32;M81
 R044,settings/inventory/notifications.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",
 R044,settings/inventory/notifications.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",
 R044,settings/inventory/notifications.tsx,notifications,System notification entry and state,pending,,
@@ -1145,7 +1145,7 @@ R048,settings/sharing.tsx,motion,Reduced motion and feedback alternatives,pendin
 R048,settings/sharing.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Paged invitation list with explicit Load older and repeat-cursor guard; runtime density pending.,
 R048,settings/sharing.tsx,search,"Search, scope and filters",pending,,
 R048,settings/sharing.tsx,loading,"Loading, background refresh and progress",source-reviewed,Explicit usePullRefresh; initial load indicator and separate pending creation/cancellation indicators.,
-R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.; sharing-axis.md: source/controlled-render review; native pending,M69
+R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",finding,Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.; sharing-axis.md: source/controlled-render review; native pending; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M69;M81
 R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Pending email/access disabled and guarded; rejected creation retains draft; remote behavior test.; sharing-axis.md: source/controlled-render review; native pending,M27
 R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Source and existing tests hide denied cached invitations and keep created secret outside query cache; no new boundary changes.; sharing-axis.md: source/controlled-render review; native pending,
 R048,settings/sharing.tsx,notifications,System notification entry and state,pending,,
@@ -1169,7 +1169,7 @@ R049,settings/voice/[capability].tsx,motion,Reduced motion and feedback alternat
 R049,settings/voice/[capability].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R049,settings/voice/[capability].tsx,search,"Search, scope and filters",pending,,
 R049,settings/voice/[capability].tsx,loading,"Loading, background refresh and progress",source-reviewed,M31 select/test/enable state identifies active operation and disables competing commands.,M31
-R049,settings/voice/[capability].tsx,recovery,"Empty, error, denied and retry",source-reviewed,"Selection failure retains server-confirmed choice; command errors use feedback, initial/refresh query failures handled separately.",
+R049,settings/voice/[capability].tsx,recovery,"Empty, error, denied and retry",finding,"Selection failure retains server-confirmed choice; command errors use feedback, initial/refresh query failures handled separately.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md)",M81
 R049,settings/voice/[capability].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R049,settings/voice/[capability].tsx,privacy,"Account scope, data use and permissions",source-reviewed,Selection footer explains tenant-wide effect; server authorization unchanged.,
 R049,settings/voice/[capability].tsx,notifications,System notification entry and state,pending,,
@@ -1193,7 +1193,7 @@ R050,settings/voice/index.tsx,motion,Reduced motion and feedback alternatives,pe
 R050,settings/voice/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Configuration slots map to labeled sections with selected service context; no custom flat-selection screen introduced here.,
 R050,settings/voice/index.tsx,search,"Search, scope and filters",pending,,
 R050,settings/voice/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R050,settings/voice/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Provider/settings loading and errors have retry paths; refresh errors preserve existing provider view.,
+R050,settings/voice/index.tsx,recovery,"Empty, error, denied and retry",finding,Provider/settings loading and errors have retry paths; refresh errors preserve existing provider view.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
 R050,settings/voice/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R050,settings/voice/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Header names tenant and explicitly says setup applies to everyone there.,
 R050,settings/voice/index.tsx,notifications,System notification entry and state,pending,,
@@ -1217,7 +1217,7 @@ R051,settings/voice/profiles/[providerProfileId]/credential.tsx,motion,Reduced m
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,search,"Search, scope and filters",pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,loading,"Loading, background refresh and progress",source-reviewed,Save text changes to Saving with busy/disabled state; Cancel disabled. Background refresh error uses separate notice.,
-R051,settings/voice/profiles/[providerProfileId]/credential.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.,
+R051,settings/voice/profiles/[providerProfileId]/credential.tsx,recovery,"Empty, error, denied and retry",finding,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M30 freezes submitted draft and guards late edits; failure retains draft. Form keyed by owner/profile to prevent cross-scope reuse.,M30
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"Credential uses secureTextEntry, is not prefilled and clears after success; secret/prompt outside query cache. Native keyboard privacy verification pending.",
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,notifications,System notification entry and state,pending,,
@@ -1241,7 +1241,7 @@ R052,settings/voice/profiles/[providerProfileId]/index.tsx,motion,Reduced motion
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,search,"Search, scope and filters",pending,,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,"M29 tracks test/lifecycle/archive independently, shows progress only for active action.",M29
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Missing profile/read failure uses retry view; refresh errors preserve prior data; command failures use persistent feedback.,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,recovery,"Empty, error, denied and retry",finding,Missing profile/read failure uses retry view; refresh errors preserve prior data; command failures use persistent feedback.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M29 serializes actions and guards credential/prompt navigation; three operation-failure cases restore actions.,M29
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,notifications,System notification entry and state,pending,,
@@ -1265,7 +1265,7 @@ R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,motion,Reduced motio
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,search,"Search, scope and filters",pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,loading,"Loading, background refresh and progress",source-reviewed,Save text changes to Saving with busy/disabled state; Cancel disabled. Background refresh error uses separate notice.,
-R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.,
+R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,recovery,"Empty, error, denied and retry",finding,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M30 freezes submitted draft and guards late edits; failure retains draft. Form keyed by owner/profile to prevent cross-scope reuse.,M30
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"Credential uses secureTextEntry, is not prefilled and clears after success; secret/prompt outside query cache. Native keyboard privacy verification pending.",
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,notifications,System notification entry and state,pending,,
@@ -1289,7 +1289,7 @@ R054,settings/voice/profiles/add.tsx,motion,Reduced motion and feedback alternat
 R054,settings/voice/profiles/add.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R054,settings/voice/profiles/add.tsx,search,"Search, scope and filters",pending,,
 R054,settings/voice/profiles/add.tsx,loading,"Loading, background refresh and progress",source-reviewed,Only selected template changes to Creating; all templates disabled and ref guard prevents duplicate creation.,
-R054,settings/voice/profiles/add.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Create failure uses feedback and restores choices without navigating.,
+R054,settings/voice/profiles/add.tsx,recovery,"Empty, error, denied and retry",finding,Create failure uses feedback and restores choices without navigating.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
 R054,settings/voice/profiles/add.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R054,settings/voice/profiles/add.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Route uses VoiceAdminGuard; profile scope described as tenant-wide; source review does not certify server authorization.,
 R054,settings/voice/profiles/add.tsx,notifications,System notification entry and state,pending,,
@@ -1313,7 +1313,7 @@ R055,settings/voice/profiles/index.tsx,motion,Reduced motion and feedback altern
 R055,settings/voice/profiles/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Profiles sorted by capability/name in query; empty state offers Add; scaling for large lists requires runtime evaluation.,
 R055,settings/voice/profiles/index.tsx,search,"Search, scope and filters",pending,,
 R055,settings/voice/profiles/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R055,settings/voice/profiles/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,ProviderStateView handles initial failure/retry; SettingsRefreshNotice retains visible list on refresh failure.,
+R055,settings/voice/profiles/index.tsx,recovery,"Empty, error, denied and retry",finding,ProviderStateView handles initial failure/retry; SettingsRefreshNotice retains visible list on refresh failure.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
 R055,settings/voice/profiles/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R055,settings/voice/profiles/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"VoiceAdminGuard wraps route, tenant-wide scope explained; no secret credentials rendered.",
 R055,settings/voice/profiles/index.tsx,notifications,System notification entry and state,pending,,
@@ -1370,8 +1370,8 @@ R057,voice.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pendi
 S058,onboarding / server entry,task,Task clarity and platform-pattern fit,source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S058,onboarding / server entry,navigation,"Navigation, hierarchy and return",pending,,
 S058,onboarding / server entry,selection,Value selection and current value,source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
-S058,onboarding / server entry,modality,Presentation and dismissal,runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",
-S058,onboarding / server entry,layout,"Safe areas, scroll edges and overlays",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",
+S058,onboarding / server entry,modality,Presentation and dismissal,runtime-partial,native-evidence.md; Run349372 actual6076e824: production help opens/closes without losing address; keyboard dismissal passes phone/iPad. No browser sign-in was performed.,
+S058,onboarding / server entry,layout,"Safe areas, scroll edges and overlays",runtime-partial,"native-evidence.md; Run349372 actual6076e824: phone entry/keyboard/post-drag and iPad portrait post-drag screenshots reviewed. Connect remains visible; iPad landscape screenshot discrepancy, large text and other configurations remain open.",
 S058,onboarding / server entry,adaptation,Phone/tablet/window reflow,source-reviewed,da766245; shared centered readable form and adjacent primary action; iPad landscape fixture pending,M17
 S058,onboarding / server entry,typography,"Dynamic Type, wrapping and legibility",pending,,
 S058,onboarding / server entry,appearance,"Light/dark, contrast and materials",pending,,
@@ -1379,7 +1379,7 @@ S058,onboarding / server entry,localization,"Locale, timezone, RTL and long stri
 S058,onboarding / server entry,imagery,"Icons, photos and missing media",pending,,
 S058,onboarding / server entry,targets,Touch target size and reachability,pending,,
 S058,onboarding / server entry,gestures,Gestures and explicit alternatives,pending,,
-S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,Native349208 candidate890cf904 iPhone production help/full URL/native keyboard dismissal passed. iPad launch/background-assertion failures prevented UI assertions. Submission fixtures and remaining configurations pending; not full M14 closure.; text-entry-axis.md records ownership/reset review; full native input acceptance still pending,M14
+S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,"native-evidence.md; Run349372 actual6076e824: full URL retained, help preserves draft, phone keyboard dismissal and both iPad margin/inside-column drags pass. Submission fixtures pass; real sign-in, hardware keyboards, composition, large text remain unverified. Historical failures remain in native-evidence.md.",M14
 S058,onboarding / server entry,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S058,onboarding / server entry,motion,Reduced motion and feedback alternatives,pending,,
 S058,onboarding / server entry,content,"Lists, hierarchy, density and pagination",pending,,
@@ -1896,10 +1896,10 @@ S079,Expiration / date range,notifications,System notification entry and state,p
 S079,Expiration / date range,media,"Camera, library, files and audio",pending,,
 S079,Expiration / date range,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S080,Inventory switcher / inventory list,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
-S080,Inventory switcher / inventory list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S080,Inventory switcher / inventory list,navigation,"Navigation, hierarchy and return",runtime-partial,"native-evidence.md; Run349372 actual6076e824: warm-cache synthetic switcher navigates households, retries a rejected selection and returns, then reopens and closes on phone/iPad. Live scope transitions and interruption remain unverified.",M07
 S080,Inventory switcher / inventory list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
-S080,Inventory switcher / inventory list,modality,Presentation and dismissal,pending,,
-S080,Inventory switcher / inventory list,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S080,Inventory switcher / inventory list,modality,Presentation and dismissal,runtime-partial,"native-evidence.md; Run349372 actual6076e824: production sheet detents, explicit Close and return after successful retry pass phone/iPad. Swipe dismissal and interrupted selection still require runtime coverage.",
+S080,Inventory switcher / inventory list,layout,"Safe areas, scroll edges and overlays",runtime-partial,"native-evidence.md; Run349372 actual6076e824: phone006B9F4E and iPad548D03B7 show long household heading wrapped with native command and Close visible. Default light layouts only; large text, dark and other windows pending.",M07
 S080,Inventory switcher / inventory list,adaptation,Phone/tablet/window reflow,pending,,
 S080,Inventory switcher / inventory list,typography,"Dynamic Type, wrapping and legibility",pending,,
 S080,Inventory switcher / inventory list,appearance,"Light/dark, contrast and materials",pending,,
@@ -1920,7 +1920,7 @@ S080,Inventory switcher / inventory list,notifications,System notification entry
 S080,Inventory switcher / inventory list,media,"Camera, library, files and audio",pending,,
 S080,Inventory switcher / inventory list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
 S081,Inventory switcher / household list,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
-S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",runtime-partial,native-evidence.md; Run349372 actual6076e824: Switch household then Workshop household navigation succeeds in synthetic fixture on phone/iPad. Full live account scope and interruption not exercised.,M07
 S081,Inventory switcher / household list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
 S081,Inventory switcher / household list,modality,Presentation and dismissal,pending,,
 S081,Inventory switcher / household list,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
@@ -1985,7 +1985,7 @@ S083,Inventory switcher / selection pending failure,motion,Reduced motion and fe
 S083,Inventory switcher / selection pending failure,content,"Lists, hierarchy, density and pagination",pending,,
 S083,Inventory switcher / selection pending failure,search,"Search, scope and filters",pending,,
 S083,Inventory switcher / selection pending failure,loading,"Loading, background refresh and progress",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
-S083,Inventory switcher / selection pending failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S083,Inventory switcher / selection pending failure,recovery,"Empty, error, denied and retry",runtime-partial,"native-evidence.md; Run349372 actual6076e824: rejected selection shows local error, retry succeeds and dismisses on phone/iPad. Phone error screenshot780341C7 reviewed; live authorization/cache failure and blur sequences remain unverified.",M07
 S083,Inventory switcher / selection pending failure,editing,"Draft, save, cancel, undo and interruption",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 S083,Inventory switcher / selection pending failure,privacy,"Account scope, data use and permissions",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 S083,Inventory switcher / selection pending failure,notifications,System notification entry and state,pending,,
@@ -1995,7 +1995,7 @@ S084,Add / main draft,task,Task clarity and platform-pattern fit,pending,,
 S084,Add / main draft,navigation,"Navigation, hierarchy and return",pending,,
 S084,Add / main draft,selection,Value selection and current value,pending,,
 S084,Add / main draft,modality,Presentation and dismissal,pending,,
-S084,Add / main draft,layout,"Safe areas, scroll edges and overlays",pending,,
+S084,Add / main draft,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 S084,Add / main draft,adaptation,Phone/tablet/window reflow,pending,,
 S084,Add / main draft,typography,"Dynamic Type, wrapping and legibility",pending,,
 S084,Add / main draft,appearance,"Light/dark, contrast and materials",pending,,
@@ -2003,13 +2003,13 @@ S084,Add / main draft,localization,"Locale, timezone, RTL and long strings",pend
 S084,Add / main draft,imagery,"Icons, photos and missing media",pending,,
 S084,Add / main draft,targets,Touch target size and reachability,pending,,
 S084,Add / main draft,gestures,Gestures and explicit alternatives,pending,,
-S084,Add / main draft,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending; text-entry-axis.md M74 native typing failure/candidate; acceptance pending,M74
+S084,Add / main draft,keyboard,"Keyboard, text entry and focus",finding,text-entry-axis.md records ownership/reset review; full native input acceptance still pending; text-entry-axis.md M74 native typing failure/candidate; acceptance pending; Run349397 Add navigation name Ne draft name; seeded field did not resolve all typing failures (native-evidence.md),M74
 S084,Add / main draft,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S084,Add / main draft,motion,Reduced motion and feedback alternatives,pending,,
 S084,Add / main draft,content,"Lists, hierarchy, density and pagination",pending,,
 S084,Add / main draft,search,"Search, scope and filters",pending,,
 S084,Add / main draft,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
-S084,Add / main draft,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S084,Add / main draft,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
 S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; text-entry-axis.md M74 native typing failure/candidate; acceptance pending,M21;M74
 S084,Add / main draft,privacy,"Account scope, data use and permissions",pending,,
 S084,Add / main draft,notifications,System notification entry and state,pending,,
@@ -2067,7 +2067,7 @@ S087,Add / quick parent creation,task,Task clarity and platform-pattern fit,pend
 S087,Add / quick parent creation,navigation,"Navigation, hierarchy and return",pending,,
 S087,Add / quick parent creation,selection,Value selection and current value,pending,,
 S087,Add / quick parent creation,modality,Presentation and dismissal,pending,,
-S087,Add / quick parent creation,layout,"Safe areas, scroll edges and overlays",pending,,
+S087,Add / quick parent creation,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 S087,Add / quick parent creation,adaptation,Phone/tablet/window reflow,pending,,
 S087,Add / quick parent creation,typography,"Dynamic Type, wrapping and legibility",pending,,
 S087,Add / quick parent creation,appearance,"Light/dark, contrast and materials",pending,,
@@ -2081,7 +2081,7 @@ S087,Add / quick parent creation,motion,Reduced motion and feedback alternatives
 S087,Add / quick parent creation,content,"Lists, hierarchy, density and pagination",pending,,
 S087,Add / quick parent creation,search,"Search, scope and filters",pending,,
 S087,Add / quick parent creation,loading,"Loading, background refresh and progress",pending,,
-S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
 S087,Add / quick parent creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S087,Add / quick parent creation,privacy,"Account scope, data use and permissions",pending,,
 S087,Add / quick parent creation,notifications,System notification entry and state,pending,,
@@ -2139,7 +2139,7 @@ S090,Add / photo selection,task,Task clarity and platform-pattern fit,pending,,
 S090,Add / photo selection,navigation,"Navigation, hierarchy and return",pending,,
 S090,Add / photo selection,selection,Value selection and current value,pending,,
 S090,Add / photo selection,modality,Presentation and dismissal,pending,,
-S090,Add / photo selection,layout,"Safe areas, scroll edges and overlays",pending,,
+S090,Add / photo selection,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 S090,Add / photo selection,adaptation,Phone/tablet/window reflow,pending,,
 S090,Add / photo selection,typography,"Dynamic Type, wrapping and legibility",pending,,
 S090,Add / photo selection,appearance,"Light/dark, contrast and materials",pending,,
@@ -2153,7 +2153,7 @@ S090,Add / photo selection,motion,Reduced motion and feedback alternatives,pendi
 S090,Add / photo selection,content,"Lists, hierarchy, density and pagination",pending,,
 S090,Add / photo selection,search,"Search, scope and filters",pending,,
 S090,Add / photo selection,loading,"Loading, background refresh and progress",pending,,
-S090,Add / photo selection,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S090,Add / photo selection,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
 S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S090,Add / photo selection,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S090,Add / photo selection,notifications,System notification entry and state,pending,,
@@ -2235,7 +2235,7 @@ S094,Add / draft recovery,task,Task clarity and platform-pattern fit,pending,,
 S094,Add / draft recovery,navigation,"Navigation, hierarchy and return",pending,,
 S094,Add / draft recovery,selection,Value selection and current value,pending,,
 S094,Add / draft recovery,modality,Presentation and dismissal,pending,,
-S094,Add / draft recovery,layout,"Safe areas, scroll edges and overlays",pending,,
+S094,Add / draft recovery,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 S094,Add / draft recovery,adaptation,Phone/tablet/window reflow,pending,,
 S094,Add / draft recovery,typography,"Dynamic Type, wrapping and legibility",pending,,
 S094,Add / draft recovery,appearance,"Light/dark, contrast and materials",pending,,
@@ -2249,16 +2249,16 @@ S094,Add / draft recovery,motion,Reduced motion and feedback alternatives,pendin
 S094,Add / draft recovery,content,"Lists, hierarchy, density and pagination",pending,,
 S094,Add / draft recovery,search,"Search, scope and filters",pending,,
 S094,Add / draft recovery,loading,"Loading, background refresh and progress",pending,,
-S094,Add / draft recovery,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S094,Add / draft recovery,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
 S094,Add / draft recovery,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S094,Add / draft recovery,privacy,"Account scope, data use and permissions",pending,,
 S094,Add / draft recovery,notifications,System notification entry and state,pending,,
 S094,Add / draft recovery,media,"Camera, library, files and audio",pending,,
 S094,Add / draft recovery,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
-S095,Asset / overflow commands,task,Task clarity and platform-pattern fit,pending,,
-S095,Asset / overflow commands,navigation,"Navigation, hierarchy and return",pending,,
-S095,Asset / overflow commands,selection,Value selection and current value,pending,,
-S095,Asset / overflow commands,modality,Presentation and dismissal,pending,,
+S095,Asset / overflow commands,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending,
+S095,Asset / overflow commands,navigation,"Navigation, hierarchy and return",source-reviewed,asset-actions-axis.md; native interaction pending,
+S095,Asset / overflow commands,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending,
+S095,Asset / overflow commands,modality,Presentation and dismissal,source-reviewed,asset-actions-axis.md; native interaction pending,
 S095,Asset / overflow commands,layout,"Safe areas, scroll edges and overlays",pending,,
 S095,Asset / overflow commands,adaptation,Phone/tablet/window reflow,pending,,
 S095,Asset / overflow commands,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2279,10 +2279,10 @@ S095,Asset / overflow commands,privacy,"Account scope, data use and permissions"
 S095,Asset / overflow commands,notifications,System notification entry and state,pending,,
 S095,Asset / overflow commands,media,"Camera, library, files and audio",pending,,
 S095,Asset / overflow commands,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S096,Asset / checkout action,task,Task clarity and platform-pattern fit,pending,,
-S096,Asset / checkout action,navigation,"Navigation, hierarchy and return",pending,,
-S096,Asset / checkout action,selection,Value selection and current value,pending,,
-S096,Asset / checkout action,modality,Presentation and dismissal,pending,,
+S096,Asset / checkout action,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending,
+S096,Asset / checkout action,navigation,"Navigation, hierarchy and return",source-reviewed,asset-actions-axis.md; native interaction pending,
+S096,Asset / checkout action,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending,
+S096,Asset / checkout action,modality,Presentation and dismissal,source-reviewed,asset-actions-axis.md; native interaction pending,
 S096,Asset / checkout action,layout,"Safe areas, scroll edges and overlays",pending,,
 S096,Asset / checkout action,adaptation,Phone/tablet/window reflow,pending,,
 S096,Asset / checkout action,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2297,16 +2297,16 @@ S096,Asset / checkout action,motion,Reduced motion and feedback alternatives,pen
 S096,Asset / checkout action,content,"Lists, hierarchy, density and pagination",pending,,
 S096,Asset / checkout action,search,"Search, scope and filters",pending,,
 S096,Asset / checkout action,loading,"Loading, background refresh and progress",pending,,
-S096,Asset / checkout action,recovery,"Empty, error, denied and retry",pending,,
-S096,Asset / checkout action,editing,"Draft, save, cancel, undo and interruption",pending,,
+S096,Asset / checkout action,recovery,"Empty, error, denied and retry",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
+S096,Asset / checkout action,editing,"Draft, save, cancel, undo and interruption",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
 S096,Asset / checkout action,privacy,"Account scope, data use and permissions",pending,,
 S096,Asset / checkout action,notifications,System notification entry and state,pending,,
 S096,Asset / checkout action,media,"Camera, library, files and audio",pending,,
-S096,Asset / checkout action,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S097,Asset / return action,task,Task clarity and platform-pattern fit,pending,,
-S097,Asset / return action,navigation,"Navigation, hierarchy and return",pending,,
-S097,Asset / return action,selection,Value selection and current value,pending,,
-S097,Asset / return action,modality,Presentation and dismissal,pending,,
+S096,Asset / checkout action,lifecycle,"Cold/warm start, blur, background and deep link",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
+S097,Asset / return action,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending,
+S097,Asset / return action,navigation,"Navigation, hierarchy and return",source-reviewed,asset-actions-axis.md; native interaction pending,
+S097,Asset / return action,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending,
+S097,Asset / return action,modality,Presentation and dismissal,source-reviewed,asset-actions-axis.md; native interaction pending,
 S097,Asset / return action,layout,"Safe areas, scroll edges and overlays",pending,,
 S097,Asset / return action,adaptation,Phone/tablet/window reflow,pending,,
 S097,Asset / return action,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2321,16 +2321,16 @@ S097,Asset / return action,motion,Reduced motion and feedback alternatives,pendi
 S097,Asset / return action,content,"Lists, hierarchy, density and pagination",pending,,
 S097,Asset / return action,search,"Search, scope and filters",pending,,
 S097,Asset / return action,loading,"Loading, background refresh and progress",pending,,
-S097,Asset / return action,recovery,"Empty, error, denied and retry",pending,,
-S097,Asset / return action,editing,"Draft, save, cancel, undo and interruption",pending,,
+S097,Asset / return action,recovery,"Empty, error, denied and retry",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
+S097,Asset / return action,editing,"Draft, save, cancel, undo and interruption",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
 S097,Asset / return action,privacy,"Account scope, data use and permissions",pending,,
 S097,Asset / return action,notifications,System notification entry and state,pending,,
 S097,Asset / return action,media,"Camera, library, files and audio",pending,,
-S097,Asset / return action,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S098,Asset / archive restore delete,task,Task clarity and platform-pattern fit,pending,,
-S098,Asset / archive restore delete,navigation,"Navigation, hierarchy and return",pending,,
-S098,Asset / archive restore delete,selection,Value selection and current value,pending,,
-S098,Asset / archive restore delete,modality,Presentation and dismissal,pending,,
+S097,Asset / return action,lifecycle,"Cold/warm start, blur, background and deep link",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
+S098,Asset / archive restore delete,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending,
+S098,Asset / archive restore delete,navigation,"Navigation, hierarchy and return",source-reviewed,asset-actions-axis.md; native interaction pending,
+S098,Asset / archive restore delete,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending,
+S098,Asset / archive restore delete,modality,Presentation and dismissal,source-reviewed,asset-actions-axis.md; native interaction pending,
 S098,Asset / archive restore delete,layout,"Safe areas, scroll edges and overlays",pending,,
 S098,Asset / archive restore delete,adaptation,Phone/tablet/window reflow,pending,,
 S098,Asset / archive restore delete,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2345,12 +2345,12 @@ S098,Asset / archive restore delete,motion,Reduced motion and feedback alternati
 S098,Asset / archive restore delete,content,"Lists, hierarchy, density and pagination",pending,,
 S098,Asset / archive restore delete,search,"Search, scope and filters",pending,,
 S098,Asset / archive restore delete,loading,"Loading, background refresh and progress",pending,,
-S098,Asset / archive restore delete,recovery,"Empty, error, denied and retry",pending,,
-S098,Asset / archive restore delete,editing,"Draft, save, cancel, undo and interruption",pending,,
+S098,Asset / archive restore delete,recovery,"Empty, error, denied and retry",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
+S098,Asset / archive restore delete,editing,"Draft, save, cancel, undo and interruption",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
 S098,Asset / archive restore delete,privacy,"Account scope, data use and permissions",pending,,
 S098,Asset / archive restore delete,notifications,System notification entry and state,pending,,
 S098,Asset / archive restore delete,media,"Camera, library, files and audio",pending,,
-S098,Asset / archive restore delete,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S098,Asset / archive restore delete,lifecycle,"Cold/warm start, blur, background and deep link",finding,asset-actions-axis.md; M86 candidate regression tests; native pending,M86
 S099,Asset / photo gallery,task,Task clarity and platform-pattern fit,source-reviewed,Native Add photos command implemented on continuation branch; eight remote checks and critic pass. Native placement pending; excluded from interim0.24.11.,M43
 S099,Asset / photo gallery,navigation,"Navigation, hierarchy and return",source-reviewed,Gallery opens the selected photo ID; permission/callback absence disables opening. Source review only.,
 S099,Asset / photo gallery,selection,Value selection and current value,source-reviewed,Numbered image buttons identify photo position and open that exact ID. Source review only.,
@@ -2375,29 +2375,29 @@ S099,Asset / photo gallery,privacy,"Account scope, data use and permissions",sou
 S099,Asset / photo gallery,notifications,System notification entry and state,pending,,
 S099,Asset / photo gallery,media,"Camera, library, files and audio",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S099,Asset / photo gallery,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,M64 asset change/unmount and duplicate photo-task behavior checks; native chooser interruption pending; focus-only lifecycle not cleared,M64
-S100,Asset / full screen viewer,task,Task clarity and platform-pattern fit,source-reviewed,Full-screen image inspection supports zoom and paging; modal exception is recorded in mobile-navigation-and-visual-polish.spec.md.,
-S100,Asset / full screen viewer,navigation,"Navigation, hierarchy and return",source-reviewed,Explicit Close/Previous/Next plus swipe-to-close; boundary controls disabled. Native gesture/focus restoration pending.,
+S100,Asset / full screen viewer,task,Task clarity and platform-pattern fit,source-reviewed,Full-screen image inspection supports zoom and paging; modal exception is recorded in mobile-navigation-and-visual-polish.spec.md.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
+S100,Asset / full screen viewer,navigation,"Navigation, hierarchy and return",source-reviewed,Explicit Close/Previous/Next plus swipe-to-close; boundary controls disabled. Native gesture/focus restoration pending.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,selection,Value selection and current value,source-reviewed,Selected index resolves by photo ID and invalid indexes do not present the viewer. Source review only.,
-S100,Asset / full screen viewer,modality,Presentation and dismissal,pending,,
-S100,Asset / full screen viewer,layout,"Safe areas, scroll edges and overlays",source-reviewed,Bottom toolbar accounts for safe-bottom inset; full-screen and enlarged-text runtime pending.,
-S100,Asset / full screen viewer,adaptation,Phone/tablet/window reflow,pending,,
+S100,Asset / full screen viewer,modality,Presentation and dismissal,runtime-partial,native-evidence.md run34947056524 iPad removal-error dialog only; other modal states pending,
+S100,Asset / full screen viewer,layout,"Safe areas, scroll edges and overlays",finding,"Bottom toolbar accounts for safe-bottom inset; full-screen and enlarged-text runtime pending.; M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md)",M83
+S100,Asset / full screen viewer,adaptation,Phone/tablet/window reflow,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,typography,"Dynamic Type, wrapping and legibility",pending,,
 S100,Asset / full screen viewer,appearance,"Light/dark, contrast and materials",source-reviewed,Neutral dark viewer canvas intentionally preserves image appearance; native contrast review pending.,
 S100,Asset / full screen viewer,localization,"Locale, timezone, RTL and long strings",pending,,
-S100,Asset / full screen viewer,imagery,"Icons, photos and missing media",pending,,
-S100,Asset / full screen viewer,targets,Touch target size and reachability,pending,,
-S100,Asset / full screen viewer,gestures,Gestures and explicit alternatives,pending,,
+S100,Asset / full screen viewer,imagery,"Icons, photos and missing media",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
+S100,Asset / full screen viewer,targets,Touch target size and reachability,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
+S100,Asset / full screen viewer,gestures,Gestures and explicit alternatives,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,keyboard,"Keyboard, text entry and focus",pending,,
 S100,Asset / full screen viewer,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Viewer commands have accessible names, button roles and disabled states; image announcements/focus order pending.",
-S100,Asset / full screen viewer,motion,Reduced motion and feedback alternatives,pending,,
-S100,Asset / full screen viewer,content,"Lists, hierarchy, density and pagination",pending,,
+S100,Asset / full screen viewer,motion,Reduced motion and feedback alternatives,finding,M84: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending,M84
+S100,Asset / full screen viewer,content,"Lists, hierarchy, density and pagination",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,search,"Search, scope and filters",pending,,
-S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.,M42
-S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",pending,,
-S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.,M42
-S100,Asset / full screen viewer,privacy,"Account scope, data use and permissions",source-reviewed,Authorized image headers retained; Remove is permission-gated and system confirmation precedes command. No boundary changes.,
+S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",finding,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; M85: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending,M42;M85
+S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",finding,"M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md); M85: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending",M83;M85
+S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,M42
+S100,Asset / full screen viewer,privacy,"Account scope, data use and permissions",source-reviewed,Authorized image headers retained; Remove is permission-gated and system confirmation precedes command. No boundary changes.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,notifications,System notification entry and state,pending,,
-S100,Asset / full screen viewer,media,"Camera, library, files and audio",pending,,
+S100,Asset / full screen viewer,media,"Camera, library, files and audio",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S101,Asset / upload retry,task,Task clarity and platform-pattern fit,pending,,
 S101,Asset / upload retry,navigation,"Navigation, hierarchy and return",pending,,
@@ -3275,7 +3275,7 @@ S137,Home return / optional details,localization,"Locale, timezone, RTL and long
 S137,Home return / optional details,imagery,"Icons, photos and missing media",pending,,
 S137,Home return / optional details,targets,Touch target size and reachability,pending,,
 S137,Home return / optional details,gestures,Gestures and explicit alternatives,pending,,
-S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,M65 native iPad typed Returned clean but showed leanR; seeded field candidate awaiting native rerun; text-entry-axis.md records ownership/reset review; full native input acceptance still pending,M65
+S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,M65 native iPad typed Returned clean but showed leanR; seeded field candidate awaiting native rerun; text-entry-axis.md records ownership/reset review; full native input acceptance still pending; Run349397 iPad Return details loses suffix (Returned vs Returned clean); seeded field; shared text-entry investigation open (text-entry-axis.md/native-evidence.md),M65
 S137,Home return / optional details,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S137,Home return / optional details,motion,Reduced motion and feedback alternatives,pending,,
 S137,Home return / optional details,content,"Lists, hierarchy, density and pagination",pending,,
@@ -3347,7 +3347,7 @@ R140,home-return-details.tsx,localization,"Locale, timezone, RTL and long string
 R140,home-return-details.tsx,imagery,"Icons, photos and missing media",pending,,
 R140,home-return-details.tsx,targets,Touch target size and reachability,pending,,
 R140,home-return-details.tsx,gestures,Gestures and explicit alternatives,pending,,
-R140,home-return-details.tsx,keyboard,"Keyboard, text entry and focus",pending,,
+R140,home-return-details.tsx,keyboard,"Keyboard, text entry and focus",finding,Run349397 iPad Return details loses suffix (Returned vs Returned clean); seeded field; shared text-entry investigation open (text-entry-axis.md/native-evidence.md),M65
 R140,home-return-details.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R140,home-return-details.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R140,home-return-details.tsx,content,"Lists, hierarchy, density and pagination",pending,,

@@ -1,3 +1,4 @@
+import { dispatchedActions } from '../../test-support/navigation';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { AssetDetailRouteScreen } from './AssetDetailRouteScreen';
@@ -161,9 +162,13 @@ it.each([false, true])('handles photo-removal failure while mounted or after rou
     await test.harness.run(() => firstRemoval.reject(new Error('Connection failed')));
     await settle(test.harness);
     if (leaveRoute) {
-      expect(test.harness.allText()).not.toContain('Could not remove photo');
+      expect(latestAlert()?.title).not.toBe('Could not remove photo');
     } else {
-      expect(test.harness.allText()).toContain('Could not remove photo');
+      expect(latestAlert()?.title).toBe('Could not remove photo');
+      expect(latestAlert()?.message).toBe('Connection failed');
+      expect(latestAlert()?.buttons.map(button => button.text)).toEqual(['OK']);
+      await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'OK')?.onPress?.(); });
+      expect(calls).toBe(1);
       expect(test.harness.byType('ImageViewing')?.props.visible).toBe(true);
       expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
       await test.harness.press(test.harness.byLabel('Remove photo'));
@@ -290,5 +295,63 @@ it('keeps the new asset upload pending when the previous upload finishes', async
     await settle(test.harness);
     expect(test.harness.allText()).toContain('New upload complete');
     expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+  } finally { await test.harness.unmount(); }
+});
+
+it('submits checkout once and suppresses its late failure after leaving the route', async () => {
+  const command = deferred<never>(); let calls = 0;
+  const test = setup({ assetCheckoutCommand: { execute: () => { calls++; return command.promise; } } });
+  try {
+    await test.render(); await settle(test.harness);
+    const checkout = test.harness.byLabel('Check out');
+    expect(checkout).toBeDefined();
+    await test.harness.run(() => { checkout!.props.onPress(); checkout!.props.onPress(); });
+    expect(calls).toBe(1);
+    test.hide(); await test.render();
+    await test.harness.run(() => command.reject(new Error('Late checkout failure')));
+    expect(test.harness.allText()).not.toContain('Late checkout failure');
+  } finally { await test.harness.unmount(); }
+});
+
+it.each(['Archive', 'Restore', 'Delete permanently'] as const)('owns %s confirmation and suppresses late navigation after teardown', async label => {
+  const command = deferred<void>(); let calls = 0;
+  const core = snapshot();
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => ({ ...core, asset: { ...core.asset, lifecycleState: label === 'Archive' ? 'active' : 'archived' } }) }),
+    assetLifecycleCommand: { execute: () => { calls++; return command.promise; } }
+  });
+  try {
+    await test.render(); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
+    const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    await test.harness.run(() => { confirm!(); confirm!(); });
+    expect(calls).toBe(1);
+    test.hide(); await test.render();
+    const navigationBefore = dispatchedActions().length;
+    await test.harness.run(() => command.resolve());
+    expect(dispatchedActions()).toHaveLength(navigationBefore);
+    await test.harness.run(() => confirm!());
+    expect(calls).toBe(1);
+  } finally { await test.harness.unmount(); }
+});
+
+it('does not let old checkout completion unlock the replacement asset operation', async () => {
+  const old = deferred<never>(); const current = deferred<never>();
+  const test = setup({ assetCheckoutCommand: { execute: input => input.assetId === 'tent' ? old.promise : current.promise } });
+  try {
+    await test.render(); await settle(test.harness);
+    const staleCheckout = test.harness.byLabel('Check out')!;
+    await test.harness.press(staleCheckout);
+    test.changeAsset('other'); await test.render(); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Check out'));
+    expect(test.harness.byLabel('Check out')?.props.disabled).toBe(true);
+    await test.harness.run(() => old.reject(new Error('Old asset failed')));
+    expect(test.harness.byLabel('Check out')?.props.disabled).toBe(true);
+    expect(test.harness.allText()).not.toContain('Old asset failed');
+    await test.harness.run(() => current.reject(new Error('Current asset failed')));
+    expect(test.harness.byLabel('Check out')?.props.disabled).toBe(false);
+    expect(test.harness.allText()).toContain('Current asset failed');
   } finally { await test.harness.unmount(); }
 });

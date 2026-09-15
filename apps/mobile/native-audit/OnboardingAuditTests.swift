@@ -28,6 +28,12 @@ final class OnboardingAuditTests: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
+    if name.hasPrefix("onboarding-landscape-") {
+      let screen = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+      screen.name = "\(name)-full-screen"
+      screen.lifetime = .keepAlways
+      add(screen)
+    }
     let hierarchy = XCTAttachment(string: app.debugDescription)
     hierarchy.name = "\(name)-hierarchy"
     hierarchy.lifetime = .keepAlways
@@ -71,7 +77,7 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertTrue(helpText.waitForExistence(timeout: 5))
     capture("onboarding-help")
     help.tap()
-    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: helpText)], timeout: 5), .completed)
+    XCTAssertTrue(helpText.waitForNonExistence(timeout: 5), "Connection help must close")
 
     address.tap()
     waitForKeyboard()

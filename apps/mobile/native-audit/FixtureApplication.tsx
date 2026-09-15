@@ -1,3 +1,5 @@
+export { AssetEditRecoveryFixture } from './AssetEditRecoveryFixture';
+import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
 export { HomeReturnFixture } from './HomeReturnFixture';
@@ -34,7 +36,7 @@ export { AddAssetFixture } from './AddAssetFixture';
 export { CheckoutHistoryFixture } from './CheckoutHistoryFixture';
 
 // Runner-only composition. No production session, service, or credentials are loaded.
-const ResultContext = createContext({ result: '', setResult: (_value: string) => {} });
+const ResultContext = createContext({ result: '', setResult: (_value: string) => {}, keyboardAccessoryEnabled: true, setKeyboardAccessoryEnabled: (_value: boolean) => {} });
 
 export function FixtureLayout() {
   const [controller] = useState(() => {
@@ -52,9 +54,10 @@ export function FixtureLayout() {
 function FixtureNavigation() {
   const { palette, isHydrated } = useAppearance();
   const [result, setResult] = useState('');
+  const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider><HomeReturnTaskProvider>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider><HomeReturnTaskProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
@@ -65,24 +68,27 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add-header" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: true, title: 'Add item', contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
+      <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
-    <AppKeyboardAccessory />
+    {keyboardAccessoryEnabled ? <AppKeyboardAccessory /> : null}
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 export function FixtureMenu() {
   const router = useRouter();
-  const { result, setResult } = useContext(ResultContext);
+  const { result, setResult, setKeyboardAccessoryEnabled } = useContext(ResultContext);
   const feedback = useAppFeedback();
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState(false);
   const [draftPhotos, setDraftPhotos] = useState(false);
-  const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system'>();
+  const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
+  const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'>();
+  if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
@@ -101,6 +107,7 @@ export function FixtureMenu() {
     {showDraftOptions ? <DraftOptionsFixture /> : null}
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
+    <Button title="Audit input without accessory" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('uncontrolled'); }} />
     <Button title="Audit system input" onPress={() => setInputMode('system')} />
     {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
     <Button title="Audit Add navigation draft" onPress={() => router.push('/audit-add-push' as Href)} />
@@ -112,6 +119,11 @@ export function FixtureMenu() {
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Button title="Audit Checkout history" onPress={() => router.push('/audit-checkout-history' as Href)} />
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
+    <Button title="Audit plain input" onPress={() => setInputMode('plain')} />
+    <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
+    <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
+    <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
+    <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />
     <Text>{result}</Text>
   </FixturePage>;
 }
@@ -149,8 +161,13 @@ function DraftOptionsFixture() {
     persistedTargetIds={[]} targetIds={[]} onTargets={() => {}} onApplicability={() => {}} onFieldType={() => {}} />;
 }
 
-function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' | 'system' }) {
+function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' }) {
   const [value, setValue] = useState('');
+  if (mode === 'plain' || mode === 'multiline') return <View>
+    <AppTextInput accessibilityLabel={`Audit ${mode} text`} defaultValue="" multiline={mode === 'multiline'}
+      onChangeText={setValue} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
+    <Text>{`Observed ${mode} input: ${value}`}</Text>
+  </View>;
   if (mode === 'system') return <View>
     <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
       <TextField defaultValue="" placeholder="https://example.invalid" onValueChange={setValue}

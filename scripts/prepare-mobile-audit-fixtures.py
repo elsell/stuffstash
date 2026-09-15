@@ -28,6 +28,7 @@ exports = {
     "audit-inventory-switcher": "InventorySwitcherFixture",
     "audit-home-return": "HomeReturnFixture",
     "home-return-details": "HomeReturnDetailsRoute",
+    "audit-edit-recovery": "AssetEditRecoveryFixture",
     "audit-checkout-history": "CheckoutHistoryFixture",
     "audit-browse": "BrowseFilterFixture",
     "audit-expiration": "ExpirationFilterFixture",

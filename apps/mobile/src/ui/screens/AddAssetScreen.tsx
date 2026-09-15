@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { AddAssetNameField } from './AddAssetNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
@@ -12,6 +13,7 @@ import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   Image,
@@ -92,7 +94,7 @@ type SaveState =
   | { readonly status: 'idle' }
   | { readonly status: 'saving' }
   | { readonly status: 'saved'; readonly message: string }
-  | { readonly status: 'error'; readonly message: string };
+  | { readonly status: 'error'; readonly title: string; readonly message: string };
 
 const emptyDraft: AddAssetDraft = {
   title: '',
@@ -122,6 +124,7 @@ function ScopedAddAssetScreen({
   const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
   const formScrollRef = useRef<ScrollView>(null);
+  const navigationHeaderHeight = useHeaderHeight();
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [draftContext, setDraftContext] = useState<AddAssetDraftContext | undefined>();
   const [expiration, setExpiration] = useState<AssetExpiration | undefined>();
@@ -153,10 +156,19 @@ function ScopedAddAssetScreen({
   function beginDraftOperation(operation: 'save' | 'parent' | 'photo') {
     if (draftOperation.current) return false;
     draftOperation.current = operation; setDraftBusy(true); Keyboard.dismiss();
+    if (saveState.status === 'error') setSaveState({ status: 'idle' });
     return true;
   }
   function endDraftOperation() { draftOperation.current = null; setDraftBusy(false); }
-  function editDraft(change: () => void) { if (!draftOperation.current) change(); }
+  function showDraftError(title: string, message: string) {
+    setSaveState({ status: 'error', title, message });
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(`${title}. ${message}`);
+  }
+  function editDraft(change: () => void) {
+    if (draftOperation.current) return;
+    if (saveState.status === 'error') setSaveState({ status: 'idle' });
+    change();
+  }
 
   const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
@@ -330,9 +342,8 @@ function ScopedAddAssetScreen({
       });
     } catch (error) {
       const message = readableError(error, 'Could not save asset.');
-      setSaveState({ status: 'idle' });
+      showDraftError('Could not save asset', message);
       await refreshDashboardAfterTagCreation(newTags);
-      feedback.showNotice({ tone: 'error', title: 'Could not save asset', message });
     } finally { endDraftOperation(); }
   }
 
@@ -386,8 +397,7 @@ function ScopedAddAssetScreen({
 
     } catch (error) {
       const message = readableError(error, 'Could not create parent.');
-      setSaveState({ status: 'idle' });
-      feedback.showNotice({ tone: 'error', title: 'Could not create parent', message });
+      showDraftError('Could not create parent', message);
     } finally {
       setIsCreatingParent(false); endDraftOperation();
     }
@@ -406,8 +416,7 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'idle' });
     } catch (error) {
       const message = readableError(error, 'Could not select photos.');
-      setSaveState({ status: 'idle' });
-      feedback.showNotice({ tone: 'error', title: 'Could not select photos', message });
+      showDraftError('Could not select photos', message);
     } finally { endDraftOperation(); }
   }
 
@@ -424,8 +433,7 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'idle' });
     } catch (error) {
       const message = readableError(error, 'Could not take photo.');
-      setSaveState({ status: 'idle' });
-      feedback.showNotice({ tone: 'error', title: 'Could not take photo', message });
+      showDraftError('Could not take photo', message);
     } finally { endDraftOperation(); }
   }
 
@@ -511,6 +519,7 @@ function ScopedAddAssetScreen({
         ref={formScrollRef}
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"
+        scrollToOverflowEnabled={Platform.OS === 'ios'}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: safeAreaInsets.bottom + spacing.lg }
@@ -520,6 +529,10 @@ function ScopedAddAssetScreen({
         keyboardShouldPersistTaps="handled"
       >
         {saveState.status === 'saving' ? <ActivityIndicator accessibilityLabel="Saving item" color={colors.action} /> : null}
+        {saveState.status === 'error' ? <View accessibilityLiveRegion="assertive" onLayout={() => formScrollRef.current?.scrollTo({ y: Platform.OS === 'ios' ? -navigationHeaderHeight : 0, animated: false })}>
+          <Text accessibilityRole="header" style={styles.errorText}>{saveState.title}</Text>
+          <Text style={styles.errorText}>{saveState.message}</Text>
+        </View> : null}
         {loadState.status === 'loading' ? (
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} />
@@ -896,6 +909,12 @@ function PhotoPreviewModal({
   readonly onSetIndex: (index: number | undefined) => void;
   readonly photos: readonly SelectedAssetPhoto[];
 }) {
+  const viewerPhotos = useMemo(() => photos.map(photo => ({
+    id: photo.id,
+    label: photo.fileName,
+    metadataLabel: photoMetadataLabel(photo),
+    uri: photo.uri
+  })), [photos]);
   function removeCurrentPhoto(photo: FullScreenPhotoViewerPhoto, index: number): void {
     if (!photo.id) {
       return;
@@ -926,12 +945,7 @@ function PhotoPreviewModal({
       onClose={onClose}
       onRemove={removeCurrentPhoto}
       onSelectIndex={onSetIndex}
-      photos={photos.map((photo) => ({
-        id: photo.id,
-        label: photo.fileName,
-        metadataLabel: photoMetadataLabel(photo),
-        uri: photo.uri
-      }))}
+      photos={viewerPhotos}
     />
   );
 }

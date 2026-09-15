@@ -1,6 +1,7 @@
+import { NativeCommandButton } from '../ui/components/NativeCommandButton';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ScrollView, ActivityIndicator, Text, View } from 'react-native';
 import { useAppServices } from '../ui/navigation/AppServicesContext';
 import { ExpirationFiltersScreen } from '../ui/expiration/ExpirationFiltersScreen';
 import { parseExpirationRoute, expirationRouteParams, type ExpirationRouteParams } from '../ui/expiration/ExpirationRouteState';
@@ -19,6 +20,6 @@ export default function ExpirationFiltersRoute() {
   return { types: types.map(type => ({ id: type.id, label: type.displayName })), tags, locations: locations.locations.map(location => ({ id: location.id, label: location.pathLabel ?? location.title })) };
  } });
  if (state.isPending) return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading filters" color={palette.action} /></View>;
- if (state.isError) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="alert" style={styles.errorMessage}>Filters could not be loaded.</Text><Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => { void state.refetch(); }}><Text style={styles.retryText}>Retry</Text></Pressable><Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => router.back()}><Text style={styles.retryText}>Cancel</Text></Pressable></ScrollView>;
+ if (state.isError) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="alert" style={styles.errorMessage}>Filters could not be loaded.</Text><NativeCommandButton label="Retry" onPress={() => { void state.refetch(); }} /><NativeCommandButton label="Cancel" onPress={() => router.back()} /></ScrollView>;
  return <><Stack.Screen options={{ headerShown: true }} /><ExpirationFiltersScreen key={JSON.stringify([scope.scopeId, tenantId, inventoryId])} initial={filter} choices={state.data} onCancel={() => router.back()} onApply={draft => router.dismissTo({ pathname: '/expiration', params: expirationRouteParams(tenantId, inventoryId, draft) })} /></>;
 }

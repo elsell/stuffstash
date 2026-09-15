@@ -981,7 +981,9 @@
     "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/HomeScreen.tsx",
-      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts",
+      "apps/mobile/src/ui/screens/HomeReturnDetailsSheet.tsx",
+      "apps/mobile/src/ui/screens/HomeReturnDetailsRouteScreen.tsx"
     ]
   },
   {
@@ -990,7 +992,9 @@
     "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/HomeScreen.tsx",
-      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts",
+      "apps/mobile/src/ui/screens/HomeReturnDetailsSheet.tsx",
+      "apps/mobile/src/ui/screens/HomeReturnDetailsRouteScreen.tsx"
     ]
   },
   {
@@ -999,7 +1003,9 @@
     "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/HomeScreen.tsx",
-      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts",
+      "apps/mobile/src/ui/screens/HomeReturnDetailsSheet.tsx",
+      "apps/mobile/src/ui/screens/HomeReturnDetailsRouteScreen.tsx"
     ]
   },
   {

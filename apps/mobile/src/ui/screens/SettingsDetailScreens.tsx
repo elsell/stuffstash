@@ -1,8 +1,9 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerQuery } from '../serverState/useMobileServerQuery';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { AppearancePicker } from '../components/AppearancePicker';
 import type { SettingsQuery, SettingsViewModel } from '../../application/settings/SettingsQuery';
 import { useAppFeedback } from '../feedback/AppFeedback';
@@ -183,9 +184,7 @@ function SettingsModelScreen({
       <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
         <Text accessibilityRole="header" style={styles.errorTitle}>Could not load this setting</Text>
         <Text style={styles.errorMessage}>{state.message}</Text>
-        <Pressable accessibilityRole="button" onPress={() => void load()} style={styles.retryButton}>
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
+        <NativeCommandButton label="Retry" onPress={() => void load()} />
       </ScrollView>
     );
   }

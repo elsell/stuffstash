@@ -490,3 +490,194 @@ for presentation coverage (not cold-query acceptance), two households, and a loc
 selection port that rejects once then succeeds. Verify household drilldown,
 selection failure/retry, return to the fixture menu, and explicit Close. Retain
 screenshots. Do not touch real inventory selection or production services.
+
+### History comparison query resolution
+
+Run34937278231 exposes nested StaticText wrappers with the same checkout note
+label. The bounds comparison must resolve an explicit first matching note inside
+its History scroll view before reading geometry, including the older-page note.
+Retain the original hit-testing diagnostic unchanged. This removes ambiguous
+XCTest lookup, not a production accessibility defect; pagination, expansion and
+Close must still execute on the native runtime before acceptance.
+
+### Landscape capture cross-check
+
+The iPad landscape app attachment in run349372 has landscape pixel dimensions
+and EXIF orientation8, while its rendered view disagrees with the recorded window
+and form geometry. Capture XCUIScreen.main alongside the app attachment for named
+landscape checkpoints. Preserve both originals and existing geometry assertions;
+this comparison must not transform screenshots or declare layout verified merely
+because hit-testing passed.
+
+### Settings recovery commands
+
+Root Settings, detail loading failures and the shared refresh notice must use the
+existing NativeCommandButton adapter for Retry and Retry refresh. These issue an
+in-place command; they do not choose a value or navigate. Preserve Account and
+Connection recovery links, retained data, query retry behavior and error copy.
+Place the full-width native Host in vertical content. Inspect every shared-notice
+consumer; native error-state layout remains a separate verification requirement.
+
+The same command rule covers scoped household/inventory Settings, customization
+collection/editor load retries, the editor's Refresh access command, and provider
+and voice setup load retries. Refresh access still rechecks permission through its
+existing application flow and retains the read-only draft. The shared refresh
+notice also serves Sharing, customization, provider lists/editors, scoped Settings
+and voice setup; inspect those vertical placements and preserve their behavior.
+
+### Add save errors remain in the presented form
+
+A failed Add save must show a persistent, announced error inside the Add form,
+retain the draft and restore Save and Close. Do not rely on the root notice
+overlay for a failure in a native sheet: it can render behind that sheet.
+Show the error before form fields and scroll it into view after failure; the
+next save or deliberate edit can clear the stale failure. Keep ordinary
+background refresh separate from this recovery. Native acceptance must inspect
+the visible error, retained text and reachable retry/close, not only AX existence.
+
+The same form-owned error rule applies to Add parent creation, camera and photo-library failures. Use the operation-specific heading; cancellation without an error stays silent. Beginning another operation clears stale failure feedback.
+
+### Onboarding disappearance observation
+
+For onboarding help collapse, use XCTest's dedicated waitForNonExistence
+with the existing five-second deadline instead of wrapping an element existence
+query in a generic predicate waiter. Record screenshot/hierarchy evidence when
+the assertion times out; a later closed snapshot does not prove timely collapse.
+Do not count unreached keyboard steps as passed. This is a test observation
+change, not a production repair.
+
+### Ordinary-keyboard text-entry comparisons
+
+Runner-only diagnostics must compare seeded single-line and multiline RN inputs
+with default keyboard/correction settings, alongside the existing URL and SwiftUI
+comparisons. Use identical full-string entry and verify native text plus the
+application-observed value. Do not replace failing product scenarios, disable
+autocorrection in production, slow typing to obtain a pass, or equate URL-field
+success with general text-entry acceptance. Native execution is required.
+
+### Remaining Settings recovery consumers
+
+Expiration filter loading recovery, notification settings recovery, Sharing and
+Voice permission-check recovery, invitation retry and invitation pagination must
+use the shared native command adapter in their existing vertical containers.
+Preserve access decisions, retry destinations, cancellation and pagination
+disabling. This is a presentation change, not a change to access policy. Remove
+shared custom retry styling only after every consumer has migrated.
+
+### Photo removal failure above the full-screen viewer
+
+A rejected photo removal requires a native acknowledgment alert above the active
+viewer, rather than a root notice obscured by the full-screen modal. This
+operation-specific failure interrupts because the user needs to know the
+confirmed destructive request did not succeed. Retain the photo and enable retry
+after completion; acknowledgment must not perform another removal. Suppress
+late failures after the route's operation owner is gone. No authorization or
+removal service boundary changes. Native modal layering remains an acceptance gate.
+
+Native photo-recovery coverage must compose the real AssetPhotoViewerSheet and
+AppFeedback native dialog adapter with a synthetic rejected removal. Verify the
+confirmation, failure alert, acknowledgment, retained viewer and retry controls,
+then close. This fixture establishes modal layering only; production command
+ownership and authorization remain covered by their separate boundary tests.
+
+### Pinned photo-viewer motion patch
+
+Use a pnpm content-hashed patch against react-native-image-viewing0.2.2 rather
+than an unreviewed version upgrade. Its chrome animation hook must start with
+motion suppressed, honor live Reduce Motion changes, ignore stale initial reads,
+stop ongoing movement when reduction becomes enabled, and keep animation values
+stable across rerenders. Re-enable optional animation only after an explicit
+platform value permits it. Cleanup subscriptions/late reads. Preserve the public
+viewer API and zoom controls. Test the installed patched hook through the existing
+native fake; source assertions alone cannot prove its behavior. Native zoom and
+preference changes remain required. The independent image-load recovery gap M85
+is not resolved by this patch.
+
+All workspace installation contexts, including the web container build, must include the pinned patch file before pnpm install. The lockfile must change only the patch declaration and affected dependency identity; retain existing package versions.
+
+### Failed photo loading acceptance
+
+A failed image decode or dimension request must replace loading with a readable
+Photo unavailable state and explicit Retry, while keeping Close reachable.
+Retry starts a fresh image/dimension attempt, preserves request headers and ignores
+late events from older attempts; failure must not auto-loop network requests.
+Runner diagnostics use a deliberately missing bundled-file sibling, not external
+URLs or user media. Verify error/Retry/Close native reachability; separate controlled
+loading tests must prove a new request and successful recovery. A native click
+on a still-failing fixture alone does not prove retry semantics.
+
+The pinned viewer dimension adapter accepts an explicit retry generation. Each
+source or generation change clears old dimensions and starts a fresh native size
+request; obsolete completions cannot affect the active photo. Remove its URI-only
+JavaScript dimensions cache so a changed source/header context cannot inherit a
+previous request's result. Native image caching remains the platform's concern.
+This internal lifecycle repair alone does not establish visible error/retry UI.
+
+Both platform image items must share attempt ownership for dimension and decode
+completion. A decode error is terminal for that attempt even if a late load event
+arrives. Retry remounts the native image and restarts dimensions without modifying
+the source URI or headers. The failure replaces the image's zoom/gesture surface
+with a centered, readable message and native Retry button; the viewer's existing
+Close and photo navigation stay outside this replacement. Do not add another
+screen, confirmation, or automatic retry loop for this recoverable read failure.
+
+The dependency exposes an optional error renderer so Stuff Stash can reuse its
+native command-button adapter. Restore viewer chrome when the current photo fails;
+background/preloaded photo failures must not interrupt another photo's zoom state.
+Keep image source objects stable across unrelated wrapper rerenders.
+
+### Add error reveal beneath native chrome
+
+Run34944106312 shows the inline error heading partly covered by the Add navigation
+bar after programmatic scrolling. Reveal the form's top using the measured native
+header height on iOS, rather than content offset zero. Keep automatic safe-area
+adjustment and allow that bounded negative programmatic offset; the pinned RN
+Fabric scrollTo implementation otherwise clamps it using raw contentInset rather
+than UIKit's adjustedContentInset. Android retains offset zero. Do not add fixed
+header padding or a guessed navigation-bar height. The native rejection scenario
+must assert the complete error heading below the navigation bar and inside the
+sheet, in addition to retained text and reachable actions. Source tests verify the
+scroll command against changing header measurements; native geometry is separate.
+
+References: React Native ScrollView scrollToOverflowEnabled and
+contentInsetAdjustmentBehavior (https://reactnative.dev/docs/scrollview), and
+UIKit adjustedContentInset
+(https://developer.apple.com/documentation/uikit/uiscrollview/adjustedcontentinset).
+
+### Asset command completion ownership
+
+Checkout, return, archive, restore and permanent deletion share the existing
+asset-screen operation owner with photo changes. Acquire the synchronous guard
+before invoking a command so repeated callbacks cannot submit twice before React
+renders the busy state. A confirmation callback captured for another asset must
+not start work. After unmounting or replacing the asset screen, completed commands
+may finish in the domain, but must not navigate, show screen-owned feedback,
+refresh the replacement screen or clear its busy state. Keep explicit deletion
+confirmation, domain authorization, and command/audit behavior unchanged.
+
+### Native recovery in asset action sheets
+
+Edit, Move and Move here query failures use the existing native command adapter.
+Name the failed resource in Retry labels so simultaneous type/tag failures remain
+distinguishable. Metadata failures are compact inline messages alongside the
+retained form, not additional expanding full-screen error panels. Keep the blocking
+asset-load error separate from supplementary metadata recovery. Manual retry must
+not reset dirty fields, selected destinations or staged tags. Preserve queries,
+permissions and command behavior; native reachability still requires verification.
+
+A runner-only Edit fixture starts with both metadata queries failed and succeeds
+on each explicit retry. At the largest accessibility text size, verify both native
+retry commands and Cancel are reachable, then verify the original asset name after
+recovery. Local behavior tests separately exercise a dirty draft. The fixture must
+remain isolated from production routes and cannot perform a real save.
+
+### Keyboard accessory isolation comparison
+
+The seeded ordinary and URL fixtures both use the same AppTextInput wrapper.
+Their different strings/keyboard settings do not isolate that wrapper. Add a
+runner-only seeded URL comparison that removes AppKeyboardAccessory before focus,
+while retaining the provider, input props, string and typing cadence. Verify the
+accessory is absent. This isolates the extender's presence, not the entire keyboard
+controller; its pinned native implementation reloads input views when attaching
+an accessory, which is a hypothesis to test, not an established cause of lost text.
+Do not remove production keyboard controls based only on this source observation.

@@ -1,0 +1,394 @@
+diff --git a/dist/ImageViewing.d.ts b/dist/ImageViewing.d.ts
+index b27950495a8a92f3f6dd41b07b7907703d80e8ae..aaae4872dec6f6dd74bbd43ed81930e400789568 100644
+--- a/dist/ImageViewing.d.ts
++++ b/dist/ImageViewing.d.ts
+@@ -22,6 +22,7 @@ declare type Props = {
+     swipeToCloseEnabled?: boolean;
+     doubleTapToZoomEnabled?: boolean;
+     delayLongPress?: number;
++    ErrorComponent?: ComponentType<{ onRetry: () => void }>;
+     HeaderComponent?: ComponentType<{
+         imageIndex: number;
+     }>;
+diff --git a/dist/ImageViewing.js b/dist/ImageViewing.js
+index 3d7641a9a94864415d207c678b71f8c592c90aa1..a3d9957d9d93a473e25f36a34fcac5cf2ba8a5f3 100644
+--- a/dist/ImageViewing.js
++++ b/dist/ImageViewing.js
+@@ -18,7 +18,7 @@ const DEFAULT_BG_COLOR = "#000";
+ const DEFAULT_DELAY_LONG_PRESS = 800;
+ const SCREEN = Dimensions.get("screen");
+ const SCREEN_WIDTH = SCREEN.width;
+-function ImageViewing({ images, keyExtractor, imageIndex, visible, onRequestClose, onLongPress = () => { }, onImageIndexChange, animationType = DEFAULT_ANIMATION_TYPE, backgroundColor = DEFAULT_BG_COLOR, presentationStyle, swipeToCloseEnabled, doubleTapToZoomEnabled, delayLongPress = DEFAULT_DELAY_LONG_PRESS, HeaderComponent, FooterComponent, }) {
++function ImageViewing({ images, keyExtractor, imageIndex, visible, onRequestClose, onLongPress = () => { }, onImageIndexChange, animationType = DEFAULT_ANIMATION_TYPE, backgroundColor = DEFAULT_BG_COLOR, presentationStyle, swipeToCloseEnabled, doubleTapToZoomEnabled, delayLongPress = DEFAULT_DELAY_LONG_PRESS, HeaderComponent, FooterComponent, ErrorComponent, }) {
+     const imageList = useRef(null);
+     const [opacity, onRequestCloseEnhanced] = useRequestClose(onRequestClose);
+     const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
+@@ -49,7 +49,7 @@ function ImageViewing({ images, keyExtractor, imageIndex, visible, onRequestClos
+         length: SCREEN_WIDTH,
+         offset: SCREEN_WIDTH * index,
+         index,
+-    })} renderItem={({ item: imageSrc }) => (<ImageItem onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll} 
++    })} renderItem={({ item: imageSrc, index }) => (<ImageItem ErrorComponent={ErrorComponent} isActive={index === currentImageIndex} onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll} 
+     //@ts-ignore
+     keyExtractor={(imageSrc, index) => keyExtractor
+         ? keyExtractor(imageSrc, index)
+diff --git a/dist/components/ImageItem/ImageError.js b/dist/components/ImageItem/ImageError.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..e187ee6edbb36da063c855db41489a7d814497fa
+--- /dev/null
++++ b/dist/components/ImageItem/ImageError.js
+@@ -0,0 +1,13 @@
++import React from "react";
++import { Button, StyleSheet, Text, View } from "react-native";
++
++export const ImageError = ({ onRetry }) => (
++  <View style={styles.container}>
++    <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.message}>Photo unavailable</Text>
++    <Button title="Retry" accessibilityLabel="Retry photo" onPress={onRetry} />
++  </View>
++);
++const styles = StyleSheet.create({
++    container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 16 },
++    message: { color: "white", fontSize: 20, textAlign: "center", flexShrink: 1 },
++});
+diff --git a/dist/components/ImageItem/ImageItem.android.js b/dist/components/ImageItem/ImageItem.android.js
+index 5fcaa9f9a7d893817fee89b85186ee3936118e69..f014ae7471780cd0b439d377ed3a7cf7112da6df 100644
+--- a/dist/components/ImageItem/ImageItem.android.js
++++ b/dist/components/ImageItem/ImageItem.android.js
+@@ -5,9 +5,10 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import React, { useCallback, useRef, useState } from "react";
+-import { Animated, ScrollView, Dimensions, StyleSheet, } from "react-native";
+-import useImageDimensions from "../../hooks/useImageDimensions";
++import React, { useCallback, useEffect, useRef } from "react";
++import { Animated, ScrollView, Dimensions, StyleSheet, View, } from "react-native";
++import useImageLoad from "../../hooks/useImageLoad";
++import { ImageError } from "./ImageError";
+ import usePanResponder from "../../hooks/usePanResponder";
+ import { getImageStyles, getImageTransform } from "../../utils";
+ import { ImageLoading } from "./ImageLoading";
+@@ -16,13 +17,13 @@ const SWIPE_CLOSE_VELOCITY = 1.75;
+ const SCREEN = Dimensions.get("window");
+ const SCREEN_WIDTH = SCREEN.width;
+ const SCREEN_HEIGHT = SCREEN.height;
+-const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, }) => {
++const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, ErrorComponent = ImageError, isActive = true, }) => {
+     const imageContainer = useRef(null);
+-    const imageDimensions = useImageDimensions(imageSrc);
++    const loading = useImageLoad(imageSrc);
++    const imageDimensions = loading.dimensions;
++    useEffect(() => { if (loading.failed && isActive) onZoom(false); }, [loading.failed, isActive, onZoom]);
+     const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
+     const scrollValueY = new Animated.Value(0);
+-    const [isLoaded, setLoadEnd] = useState(false);
+-    const onLoaded = useCallback(() => setLoadEnd(true), []);
+     const onZoomPerformed = useCallback((isZoomed) => {
+         var _a;
+         onZoom(isZoomed);
+@@ -64,12 +65,13 @@ const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPre
+         const offsetY = (_c = (_b = (_a = nativeEvent) === null || _a === void 0 ? void 0 : _a.contentOffset) === null || _b === void 0 ? void 0 : _b.y, (_c !== null && _c !== void 0 ? _c : 0));
+         scrollValueY.setValue(offsetY);
+     };
++    if (loading.failed) return <View style={styles.listItem}><ErrorComponent onRetry={loading.retry} /></View>;
+     return (<ScrollView ref={imageContainer} style={styles.listItem} pagingEnabled nestedScrollEnabled showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.imageScrollContainer} scrollEnabled={swipeToCloseEnabled} {...(swipeToCloseEnabled && {
+         onScroll,
+         onScrollEndDrag,
+     })}>
+-      <Animated.Image {...panHandlers} source={imageSrc} style={imageStylesWithOpacity} onLoad={onLoaded}/>
+-      {(!isLoaded || !imageDimensions) && <ImageLoading />}
++      <Animated.Image key={loading.attempt} {...panHandlers} source={imageSrc} style={imageStylesWithOpacity} onLoad={loading.onLoad} onError={loading.onError}/>
++      {!loading.loaded && <ImageLoading />}
+     </ScrollView>);
+ };
+ const styles = StyleSheet.create({
+diff --git a/dist/components/ImageItem/ImageItem.ios.js b/dist/components/ImageItem/ImageItem.ios.js
+index 0708505081e1d3da5bfc09d7b599975088969ea6..ffaff30fb3b7e053e1911f41733cb1fe5f22681a 100644
+--- a/dist/components/ImageItem/ImageItem.ios.js
++++ b/dist/components/ImageItem/ImageItem.ios.js
+@@ -5,10 +5,11 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import React, { useCallback, useRef, useState } from "react";
++import React, { useCallback, useEffect, useRef, useState } from "react";
+ import { Animated, Dimensions, ScrollView, StyleSheet, View, TouchableWithoutFeedback, } from "react-native";
+ import useDoubleTapToZoom from "../../hooks/useDoubleTapToZoom";
+-import useImageDimensions from "../../hooks/useImageDimensions";
++import useImageLoad from "../../hooks/useImageLoad";
++import { ImageError } from "./ImageError";
+ import { getImageStyles, getImageTransform } from "../../utils";
+ import { ImageLoading } from "./ImageLoading";
+ const SWIPE_CLOSE_OFFSET = 75;
+@@ -16,11 +17,12 @@ const SWIPE_CLOSE_VELOCITY = 1.55;
+ const SCREEN = Dimensions.get("screen");
+ const SCREEN_WIDTH = SCREEN.width;
+ const SCREEN_HEIGHT = SCREEN.height;
+-const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, }) => {
++const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, ErrorComponent = ImageError, isActive = true, }) => {
+     const scrollViewRef = useRef(null);
+-    const [loaded, setLoaded] = useState(false);
+     const [scaled, setScaled] = useState(false);
+-    const imageDimensions = useImageDimensions(imageSrc);
++    const loading = useImageLoad(imageSrc);
++    const imageDimensions = loading.dimensions;
++    useEffect(() => { if (loading.failed && isActive) onZoom(false); }, [loading.failed, isActive, onZoom]);
+     const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
+     const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
+     const scrollValueY = new Animated.Value(0);
+@@ -56,13 +58,14 @@ const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPre
+     const onLongPressHandler = useCallback((event) => {
+         onLongPress(imageSrc);
+     }, [imageSrc, onLongPress]);
++    if (loading.failed) return <View style={styles.listItem}><ErrorComponent onRetry={loading.retry} /></View>;
+     return (<View>
+       <ScrollView ref={scrollViewRef} style={styles.listItem} pinchGestureEnabled showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} maximumZoomScale={maxScale} contentContainerStyle={styles.imageScrollContainer} scrollEnabled={swipeToCloseEnabled} onScrollEndDrag={onScrollEndDrag} scrollEventThrottle={1} {...(swipeToCloseEnabled && {
+         onScroll,
+     })}>
+-        {(!loaded || !imageDimensions) && <ImageLoading />}
++        {!loading.loaded && <ImageLoading />}
+         <TouchableWithoutFeedback onPress={doubleTapToZoomEnabled ? handleDoubleTap : undefined} onLongPress={onLongPressHandler} delayLongPress={delayLongPress}>
+-          <Animated.Image source={imageSrc} style={imageStylesWithOpacity} onLoad={() => setLoaded(true)}/>
++          <Animated.Image key={loading.attempt} source={imageSrc} style={imageStylesWithOpacity} onLoad={loading.onLoad} onError={loading.onError}/>
+         </TouchableWithoutFeedback>
+       </ScrollView>
+     </View>);
+diff --git a/dist/hooks/useAnimatedComponents.js b/dist/hooks/useAnimatedComponents.js
+index 4730fe40735bd80afc97abdd14150a2fb4abf3e5..e85bd50bd41d5763d5cb74860aba09d90f7c6663 100644
+--- a/dist/hooks/useAnimatedComponents.js
++++ b/dist/hooks/useAnimatedComponents.js
+@@ -5,37 +5,54 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import { Animated } from "react-native";
+-const INITIAL_POSITION = { x: 0, y: 0 };
+-const ANIMATION_CONFIG = {
+-    duration: 200,
+-    useNativeDriver: true,
+-};
++import { useCallback, useEffect, useRef, useState } from "react";
++import { AccessibilityInfo, Animated } from "react-native";
++const ANIMATION_CONFIG = { duration: 200, useNativeDriver: true };
+ const useAnimatedComponents = () => {
+-    const headerTranslate = new Animated.ValueXY(INITIAL_POSITION);
+-    const footerTranslate = new Animated.ValueXY(INITIAL_POSITION);
+-    const toggleVisible = (isVisible) => {
+-        if (isVisible) {
+-            Animated.parallel([
+-                Animated.timing(headerTranslate.y, { ...ANIMATION_CONFIG, toValue: 0 }),
+-                Animated.timing(footerTranslate.y, { ...ANIMATION_CONFIG, toValue: 0 }),
+-            ]).start();
+-        }
+-        else {
+-            Animated.parallel([
+-                Animated.timing(headerTranslate.y, {
+-                    ...ANIMATION_CONFIG,
+-                    toValue: -300,
+-                }),
+-                Animated.timing(footerTranslate.y, {
+-                    ...ANIMATION_CONFIG,
+-                    toValue: 300,
+-                }),
+-            ]).start();
++    const [headerTranslate] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
++    const [footerTranslate] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
++    const reduced = useRef(true);
++    const visible = useRef(true);
++    const animation = useRef(null);
++    const settle = useCallback(() => {
++        animation.current?.stop();
++        animation.current = null;
++        headerTranslate.y.setValue(visible.current ? 0 : -300);
++        footerTranslate.y.setValue(visible.current ? 0 : 300);
++    }, [headerTranslate, footerTranslate]);
++    useEffect(() => {
++        let active = true;
++        let changed = false;
++        const apply = (value) => {
++            reduced.current = value;
++            if (value) settle();
++        };
++        const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", value => {
++            changed = true;
++            if (active) apply(value);
++        });
++        AccessibilityInfo.isReduceMotionEnabled().then(value => {
++            if (active && !changed) apply(value);
++        }).catch(() => {});
++        return () => {
++            active = false;
++            subscription.remove();
++            animation.current?.stop();
++        };
++    }, [settle]);
++    const toggleVisible = useCallback((isVisible) => {
++        visible.current = isVisible;
++        if (reduced.current) {
++            settle();
++            return;
+         }
+-    };
+-    const headerTransform = headerTranslate.getTranslateTransform();
+-    const footerTransform = footerTranslate.getTranslateTransform();
+-    return [headerTransform, footerTransform, toggleVisible];
++        animation.current?.stop();
++        animation.current = Animated.parallel([
++            Animated.timing(headerTranslate.y, { ...ANIMATION_CONFIG, toValue: isVisible ? 0 : -300 }),
++            Animated.timing(footerTranslate.y, { ...ANIMATION_CONFIG, toValue: isVisible ? 0 : 300 }),
++        ]);
++        animation.current.start();
++    }, [headerTranslate, footerTranslate, settle]);
++    return [headerTranslate.getTranslateTransform(), footerTranslate.getTranslateTransform(), toggleVisible];
+ };
+ export default useAnimatedComponents;
+diff --git a/dist/hooks/useImageDimensions.d.ts b/dist/hooks/useImageDimensions.d.ts
+index 5613dca24f2006c59ce53713b820950fab40a47b..9b609ce0514045cae45042bf9a2346ec74fc462d 100644
+--- a/dist/hooks/useImageDimensions.d.ts
++++ b/dist/hooks/useImageDimensions.d.ts
+@@ -6,5 +6,5 @@
+  *
+  */
+ import { Dimensions, ImageSource } from "../@types";
+-declare const useImageDimensions: (image: ImageSource) => Dimensions | null;
++declare const useImageDimensions: (image: ImageSource, attempt?: number) => Dimensions | null;
+ export default useImageDimensions;
+diff --git a/dist/hooks/useImageDimensions.js b/dist/hooks/useImageDimensions.js
+index d89a3a1280968b3b48b10f4e8ddaf164e23ee1b7..1a091a029f76844addc13b0a9362aa7c775cdd7a 100644
+--- a/dist/hooks/useImageDimensions.js
++++ b/dist/hooks/useImageDimensions.js
+@@ -7,58 +7,32 @@
+  */
+ import { useEffect, useState } from "react";
+ import { Image } from "react-native";
+-import { createCache } from "../utils";
+-const CACHE_SIZE = 50;
+-const imageDimensionsCache = createCache(CACHE_SIZE);
+-const useImageDimensions = (image) => {
+-    const [dimensions, setDimensions] = useState(null);
+-    const getImageDimensions = (image) => {
+-        return new Promise((resolve) => {
+-            if (typeof image == "number") {
+-                const cacheKey = `${image}`;
+-                let imageDimensions = imageDimensionsCache.get(cacheKey);
+-                if (!imageDimensions) {
+-                    const { width, height } = Image.resolveAssetSource(image);
+-                    imageDimensions = { width, height };
+-                    imageDimensionsCache.set(cacheKey, imageDimensions);
+-                }
+-                resolve(imageDimensions);
+-                return;
+-            }
+-            // @ts-ignore
+-            if (image.uri) {
+-                const source = image;
+-                const cacheKey = source.uri;
+-                const imageDimensions = imageDimensionsCache.get(cacheKey);
+-                if (imageDimensions) {
+-                    resolve(imageDimensions);
+-                }
+-                else {
+-                    // @ts-ignore
+-                    Image.getSizeWithHeaders(source.uri, source.headers, (width, height) => {
+-                        imageDimensionsCache.set(cacheKey, { width, height });
+-                        resolve({ width, height });
+-                    }, () => {
+-                        resolve({ width: 0, height: 0 });
+-                    });
+-                }
+-            }
+-            else {
+-                resolve({ width: 0, height: 0 });
+-            }
+-        });
+-    };
+-    let isImageUnmounted = false;
++const useImageDimensions = (image, attempt = 0) => {
++    const [result, setResult] = useState(null);
+     useEffect(() => {
+-        getImageDimensions(image).then((dimensions) => {
+-            if (!isImageUnmounted) {
+-                setDimensions(dimensions);
+-            }
+-        });
+-        return () => {
+-            isImageUnmounted = true;
++        let active = true;
++        let completed = false;
++        setResult(null);
++        const finish = (width, height) => {
++            if (!active || completed) return;
++            completed = true;
++            const valid = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
++            setResult({ image, attempt, dimensions: valid ? { width, height } : { width: 0, height: 0 } });
+         };
+-    }, [image]);
+-    return dimensions;
++        try {
++            if (typeof image === "number") {
++                const source = Image.resolveAssetSource(image);
++                finish(source?.width, source?.height);
++            } else if (image?.uri) {
++                Image.getSizeWithHeaders(image.uri, image.headers, finish, () => finish(0, 0));
++            } else {
++                finish(0, 0);
++            }
++        } catch {
++            finish(0, 0);
++        }
++        return () => { active = false; };
++    }, [image, attempt]);
++    return result?.image === image && result?.attempt === attempt ? result.dimensions : null;
+ };
+ export default useImageDimensions;
+diff --git a/dist/hooks/useImageLoad.d.ts b/dist/hooks/useImageLoad.d.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..dc4c331471c6d2c600efb2477595ce05aefd212b
+--- /dev/null
++++ b/dist/hooks/useImageLoad.d.ts
+@@ -0,0 +1,11 @@
++import { Dimensions, ImageSource } from "../@types";
++declare const useImageLoad: (image: ImageSource) => {
++    dimensions: Dimensions | null;
++    attempt: number;
++    failed: boolean;
++    loaded: boolean;
++    onLoad: () => void;
++    onError: () => void;
++    retry: () => void;
++};
++export default useImageLoad;
+diff --git a/dist/hooks/useImageLoad.js b/dist/hooks/useImageLoad.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1585b776970dc13507761d4b9e4c36e616c07d7
+--- /dev/null
++++ b/dist/hooks/useImageLoad.js
+@@ -0,0 +1,27 @@
++import { useEffect, useMemo, useState } from "react";
++import useImageDimensions from "./useImageDimensions";
++
++const useImageLoad = (image) => {
++    const [attempt, setAttempt] = useState(0);
++    const owner = useMemo(() => ({ active: true }), [image, attempt]);
++    const [result, setResult] = useState(null);
++    const dimensions = useImageDimensions(image, attempt);
++    useEffect(() => { owner.active = true; return () => { owner.active = false; }; }, [owner]);
++    const failed = (result?.owner === owner && result.failed) ||
++        (dimensions !== null && (dimensions.width <= 0 || dimensions.height <= 0));
++    return {
++        dimensions,
++        attempt,
++        failed,
++        loaded: !failed && result?.owner === owner && result.loaded && dimensions !== null,
++        onLoad: () => {
++            if (owner.active) setResult(previous => previous?.owner === owner && previous.failed
++                ? previous : { owner, loaded: true, failed: false });
++        },
++        onError: () => {
++            if (owner.active) setResult({ owner, loaded: false, failed: true });
++        },
++        retry: () => { if (owner.active) setAttempt(value => value + 1); },
++    };
++};
++export default useImageLoad;

@@ -706,3 +706,157 @@ terminology. Selection rows and ownership behavior are unchanged. Five existing
 remote switcher checks, TypeScript and structural checks pass
 (/tmp/switcher-native-commands.log); critic found no blockers. Native narrow,
 large-text and sheet-layout acceptance remains pending.
+
+### M81 — Settings retry commands bypass the native adapter (P2)
+
+Root Settings and Diagnostics load failures, plus the shared refresh notice used
+by root Settings, Account and Diagnostics, used custom Pressables for commands
+already supported by NativeCommandButton. They now use that adapter in vertical
+content. Retry callbacks, retained values, error copy and account recovery links
+are preserved. Other users of the shared retry styles are unchanged and remain
+part of the audit. Twenty-seven existing remote Settings behavior tests,
+TypeScript and structural checks pass (/tmp/settings-native-retry.log on paul).
+This presentation change adds no prop-mirroring tests. Native error-state layout,
+large text and VoiceOver acceptance remain pending.
+
+
+M81 follow-up extends the native commands to scoped Settings, customization
+collections and editors (including Refresh access), provider state and voice
+setup. Shared refresh-notice consumers also include Sharing, scoped Settings,
+customization and provider/voice editors; their vertical composition was reviewed.
+Remaining route, navigation-guard and Sharing-specific retry controls are outside
+this pass, and their shared styles remain. The first validation caught a duplicate
+import and premature style removal; both were corrected before committing.
+All 115 tests across five Settings, customization, provider and Sharing suites
+pass on paul, followed by TypeScript and structural checks
+(`/tmp/settings-retry-consumers.log`, `/tmp/settings-retry-consumers-check.log`).
+The critic found no remaining blockers. Native layout acceptance remains pending.
+
+### M82 — Add save error is behind the native sheet (P1)
+
+Run 34939793483, actual checkout 17c9a1c94fa38092ac965c9eccfb9b33051c0c1f,
+iPhone configured-header comparison retained and submitted Native draft name.
+The final hierarchy B690DF46-1CAF-4374-AD62-85028EC65E52.txt contains the root
+notice, but inspected screenshot 3CBE115A-6EBB-46A7-8737-CACC78FE931F.png shows
+no error in the presented sheet. The test also queried StaticText while the old
+notice grouped its message; existence alone would not prove visibility.
+
+Save failures now persist inside the Add form, scroll into view on layout, and
+announce through iOS accessibility or Android live region. Draft edits and the
+next save clear stale failure state. The draft and retry/close lifecycle remain.
+An ownership regression asserts that the error is inside the form scroll view;
+it fails against HEAD and passes with the correction. Sixteen remote Add checks,
+TypeScript and structural validation pass on paul (/tmp/add-inline-error-green.log);
+critic found no blockers. Native inset/keyboard visibility and announcement
+acceptance remain pending. The separate Add typing and loading failures are open.
+
+M82 consumer follow-up: Add parent creation, library and camera failures used
+the same root notice. They now share the form-owned error path with accurate
+headings. Starting a new operation clears stale errors; cancellation stays silent.
+Three operation error ownership regressions fail before the correction. Eighteen
+remote Add checks, TypeScript and structural checks pass afterward
+(/tmp/add-operation-error-green.log on paul); critic found no blockers.
+Native camera/library return and announcement checks remain pending.
+
+M81 remaining shared-style consumers: expiration filter Retry/Cancel, notification
+settings Retry, Sharing/Voice guard recovery, invitation Retry and pagination now
+use native commands. Authorization decisions and request callbacks are unchanged.
+The shared custom retry styles are now unused and removed. Twenty-six remote
+guard, Sharing and notification checks plus TypeScript/structural checks pass
+(/tmp/settings-last-retry.log). Critic caught missing pagination progress copy;
+an adjacent Loading older invitations status now preserves feedback while the
+native command retains its stable label. The nine Sharing checks and static
+checks passed again after that correction. Native recovery layout remains pending.
+
+### M83 — photo-removal recovery belongs above the viewer (P1)
+
+Source inspection finds AssetPhotoViewerSheet retains its overFullScreen viewer
+after failed removal, while AssetDetailRouteScreen sends failure to the root
+notice. The Add runtime evidence established that such notices can remain behind
+a native modal. Photo-specific visual failure is not yet captured.
+
+The rejected destructive operation now uses the existing native dialog adapter
+with one OK acknowledgment. It preserves the photo and retry state, and suppresses
+late failures after the operation owner leaves. The failure/teardown regression
+fails before correction and checks acknowledgment does not retry. Sixty-one
+remote asset/photo checks, TypeScript and structural checks pass
+(/tmp/photo-removal-alert-green.log); critic found no blockers. Native viewer/alert
+layering, VoiceOver focus return and retry remain required acceptance evidence.
+
+M83 native scenario added: the real photo viewer and native feedback adapter are
+composed with a synthetic failure. XCTest checks confirmation, reachable failure
+alert/OK, two attempts, preserved viewer controls and closing to the retained
+photo count. Captures must be inspected after execution. This verifies modal
+presentation, not production deletion or authorization. Remote structural and
+two fixture-preparation checks pass; critic found no blockers. Native pending.
+
+### M84 — photo viewer chrome ignores Reduce Motion (P2)
+
+Pinned image-viewing0.2.2 uses200ms Animated.timing translations to ±300points
+for zoom-triggered chrome changes, without reading Reduce Motion. The wrapper's
+fade prop does not control this path. Source confirmed; repair and native preference
+testing pending. See photo-viewer-axis.md.
+
+### M85 — photo load failure has no viewer recovery (P1)
+
+Pinned image-viewing0.2.2 resolves failed dimensions to0×0 and has no image onError
+handler to leave loading or offer retry. Both platform image components retain
+loading until their success path. The wrapper exposes no load-error callback.
+Source confirmed; failed-media runtime reproduction and dependency repair pending.
+Close remains an escape, but does not explain or retry the failure.
+
+M84 candidate repair: pnpm applies a content-hashed patch to0.2.2; the version
+and other package resolutions remain unchanged. The chrome hook keeps stable
+animation values, starts with motion suppressed, handles live preference changes
+and stale/failed initial reads, and stops animation when reduction is enabled.
+Tests import the installed dependency hook rather than the viewer test double.
+The initial regression fails against upstream;15 focused remote checks plus
+TypeScript/structural checks pass against the patch. A clean web-container-shaped
+frozen-lockfile install also passes. Dockerfile.web now copies patches before
+install. Native zoom/preference-change verification remains pending; M85 is open.
+
+Critic requested stronger motion evidence: the controlled animation fake now
+tracks pending children and stop operations; the regression verifies settled
+positions, stable values across rerenders and cleanup on unmount. Twenty-five
+focused viewer, route, Map and feedback checks pass, along with TypeScript and
+structural checks. This still does not establish native timing or zoom behavior.
+
+M85 candidate repair now handles both dimensions and native decode errors, presents
+Photo unavailable with the existing native Retry command, and remounts the image
+for a fresh attempt. Late events cannot replace the current attempt; only the
+active photo restores viewer chrome on failure. Both caller projections are stable
+across unrelated updates. Eleven focused checks, eighteen Add checks, TypeScript,
+structural validation, and an iOS Metro export passed remotely. This is not native
+visual acceptance; M85 remains open pending the runner scenario and inspection.
+
+M82 header-reveal follow-up: the iPad screenshot in run349441 shows the error
+heading under the navigation bar, despite a readable message. Add now requests
+the measured negative iOS header offset when revealing an error; RN's bounded
+programmatic-overflow option permits the automatically inset position. Android
+keeps zero. The existing draft-recovery regression failed at the old zero offset
+and now passes for two header measurements. The native scenario additionally
+requires the entire heading below the navigation bar. Native acceptance is pending.
+The broader remote check of the changed shared ScrollView fake passed all1495
+mobile tests across257 files; TypeScript and structural checks also passed.
+This validates source behavior, not iOS geometry.
+
+### M86 — asset command callbacks lack completion ownership (P1)
+
+Checkout, return and lifecycle callbacks could submit twice before the busy render
+and issue UI effects after route teardown/replacement. Four regression cases
+reproduced duplicate command calls. The candidate extends the existing photo
+operation owner to these commands; tests cover late deletion navigation, failure
+feedback, stale confirmations and replacement-asset busy state. Authorization and
+domain command behavior are unchanged. Native focus/blur and interruption coverage
+remain pending. See asset-actions-axis.md.
+
+### M87 — asset sheet recovery bypasses native commands (P2)
+
+Edit and Move query retries used unstyled Pressables. Edit also rendered each
+metadata failure in an expanding error panel, with indistinguishable Try again
+labels. The candidate reuses NativeCommandButton for asset, placement, suggestions,
+types and tags. Supplementary errors are compact inline messages. A regression
+verifies independent type/tag retries retain a dirty name;12 asset-sheet behavior
+checks, TypeScript and structural checks pass remotely. The new isolated native
+Edit scenario checks simultaneous failures at largest text size, including Cancel.
+That scenario has not run; combined-height and native reachability remain open.

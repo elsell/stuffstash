@@ -207,3 +207,29 @@ it('keeps an existing tag selected when inline tag resolution updates the Edit d
     expect(saved).toEqual([expect.objectContaining({ tagIds: ['camping'], newTags: [], description: 'Keep this description' })]);
   } finally { await h.unmount(); }
 });
+
+it('retries failed Edit metadata independently while retaining the dirty name', async () => {
+  const client = createMobileQueryClient(); client.setDefaultOptions({ queries: { retry: false } });
+  const harness = new MobileRenderHarness(); let typeReads = 0; let tagReads = 0;
+  const query = new AssetCoreQuery({ getAssetCore: async () => ({
+    tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: 'one',
+    asset: { id: assetId('asset'), title: 'Tent', description: '', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={query}
+        inventoryAssetTypesQuery={{ execute: async () => { if (++typeReads === 1) throw new Error('Types unavailable'); return []; } }}
+        inventoryAssetTagsQuery={{ execute: async () => { if (++tagReads === 1) throw new Error('Tags unavailable'); return []; } }}
+        updateAssetCommand={{ execute: async () => { throw new Error('Save not requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(harness); await settle(harness);
+    await harness.changeText(harness.byLabel('Asset name'), 'My retained name');
+    await harness.press(harness.byLabel('Retry tags')); await settle(harness);
+    expect(tagReads).toBe(2); expect(typeReads).toBe(1);
+    expect(harness.byLabel('Retry tags')).toBeUndefined();
+    expect(harness.byLabel('Retry asset types')).toBeDefined();
+    await harness.press(harness.byLabel('Retry asset types')); await settle(harness);
+    expect(typeReads).toBe(2);
+    expect(harness.byLabel('Asset name')?.props.value).toBe('My retained name');
+  } finally { await harness.unmount(); }
+});

@@ -839,3 +839,121 @@ Route-isolation tests failed before adding the route and now pass; remote typech
 and structural checks pass. Critic found no blockers; its cleanup and dismissal
 wait recommendations were applied. Swift compilation and phone/iPad execution
 remain pending. Fixture scenario count increases to34 including earlier additions.
+
+
+### PR140 release checkpoint — run34937278231
+
+Actual checkout 6076e824a767a647f6fc95558380eca4b4ba8212 has verified parents
+177c08b6 and b8d18f5b. The later 765aa6cd commit is documentation only. Final remote
+regression at 765aa6cd passes 1482 tests in253 files, TypeScript and structural
+checks; all 34 changed mobile/script/spec files match by SHA256. Required CI
+34937529734 passes. PR140 merged as eca1ad7e; release34939488611 is running.
+
+- Phone onboarding104277847337: one applicable pass, two iPad-only skips.
+  Entry025E4C25, keyboard7F370B55 and post-dragA52604E6 screenshots show the
+  required-field explanation, full URL, and reachable Connect. No sign-in occurs.
+- iPad onboarding104277847444: three passes. Margin and inside-column drags
+  dismiss the keyboard. Post-drag7E98A79C shows the full address and Connect.
+  Landscape interaction passes; screenshot8B0399D5 has a black/offset region
+  inconsistent with its1133×744 hierarchy and centered552-point form. Keep visual
+  landscape acceptance open; a passing hit test does not resolve the discrepancy.
+- Phone fixtures104277847107:25/34 pass. iPad fixtures104277847300:28/34 pass.
+  Switcher household navigation, failed selection, retry and Close pass on both.
+  Entry images006B9F4E(phone) and548D03B7(iPad) show the long heading wrapping and
+  native command/Close visible. Phone error780341C7 displays recovery feedback.
+- Add remains unresolved: both card runs receive `Nve draft name`; initial-header
+  comparisons receive `N` on phone and `Ne draft name` on iPad. Original sheets
+  fail field readiness. M74 is not a verified fix, and Save/retry is not reached.
+- Original History hit-testing still fails; the added comparison fails because
+  multiple elements match. This is a diagnostic defect, not evidence of pagination
+  or dismissal success. Controlled-address comparison also fails on both.
+- Phone expiration clipping and nested/footer comparison failures persist. The
+  accessibility issue attachment explicitly says XCTest did not identify an
+  element; do not attribute it to the choice label. Both dedicated large-text
+  choice scenarios pass. Expiration keyboard actions pass on both devices.
+
+Artifacts are under /tmp/native349372-{onboarding,fixtures}-{phone,ipad}; job logs
+use the same prefixes. Cumulative critic found no confirmed new production
+regression relative to the pre-PR140 evidence. This is an authorized interim
+release with unresolved findings, not native audit completion.
+
+### History comparison lookup correction
+
+The run349372 failure tree identifies nested parent/child StaticText nodes carrying
+the same checkout note. The comparison now resolves firstMatch within its scoped
+History scroll view for both the first and older-page notes. The original hit-test
+diagnostic remains unchanged. Remote structural checks pass; native compilation,
+expansion, pagination and dismissal remain pending. This is harness correction,
+not a claim that M61 is fixed.
+
+
+### TestFlight 0.24.18 (106.1) delivered
+
+Release34939488611 completed successfully at sourceeca1ad7e (PR140).
+Signed iOS job104286538918 reports upload success at07:37:33 UTC.
+Job104294718233 verified the exact v0.24.18 (106.1) TestFlight changelog at
+07:39:56 UTC on September15. Logs: /tmp/release349394-ios.log and
+/tmp/release349394-notes.log. This completes the requested interim release;
+the full audit, unresolved native findings, and PR142 work remain active.
+
+## Run 34939793483 phone onboarding observation
+
+Actual checkout 17c9a1c94fa38092ac965c9eccfb9b33051c0c1f (b931354e into
+eca1ad7e). Job104285609146 failed the help-collapse predicate waiter, before
+keyboard entry. Final screenshot06D98ECA-CD26-4813-8691-8CD345A04C97.png
+and hierarchyBBB0D047-3005-4F0E-9D09-20B13B87E605.txt show help closed, address
+entry and Connect visible. This does not establish closure within five seconds
+and does not verify keyboard behavior. No production help regression is confirmed.
+
+The observation now uses [XCTest waitForNonExistence](https://developer.apple.com/documentation/xcuiautomation/xcuielement/waitfornonexistence(timeout:))
+with the same timeout; native validation is pending. The iPad onboarding job
+104285608935 succeeded, with artifacts not yet inspected for this run.
+
+Run34939793483 is now terminal. iPad fixtures104285609035 completed29/34;
+phone fixtures104285609027 completed26/34. Both checked out17c9a1c. History
+bounds/pagination/dismissal passes on both; original static-text hit assertion
+still fails. iPad failures also include Add navigation typing (Ne draft name),
+original Add field readiness, configured-header rejection visibility, and Return
+details typing (Returned instead of Returned clean). The latter broadens native
+text-entry investigation beyond Add; no new root cause is established.
+The run predates M82 error fixes. Logs are /tmp/native349397-fixtures-phone.log
+and /tmp/native349397-fixtures-ipad.log. Native screenshots for iPad fixtures
+still need inspection. The onboarding waiter change passed remote structural
+checks; critic found no blockers, macOS compilation/execution pending.
+
+### Run 34944106312 — completed, partial Add recovery evidence
+
+Actual checkout24b7473cc410f066c1b1cd621b32681aa759808e merges cee11dd9
+into eca1ad7e. Phone fixtures25/34; iPad29/34. Both onboarding jobs passed.
+The configured-header Add rejection test passes on iPad: screenshot
+[evidence/ipad-add-error-349441.png](evidence/ipad-add-error-349441.png) shows
+retained Native draft name and the inline rejection message. Its error heading is
+partly obscured beneath the native navigation bar, so this does not close M82's
+layout acceptance. The phone variant failed while typing Ndraft name, before save.
+Add navigation typing/keyboard and original sheet readiness still fail; original
+History hit test fails while its bounds/pagination/dismissal comparison passes.
+Color-picker direct-opening assertion fails on both devices in this run. Phone
+Return details loses the end of Returned clean; iPad controlled URL loses text.
+Phone footer/nested sheet assertions and expiration accessibility still fail.
+These are recorded failures, not newly inferred root causes. Full logs are in
+/tmp/native349441-fixtures-phone.log and /tmp/native349441-fixtures-ipad.log;
+iPad artifacts are /tmp/native349441-fixtures-ipad. No photo recovery or motion
+patch is included in this checkout. The subsequent run34947056524 was confirmed
+in progress and left running.
+
+### Run34947056524 iPad fixture evidence
+
+The authoritative run is34947056524; checkout3394fcd4eee9c2f3455303ad2476fd9d38578acd
+merges184f850b into eca1ad7e. iPad fixtures completed30/38; one failure was an app
+launch timeout. Both onboarding jobs passed; phone fixtures were still running.
+The ordinary single-line and multiline input scenarios pass, as does photo-removal
+failure recovery across two attempts. The inspected
+[photo error dialog](evidence/ipad-photo-error-dialog-349470.png) is above the viewer
+with visible OK. This establishes iPad modal layering for the fixture, not physical
+media deletion, screen-reader focus, or all photo states.
+The [unavailable image](evidence/ipad-photo-loading-failure-349470.png) remains a
+spinner with Close visible, reproducing M85 before its later recovery patch.
+Add and controlled/seeded URL text-loss assertions still fail. Ordinary and URL
+comparisons share AppTextInput; keyboard configuration, content and presentation
+still differ. No wrapper-only or simulator-only root cause is established.
+Log:/tmp/native349470-fixtures-ipad.log; artifacts:/tmp/native349470-fixtures-ipad.

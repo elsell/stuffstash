@@ -353,3 +353,14 @@ structural checks passed; critic findings are addressed. [PR #104](https://githu
 jobs passed in run 34698884326. Signed TestFlight delivery is tracked by
 [release run 34699160120](https://github.com/elsell/stuffstash/actions/runs/34699160120). Physical touch/keyboard
 acceptance is separate from automated evidence.
+
+
+### September 15 interim mobile checkpoint
+
+PR140 merged as eca1ad7e after 1482 remote mobile tests, required CI and cumulative
+review. Release34939488611 succeeded: TestFlight0.24.18 (106.1) and its exact-build
+changelog were verified on September15 at07:39:56 UTC.
+Native6076e824 verifies onboarding margin dismissal and switcher recovery, while
+Add typing/loading and other recorded findings remain unresolved. Continue the
+full 141-surface/24-axis audit after this authorized release checkpoint. Detailed
+evidence and remaining limitations live in the mobile remediation report.

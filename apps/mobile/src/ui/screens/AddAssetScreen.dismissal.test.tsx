@@ -1,7 +1,9 @@
+import { scrollCommandsForTest } from '../../test-support/react-native';
+import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import React from 'react';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
 import { Platform, pressAlertButton } from '../../test-support/react-native';
-import { expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
@@ -97,6 +99,22 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
     expect(dismissed).toBe(0);
     await h.run(() => rejectSave(new Error('Save unavailable')));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+    expect(h.byText('Could not save asset')).toBeDefined();
+    const failure = h.byText('Save unavailable');
+    expect(failure).toBeDefined();
+    // Feedback must belong to the presented form, not the root overlay.
+    let ancestor = failure?.parent;
+    while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;
+    expect(ancestor?.type).toBe('ScrollView');
+    const revealError = failure?.parent?.props.onLayout;
+    expect(revealError).toBeTypeOf('function');
+    await h.run(() => setNativeHeaderHeight(72));
+    await h.run(() => h.byText('Save unavailable')?.parent?.props.onLayout());
+    expect(scrollCommandsForTest().at(-1)).toEqual({ y: -72, animated: false });
+    await h.run(() => setNativeHeaderHeight(96));
+    await h.run(() => h.byText('Save unavailable')?.parent?.props.onLayout());
+    expect(scrollCommandsForTest().at(-1)).toEqual({ y: -96, animated: false });
+    expect(ancestor?.props.scrollToOverflowEnabled).toBe(true);
     expect(h.byLabel('Asset name')?.props.editable).toBe(true);
     expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })?.title).toBe('Submitted name');
     await h.changeText(h.byLabel('Asset name'), 'Retry name');
@@ -104,7 +122,7 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
   } finally { await h.unmount(); client.clear(); }
 });
 
-for (const operation of ['parent', 'photo'] as const) {
+for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure'] as const) {
   it(`preserves the draft during pending ${operation} selection and restores editing after failure or cancellation`, async () => {
     const h = new MobileRenderHarness(); const client = createMobileQueryClient();
     const originalPlatform = Platform.OS; Platform.OS = 'android';
@@ -118,7 +136,7 @@ for (const operation of ['parent', 'photo'] as const) {
         addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
         createAssetCommand={{ execute: async () => { submissions++; return new Promise((_resolve, reject) => { finish = () => reject(new Error('Parent unavailable')); }); } }}
         parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
-        photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: () => new Promise(resolve => { finish = () => resolve([]); }), captureFromCamera: async () => [] })}
+        photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: () => new Promise((resolve, reject) => { finish = () => operation === 'library-failure' ? reject(new Error('Library unavailable')) : resolve([]); }), captureFromCamera: () => new Promise((_resolve, reject) => { finish = () => reject(new Error('Camera unavailable')); }) })}
         onDismiss={() => { dismissed++; }} /></AppFeedbackProvider></MobileServerStateProvider>);
       await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
       await h.changeText(h.byLabel('Asset name'), 'Keep this draft');
@@ -130,7 +148,7 @@ for (const operation of ['parent', 'photo'] as const) {
         await h.run(() => { void create!.props.onPress(); });
       } else {
         await h.press(h.all().find(node => node.props.accessibilityHint === 'Choose camera or photo library'));
-        await h.run(() => { void pressAlertButton('Choose from Library'); });
+        await h.run(() => { void pressAlertButton(operation === 'camera-failure' ? 'Take Photo' : 'Choose from Library'); });
       }
       expect(finish).toBeDefined();
       expect(h.byLabel('Asset name')?.props.editable).toBe(false);
@@ -142,6 +160,12 @@ for (const operation of ['parent', 'photo'] as const) {
       expect(h.byLabel('Asset name')?.props.value).toBe('Keep this draft');
       await h.run(() => finish());
       await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+      if (operation !== 'photo') {
+        const message = operation === 'parent' ? 'Parent unavailable' : operation === 'library-failure' ? 'Library unavailable' : 'Camera unavailable';
+        let owner = h.byText(message)?.parent;
+        while (owner && owner.type !== 'ScrollView') owner = owner.parent;
+        expect(owner?.type).toBe('ScrollView');
+      }
       expect(h.byLabel('Asset name')?.props.editable).toBe(true);
       await h.changeText(h.byLabel('Asset name'), 'Recovered draft');
       expect(h.byLabel('Asset name')?.props.value).toBe('Recovered draft');
@@ -184,3 +208,5 @@ it('settles navigation updates while header actions use the latest Add draft', a
     expect(dismissed).toBe(1);
   } finally { await h.unmount(); client.clear(); resetNavigation(); }
 });
+
+afterEach(() => setNativeHeaderHeight(144));

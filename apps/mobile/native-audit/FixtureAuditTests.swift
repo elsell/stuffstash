@@ -125,9 +125,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(bar.waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
-    let note = app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
     let historyScroll = app.scrollViews.containing(.staticText, identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
     XCTAssertTrue(historyScroll.exists)
+    let note = requireTextHit
+      ? app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
+      : historyScroll.staticTexts.matching(identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
     if requireTextHit { XCTAssertTrue(note.isHittable) }
     else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
     XCTAssertTrue(app.buttons["Close"].isHittable)
@@ -148,7 +150,9 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(older.isHittable)
     older.tap()
-    let loaded = app.staticTexts["Older audit checkout"]
+    let loaded = requireTextHit
+      ? app.staticTexts["Older audit checkout"]
+      : historyScroll.staticTexts.matching(identifier: "Older audit checkout").firstMatch
     XCTAssertTrue(loaded.waitForExistence(timeout: 5))
     if requireTextHit {
       for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -207,6 +211,38 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Choose tags"].isHittable)
     capture("expiration-expanded-body")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
+  }
+
+  func testEditMetadataRecoveryAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit Edit recovery"]
+    for _ in 0..<10 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let types = app.buttons["Retry asset types"]
+    let tags = app.buttons["Retry tags"]
+    XCTAssertTrue(types.waitForExistence(timeout: 10))
+    XCTAssertTrue(tags.waitForExistence(timeout: 10))
+    XCTAssertTrue(types.isHittable)
+    XCTAssertTrue(tags.isHittable)
+    let message = app.staticTexts["Asset types could not be loaded."].firstMatch
+    XCTAssertGreaterThan(message.frame.height, 30)
+    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    capture("edit-metadata-errors-accessibility-size")
+    tags.tap()
+    XCTAssertTrue(tags.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(types.isHittable)
+    types.tap()
+    XCTAssertTrue(types.waitForNonExistence(timeout: 5))
+    let name = app.textFields["Asset name"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Audit tent")
+    XCTAssertTrue(name.isHittable)
+    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    capture("edit-metadata-recovered")
   }
 
   func testNativeChoiceLabelAtAccessibilityTextSize() {
@@ -313,18 +349,91 @@ final class FixtureAuditTests: XCTestCase {
     capture("enum-draft-option-removed")
   }
 
-  private func verifyAddressEntry(_ mode: String) {
-    app.buttons["Audit \(mode) input"].tap()
+  func testUnavailablePhotoExplainsFailureAndKeepsEscapeReachable() {
+    let open = app.buttons["Audit unavailable photo"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.staticTexts["Photo unavailable"].firstMatch.waitForExistence(timeout: 15))
+    let retry = app.buttons["Retry photo"]
+    XCTAssertTrue(retry.isHittable)
+    XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
+    capture("photo-unavailable-recovery")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Photo unavailable"].firstMatch.waitForExistence(timeout: 15))
+    XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
+    app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Back to audit menu"].isHittable)
+  }
+
+  func testPhotoRemovalFailureAppearsAboveViewer() {
+    let open = app.buttons["Audit photo removal recovery"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let remove = app.buttons["Remove photo"]
+    XCTAssertTrue(remove.waitForExistence(timeout: 5))
+    for attempt in 1...2 {
+      XCTAssertTrue(remove.isHittable)
+      remove.tap()
+      let confirmation = app.alerts["Remove photo?"]
+      XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+      confirmation.buttons["Remove"].tap()
+      let failure = app.alerts["Could not remove photo"]
+      XCTAssertTrue(failure.waitForExistence(timeout: 5))
+      XCTAssertTrue(failure.buttons["OK"].isHittable)
+      capture("photo-removal-failure-\(attempt)")
+      failure.buttons["OK"].tap()
+      XCTAssertTrue(failure.waitForNonExistence(timeout: 5))
+      XCTAssertTrue(remove.isEnabled)
+      XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
+    }
+    capture("photo-retained-after-retry")
+    app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.staticTexts["Removal attempts: 2"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Photos remaining: 1"].exists)
+  }
+
+  private func verifyAddressEntry(_ mode: String, withoutAccessory: Bool = false) {
+    let open = app.buttons[withoutAccessory ? "Audit input without accessory" : "Audit \(mode) input"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
     let input = app.textFields["Audit \(mode) address"]
     XCTAssertTrue(input.waitForExistence(timeout: 5))
-    if !input.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    for _ in 0..<8 where !input.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(input.isHittable)
     input.tap()
     waitForKeyboard()
+    if withoutAccessory { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
     input.typeText("https://example.invalid")
-    capture("\(mode)-address-entry")
+    capture("\(mode)-address-entry\(withoutAccessory ? "-without-accessory" : "")")
     XCTAssertEqual(input.value as? String, "https://example.invalid")
     XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
   }
+
+  private func verifyOrdinaryTextEntry(_ mode: String) {
+    let open = app.buttons["Audit \(mode) input"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let input = mode == "multiline" ? app.textViews["Audit \(mode) text"] : app.textFields["Audit \(mode) text"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    for _ in 0..<8 where !input.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(input.isHittable)
+    input.tap()
+    waitForKeyboard()
+    input.typeText("Native draft name")
+    capture("\(mode)-ordinary-text-entry")
+    XCTAssertEqual(input.value as? String, "Native draft name")
+    XCTAssertTrue(app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5))
+  }
+
+  func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }
+  func testOrdinaryMultilineTextEntry() { verifyOrdinaryTextEntry("multiline") }
+
+  func testSeededAddressWithoutKeyboardAccessory() { verifyAddressEntry("uncontrolled", withoutAccessory: true) }
 
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
@@ -366,6 +475,12 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(name.value as? String, "Native draft name")
     XCTAssertTrue(save.isEnabled)
     XCTAssertTrue(close.isEnabled)
+    let errorHeading = app.staticTexts["Could not save asset"].firstMatch
+    XCTAssertTrue(errorHeading.waitForExistence(timeout: 5))
+    let navigationBar = app.navigationBars["Add item"]
+    XCTAssertGreaterThanOrEqual(errorHeading.frame.minY, navigationBar.frame.maxY,
+      "The entire error heading must remain below the native navigation bar")
+    XCTAssertLessThanOrEqual(errorHeading.frame.maxY, rejected.frame.minY)
     capture("add-rejected-draft-retained")
     close.tap()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 5))

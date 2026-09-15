@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { NativeCommandButton } from './NativeCommandButton';
 import ImageViewing from 'react-native-image-viewing';
 import { ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,9 +40,11 @@ export function FullScreenPhotoViewer({
   const insets = useSafeAreaInsets();
   const visible = currentIndex !== undefined && photos[currentIndex] !== undefined;
   const selectedIndex = Math.max(0, currentIndex ?? 0);
+  const images = useMemo(() => photos.map(photo => ({ uri: photo.uri, headers: photo.headers })), [photos]);
 
   return (
     <ImageViewing
+      ErrorComponent={PhotoViewerLoadError}
       animationType="fade"
       backgroundColor={viewerColors.background}
       doubleTapToZoomEnabled
@@ -58,7 +61,7 @@ export function FullScreenPhotoViewer({
         />
       )}
       imageIndex={selectedIndex}
-      images={photos.map((photo) => ({ uri: photo.uri, headers: photo.headers }))}
+      images={images}
       keyExtractor={(_image, index) => photos[index]?.id ?? index.toString()}
       onImageIndexChange={onSelectIndex}
       onRequestClose={onClose}
@@ -67,6 +70,13 @@ export function FullScreenPhotoViewer({
       visible={visible}
     />
   );
+}
+
+export function PhotoViewerLoadError({ onRetry }: { readonly onRetry: () => void }) {
+  return <View style={styles.loadError}>
+    <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.loadErrorText}>Photo unavailable</Text>
+    <NativeCommandButton label="Retry photo" onPress={onRetry} />
+  </View>;
 }
 
 function PhotoViewerToolbar({
@@ -179,6 +189,8 @@ function ViewerIconButton({
 }
 
 const styles = StyleSheet.create({
+  loadError: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
+  loadErrorText: { color: viewerColors.foreground, fontSize: 20, textAlign: 'center', flexShrink: 1 },
   toolbarOuter: {
     gap: spacing.sm,
     paddingHorizontal: spacing.md,

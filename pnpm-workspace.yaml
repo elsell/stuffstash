@@ -36,3 +36,5 @@ overrides:
   tldts-core: '7.4.2'
   undici: '7.27.1'
   yargs: '17.7.2'
+patchedDependencies:
+  react-native-image-viewing@0.2.2: patches/react-native-image-viewing@0.2.2.patch

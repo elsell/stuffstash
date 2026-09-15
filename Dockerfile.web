@@ -10,6 +10,7 @@ ARG PNPM_VERSION
 USER 0
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY patches patches
 COPY apps/web/package.json apps/web/package.json
 COPY packages/api-client/package.json packages/api-client/package.json
 RUN node -e 'if (!process.env.PNPM_VERSION || require("./package.json").packageManager !== "pnpm@" + process.env.PNPM_VERSION) throw new Error("PNPM_VERSION must match the workspace packageManager")' \

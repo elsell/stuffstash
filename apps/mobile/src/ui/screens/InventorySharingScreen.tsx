@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -150,9 +151,7 @@ export function InventorySharingScreen({
       <ScrollView style={settingsStyles.shell} contentContainerStyle={settingsStyles.errorContainer}>
         <Text accessibilityRole="header" style={settingsStyles.errorTitle}>Could not load invitations</Text>
         <Text style={settingsStyles.errorMessage}>Your invitation settings are still safe. Try again.</Text>
-        <Pressable accessibilityRole="button" onPress={() => list.refetch({ cancelRefetch: false })} style={settingsStyles.retryButton}>
-          <Text style={settingsStyles.retryText}>Retry</Text>
-        </Pressable>
+        <NativeCommandButton label="Retry" onPress={() => { void list.refetch({ cancelRefetch: false }); }} />
       </ScrollView>
     );
   }
@@ -254,7 +253,10 @@ export function InventorySharingScreen({
           </View>
         ))}
       </SettingsSection>
-      {list.hasNextPage ? <Pressable accessibilityRole="button" accessibilityLabel="Load older invitations" disabled={list.isFetching} onPress={() => void list.fetchNextPage({ cancelRefetch: false })} style={settingsStyles.retryButton}><Text style={settingsStyles.retryText}>{list.isFetchingNextPage ? 'Loading…' : 'Load older invitations'}</Text></Pressable> : null}
+      {list.hasNextPage ? <View>
+        {list.isFetchingNextPage ? <Text accessibilityLiveRegion="polite" style={settingsStyles.errorMessage}>Loading older invitations…</Text> : null}
+        <NativeCommandButton label="Load older invitations" disabled={list.isFetching} onPress={() => void list.fetchNextPage({ cancelRefetch: false })} />
+      </View> : null}
     </ScrollView>
   );
 }

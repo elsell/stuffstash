@@ -28,8 +28,9 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The audit remains incomplete. After the About/Diagnostics source review based onb8d18f5b, the 3384 cells comprise 2798
-pending, 540 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicable.
+The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
+comprise 2748 pending, 541 source-reviewed, 71 finding,
+20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
 
@@ -45,23 +46,26 @@ TestFlight changelog were verified at05:52:22UTC: **0.24.17(105.1) is delivered*
 history locale, month-calendar presentation and keyboard-ownership corrections.
 It does not certify the full audit or unresolved native footer behavior.
 
-Next remediation batch: [PR140](https://github.com/elsell/stuffstash/pull/140), branch
-`codex/mobile-audit-after-138`. M69–M73 cover Sharing feedback ownership, invitation
-replacement/startup/navigation recovery and account recovery without inventory data.
-See [Sharing/invitations](sharing-axis.md) and
-[Account/connection](account-connection-axis.md). These changes are excluded from0.24.17.
+PR140 merged as `eca1ad7e`. Its interim release completed in
+[release34939488611](https://github.com/elsell/stuffstash/actions/runs/34939488611).
+This checkpoint improves onboarding, inventory switching and account/invitation
+recovery. **0.24.18 (106.1) is delivered.** Upload succeeded at07:37:33 UTC; Apple
+processing and the exact-build TestFlight changelog were verified at07:39:56 UTC
+on September15. The later PR142 Settings changes are not included.
 
-Latest completed native slice: iPhone17 onboarding in
-[run34929746647](https://github.com/elsell/stuffstash/actions/runs/34929746647),
-actual sourcebabf6765 (parents50b598ae and904684a1). One applicable test passed;
-two iPad-only tests skipped. The phone fixture job then completed with22 passes
-and9 failures; iPad fixtures completed27 passes and4 failures. iPad onboarding
-remains active. The run predates PR138 and PR140; it cannot verify their changes.
+Native run 34937278231 tested merge `6076e824`, whose parents are177c08b6 and
+b8d18f5b. The remaining PR140 commit765aa6cd changes only audit documentation.
+iPhone onboarding passes one applicable scenario (two iPad-only skips); iPad
+onboarding passes all three, including previously failing margin dismissal.
+iPhone fixtures pass25/34 and iPad fixtures 28/34. The new switcher recovery
+scenario passes on both. These results do not establish a fully passing native
+audit. See the evidence log for unresolved failures and screenshot limitations.
 
-Priority open work: native Add loading diagnosis, filter keyboard hit targets,
-large-text choice reflow, history accessibility reachability, Android runtime
-coverage and the remaining surface/axis reviews. Preserve running native jobs;
-collect their screenshots and hierarchies before selecting further fixes.
+Priority open work: Add typing/loading, History query diagnostics and interaction
+acceptance, phone clipping and nested-sheet findings, iPad landscape screenshot
+validation, Android runtime coverage, and remaining surface/axis reviews.
 
 Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) and
 [findings.md](findings.md). No historical release is full audit acceptance.
+
+Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).
