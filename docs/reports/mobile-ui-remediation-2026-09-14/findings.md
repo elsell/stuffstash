@@ -2027,3 +2027,16 @@ M144 verification: nine focused cases pass on paul; the17 existing presentation,
 history and navigation tests also pass. TypeScript and structural checks pass.
 Critic found no confirmed blocker, and its additional plan-identity coverage is
 now included.
+
+
+### M145 — Edit discard acceptance outlives its draft
+
+P2 source/mounted finding, R009/S133. Edit's Discard alert checked the operation
+lock but accepted after a changed draft or blur/refocus, and repeated acceptance
+navigated twice. Mounted tests reproduced those three failures; existing unmount
+protection already passed. Acceptance now belongs to asset, draft, saving state
+and focused visit and executes once, preserving the pending-operation guard.
+All21 Edit/Move behavior cases, TypeScript and structural checks pass on paul.
+Native alert timing remains pending.
+
+M145 critic found no confirmed issue; native acceptance remains open.

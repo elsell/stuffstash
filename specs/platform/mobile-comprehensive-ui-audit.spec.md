@@ -1155,3 +1155,11 @@ the viewer after selection, collection, close/reopen, navigation, busy-state cha
 A current confirmation executes once, retaining the existing next-photo selection
 or closing after removal of the only photo. Reuse the presentation ownership
 mechanism; keep draft-photo presentation separate from the large Add screen.
+
+
+### Edit discard confirmation ownership
+
+The native Edit discard alert belongs to the current asset, draft and focused visit.
+A retained acceptance after a draft change, blur/refocus or unmount must not navigate
+away. A valid acceptance leaves once; pending saves remain protected by the existing
+operation lock. Preserve Keep editing and the current draft.

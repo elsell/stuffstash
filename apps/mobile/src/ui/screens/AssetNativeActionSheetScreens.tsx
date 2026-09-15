@@ -1,3 +1,4 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
@@ -88,6 +89,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
   const operation = useAssetSheetOperation();
   const isSaving = operation.busy;
+  const captureDiscard = useTaskPresentation(undefined, JSON.stringify([assetId, draft, isSaving]));
 
   function close(): void {
     if (operation.locked()) return;
@@ -95,9 +97,16 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       router.back();
       return;
     }
+    const isCurrent = captureDiscard();
+    if (!isCurrent()) return;
+    let accepted = false;
     Alert.alert('Discard changes?', 'Your edits have not been saved.', [
       { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => operation.change(() => router.back()) }
+      { text: 'Discard', style: 'destructive', onPress: () => {
+        if (!isCurrent() || accepted || operation.locked()) return;
+        accepted = true;
+        operation.change(() => router.back());
+      } }
     ]);
   }
 

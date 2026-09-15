@@ -1,6 +1,6 @@
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
-import { attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
@@ -383,4 +383,27 @@ it('protects an unstaged Edit tag from cancellation and silent omission on Save'
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Keep this edit', newTags: [{ displayName: 'Camping' }] })]);
   } finally { await h.unmount(); }
+});
+
+
+it.each(['draft', 'visit', 'unmount', 'current'] as const)('owns Edit discard confirmation across %s', async change => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation();
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'First draft'); await h.press(h.byLabel('Cancel'));
+    const confirm = latestAlert()?.buttons.find(button => button.text === 'Discard')?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    if (change === 'draft') await h.changeText(h.byLabel('Asset name'), 'Later draft');
+    if (change === 'visit') { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
+    if (change === 'unmount') await h.unmount();
+    const before = dispatchedActions().length;
+    await h.run(() => confirm?.()); await h.run(() => confirm?.());
+    expect(dispatchedActions().length - before).toBe(change === 'current' ? 1 : 0);
+    if (change === 'draft') expect(h.byLabel('Asset name')?.props.value).toBe('Later draft');
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
