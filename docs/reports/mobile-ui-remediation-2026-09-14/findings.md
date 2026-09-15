@@ -706,3 +706,15 @@ terminology. Selection rows and ownership behavior are unchanged. Five existing
 remote switcher checks, TypeScript and structural checks pass
 (/tmp/switcher-native-commands.log); critic found no blockers. Native narrow,
 large-text and sheet-layout acceptance remains pending.
+
+### M81 — Settings retry commands bypass the native adapter (P2)
+
+Root Settings and Diagnostics load failures, plus the shared refresh notice used
+by root Settings, Account and Diagnostics, used custom Pressables for commands
+already supported by NativeCommandButton. They now use that adapter in vertical
+content. Retry callbacks, retained values, error copy and account recovery links
+are preserved. Other users of the shared retry styles are unchanged and remain
+part of the audit. Twenty-seven existing remote Settings behavior tests,
+TypeScript and structural checks pass (/tmp/settings-native-retry.log on paul).
+This presentation change adds no prop-mirroring tests. Native error-state layout,
+large text and VoiceOver acceptance remain pending.

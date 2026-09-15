@@ -508,3 +508,12 @@ and form geometry. Capture XCUIScreen.main alongside the app attachment for name
 landscape checkpoints. Preserve both originals and existing geometry assertions;
 this comparison must not transform screenshots or declare layout verified merely
 because hit-testing passed.
+
+### Settings recovery commands
+
+Root Settings, detail loading failures and the shared refresh notice must use the
+existing NativeCommandButton adapter for Retry and Retry refresh. These issue an
+in-place command; they do not choose a value or navigate. Preserve Account and
+Connection recovery links, retained data, query retry behavior and error copy.
+Place the full-width native Host in vertical content. Inspect every shared-notice
+consumer; native error-state layout remains a separate verification requirement.

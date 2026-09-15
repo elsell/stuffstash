@@ -1,7 +1,8 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppearancePicker } from '../components/AppearancePicker';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { Activity, Boxes, House, Info, Server, SunMedium, UserRound } from 'lucide-react-native';
 import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { useAppearance } from '../theme/AppearanceContext';
@@ -48,9 +49,7 @@ export function SettingsScreen({
       <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
         <Text accessibilityRole="header" style={styles.errorTitle}>Could not load Settings</Text>
         <Text style={styles.errorMessage}>{state.message}</Text>
-        <Pressable accessibilityRole="button" onPress={() => void load()} style={styles.retryButton}>
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
+        <NativeCommandButton label="Retry" onPress={() => void load()} />
         <SettingsRecoveryLinks onNavigate={onNavigate} />
       </ScrollView>
     );
