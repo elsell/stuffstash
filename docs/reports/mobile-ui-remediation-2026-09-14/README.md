@@ -94,3 +94,9 @@ PR148 validation at a761b0d8: the complete mobile suite passed **1,512 tests acr
 workspace by SHA-256. This expands the focused behavior evidence; native runs
 remain separate and do not yet cover the latest Add/Edit corrections. No local
 tests or builds were run.
+
+Latest delivered checkpoint: **0.24.22 (110.1)** from PR148 at `4b5f7f89`.
+Upload succeeded at 11:47:59 UTC and the exact TestFlight changelog was verified at
+11:50:22 UTC. This contains Add/Edit tag drafts/discovery and Edit title scrolling.
+The larger PR150 batch remains unreleased; native acceptance and the comprehensive
+audit remain open. See [release evidence](native-evidence.md).

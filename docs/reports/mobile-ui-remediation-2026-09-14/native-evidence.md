@@ -1241,3 +1241,14 @@ the project TypeScript check and mobile structural check passed remotely. Critic
 review caught an initial app-window-only geometry assertion; it now compares
 against the sheet root. Native compilation/execution and manual contrast inspection
 remain pending. No production colors or footer behavior changed in this pass.
+
+## Delivered TestFlight 0.24.22 (110.1)
+
+Release [34962249412](https://github.com/elsell/stuffstash/actions/runs/34962249412)
+completed successfully from `4b5f7f89` (PR148). Signed iOS upload job 104360930332
+reported Upload succeeded at 11:47:59 UTC on September 15. Apple processing and
+exact-build changelog job 104368062375 verified v0.24.22 (110.1) at 11:50:22 UTC.
+This includes Add/Edit tag draft preservation and discovery, overlong-name feedback,
+and the Edit title scrolling repair. It excludes all PR150 invitation, parent,
+Move-context and native command sizing changes. Delivery is not whole-app native
+acceptance; the audit remains open and the next release accumulates a larger batch.
