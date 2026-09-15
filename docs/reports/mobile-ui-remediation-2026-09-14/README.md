@@ -28,8 +28,8 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The audit remains incomplete. After mapping M81–M85 and run349397 evidence, the 3384 cells
-comprise 2779 pending, 526 source-reviewed, 56 finding,
+The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
+comprise 2754 pending, 542 source-reviewed, 65 finding,
 19 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
@@ -67,3 +67,5 @@ validation, Android runtime coverage, and remaining surface/axis reviews.
 
 Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) and
 [findings.md](findings.md). No historical release is full audit acceptance.
+
+Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).

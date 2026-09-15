@@ -123,11 +123,11 @@ export function AssetDetailRouteScreen({
   const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
   const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
-  const photoOperation = useRef({ assetId, active: true, pending: false });
+  const assetOperation = useRef({ assetId, active: true, pending: false });
   useEffect(() => {
-    if (photoOperation.current.pending) setPendingAction(undefined);
+    if (assetOperation.current.pending) setPendingAction(undefined);
     const scope = { assetId, active: true, pending: false };
-    photoOperation.current = scope;
+    assetOperation.current = scope;
     setIsRemovingPhoto(false);
     return () => { scope.active = false; };
   }, [assetId]);
@@ -235,7 +235,7 @@ export function AssetDetailRouteScreen({
   }
 
   function choosePhotos(currentPhotoCount: number): void {
-    const scope = photoOperation.current;
+    const scope = assetOperation.current;
     showPhotoSourceChooser({
       onCamera: () => {
         if (scope.active) void addPhotos('camera', currentPhotoCount);
@@ -264,7 +264,7 @@ export function AssetDetailRouteScreen({
     selectPhotos: () => Promise<readonly SelectedAssetPhoto[]>,
     failureTitle: string
   ): Promise<void> {
-    const scope = photoOperation.current;
+    const scope = assetOperation.current;
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setPendingAction('photos');
@@ -299,7 +299,7 @@ export function AssetDetailRouteScreen({
   }
 
   async function removePhoto(photoId: string): Promise<void> {
-    const scope = photoOperation.current;
+    const scope = assetOperation.current;
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setIsRemovingPhoto(true);
@@ -365,11 +365,15 @@ export function AssetDetailRouteScreen({
   }
 
   async function runLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): Promise<void> {
+    const scope = assetOperation.current;
+    if (!scope.active || scope.assetId !== assetId || scope.pending) return;
+    scope.pending = true;
     setPendingAction(action);
     setWorkspaceStatus(undefined);
 
     try {
       await assetLifecycleCommand.execute({ action, assetId });
+      if (!scope.active) return;
 
       if (action === 'delete') {
         navigateAfterDeletedAsset(router);
@@ -380,6 +384,7 @@ export function AssetDetailRouteScreen({
       try {
         await coreAsset.reconcile();
       } catch {
+        if (!scope.active) return;
         feedback.showNotice({
           tone: 'error',
           title: `${action === 'archive' ? 'Archive' : 'Restore'} succeeded`,
@@ -387,6 +392,7 @@ export function AssetDetailRouteScreen({
         });
       }
     } catch (error) {
+      if (!scope.active) return;
       const failure = assetLifecycleFailurePresentation(
         action,
         asset,
@@ -398,20 +404,26 @@ export function AssetDetailRouteScreen({
         message: failure.message
       });
     } finally {
-      setPendingAction(undefined);
+      scope.pending = false;
+      if (scope.active) setPendingAction(undefined);
     }
   }
 
   async function runCheckoutAction(action: 'checkout' | 'return', asset: AssetDetailViewModel): Promise<void> {
+    const scope = assetOperation.current;
+    if (!scope.active || scope.assetId !== assetId || scope.pending) return;
+    scope.pending = true;
     setPendingAction(action);
     setWorkspaceStatus(undefined);
 
     try {
       await assetCheckoutCommand.execute({ action, assetId });
+      if (!scope.active) return;
       setWorkspaceStatus(assetWorkspaceSuccessStatus(action, asset));
       try {
         await coreAsset.reconcile();
       } catch {
+        if (!scope.active) return;
         feedback.showNotice({
           tone: 'error',
           title: action === 'checkout' ? 'Checkout succeeded' : 'Return succeeded',
@@ -419,13 +431,15 @@ export function AssetDetailRouteScreen({
         });
       }
     } catch (error) {
+      if (!scope.active) return;
       feedback.showNotice({
         tone: 'error',
         title: action === 'checkout' ? 'Could not checkout asset' : 'Could not return asset',
         message: readableError(error, 'Checkout action failed.')
       });
     } finally {
-      setPendingAction(undefined);
+      scope.pending = false;
+      if (scope.active) setPendingAction(undefined);
     }
   }
 

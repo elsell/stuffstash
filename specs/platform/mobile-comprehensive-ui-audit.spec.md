@@ -643,3 +643,14 @@ References: React Native ScrollView scrollToOverflowEnabled and
 contentInsetAdjustmentBehavior (https://reactnative.dev/docs/scrollview), and
 UIKit adjustedContentInset
 (https://developer.apple.com/documentation/uikit/uiscrollview/adjustedcontentinset).
+
+### Asset command completion ownership
+
+Checkout, return, archive, restore and permanent deletion share the existing
+asset-screen operation owner with photo changes. Acquire the synchronous guard
+before invoking a command so repeated callbacks cannot submit twice before React
+renders the busy state. A confirmation callback captured for another asset must
+not start work. After unmounting or replacing the asset screen, completed commands
+may finish in the domain, but must not navigate, show screen-owned feedback,
+refresh the replacement screen or clear its busy state. Keep explicit deletion
+confirmation, domain authorization, and command/audit behavior unchanged.

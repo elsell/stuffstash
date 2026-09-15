@@ -839,3 +839,13 @@ requires the entire heading below the navigation bar. Native acceptance is pendi
 The broader remote check of the changed shared ScrollView fake passed all1495
 mobile tests across257 files; TypeScript and structural checks also passed.
 This validates source behavior, not iOS geometry.
+
+### M86 — asset command callbacks lack completion ownership (P1)
+
+Checkout, return and lifecycle callbacks could submit twice before the busy render
+and issue UI effects after route teardown/replacement. Four regression cases
+reproduced duplicate command calls. The candidate extends the existing photo
+operation owner to these commands; tests cover late deletion navigation, failure
+feedback, stale confirmations and replacement-asset busy state. Authorization and
+domain command behavior are unchanged. Native focus/blur and interruption coverage
+remain pending. See asset-actions-axis.md.
