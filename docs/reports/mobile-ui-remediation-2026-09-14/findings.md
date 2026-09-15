@@ -1007,3 +1007,18 @@ The regression failed before the change;24 resolver/action-sheet tests, TypeScri
 and structural checks passed on paul. VoiceOver announcement and large-text
 placement remain unverified. Long selected-tag truncation is a separate pending
 review, not fixed by this validation message.
+
+### M94 — Edit ignores large-tag-set disclosure
+
+**P2, source-confirmed contract drift.** EditTagPicker in AssetDetailSheets.tsx
+uses tags.map with no bounded initial choices or show/hide control. The asset-tags
+spec requires twelve naturally sorted initial options, a retained selected-tag
+summary and explicit disclosure for larger sets. This is a project requirement,
+not a numeric Apple guideline. Large inventories crowd the form and move inline
+creation farther down. No runtime clipping is asserted.
+
+Acceptance: with more than twelve tags, initially show the specified ordered subset
+and retain all selected tags in the summary; expand/collapse without changing the
+draft; assign an initially hidden tag, collapse and save without losing it. Verify
+large text, keyboard, native disclosure actions and accessibility state on device.
+The correction is not in PR146 or its interim release. See edit-tags-axis.md.

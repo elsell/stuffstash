@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `edit-tags-axis.md`: all 24 axes for tag selection, draft creation and remaining native acceptance.
 - `contained-items-axis.md`: scoped search, shared detail controls, unknown-data states and all24 review axes.
 - `inventory-switcher-axis.md`: hierarchy, context changes, completion ownership and remaining controls.
 - `onboarding-axis.md`: prerequisite task fit, editing/recovery and remaining native gates.
@@ -30,7 +31,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
-comprise 2723 pending, 551 source-reviewed, 86 finding,
+comprise 2722 pending, 551 source-reviewed, 87 finding,
 20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
@@ -80,3 +81,10 @@ PR146's asset-form and suggestion-recovery changes are not in this release and
 still require native acceptance. Earlier0.24.19 delivery is in the evidence log.
 
 Move source review: [destination selection, creation and Move here](move-axis.md).
+
+PR146 merged as `de5d87b0`. Its interim release is running in
+[release34958198826](https://github.com/elsell/stuffstash/actions/runs/34958198826).
+Required checks and final code review passed. This checkpoint includes native form
+actions, Move reflow, suggestion recovery and Edit tag-name feedback. Upload and
+exact-build TestFlight changelog verification are still pending. Later audit work
+on M94 is excluded.
