@@ -40,6 +40,7 @@ exports = {
     "audit-connection": "AccountConnectionFixture",
     "audit-sharing": "InventorySharingFixture",
     "audit-customization": "CustomizationCollectionFixture",
+    "audit-customization-editor": "CustomizationEditorFixture",
     "audit-footer-appearance": "FooterAppearanceFixture",
     "audit-move-here-recovery": "MoveHereRecoveryFixture",
     "audit-edit-tags": "AssetEditTagsFixture",

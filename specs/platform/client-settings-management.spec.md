@@ -441,3 +441,9 @@ that risks duplicate creation and edits hidden by the completed dirty-state flag
 This is a state of the existing screen, not another modal or navigation step.
 The user can deliberately return when ready. Failed operations keep the existing
 draft and retry behavior; changing resource starts a fresh editor lifecycle.
+
+Native audit fixtures must exercise the production customization editor inside a
+real navigation stack with a synthetic repository. Verify native Back with a dirty
+draft (Keep Editing and Discard), native Save returning to the collection, and
+Archive confirmation cancellation and completion. Fixture data must never reach
+production services. Source tests remain separate from simulator acceptance.

@@ -107,6 +107,7 @@ type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'mu
   | 'plain-controlled-no-assistance' | 'plain-controlled-no-accessory';
 
 export { CustomizationCollectionFixture } from './CustomizationCollectionFixture';
+export { CustomizationEditorFixture } from './CustomizationEditorFixture';
 
 export function FixtureMenu() {
   const router = useRouter();
@@ -157,6 +158,7 @@ export function FixtureMenu() {
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
     <Button title="Audit settings collection" onPress={() => router.push('/audit-customization' as Href)} />
+    <Button title="Audit settings editor" onPress={() => router.push('/audit-customization-editor' as Href)} />
     {['direct', 'nested', 'footer', 'direct-footer', 'scroll-footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Button title="Audit Checkout history" onPress={() => router.push('/audit-checkout-history' as Href)} />

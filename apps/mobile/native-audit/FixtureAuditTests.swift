@@ -1489,6 +1489,77 @@ final class FixtureAuditTests: XCTestCase {
     capture("settings-collection-native-header")
   }
 
+  private func openCustomizationEditor() {
+    let open = app.buttons["Audit settings editor"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.textFields["Name"].waitForExistence(timeout: 10))
+    XCTAssertEqual(app.textFields["Name"].value as? String, "Tools")
+  }
+
+  func testSettingsEditorNativeBackProtectsDirtyDraft() {
+    openCustomizationEditor()
+    let name = app.textFields["Name"]
+    name.tap(); waitForKeyboard(); name.typeText("x")
+    XCTAssertEqual(name.value as? String, "Toolsx")
+    let back = app.buttons["Back to settings collection"]
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    let alert = app.alerts["Discard changes?"]
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons["Keep Editing"].tap()
+    XCTAssertEqual(name.value as? String, "Toolsx")
+    back.tap()
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    capture("settings-editor-native-discard")
+    alert.buttons["Discard"].tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    XCTAssertFalse(name.exists)
+  }
+
+  func testSettingsEditorNativeSaveReturnsToCollection() {
+    openCustomizationEditor()
+    let name = app.textFields["Name"]
+    name.tap(); waitForKeyboard(); name.typeText("x")
+    XCTAssertEqual(name.value as? String, "Toolsx")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable)
+    dismiss.tap()
+    let save = app.buttons["Save"].firstMatch
+    for _ in 0..<6 where !save.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(save.isHittable)
+    XCTAssertTrue(save.isEnabled)
+    capture("settings-editor-native-save")
+    save.tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    assertCustomizationNotice("Tag saved")
+  }
+
+  func testSettingsEditorNativeArchiveConfirmsBeforeReturning() {
+    openCustomizationEditor()
+    let archive = app.buttons["Archive"].firstMatch
+    for _ in 0..<6 where !archive.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(archive.isHittable)
+    archive.tap()
+    let alert = app.alerts["Archive Tools?"]
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons["Cancel"].tap()
+    XCTAssertTrue(archive.isEnabled)
+    archive.tap()
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    capture("settings-editor-native-archive")
+    alert.buttons["Archive"].tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    assertCustomizationNotice("Tag archived")
+  }
+
+  private func assertCustomizationNotice(_ title: String) {
+    let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
+    let expected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", title), object: notice)
+    XCTAssertEqual(XCTWaiter.wait(for: [expected], timeout: 5), .completed)
+  }
+
   func testColorWellTargetOpensSystemPicker() {
     openSettingsControls()
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch

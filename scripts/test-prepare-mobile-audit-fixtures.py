@@ -33,9 +33,10 @@ class FixtureRouteIsolationTests(unittest.TestCase):
     def test_retains_production_routes_and_installs_only_fixture_exports(self):
         self.assertEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
-        self.assertEqual({p.name for p in self.routes.iterdir()},
+        self.assertEqual({p.name for p in self.routes.iterdir()} - {"audit-customization-editor.tsx"},
                          {"audit-customization.tsx", "_layout.tsx", "index.tsx", "audit-add.tsx", "audit-add-push.tsx", "audit-add-header.tsx", "audit-inventory-query.tsx", "audit-inventory-switcher.tsx", "audit-home-return.tsx", "audit-home-header.tsx", "home-return-details.tsx", "audit-checkout-history.tsx", "audit-edit-recovery.tsx", "audit-edit-tags.tsx", "audit-move-here-recovery.tsx", "audit-command-height.tsx", "audit-footer-appearance.tsx", "audit-sharing.tsx", "audit-account.tsx", "audit-connection.tsx", "audit-provider-editor.tsx", "audit-notice.tsx", "audit-notice-sheet.tsx", "audit-region-recovery.tsx", "audit-contents-search.tsx", "audit-detail-commands.tsx", "audit-sheet-diagnostic.tsx", "audit-browse.tsx", "audit-expiration.tsx", "audit-expiration-medium.tsx"})
         self.assertIn("FixtureMenu as default", (self.routes / "index.tsx").read_text())
+        self.assertIn("CustomizationEditorFixture as default", (self.routes / "audit-customization-editor.tsx").read_text())
         self.assertNotEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
 

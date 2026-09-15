@@ -102,8 +102,13 @@ Native acceptance and M51 color behavior remain open. Field editors receive the
 shared controls but are not certified by this six-route review.
 
 [Run350298 follow-up](native-350298-followup.md) records both onboarding passes
-and iPad49/61 fixtures. Phone fixtures remain running; current editor changes are
+and iPad49/61, phone42/61 fixtures. Current editor changes are
 newer than this build. No screenshot acceptance is claimed from terminal logs.
+
+Production customization editor journeys now cover native Back (Keep Editing and
+Discard), Save, and Archive cancellation/completion in the isolated runner fixture.
+Fixture installation tests, TypeScript and structural checks pass on paul. Native
+execution is pending; these additions do not close editor acceptance findings.
 
 Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
 The [latest completed native follow-up](native-350129-followup.md) records full
