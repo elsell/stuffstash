@@ -789,3 +789,18 @@ alert/OK, two attempts, preserved viewer controls and closing to the retained
 photo count. Captures must be inspected after execution. This verifies modal
 presentation, not production deletion or authorization. Remote structural and
 two fixture-preparation checks pass; critic found no blockers. Native pending.
+
+### M84 — photo viewer chrome ignores Reduce Motion (P2)
+
+Pinned image-viewing0.2.2 uses200ms Animated.timing translations to ±300points
+for zoom-triggered chrome changes, without reading Reduce Motion. The wrapper's
+fade prop does not control this path. Source confirmed; repair and native preference
+testing pending. See photo-viewer-axis.md.
+
+### M85 — photo load failure has no viewer recovery (P1)
+
+Pinned image-viewing0.2.2 resolves failed dimensions to0×0 and has no image onError
+handler to leave loading or offer retry. Both platform image components retain
+loading until their success path. The wrapper exposes no load-error callback.
+Source confirmed; failed-media runtime reproduction and dependency repair pending.
+Close remains an escape, but does not explain or retry the failure.
