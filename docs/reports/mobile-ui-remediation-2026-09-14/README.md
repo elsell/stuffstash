@@ -40,8 +40,8 @@ The larger PR150 batch remains unreleased. Source `eaf61bcf` passes all **1,689
 mobile tests across270 files**, TypeScript and structural checks remotely on paul
 (`/tmp/mobile-batch-eaf61bcf.log`), with a clean source checksum comparison. This
 includes item-type failure/search recovery and the earlier interaction fixes.
-Native acceptance is incomplete: run350037 iPad fixtures passed45/57; iPhone
-fixtures were still running at this checkpoint. Both onboarding jobs passed.
+Native acceptance is incomplete: run350037 iPad fixtures passed45/57 and iPhone fixtures38/57.
+The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs passed.
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add

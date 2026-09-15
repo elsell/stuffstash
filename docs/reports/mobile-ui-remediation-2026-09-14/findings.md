@@ -2129,3 +2129,23 @@ M150 verification: all10 shared editor cases, TypeScript and structural checks
 passed remotely. Critic found no confirmed issue in the implementation or audit
 classification. The final Add case also asserts the name after cached refresh
 failure; all11 Add cases pass. Native acceptance remains open.
+
+
+M51 native target follow-up: iPad350037 at818c3f38 exposes the compact well as
+36×36 despite the44-point SwiftUI wrapper. Retained ipad-color-target-350037
+image/hierarchy confirms the named button at x684,y326.5,width36,height36.
+Center activation is exercised separately; the minimum-target assertion remains
+failed. The candidate now requests SwiftUI's large control size and a minimum
+44-point frame, allowing native sizing rather than scaling the drawing. Apple
+documents controlSize as the platform sizing mechanism, but does not establish
+that this ColorPicker will honor the requested minimum; runtime evidence is
+required. No assertion is removed or relaxed.
+
+Consumers remain Add staged-tag color, Edit staged-tag color and Settings tag
+customization through TagColorPicker/FullSpectrumTagColorPicker.15 color behavior
+tests, TypeScript and structural checks pass remotely. Native bounds, hit testing
+and system-picker behavior remain pending; M51 is not closed.
+
+M51 critic found no confirmed source blocker in the native large-size candidate.
+The existing target-size/activation gate remains open pending an actual native
+run containing this change.

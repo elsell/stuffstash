@@ -1848,3 +1848,25 @@ space; the authoritative Actions artifact remains available.
 Critic confirmed that the session-notice locator correction preserves the intended
 message, placement, reachability and retry checks. Swift compilation/execution
 remains pending; source checks do not establish a corrected native pass.
+
+
+## Native350037 — iPhone terminal and next full run
+
+Job104498364184 completed with38/57 fixture tests passing and19 failures at
+818c3f38791e3d1535588f8d2015b2682f39aa1a. Its checkout matches the iPad job.
+The terminal log is /tmp/native350037-phone-terminal.log; phone artifacts have
+not yet been downloaded/inspected for this run. Do not project the iPad locator
+diagnosis onto phone screenshots that have not been reviewed.
+
+Phone failures include Account/Connection notices; three Add entry/draft cases;
+color picker open and target size; controlled and ordinary single-line entry;
+Place contents; Sharing; seeded accessory comparison; full/nested sheet diagnostics;
+and enlarged-text asset-region, Edit metadata/tags, Expiration and Move Here.
+Some scenarios passed on iPad, so platform and timing differences remain material.
+No full native acceptance or TestFlight release follows from this run.
+
+A new full run35010077082 is active for PR headff7fbc74. It follows the completed
+run and includes the later operation ownership, item-type recovery, Home header
+scenario and corrected session-notice lookup. Its actual merged checkout must be
+verified from job evidence. It predates the new large-control-size color candidate.
+No live run was canceled or restarted for an observation timeout.

@@ -1225,3 +1225,10 @@ Native notice acceptance must query the exposed accessible notice container and
 validate its message, not require separate static-text children that may be grouped
 for assistive reading. Keep whole-notice bounds, command reachability and retry
 assertions; a locator correction must not remove the behavior being verified.
+
+The compact iOS tag color well must retain a44-point minimum actionable target.
+Use the platform's larger control size and minimum frame constraints rather than
+scaling its drawing or widening an inactive label. Keep native target-size and
+center-activation assertions; if the framework does not honor this sizing, record
+the failed runtime evidence and investigate the adapter rather than certifying
+the React wrapper's dimensions.

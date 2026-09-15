@@ -1,5 +1,5 @@
 import { ColorPicker, Host, HStack, Spacer, Text } from '@expo/ui/swift-ui';
-import { accessibilityLabel, fixedSize, frame, labelsHidden } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel, controlSize, fixedSize, frame, labelsHidden } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { nativeTagColorInteraction, nativeTagColorSelection } from './NativeTagColorPickerPresentation';
 
@@ -12,7 +12,7 @@ export function NativeTagColorPicker({ disabled, onChange, value }: { readonly d
         <Spacer />
         <ColorPicker label="Choose any color" selection={nativeTagColorSelection(value)} supportsOpacity={false}
           onSelectionChange={interaction.onSelectionChange}
-          modifiers={[labelsHidden(), frame({ width: 44, height: 44 }), accessibilityLabel('Choose any color')]} />
+          modifiers={[labelsHidden(), controlSize('large'), frame({ minWidth: 44, minHeight: 44 }), accessibilityLabel('Choose any color')]} />
       </HStack>
     </Host>
   </View>;
