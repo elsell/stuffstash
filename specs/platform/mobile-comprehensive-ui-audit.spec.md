@@ -330,3 +330,35 @@ color well using the captured native element bounds. The iPad run34919776387
 hierarchy exposes one 704-by-36-point button spanning label and well, while its
 screenshot shows the well at the trailing edge. Do not infer a successful picker
 from a tap or replace the failed row-activation result with the comparison's result.
+
+## Native choice-label text adaptation
+
+The shared iOS menu picker must preserve the full visible field label when
+Dynamic Type or a narrow available width requires wrapping. Keep the native
+LabeledContent/Picker interaction and allow the label's intrinsic vertical size
+to increase; do not shrink the text, truncate it, or hide the label to make room.
+This applies to every shared picker consumer, including filter Availability,
+settings, customization fields and reminder mode.
+
+Apple's Typography guidance recommends adapting layout for larger text, including
+stacking where needed: https://developer.apple.com/design/human-interface-guidelines/typography.
+Run34920888328's phone accessibility audit identifies Availability as potentially
+clipped at larger sizes. Preserve that failing native audit and add an explicit
+accessibility-size label/menu scenario; source tests cannot verify text layout.
+
+## Native choice events during locked editing
+
+The shared choice adapters must reject selection events while disabled, even
+if the native menu was already open when the parent locked editing. Native visual
+disabling is not a substitute for guarding the callback boundary. When editing
+resumes, valid selection events must be delivered normally. This preserves the
+parent's draft during pending saves; it does not change application authorization.
+
+## iPad onboarding drag diagnosis
+
+Run34923022927 reaches native iPad portrait UI, preserves the full address, and
+leaves Connect visible, but the left-margin downward drag does not dismiss the
+keyboard. Retain this scenario. Add an independent drag inside the centered form
+column to distinguish gesture-region behavior from a general dismissal failure.
+Record both outcomes and screenshots; a passing comparison does not erase the
+original failure or certify all onboarding keyboard behavior.

@@ -139,6 +139,29 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testNativeChoiceLabelAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    let open = app.buttons["Audit Expiration filters"]
+    XCTAssertTrue(open.waitForExistence(timeout: 30))
+    for _ in 0..<5 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let label = app.staticTexts["Availability"]
+    XCTAssertTrue(label.waitForExistence(timeout: 5))
+    for _ in 0..<5 where !label.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(label.isHittable)
+    XCTAssertGreaterThan(label.frame.height, 30, "The scenario must actually render enlarged text")
+    capture("choice-label-accessibility-size")
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
+    for _ in 0..<5 where !choice.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(choice.isHittable)
+    choice.tap()
+    XCTAssertTrue(app.buttons["Available"].waitForExistence(timeout: 5))
+    capture("choice-menu-accessibility-size")
+  }
+
   func testExpirationOverviewAccessibility() throws {
     app.buttons["Audit Expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))

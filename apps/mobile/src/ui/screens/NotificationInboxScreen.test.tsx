@@ -140,3 +140,44 @@ it('keeps empty and short inbox refresh surfaces as large as the viewport', asyn
   expect(harness.byLabel('Open Tylenol')).toBeDefined();
  }finally{await harness.unmount();}
 });
+
+it.each([false, true])('does not navigate for an old inbox open after blur (returned=%s)', async returned => {
+  const h = new MobileRenderHarness(); const opened: string[] = []; let changes = 0; let opens = 0; let finish!: (id: string) => void;
+  const queries = {
+    async list() { return { items: [alert], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
+    async open() { if (++opens > 1) return 'fresh-item'; return new Promise<string>(resolve => { finish = resolve; }); }, async setRead() {}, async markAllRead() {}
+  };
+  try {
+    await h.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={id => opened.push(id)} onChanged={() => changes++} onSettings={() => {}} />);
+    await h.settle();
+    await h.press(h.byLabel('Open Tylenol'));
+    await h.run(() => setScreenFocused(false));
+    if (returned) await h.run(() => setScreenFocused(true));
+    await h.run(() => finish('resolved-item'));
+    expect(opened).toEqual([]);
+    expect(changes).toBe(1);
+    expect(h.byLabel('Mark Tylenol unread')).toBeDefined();
+    if (returned) {
+      await h.press(h.byLabel('Open Tylenol'));
+      await h.settle();
+      expect(opened).toEqual(['fresh-item']);
+      expect(changes).toBe(2);
+    }
+  } finally { await h.unmount(); setScreenFocused(true); }
+});
+
+it('ignores an inbox open callback while another screen is focused', async () => {
+  const h = new MobileRenderHarness(); let reads = 0;
+  const queries = {
+    async list() { return { items: [alert], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
+    async open() { reads++; return 'item'; }, async setRead() {}, async markAllRead() {}
+  };
+  try {
+    await h.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => {}} onChanged={() => {}} onSettings={() => {}} />);
+    await h.settle();
+    const open = h.byLabel('Open Tylenol')?.props.onPress;
+    await h.run(() => setScreenFocused(false));
+    await h.run(() => open());
+    expect(reads).toBe(0);
+  } finally { await h.unmount(); setScreenFocused(true); }
+});

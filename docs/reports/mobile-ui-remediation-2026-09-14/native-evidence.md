@@ -415,3 +415,55 @@ portrait and acquiring a background assertion for landscape. These failures did
 not reach the UI assertions and provide no verdict on address preservation. Keep
 iPad verification pending and use the already queued newer candidate rather than
 restarting running fixture jobs. Full fixture results remain pending at this entry.
+
+## Run34920888328 — complete checkpoint
+
+Source890cf904, runner merge4b934a69: phone fixtures18/25 pass, iPad22/25 pass.
+The production address-submission fixture and keyboard Go submission pass on
+both devices. Production phone onboarding also passes; the separate production
+iPad launch failed before UI assertions. These results establish the named
+address-entry scenarios, not all onboarding states.
+
+Expiration sheet expansion passes on both devices with the direct-root candidate.
+Phone search keyboard reachability still fails: the retained screenshot shows
+Tags with Tools entered and the keyboard visible, with no bottom commit/cancel
+controls visible. The same scenario passes on iPad. The phone overview accessibility
+audit reports potential clipping at larger Dynamic Type; its element attachment
+identifies Availability. Default-size screenshots cannot establish large-text fit.
+iPad overview accessibility passes. Phone nested/footer diagnostic variants fail;
+direct/direct-footer/scroll-footer variants pass.
+
+Add readiness, History header and the old controlled-input comparison fail on both
+devices. This source predates the initial History header fix and Home return-sheet
+implementation. Color-row activation passes on both devices in this run; prior
+intermittent failure remains open. Logs are retained at
+`/tmp/native349208-fixtures-phone.log` and `/tmp/native349208-fixtures-ipad.log`.
+
+## Next interim release requested
+
+PR132 merged as308764060802bcfa5c9b34f99aa2c0b80c381c86 after required checks passed.
+[Release34923402256](https://github.com/elsell/stuffstash/actions/runs/34923402256)
+is running. It includes the onboarding address, Home return details, initial History
+header and field-editor command fixes. Upload, Apple processing and exact-build
+changelog are not yet verified. The audit continues on a separate branch.
+
+## Run34923022927 — production onboarding checkpoint
+
+PR132 source703682bb, runner merge6051bc06. Phone onboarding passes the full
+help/address/drag/draft-preservation scenario. iPad landscape passes; portrait
+preserves the complete address but fails the downward-drag dismissal assertion.
+This is an actual UI failure, unlike the previous iPad launch timeout.
+
+The inspected iPad final screenshot shows the complete address, visible Connect
+command, and keyboard still open. Hierarchy reports the scroll view at0,32 with
+size744×761; the form field begins atx96. The existing drag starts atx8, inside
+the scroll frame but outside the centered form column. This geometry is a
+hypothesis for diagnosis, not a proven cause. A separate iPad comparison reuses
+the entire original helper and changes only x to the field center; the original
+case is preserved. Native results must establish both outcomes. Two fixture
+installer checks pass; critic found no issue. Swift compile/runtime is pending.
+
+![iPad keyboard remains after the left-margin drag](evidence/onboarding-ipad-keyboard-34923022927.png)
+
+Release0.24.14 signed upload job104237609495 has now started. Delivery, Apple
+processing and exact-build changelog remain unverified.

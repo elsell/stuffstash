@@ -1,10 +1,11 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { usePullRefresh } from '../serverState/usePullRefresh';
-import { Stack } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import { Mail, MailOpen } from 'lucide-react-native';
 import { AssetBreadcrumbTrail } from '../components/AssetCard';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NotificationInboxQueries } from '../../application/notifications/NotificationInboxQueries';
 import { NotificationFailure } from '../../application/notifications/NotificationFailure';
@@ -29,6 +30,11 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const focusSession = useRef<object | undefined>(undefined);
+  useFocusEffect(useCallback(() => {
+    const session = {}; focusSession.current = session;
+    return () => { if (focusSession.current === session) focusSession.current = undefined; };
+  }, []));
   const pending = useRef(false);
   const mounted = useRef(true);
   const controller = useRef<AbortController | null>(null);
@@ -57,12 +63,15 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     if (!pending.current) await load(filter);
   });
   function open(row: ExpirationNotification) {
+    const session = focusSession.current;
+    if (!session) return;
     return run(async (signal) => {
       const assetId = await queries.open(tenantId, inventoryId, row.id, { signal });
       if (mounted.current && !signal.aborted) {
         setLocallyRead((previous) => new Set([...previous, row.id]));
         if (filter === 'unread') setRows((previous) => previous.filter((entry) => entry.id !== row.id));
-        onChanged(); onOpenAsset(assetId);
+        onChanged();
+        if (focusSession.current === session) onOpenAsset(assetId);
       }
     }, 'This notification could not be opened. Refresh and try again.');
   }
@@ -83,7 +92,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       await fetchPage(filter, signal);
     }, 'Could not update this notification. Try again.');
   }
-  const button = (label: string, action: () => void, disabled = busy) => <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={action} style={[styles.button, { borderColor: colors.controlBorder, opacity: disabled ? 0.5 : 1 }]}><Text style={{ color: colors.text }}>{label}</Text></Pressable>;
+  const button = (label: string, action: () => void, disabled = busy) => <NativeCommandButton label={label} disabled={disabled} onPress={action} />;
   const actionOptions = useNativeHeaderActionOptions([
       { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
       { kind: 'settings', label: 'Reminder settings', onPress: onSettings }
@@ -117,6 +126,5 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: spacing.lg, gap: spacing.md }, heading: { fontSize: 24, fontWeight: '700' }, title: { fontSize: 18, fontWeight: '600' },
   actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 44, gap: spacing.sm },
-  readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  button: { minHeight: 44, padding: spacing.sm, justifyContent: 'center' }
+  readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }
 });

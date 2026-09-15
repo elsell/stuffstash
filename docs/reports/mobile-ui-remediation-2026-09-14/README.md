@@ -34,3 +34,8 @@ were merged in PR129 for a second interim release, v0.24.12. Build **100.1** upl
 TestFlight changelog were verified at01:58:20UTC in
 [release34917914704](https://github.com/elsell/stuffstash/actions/runs/34917914704). Shared-header and Home
 return ownership/permission fixes continue separately in draft PR131.
+
+Latest delivered checkpoint: **0.24.13 (101.1)**, verified at02:44:35 UTC
+September15 in release34920497945. The next current-fixes release from PR132
+(source30876406) is running in release34923402256; delivery is pending.
+Audit remediation continues on `codex/mobile-audit-after-132`.

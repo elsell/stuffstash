@@ -1,0 +1,141 @@
+surface_id,surface,notification_responsibility,verification_owner
+R001,(tabs)/(home)/_layout.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R002,(tabs)/(home)/index.tsx,Home notification entry and unread state,R002
+R003,(tabs)/_layout.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R004,(tabs)/search/_layout.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R005,(tabs)/search/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R006,_layout.tsx,Root push navigation and service registration lifecycle,R006
+R007,add.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R008,assets/[assetId]/checkouts.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R009,assets/[assetId]/edit.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R010,assets/[assetId]/history/[activityId].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R011,assets/[assetId]/history/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R012,assets/[assetId]/index.tsx,Authorized push/inbox asset destination,R012
+R013,assets/[assetId]/move-here.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R014,assets/[assetId]/move.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R015,assets/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R016,browse-filters.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R017,expiration-filters.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R018,expiration.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R019,invitations/accept.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R020,locations/[locationId]/assets/[assetId]/index.tsx,Legacy asset destination routing,R020
+R021,locations/[locationId]/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R022,notifications.tsx,Inbox read state and item opening,R022
+R023,settings/about.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R024,settings/account.tsx,Account sign-out registration cleanup,R024
+R025,settings/appearance.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R026,settings/connection.tsx,Server-change registration cleanup,R026
+R027,settings/diagnostics.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R028,settings/household/asset-types/[resourceId].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R029,settings/household/asset-types/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R030,settings/household/asset-types/new.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R031,settings/household/fields/[resourceId].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R032,settings/household/fields/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R033,settings/household/fields/new.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R034,settings/household/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R035,settings/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R036,settings/inventory/asset-types/[resourceId].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R037,settings/inventory/asset-types/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R038,settings/inventory/asset-types/new.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R039,settings/inventory/fields/[resourceId].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R040,settings/inventory/fields/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R041,settings/inventory/fields/new.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R042,settings/inventory/index.tsx,Inventory settings entry to notifications,R042
+R043,settings/inventory/notification-editor.tsx,Reminder setting editor,R043
+R044,settings/inventory/notifications.tsx,Reminder overview and device enablement,R044
+R045,settings/inventory/tags/[resourceId].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R046,settings/inventory/tags/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R047,settings/inventory/tags/new.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R048,settings/sharing.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R049,settings/voice/[capability].tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R050,settings/voice/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R051,settings/voice/profiles/[providerProfileId]/credential.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R054,settings/voice/profiles/add.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R055,settings/voice/profiles/index.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R056,tenant-switcher.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R057,voice.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S058,onboarding / server entry,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S059,onboarding / browser sign-in return,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S060,onboarding / household setup,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S061,onboarding / first inventory,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S062,onboarding / partial setup recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S063,Home / expiration summary,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S064,Home / recent changes,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S065,Home / checked-out return,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S066,Home / native action header,Home native notification action and badge,S066
+S067,Browse / list grid,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S068,Browse / containment map columns,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S069,Browse / map search path,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S070,Browse / list search,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S071,Browse / filter overview,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S072,Browse / tag selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S073,Browse / expiration handoff,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S074,Expiration / soon expired all dates,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S075,Expiration / filter overview,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S076,Expiration / types selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S077,Expiration / tags selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S078,Expiration / locations selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S079,Expiration / date range,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S080,Inventory switcher / inventory list,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S081,Inventory switcher / household list,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S082,Inventory switcher / load failure,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S083,Inventory switcher / selection pending failure,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S084,Add / main draft,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S085,Add / kind choice,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S086,Add / parent search,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S087,Add / quick parent creation,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S088,Add / type choice,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S089,Add / tags select create,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S090,Add / photo selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S091,Add / custom fields,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S092,Add / expiration exact date,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S093,Add / expiration month year,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S094,Add / draft recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S095,Asset / overflow commands,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S096,Asset / checkout action,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S097,Asset / return action,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S098,Asset / archive restore delete,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S099,Asset / photo gallery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S100,Asset / full screen viewer,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S101,Asset / upload retry,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S102,Asset / contained items,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S103,Asset / history revert,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S104,Settings / appearance selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S105,Settings / field type choice,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S106,Settings / field applicability,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S107,Settings / enum options,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S108,Settings / tag color,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S109,Settings / inherited definition,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S110,Settings / dirty editor exit,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S111,Reminders / defaults,Inventory reminder defaults,S111
+S112,Reminders / type override,Type reminder override,S112
+S113,Reminders / preset timing,Preset reminder timing,S113
+S114,Reminders / custom timing,Custom reminder timing,S114
+S115,Reminders / timezone search,Reminder time zone,S115
+S116,Reminders / push permissions,Device notification permission and registration,S116
+S117,Voice / accessory,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S118,Voice / typed composer,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S119,Voice / recording,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S120,Voice / processing,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S121,Voice / response,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S122,Voice / plan approval edits,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S123,Voice / plan progress recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S124,Voice / provider readiness,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S125,Voice / credential editor,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S126,Voice / prompt editor,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S127,System / keyboard accessory,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S128,System / global notice,Shared notification failure feedback rendering,S128
+S129,System / confirmation alert,Shared notification unavailable dialog rendering,S129
+S130,System / push cold warm tap,Cold/warm push response handling,S130
+S131,System / invitation link,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S132,System / permission denied recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S133,Asset Edit / tag selection and creation,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S134,Asset Move / destination search and selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S135,Asset Move / destination creation,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S136,Asset Move here / asset search and selection,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S137,Home return / optional details,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S138,Home return / save pending and recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S139,Home return / cancellation and recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+R140,home-return-details.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
