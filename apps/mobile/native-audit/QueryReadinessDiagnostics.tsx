@@ -18,7 +18,7 @@ export function QueryReadinessDiagnostics({ client }: { readonly client: QueryCl
     }))
   }), [client]);
   const state = useSyncExternalStore(subscribe, snapshot, snapshot);
-  return <Text accessibilityLabel="Audit query readiness" accessibilityValue={{ text: state }}
+  return <Text testID="audit-query-readiness" accessibilityLabel={state} accessibilityValue={{ text: state }}
     pointerEvents="none" numberOfLines={1}
     style={{ position: 'absolute', left: 8, bottom: 4, width: 100, height: 16, fontSize: 10 }}>Audit query state</Text>;
 }

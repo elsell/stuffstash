@@ -40,9 +40,13 @@ final class FixtureAuditTests: XCTestCase {
     hierarchy.lifetime = .keepAlways
     add(hierarchy)
     // debugDescription truncates AX values; retain the safe fixture diagnostic verbatim.
-    let diagnostics = app.staticTexts.matching(NSPredicate(format: "label == %@", "Audit query readiness"))
+    let diagnostics = app.descendants(matching: .any).matching(identifier: "audit-query-readiness")
     for (index, element) in diagnostics.allElementsBoundByIndex.enumerated() {
-      guard let value = element.value as? String, value.hasPrefix("{") else { continue }
+      let value = [element.value as? String, element.label].compactMap { $0 }.first { candidate in
+        guard let data = candidate.data(using: .utf8) else { return false }
+        return (try? JSONSerialization.jsonObject(with: data)) is [String: Any]
+      }
+      guard let value else { continue }
       let readiness = XCTAttachment(string: value)
       readiness.name = "\(name)-query-readiness-\(index)"
       readiness.lifetime = .keepAlways

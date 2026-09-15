@@ -603,3 +603,25 @@ Route-isolation tests failed for the absent route then passed after installation
 both tests, TypeScript and structural checks pass on paul
 (`/tmp/add-presentation-green.log`); critic found no blocker. Native comparison
 outcome is pending. This changes the diagnostic suite, not production Add behavior.
+
+
+### Query snapshot capture follow-up after PR136
+
+The iPad Add failure in34927007321 saved a hierarchy with nested StaticText
+entries, an outer truncated JSON value and an inner entry without a value, but
+no separate query JSON attachment. The cold inventory probe did save its full
+snapshot. This leaves Add readiness unresolved.
+
+Runner-only diagnostics now use a stable accessibility identifier and expose
+the existing safe snapshot as a label fallback. XCTest finds the identifier
+without assuming an element type and selects a complete JSON object from the
+value or label. Visible label/geometry and all Add assertions remain unchanged.
+Fixture isolation (two checks), TypeScript and mobile structural checks pass
+on paul. Critic found no blocker; its truncated-value precedence concern is
+addressed by JSON parsing. Swift compilation and actual attachment capture
+remain pending on macOS. No production loading workaround is introduced.
+
+Release0.24.16 was published at04:55:50UTC from5775da93 in
+release34930161409. Signed iOS job104258185620 is running; TestFlight availability
+and exact-build changelog verification are still pending. The new capture and
+M66 badge work are excluded from that release.

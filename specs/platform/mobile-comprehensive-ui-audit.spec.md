@@ -321,6 +321,11 @@ Go submission scenarios.
 
 When XCTest's debug hierarchy truncates the query-readiness accessibility value,
 attach that diagnostic element's explicit value as a separate text attachment.
+Use a stable test identifier rather than relying on a particular native element
+type. When React Native exposes nested text elements without the outer value,
+retain the same safe snapshot in the diagnostic's accessibility label as a
+fallback. Choose a complete JSON object so a truncated value cannot hide a
+complete label. Keep the visible short label and geometry unchanged.
 Do not widen the UI or render raw query data to compensate. Keep the existing
 safe diagnostic schema, screen layout and failing acceptance assertions intact.
 
