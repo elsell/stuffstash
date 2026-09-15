@@ -3047,30 +3047,30 @@ S127,System / keyboard accessory,privacy,"Account scope, data use and permission
 S127,System / keyboard accessory,notifications,System notification entry and state,pending,,
 S127,System / keyboard accessory,media,"Camera, library, files and audio",pending,,
 S127,System / keyboard accessory,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S128,System / global notice,task,Task clarity and platform-pattern fit,pending,,
-S128,System / global notice,navigation,"Navigation, hierarchy and return",pending,,
-S128,System / global notice,selection,Value selection and current value,pending,,
-S128,System / global notice,modality,Presentation and dismissal,pending,,
-S128,System / global notice,layout,"Safe areas, scroll edges and overlays",pending,,
-S128,System / global notice,adaptation,Phone/tablet/window reflow,pending,,
-S128,System / global notice,typography,"Dynamic Type, wrapping and legibility",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
-S128,System / global notice,appearance,"Light/dark, contrast and materials",pending,,
-S128,System / global notice,localization,"Locale, timezone, RTL and long strings",pending,,
-S128,System / global notice,imagery,"Icons, photos and missing media",pending,,
-S128,System / global notice,targets,Touch target size and reachability,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
-S128,System / global notice,gestures,Gestures and explicit alternatives,pending,,
-S128,System / global notice,keyboard,"Keyboard, text entry and focus",pending,,
-S128,System / global notice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
-S128,System / global notice,motion,Reduced motion and feedback alternatives,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending",M06;M12;M62
-S128,System / global notice,content,"Lists, hierarchy, density and pagination",pending,,
-S128,System / global notice,search,"Search, scope and filters",pending,,
-S128,System / global notice,loading,"Loading, background refresh and progress",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
-S128,System / global notice,recovery,"Empty, error, denied and retry",runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Actionable feedback persists and Retry remains reachable; assistive technology and enlarged text pending. See native-evidence.md.,M06
-S128,System / global notice,editing,"Draft, save, cancel, undo and interruption",pending,,
-S128,System / global notice,privacy,"Account scope, data use and permissions",pending,,
-S128,System / global notice,notifications,System notification entry and state,pending,,
-S128,System / global notice,media,"Camera, library, files and audio",pending,,
-S128,System / global notice,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
+S128,System / global notice,task,Task clarity and platform-pattern fit,source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,navigation,"Navigation, hierarchy and return",finding,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,M103
+S128,System / global notice,selection,Value selection and current value,not-applicable,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,modality,Presentation and dismissal,source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,layout,"Safe areas, scroll edges and overlays",finding,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,M103
+S128,System / global notice,adaptation,Phone/tablet/window reflow,pending,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,typography,"Dynamic Type, wrapping and legibility",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.",M06;M12
+S128,System / global notice,appearance,"Light/dark, contrast and materials",source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,localization,"Locale, timezone, RTL and long strings",source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,imagery,"Icons, photos and missing media",source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,targets,Touch target size and reachability,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.",M06;M12
+S128,System / global notice,gestures,Gestures and explicit alternatives,source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,keyboard,"Keyboard, text entry and focus",pending,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.",M06;M12
+S128,System / global notice,motion,Reduced motion and feedback alternatives,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.",M06;M12;M62
+S128,System / global notice,content,"Lists, hierarchy, density and pagination",source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,search,"Search, scope and filters",not-applicable,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,loading,"Loading, background refresh and progress",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.",M06;M12
+S128,System / global notice,recovery,"Empty, error, denied and retry",runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Actionable feedback persists and Retry remains reachable; assistive technology and enlarged text pending. See native-evidence.md.; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,M06
+S128,System / global notice,editing,"Draft, save, cancel, undo and interruption",source-reviewed,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,privacy,"Account scope, data use and permissions",finding,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,M104
+S128,System / global notice,notifications,System notification entry and state,not-applicable,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,media,"Camera, library, files and audio",not-applicable,global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.,
+S128,System / global notice,lifecycle,"Cold/warm start, blur, background and deep link",finding,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; global-notice-axis.md: all-axis source review at ab1861d6; 38 production call sites inventoried; native scope limits retained.",M06;M12;M104
 S129,System / confirmation alert,task,Task clarity and platform-pattern fit,pending,,
 S129,System / confirmation alert,navigation,"Navigation, hierarchy and return",pending,,
 S129,System / confirmation alert,selection,Value selection and current value,pending,,

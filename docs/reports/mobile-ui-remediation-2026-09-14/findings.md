@@ -1251,3 +1251,24 @@ followed by mobile TypeScript and structural checks. Critic review found no
 remaining blocker after the one-shot confirmation regression was added. These
 checks include the current branch's Sharing, parent-command, Move context and
 native-command changes; they do not establish native runtime appearance.
+
+### M103 — Global notices reserve no space for native navigation
+
+P2, S128 navigation/layout, source-confirmed with historical user evidence in M99.
+AppNotice is a root absolute layer at safe-area top plus small spacing, with no
+active-header geometry. Sharing's local-feedback fix does not repair the other
+38 call sites. See [global notice review](global-notice-axis.md) and its complete
+call-site inventory. A correction must preserve cross-navigation View/Undo while
+keeping notice actions and native chrome reachable; a guessed header offset or
+blanket alert replacement is insufficient. Current-build native placement remains
+unverified. No implementation is claimed in this audit pass.
+
+### M104 — Global notice content/actions survive service transitions
+
+P1, S128 privacy/lifecycle, source-confirmed. AppFeedbackProvider wraps the inner
+services gate and retains ActiveNotice through sign-out, session expiry and server
+change. Those transitions do not clear the notice or invalidate its action closure.
+Old item/profile text and actions can remain on onboarding or a replacement session.
+This does not prove an API authorization bypass. Add controlled transition/action
+regressions before implementing a service-context ownership boundary; preserve
+same-session completion handoffs. See [global notice review](global-notice-axis.md).
