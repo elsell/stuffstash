@@ -1169,7 +1169,7 @@ Delivery is not native acceptance of the unresolved audit findings.
 ## iPhone run 34958958425 — early PR148
 
 The iPhone fixtures job 104347687569 completed with 31/46 scenarios passing and
-15 failing. Run-level iPad fixtures were still active when this was recorded.
+15 failing. The iPad job subsequently completed as recorded below.
 The checkout was `07cb72e05c5e1dc46eb9845f330cdc63d1f3ab56`, the merge of
 `5890b169` into `de5d87b0`. It includes early Edit tag disclosure and PR146 fixes;
 it excludes later PR148 draft preservation/title changes and all PR150 changes.
@@ -1252,3 +1252,24 @@ This includes Add/Edit tag draft preservation and discovery, overlong-name feedb
 and the Edit title scrolling repair. It excludes all PR150 invitation, parent,
 Move-context and native command sizing changes. Delivery is not whole-app native
 acceptance; the audit remains open and the next release accumulates a larger batch.
+
+
+## iPad run 34958958425 — terminal results
+
+Job 104347687961 completed with 35/46 fixture scenarios passing and 11 failing,
+using the same early-PR148 checkout `07cb72e05c5e1dc46eb9845f330cdc63d1f3ab56`
+as the phone above. Both onboarding jobs passed; the workflow is terminal.
+The job log was retrieved directly from GitHub. Its captures have not been
+inspected in this pass.
+
+Failures: Add draft in navigation stack; rejected Add save recovery; original
+checkout-history hit test; command comparison Back assertion; Edit metadata;
+Edit tag disclosure; Move Here recovery; ordinary single-line entry; place
+contents search; no-accessory address entry; uncontrolled address entry.
+The single-line field contained `Ndraft name` rather than `Native draft name`;
+uncontrolled address contained `h://example.invalid` rather than the full URL.
+These observations do not establish whether text loss is a product or automation
+defect. Inspect the capture and compare current-build input paths before changing
+production behavior. Normal-text failures take priority over enlarged-text-only
+ones. No current Sharing, Move context, or footer appearance fix is validated by
+this older run.
