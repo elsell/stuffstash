@@ -431,30 +431,30 @@ R018,expiration.tsx,privacy,"Account scope, data use and permissions",source-rev
 R018,expiration.tsx,notifications,System notification entry and state,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 R018,expiration.tsx,media,"Camera, library, files and audio",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 R018,expiration.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,; expiration-results-axis.md; source50d48f3c; native pending; M120 focus debounce correction; native pending,M120
-R019,invitations/accept.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Preview names inventory and access; explicit Join precedes Open; accepted state distinguishes access from opening.,
-R019,invitations/accept.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Open calls onAccepted only after acceptance. Failed open remains accepted with retry; onDismiss and account-switch callbacks explicit.; sharing-axis.md M72 route completion ownership; native pending,M72
-R019,invitations/accept.tsx,selection,Value selection and current value,pending,,
-R019,invitations/accept.tsx,modality,Presentation and dismissal,pending,,
-R019,invitations/accept.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R019,invitations/accept.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,"Centered maxWidth520 card, fontScale>=2 or width<340 uses compact spacing/top alignment; rotation/native text reflow pending.",
-R019,invitations/accept.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R019,invitations/accept.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R019,invitations/accept.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,"Expiration uses Intl locale date/time; copy remains English, RTL/translated strings unverified.",
-R019,invitations/accept.tsx,imagery,"Icons, photos and missing media",pending,,
-R019,invitations/accept.tsx,targets,Touch target size and reachability,source-reviewed,Primary and secondary actions minHeight54 with vertical padding; native hit testing pending.,
-R019,invitations/accept.tsx,gestures,Gestures and explicit alternatives,pending,,
-R019,invitations/accept.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R019,invitations/accept.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,M28 retains Join/Open names and busy/disabled state. Mounted progress/recovery test passes; native screen reader remains pending.,M28
-R019,invitations/accept.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R019,invitations/accept.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R019,invitations/accept.tsx,search,"Search, scope and filters",pending,,
-R019,invitations/accept.tsx,loading,"Loading, background refresh and progress",source-reviewed,Preview shows Checking invitation; joining/opening retain progress labels M28. No background-query pull indicator.,M28
-R019,invitations/accept.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Expired/cancelled/revoked/malformed/auth/mismatched-account states and opening failure have distinct branches; actual backend boundaries outside this source-only review.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
-R019,invitations/accept.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
-R019,invitations/accept.tsx,privacy,"Account scope, data use and permissions",pending,,
-R019,invitations/accept.tsx,notifications,System notification entry and state,pending,,
-R019,invitations/accept.tsx,media,"Camera, library, files and audio",pending,,
-R019,invitations/accept.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Request generation guards late preview/acceptance when invitation reference changes; existing behavior tests cover newer reference.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M72 route completion ownership; native pending,M70;M72
+R019,invitations/accept.tsx,task,Task clarity and platform-pattern fit,finding,Preview names inventory and access; explicit Join precedes Open; accepted state distinguishes access from opening.; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M133
+R019,invitations/accept.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Open calls onAccepted only after acceptance. Failed open remains accepted with retry; onDismiss and account-switch callbacks explicit.; sharing-axis.md M72 route completion ownership; native pending; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M72
+R019,invitations/accept.tsx,selection,Value selection and current value,source-reviewed,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,modality,Presentation and dismissal,source-reviewed,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,layout,"Safe areas, scroll edges and overlays",pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,"Centered maxWidth520 card, fontScale>=2 or width<340 uses compact spacing/top alignment; rotation/native text reflow pending.; invitation-acceptance-axis.md; source6f45c031; native acceptance pending",
+R019,invitations/accept.tsx,typography,"Dynamic Type, wrapping and legibility",pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,appearance,"Light/dark, contrast and materials",finding,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M133
+R019,invitations/accept.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,"Expiration uses Intl locale date/time; copy remains English, RTL/translated strings unverified.; invitation-acceptance-axis.md; source6f45c031; native acceptance pending",
+R019,invitations/accept.tsx,imagery,"Icons, photos and missing media",pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,targets,Touch target size and reachability,finding,Primary and secondary actions minHeight54 with vertical padding; native hit testing pending.; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M133
+R019,invitations/accept.tsx,gestures,Gestures and explicit alternatives,pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,keyboard,"Keyboard, text entry and focus",pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,M28 retains Join/Open names and busy/disabled state. Mounted progress/recovery test passes; native screen reader remains pending.; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M28
+R019,invitations/accept.tsx,motion,Reduced motion and feedback alternatives,pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,search,"Search, scope and filters",not-applicable,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,loading,"Loading, background refresh and progress",source-reviewed,Preview shows Checking invitation; joining/opening retain progress labels M28. No background-query pull indicator.; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M28
+R019,invitations/accept.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Expired/cancelled/revoked/malformed/auth/mismatched-account states and opening failure have distinct branches; actual backend boundaries outside this source-only review.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M70
+R019,invitations/accept.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M70
+R019,invitations/accept.tsx,privacy,"Account scope, data use and permissions",source-reviewed,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,notifications,System notification entry and state,pending,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,media,"Camera, library, files and audio",not-applicable,invitation-acceptance-axis.md; source6f45c031; native acceptance pending,
+R019,invitations/accept.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Request generation guards late preview/acceptance when invitation reference changes; existing behavior tests cover newer reference.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M72 route completion ownership; native pending; invitation-acceptance-axis.md; source6f45c031; native acceptance pending,M70;M72
 R020,locations/[locationId]/assets/[assetId]/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,selection,Value selection and current value,pending,,

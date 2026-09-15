@@ -1783,3 +1783,14 @@ their initial missing-label failure reflects adapter wiring, not proof of a prio
 runtime accessibility defect. All13 focused Browse tests, TypeScript and structural
 checks passed on paul. Critic found no confirmed regression. Native full-width
 geometry and actual retry/clear navigation remain acceptance work.
+
+## M133 — Invitation acceptance commands remain custom
+
+P2 platform consistency, source-confirmed at6f45c031, R019. InventoryInvitationScreen
+uses hand-styled Pressables for Join/Open, start-over, Not now, retry, account switch
+and Done. The existing native command adapter should supply these controls, while
+preserving pending labels, disabled states, explicit acceptance and recovery. The
+review route itself fits the task; no extra selection menu is recommended. See
+invitation-acceptance-axis.md for all24 axes and evidence limits. Implementation
+and normal-text native acceptance are pending. This is not a claim that source
+inspection established a particular rendering defect.
