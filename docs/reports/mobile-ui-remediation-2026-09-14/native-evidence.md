@@ -1568,3 +1568,17 @@ reported no differences before execution. Remote log: /tmp/mobile-batch-cd245a20
 This includes M118–M121 candidates, not their native acceptance. Run34985387290
 remained active on the earlier8f1ec146 source; onboarding succeeded on both devices
 and fixture jobs remained in progress. No new TestFlight release is claimed.
+
+### Shared-search coverage traceability
+
+M122 is mapped to the actual native-search surfaces: Browse list and map search,
+Browse tag selection, Expiration type/tag/location selections, contained items
+and reminder timezone search. M123 is mapped to Browse's route and list-search
+surface. Mapping does not mark those surfaces accepted: shared callback focus
+tests do not certify native text restoration, caller-owned asynchronous work or
+their entire navigation lifecycle. The broader audit remains incomplete.
+
+Native run34985387290 still reported both fixture jobs in progress at this
+checkpoint, with both onboarding jobs successful. The existing change-only
+sleep30 poller remains active; no replacement run was dispatched or live run
+cancelled for this review.

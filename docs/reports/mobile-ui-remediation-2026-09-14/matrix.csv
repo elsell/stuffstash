@@ -111,14 +111,14 @@ R005,(tabs)/search/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R005,(tabs)/search/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R005,(tabs)/search/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 R005,(tabs)/search/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R005,(tabs)/search/index.tsx,search,"Search, scope and filters",pending,,
+R005,(tabs)/search/index.tsx,search,"Search, scope and filters",finding,; findings.md M123; source f13ea7e1; focus callback/debounce tests; native return pending,M123
 R005,(tabs)/search/index.tsx,loading,"Loading, background refresh and progress",pending,,
 R005,(tabs)/search/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R005,(tabs)/search/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R005,(tabs)/search/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R005,(tabs)/search/index.tsx,notifications,System notification entry and state,pending,,
 R005,(tabs)/search/index.tsx,media,"Camera, library, files and audio",pending,,
-R005,(tabs)/search/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
+R005,(tabs)/search/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.; findings.md M123; source f13ea7e1; focus callback/debounce tests; native return pending,M46;M123
 R006,_layout.tsx,task,Task clarity and platform-pattern fit,pending,,
 R006,_layout.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R006,_layout.tsx,selection,Value selection and current value,pending,,
@@ -1643,7 +1643,7 @@ S069,Browse / map search path,localization,"Locale, timezone, RTL and long strin
 S069,Browse / map search path,imagery,"Icons, photos and missing media",pending,,
 S069,Browse / map search path,targets,Touch target size and reachability,pending,,
 S069,Browse / map search path,gestures,Gestures and explicit alternatives,pending,,
-S069,Browse / map search path,keyboard,"Keyboard, text entry and focus",pending,,
+S069,Browse / map search path,keyboard,"Keyboard, text entry and focus",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S069,Browse / map search path,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S069,Browse / map search path,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 S069,Browse / map search path,content,"Lists, hierarchy, density and pagination",pending,,
@@ -1654,7 +1654,7 @@ S069,Browse / map search path,editing,"Draft, save, cancel, undo and interruptio
 S069,Browse / map search path,privacy,"Account scope, data use and permissions",pending,,
 S069,Browse / map search path,notifications,System notification entry and state,pending,,
 S069,Browse / map search path,media,"Camera, library, files and audio",pending,,
-S069,Browse / map search path,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S069,Browse / map search path,lifecycle,"Cold/warm start, blur, background and deep link",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S070,Browse / list search,task,Task clarity and platform-pattern fit,pending,,
 S070,Browse / list search,navigation,"Navigation, hierarchy and return",pending,,
 S070,Browse / list search,selection,Value selection and current value,pending,,
@@ -1667,18 +1667,18 @@ S070,Browse / list search,localization,"Locale, timezone, RTL and long strings",
 S070,Browse / list search,imagery,"Icons, photos and missing media",pending,,
 S070,Browse / list search,targets,Touch target size and reachability,pending,,
 S070,Browse / list search,gestures,Gestures and explicit alternatives,pending,,
-S070,Browse / list search,keyboard,"Keyboard, text entry and focus",pending,,
+S070,Browse / list search,keyboard,"Keyboard, text entry and focus",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S070,Browse / list search,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S070,Browse / list search,motion,Reduced motion and feedback alternatives,pending,,
 S070,Browse / list search,content,"Lists, hierarchy, density and pagination",pending,,
-S070,Browse / list search,search,"Search, scope and filters",pending,,
+S070,Browse / list search,search,"Search, scope and filters",finding,; findings.md M123; source f13ea7e1; focus callback/debounce tests; native return pending,M123
 S070,Browse / list search,loading,"Loading, background refresh and progress",pending,,
 S070,Browse / list search,recovery,"Empty, error, denied and retry",pending,,
 S070,Browse / list search,editing,"Draft, save, cancel, undo and interruption",pending,,
 S070,Browse / list search,privacy,"Account scope, data use and permissions",pending,,
 S070,Browse / list search,notifications,System notification entry and state,pending,,
 S070,Browse / list search,media,"Camera, library, files and audio",pending,,
-S070,Browse / list search,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S070,Browse / list search,lifecycle,"Cold/warm start, blur, background and deep link",finding,"; findings.md M122,M123; source f13ea7e1; focus callback/debounce tests; native return pending",M122;M123
 S071,Browse / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S071,Browse / filter overview,navigation,"Navigation, hierarchy and return",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S071,Browse / filter overview,selection,Value selection and current value,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Browse Availability uses native menu and applies selected value. See native-evidence.md.,M01
@@ -1715,7 +1715,7 @@ S072,Browse / tag selection,localization,"Locale, timezone, RTL and long strings
 S072,Browse / tag selection,imagery,"Icons, photos and missing media",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S072,Browse / tag selection,targets,Touch target size and reachability,finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
 S072,Browse / tag selection,gestures,Gestures and explicit alternatives,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
-S072,Browse / tag selection,keyboard,"Keyboard, text entry and focus",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
+S072,Browse / tag selection,keyboard,"Keyboard, text entry and focus",finding,browse-filters-axis.md; e303e4f7 source; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S072,Browse / tag selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S072,Browse / tag selection,motion,Reduced motion and feedback alternatives,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S072,Browse / tag selection,content,"Lists, hierarchy, density and pagination",finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
@@ -1726,7 +1726,7 @@ S072,Browse / tag selection,editing,"Draft, save, cancel, undo and interruption"
 S072,Browse / tag selection,privacy,"Account scope, data use and permissions",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S072,Browse / tag selection,notifications,System notification entry and state,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S072,Browse / tag selection,media,"Camera, library, files and audio",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
-S072,Browse / tag selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
+S072,Browse / tag selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,browse-filters-axis.md; e303e4f7 source; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S073,Browse / expiration handoff,task,Task clarity and platform-pattern fit,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S073,Browse / expiration handoff,navigation,"Navigation, hierarchy and return",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S073,Browse / expiration handoff,selection,Value selection and current value,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
@@ -1811,7 +1811,7 @@ S076,Expiration / types selection,localization,"Locale, timezone, RTL and long s
 S076,Expiration / types selection,imagery,"Icons, photos and missing media",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S076,Expiration / types selection,targets,Touch target size and reachability,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S076,Expiration / types selection,gestures,Gestures and explicit alternatives,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-S076,Expiration / types selection,keyboard,"Keyboard, text entry and focus",finding,"M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.; expiration-filters-axis.md; source b15a38d5; native acceptance pending",M117
+S076,Expiration / types selection,keyboard,"Keyboard, text entry and focus",finding,"M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.; expiration-filters-axis.md; source b15a38d5; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending",M117;M122
 S076,Expiration / types selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S076,Expiration / types selection,motion,Reduced motion and feedback alternatives,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S076,Expiration / types selection,content,"Lists, hierarchy, density and pagination",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
@@ -1822,7 +1822,7 @@ S076,Expiration / types selection,editing,"Draft, save, cancel, undo and interru
 S076,Expiration / types selection,privacy,"Account scope, data use and permissions",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S076,Expiration / types selection,notifications,System notification entry and state,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S076,Expiration / types selection,media,"Camera, library, files and audio",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-S076,Expiration / types selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
+S076,Expiration / types selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-filters-axis.md; source b15a38d5; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S077,Expiration / tags selection,task,Task clarity and platform-pattern fit,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,selection,Value selection and current value,source-reviewed,ExpirationFiltersScreen tags branch uses independent checkbox checked states; select2/remove1/apply test. VoiceOver/TalkBack pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending,M10
@@ -1835,7 +1835,7 @@ S077,Expiration / tags selection,localization,"Locale, timezone, RTL and long st
 S077,Expiration / tags selection,imagery,"Icons, photos and missing media",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,targets,Touch target size and reachability,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,gestures,Gestures and explicit alternatives,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-S077,Expiration / tags selection,keyboard,"Keyboard, text entry and focus",finding,"M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.; expiration-filters-axis.md; source b15a38d5; native acceptance pending",M117
+S077,Expiration / tags selection,keyboard,"Keyboard, text entry and focus",finding,"M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.; expiration-filters-axis.md; source b15a38d5; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending",M117;M122
 S077,Expiration / tags selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,ExpirationFiltersScreen tags branch uses independent checkbox checked states; select2/remove1/apply test. VoiceOver/TalkBack pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending,M10
 S077,Expiration / tags selection,motion,Reduced motion and feedback alternatives,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,content,"Lists, hierarchy, density and pagination",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
@@ -1846,7 +1846,7 @@ S077,Expiration / tags selection,editing,"Draft, save, cancel, undo and interrup
 S077,Expiration / tags selection,privacy,"Account scope, data use and permissions",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,notifications,System notification entry and state,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S077,Expiration / tags selection,media,"Camera, library, files and audio",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-S077,Expiration / tags selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
+S077,Expiration / tags selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-filters-axis.md; source b15a38d5; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S078,Expiration / locations selection,task,Task clarity and platform-pattern fit,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,selection,Value selection and current value,source-reviewed,"Expiration choices use LocationsQuery pathLabel from authorized active-tree ancestry, with partial-path indication and stable IDs. Integration fixture covers duplicate names; runtime pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending",M09
@@ -1859,7 +1859,7 @@ S078,Expiration / locations selection,localization,"Locale, timezone, RTL and lo
 S078,Expiration / locations selection,imagery,"Icons, photos and missing media",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,targets,Touch target size and reachability,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,gestures,Gestures and explicit alternatives,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-S078,Expiration / locations selection,keyboard,"Keyboard, text entry and focus",finding,"M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.; expiration-filters-axis.md; source b15a38d5; native acceptance pending",M117
+S078,Expiration / locations selection,keyboard,"Keyboard, text entry and focus",finding,"M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.; expiration-filters-axis.md; source b15a38d5; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending",M117;M122
 S078,Expiration / locations selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,motion,Reduced motion and feedback alternatives,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,content,"Lists, hierarchy, density and pagination",source-reviewed,"Expiration choices use LocationsQuery pathLabel from authorized active-tree ancestry, with partial-path indication and stable IDs. Integration fixture covers duplicate names; runtime pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending",M09
@@ -1870,7 +1870,7 @@ S078,Expiration / locations selection,editing,"Draft, save, cancel, undo and int
 S078,Expiration / locations selection,privacy,"Account scope, data use and permissions",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,notifications,System notification entry and state,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S078,Expiration / locations selection,media,"Camera, library, files and audio",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-S078,Expiration / locations selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
+S078,Expiration / locations selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-filters-axis.md; source b15a38d5; native acceptance pending; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S079,Expiration / date range,task,Task clarity and platform-pattern fit,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S079,Expiration / date range,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 S079,Expiration / date range,selection,Value selection and current value,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
@@ -2435,7 +2435,7 @@ S102,Asset / contained items,localization,"Locale, timezone, RTL and long string
 S102,Asset / contained items,imagery,"Icons, photos and missing media",source-reviewed,contained-items-axis.md: imagery (source review; runtime acceptance pending),
 S102,Asset / contained items,targets,Touch target size and reachability,pending,contained-items-axis.md: targets (source review; runtime acceptance pending),
 S102,Asset / contained items,gestures,Gestures and explicit alternatives,pending,contained-items-axis.md: gestures (source review; runtime acceptance pending),
-S102,Asset / contained items,keyboard,"Keyboard, text entry and focus",pending,contained-items-axis.md: keyboard (source review; runtime acceptance pending),
+S102,Asset / contained items,keyboard,"Keyboard, text entry and focus",finding,contained-items-axis.md: keyboard (source review; runtime acceptance pending); findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S102,Asset / contained items,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,contained-items-axis.md: accessibility (source review; runtime acceptance pending),
 S102,Asset / contained items,motion,Reduced motion and feedback alternatives,pending,contained-items-axis.md: motion (source review; runtime acceptance pending),
 S102,Asset / contained items,content,"Lists, hierarchy, density and pagination",source-reviewed,contained-items-axis.md: content (source review; runtime acceptance pending),
@@ -2446,7 +2446,7 @@ S102,Asset / contained items,editing,"Draft, save, cancel, undo and interruption
 S102,Asset / contained items,privacy,"Account scope, data use and permissions",pending,contained-items-axis.md: privacy (source review; runtime acceptance pending),
 S102,Asset / contained items,notifications,System notification entry and state,pending,contained-items-axis.md: notifications (source review; runtime acceptance pending),
 S102,Asset / contained items,media,"Camera, library, files and audio",pending,contained-items-axis.md: media (source review; runtime acceptance pending),
-S102,Asset / contained items,lifecycle,"Cold/warm start, blur, background and deep link",pending,contained-items-axis.md: lifecycle (source review; runtime acceptance pending),
+S102,Asset / contained items,lifecycle,"Cold/warm start, blur, background and deep link",finding,contained-items-axis.md: lifecycle (source review; runtime acceptance pending); findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
 S103,Asset / history revert,task,Task clarity and platform-pattern fit,source-reviewed,"Read-only detail shows selected operation changes and optional technical disclosure. Revert is a compensating command with native explanatory confirmation, not a whole-asset restore. Source/spec reviewed; native rendering pending.",
 S103,Asset / history revert,navigation,"Navigation, hierarchy and return",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 S103,Asset / history revert,selection,Value selection and current value,pending,,
@@ -2747,7 +2747,7 @@ S115,Reminders / timezone search,localization,"Locale, timezone, RTL and long st
 S115,Reminders / timezone search,imagery,"Icons, photos and missing media",pending,,
 S115,Reminders / timezone search,targets,Touch target size and reachability,pending,,
 S115,Reminders / timezone search,gestures,Gestures and explicit alternatives,pending,,
-S115,Reminders / timezone search,keyboard,"Keyboard, text entry and focus",source-reviewed,Native search receives query/submit/cancel; parent ScrollView adjusts keyboard insets. Native keyboard/title/return verification pending.,M34
+S115,Reminders / timezone search,keyboard,"Keyboard, text entry and focus",finding,Native search receives query/submit/cancel; parent ScrollView adjusts keyboard insets. Native keyboard/title/return verification pending.; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M34;M122
 S115,Reminders / timezone search,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S115,Reminders / timezone search,motion,Reduced motion and feedback alternatives,pending,,
 S115,Reminders / timezone search,content,"Lists, hierarchy, density and pagination",pending,,
@@ -2758,7 +2758,7 @@ S115,Reminders / timezone search,editing,"Draft, save, cancel, undo and interrup
 S115,Reminders / timezone search,privacy,"Account scope, data use and permissions",source-reviewed,"notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",
 S115,Reminders / timezone search,notifications,System notification entry and state,pending,,
 S115,Reminders / timezone search,media,"Camera, library, files and audio",pending,,
-S115,Reminders / timezone search,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Mounted guard suppresses late local save updates; native navigation search cleanup must be checked on route exit.; M108: departed reminder feedback suppressed; pending lock preserved; mode/timing reconcile latest saved policy, including unchanged refresh. 73 remote focused tests plus TypeScript/structural pass; native acceptance pending. See notifications-axis.md.",M34;M108
+S115,Reminders / timezone search,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Mounted guard suppresses late local save updates; native navigation search cleanup must be checked on route exit.; M108: departed reminder feedback suppressed; pending lock preserved; mode/timing reconcile latest saved policy, including unchanged refresh. 73 remote focused tests plus TypeScript/structural pass; native acceptance pending. See notifications-axis.md.; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending",M34;M108;M122
 S116,Reminders / push permissions,task,Task clarity and platform-pattern fit,source-reviewed,"notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",
 S116,Reminders / push permissions,navigation,"Navigation, hierarchy and return",source-reviewed,"notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",
 S116,Reminders / push permissions,selection,Value selection and current value,source-reviewed,"notifications-axis.md September15 reminder review; task and owner source evidence, runtime remains partial",
