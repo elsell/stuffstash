@@ -1752,3 +1752,21 @@ before typing and cannot establish that removing the accessory fixes character
 loss. Place-search and sheet-notice failures predate the subsequent candidates.
 No broad native pass is claimed. Next queued run35003739726 was confirmed running;
 no manual restart or cancellation was used.
+
+
+### Accessory isolation crashes before typing, run349983 phone
+
+The crash attachment exported beside Sharing belongs by capture time to the
+preceding seeded-without-accessory comparison: test starts17:41:02, removes the
+accessory17:41:10, focuses the input17:41:12, and the crash is captured17:41:12.8338.
+Sharing begins later and has a separate incomplete-text failure.
+
+Retained sanitized stack: evidence/phone-accessory-removal-crash-349983.json.
+It shows SIGABRT through NSArray objectAtIndex and KeyboardExtender
+createSharedInputAccessoryView at KeyboardExtenderManager.mm:146. The pinned
+native source reads _contentView.subviews[0] there while handling input focus.
+This establishes a native crash in the comparison after accessory removal; it
+does not establish the cause of production character loss. The comparison needs
+a non-crashing isolation setup before its typing result is meaningful. Preserve
+production typing assertions and do not classify this as a keyboard wait timeout
+alone. No production code change or native acceptance is claimed from this review.
