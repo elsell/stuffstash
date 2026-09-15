@@ -626,3 +626,18 @@ existing phone/iPad keyboard and landscape tests remain the native acceptance ga
 Remote validation:4 mounted onboarding/invitation checks, TypeScript and mobile
 structural checks pass on paul (/tmp/onboarding-scroll-green.log). Required critic
 found no blocker. No local tests/builds were run; native acceptance remains pending.
+
+### M75 — departed onboarding screen sends reset navigation (P2)
+
+Source and mounted-test confirmed: a pending Sign out and start over completes
+its authorized reset after unmount, then calls onStartOver and onStateChange from
+the departed screen. This can replace the current destination. Connect/Create
+already checks the mounted generation; reset now uses the same ownership check.
+Teardown continues and the focused success path still returns to connection.
+
+The regression failed with both callbacks observed, then passed with sign-out
+completed and no callbacks. Five remote onboarding/invitation checks, TypeScript
+and structural checks pass (/tmp/onboarding-reset-green.log). Critic found no
+blockers. This proves unmount ownership, not native transition rendering or every
+in-place state replacement. Native acceptance and failure recovery remain tracked
+separately; no new authentication or teardown behavior is introduced.

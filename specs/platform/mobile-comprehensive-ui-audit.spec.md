@@ -418,3 +418,13 @@ do not add a competing tap catcher or manual gesture recognizer. Both existing
 native drag cases, phone keyboard reachability, and iPad landscape layout remain
 acceptance gates. The failing native drag is the regression baseline; source
 layout and unit checks alone cannot establish its resolution.
+
+### Onboarding start-over completion ownership
+
+A pending Sign out and start over command may finish its authorized teardown after
+its screen unmounts. Its former screen must not then clear local fields or invoke
+onStartOver/onStateChange callbacks that could replace the new destination. Use
+the same mounted-generation ownership as Connect/Create completion. While the
+initiating screen remains mounted, successful reset still returns to connection;
+failed reset preserves the current form and reports a retryable error. This is a
+UI completion guard, not cancellation of sign-out or profile cleanup.

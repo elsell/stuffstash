@@ -1416,7 +1416,7 @@ S059,onboarding / browser sign-in return,notifications,System notification entry
 S059,onboarding / browser sign-in return,media,"Camera, library, files and audio",pending,,
 S059,onboarding / browser sign-in return,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S060,onboarding / household setup,task,Task clarity and platform-pattern fit,pending,,
-S060,onboarding / household setup,navigation,"Navigation, hierarchy and return",pending,,
+S060,onboarding / household setup,navigation,"Navigation, hierarchy and return",source-reviewed,"M75; findings.md; reset unmount callbacks guarded, remote behavior verified; remaining navigation/native acceptance pending",M75
 S060,onboarding / household setup,selection,Value selection and current value,pending,,
 S060,onboarding / household setup,modality,Presentation and dismissal,pending,,
 S060,onboarding / household setup,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1440,7 +1440,7 @@ S060,onboarding / household setup,notifications,System notification entry and st
 S060,onboarding / household setup,media,"Camera, library, files and audio",pending,,
 S060,onboarding / household setup,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S061,onboarding / first inventory,task,Task clarity and platform-pattern fit,pending,,
-S061,onboarding / first inventory,navigation,"Navigation, hierarchy and return",pending,,
+S061,onboarding / first inventory,navigation,"Navigation, hierarchy and return",source-reviewed,"M75; findings.md; reset unmount callbacks guarded, remote behavior verified; remaining navigation/native acceptance pending",M75
 S061,onboarding / first inventory,selection,Value selection and current value,pending,,
 S061,onboarding / first inventory,modality,Presentation and dismissal,pending,,
 S061,onboarding / first inventory,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1464,7 +1464,7 @@ S061,onboarding / first inventory,notifications,System notification entry and st
 S061,onboarding / first inventory,media,"Camera, library, files and audio",pending,,
 S061,onboarding / first inventory,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S062,onboarding / partial setup recovery,task,Task clarity and platform-pattern fit,pending,,
-S062,onboarding / partial setup recovery,navigation,"Navigation, hierarchy and return",pending,,
+S062,onboarding / partial setup recovery,navigation,"Navigation, hierarchy and return",source-reviewed,"M75; findings.md; reset unmount callbacks guarded, remote behavior verified; remaining navigation/native acceptance pending",M75
 S062,onboarding / partial setup recovery,selection,Value selection and current value,pending,,
 S062,onboarding / partial setup recovery,modality,Presentation and dismissal,pending,,
 S062,onboarding / partial setup recovery,layout,"Safe areas, scroll edges and overlays",pending,,

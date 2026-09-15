@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { OnboardingCommand, type OnboardingStartState } from '../../application/onboarding/OnboardingCommand';
-import { onboardingFakes, onboardingServer } from '../../application/onboarding/OnboardingTestSupport';
+import { OnboardingAuthFake, onboardingFakes, onboardingServer } from '../../application/onboarding/OnboardingTestSupport';
 import { OnboardingScreen } from './OnboardingScreen';
 
 describe('onboarding screen', () => {
@@ -64,6 +64,30 @@ describe('onboarding screen', () => {
     expect(api.tenantWrites).toBe(1);
     expect(api.inventoryWrites).toBe(1);
     await harness.unmount();
+  });
+
+  it('does not navigate after a pending start-over finishes on an unmounted screen', async () => {
+    let finish!: () => void;
+    const gate = new Promise<void>(resolve => { finish = resolve; });
+    class DelayedSignOut extends OnboardingAuthFake {
+      override async signOut() { await gate; await super.signOut(); }
+    }
+    const f = onboardingFakes();
+    const auth = new DelayedSignOut();
+    auth.signedIn = true;
+    const command = new OnboardingCommand(f.profiles, () => f.api, auth);
+    const callbacks: string[] = [];
+    const harness = new MobileRenderHarness();
+    await harness.render(<OnboardingScreen command={command}
+      initialState={{ step: 'tenant' }} onStateChange={() => callbacks.push('state')}
+      onStartOver={() => callbacks.push('start-over')} onComplete={() => callbacks.push('complete')} />);
+    let pending!: Promise<void>;
+    await harness.run(() => { pending = harness.byLabel('Sign out and start over')!.props.onPress(); });
+    await harness.unmount();
+    finish();
+    await pending;
+    expect(auth.signOuts).toBe(1);
+    expect(callbacks).toEqual([]);
   });
 
 });

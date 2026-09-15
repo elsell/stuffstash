@@ -90,8 +90,10 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   }
 
   async function startOver() {
+    const current = generation.current;
     await submit(async () => {
       await command.reset();
+      if (current !== generation.current) return;
       setApiBaseUrl(''); setHouseholdName(''); setInventoryName(initialInventoryName);
       setHelpVisible(false);
       onStartOver?.();
