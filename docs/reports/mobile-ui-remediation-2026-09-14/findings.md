@@ -849,3 +849,14 @@ operation owner to these commands; tests cover late deletion navigation, failure
 feedback, stale confirmations and replacement-asset busy state. Authorization and
 domain command behavior are unchanged. Native focus/blur and interruption coverage
 remain pending. See asset-actions-axis.md.
+
+### M87 — asset sheet recovery bypasses native commands (P2)
+
+Edit and Move query retries used unstyled Pressables. Edit also rendered each
+metadata failure in an expanding error panel, with indistinguishable Try again
+labels. The candidate reuses NativeCommandButton for asset, placement, suggestions,
+types and tags. Supplementary errors are compact inline messages. A regression
+verifies independent type/tag retries retain a dirty name;12 asset-sheet behavior
+checks, TypeScript and structural checks pass remotely. The new isolated native
+Edit scenario checks simultaneous failures at largest text size, including Cancel.
+That scenario has not run; combined-height and native reachability remain open.

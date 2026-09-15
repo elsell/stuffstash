@@ -213,6 +213,38 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testEditMetadataRecoveryAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit Edit recovery"]
+    for _ in 0..<10 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let types = app.buttons["Retry asset types"]
+    let tags = app.buttons["Retry tags"]
+    XCTAssertTrue(types.waitForExistence(timeout: 10))
+    XCTAssertTrue(tags.waitForExistence(timeout: 10))
+    XCTAssertTrue(types.isHittable)
+    XCTAssertTrue(tags.isHittable)
+    let message = app.staticTexts["Asset types could not be loaded."].firstMatch
+    XCTAssertGreaterThan(message.frame.height, 30)
+    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    capture("edit-metadata-errors-accessibility-size")
+    tags.tap()
+    XCTAssertTrue(tags.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(types.isHittable)
+    types.tap()
+    XCTAssertTrue(types.waitForNonExistence(timeout: 5))
+    let name = app.textFields["Asset name"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Audit tent")
+    XCTAssertTrue(name.isHittable)
+    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    capture("edit-metadata-recovered")
+  }
+
   func testNativeChoiceLabelAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

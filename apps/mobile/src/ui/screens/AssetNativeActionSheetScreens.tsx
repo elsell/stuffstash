@@ -1,10 +1,10 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
 import { Fragment, ReactNode, useEffect, useRef, useState } from 'react';
 import { router, Stack, useNavigation } from 'expo-router';
 import {
   ActivityIndicator,
-  Pressable,
   Alert,
   StyleSheet,
   Text,
@@ -68,7 +68,7 @@ function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }:
   const asset = placement.data && assetPlacementQuery ? { ...core.data.view, parentLocationTrail: placement.data.parentLocationTrail, parentLocationTrailLabel: placement.data.parentLocationTrailLabel, locationTrailLabel: placement.data.locationTrailLabel, isPlacementLoading: false } : core.data.view;
   return <Fragment key={`${asset.tenantId}:${asset.inventoryId}:${asset.id}`}>
     {assetPlacementQuery && !placement.data ? <Text accessibilityLiveRegion="polite">{placement.isError ? 'Current placement could not be loaded.' : 'Loading current placement…'}</Text> : null}
-    {assetPlacementQuery && placement.isError ? <Pressable accessibilityRole="button" onPress={() => void placement.refetch()}><Text>Retry placement</Text></Pressable> : null}
+    {assetPlacementQuery && placement.isError ? <NativeCommandButton label="Retry placement" onPress={() => void placement.refetch()} /> : null}
     {children(asset)}
   </Fragment>;
 }
@@ -155,8 +155,8 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
 
   return (
     <NativeSheetFrame title="Edit asset" busy={isSaving} dismissible={false}>
-      {types.isError ? <ErrorState message="Asset types could not be loaded." onRetry={() => void types.refetch()} /> : null}
-      {tags.isError ? <ErrorState message="Tags could not be loaded." onRetry={() => void tags.refetch()} /> : null}
+      {types.isError ? <InlineQueryError message="Asset types could not be loaded." retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
+      {tags.isError ? <InlineQueryError message="Tags could not be loaded." retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
       {(
         <EditAssetSheet
           asset={asset}
@@ -351,13 +351,23 @@ function ErrorState({ message, onRetry }: { readonly message: string; readonly o
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
       <Text style={styles.stateText}>{message}</Text>
-      {onRetry ? <Pressable accessibilityRole="button" onPress={onRetry}><Text style={styles.stateText}>Try again</Text></Pressable> : null}
+      {onRetry ? <NativeCommandButton label="Retry asset" onPress={onRetry} /> : null}
     </View>
   );
 }
 
+function InlineQueryError({ message, retryLabel, onRetry }: {
+  readonly message: string; readonly retryLabel: string; readonly onRetry: () => void;
+}) {
+  const styles = useStyles();
+  return <View style={styles.inlineError}>
+    <Text accessibilityRole="alert" style={styles.inlineErrorText}>{message}</Text>
+    <NativeCommandButton label={retryLabel} onPress={onRetry} />
+  </View>;
+}
+
 function CandidateStatus({ candidates }: { candidates: ReturnType<typeof useParentCandidates> }) {
-  if (candidates.isError) return <View><Text accessibilityRole="alert">Suggestions could not be loaded.</Text><Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text>Retry suggestions</Text></Pressable></View>;
+  if (candidates.isError) return <InlineQueryError message="Suggestions could not be loaded." retryLabel="Retry suggestions" onRetry={() => void candidates.refetch()} />;
   if (!candidates.data) return <Text accessibilityLiveRegion="polite">Loading suggestions…</Text>;
   return null;
 }
@@ -379,6 +389,8 @@ function useStyles() {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+  inlineError: { paddingHorizontal: spacing.md, gap: spacing.xs },
+  inlineErrorText: { color: colors.text, fontSize: 16 },
   frame: {
     backgroundColor: colors.surface,
     flex: 1

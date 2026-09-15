@@ -201,7 +201,7 @@ R009,assets/[assetId]/edit.tsx,typography,"Dynamic Type, wrapping and legibility
 R009,assets/[assetId]/edit.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R009,assets/[assetId]/edit.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R009,assets/[assetId]/edit.tsx,imagery,"Icons, photos and missing media",pending,,
-R009,assets/[assetId]/edit.tsx,targets,Touch target size and reachability,pending,,
+R009,assets/[assetId]/edit.tsx,targets,Touch target size and reachability,finding,; M87 native query retry candidate; runtime pending,M87
 R009,assets/[assetId]/edit.tsx,gestures,Gestures and explicit alternatives,pending,,
 R009,assets/[assetId]/edit.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R009,assets/[assetId]/edit.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
@@ -209,7 +209,7 @@ R009,assets/[assetId]/edit.tsx,motion,Reduced motion and feedback alternatives,p
 R009,assets/[assetId]/edit.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R009,assets/[assetId]/edit.tsx,search,"Search, scope and filters",pending,,
 R009,assets/[assetId]/edit.tsx,loading,"Loading, background refresh and progress",pending,,
-R009,assets/[assetId]/edit.tsx,recovery,"Empty, error, denied and retry",pending,,
+R009,assets/[assetId]/edit.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
 R009,assets/[assetId]/edit.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R009,assets/[assetId]/edit.tsx,privacy,"Account scope, data use and permissions",pending,,
 R009,assets/[assetId]/edit.tsx,notifications,System notification entry and state,pending,,
@@ -297,7 +297,7 @@ R013,assets/[assetId]/move-here.tsx,typography,"Dynamic Type, wrapping and legib
 R013,assets/[assetId]/move-here.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R013,assets/[assetId]/move-here.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R013,assets/[assetId]/move-here.tsx,imagery,"Icons, photos and missing media",pending,,
-R013,assets/[assetId]/move-here.tsx,targets,Touch target size and reachability,pending,,
+R013,assets/[assetId]/move-here.tsx,targets,Touch target size and reachability,finding,; M87 native query retry candidate; runtime pending,M87
 R013,assets/[assetId]/move-here.tsx,gestures,Gestures and explicit alternatives,pending,,
 R013,assets/[assetId]/move-here.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R013,assets/[assetId]/move-here.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
@@ -305,7 +305,7 @@ R013,assets/[assetId]/move-here.tsx,motion,Reduced motion and feedback alternati
 R013,assets/[assetId]/move-here.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R013,assets/[assetId]/move-here.tsx,search,"Search, scope and filters",pending,,
 R013,assets/[assetId]/move-here.tsx,loading,"Loading, background refresh and progress",pending,,
-R013,assets/[assetId]/move-here.tsx,recovery,"Empty, error, denied and retry",pending,,
+R013,assets/[assetId]/move-here.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
 R013,assets/[assetId]/move-here.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R013,assets/[assetId]/move-here.tsx,privacy,"Account scope, data use and permissions",pending,,
 R013,assets/[assetId]/move-here.tsx,notifications,System notification entry and state,pending,,
@@ -321,7 +321,7 @@ R014,assets/[assetId]/move.tsx,typography,"Dynamic Type, wrapping and legibility
 R014,assets/[assetId]/move.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R014,assets/[assetId]/move.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R014,assets/[assetId]/move.tsx,imagery,"Icons, photos and missing media",pending,,
-R014,assets/[assetId]/move.tsx,targets,Touch target size and reachability,pending,,
+R014,assets/[assetId]/move.tsx,targets,Touch target size and reachability,finding,; M87 native query retry candidate; runtime pending,M87
 R014,assets/[assetId]/move.tsx,gestures,Gestures and explicit alternatives,pending,,
 R014,assets/[assetId]/move.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R014,assets/[assetId]/move.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
@@ -329,7 +329,7 @@ R014,assets/[assetId]/move.tsx,motion,Reduced motion and feedback alternatives,p
 R014,assets/[assetId]/move.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R014,assets/[assetId]/move.tsx,search,"Search, scope and filters",pending,,
 R014,assets/[assetId]/move.tsx,loading,"Loading, background refresh and progress",pending,,
-R014,assets/[assetId]/move.tsx,recovery,"Empty, error, denied and retry",pending,,
+R014,assets/[assetId]/move.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
 R014,assets/[assetId]/move.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 R014,assets/[assetId]/move.tsx,privacy,"Account scope, data use and permissions",pending,,
 R014,assets/[assetId]/move.tsx,notifications,System notification entry and state,pending,,

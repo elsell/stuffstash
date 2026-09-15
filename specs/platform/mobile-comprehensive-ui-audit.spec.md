@@ -654,3 +654,19 @@ not start work. After unmounting or replacing the asset screen, completed comman
 may finish in the domain, but must not navigate, show screen-owned feedback,
 refresh the replacement screen or clear its busy state. Keep explicit deletion
 confirmation, domain authorization, and command/audit behavior unchanged.
+
+### Native recovery in asset action sheets
+
+Edit, Move and Move here query failures use the existing native command adapter.
+Name the failed resource in Retry labels so simultaneous type/tag failures remain
+distinguishable. Metadata failures are compact inline messages alongside the
+retained form, not additional expanding full-screen error panels. Keep the blocking
+asset-load error separate from supplementary metadata recovery. Manual retry must
+not reset dirty fields, selected destinations or staged tags. Preserve queries,
+permissions and command behavior; native reachability still requires verification.
+
+A runner-only Edit fixture starts with both metadata queries failed and succeeds
+on each explicit retry. At the largest accessibility text size, verify both native
+retry commands and Cancel are reachable, then verify the original asset name after
+recovery. Local behavior tests separately exercise a dirty draft. The fixture must
+remain isolated from production routes and cannot perform a real save.
