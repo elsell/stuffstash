@@ -422,3 +422,10 @@ and fully visible, not merely present in the accessibility tree behind the
 keyboard. Dismiss the keyboard through the provided control, reveal the matching
 row in the detail scroll, and check its bounds before capture. Retain exact query,
 nonmatch exclusion, clear, cancel and navigation return checks.
+
+Add quick parent creation requires a settled, available candidate result, including
+a known empty result. Debouncing, initial loading or failed lookup without cached
+results must not be treated as no duplicate. Retain the query and allow lookup
+retry. Apply the same availability/known-match guard to the creation command and
+its visible offer. Cached results may retain the existing name-based duplicate
+heuristic; this does not assert global uniqueness.

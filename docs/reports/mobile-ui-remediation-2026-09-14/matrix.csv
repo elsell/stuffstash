@@ -2056,8 +2056,8 @@ S086,Add / parent search,accessibility,"VoiceOver/TalkBack names, roles, states 
 S086,Add / parent search,motion,Reduced motion and feedback alternatives,pending,,
 S086,Add / parent search,content,"Lists, hierarchy, density and pagination",pending,,
 S086,Add / parent search,search,"Search, scope and filters",pending,,
-S086,Add / parent search,loading,"Loading, background refresh and progress",pending,,
-S086,Add / parent search,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S086,Add / parent search,loading,"Loading, background refresh and progress",finding," M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M92
+S086,Add / parent search,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending. M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M21;M92
 S086,Add / parent search,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S086,Add / parent search,privacy,"Account scope, data use and permissions",pending,,
 S086,Add / parent search,notifications,System notification entry and state,pending,,
@@ -2080,8 +2080,8 @@ S087,Add / quick parent creation,accessibility,"VoiceOver/TalkBack names, roles,
 S087,Add / quick parent creation,motion,Reduced motion and feedback alternatives,pending,,
 S087,Add / quick parent creation,content,"Lists, hierarchy, density and pagination",pending,,
 S087,Add / quick parent creation,search,"Search, scope and filters",pending,,
-S087,Add / quick parent creation,loading,"Loading, background refresh and progress",pending,,
-S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
+S087,Add / quick parent creation,loading,"Loading, background refresh and progress",finding," M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M92
+S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md) M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M21;M82;M92
 S087,Add / quick parent creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S087,Add / quick parent creation,privacy,"Account scope, data use and permissions",pending,,
 S087,Add / quick parent creation,notifications,System notification entry and state,pending,,

@@ -179,6 +179,9 @@ function ScopedAddAssetScreen({
   const parentMatches = createdParent && createdParent.title === parentQuery
     ? [createdParent, ...(candidates.data ?? []).filter((parent) => parent.id !== createdParent.id)]
     : candidates.data ?? [];
+  const normalizedParentQuery = normalizeParentName(parentQuery);
+  const canCreateParent = candidates.data !== undefined && normalizedParentQuery.length > 0
+    && ![createdParent, ...parentMatches].filter(isParentSelection).some(parent => normalizeParentName(parent.title) === normalizedParentQuery);
 
   useEffect(() => {
     if (!addContext.data) {
@@ -373,7 +376,7 @@ function ScopedAddAssetScreen({
 
   async function createParent(): Promise<void> {
     const parentName = parentQuery.trim();
-    if (loadState.status !== 'ready' || parentName.length === 0) {
+    if (loadState.status !== 'ready' || !canCreateParent) {
       return;
     }
 
@@ -604,6 +607,7 @@ function ScopedAddAssetScreen({
                 {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
                 {isParentMenuOpen && candidates.isError ? <Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text style={styles.fieldLabel}>Retry suggestions</Text></Pressable> : null}
                 <ParentPicker disabled={draftBusy}
+                  canCreateParent={canCreateParent}
                   isCreatingParent={isCreatingParent}
                   createdParent={createdParent}
                   matches={parentMatches}
@@ -959,6 +963,7 @@ function PhotoPreviewModal({
 }
 
 function ParentPicker({
+  canCreateParent,
   disabled,
   createdParent,
   isCreatingParent,
@@ -973,6 +978,7 @@ function ParentPicker({
   parentAssetId,
   query
 }: {
+  readonly canCreateParent: boolean;
   readonly disabled: boolean;
   readonly createdParent: ParentSelection | undefined;
   readonly isCreatingParent: boolean;
@@ -989,11 +995,6 @@ function ParentPicker({
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
-  const normalizedQuery = normalizeParentName(query);
-  const exactParent = [createdParent, ...matches].filter(isParentSelection).find(
-    (parent) => normalizeParentName(parent.title) === normalizedQuery
-  );
-  const canCreateParent = normalizedQuery.length > 0 && !exactParent;
   const selectedParent = resolveSelectedParent(matches, parentAssetId, query, lastParent);
   const createdParentId = createdParent?.id;
 

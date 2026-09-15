@@ -997,6 +997,17 @@ tests, TypeScript and structural checks passed remotely. Critic review requires
 full query visibility before native typing, now reflected in the journey. Native
 footer/keyboard reachability remains pending; no visual closure is claimed.
 
+Add follow-up: S086/S087 had the same unknown-result creation offer. Add now
+shares one eligibility decision between the offer and command, requiring known
+current-query suggestions while retaining the existing name-match heuristic.
+The regression covers debounce, failed lookup, retry, known empty results and
+retained query; 10 Add tests, TypeScript and structural checks passed on paul.
+The render harness needs a second settle after debounce to observe the query
+subscription; the corrected test fails against the original creation offer.
+Critic review found no confirmed issue. Native suggestion controls, keyboard
+behavior and creation recovery remain pending. This follow-up is excluded from
+the interim release of PR148.
+
 ### M93 — Edit tag-name rejection has no explanation
 
 Source-confirmed P2, S133 recovery. Names over the resolver's limit disabled

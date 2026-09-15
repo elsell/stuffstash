@@ -143,6 +143,8 @@ for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure']
       if (operation === 'parent') {
         await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
         await h.changeText(h.byLabel('Search parent'), 'New parent');
+        await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
+        await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
         const create = h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')?.parent;
         expect(create).toBeDefined();
         await h.run(() => { void create!.props.onPress(); });
@@ -273,5 +275,31 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await h.press(h.byLabel('Save item')); await settle();
     expect(saved).toEqual([expect.objectContaining({ title: 'Tent', newTags: [{ displayName: 'Camping' }] })]);
     expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
+  } finally { await h.unmount(); }
+});
+
+
+it('waits for known parent suggestions before offering quick creation in Add', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let attempts = 0;
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
+      createAssetCommand={{ execute: async () => { throw new Error('Creation not requested'); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async input => { if (input === 'New parent' && ++attempts === 1) throw new Error('Lookup unavailable'); return []; } })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
+    await h.changeText(h.byLabel('Search parent'), 'New parent');
+    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(h.byText('Suggestions could not be loaded.')).toBeDefined();
+    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    await h.press(h.byText('Retry suggestions')?.parent ?? undefined);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeDefined();
+    expect(h.byLabel('Search parent')?.props.value).toBe('New parent');
   } finally { await h.unmount(); }
 });
