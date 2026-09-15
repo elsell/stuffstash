@@ -371,18 +371,38 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(photos.waitForExistence(timeout: 10))
     XCTAssertFalse(app.staticTexts["Nothing here yet"].exists)
     XCTAssertFalse(app.staticTexts["No photos"].exists)
-    XCTAssertTrue(photos.isHittable)
-    capture("asset-region-errors-accessibility-size")
+    let scroll = app.scrollViews.firstMatch
+    XCTAssertTrue(scroll.exists)
+    func reveal(_ element: XCUIElement) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+        return (element.elementType != .button || element.isHittable) && element.frame.minY >= top && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<12 where !visible() {
+        let top = max(scroll.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+        let above = element.frame.minY < top
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+    }
+    reveal(photos)
+    capture("asset-region-photo-error-accessibility-size")
     photos.tap()
     XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["No photos"].firstMatch.waitForExistence(timeout: 5))
-    for _ in 0..<8 where !contents.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(contents.isHittable)
+    reveal(app.staticTexts["No photos"].firstMatch)
+    capture("asset-region-photo-recovered-accessibility-size")
+    reveal(contents)
+    capture("asset-region-contents-error-accessibility-size")
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
     XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
     let empty = app.staticTexts["Nothing here yet"].firstMatch
     XCTAssertTrue(empty.waitForExistence(timeout: 5))
+    reveal(empty)
     capture("asset-region-recovered-accessibility-size")
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)

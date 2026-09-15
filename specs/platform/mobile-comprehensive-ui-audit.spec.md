@@ -798,3 +798,9 @@ error without an empty-match claim, retry to the actual candidate, retain the
 query and dismiss through Cancel. No move is performed. Require scrolling rather
 than assuming every result fits; failure to reach controls remains an audit
 finding, not a reason to reduce the text size.
+
+Region-recovery native captures must reveal each retry and its settled empty
+state completely inside the visible detail scroll region, below navigation.
+Existence or a partly hittable control does not establish readable layout. Capture
+photo and contents recovery separately; preserve positive settled-state waits and
+independent-query assertions. Screenshot evidence must not certify offscreen text.

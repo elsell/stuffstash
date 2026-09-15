@@ -1057,3 +1057,15 @@ reachability, expiration accessibility, footer/nested-sheet checks and the
 no-accessory keyboard-readiness comparison. Both onboarding jobs passed; iPad
 fixtures remain running. No overall native acceptance is claimed, and this build
 precedes PR144 search/commands and PR146 changes.
+
+Inspected phone349521 E004366D and AA91AFCA captures. Photo failure text and
+Retry photos are readable. Retry contents is partly below the error capture;
+Nothing here yet is offscreen in the recovered capture. The interaction pass
+therefore does not establish complete visual acceptance. Native capture logic
+now reveals each retry and settled empty state within the scroll viewport below
+navigation, and captures them separately. Button reachability is checked; static
+text is evaluated by geometry rather than requiring an interaction hit target.
+Keep M89 open pending these captures and iPad evidence.
+
+The inspected images are retained as phone-region-error-partial-349521.png and
+phone-region-recovered-offscreen-349521.png in evidence/.
