@@ -1655,3 +1655,14 @@ receives the replacement query, never the abandoned draft, and no deferred
 setParams overwrites the replacement on return. All10 mounted Browse cases,
 TypeScript and structural checks pass remotely; critic found no confirmed issue.
 This is controlled route-prop evidence, not native navigation acceptance.
+
+## M124 — Map search updates its path after navigation away
+
+P2, source and mounted-test confirmed. The map search debounce survived blur and
+selected a path while the route was hidden. Focus cleanup now cancels the timer;
+unfinished searches resume on return, while deliberate branch-navigation
+cancellation stays cancelled. Hidden manual submission is ignored. The regression
+failed before correction; all13 focused Map/Browse cases, TypeScript and mobile
+structural checks pass on paul. Code critic found no confirmed blocker. Native
+focus delivery, returned search text and map scroll/highlight behavior remain
+pending acceptance.

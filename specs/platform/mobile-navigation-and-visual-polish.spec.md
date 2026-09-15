@@ -590,3 +590,8 @@ the field and resumes after refocus, using current criteria and route callbacks.
 No hidden debounce may synchronize route parameters or start a new search.
 External route replacements still supersede pending text; immediate List/Map
 switches and explicit filter handoff retain their existing query semantics.
+
+Map path search pauses its debounce when the route loses focus and rejects hidden
+submissions. Resume an unfinished query when focus/data are ready. Preserve the
+existing deliberate-navigation cancellation: returning must not reopen a search
+path that the user already superseded by navigating the map.

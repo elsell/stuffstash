@@ -1,3 +1,4 @@
+import { setScreenFocused } from '../../test-support/navigation';
 import React from 'react';
 import { expect,it,vi } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -21,4 +22,18 @@ it('retains keyboard submission until the map is ready',async()=>{
   await h.render(<Surface ready={false}/>);await h.run(()=>controls.submit('tent'));expect(found).toEqual([]);
   await h.render(<Surface ready/>);await h.run(()=>vi.advanceTimersByTime(300));expect(found).toEqual(['tent']);
  }finally{await h.unmount();vi.useRealTimers();}
+});
+
+it('pauses map path search while hidden and preserves deliberate cancellation on return',async()=>{
+ vi.useFakeTimers();setScreenFocused(true);const h=new MobileRenderHarness();const found:string[]=[];let controls!:ReturnType<typeof useInventoryMapSearch>;
+ function Surface({query}:{query:string}){controls=useInventoryMapSearch(query,true,text=>found.push(text));return null;}
+ try{
+  await h.render(<Surface query="tent"/>);await h.run(()=>setScreenFocused(false));
+  await h.run(()=>vi.advanceTimersByTime(300));expect(found).toEqual([]);
+  await h.run(()=>controls.submit('hidden'));expect(found).toEqual([]);
+  await h.run(()=>setScreenFocused(true));await h.run(()=>vi.advanceTimersByTime(300));expect(found).toEqual(['tent']);
+  await h.render(<Surface query="drill"/>);await h.run(()=>controls.cancel());
+  await h.run(()=>setScreenFocused(false));await h.run(()=>setScreenFocused(true));
+  await h.run(()=>vi.advanceTimersByTime(300));expect(found).toEqual(['tent']);
+ }finally{await h.unmount();setScreenFocused(true);vi.useRealTimers();}
 });
