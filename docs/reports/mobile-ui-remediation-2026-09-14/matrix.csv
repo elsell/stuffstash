@@ -1681,7 +1681,7 @@ S070,Browse / list search,media,"Camera, library, files and audio",pending,,
 S070,Browse / list search,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S071,Browse / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S071,Browse / filter overview,navigation,"Navigation, hierarchy and return",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
-S071,Browse / filter overview,selection,Value selection and current value,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S071,Browse / filter overview,selection,Value selection and current value,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Browse Availability uses native menu and applies selected value. See native-evidence.md.,M01
 S071,Browse / filter overview,modality,Presentation and dismissal,pending,,
 S071,Browse / filter overview,layout,"Safe areas, scroll edges and overlays",pending,,
 S071,Browse / filter overview,adaptation,Phone/tablet/window reflow,pending,,
@@ -1779,7 +1779,7 @@ S075,Expiration / filter overview,task,Task clarity and platform-pattern fit,sou
 S075,Expiration / filter overview,navigation,"Navigation, hierarchy and return",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S075,Expiration / filter overview,selection,Value selection and current value,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
 S075,Expiration / filter overview,modality,Presentation and dismissal,pending,,
-S075,Expiration / filter overview,layout,"Safe areas, scroll edges and overlays",pending,,
+S075,Expiration / filter overview,layout,"Safe areas, scroll edges and overlays",finding,Run34907820613/source a01407dc: native expansion still loses expiration filter body on both iPhone17 and iPad mini. Diagnostic variants running in34909419413.,M19
 S075,Expiration / filter overview,adaptation,Phone/tablet/window reflow,pending,,
 S075,Expiration / filter overview,typography,"Dynamic Type, wrapping and legibility",pending,,
 S075,Expiration / filter overview,appearance,"Light/dark, contrast and materials",pending,,
@@ -1874,7 +1874,7 @@ S078,Expiration / locations selection,lifecycle,"Cold/warm start, blur, backgrou
 S079,Expiration / date range,task,Task clarity and platform-pattern fit,pending,,
 S079,Expiration / date range,navigation,"Navigation, hierarchy and return",pending,,
 S079,Expiration / date range,selection,Value selection and current value,pending,,
-S079,Expiration / date range,modality,Presentation and dismissal,pending,,
+S079,Expiration / date range,modality,Presentation and dismissal,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Date-page native calendar dismisses outside its bounds; underlying action reachable. Other filter expansion remains broken. See native-evidence.md.,M19
 S079,Expiration / date range,layout,"Safe areas, scroll edges and overlays",pending,,
 S079,Expiration / date range,adaptation,Phone/tablet/window reflow,pending,,
 S079,Expiration / date range,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2185,7 +2185,7 @@ S091,Add / custom fields,media,"Camera, library, files and audio",pending,,
 S091,Add / custom fields,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S092,Add / expiration exact date,task,Task clarity and platform-pattern fit,source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending",M03
 S092,Add / expiration exact date,navigation,"Navigation, hierarchy and return",pending,,
-S092,Add / expiration exact date,selection,Value selection and current value,source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending",M03
+S092,Add / expiration exact date,selection,Value selection and current value,runtime-partial,"Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Compact date picker opens, Add initializes a date and Clear restores no expiration; other date-edit interactions pending. See native-evidence.md.",M03
 S092,Add / expiration exact date,modality,Presentation and dismissal,pending,,
 S092,Add / expiration exact date,layout,"Safe areas, scroll edges and overlays",pending,,
 S092,Add / expiration exact date,adaptation,Phone/tablet/window reflow,pending,,
@@ -2473,7 +2473,7 @@ S103,Asset / history revert,media,"Camera, library, files and audio",pending,,
 S103,Asset / history revert,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S104,Settings / appearance selection,task,Task clarity and platform-pattern fit,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
 S104,Settings / appearance selection,navigation,"Navigation, hierarchy and return",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
-S104,Settings / appearance selection,selection,Value selection and current value,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
+S104,Settings / appearance selection,selection,Value selection and current value,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Appearance native menu selects Dark in place and displays saved value. See native-evidence.md.,M22
 S104,Settings / appearance selection,modality,Presentation and dismissal,pending,,
 S104,Settings / appearance selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S104,Settings / appearance selection,adaptation,Phone/tablet/window reflow,pending,,
@@ -2562,7 +2562,7 @@ S107,Settings / enum options,content,"Lists, hierarchy, density and pagination",
 S107,Settings / enum options,search,"Search, scope and filters",pending,,
 S107,Settings / enum options,loading,"Loading, background refresh and progress",pending,,
 S107,Settings / enum options,recovery,"Empty, error, denied and retry",pending,,
-S107,Settings / enum options,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M15; saved options immutable, draft removal in place; 43 focused tests/check/structural; native fixture pending",M15
+S107,Settings / enum options,editing,"Draft, save, cancel, undo and interruption",runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Fixture removes draft enum option while preserving saved option; full editor routing/persistence pending. See native-evidence.md.,M15
 S107,Settings / enum options,privacy,"Account scope, data use and permissions",pending,,
 S107,Settings / enum options,notifications,System notification entry and state,pending,,
 S107,Settings / enum options,media,"Camera, library, files and audio",pending,,
@@ -3065,7 +3065,7 @@ S128,System / global notice,motion,Reduced motion and feedback alternatives,sour
 S128,System / global notice,content,"Lists, hierarchy, density and pagination",pending,,
 S128,System / global notice,search,"Search, scope and filters",pending,,
 S128,System / global notice,loading,"Loading, background refresh and progress",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
-S128,System / global notice,recovery,"Empty, error, denied and retry",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
+S128,System / global notice,recovery,"Empty, error, denied and retry",runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Actionable feedback persists and Retry remains reachable; assistive technology and enlarged text pending. See native-evidence.md.,M06
 S128,System / global notice,editing,"Draft, save, cancel, undo and interruption",pending,,
 S128,System / global notice,privacy,"Account scope, data use and permissions",pending,,
 S128,System / global notice,notifications,System notification entry and state,pending,,

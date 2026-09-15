@@ -8,8 +8,9 @@ inventory into nested tasks, shared controls, lifecycle states, system entrypoin
 and accessibility/adaptation axes. Maintain an explicit surface-by-axis ledger in
 `docs/reports/mobile-ui-remediation-2026-09-14/`.
 
-Each cell records pending, source-reviewed, runtime-verified, finding, or justified
-N/A. Track findings through spec, failing test, fix, review, runtime evidence and
+Each cell records pending, source-reviewed, runtime-partial, runtime-verified,
+finding, or justified N/A. Runtime-partial identifies observed scenarios without
+claiming the entire axis is verified; a reproduced unresolved defect is a finding. Track findings through spec, failing test, fix, review, runtime evidence and
 release. Source and native-runtime evidence are separate; pending cells prevent an
 unqualified claim that the audit is complete. Unavailable device access must be
 recorded with attempted access paths, without stopping independent fixes.

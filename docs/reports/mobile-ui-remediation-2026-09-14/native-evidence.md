@@ -168,3 +168,14 @@ appeared. Color still hit the previously identified uppercase Close selector
 mistake (the correction was not in this run). Keyboard scenarios stopped at the
 readiness test mistake and provide no new evidence about typing preservation or
 keyboard/footer layout. Production iPad landscape passed.
+
+Run34907820613 is now complete (failed). Phone fixture results match the iPad
+passes/failures above, including date-page dismissal/action reachability. The
+phone Add failure explicitly reports loss of the application connection before
+Asset name appears. This does not establish whether the root cause is JS, native
+code, or fixture composition; crash collection is queued with later source.
+
+Run34909419413 (4020f012) started before the next push, preserving the isolated
+sheet-layout diagnostic. Run34911480135 (6d79ad49) is pending with the corrected
+keyboard/color procedures, crash diagnostics, and later source fixes. Neither
+pending/run-start status is acceptance evidence. No TestFlight release yet.
