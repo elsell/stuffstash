@@ -95,3 +95,11 @@ existing consumers default to standard text commands. This completes the current
 M88 source candidate, not native acceptance. Check full-width primary labels and
 wrapped maintenance at narrow/large-text sizes on iPhone and iPad, and Android
 when runtime access is available.
+
+
+Native command fixture added for an editable container at largest accessibility
+text. Each spatial/availability/maintenance command must fit entirely below the
+navigation bar within the visible scroll region, meet target dimensions, and have
+its region captured for review. A reviewer caught and corrected the initial
+hittable-only test that could accept partly obscured controls. This verifies no
+mutations and still requires runner execution and manual text-clipping review.

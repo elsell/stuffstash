@@ -1,4 +1,4 @@
-export { AssetRegionRecoveryFixture, AssetContentsSearchFixture } from './AssetRegionRecoveryFixture';
+export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
 export { AssetEditRecoveryFixture } from './AssetEditRecoveryFixture';
 import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
@@ -69,6 +69,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add-header" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: true, title: 'Add item', contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
+      <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
@@ -129,6 +130,7 @@ export function FixtureMenu() {
     <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />
     <Button title="Audit contents recovery" onPress={() => router.push('/audit-region-recovery' as Href)} />
     <Button title="Audit place search" onPress={() => router.push('/audit-contents-search' as Href)} />
+    <Button title="Audit detail commands" onPress={() => router.push('/audit-detail-commands' as Href)} />
     <Text>{result}</Text>
   </FixturePage>;
 }

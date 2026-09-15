@@ -732,3 +732,11 @@ pending disabling, action ordering and route destinations must be preserved.
 SwiftUI and Compose own button appearance and label measurement; preview styling
 is not evidence of native rendering. Shared adapter consumers need regression
 checks, and native large-text/permission-state verification remains required.
+
+Native detail-command acceptance includes an editable container with create/edit
+permissions and a long title at largest accessibility text. Check Add item here,
+Move items here, Check out and maintenance commands after scrolling: unobstructed
+hit targets, minimum44-point height, horizontal containment and primary width.
+Capture each visible command region for multiline/visual review. This is layout
+acceptance only; downstream mutations and route destinations remain covered by
+separate behavior/native journeys. The fixture does not execute mutations.

@@ -213,6 +213,47 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testDetailCommandsRemainReachableAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit detail commands"]
+    for _ in 0..<14 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let add = app.buttons["Add item here"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    for label in ["Add item here", "Move items here", "Check out", "Edit", "Move"] {
+      let command = app.buttons[label].firstMatch
+      XCTAssertTrue(command.exists)
+      let scroll = app.scrollViews.firstMatch
+      func fullyVisible() -> Bool {
+        let visible = scroll.frame.intersection(app.frame)
+        let top = max(visible.minY, app.navigationBars.firstMatch.frame.maxY)
+        return command.isHittable && command.frame.minY >= top && command.frame.maxY <= visible.maxY
+      }
+      for _ in 0..<12 where !fullyVisible() {
+        let above = command.frame.minY < app.navigationBars.firstMatch.frame.maxY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(fullyVisible(), label)
+      XCTAssertGreaterThanOrEqual(command.frame.height, 44, label)
+      XCTAssertGreaterThanOrEqual(command.frame.minX, app.frame.minX, label)
+      XCTAssertLessThanOrEqual(command.frame.maxX, app.frame.maxX, label)
+      if label == "Add item here" {
+        XCTAssertGreaterThan(command.frame.width, app.frame.width * 0.5)
+      }
+      capture("detail-command-" + label.lowercased().replacingOccurrences(of: " ", with: "-"))
+    }
+    let back = app.navigationBars.buttons.firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testPlaceContentsUseNativeSearchAndKeepNavigation() {
     let open = app.buttons["Audit place search"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

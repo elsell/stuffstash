@@ -20,19 +20,24 @@ export function AssetContentsSearchFixture() {
   return <AssetDetailFixture mode="search" />;
 }
 
-function AssetDetailFixture({ mode }: { readonly mode: 'recovery' | 'search' }) {
+export function AssetDetailCommandsFixture() {
+  return <AssetDetailFixture mode="commands" />;
+}
+
+function AssetDetailFixture({ mode }: { readonly mode: 'recovery' | 'search' | 'commands' }) {
   const [fixture] = useState(() => {
     const client = createMobileQueryClient();
     const defaults = client.getDefaultOptions();
     client.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
-    const asset = { id: assetId('audit-place'), title: 'Audit place', kind: 'location' as const,
+    const asset = { id: assetId('audit-place'), title: mode === 'commands' ? 'Garage shelves and seasonal storage' : 'Audit place',
+      kind: mode === 'commands' ? 'container' as const : 'location' as const,
       lifecycleState: 'active' as const, description: '', locationLabel: '', locationTrail: [],
       parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
     let contentsReads = 0; let photoReads = 0;
     return { client,
       core: new AssetCoreQuery({ getAssetCore: async () => ({
         tenantId: tenantId('audit-tenant'), inventoryId: inventoryId('audit-inventory'),
-        permissions: ['view'], revision: 'audit', asset
+        permissions: mode === 'commands' ? ['view', 'edit_asset', 'create_asset'] : ['view'], revision: 'audit', asset
       }) }),
       contents: new AssetContentsQuery({ getAssetContents: async () => {
         if (++contentsReads === 1 && mode === 'recovery') throw new Error('Audit contents unavailable');
