@@ -437,3 +437,11 @@ label while pending instead of replacing the command with only a spinner. Search
 selection and the item draft remain in the current Add form; neither command
 creates a new navigation destination. Retry respects draft-operation ownership.
 Native large-text, keyboard and scroll reachability require runtime acceptance.
+
+Move uses a short task heading and a separate, wrapping asset name at body emphasis;
+a long name must not become the oversized sheet heading. Show the current location
+once in quiet form context. Show “Move to” only after selection differs from the
+current parent; identical From/To summaries add no information. The context and
+query stay in the same scrolling form. Existing valid-change, pending-operation,
+cancellation and destination-creation rules remain unchanged. This context repair
+does not establish native disabled-button contrast; verify that separately.

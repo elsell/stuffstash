@@ -104,11 +104,18 @@ it.each(['move', 'move-here'] as const)('freezes %s submission and restores its 
       {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    if (mode === 'move') {
+      expect(h.byText('Tent')).toBeDefined();
+      expect(h.byText('Current location')).toBeDefined();
+      expect(h.byText('Move to')).toBeUndefined();
+      expect(h.byLabel('Move')?.props.disabled).toBe(true);
+    }
     const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
     await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
     await h.press(candidateRow ?? undefined);
-    const save = h.byText(mode === 'move' ? 'Move' : 'Move here')?.parent;
+    if (mode === 'move') expect(h.byText('Move to')).toBeDefined();
+    const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
     expect(save?.props.disabled).toBe(false);
     const submit = save!.props.onPress;
     await h.run(() => { submit(); submit(); });
@@ -139,7 +146,7 @@ it('shares the Move lock with destination creation and retains the query after f
     await h.changeText(h.allByType('TextInput')[0], 'New box');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     const create = h.byText('Create location "New box"')?.parent;
-    const move = h.byText('Move')?.parent;
+    const move = h.byLabel('Move');
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);

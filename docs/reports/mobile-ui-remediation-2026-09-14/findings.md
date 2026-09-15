@@ -1179,4 +1179,15 @@ picker. Exact build is unknown; the current native footer must be tested for
 appearance inheritance, tint and disabled contrast before choosing a repair.
 Simplify the context and distinguish the current parent from an actual destination
 change. Keep Move disabled until a valid change is selected and Cancel reachable.
-Native verification must include dark/light, long titles and large text. Unfixed.
+Native verification must include dark/light, long titles and large text.
+
+Context candidate: Move now has a short task heading and a separate wrapping
+asset name, with no oversized name heading or instructional subtitle. Current
+location appears once in quiet form context; Move to appears only for a changed
+destination. The colored padded summary panel is removed. Seventeen action-sheet
+behavior tests, TypeScript and structural checks passed remotely after the changed
+context regression failed first. It preserves valid-change gating and mutation
+locks. Critic review found no blocker. Native long-title layout and disabled-action
+contrast remain unverified; M100 stays open. The appearance provider already calls
+Appearance.setColorScheme, so a missing explicit SwiftUI Host scheme alone is not
+evidence of the contrast cause.
