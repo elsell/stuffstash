@@ -1577,4 +1577,9 @@ Retry; its callback performs no read when matches is false. Separate command
 retry from gesture presentation and give inventory mismatch an actionable return
 path instead of an ineffective retry. Preserve loaded pages during recoverable
 errors and test command, pull, mismatch and navigation-return paths independently.
-Implementation and native acceptance remain outstanding. R018/S074 loading/recovery.
+The candidate separates query retry from gesture presentation and supplies a native
+Return to Home command for mismatch. Retry is disabled and labeled while reads
+are in flight. Eight focused component/refresh tests, TypeScript and structural
+checks pass remotely after a failing recovery regression. These checks prove the
+component action separation, not full route navigation or native spinner geometry.
+Native acceptance remains outstanding. R018/S074 loading/recovery.

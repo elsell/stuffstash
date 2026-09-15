@@ -28,3 +28,19 @@ it('uses compact native search and carries pending text into filters before debo
   expect(queries).toEqual(['medicine','']);
  } finally { await h.unmount(); resetNavigation(); vi.useRealTimers(); }
 });
+
+it('routes error recovery separately from pull refresh and supports returning Home', async () => {
+ const h=new MobileRenderHarness(); let retry=0; let pulls=0; let home=0;
+ const props={mode:'all' as const,items:[],loading:false,refreshing:false,hasMore:false,error:'Unavailable',onMode:()=>{},onSearch:()=>{},onFilters:()=>{},onRefresh:()=>{pulls++},onMore:()=>{},onOpenAsset:()=>{}};
+ try {
+  await h.render(<ExpirationWorkspaceScreen {...props} recovery={{label:'Retry expiration',onPress:()=>{retry++}}} />);
+  await h.press(h.byLabel('Retry expiration'));
+  expect(retry).toBe(1); expect(pulls).toBe(0);
+  await h.render(<ExpirationWorkspaceScreen {...props} recovery={{label:'Retrying expiration',disabled:true,onPress:()=>{retry++}}} />);
+  expect(h.byLabel('Retrying expiration')?.props.accessibilityState.disabled).toBe(true);
+  await h.render(<ExpirationWorkspaceScreen {...props} recovery={{label:'Return to Home',onPress:()=>{home++}}} />);
+  expect(h.byLabel('Retry expiration')).toBeUndefined();
+  await h.press(h.byLabel('Return to Home'));
+  expect(home).toBe(1); expect(pulls).toBe(0);
+ } finally { await h.unmount(); }
+});

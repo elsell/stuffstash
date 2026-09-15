@@ -19,14 +19,14 @@ are separate requirements.
 | Localization | Presentation formats month labels; grouping relies on supplied expiration state and date month. Locale/timezone boundary correctness needs repository/presentation coverage, not screen inspection alone. |
 | Imagery | Shared AssetCard owns photos, placeholders and breadcrumb rendering. This review does not certify those shared consumers. |
 | Targets | Retry/load-more custom text buttons have44 minimum height. Native pattern fit remains review work; runtime reachability is unverified. |
-| Gestures | Explicit Retry and Load more supplement pull/scroll. M119: Retry incorrectly shares the pull-indicator handler. |
+| Gestures | Explicit Retry and Load more supplement pull/scroll. M119 separates Retry from the pull-indicator handler; native acceptance remains pending. |
 | Keyboard | M118 uses compact native search, preserves debounce and flushes before navigation. Native header focus and keyboard transitions remain pending. |
 | Accessibility | Headings and error alerts are labeled; loading states have labels. Result changes and pagination announcements need VoiceOver acceptance. |
 | Motion | No screen-specific custom animation. Native refresh/search transitions under Reduce Motion remain pending. |
 | Content | Infinite query fetches30 items, deduplicates IDs, groups consecutive month/status records. Load more is explicit. Stable grouping depends on repository ordering; no ordering proof is claimed here. |
 | Search | Search debounce is300ms, clear immediate, filters flush pending text. External route changes update native text. Focus loss while debounce is pending needs additional ownership review. |
-| Loading | Initial and pagination spinners are separate. Pull refresh uses the shared focused-gesture owner, but Retry calls that same owner (M119). |
-| Recovery | Error copy has Retry, while inventory mismatch asks the user to return Home. Retry does nothing for a successful mismatched scope; this recovery path needs correction alongside M119. Pagination errors currently appear at the top; local footer recovery remains review work. |
+| Loading | Initial and pagination spinners are separate. Pull refresh uses the shared focused-gesture owner, and M119 gives Retry a separate direct-query command. |
+| Recovery | Error copy has Retry, while inventory mismatch asks the user to return Home. M119 replaces the ineffective mismatch Retry with Return to Home. Native return remains pending. Pagination errors currently appear at the top; local footer recovery remains review work. |
 | Editing | No persisted edits occur here; route state holds filters. Filter clear semantics are reviewed separately. |
 | Privacy | Scope mismatch and access failure hide items. Query keys include scope/tenant/inventory. Retried access failure behavior and real API authorization require boundary verification. |
 | Notifications | Screen owns no notification registration. Notification-driven departure needs actual native return/focus checks. |

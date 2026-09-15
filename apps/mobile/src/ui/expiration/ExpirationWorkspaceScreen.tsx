@@ -1,3 +1,5 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import type { NativeCommandButtonProps } from '../components/NativeCommandButton.types';
 import { Stack } from 'expo-router';
 import { expirationFilterHeaderOptions } from './ExpirationFilterHeader';
 import { useExpirationSearch } from './useExpirationSearch';
@@ -12,9 +14,10 @@ import { useAppearanceAwarePalette } from '../theme/appearance';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
 
 type Row = { key: string; heading: string } | { key: string; asset: AssetCardViewModel };
-export function ExpirationWorkspaceScreen({ mode, items, query = '', filtered = false, refinementsActive = false, loading, refreshing, hasMore, appending = false, error, onMode, onSearch, onFilters, onRefresh, onMore, onOpenAsset }: {
+export function ExpirationWorkspaceScreen({ mode, items, query = '', filtered = false, refinementsActive = false, loading, refreshing, hasMore, appending = false, error, recovery, onMode, onSearch, onFilters, onRefresh, onMore, onOpenAsset }: {
  readonly mode: ExpirationMode; readonly items: readonly AssetCardViewModel[]; readonly query?: string; readonly filtered?: boolean; readonly refinementsActive?: boolean;
  readonly loading: boolean; readonly refreshing: boolean; readonly hasMore: boolean; readonly appending?: boolean; readonly error?: string;
+ readonly recovery?: NativeCommandButtonProps;
  readonly onMode: (mode: ExpirationMode) => void; readonly onSearch: (query: string) => void;
  readonly onFilters: (query: string) => void; readonly onRefresh: () => void; readonly onMore: () => void; readonly onOpenAsset: (id: string) => void;
 }) {
@@ -39,7 +42,7 @@ export function ExpirationWorkspaceScreen({ mode, items, query = '', filtered = 
   <FlatList<Row> style={styles.shell} contentContainerStyle={styles.content} data={rows} keyExtractor={row => row.key} alwaysBounceVertical keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic"
    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.action} />}
    renderItem={({ item }) => 'heading' in item ? <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{item.heading}</Text> : <AssetCard asset={item.asset} density="row" palette={colors} onPress={() => { search.flush(); onOpenAsset(item.asset.id); }} onParentLocationPress={parent => { search.flush(); onOpenAsset(parent.id); }} />}
-   ListHeaderComponent={<>{controls}{error ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>{error}</Text>{button('Retry expiration', onRefresh)}</View> : null}</>}
+   ListHeaderComponent={<>{controls}{error ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>{error}</Text>{recovery ? <NativeCommandButton {...recovery} /> : null}</View> : null}</>}
    ListEmptyComponent={loading ? <ActivityIndicator accessibilityLabel="Loading expiration dates" color={colors.action} /> : !error ? <Text style={[styles.empty, { color: colors.textMuted }]}>{filtered ? 'No matching expiration dates' : mode === 'expired' ? 'No expired items' : mode === 'soon' ? 'No items expiring soon' : 'No expiration dates recorded'}</Text> : null}
    ListFooterComponent={appending ? <ActivityIndicator accessibilityLabel="Loading more expiration dates" color={colors.action} /> : hasMore ? button('Load more', onMore) : null}
   />

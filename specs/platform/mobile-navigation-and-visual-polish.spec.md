@@ -554,3 +554,9 @@ Expiration results also use integrated-button native search without toolbar
 integration, matching Browse. Preserve the existing debounced route query and
 flush pending text when opening filters or an item. Clearing/closing search applies
 an empty query immediately. Compact presentation must not discard pending input.
+
+Expiration error recovery is independent of pull refresh. Retry calls the failed
+query directly; its native command indicates loading and is disabled during a
+read. Only an explicit pull starts the native refresh indicator. A successful
+inventory-scope mismatch offers Return to Home instead of Retry. Loaded records
+remain visible during transient retry; access-failure hiding remains unchanged.
