@@ -1740,3 +1740,15 @@ investigation remains needed.
 TypeScript and structural checks also pass on paul. Critic found no confirmed issue;
 the existing acquisition test independently establishes that the harness replays
 effects. The native diagnosis remains open.
+
+
+### Run349983 final result
+
+All jobs are terminal: iPhone fixtures41/55 pass (14 failures), iPad fixtures43/55
+pass (12 failures), iPhone onboarding passes, iPad onboarding2/3 passes. iPad
+fixture log retained at `/tmp/native349983-ipad-terminal.log`. Cross-device Add and
+Sharing typing failures remain; the seeded-without-accessory comparison stops
+before typing and cannot establish that removing the accessory fixes character
+loss. Place-search and sheet-notice failures predate the subsequent candidates.
+No broad native pass is claimed. Next queued run35003739726 was confirmed running;
+no manual restart or cancellation was used.
