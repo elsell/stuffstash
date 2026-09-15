@@ -1482,3 +1482,18 @@ and direct stack rendering on iOS26+. VoiceAccessoryContent shares the existing
 presentation/actions with the native wrapper. Three platform rendering cases and
 a real provider/controller test cover fresh recording, sending, navigation and
 return to Browse. Controlled tests do not prove native tab or keyboard clearance.
+
+## M114 — Browse tag filters leave empty results unexplained
+
+P2, source-confirmed at7017709b. BrowseFiltersScreen rendered an empty section
+both when the inventory had no tag options and when the search matched nothing.
+Two controlled tests reproduced the missing explanation. The candidate uses the
+existing section footer to distinguish `No tags available` and `No matching tags`;
+Back and Show results remain available. Clearing native search restores choices
+with the existing selected draft intact. No tag-creation task is added to filters.
+
+Eight focused Browse/filter-footer tests, TypeScript and structural checks pass
+remotely. Expiration already renders a no-match message and is unchanged. Native
+search focus, message visibility and assistive-technology announcement remain
+unverified; source text assertions do not establish those properties. R016/S072
+recovery and search; implementation ready for native acceptance in the larger batch.

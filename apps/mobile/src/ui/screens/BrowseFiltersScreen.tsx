@@ -31,6 +31,8 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, onAppl
   const [search, setSearch] = useState('');
   const open = (next: Page) => { setSearch(''); setPage(next); };
   const searchMode = !!query.trim() || draft.tagIds.length > 0;
+  const visibleTags = [...tags].sort((a, b) => a.label.localeCompare(b.label))
+    .filter(tag => tag.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <>
     <Stack.Screen options={{ title: titles[page], headerSearchBarOptions: undefined }} />
     {page === 'tags' ? <NativeNavigationSearch query={search} placeholder="Search tags" onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} /> : null}
@@ -49,8 +51,8 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, onAppl
           <SettingsNavigationRow label="Expiration" context="Review active items by date" accessibilityLabel="Choose expiration review" onPress={() => open('expiration')} />
         </SettingsSection>
         <SettingsSection><SettingsActionRow label="Reset all" accessibilityLabel="Reset all filters" onPress={() => setDraft(defaults)} /></SettingsSection>
-      </> : page === 'tags' ? <SettingsSection>
-        {[...tags].sort((a, b) => a.label.localeCompare(b.label)).filter(tag => tag.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())).map(tag =>
+      </> : page === 'tags' ? <SettingsSection footer={visibleTags.length ? undefined : tags.length ? 'No matching tags' : 'No tags available'}>
+        {visibleTags.map(tag =>
           <SettingsChoiceRow key={tag.id} multiple label={tag.label} accessibilityLabel={'Filter by tag ' + tag.label} selected={draft.tagIds.includes(tag.id)}
             onPress={() => setDraft({ ...draft, tagIds: draft.tagIds.includes(tag.id) ? draft.tagIds.filter(id => id !== tag.id) : [...draft.tagIds, tag.id] })} />
         )}

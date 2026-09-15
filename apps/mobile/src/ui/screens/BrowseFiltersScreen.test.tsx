@@ -1,3 +1,4 @@
+import { navigationOptions, resetNavigation } from '../../test-support/navigation';
 import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -51,4 +52,33 @@ it('shows the effective relevance order during search instead of an inactive sav
     await h.render(<BrowseFiltersScreen initial={initial} query="medicine" tags={[]} onApply={() => {}} onCancel={() => {}} onExpiration={() => {}} />);
     expect(h.byLabel('Sort, Relevance while searching')).toBeDefined();
   } finally { await h.unmount(); }
+});
+
+it('explains an empty tag inventory while retaining Back and Show results', async () => {
+  const h = new MobileRenderHarness(); const applied: BrowseFilterDraft[] = [];
+  try {
+    await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[]} onApply={value => applied.push(value)} onCancel={() => {}} onExpiration={() => {}} />);
+    await h.press(h.byLabel('Choose tags'));
+    expect(h.allText()).toContain('No tags available');
+    await h.press(h.byLabel('Back to filters'));
+    await h.press(h.byLabel('Show results'));
+    expect(applied).toEqual([initial]);
+  } finally { await h.unmount(); }
+});
+
+it('explains unmatched tag search and restores the selected tag when search is cleared', async () => {
+  const h = new MobileRenderHarness(); const applied: BrowseFilterDraft[] = [];
+  try {
+    await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[{ id: 'tag', key: 'tools', label: 'Tools' }]} onApply={value => applied.push(value)} onCancel={() => {}} onExpiration={() => {}} />);
+    await h.press(h.byLabel('Choose tags'));
+    await h.press(h.byLabel('Filter by tag Tools'));
+    const options = () => navigationOptions().map(value => value as { headerSearchBarOptions?: { onChangeText: (event: { nativeEvent: { text: string } }) => void } }).filter(value => value.headerSearchBarOptions).at(-1)!.headerSearchBarOptions!;
+    await h.run(() => options().onChangeText({ nativeEvent: { text: 'unmatched' } }));
+    expect(h.allText()).toContain('No matching tags');
+    await h.run(() => options().onChangeText({ nativeEvent: { text: '' } }));
+    expect(h.allText()).not.toContain('No matching tags');
+    expect(h.byLabel('Filter by tag Tools')?.props.accessibilityState.checked).toBe(true);
+    await h.press(h.byLabel('Show results'));
+    expect(applied[0].tagIds).toEqual(['tag']);
+  } finally { await h.unmount(); resetNavigation(); }
 });

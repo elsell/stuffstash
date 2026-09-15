@@ -375,9 +375,9 @@ R016,browse-filters.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R016,browse-filters.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R016,browse-filters.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R016,browse-filters.tsx,content,"Lists, hierarchy, density and pagination",finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
-R016,browse-filters.tsx,search,"Search, scope and filters",pending,,
+R016,browse-filters.tsx,search,"Search, scope and filters",finding,; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,M114
 R016,browse-filters.tsx,loading,"Loading, background refresh and progress",pending,,
-R016,browse-filters.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R016,browse-filters.tsx,recovery,"Empty, error, denied and retry",finding,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,"M32,M114"
 R016,browse-filters.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R016,browse-filters.tsx,privacy,"Account scope, data use and permissions",pending,,
 R016,browse-filters.tsx,notifications,System notification entry and state,pending,,
@@ -1719,9 +1719,9 @@ S072,Browse / tag selection,keyboard,"Keyboard, text entry and focus",pending,,
 S072,Browse / tag selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S072,Browse / tag selection,motion,Reduced motion and feedback alternatives,pending,,
 S072,Browse / tag selection,content,"Lists, hierarchy, density and pagination",finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
-S072,Browse / tag selection,search,"Search, scope and filters",pending,,
+S072,Browse / tag selection,search,"Search, scope and filters",finding,; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,M114
 S072,Browse / tag selection,loading,"Loading, background refresh and progress",pending,,
-S072,Browse / tag selection,recovery,"Empty, error, denied and retry",pending,,
+S072,Browse / tag selection,recovery,"Empty, error, denied and retry",finding,; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,M114
 S072,Browse / tag selection,editing,"Draft, save, cancel, undo and interruption",pending,,
 S072,Browse / tag selection,privacy,"Account scope, data use and permissions",pending,,
 S072,Browse / tag selection,notifications,System notification entry and state,pending,,

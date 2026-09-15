@@ -509,3 +509,8 @@ existing native tab accessory is unavailable on those platforms, which justifies
 this bounded fallback. On iOS26+, render the stack directly and keep the native
 accessory without a duplicate fallback. Verify bottom-tab clearance and keyboard
 behavior on each supported fallback platform before claiming native acceptance.
+
+Browse tag filters must distinguish an inventory without tags from a search with
+no matching tags. Keep the selection draft and Back/Show results available in both
+states. Clearing the native search restores choices without clearing selections;
+an empty result must not look like an unfinished load or remove the user's draft.
