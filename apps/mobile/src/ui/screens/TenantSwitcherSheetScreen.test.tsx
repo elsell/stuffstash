@@ -8,7 +8,7 @@ import { MobileServerStateProvider } from '../navigation/MobileServerStateProvid
 import { TenantSwitcherSheetScreen } from './TenantSwitcherSheetScreen';
 
 const dashboard: HomeDashboardViewModel = {
-  tenantId: 'second', tenantName: 'Home', inventoryId: 'selected', inventoryName: 'Main', canAdd: true, recentAssets: [], checkedOutAssets: [],
+  tenantId: 'second', tenantName: 'Home', inventoryId: 'selected', inventoryName: 'Main', canAdd: true, canReturn: true, recentAssets: [], checkedOutAssets: [],
   tenants: [{ id: 'first', name: 'Home' }, { id: 'second', name: 'Home' }],
   inventories: [{ id: 'wrong', tenantId: 'first', tenantName: 'Home', name: 'Other household inventory', roleLabel: 'Owner', updatedAtLabel: 'Today' },
     { id: 'selected', tenantId: 'second', tenantName: 'Home', name: 'Main', roleLabel: 'Owner', updatedAtLabel: 'Today' }]

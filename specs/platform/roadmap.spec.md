@@ -31,7 +31,7 @@ close the effort after only fixing the original ten audit examples.
 
 
 The UI design skill now chooses platform patterns before components. Remediation
-is underway in PR 127, with 136 surfaces and 24 axes tracked individually. The
+continues after PRs127 and129, with 139 surfaces and 24 axes tracked individually. The
 interim release validation passed 1,374 mobile tests; source checks are not native
 acceptance. Native macOS runner fixtures have verified
 selected menu, date and feedback scenarios, but expiration sheet expansion and
@@ -43,7 +43,11 @@ does not certify the full audit: retain the native failures and unreviewed cells
 publish release notes, and continue remediation after delivery.
 TestFlight **0.24.11 (99.1)** uploaded successfully and its exact-build changelog
 was verified on September 15 at 00:53 UTC in release34913014534. Continue the audit
-in draft PR129; its photo-removal and gallery fixes are outside that interim build.
+after PR129, merged for v0.24.12 in release34917914704. Build100.1 uploaded successfully at01:55:59UTC and Apple processing/exact-build
+changelog verification succeeded at01:58:20UTC. The separate continuation branch includes
+shared-header stabilization and Home Return ownership; native return-sheet
+presentation remains open; viewer Return action visibility is now source-fixed
+and awaiting native acceptance in draft PR131.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

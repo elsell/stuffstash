@@ -2,8 +2,8 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Inventory: **136 route/layout and nested-task surfaces × 24 axes = 3264 review cells**
-(initial inventory: 132 surfaces; four asset editing/moving subtasks added during source inspection).
+Inventory: **139 route/layout and nested-task surfaces × 24 axes = 3336 review cells**
+(initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
 are intentional: route coverage and interaction coverage are independent.
 
@@ -30,4 +30,7 @@ review cells stay open; this release is not full audit acceptance.
 Interim release delivered: **0.24.11 (99.1)**, processed with TestFlight changelog
 verified on September 15 at 00:53 UTC. [Release workflow](https://github.com/elsell/stuffstash/actions/runs/34913014534).
 The comprehensive audit remains active. Photo-removal and gallery follow-up fixes
-are in draft PR 129 and are not part of this interim build.
+were merged in PR129 for a second interim release, v0.24.12. Build **100.1** uploaded at01:55:59UTC; Apple processing and the exact-build
+TestFlight changelog were verified at01:58:20UTC in
+[release34917914704](https://github.com/elsell/stuffstash/actions/runs/34917914704). Shared-header and Home
+return ownership/permission fixes continue separately in draft PR131.

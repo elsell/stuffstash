@@ -517,3 +517,38 @@ buttons with operation-specific progress and disabled states. Existing permissio
 continuation-failure and cached-data behavior must remain intact. Verify actual
 sheet detents, long records and enlarged text on iPhone and iPad before claiming
 native layout acceptance.
+
+### Home return operation ownership
+
+Only one Home return workflow may own optional-details state at a time. Ignore
+repeated/stale Return callbacks while a return is pending or its details are open;
+disable other Return actions during that workflow. Successful returns cannot be
+submitted again from stale dashboard cards while reconciliation is pending.
+
+Scope this state to the current tenant and inventory. A completion after leaving
+Home may reconcile its originating dashboard but must not open a details editor
+or announce an error over the new screen. Save and Cancel return reject duplicate
+operations, preserve details on failure, and permit retry. Successful cancellation
+clears the completed-return guard so the restored checkout can be returned again.
+A successful details save clears its editor even when Home has lost focus; it must
+not resurrect an already-completed draft. Re-entry starts a new presentation
+session, not a continuation of an old in-flight presentation callback.
+
+The separate native-sheet requirement above remains unchanged; fixing operation
+ownership does not certify the current inline editor as a native sheet.
+
+The Home checked-out projection preserves current checkout identity for workflow
+ownership. Completed-return guards compare that identity, so a later checkout of
+the same asset can be returned even when no empty snapshot was observed between
+the two checkouts. Reconciliation failures use the originating presentation gate,
+including failures that arrive after blur or scope teardown.
+
+### Home Return permission presentation
+
+Home projects `canReturn` from the selected inventory's `edit_asset` permission,
+independently of `create_asset` and role labels. Viewers and create-only inventories
+retain checkout cards, status and navigation but have no Return command. A stale
+Return callback must stop after the current permission projection is revoked.
+The API remains authoritative; rejection of unauthorized Return attempts must leave
+the open checkout intact. Existing editor return/undo and adversarial missing,
+malformed, viewer and cross-scope boundary cases remain part of validation.

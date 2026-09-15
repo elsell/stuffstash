@@ -1,10 +1,9 @@
+import { useMemo } from 'react';
 import { Stack } from 'expo-router';
-import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 
 export function BrowseAddHeader({ canAdd, onAdd }: { readonly canAdd: boolean; readonly onAdd: () => void }) {
-  return <Stack.Screen options={{
-    title: 'Browse',
-    headerLeft: undefined,
-    ...nativeHeaderActionOptions(canAdd ? [{ kind: 'add', label: 'Add an asset', onPress: onAdd }] : [])
-  }} />;
+  const actions = useNativeHeaderActionOptions(canAdd ? [{ kind: 'add', label: 'Add an asset', onPress: onAdd }] : []);
+  const options = useMemo(() => ({ title: 'Browse', headerLeft: undefined, ...actions }), [actions]);
+  return <Stack.Screen options={options} />;
 }

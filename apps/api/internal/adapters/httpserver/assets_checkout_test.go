@@ -271,6 +271,13 @@ func TestAssetCheckoutEndpointsRejectUnauthorizedAndCrossScopeAccess(t *testing.
 		})
 	}
 
+	// Rejected mutation attempts must not change the visible checkout state.
+	stillOpen := performRequest(server, http.MethodGet, assetPath, "Bearer dev:viewer-user", nil)
+	requireStatus(t, stillOpen, http.StatusOK)
+	if checkout := decodeAsset(t, stillOpen).Data.CurrentCheckout; checkout == nil || checkout.State != "open" {
+		t.Fatalf("unauthorized mutation attempts changed the open checkout: %+v", checkout)
+	}
+
 	readCases := []struct {
 		name          string
 		path          string

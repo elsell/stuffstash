@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
@@ -19,7 +19,7 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
-import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 
 type TenantSwitcherSheetScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
@@ -56,9 +56,12 @@ export function TenantSwitcherSheetScreen({
     }
   }
 
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => { pending.current?.abort(); router.back(); } }]);
+  const headerOptions = useMemo(() => ({ title: 'Inventories', ...actionOptions }), [actionOptions]);
+
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right', 'bottom']}>
-      <Stack.Screen options={{ title: 'Inventories', ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => { pending.current?.abort(); router.back(); } }]) }} />
+      <Stack.Screen options={headerOptions} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       {dashboard.isPending && !dashboard.data ? <LoadingState /> : null}
       {dashboard.isError && !dashboard.data ? (

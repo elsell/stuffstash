@@ -74,3 +74,103 @@ Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
 This establishes retention and action reachability for that fixture, not full
 assistive-technology or enlarged-text verification. Its iPad onboarding entry
 still lost characters (`h//example.invalid`); M14 remains unresolved.
+
+### M46 shared-consumer follow-through
+
+The Add navigation-feedback finding prompted preventive stabilization of Home,
+Browse, notification inbox, inventory switcher, checkout-history dismissal and
+reminder timing headers. Home/Browse feedback regressions failed before the fix;
+current commands, inventory labels, badges and permission changes remain live.
+This does not imply native crashes were observed in all six consumers.
+
+Home's legacy hook mocks and direct component invocation were replaced with
+mounted React components, real application queries/commands and repository fakes.
+Coverage retains item/location/section navigation, compact tag suppression,
+initial recovery, pending Return and background reconciliation without pull
+indicators. Header sizing/order has separate coverage. The full remote suite
+passed 1,387 tests across 246 files, TypeScript and structural checks; critic
+coverage feedback was addressed. Native verification remains pending.
+
+These preventive changes follow the PR129 release snapshot and are not included
+in that snapshot.
+
+### M47 — Home return details uses an inline panel instead of its specified sheet
+
+Source-confirmed, open. `HomeScreen.tsx` renders `ReturnDetailsSheet` as a `View`
+at the end of dashboard content, with bespoke buttons and a placeholder-only
+input. The asset checkout spec explicitly calls for a native sheet. The follow-up
+may be offscreen after Return, has no modal focus boundary, and lacks a persistent
+input label. A bounded optional-details task fits a native sheet with clear Save
+and Cancel return semantics; this is consistent with [Apple's sheets guidance](https://developer.apple.com/design/human-interface-guidelines/sheets).
+Acceptance must include actual sheet presentation, keyboard, long content, error,
+dismissal/undo, and phone/iPad adaptation. This finding is not closed by replacing
+buttons alone.
+
+### M48 — Home return operations have no workflow owner
+
+Implemented; native acceptance pending. `DashboardHeader` has no synchronous duplicate guard,
+focus ownership or tenant/inventory reset. Only the currently returning card is
+disabled. A second Return can replace the first optional-details editor, and a
+late completion can open that editor after leaving Home. Save/undo callbacks also
+accept repeat invocations while their rendered disabled state catches up.
+Acceptance: deferred operations reject stale/repeated commands, retain failure
+recovery, suppress new presentation after blur/refocus or scope change, reconcile
+successful operations, and prevent repeat returns from stale cards.
+
+### M49 — Home exposes Return without a mutation-permission projection
+
+Implemented; native permission presentation pending. `HomeDashboardViewModel` carries only `canAdd` for toolbar
+creation. Checked-out Home cards always create a Return footer whenever a
+checkout command is present, including viewer inventories. The API remains the
+authorization boundary, but this violates the mobile requirement that viewers
+never see checkout/return actions. Add a correctly scoped permission projection
+and real viewer/editor boundary tests before changing this interaction; do not
+substitute create permission for edit/return permission.
+
+M48 validation: four failing regressions reproduced duplicate submissions, late
+presentation, late refresh feedback, and a newer checkout incorrectly disabled.
+The scope-owned hook now serializes Return/Save/undo, uses current checkout
+identity, preserves failure drafts and gates reconciliation feedback. Home's
+dashboard subtree is keyed by tenant/inventory. Twenty focused query/interaction
+tests, TypeScript and structural checks pass; full remote suite passes 1,394 tests
+in 246 files. Critic findings were fixed and re-reviewed with no further blockers.
+Native return/keyboard/dismissal acceptance is still pending, including open M47.
+
+M49 implementation: Home projects `canReturn` from selected-inventory
+`edit_asset`; create permission stays independent. Viewer and create-only cards
+hide the command while preserving checkout status/navigation. A committed
+permission ref rejects stale Return callbacks after revocation. Three regressions
+failed before the fix; all 22 Home cases pass, including edit-only permission.
+TypeScript and mobile/Go structural checks pass. The API checkout boundary suite
+passes with pinned Go1.25.8 and verifies rejected mutations leave the open checkout
+intact, alongside existing editor success and adversarial cases. Critic found no
+blocker; its edit-only coverage suggestion was added. Permission changes while
+the optional-details task is already open remain an acceptance case for M47.
+
+### M50 — Native Add and checkout-history fixtures remain loading
+
+Runtime observed, investigating. Run34917318548 iPad final screenshots show stable
+Add chrome with Loading inventory, and checkout history with Loading checkout
+history. Synthetic repositories are expected to resolve immediately, but native
+readiness assertions fail on both devices. The former Add render-loop exception
+is absent from the inspected final hierarchy. Do not certify M46/M45 or attribute
+this to production connectivity without query-state evidence. Runner-only query
+metadata diagnostics are the next discrimination step; no cache pre-seeding or
+connectivity override is an acceptable substitute for the acceptance scenario.
+
+### M19 direct-root candidate after native comparisons
+
+ExpirationFiltersScreen now exposes its ScrollView directly to the native sheet;
+the bottom native-action footer is a sibling with measured space reserved in the
+content and scrollbar. This follows the three direct-root variants that passed
+on both devices in run34917318548. Header search presentation is memoized across
+unrelated draft edits. Production route and isolated fixture consumers were
+inspected; neither adds an outer ready-state host container.
+
+Four existing selection/date/menu/tag behavior tests, TypeScript, structural checks
+and two fixture-installer tests pass remotely. The failing native expansion and
+keyboard scenarios remain unchanged, and an overview accessibility audit adds
+hit-region, description, traits, Dynamic Type and clipping checks without suppressions.
+Unsupported pre-iOS17 audit runtimes explicitly skip. Critic found no source blocker.
+This is a new candidate, not a declaration that expansion or keyboard behavior is
+fixed; those native results remain required.
