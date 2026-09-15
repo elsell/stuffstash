@@ -137,3 +137,12 @@ M134–M139 follow-ups and preserves all native acceptance gaps. M137 keyboard
 hit-testing remains unresolved. PR150's review body reflects the current batch.
 The active native run34998354801 has passed iPhone onboarding; other jobs were
 still running at this checkpoint and its source predates the newest corrections.
+
+
+Matrix reconciliation at e1b3b7d6 maps M137–M140 onto22 affected review cells,
+including Edit and Add consumers of the expiration editor, the stored-photo viewer,
+and Account/Connection settings. These are findings with recorded source fixes or
+unresolved native behavior, not pass promotions. Existing evidence is retained.
+Coverage is still141 surfaces ×24 axes:984 source-reviewed,2086 pending,268 finding,
+18 runtime-partial and28 not-applicable. Unique surface/axis pairs match the
+inventory exactly. The many pending cells remain work, not implied compliance.

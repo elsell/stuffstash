@@ -194,7 +194,7 @@ R008,assets/[assetId]/checkouts.tsx,lifecycle,"Cold/warm start, blur, background
 R009,assets/[assetId]/edit.tsx,task,Task clarity and platform-pattern fit,pending,,
 R009,assets/[assetId]/edit.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R009,assets/[assetId]/edit.tsx,selection,Value selection and current value,pending,,
-R009,assets/[assetId]/edit.tsx,modality,Presentation and dismissal,pending,,
+R009,assets/[assetId]/edit.tsx,modality,Presentation and dismissal,finding,ce586b03 mounted expiration-type confirmation ownership; current acceptance once; native pending.,M138
 R009,assets/[assetId]/edit.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R009,assets/[assetId]/edit.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R009,assets/[assetId]/edit.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -210,11 +210,11 @@ R009,assets/[assetId]/edit.tsx,content,"Lists, hierarchy, density and pagination
 R009,assets/[assetId]/edit.tsx,search,"Search, scope and filters",pending,,
 R009,assets/[assetId]/edit.tsx,loading,"Loading, background refresh and progress",pending,,
 R009,assets/[assetId]/edit.tsx,recovery,"Empty, error, denied and retry",finding,; M87 native query retry candidate; runtime pending,M87
-R009,assets/[assetId]/edit.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
+R009,assets/[assetId]/edit.tsx,editing,"Draft, save, cancel, undo and interruption",finding,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.; ce586b03 mounted expiration-type confirmation ownership; current acceptance once; native pending.",M37; M138
 R009,assets/[assetId]/edit.tsx,privacy,"Account scope, data use and permissions",pending,,
 R009,assets/[assetId]/edit.tsx,notifications,System notification entry and state,pending,,
 R009,assets/[assetId]/edit.tsx,media,"Camera, library, files and audio",pending,,
-R009,assets/[assetId]/edit.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R009,assets/[assetId]/edit.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,ce586b03 mounted expiration-type confirmation ownership; current acceptance once; native pending.,M138
 R010,assets/[assetId]/history/[activityId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Read-only detail shows selected operation changes and optional technical disclosure. Revert is a compensating command with native explanatory confirmation, not a whole-asset restore. Source/spec reviewed; native rendering pending.",
 R010,assets/[assetId]/history/[activityId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 R010,assets/[assetId]/history/[activityId].tsx,selection,Value selection and current value,pending,,
@@ -554,7 +554,7 @@ R023,settings/about.tsx,lifecycle,"Cold/warm start, blur, background and deep li
 R024,settings/account.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shows signed-in identity and explicit sign-out; explains saved server retention.; account-connection-axis.md source/controlled recovery; native pending,
 R024,settings/account.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; account-connection-axis.md source/controlled recovery; native pending,M73
 R024,settings/account.tsx,selection,Value selection and current value,pending,,
-R024,settings/account.tsx,modality,Presentation and dismissal,source-reviewed,Native confirmation names account and explains sign-in consequence; cancel provided.,
+R024,settings/account.tsx,modality,Presentation and dismissal,finding,Native confirmation names account and explains sign-in consequence; cancel provided.; 3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M140
 R024,settings/account.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R024,settings/account.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R024,settings/account.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -569,12 +569,12 @@ R024,settings/account.tsx,motion,Reduced motion and feedback alternatives,pendin
 R024,settings/account.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R024,settings/account.tsx,search,"Search, scope and filters",pending,,
 R024,settings/account.tsx,loading,"Loading, background refresh and progress",source-reviewed,Pending sign-out label and ref guard; failed command restores action.; account-connection-axis.md source/controlled recovery; native pending,M73
-R024,settings/account.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Failure uses feedback; settings load failure is scrollable with Retry; refresh error preserves content.; account-connection-axis.md source/controlled recovery; native pending,M73
-R024,settings/account.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R024,settings/account.tsx,recovery,"Empty, error, denied and retry",finding,Failure uses feedback; settings load failure is scrollable with Retry; refresh error preserves content.; account-connection-axis.md source/controlled recovery; native pending; 3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M73; M140
+R024,settings/account.tsx,editing,"Draft, save, cancel, undo and interruption",finding,3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M140
 R024,settings/account.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Identity and saved-server consequences visible before command; no auth boundary changed.; account-connection-axis.md source/controlled recovery; native pending,
 R024,settings/account.tsx,notifications,System notification entry and state,pending,,
 R024,settings/account.tsx,media,"Camera, library, files and audio",pending,,
-R024,settings/account.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R024,settings/account.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M140
 R025,settings/appearance.tsx,task,Task clarity and platform-pattern fit,source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
 R025,settings/appearance.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
 R025,settings/appearance.tsx,selection,Value selection and current value,source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
@@ -602,7 +602,7 @@ R025,settings/appearance.tsx,lifecycle,"Cold/warm start, blur, background and de
 R026,settings/connection.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Current server host/address shown separately from Change Server command.; account-connection-axis.md source/controlled recovery; native pending,
 R026,settings/connection.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; account-connection-axis.md source/controlled recovery; native pending,
 R026,settings/connection.tsx,selection,Value selection and current value,pending,,
-R026,settings/connection.tsx,modality,Presentation and dismissal,source-reviewed,"Native confirmation explains sign-out, forgotten selection and retained remote data.",
+R026,settings/connection.tsx,modality,Presentation and dismissal,finding,"Native confirmation explains sign-out, forgotten selection and retained remote data.; 3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.",M140
 R026,settings/connection.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R026,settings/connection.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R026,settings/connection.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -617,12 +617,12 @@ R026,settings/connection.tsx,motion,Reduced motion and feedback alternatives,pen
 R026,settings/connection.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R026,settings/connection.tsx,search,"Search, scope and filters",pending,,
 R026,settings/connection.tsx,loading,"Loading, background refresh and progress",source-reviewed,Pending command disables action and ref prevents duplicate execution.; account-connection-axis.md source/controlled recovery; native pending,
-R026,settings/connection.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Change-server failure shows feedback and restores action.; account-connection-axis.md source/controlled recovery; native pending,
-R026,settings/connection.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R026,settings/connection.tsx,recovery,"Empty, error, denied and retry",finding,Change-server failure shows feedback and restores action.; account-connection-axis.md source/controlled recovery; native pending; 3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.,M140
+R026,settings/connection.tsx,editing,"Draft, save, cancel, undo and interruption",finding,3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.,M140
 R026,settings/connection.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Server destination and data consequences visible; no destructive remote action implied.; account-connection-axis.md source/controlled recovery; native pending,
 R026,settings/connection.tsx,notifications,System notification entry and state,pending,,
 R026,settings/connection.tsx,media,"Camera, library, files and audio",pending,,
-R026,settings/connection.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R026,settings/connection.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.,M140
 R027,settings/diagnostics.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Diagnostics groups connection, identity and version as read-only values.; account-connection-axis.md About/Diagnostics source inspection; native and configured-data acceptance pending",
 R027,settings/diagnostics.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R027,settings/diagnostics.tsx,selection,Value selection and current value,source-reviewed,account-connection-axis.md About/Diagnostics source inspection; native and configured-data acceptance pending,
@@ -2186,7 +2186,7 @@ S091,Add / custom fields,lifecycle,"Cold/warm start, blur, background and deep l
 S092,Add / expiration exact date,task,Task clarity and platform-pattern fit,source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending",M03
 S092,Add / expiration exact date,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,selection,Value selection and current value,runtime-partial,"Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Compact date picker opens, Add initializes a date and Clear restores no expiration; other date-edit interactions pending. See native-evidence.md.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending",M03
-S092,Add / expiration exact date,modality,Presentation and dismissal,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S092,Add / expiration exact date,modality,Presentation and dismissal,finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
 S092,Add / expiration exact date,layout,"Safe areas, scroll edges and overlays",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,adaptation,Phone/tablet/window reflow,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,typography,"Dynamic Type, wrapping and legibility",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
@@ -2202,15 +2202,15 @@ S092,Add / expiration exact date,content,"Lists, hierarchy, density and paginati
 S092,Add / expiration exact date,search,"Search, scope and filters",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,loading,"Loading, background refresh and progress",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,recovery,"Empty, error, denied and retry",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending",M03
+S092,Add / expiration exact date,editing,"Draft, save, cancel, undo and interruption",finding,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.",M03; M138
 S092,Add / expiration exact date,privacy,"Account scope, data use and permissions",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,notifications,System notification entry and state,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,media,"Camera, library, files and audio",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S092,Add / expiration exact date,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
 S093,Add / expiration month year,task,Task clarity and platform-pattern fit,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,selection,Value selection and current value,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,modality,Presentation and dismissal,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,modality,Presentation and dismissal,finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
 S093,Add / expiration month year,layout,"Safe areas, scroll edges and overlays",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,adaptation,Phone/tablet/window reflow,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,M53
@@ -2226,11 +2226,11 @@ S093,Add / expiration month year,content,"Lists, hierarchy, density and paginati
 S093,Add / expiration month year,search,"Search, scope and filters",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,loading,"Loading, background refresh and progress",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,recovery,"Empty, error, denied and retry",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,editing,"Draft, save, cancel, undo and interruption",finding, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,M54;M134
+S093,Add / expiration month year,editing,"Draft, save, cancel, undo and interruption",finding, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M54;M134; M138
 S093,Add / expiration month year,privacy,"Account scope, data use and permissions",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,notifications,System notification entry and state,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,media,"Camera, library, files and audio",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
 S094,Add / draft recovery,task,Task clarity and platform-pattern fit,pending,,
 S094,Add / draft recovery,navigation,"Navigation, hierarchy and return",pending,,
 S094,Add / draft recovery,selection,Value selection and current value,pending,,
@@ -2378,7 +2378,7 @@ S099,Asset / photo gallery,lifecycle,"Cold/warm start, blur, background and deep
 S100,Asset / full screen viewer,task,Task clarity and platform-pattern fit,source-reviewed,Full-screen image inspection supports zoom and paging; modal exception is recorded in mobile-navigation-and-visual-polish.spec.md.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,navigation,"Navigation, hierarchy and return",source-reviewed,Explicit Close/Previous/Next plus swipe-to-close; boundary controls disabled. Native gesture/focus restoration pending.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,selection,Value selection and current value,source-reviewed,Selected index resolves by photo ID and invalid indexes do not present the viewer. Source review only.,
-S100,Asset / full screen viewer,modality,Presentation and dismissal,runtime-partial,native-evidence.md run34947056524 iPad removal-error dialog only; other modal states pending,
+S100,Asset / full screen viewer,modality,Presentation and dismissal,finding,native-evidence.md run34947056524 iPad removal-error dialog only; other modal states pending; dcbf1fe0 stored-photo confirmation invalidation and one-shot acceptance; nine mounted cases; native pending.,M139
 S100,Asset / full screen viewer,layout,"Safe areas, scroll edges and overlays",finding,"Bottom toolbar accounts for safe-bottom inset; full-screen and enlarged-text runtime pending.; M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md)",M83
 S100,Asset / full screen viewer,adaptation,Phone/tablet/window reflow,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2394,11 +2394,11 @@ S100,Asset / full screen viewer,content,"Lists, hierarchy, density and paginatio
 S100,Asset / full screen viewer,search,"Search, scope and filters",pending,,
 S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",finding,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; M85: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending,M42;M85
 S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",finding,"M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md); M85: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending",M83;M85
-S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,M42
+S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",finding,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; photo-viewer-axis.md source review at82669f4b; native acceptance pending; dcbf1fe0 stored-photo confirmation invalidation and one-shot acceptance; nine mounted cases; native pending.,M42; M139
 S100,Asset / full screen viewer,privacy,"Account scope, data use and permissions",source-reviewed,Authorized image headers retained; Remove is permission-gated and system confirmation precedes command. No boundary changes.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,notifications,System notification entry and state,pending,,
 S100,Asset / full screen viewer,media,"Camera, library, files and audio",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
-S100,Asset / full screen viewer,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S100,Asset / full screen viewer,lifecycle,"Cold/warm start, blur, background and deep link",finding,dcbf1fe0 stored-photo confirmation invalidation and one-shot acceptance; nine mounted cases; native pending.,M139
 S101,Asset / upload retry,task,Task clarity and platform-pattern fit,pending,,
 S101,Asset / upload retry,navigation,"Navigation, hierarchy and return",pending,,
 S101,Asset / upload retry,selection,Value selection and current value,pending,,
@@ -3033,9 +3033,9 @@ S127,System / keyboard accessory,typography,"Dynamic Type, wrapping and legibili
 S127,System / keyboard accessory,appearance,"Light/dark, contrast and materials",source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
 S127,System / keyboard accessory,localization,"Locale, timezone, RTL and long strings",source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
 S127,System / keyboard accessory,imagery,"Icons, photos and missing media",source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
-S127,System / keyboard accessory,targets,Touch target size and reachability,source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
+S127,System / keyboard accessory,targets,Touch target size and reachability,finding,keyboard-accessory-axis.md; source91a48f09; native acceptance pending; Native349920 iPad visible dismissal fails hit testing; retained image/hierarchy; unresolved.,M137
 S127,System / keyboard accessory,gestures,Gestures and explicit alternatives,source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
-S127,System / keyboard accessory,keyboard,"Keyboard, text entry and focus",source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
+S127,System / keyboard accessory,keyboard,"Keyboard, text entry and focus",finding,keyboard-accessory-axis.md; source91a48f09; native acceptance pending; Native349920 iPad visible dismissal fails hit testing; retained image/hierarchy; unresolved.,M137
 S127,System / keyboard accessory,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
 S127,System / keyboard accessory,motion,Reduced motion and feedback alternatives,source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
 S127,System / keyboard accessory,content,"Lists, hierarchy, density and pagination",source-reviewed,keyboard-accessory-axis.md; source91a48f09; native acceptance pending,
