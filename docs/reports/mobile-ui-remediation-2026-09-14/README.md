@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `text-input-sites.csv` and `text-entry-axis.md`: input ownership, external reset paths, and native acceptance work.
 
 Runtime availability: macOS GitHub runners build and launch the genuine application
 on iPhone and iPad simulators. The first native run failed; see `native-evidence.md`
