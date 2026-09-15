@@ -1805,3 +1805,11 @@ landscape acceptance each passed. Log: /tmp/native350037-ipad-onboarding.log.
 Screenshots from this iPad run have not yet been inspected; prior intermittent
 keyboard hit-test failures remain evidence and their cause is not declared fixed.
 Both fixture jobs remain in progress.
+
+
+Inspected iPad run350037 screenshots now retained: ipad-onboarding-keyboard-350037
+shows the full URL, visible help and primary action clear above the software
+keyboard; ipad-onboarding-landscape-350037 shows the centered constrained form
+and complete action within the screen. These normal-size/light-mode images resolve
+the visual review gap for these captures. They do not establish hardware keyboard,
+VoiceOver or uninterrupted typing reliability across other routes.

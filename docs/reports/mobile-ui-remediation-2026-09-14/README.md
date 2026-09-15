@@ -148,3 +148,13 @@ Coverage is still141 surfaces ×24 axes:984 source-reviewed,2086 pending,268 fin
 inventory exactly. The many pending cells remain work, not implied compliance.
 
 `account-connection-axis.md` reviews R024/R026 across all24 axes. M141 corrects initial identity recovery copy; M142 records custom command rows awaiting native-adapter correction. Source review does not close runtime cells.
+
+
+Combined checkpoint51fedfc8 passes1,677 tests across270 files, TypeScript and
+structural checks on paul (`/tmp/mobile-batch-51fedfc8.log`). Mobile source checksum
+comparison was clean before testing. This includes M143–M146 and the non-crashing
+accessory-comparison candidate; native acceptance of those latest changes remains
+pending. [Confirmation review](confirmation-review.md) distinguishes reviewed
+callers from still-pending dialogs. Run350037 onboarding passes on both devices;
+phone/iPad keyboard and iPad landscape screenshots have been inspected and retained
+in [native evidence](native-evidence.md). Fixture jobs remain running.
