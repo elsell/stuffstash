@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
 import { Platform, pressAlertButton } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
@@ -10,7 +11,7 @@ import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
-import { navigationOptions, resetNavigation, subscribeNavigationOptions } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
 it('keeps dirty Add parent/title across metadata refresh and exposes dismissal', async () => {
@@ -146,20 +147,6 @@ for (const operation of ['parent', 'photo'] as const) {
   });
 }
 
-
-// Native navigation context consumers rerender when screen options change. A
-// bounded fake makes a failure to converge fail promptly instead of hanging CI.
-function NavigationOptionFeedback({ render }: { render: () => React.ReactNode }) {
-  const [, update] = useState(0);
-  useEffect(() => {
-    let updates = 0;
-    return subscribeNavigationOptions(() => {
-      if (++updates > 25) throw new Error('Native header options did not settle');
-      update(value => value + 1);
-    });
-  }, []);
-  return render();
-}
 
 it('settles navigation updates while header actions use the latest Add draft', async () => {
   resetNavigation();

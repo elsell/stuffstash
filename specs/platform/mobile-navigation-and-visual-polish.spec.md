@@ -326,3 +326,10 @@ Verify a navigation fake that notifies consumers of changed options: initial Add
 entry and unrelated draft edits converge, Save submits the latest draft, busy
 Save/Close remain unavailable, and editing recovers after failure. Keep native
 launch, typing and rejected-save recovery as the release acceptance scenario.
+
+Apply the same stable presentation boundary to Home, Browse, notification inbox,
+inventory switcher, checkout-history dismissal and reminder timing headers. Home's
+inventory label still updates for inventory/tenant, width, appearance and text
+size changes. Notification badges/commands and Browse's Add permission remain live.
+These are preventive consumer fixes for the Add-discovered update pattern, not
+claims that every consumer has exhibited a native crash.

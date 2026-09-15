@@ -1,5 +1,5 @@
-import { nativeHeaderActionOptions } from './NativeHeaderActions';
-import { useEffect, useRef, useState } from 'react';
+import { useNativeHeaderActionOptions } from './useNativeHeaderActionOptions';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Stack } from 'expo-router';
 import { Text, View } from 'react-native';
 import type { ExpirationReminderPolicy } from '../../domain/notifications/Notification';
@@ -31,9 +31,10 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
     catch { if (mounted.current) setError('Could not save. Your selection is still here. Try again.'); }
     finally { pending.current = false; if (mounted.current) setSaving(false); }
   }
+  const actionOptions = useNativeHeaderActionOptions(custom ? [{ kind: 'save', label: 'Save reminder days', disabled: locked || !valid, onPress: () => void save(true, Number(days)) }] : []);
+  const headerOptions = useMemo(() => ({ title: 'Before expiration', gestureEnabled: !saving, headerBackVisible: !saving, ...actionOptions }), [saving, actionOptions]);
   return <>
-    <Stack.Screen options={{ title: 'Before expiration', gestureEnabled: !saving, headerBackVisible: !saving,
-      ...nativeHeaderActionOptions(custom ? [{ kind: 'save', label: 'Save reminder days', disabled: locked || !valid, onPress: () => void save(true, Number(days)) }] : []) }} />
+    <Stack.Screen options={headerOptions} />
     <SettingsSection footer="Choose when to remind you before the expiration date. Expired reminders are set separately.">
       <SettingsChoiceRow label="Off" selected={!selection.upcoming && !custom} disabled={locked} onPress={() => { setCustom(false); void save(false, policy.advanceDays); }} />
       {presets.map(value => <View key={value}><SettingsSeparator /><SettingsChoiceRow label={value === 0 ? 'On the expiration date' : `${reminderDaysLabel(value)} before`} selected={!custom && selection.upcoming && selection.advanceDays === value} disabled={locked} onPress={() => { setCustom(false); void save(true, value); }} /></View>)}

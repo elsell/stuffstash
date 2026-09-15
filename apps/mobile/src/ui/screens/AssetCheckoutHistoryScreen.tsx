@@ -1,5 +1,6 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
+import { useMemo } from 'react';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
@@ -41,8 +42,10 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
     : accessDenied || history.isError || inventory.isError ? { status: 'error', assetTitle, message: 'Checkout history could not be loaded.' }
       : { status: 'loading', assetTitle };
   const retry = () => { void (inventory.isError ? inventory.refetch() : (core.isError && !core.data) ? core.refetch() : history.refetch()); };
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => router.back() }]);
+  const headerOptions = useMemo(() => ({ title: 'Checkout history', headerShown: true, ...actionOptions }), [actionOptions]);
   return <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['left', 'right', 'bottom']}>
-    <Stack.Screen options={{ title: 'Checkout history', headerShown: true, ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => router.back() }]) }} />
+    <Stack.Screen options={headerOptions} />
     <AssetCheckoutHistorySheet state={state} footer={<>
       {state.status === 'error' ? <NativeCommandButton label="Try again" onPress={retry} /> : null}
       {history.isRefetchError && state.status === 'ready' ? <>

@@ -46,7 +46,7 @@ R002,(tabs)/(home)/index.tsx,editing,"Draft, save, cancel, undo and interruption
 R002,(tabs)/(home)/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R002,(tabs)/(home)/index.tsx,notifications,System notification entry and state,pending,,
 R002,(tabs)/(home)/index.tsx,media,"Camera, library, files and audio",pending,,
-R002,(tabs)/(home)/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R002,(tabs)/(home)/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
 R003,(tabs)/_layout.tsx,task,Task clarity and platform-pattern fit,pending,,
 R003,(tabs)/_layout.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R003,(tabs)/_layout.tsx,selection,Value selection and current value,pending,,
@@ -118,7 +118,7 @@ R005,(tabs)/search/index.tsx,editing,"Draft, save, cancel, undo and interruption
 R005,(tabs)/search/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R005,(tabs)/search/index.tsx,notifications,System notification entry and state,pending,,
 R005,(tabs)/search/index.tsx,media,"Camera, library, files and audio",pending,,
-R005,(tabs)/search/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R005,(tabs)/search/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
 R006,_layout.tsx,task,Task clarity and platform-pattern fit,pending,,
 R006,_layout.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R006,_layout.tsx,selection,Value selection and current value,pending,,
@@ -190,7 +190,7 @@ R008,assets/[assetId]/checkouts.tsx,editing,"Draft, save, cancel, undo and inter
 R008,assets/[assetId]/checkouts.tsx,privacy,"Account scope, data use and permissions",pending,,
 R008,assets/[assetId]/checkouts.tsx,notifications,System notification entry and state,pending,,
 R008,assets/[assetId]/checkouts.tsx,media,"Camera, library, files and audio",pending,,
-R008,assets/[assetId]/checkouts.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R008,assets/[assetId]/checkouts.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
 R009,assets/[assetId]/edit.tsx,task,Task clarity and platform-pattern fit,pending,,
 R009,assets/[assetId]/edit.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R009,assets/[assetId]/edit.tsx,selection,Value selection and current value,pending,,
@@ -526,7 +526,7 @@ R022,notifications.tsx,editing,"Draft, save, cancel, undo and interruption",pend
 R022,notifications.tsx,privacy,"Account scope, data use and permissions",pending,,
 R022,notifications.tsx,notifications,System notification entry and state,pending,,
 R022,notifications.tsx,media,"Camera, library, files and audio",pending,,
-R022,notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R022,notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,"M05,M46"
 R023,settings/about.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Read-only product description/version; no unnecessary selection or navigation within content.,
 R023,settings/about.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R023,settings/about.tsx,selection,Value selection and current value,pending,,
@@ -1342,7 +1342,7 @@ R056,tenant-switcher.tsx,editing,"Draft, save, cancel, undo and interruption",pe
 R056,tenant-switcher.tsx,privacy,"Account scope, data use and permissions",pending,,
 R056,tenant-switcher.tsx,notifications,System notification entry and state,pending,,
 R056,tenant-switcher.tsx,media,"Camera, library, files and audio",pending,,
-R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
 R057,voice.tsx,task,Task clarity and platform-pattern fit,pending,,
 R057,voice.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R057,voice.tsx,selection,Value selection and current value,pending,,
@@ -1918,7 +1918,7 @@ S080,Inventory switcher / inventory list,editing,"Draft, save, cancel, undo and 
 S080,Inventory switcher / inventory list,privacy,"Account scope, data use and permissions",pending,,
 S080,Inventory switcher / inventory list,notifications,System notification entry and state,pending,,
 S080,Inventory switcher / inventory list,media,"Camera, library, files and audio",pending,,
-S080,Inventory switcher / inventory list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S080,Inventory switcher / inventory list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
 S081,Inventory switcher / household list,task,Task clarity and platform-pattern fit,pending,,
 S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
@@ -1942,7 +1942,7 @@ S081,Inventory switcher / household list,editing,"Draft, save, cancel, undo and 
 S081,Inventory switcher / household list,privacy,"Account scope, data use and permissions",pending,,
 S081,Inventory switcher / household list,notifications,System notification entry and state,pending,,
 S081,Inventory switcher / household list,media,"Camera, library, files and audio",pending,,
-S081,Inventory switcher / household list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S081,Inventory switcher / household list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
 S082,Inventory switcher / load failure,task,Task clarity and platform-pattern fit,pending,,
 S082,Inventory switcher / load failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
@@ -1966,7 +1966,7 @@ S082,Inventory switcher / load failure,editing,"Draft, save, cancel, undo and in
 S082,Inventory switcher / load failure,privacy,"Account scope, data use and permissions",pending,,
 S082,Inventory switcher / load failure,notifications,System notification entry and state,pending,,
 S082,Inventory switcher / load failure,media,"Camera, library, files and audio",pending,,
-S082,Inventory switcher / load failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S082,Inventory switcher / load failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
 S083,Inventory switcher / selection pending failure,task,Task clarity and platform-pattern fit,pending,,
 S083,Inventory switcher / selection pending failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
@@ -1990,7 +1990,7 @@ S083,Inventory switcher / selection pending failure,editing,"Draft, save, cancel
 S083,Inventory switcher / selection pending failure,privacy,"Account scope, data use and permissions",pending,,
 S083,Inventory switcher / selection pending failure,notifications,System notification entry and state,pending,,
 S083,Inventory switcher / selection pending failure,media,"Camera, library, files and audio",pending,,
-S083,Inventory switcher / selection pending failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S083,Inventory switcher / selection pending failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
 S084,Add / main draft,task,Task clarity and platform-pattern fit,pending,,
 S084,Add / main draft,navigation,"Navigation, hierarchy and return",pending,,
 S084,Add / main draft,selection,Value selection and current value,pending,,
@@ -2710,7 +2710,7 @@ S113,Reminders / preset timing,editing,"Draft, save, cancel, undo and interrupti
 S113,Reminders / preset timing,privacy,"Account scope, data use and permissions",pending,,
 S113,Reminders / preset timing,notifications,System notification entry and state,pending,,
 S113,Reminders / preset timing,media,"Camera, library, files and audio",pending,,
-S113,Reminders / preset timing,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S113,Reminders / preset timing,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
 S114,Reminders / custom timing,task,Task clarity and platform-pattern fit,pending,,
 S114,Reminders / custom timing,navigation,"Navigation, hierarchy and return",pending,,
 S114,Reminders / custom timing,selection,Value selection and current value,pending,,
@@ -2734,7 +2734,7 @@ S114,Reminders / custom timing,editing,"Draft, save, cancel, undo and interrupti
 S114,Reminders / custom timing,privacy,"Account scope, data use and permissions",pending,,
 S114,Reminders / custom timing,notifications,System notification entry and state,pending,,
 S114,Reminders / custom timing,media,"Camera, library, files and audio",pending,,
-S114,Reminders / custom timing,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S114,Reminders / custom timing,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
 S115,Reminders / timezone search,task,Task clarity and platform-pattern fit,source-reviewed,Dedicated searchable chooser justified by large IANA list; explanation describes midnight/travel semantics.,
 S115,Reminders / timezone search,navigation,"Navigation, hierarchy and return",pending,,
 S115,Reminders / timezone search,selection,Value selection and current value,source-reviewed,Saved zone retained as selected; selection immediately saves with pending guard; failed selection leaves saved checkmark.,

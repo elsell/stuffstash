@@ -1,435 +1,147 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HomeDashboardViewModel } from '../../application/home/HomeDashboardQuery';
+import React from 'react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { HomeDashboardQuery } from '../../application/home/HomeDashboardQuery';
+import type { AssetCheckoutResult, HomeDashboardSnapshot, HomeDashboardSnapshotRepository } from '../../application/home/InventorySummaryRepository';
+import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
+import { assetId, type AssetSummary } from '../../domain/assets/AssetSummary';
+import { inventoryId, tenantId } from '../../domain/inventories/InventorySummary';
+import { createMobileQueryClient } from '../../adapters/serverState/MobileQueryClient';
+import { MobileRenderHarness } from '../../test-support/render';
+import { dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
+import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { HomeScreen } from './HomeScreen';
 
-const testState = vi.hoisted(() => ({
-  stateValues: [] as unknown[],
-  stateIndex: 0,
-  stateSetters: [] as ReturnType<typeof vi.fn>[]
-}));
-const routerPush = vi.hoisted(() => vi.fn());
-const serverQueryState = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
-
-vi.mock('react', async (importOriginal) => ({
-  ...await importOriginal<typeof import('react')>(),
-  useCallback: <T,>(callback: T) => callback,
-  useEffect: vi.fn(),
-  useRef: <T,>(value: T) => ({ current: value }),
-  useState: <T,>(initialValue?: T) => {
-    const index = testState.stateIndex++;
-    const value = index < testState.stateValues.length ? testState.stateValues[index] : initialValue;
-    const setter = vi.fn();
-    testState.stateSetters[index] = setter;
-    return [value, setter];
-  }
-}));
-
-vi.mock('expo-router', () => ({
-  useFocusEffect: () => {},
-  Stack: { Screen: ({ options }: { options: { headerLeft?: () => unknown; headerRight?: () => unknown } }) => ({
-    type: 'NativeHeader', props: { children: [options.headerLeft?.(), options.headerRight?.()] }
-  }) },
-  router: {
-    navigate: vi.fn(),
-    push: routerPush
-  }
-}));
-
-vi.mock('../serverState/useMobileInventoryServerQuery', () => ({
-  useMobileInventoryServerQuery: () => serverQueryState.current
-}));
-
-vi.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: 'SafeAreaView'
-}));
-
-vi.mock('react-native', () => ({
-  useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
-  ActivityIndicator: 'ActivityIndicator',
-  Image: 'Image',
-  Modal: 'Modal',
-  Platform: { OS: 'ios' },
-  Pressable: 'Pressable',
-  RefreshControl: 'RefreshControl',
-  ScrollView: 'ScrollView',
-  StyleSheet: { create: (styles: unknown) => styles },
-  Text: 'Text',
-  TextInput: 'TextInput',
-  View: 'View'
-}));
-
-vi.mock('../components/AssetCard', () => ({
-  AssetCard: (props: Record<string, unknown>) => ({
-    type: 'AssetCard',
-    props: {
-      ...props,
-      children: props.showUpdatedAt
-        ? { type: 'Text', props: { children: (props.asset as typeof recentAsset).updatedAtLabel } }
-        : undefined
-    }
-  })
-}));
-
-vi.mock('../components/BrandMark', () => ({ BrandMark: 'BrandMark' }));
-vi.mock('../components/IdentityIcon', () => ({ IdentityLabel: 'IdentityLabel' }));
-vi.mock('../feedback/AppFeedback', () => ({
-  useAppFeedback: () => ({ showDialog: vi.fn(), showNotice: vi.fn() })
-}));
-vi.mock('../theme/appearance', () => ({
-  useAppearanceAwarePalette: () => ({
-    accent: '#6B90AA',
-    action: '#0066CC',
-    background: '#F7FAFB',
-    border: '#C5D0D7',
-    onAction: '#FFFFFF',
-    surface: '#FFFFFF',
-    surfaceMuted: '#E8F0F5',
-    text: '#243038',
-    textMuted: '#52616B'
-  })
-}));
-
-const recentAsset = {
-  id: 'asset-recent',
-  title: 'Recent bowl',
-  kindLabel: 'Item',
-  customTypeLabel: undefined,
-  description: 'Recently changed',
-  locationTrailLabel: 'Kitchen / Cabinet',
-  parentLocationTrail: [{ id: 'asset-kitchen', title: 'Kitchen', isImmediateParent: true }],
-  updatedAtLabel: 'Updated today',
-  photoLabel: 'Needs photo',
-  imagePlaceholderLabel: 'Item',
-  tags: [{ id: 'tag-kitchen', label: 'Kitchen', color: '#2F80ED' }]
-} as const;
-
-const checkedOutAsset = {
-  ...recentAsset,
-  id: 'asset-checked-out',
-  title: 'Cordless drill',
-  checkedOutLabel: 'Checked out'
-} as const;
-
-const dashboard: HomeDashboardViewModel = {
-  tenantId: 'tenant-home',
-  tenantName: 'Home',
-  inventoryId: 'inventory-home',
-  inventoryName: 'Home Inventory',
-  tenants: [{ id: 'tenant-home', name: 'Home' }],
-  inventories: [{
-    id: 'inventory-home',
-    tenantId: 'tenant-home',
-    tenantName: 'Home',
-    name: 'Home Inventory',
-    roleLabel: 'Owner',
-    updatedAtLabel: 'Updated today'
-  }],
-  canAdd: true,
-  recentAssets: [recentAsset],
-  checkedOutAssets: [checkedOutAsset]
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(done => { resolve = done; });
+  return { promise, resolve };
+}
+const recent: AssetSummary = {
+  id: assetId('asset-recent'), title: 'Recent bowl', kind: 'item', lifecycleState: 'active',
+  description: '', locationLabel: 'Cabinet', locationTrail: ['Kitchen', 'Cabinet'],
+  parentLocationTrail: [{ id: assetId('asset-kitchen'), title: 'Kitchen' }],
+  updatedAtLabel: 'Updated today', hasPhoto: false,
+  tags: [{ id: 'tag-kitchen', key: 'kitchen', displayName: 'Kitchen supplies' }]
 };
+const checkedOut: AssetSummary = {
+  ...recent, id: assetId('asset-checked-out'), title: 'Cordless drill',
+  tags: [{ id: 'tag-tools', key: 'tools', displayName: 'Power tools' }],
+  currentCheckout: { id: 'checkout-one', state: 'open', checkedOutAt: '2026-09-15T00:00:00Z', checkedOutByPrincipalId: 'principal' }
+};
+function snapshot(checkedOutAssets: readonly AssetSummary[] = [checkedOut]): HomeDashboardSnapshot {
+  return { checkedOutAssets, workspace: {
+    tenants: [{ id: tenantId('tenant-home'), name: 'Home' }], defaultInventoryId: inventoryId('inventory-home'),
+    inventories: [{ id: inventoryId('inventory-home'), tenantId: tenantId('tenant-home'), name: 'Home Inventory',
+      role: 'owner', permissions: ['view', 'create_asset'], description: '', updatedAtLabel: 'Updated today',
+      locationCount: 1, locations: [], assets: [recent] }]
+  } };
+}
+class DashboardRepository implements HomeDashboardSnapshotRepository {
+  reads = 0;
+  load: () => Promise<HomeDashboardSnapshot> = async () => snapshot();
+  async getHomeDashboardSnapshot() { this.reads++; return this.load(); }
+}
 
-describe('HomeScreen asset cards', () => {
+describe('Home interactions through mounted components', () => {
+  let h: MobileRenderHarness;
+  let repository: DashboardRepository;
+  let client: ReturnType<typeof createMobileQueryClient>;
+  let returns: string[];
+  let returnResult: () => Promise<AssetCheckoutResult>;
+  const settle = async () => { await h.run(() => new Promise(resolve => setTimeout(resolve, 10))); };
+  const refresh = () => h.byType('ScrollView')!.props.refreshControl.props;
+  async function render() {
+    const command = new AssetCheckoutCommand({ returnAsset: async id => { returns.push(id); return returnResult(); } });
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-home', inventoryId: 'inventory-home' })}>
+      <AppFeedbackProvider><HomeScreen dashboardQuery={new HomeDashboardQuery(repository)} assetCheckoutCommand={command} /></AppFeedbackProvider>
+    </MobileServerStateProvider>);
+    await settle(); await settle();
+  }
   beforeEach(() => {
-    testState.stateIndex = 0;
-    testState.stateSetters = [];
-    testState.stateValues = [false, undefined, undefined];
-    serverQueryState.current = readyServerQuery(dashboard);
-    routerPush.mockClear();
+    resetNavigation(); h = new MobileRenderHarness(); repository = new DashboardRepository(); client = createMobileQueryClient(); returns = [];
+    returnResult = async () => ({ id: 'checkout-one', assetId: checkedOut.id, undoableOperationId: 'operation-one' });
   });
+  afterEach(async () => { await h.unmount(); client.clear(); resetNavigation(); });
 
-  it('wires recent and checked-out entries through the shared compact card', () => {
-    const cards = renderHomeCards();
-    const recent = cards.find((card) => card.props?.asset === recentAsset);
-    const checkedOut = cards.find((card) => card.props?.asset === checkedOutAsset);
-
-    expect(recent?.props).toMatchObject({ density: 'row', showUpdatedAt: true });
-    expect(recent?.props?.showTags).toBeUndefined();
-    expect(checkedOut?.props).toMatchObject({ density: 'row', showTags: false });
-    expect(checkedOut?.props?.footerAction).toMatchObject({ disabled: false, label: 'Return' });
-
-    (recent?.props?.onPress as (() => void) | undefined)?.();
-    (recent?.props?.onParentLocationPress as ((location: { id: string }) => void) | undefined)?.({ id: 'asset-kitchen' });
-
-    expect(routerPush).toHaveBeenNthCalledWith(1, {
-      pathname: '/assets/[assetId]',
-      params: { assetId: 'asset-recent' }
-    });
-    expect(routerPush).toHaveBeenNthCalledWith(2, {
-      pathname: '/assets/[assetId]',
-      params: { assetId: 'asset-kitchen' }
-    });
+  it('opens recent and checked-out items and their parent location', async () => {
+    await render();
+    await h.press(h.byLabel('Open asset Recent bowl'));
+    await h.press(h.byLabel('Open asset Cordless drill'));
+    await h.press(h.byLabel('Open location Kitchen'));
+    expect(dispatchedActions()).toEqual(['asset-recent', 'asset-checked-out', 'asset-kitchen'].map(id => ({ type: 'push', href: { pathname: '/assets/[assetId]', params: { assetId: id } } })));
   });
-
-  it('presents compact inventory context and primary toolbar actions with explicit labels', () => {
-    const tree = renderReadyHome();
-    const context = findByAccessibilityLabel(
-      tree,
-      'Current inventory Home Inventory, tenant Home. Switch inventory'
-    );
-    const account = findByAccessibilityLabel(tree, 'Open account and settings');
-    const add = findByAccessibilityLabel(tree, 'Add an asset');
-
-    expect(context?.props?.accessibilityRole).toBe('button');
-    expect(findTextNode(tree, 'Home Inventory')?.props?.numberOfLines).toBe(1);
-    expect(findTextNode(tree, 'Home')?.props?.numberOfLines).toBe(1);
-    expect(account?.props?.accessibilityRole).toBe('button');
-    expect(add?.props?.accessibilityRole).toBe('button');
-    expect(controlSize(context, 'minHeight')).toBeGreaterThanOrEqual(44);
-    expect(controlSize(account, 'minHeight')).toBeGreaterThanOrEqual(44);
-    expect(controlSize(account, 'minWidth')).toBeGreaterThanOrEqual(44);
-    expect(controlSize(add, 'minHeight')).toBeGreaterThanOrEqual(44);
-    expect(controlSize(add, 'minWidth')).toBeGreaterThanOrEqual(44);
-
-    (context?.props?.onPress as (() => void) | undefined)?.();
-    (account?.props?.onPress as (() => void) | undefined)?.();
-    (add?.props?.onPress as (() => void) | undefined)?.();
-
-    expect(routerPush).toHaveBeenNthCalledWith(1, '/tenant-switcher');
-    expect(routerPush).toHaveBeenNthCalledWith(2, '/settings');
-    expect(routerPush).toHaveBeenNthCalledWith(3, '/add');
+  it('names inventory context and opens inventory, account, and Add', async () => {
+    await render();
+    await h.press(h.byLabel('Current inventory Home Inventory, tenant Home. Switch inventory'));
+    await h.press(h.byLabel('Open account and settings'));
+    await h.press(h.byLabel('Add an asset'));
+    expect(dispatchedActions()).toEqual(['/tenant-switcher', '/settings', '/add'].map(href => ({ type: 'push', href })));
   });
-
-  it('removes the permanent Locations section even when location data is available', () => {
-    const tree = renderReadyHome();
-
-    expect(allText(tree)).not.toContain('Locations');
-    expect(allText(tree)).not.toContain('Kitchen');
-    expect(findAllByType(tree, 'Image')).toHaveLength(0);
+  it('retains location breadcrumbs without a permanent Locations section', async () => {
+    await render();
+    expect(h.byLabel('Open location Kitchen')).toBeDefined();
+    expect(h.byText('Locations')).toBeUndefined();
+    expect(h.byText('Kitchen supplies')).toBeUndefined();
+    expect(h.byText('Power tools')).toBeUndefined();
   });
-
-  it('exposes recent activity context and descriptive section semantics', () => {
-    const tree = renderReadyHome();
-    const cards = findAllByType(tree, 'AssetCard');
-
-    expect(allText(tree)).toContain('Updated today');
-    expect(cards.find((card) => card.props?.asset === recentAsset)?.props?.showUpdatedAt).toBe(true);
-    expect(findTextNode(tree, 'Recently changed')?.props?.accessibilityRole).toBe('header');
-    expect(findTextNode(tree, 'Checked out')?.props?.accessibilityRole).toBe('header');
-    expect(findByAccessibilityLabel(tree, 'View all recently changed assets')).toBeDefined();
-    expect(findByAccessibilityLabel(tree, 'View all checked-out assets')).toBeDefined();
-    const scrollViews = findAllByType(tree, 'ScrollView');
-    expect(scrollViews.filter((node) => node.props?.horizontal === true)).toHaveLength(0);
-    expect(scrollViews[0]?.props?.contentInsetAdjustmentBehavior).toBe('automatic');
+  it('exposes update context and section navigation', async () => {
+    await render();
+    expect(h.byText('Updated today')).toBeDefined();
+    expect(h.byType('ScrollView')?.props.contentInsetAdjustmentBehavior).toBe('automatic');
+    expect(h.byType('ScrollView')?.props.horizontal).not.toBe(true);
+    expect(h.byText('Recently changed')?.props.accessibilityRole).toBe('header');
+    expect(h.allByType('Text').some(node => node.children.includes('Checked out') && node.props.accessibilityRole === 'header')).toBe(true);
+    await h.press(h.byLabel('View all recently changed assets'));
+    await h.press(h.byLabel('View all checked-out assets'));
+    expect(dispatchedActions()).toEqual([{ type: 'push', href: '/assets' }, { type: 'navigate', href: { pathname: '/search', params: { checkoutState: 'checked_out' } } }]);
   });
-
-  it('omits the checked-out section entirely when no assets need attention', () => {
-    const tree = renderReadyHome({ ...dashboard, checkedOutAssets: [] });
-
-    expect(allText(tree)).not.toContain('Checked out');
-    expect(allText(tree)).not.toContain('Nothing checked out.');
-    expect(findByAccessibilityLabel(tree, 'View all checked-out assets')).toBeUndefined();
+  it('omits the checked-out section when empty', async () => {
+    repository.load = async () => snapshot([]); await render();
+    expect(h.byLabel('View all checked-out assets')).toBeUndefined();
+    expect(h.byText('Checked out')).toBeUndefined();
+    expect(h.byText('Nothing checked out.')).toBeUndefined();
   });
-
-  it('keeps checked-out assets compact and gives each Return action asset-specific context', () => {
-    const checkedOut = findAllByType(renderReadyHome(), 'AssetCard')
-      .find((card) => card.props?.asset === checkedOutAsset);
-
-    expect(checkedOut?.props).toMatchObject({ density: 'row', showTags: false });
-    expect(checkedOut?.props?.footerAction).toMatchObject({
-      accessibilityLabel: 'Return Cordless drill',
-      disabled: false,
-      label: 'Return'
-    });
+  it('returns the named asset through its command', async () => {
+    await render(); await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(returns).toEqual(['asset-checked-out']);
+    expect(h.byText('Return details')).toBeDefined();
   });
-
-  it('does not open the native pull control for a background dashboard refetch', () => {
-    serverQueryState.current = { ...readyServerQuery(dashboard), isRefetching: true };
-    const scroll = findAllByType(renderHome(), 'ScrollView')[0];
-    const refresh = scroll.props?.refreshControl as ElementNode;
-    expect(refresh.props?.refreshing).toBe(false);
+  it('does not display a pull indicator during background refresh', async () => {
+    await render(); const pending = deferred<HomeDashboardSnapshot>(); repository.load = () => pending.promise;
+    let finished!: Promise<void>;
+    await h.run(() => { finished = client.invalidateQueries(); }); await settle();
+    expect(repository.reads).toBeGreaterThan(1); expect(refresh().refreshing).toBe(false);
+    await h.run(async () => { pending.resolve(snapshot()); await finished; });
   });
-
-  it('connects Return to the checkout command and disables the action while returning', async () => {
-    const execute = vi.fn().mockResolvedValue({
-      id: 'checkout-one',
-      assetId: 'asset-checked-out',
-      undoableOperationId: 'operation-one'
-    });
-    const cards = renderHomeCards(execute);
-    const checkedOut = cards.find((card) => card.props?.asset === checkedOutAsset);
-
-    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
-    await Promise.resolve();
-
-    expect(execute).toHaveBeenCalledWith({ action: 'return', assetId: 'asset-checked-out' });
-
-    testState.stateIndex = 0;
-    testState.stateValues = [false, 'asset-checked-out', undefined];
-    const returningCard = renderHomeCards(execute).find((card) => card.props?.asset === checkedOutAsset);
-
-    expect(returningCard?.props?.footerAction).toMatchObject({ disabled: true, label: 'Returning...' });
+  it('disables Return while the command is pending', async () => {
+    const pending = deferred<AssetCheckoutResult>(); returnResult = () => pending.promise;
+    await render(); await h.press(h.byLabel('Return Cordless drill'));
+    expect(h.byLabel('Return Cordless drill')?.props.disabled).toBe(true);
+    expect(h.byText('Returning...')).toBeDefined(); expect(h.byText('Return details')).toBeUndefined();
+    await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id, undoableOperationId: 'operation-one' })); await settle();
+    expect(h.byText('Return details')).toBeDefined();
   });
-
-  it('shows return details before the dashboard refresh completes', async () => {
-    const execute = vi.fn().mockResolvedValue({
-      id: 'checkout-one',
-      assetId: 'asset-checked-out',
-      undoableOperationId: 'operation-one'
-    });
-    const dashboardExecute = vi.fn(() => new Promise<HomeDashboardViewModel>(() => undefined));
-    const tree = renderHome(dashboardExecute, execute);
-    const checkedOut = findAllByType(tree, 'AssetCard')
-      .find((card) => card.props?.asset === checkedOutAsset);
-
-    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(dashboardExecute).toHaveBeenCalledTimes(1);
-    expect(testState.stateSetters[2]).toHaveBeenCalledWith(expect.objectContaining({
-      checkoutId: 'checkout-one',
-      asset: checkedOutAsset
-    }));
+  it('shows return details before background reconciliation completes', async () => {
+    await render(); const pending = deferred<HomeDashboardSnapshot>(); repository.load = () => pending.promise;
+    await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(repository.reads).toBeGreaterThan(1); expect(h.byText('Return details')).toBeDefined();
+    expect(h.byText('Cancel return')).toBeDefined(); expect(refresh().refreshing).toBe(false);
+    await h.run(() => pending.resolve(snapshot([]))); await settle();
   });
-
-  it('reconciles a successful return even when undo is unavailable', async () => {
-    const execute = vi.fn().mockResolvedValue({
-      id: 'checkout-one',
-      assetId: 'asset-checked-out',
-      undoableOperationId: undefined
-    });
-    const dashboardExecute = vi.fn().mockResolvedValue(dashboard);
-    const tree = renderHome(dashboardExecute, execute);
-    const checkedOut = findAllByType(tree, 'AssetCard')
-      .find((card) => card.props?.asset === checkedOutAsset);
-
-    (checkedOut?.props?.footerAction as { onPress?: () => void } | undefined)?.onPress?.();
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(dashboardExecute).toHaveBeenCalledTimes(1);
-    expect(testState.stateSetters[2]).toHaveBeenCalledWith(expect.objectContaining({
-      checkoutId: 'checkout-one',
-      undoableOperationId: undefined
-    }));
+  it('still reconciles a successful return without undo and explains the limitation', async () => {
+    returnResult = async () => ({ id: 'checkout-one', assetId: checkedOut.id });
+    await render(); const pending = deferred<HomeDashboardSnapshot>(); repository.load = () => pending.promise;
+    await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(repository.reads).toBeGreaterThan(1); expect(h.byText('Return details')).toBeDefined();
+    expect(h.byText('Return completed without undo')).toBeDefined(); expect(h.byText('Close')).toBeDefined();
+    expect(h.byText('Cancel return')).toBeUndefined();
+    await h.run(() => pending.resolve(snapshot([]))); await settle();
+  });
+  it('recovers an initial load failure using Retry', async () => {
+    repository.load = async () => { throw new Error('Connection failed'); }; await render();
+    expect(h.byLabel('Retry loading Home')).toBeDefined();
+    repository.load = async () => snapshot(); await h.press(h.byLabel('Retry loading Home')); await settle();
+    expect(h.byLabel('Open asset Recent bowl')).toBeDefined(); expect(h.byLabel('Retry loading Home')).toBeUndefined();
   });
 });
-
-describe('HomeScreen recovery', () => {
-  it('offers an explicit Retry action after the initial load fails', async () => {
-    testState.stateIndex = 0;
-    const execute = vi.fn().mockResolvedValue(dashboard);
-    serverQueryState.current = {
-      ...readyServerQuery(undefined),
-      error: new Error('Network unavailable'),
-      isError: true,
-      isPending: false,
-      refetch: execute
-    };
-    const tree = renderHome(execute);
-    const retry = findByAccessibilityLabel(tree, 'Retry loading Home');
-
-    expect(retry?.props?.accessibilityRole).toBe('button');
-    (retry?.props?.onPress as (() => void) | undefined)?.();
-    await Promise.resolve();
-
-    expect(execute).toHaveBeenCalledTimes(1);
-  });
-});
-
-type ElementNode = {
-  readonly type?: unknown;
-  readonly props?: Record<string, unknown>;
-};
-
-function renderHomeCards(execute = vi.fn()): readonly ElementNode[] {
-  const tree = renderHome(undefined, execute);
-  return findAllByType(tree, 'AssetCard');
-}
-
-function renderReadyHome(readyDashboard: HomeDashboardViewModel = dashboard): unknown {
-  testState.stateIndex = 0;
-  testState.stateValues = [false, undefined, undefined];
-  serverQueryState.current = readyServerQuery(readyDashboard);
-  return renderHome();
-}
-
-function renderHome(dashboardExecute?: ReturnType<typeof vi.fn>, checkoutExecute = vi.fn()): unknown {
-  if (dashboardExecute) {
-    serverQueryState.current = {
-      ...serverQueryState.current,
-      refetch: dashboardExecute
-    };
-  }
-  return HomeScreen({
-    assetCheckoutCommand: {
-      execute: checkoutExecute,
-      undoOperation: vi.fn(),
-      updateReturnedCheckoutDetails: vi.fn()
-    } as never,
-    dashboardQuery: { execute: dashboardExecute ?? vi.fn().mockResolvedValue(dashboard) } as never
-  });
-}
-
-function readyServerQuery(data: HomeDashboardViewModel | undefined): Record<string, unknown> {
-  return {
-    data,
-    error: null,
-    isError: false,
-    isPending: data === undefined,
-    isRefetching: false,
-    refetch: vi.fn().mockResolvedValue({ data })
-  };
-}
-
-function findAllByType(node: unknown, type: unknown): readonly ElementNode[] {
-  if (Array.isArray(node)) {
-    return node.flatMap((child) => findAllByType(child, type));
-  }
-  if (!isElementNode(node)) {
-    return [];
-  }
-  if (node.type === type) {
-    return [node];
-  }
-  if (typeof node.type === 'function') {
-    return findAllByType(node.type(node.props), type);
-  }
-  const children = node.props?.children;
-  return findAllByType(Array.isArray(children) ? children : [children], type);
-}
-
-function isElementNode(node: unknown): node is ElementNode {
-  return Boolean(node && typeof node === 'object' && 'props' in node);
-}
-
-function findByAccessibilityLabel(node: unknown, label: string): ElementNode | undefined {
-  return findAll(node).find((candidate) => candidate.props?.accessibilityLabel === label);
-}
-
-function findTextNode(node: unknown, value: string): ElementNode | undefined {
-  return findAllByType(node, 'Text').find((candidate) => candidate.props?.children === value);
-}
-
-function allText(node: unknown): readonly string[] {
-  return findAllByType(node, 'Text')
-    .flatMap((candidate) => typeof candidate.props?.children === 'string' ? [candidate.props.children] : []);
-}
-
-function findAll(node: unknown): readonly ElementNode[] {
-  if (Array.isArray(node)) {
-    return node.flatMap(findAll);
-  }
-  if (!isElementNode(node)) {
-    return [];
-  }
-  if (typeof node.type === 'function') {
-    return [node, ...findAll(node.type(node.props))];
-  }
-  const children = node.props?.children;
-  return [node, ...findAll(Array.isArray(children) ? children : [children])];
-}
-
-function controlSize(node: ElementNode | undefined, property: 'minHeight' | 'minWidth'): number | undefined {
-  const styles = flattenStyles(node?.props?.style);
-  const value = styles[property];
-  return typeof value === 'number' ? value : undefined;
-}
-
-function flattenStyles(style: unknown): Record<string, unknown> {
-  if (Array.isArray(style)) {
-    return Object.assign({}, ...style.map(flattenStyles));
-  }
-  return style && typeof style === 'object' ? style as Record<string, unknown> : {};
-}

@@ -1,10 +1,10 @@
-import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { Stack } from 'expo-router';
 import { Mail, MailOpen } from 'lucide-react-native';
 import { AssetBreadcrumbTrail } from '../components/AssetCard';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NotificationInboxQueries } from '../../application/notifications/NotificationInboxQueries';
 import { NotificationFailure } from '../../application/notifications/NotificationFailure';
@@ -84,11 +84,13 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     }, 'Could not update this notification. Try again.');
   }
   const button = (label: string, action: () => void, disabled = busy) => <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={action} style={[styles.button, { borderColor: colors.controlBorder, opacity: disabled ? 0.5 : 1 }]}><Text style={{ color: colors.text }}>{label}</Text></Pressable>;
-  return <>
-    <Stack.Screen options={{ title: 'Notifications', ...nativeHeaderActionOptions([
+  const actionOptions = useNativeHeaderActionOptions([
       { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
       { kind: 'settings', label: 'Reminder settings', onPress: onSettings }
-    ]) }} />
+    ]);
+  const headerOptions = useMemo(() => ({ title: 'Notifications', ...actionOptions }), [actionOptions]);
+  return <>
+    <Stack.Screen options={headerOptions} />
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.content} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />}>
     <NativeSegmentedControl colors={colors} value={filter} disabled={busy} segments={[{ label: 'All', value: 'all' }, { label: 'Unread', value: 'unread' }]} onChange={(value) => void load(value)} />
 

@@ -74,3 +74,22 @@ Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
 This establishes retention and action reachability for that fixture, not full
 assistive-technology or enlarged-text verification. Its iPad onboarding entry
 still lost characters (`h//example.invalid`); M14 remains unresolved.
+
+### M46 shared-consumer follow-through
+
+The Add navigation-feedback finding prompted preventive stabilization of Home,
+Browse, notification inbox, inventory switcher, checkout-history dismissal and
+reminder timing headers. Home/Browse feedback regressions failed before the fix;
+current commands, inventory labels, badges and permission changes remain live.
+This does not imply native crashes were observed in all six consumers.
+
+Home's legacy hook mocks and direct component invocation were replaced with
+mounted React components, real application queries/commands and repository fakes.
+Coverage retains item/location/section navigation, compact tag suppression,
+initial recovery, pending Return and background reconciliation without pull
+indicators. Header sizing/order has separate coverage. The full remote suite
+passed 1,387 tests across 246 files, TypeScript and structural checks; critic
+coverage feedback was addressed. Native verification remains pending.
+
+These preventive changes follow the PR129 release snapshot and are not included
+in that snapshot.
