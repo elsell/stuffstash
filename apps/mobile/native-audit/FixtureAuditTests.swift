@@ -213,6 +213,121 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testDetailCommandsRemainReachableAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit detail commands"]
+    for _ in 0..<14 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let add = app.buttons["Add item here"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    for label in ["Add item here", "Move items here", "Check out", "Edit", "Move"] {
+      let command = app.buttons[label].firstMatch
+      XCTAssertTrue(command.exists)
+      let scroll = app.scrollViews.firstMatch
+      func fullyVisible() -> Bool {
+        let visible = scroll.frame.intersection(app.frame)
+        let top = max(visible.minY, app.navigationBars.firstMatch.frame.maxY)
+        return command.isHittable && command.frame.minY >= top && command.frame.maxY <= visible.maxY
+      }
+      for _ in 0..<12 where !fullyVisible() {
+        let above = command.frame.minY < app.navigationBars.firstMatch.frame.maxY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(fullyVisible(), label)
+      XCTAssertGreaterThanOrEqual(command.frame.height, 44, label)
+      XCTAssertGreaterThanOrEqual(command.frame.minX, app.frame.minX, label)
+      XCTAssertLessThanOrEqual(command.frame.maxX, app.frame.maxX, label)
+      if label == "Add item here" {
+        XCTAssertGreaterThan(command.frame.width, app.frame.width * 0.5)
+      }
+      capture("detail-command-" + label.lowercased().replacingOccurrences(of: " ", with: "-"))
+    }
+    let back = app.navigationBars.buttons.firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
+  func testPlaceContentsUseNativeSearchAndKeepNavigation() {
+    let open = app.buttons["Audit place search"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let more = app.buttons["More actions for Audit place"]
+    XCTAssertTrue(more.waitForExistence(timeout: 10))
+    XCTAssertTrue(more.isHittable)
+    let searchButton = app.buttons["Search"].firstMatch
+    XCTAssertTrue(searchButton.waitForExistence(timeout: 10))
+    XCTAssertTrue(searchButton.isHittable)
+    capture("place-search-collapsed")
+    searchButton.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertTrue(field.isHittable)
+    XCTAssertEqual(field.placeholderValue, "Search this place")
+    field.tap()
+    waitForKeyboard()
+    field.typeText("19")
+    XCTAssertEqual(field.value as? String, "19")
+    XCTAssertTrue(app.staticTexts["Tool 19"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.staticTexts["Tool 0"].exists)
+    capture("place-search-filtered")
+    let clear = field.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable)
+    clear.tap()
+    XCTAssertTrue(app.staticTexts["Tool 0"].firstMatch.waitForExistence(timeout: 5))
+    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
+    XCTAssertTrue(cancel.isHittable)
+    cancel.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(more.isHittable)
+    capture("place-search-cleared")
+    let back = app.navigationBars.buttons.firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
+  func testAssetRegionRecoveryAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit contents recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let contents = app.buttons["Retry contents"]
+    let photos = app.buttons["Retry photos"]
+    XCTAssertTrue(contents.waitForExistence(timeout: 10))
+    XCTAssertTrue(photos.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts["Nothing here yet"].exists)
+    XCTAssertFalse(app.staticTexts["No photos"].exists)
+    XCTAssertTrue(photos.isHittable)
+    capture("asset-region-errors-accessibility-size")
+    photos.tap()
+    XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["No photos"].firstMatch.waitForExistence(timeout: 5))
+    for _ in 0..<8 where !contents.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(contents.isHittable)
+    XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
+    contents.tap()
+    XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
+    let empty = app.staticTexts["Nothing here yet"].firstMatch
+    XCTAssertTrue(empty.waitForExistence(timeout: 5))
+    capture("asset-region-recovered-accessibility-size")
+    let back = app.navigationBars.buttons.firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testEditMetadataRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

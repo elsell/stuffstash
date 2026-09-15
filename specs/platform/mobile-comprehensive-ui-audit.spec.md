@@ -681,3 +681,62 @@ accessory is absent. This isolates the extender's presence, not the entire keybo
 controller; its pinned native implementation reloads input views when attaching
 an accessory, which is a hypothesis to test, not an established cause of lost text.
 Do not remove production keyboard controls based only on this source observation.
+
+
+### Contained-workspace recovery and native-pattern follow-up
+
+The contained-items audit includes the shared detail route reached from Browse
+and Map. Unknown contents must not be described as an empty collection.
+Initial loading and failed loads without data must suppress empty-result claims
+for both contents and photos;
+a failed refresh must preserve any available contents. Contents and photo query
+errors must have persistent region-level status and independent native retry
+commands, rather than requiring a pull gesture or relying on a root notice. This does not change repository authorization or query scope.
+
+The older inline contained-search contract requires a separate spec revision
+before adopting native navigation search. That revision must preserve title/path
+matching, section counts and no-match recovery, address search ownership on both
+entry points, and include native focus/close checks. See M88/M89 and the24-axis
+contained-items report; neither finding is considered fixed by this source review.
+
+
+M89 native acceptance uses the real progressive detail route with controlled first
+failures for contents and photos, followed by independent successful retries.
+The runner verifies absent empty claims before recovery, reachable native retry
+commands at largest accessibility text, independent error removal and Back after
+recovery. Current Map info pushes the ordinary asset route; the fixture must not
+be described as a Map sheet test. Real Map return preservation remains a separate
+acceptance scenario. No fixture mutations or production credentials are used.
+
+
+M88 search revision adopts NativeNavigationSearch for location contents at the
+existing20-row threshold. Route-owned query state clears on asset replacement
+or loss of eligibility. The adapter explicitly removes search configuration when
+disabled. Existing Browse/Map/Expiration callers retain enabled behavior by default.
+Native verification must cover header coexistence, expansion, cancellation and
+return, in addition to query-fake tests for filtering and ownership. Spatial
+command modernization remains a separate part of M88.
+
+Native place-search acceptance uses the shared detail route with20 known item
+rows and successful independent queries. Verify the integrated search button,
+scoped field, filtering, native clear, settled full results, keyboard dismissal
+and Back. Check the More actions control before and after search. This fixture
+does not certify Map-path return, all text sizes, or spatial command styling.
+
+M88 detail commands reuse NativeCommandButton with optional primary prominence.
+Default commands retain their existing native text-button appearance. Add item here
+uses native primary styling; Move items here and maintenance remain quiet. Direct
+item Check out/Return retains primary prominence, while contained-workspace
+availability remains quiet. Authorization-derived visibility, missing-handler and
+pending disabling, action ordering and route destinations must be preserved.
+SwiftUI and Compose own button appearance and label measurement; preview styling
+is not evidence of native rendering. Shared adapter consumers need regression
+checks, and native large-text/permission-state verification remains required.
+
+Native detail-command acceptance includes an editable container with create/edit
+permissions and a long title at largest accessibility text. Check Add item here,
+Move items here, Check out and maintenance commands after scrolling: unobstructed
+hit targets, minimum44-point height, horizontal containment and primary width.
+Capture each visible command region for multiline/visual review. This is layout
+acceptance only; downstream mutations and route destinations remain covered by
+separate behavior/native journeys. The fixture does not execute mutations.

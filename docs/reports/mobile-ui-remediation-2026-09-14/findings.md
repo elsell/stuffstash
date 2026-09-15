@@ -860,3 +860,68 @@ verifies independent type/tag retries retain a dirty name;12 asset-sheet behavio
 checks, TypeScript and structural checks pass remotely. The new isolated native
 Edit scenario checks simultaneous failures at largest text size, including Cancel.
 That scenario has not run; combined-height and native reachability remain open.
+
+
+### M88 — contained workspace retains custom search and commands (P2)
+
+AssetContainedWorkspace uses an AppTextInput and separate Clear control, plus
+custom spatial and maintenance buttons. The inline search follows an older spec,
+so this is design-contract drift rather than failure to follow that contract.
+Update the contract to scoped native search on demand, and use native command
+controls while preserving Add prominence. Inspect both regular detail and map
+sheet consumers. Source-confirmed; implementation and native acceptance pending.
+See contained-items-axis.md for the complete24-axis review and acceptance.
+
+### M89 — unknown contents are presented alongside empty-state claims (P2)
+
+AssetDetailView builds empty section rows while contents are loading or unavailable.
+AssetDetailRouteScreen reports query failure through a root notice suggesting a
+pull gesture, without persistent region-level retry. In a map detail sheet the
+root notice may be obscured; that occlusion is a source risk, not a new screenshot
+observation. Retain available content and provide explicit independent native
+contents/photo retries; do not claim an unknown collection is empty. Source
+confirmed; reproduction tests, implementation and runtime acceptance are pending.
+
+
+M89 candidate: contents and photos now expose independent native retry commands
+inside their owning detail screen/sheet. Unknown contents and photos no longer
+render empty claims; initial retry returns to the loading indicator, while cached
+content remains visible. A real query regression reproduced false empty copy
+before implementation; independent failure/retry and cached-refresh retention
+checks pass.35 remote detail tests, TypeScript and mobile structural checks passed.
+Critic found no blocker. Native sheet placement and announcements remain pending;
+M89 is not closed by this source result. This change is after the PR142 release.
+
+
+M89 route correction: current Map info pushes assetDetailHref rather than a
+sheet. The earlier sheet-occlusion rationale does not apply to that current path;
+false empty claims and lack of persistent local retry are still source-confirmed.
+A runner fixture now exercises the actual shared detail route at largest text,
+with independent contents/photo recovery and Back. Native execution is pending.
+
+
+M88 search candidate: location contents now use NativeNavigationSearch with the
+existing20-row threshold. The inline field is removed and no-match Clear search
+uses NativeCommandButton. Route-owned search resets on asset/eligibility changes;
+owner guards and keyed adapter lifetime reject obsolete callbacks. A regression
+reproduced stale callbacks clearing a newer asset query before the guard. Shared
+adapter events after unmount are also ignored. Spatial and maintenance controls
+remain open under M88; search header/keyboard behavior is not native-verified yet.
+
+M88 validation:41 final remote adapter/consumer/route checks passed, plus18
+detail-presentation checks before the ownership follow-up, TypeScript and
+structural checks. Critic confirmed the stale-event fix; native acceptance pending.
+
+
+M88 command candidate: spatial, availability and maintenance actions now use the
+shared native command adapter. Add item here and direct item availability retain
+primary prominence; contained availability and maintenance use standard commands.
+Authorization-derived visibility, missing-handler/pending guards and ordering are
+preserved. Removed custom icon/button styling. The native adapter regression
+reproduced missing primary emphasis, then passed with37 detail/native checks,
+TypeScript and structural validation. Native width, multiline labels and wrapped
+maintenance rows at large text remain unverified; M88 remains open for acceptance.
+
+The broader shared-adapter run passed all1505 mobile tests across258 files on
+paul. Code critic found no confirmed blocker. This does not establish native
+button geometry or Android runtime behavior.

@@ -1,4 +1,4 @@
-import { dispatchedActions } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation, dispatchedActions } from '../../test-support/navigation';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { AssetDetailRouteScreen } from './AssetDetailRouteScreen';
@@ -353,5 +353,124 @@ it('does not let old checkout completion unlock the replacement asset operation'
     await test.harness.run(() => current.reject(new Error('Current asset failed')));
     expect(test.harness.byLabel('Check out')?.props.disabled).toBe(false);
     expect(test.harness.allText()).toContain('Current asset failed');
+  } finally { await test.harness.unmount(); }
+});
+
+
+describe('independent asset region recovery', () => {
+  it('keeps known contents visible when a refresh fails and retries without refreshing core', async () => {
+    const core = { ...snapshot(), asset: { ...snapshot().asset, kind: 'location' as const } };
+    const child = { ...snapshot().asset, id: assetId('drill'), title: 'Cordless drill', parentAssetId: core.asset.id };
+    let fail = false;
+    let coreCalls = 0;
+    let contentsCalls = 0;
+    const test = setup({
+      assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => { coreCalls++; return core; } }),
+      assetContentsQuery: new AssetContentsQuery({ getAssetContents: async () => {
+        contentsCalls++;
+        if (fail) throw new Error('Unavailable');
+        return { asset: core.asset, allAssets: [core.asset, child] };
+      } }),
+      assetPhotosQuery: new AssetPhotosQuery({ getAssetPhotos: async () => [] })
+    });
+    test.client.setDefaultOptions({ ...test.client.getDefaultOptions(), queries: { ...test.client.getDefaultOptions().queries, retry: false } });
+    try {
+      await test.render(); await settle(test.harness); await settle(test.harness);
+      expect(test.harness.allText()).toContain('Cordless drill');
+      fail = true;
+      await test.harness.run(() => test.harness.byType('RefreshControl')?.props.onRefresh());
+      await settle(test.harness);
+      expect(test.harness.allText()).toContain('Cordless drill');
+      expect(test.harness.byLabel('Retry contents')).toBeDefined();
+      const coreCallsBeforeRetry = coreCalls;
+      fail = false;
+      await test.harness.press(test.harness.byLabel('Retry contents')); await settle(test.harness);
+      expect(test.harness.byLabel('Retry contents')).toBeUndefined();
+      expect(test.harness.allText()).toContain('Cordless drill');
+      expect(coreCalls).toBe(coreCallsBeforeRetry);
+      expect(contentsCalls).toBe(3);
+    } finally { await test.harness.unmount(); }
+  });
+
+  it('does not call unknown contents empty and retries each failed region independently', async () => {
+    const core = { ...snapshot(), asset: { ...snapshot().asset, kind: 'location' as const } };
+    const firstContents = deferred<AssetContentsSnapshot>();
+    const firstPhotos = deferred<AssetPhoto[]>();
+    const retryContents = deferred<AssetContentsSnapshot>();
+    let contentsCalls = 0;
+    let photoCalls = 0;
+    const test = setup({
+      assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => core }),
+      assetContentsQuery: new AssetContentsQuery({ getAssetContents: () => ++contentsCalls === 1 ? firstContents.promise : retryContents.promise }),
+      assetPhotosQuery: new AssetPhotosQuery({ getAssetPhotos: () => ++photoCalls === 1 ? firstPhotos.promise : Promise.resolve([]) })
+    });
+    test.client.setDefaultOptions({ ...test.client.getDefaultOptions(), queries: { ...test.client.getDefaultOptions().queries, retry: false } });
+    try {
+      await test.render(); await settle(test.harness); await settle(test.harness);
+      expect(test.harness.byLabel('Loading location and contents')).toBeDefined();
+      expect(test.harness.allText()).not.toContain('No photos');
+      expect(test.harness.allText()).not.toContain('Nothing here yet');
+      expect(test.harness.allText()).not.toContain('No spaces here yet');
+      await test.harness.run(() => { firstContents.reject(new Error('Unavailable')); firstPhotos.reject(new Error('Unavailable')); });
+      await settle(test.harness);
+      expect(test.harness.byLabel('Retry contents')).toBeDefined();
+      expect(test.harness.byLabel('Retry photos')).toBeDefined();
+      expect(test.harness.allText()).not.toContain('Nothing here yet');
+      await test.harness.press(test.harness.byLabel('Retry contents'));
+      await settle(test.harness);
+      expect(test.harness.byLabel('Retry contents')).toBeUndefined();
+      expect(test.harness.byLabel('Loading location and contents')).toBeDefined();
+      expect(contentsCalls).toBe(2); expect(photoCalls).toBe(1);
+      await test.harness.press(test.harness.byLabel('Retry photos'));
+      await settle(test.harness);
+      expect(test.harness.byLabel('Retry photos')).toBeUndefined();
+      expect(test.harness.byLabel('Loading location and contents')).toBeDefined();
+      await test.harness.run(() => retryContents.resolve({ asset: core.asset, allAssets: [] }));
+      await settle(test.harness);
+      expect(test.harness.byLabel('Retry contents')).toBeUndefined();
+      expect(test.harness.allText()).toContain('Nothing here yet');
+      expect(test.harness.allText()).toContain('Family tent');
+    } finally { await test.harness.unmount(); }
+  });
+});
+
+
+it('uses scoped native contents search and clears it when detail eligibility changes', async () => {
+  resetNavigation();
+  let count = 20;
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async id => ({ ...snapshot(), asset: { ...snapshot().asset, id, kind: 'location' } }) }),
+    assetContentsQuery: new AssetContentsQuery({ getAssetContents: async core => ({ asset: core.asset,
+      allAssets: Array.from({ length: count }, (_, index) => ({ ...snapshot().asset,
+        id: assetId(`child-${index}`), title: `Tool ${index}`, parentAssetId: core.asset.id }))
+    }) }),
+    assetPhotosQuery: new AssetPhotosQuery({ getAssetPhotos: async () => [] })
+  });
+  type Search = { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void };
+  const search = () => (navigationOptions().findLast(value => Object.hasOwn(value as object, 'headerSearchBarOptions')) as { headerSearchBarOptions?: Search } | undefined)?.headerSearchBarOptions;
+  try {
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    expect(search()).toBeDefined();
+    await test.harness.run(() => search()!.onChangeText({ nativeEvent: { text: 'Tool 19' } }));
+    expect(test.harness.allText()).toContain('Tool 19');
+    expect(test.harness.allText()).not.toContain('Tool 0');
+    await test.harness.run(() => search()!.onCancelButtonPress());
+    expect(test.harness.allText()).toContain('Tool 0');
+    await test.harness.run(() => search()!.onChangeText({ nativeEvent: { text: 'missing' } }));
+    expect(test.harness.allText()).toContain('No matching items');
+    await test.harness.press(test.harness.all().find(node => node.type === 'Pressable' && node.props.accessibilityLabel === 'Clear search'));
+    expect(test.harness.allText()).toContain('Tool 0');
+    await test.harness.run(() => search()!.onChangeText({ nativeEvent: { text: 'Tool 19' } }));
+    const previousSearch = search()!;
+    test.changeAsset('other-place'); await test.render(); await settle(test.harness); await settle(test.harness);
+    expect(test.harness.allText()).toContain('Tool 0');
+    await test.harness.run(() => search()!.onChangeText({ nativeEvent: { text: 'Tool 19' } }));
+    await test.harness.run(() => { previousSearch.onChangeText({ nativeEvent: { text: 'obsolete' } }); previousSearch.onCancelButtonPress(); });
+    expect(test.harness.allText()).toContain('Tool 19');
+    expect(test.harness.allText()).not.toContain('Tool 0');
+    count = 1;
+    await test.harness.run(() => test.harness.byType('RefreshControl')?.props.onRefresh()); await settle(test.harness);
+    expect(search()).toBeUndefined();
+    expect(test.harness.allText()).toContain('Tool 0');
   } finally { await test.harness.unmount(); }
 });

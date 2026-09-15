@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ChevronRight, MoveRight, Plus } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import type {
   AssetCardViewModel,
   AssetDetailViewModel
@@ -29,7 +29,7 @@ import {
   type ContainedAssetsSectionHeading,
   type ContainedAssetRowViewModel
 } from './ContainedAssetsPresentation';
-import { AppTextInput } from './AppTextInput';
+import { NativeCommandButton } from './NativeCommandButton';
 
 export type ContainedWorkspaceListItem =
   | { readonly key: string; readonly kind: 'section'; readonly heading: ContainedAssetsSectionHeading }
@@ -125,41 +125,6 @@ export function containedAssetRowAccessibilityLabel(asset: ContainedAssetRowView
     .join('. ');
 }
 
-export function ContainedContentsSearch({
-  onChangeQuery,
-  query
-}: {
-  readonly onChangeQuery: (query: string) => void;
-  readonly query: string;
-}) {
-  const palette = useAppearanceAwarePalette();
-  const styles = createStyles(palette);
-  return (
-    <View style={styles.contentsSearch}>
-      <AppTextInput
-        accessibilityLabel="Search contents"
-        autoCapitalize="none"
-        onChangeText={onChangeQuery}
-        placeholder="Search this place"
-        placeholderTextColor={palette.textMuted}
-        returnKeyType="search"
-        style={styles.contentsSearchInput}
-        value={query}
-      />
-      {query.length > 0 ? (
-        <Pressable
-          accessibilityLabel="Clear contents search"
-          accessibilityRole="button"
-          onPress={() => onChangeQuery('')}
-          style={styles.clearSearchButton}
-        >
-          <Text style={styles.clearSearchText}>Clear</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 export function ContainedSpatialActions({
   asset,
   isActionPending,
@@ -240,31 +205,9 @@ function ContainedAssetActionButton({
   readonly isActionPending: boolean;
   readonly onPress?: () => void;
 }) {
-  const palette = useAppearanceAwarePalette();
-  const styles = createStyles(palette);
   const enabled = canUseContainedAssetAction({ isActionPending, onPress });
-  return (
-    <Pressable
-      accessibilityLabel={action.label}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !enabled }}
-      disabled={!enabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.spatialAction,
-        action.isPrimary ? styles.primarySpatialAction : styles.secondarySpatialAction,
-        pressed ? styles.spatialActionPressed : null,
-        !enabled ? styles.disabledAction : null
-      ]}
-    >
-      {action.kind === 'add_here'
-        ? <Plus color={action.isPrimary ? palette.onAction : palette.action} size={19} />
-        : <MoveRight color={palette.action} size={19} />}
-      <Text style={action.isPrimary ? styles.primarySpatialText : styles.secondarySpatialText}>
-        {action.label}
-      </Text>
-    </Pressable>
-  );
+  return <NativeCommandButton label={action.label} disabled={!enabled}
+    prominence={action.isPrimary ? 'primary' : 'standard'} onPress={() => onPress?.()} />;
 }
 
 export function ContainedWorkspaceListItemView({
@@ -314,9 +257,7 @@ function ContainedAssetsEmptyState({
       <Text style={styles.emptyContainerTitle}>{emptyState.title}</Text>
       <Text style={styles.emptyContainerText}>{emptyState.message}</Text>
       {onClearSearch ? (
-        <Pressable accessibilityRole="button" onPress={onClearSearch} style={styles.emptyClearButton}>
-          <Text style={styles.emptyClearText}>Clear search</Text>
-        </Pressable>
+        <NativeCommandButton label="Clear search" onPress={onClearSearch} />
       ) : null}
     </View>
   );
@@ -375,65 +316,9 @@ function createStyles(palette: MobileColorPalette) {
       gap: spacing.md,
       paddingTop: spacing.lg
     },
-    contentsSearch: {
-      alignItems: 'center',
-      backgroundColor: palette.elevatedSurface,
-      borderColor: palette.controlBorder,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      flexDirection: 'row',
-      minHeight: 44,
-      paddingLeft: spacing.sm
-    },
-    contentsSearchInput: {
-      color: palette.text,
-      flex: 1,
-      fontSize: 16,
-      minHeight: 44,
-      paddingVertical: spacing.sm
-    },
-    clearSearchButton: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: 44,
-      minWidth: 60,
-      paddingHorizontal: spacing.sm
-    },
-    clearSearchText: { color: palette.action, fontSize: 15, fontWeight: '600' },
     sectionHeading: { gap: 3, paddingBottom: spacing.sm, paddingTop: spacing.lg },
     sectionTitle: { color: palette.text, fontSize: 22, fontWeight: '700' },
     sectionSummary: { color: palette.textMuted, fontSize: 14, fontWeight: '500' },
-    spatialAction: {
-      alignItems: 'center',
-      borderRadius: radius.md,
-      flexDirection: 'row',
-      gap: spacing.sm,
-      justifyContent: 'center',
-      minHeight: 50,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm
-    },
-    primarySpatialAction: { backgroundColor: palette.action },
-    secondarySpatialAction: {
-      backgroundColor: palette.elevatedSurface,
-      borderColor: palette.border,
-      borderWidth: StyleSheet.hairlineWidth
-    },
-    spatialActionPressed: { opacity: 0.82 },
-    primarySpatialText: {
-      color: palette.onAction,
-      flexShrink: 1,
-      fontSize: 17,
-      fontWeight: '600',
-      textAlign: 'center'
-    },
-    secondarySpatialText: {
-      color: palette.action,
-      flexShrink: 1,
-      fontSize: 17,
-      fontWeight: '600',
-      textAlign: 'center'
-    },
     childRow: {
       alignItems: 'center',
       backgroundColor: palette.surface,
@@ -468,14 +353,5 @@ function createStyles(palette: MobileColorPalette) {
     emptyContainer: { gap: spacing.xs, paddingBottom: spacing.md, paddingTop: spacing.sm },
     emptyContainerTitle: { color: palette.text, fontSize: 17, fontWeight: '600' },
     emptyContainerText: { color: palette.textMuted, fontSize: 15 },
-    emptyClearButton: {
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      justifyContent: 'center',
-      minHeight: 44,
-      paddingHorizontal: spacing.sm
-    },
-    emptyClearText: { color: palette.action, fontSize: 15, fontWeight: '600' },
-    disabledAction: { opacity: 0.55 }
   });
 }

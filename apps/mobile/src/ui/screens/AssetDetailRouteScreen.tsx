@@ -1,5 +1,8 @@
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
+import { shouldShowContainedContentsSearch } from '../components/AssetContainedWorkspace';
+import { AssetRegionRecovery } from '../components/AssetRegionRecovery';
 import { usePullRefresh } from '../serverState/usePullRefresh';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -116,6 +119,18 @@ export function AssetDetailRouteScreen({
     : coreAsset.isError
       ? { status: 'error', ...assetDetailLoadErrorPresentation(coreAsset.error) }
       : { status: 'loading' };
+  const contentsSearchEnabled = screenState.status === 'ready' && shouldShowContainedContentsSearch(screenState.asset);
+  const [contentsSearch, setContentsSearch] = useState({ assetId, query: '' });
+  const contentsQuery = contentsSearch.assetId === assetId && contentsSearchEnabled ? contentsSearch.query : '';
+  const searchOwner = useMemo(() => ({ active: false }), [assetId, contentsSearchEnabled]);
+  const changeContentsQuery = (query: string) => {
+    if (searchOwner.active && contentsSearchEnabled) setContentsSearch({ assetId, query });
+  };
+  useEffect(() => {
+    searchOwner.active = true;
+    setContentsSearch({ assetId, query: '' });
+    return () => { searchOwner.active = false; };
+  }, [assetId, contentsSearchEnabled, searchOwner]);
   const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
   const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
@@ -169,26 +184,6 @@ export function AssetDetailRouteScreen({
     }
     setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
   }, [assetId, coreAsset.data, feedback, screenState, undoAssetEditCommand]));
-
-  useEffect(() => {
-    if (coreAsset.data && assetContents.isError) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Asset contents could not load',
-        message: 'The asset is available, but its location or contents may be incomplete. Pull to refresh.'
-      });
-    }
-  }, [assetContents.data, assetContents.error, assetContents.isError, coreAsset.data, feedback]);
-
-  useEffect(() => {
-    if (coreAsset.data && assetPhotos.isError) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Asset photos could not load',
-        message: 'The asset and its contents are still available. Pull to refresh photos.'
-      });
-    }
-  }, [assetPhotos.data, assetPhotos.error, assetPhotos.isError, coreAsset.data, feedback]);
 
   async function undoSavedEdit(input: { readonly tenantId: string; readonly inventoryId: string; readonly operationId: string; readonly title: string }): Promise<void> {
     try {
@@ -453,6 +448,9 @@ export function AssetDetailRouteScreen({
   } : undefined;
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <NativeNavigationSearch key={`${assetId}:${contentsSearchEnabled}`} enabled={contentsSearchEnabled} query={contentsQuery}
+        placeholder="Search this place" onChange={changeContentsQuery} onSubmit={changeContentsQuery}
+        onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
         ...(headerOverflow ? assetHeaderOverflowScreenOptions(headerOverflow) : {})
@@ -484,9 +482,20 @@ export function AssetDetailRouteScreen({
           })()}
           <AssetDetailView
             asset={screenState.asset}
+            contentsQuery={contentsQuery} onClearContentsSearch={() => changeContentsQuery('')}
             canRetryPhotos={photoStatus?.canRetry}
             isActionPending={pendingAction !== undefined}
             isContentsLoading={!assetContents.data && assetContents.isPending}
+            contentsAvailable={Boolean(assetContents.data)}
+            photosAvailable={Boolean(assetPhotos.data)}
+            contentsRecovery={assetContents.isError ? <AssetRegionRecovery
+              region="contents" isRetrying={assetContents.isFetching}
+              onRetry={() => { void assetContents.refetch({ cancelRefetch: false }); }}
+            /> : undefined}
+            photosRecovery={assetPhotos.isError ? <AssetRegionRecovery
+              region="photos" isRetrying={assetPhotos.isFetching}
+              onRetry={() => { void assetPhotos.refetch({ cancelRefetch: false }); }}
+            /> : undefined}
             isPhotosLoading={!assetPhotos.data && assetPhotos.isPending}
             onAddHere={screenState.asset.canAddContainedAssets ? () => router.push({
               pathname: '/add',

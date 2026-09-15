@@ -15,5 +15,8 @@ it('uses native search callbacks, submits current event text and clears immediat
   await h.run(()=>search.onCancelButtonPress());
   expect(events).toEqual(['change:new','submit:newest','clear','clear']);
   expect(h.allByType('TextInput')).toHaveLength(0);
+  await h.render(<></>);
+  await h.run(()=>{search.onChangeText({nativeEvent:{text:'late'}});search.onSearchButtonPress({nativeEvent:{text:'late'}});search.onCancelButtonPress();});
+  expect(events).toEqual(['change:new','submit:newest','clear','clear']);
  }finally{await h.unmount()}
 });

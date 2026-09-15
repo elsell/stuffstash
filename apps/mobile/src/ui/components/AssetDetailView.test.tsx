@@ -7,7 +7,6 @@ import {
   containedAssetRowAccessibilityLabel,
   containedWorkspaceItems
 } from './AssetDetailView';
-import { AppTextInput } from './AppTextInput';
 
 vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
@@ -306,14 +305,14 @@ describe('AssetDetailView', () => {
     expect(noMatches.some((item) => item.kind === 'empty' && item.canClearSearch)).toBe(true);
   });
 
-  it('reserves inline contents search for places with at least twenty rows', () => {
+  it('keeps native search out of the scrollable contents header', () => {
     const twentySpaces = Array.from({ length: 20 }, (_, index) => (
       containedCard(`space-${index.toString()}`, `Shelf ${index.toString()}`, 'container')
     ));
     const large = AssetDetailView({ asset: placeDetail({ spaces: twentySpaces }), onAddHere: vi.fn() });
     const small = AssetDetailView({ asset: placeDetail({ spaces: twentySpaces.slice(0, 19) }), onAddHere: vi.fn() });
 
-    expect(findFirstByProp(large, 'accessibilityLabel', 'Search contents')?.type).toBe(AppTextInput);
+    expect(findFirstByProp(large, 'accessibilityLabel', 'Search contents')).toBeUndefined();
     expect(large.props.keyboardDismissMode).toBe('interactive');
     expect(large.props.keyboardShouldPersistTaps).toBe('handled');
     expect(findFirstByProp(small, 'accessibilityLabel', 'Search contents')).toBeUndefined();
@@ -365,8 +364,8 @@ describe('AssetDetailView', () => {
     }
     expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Asset maintenance')?.props?.style, 'flexWrap'))
       .toBe('wrap');
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'paddingVertical'))
-      .toBeGreaterThanOrEqual(10);
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'minHeight'))
+      .toBeGreaterThanOrEqual(44);
     expect(findFirstTextNode(tree, 'Container')?.props?.allowFontScaling).toBe(false);
   });
 

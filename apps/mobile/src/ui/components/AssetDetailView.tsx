@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import {
   ActivityIndicator,
@@ -20,7 +20,6 @@ import {
   AssetDetailIdentitySection
 } from './AssetDetailIdentitySection';
 import {
-  ContainedContentsSearch,
   ContainedSpatialActions,
   ContainedWorkspaceListItemView,
   ContainedWorkspaceMaintenance,
@@ -43,9 +42,15 @@ export type AssetPhotoUploadProgressViewModel = {
 
 type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
+  readonly contentsQuery?: string;
+  readonly onClearContentsSearch?: () => void;
   readonly isActionPending?: boolean;
   readonly isPhotosLoading?: boolean;
   readonly isContentsLoading?: boolean;
+  readonly contentsAvailable?: boolean;
+  readonly photosAvailable?: boolean;
+  readonly contentsRecovery?: ReactElement;
+  readonly photosRecovery?: ReactElement;
   readonly photoUploads?: readonly AssetPhotoUploadProgressViewModel[];
   readonly photoStatusMessage?: string;
   readonly workspaceStatusMessage?: string;
@@ -74,10 +79,16 @@ export function assetDetailNavigationTitle(asset: Pick<AssetDetailViewModel, 'ki
 
 export function AssetDetailView({
   asset,
+  contentsQuery = '',
+  onClearContentsSearch = () => {},
   canRetryPhotos = false,
   isActionPending = false,
   isPhotosLoading = false,
   isContentsLoading = false,
+  contentsAvailable = true,
+  photosAvailable = true,
+  contentsRecovery,
+  photosRecovery,
   onAddHere,
   onAddPhotos,
   onBack,
@@ -100,9 +111,8 @@ export function AssetDetailView({
 }: AssetDetailViewProps) {
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
-  const [contentsQuery, setContentsQuery] = useState('');
   const showContentsSearch = shouldShowContainedContentsSearch(asset);
-  const workspaceItems = asset.canContainAssets
+  const workspaceItems = asset.canContainAssets && contentsAvailable
     ? containedWorkspaceItems(asset, showContentsSearch ? contentsQuery : '')
     : [];
   const updatedMetadata = assetDetailUpdatedMetadata(asset);
@@ -119,7 +129,7 @@ export function AssetDetailView({
         <ContainedWorkspaceListItemView
           item={item}
           onChildPress={onChildPress}
-          onClearSearch={() => setContentsQuery('')}
+          onClearSearch={onClearContentsSearch}
         />
       )}
       ListHeaderComponent={(
@@ -135,7 +145,7 @@ export function AssetDetailView({
             </View>
           ) : null}
 
-          <AssetDetailPhotoGallery
+          {photosAvailable ? <AssetDetailPhotoGallery
             canAddPhotos={!isActionPending && !isPhotosLoading && asset.canAddPhotos}
             contentHorizontalPadding={spacing.md}
             imagePlaceholderLabel={asset.imagePlaceholderLabel}
@@ -143,7 +153,8 @@ export function AssetDetailView({
             onPhotoPress={onPhotoPress}
             photos={asset.photos}
             palette={palette}
-          />
+          /> : null}
+          {photosRecovery}
 
           {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}
 
@@ -161,6 +172,7 @@ export function AssetDetailView({
           />
 
           {isContentsLoading ? <WorkspaceLoadingState label="Loading location and contents" /> : null}
+          {contentsRecovery}
 
           <StatusAndProgressSection
             canRetryPhotos={canRetryPhotos}
@@ -180,9 +192,6 @@ export function AssetDetailView({
             />
           ) : null}
 
-          {showContentsSearch ? (
-            <ContainedContentsSearch onChangeQuery={setContentsQuery} query={contentsQuery} />
-          ) : null}
         </View>
       )}
       ListFooterComponent={(
