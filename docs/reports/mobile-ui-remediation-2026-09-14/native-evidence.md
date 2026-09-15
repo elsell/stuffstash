@@ -1398,3 +1398,15 @@ tests passed; eight feedback behavior tests, TypeScript and structural checks
 also passed remotely on paul. Critic review found no remaining confirmed issue.
 Swift/native execution is pending. M103 remains uncorrected: these regressions
 provide an acceptance target for a future geometry-aware placement repair.
+
+## Run 34972540083: phone keyboard readiness failure
+
+Phone onboarding ended before injected text because no key became hittable in
+the bounded keyboard-readiness check. The [retained final screenshot](evidence/phone-onboarding-keyboard-preview-349725.png)
+shows an empty focused address field and a visible keyboard. The hierarchy names
+`UIKeyboardLayoutStar Preview` and marks the address field Keyboard Focused. This
+is not evidence that a server request failed, nor proof that the input lost focus.
+The actual tested merge is `1c4728f508dab1892d51ba7982bf19641acf7f34`. iPad onboarding
+passed; both fixture jobs were still running when this evidence was recorded.
+Do not infer a keyboard-controller cause: production already disables preloading,
+and the existing no-accessory comparisons still need to be correlated.
