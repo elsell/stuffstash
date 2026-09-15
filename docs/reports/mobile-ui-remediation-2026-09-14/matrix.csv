@@ -648,7 +648,7 @@ R027,settings/diagnostics.tsx,notifications,System notification entry and state,
 R027,settings/diagnostics.tsx,media,"Camera, library, files and audio",pending,,
 R027,settings/diagnostics.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
+R028,settings/household/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R028,settings/household/asset-types/[resourceId].tsx,selection,Value selection and current value,pending,,
 R028,settings/household/asset-types/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R028,settings/household/asset-types/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -666,11 +666,11 @@ R028,settings/household/asset-types/[resourceId].tsx,content,"Lists, hierarchy, 
 R028,settings/household/asset-types/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R028,settings/household/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R028,settings/household/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R028,settings/household/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R028,settings/household/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R028,settings/household/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R029,settings/household/asset-types/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R029,settings/household/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R029,settings/household/asset-types/index.tsx,selection,Value selection and current value,pending,,
@@ -696,7 +696,7 @@ R029,settings/household/asset-types/index.tsx,notifications,System notification 
 R029,settings/household/asset-types/index.tsx,media,"Camera, library, files and audio",pending,,
 R029,settings/household/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R030,settings/household/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
-R030,settings/household/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R030,settings/household/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R030,settings/household/asset-types/new.tsx,selection,Value selection and current value,pending,,
 R030,settings/household/asset-types/new.tsx,modality,Presentation and dismissal,pending,,
 R030,settings/household/asset-types/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -714,13 +714,13 @@ R030,settings/household/asset-types/new.tsx,content,"Lists, hierarchy, density a
 R030,settings/household/asset-types/new.tsx,search,"Search, scope and filters",pending,,
 R030,settings/household/asset-types/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R030,settings/household/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R030,settings/household/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R030,settings/household/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R030,settings/household/asset-types/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R030,settings/household/asset-types/new.tsx,notifications,System notification entry and state,pending,,
 R030,settings/household/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
-R030,settings/household/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R030,settings/household/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R031,settings/household/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R031,settings/household/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
+R031,settings/household/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R031,settings/household/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R031,settings/household/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -738,11 +738,11 @@ R031,settings/household/fields/[resourceId].tsx,content,"Lists, hierarchy, densi
 R031,settings/household/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R031,settings/household/fields/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R031,settings/household/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R031,settings/household/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R031,settings/household/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R031,settings/household/fields/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R031,settings/household/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R031,settings/household/fields/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R031,settings/household/fields/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R031,settings/household/fields/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R032,settings/household/fields/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R032,settings/household/fields/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R032,settings/household/fields/index.tsx,selection,Value selection and current value,pending,,
@@ -768,7 +768,7 @@ R032,settings/household/fields/index.tsx,notifications,System notification entry
 R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",pending,,
 R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R033,settings/household/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R033,settings/household/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -786,11 +786,11 @@ R033,settings/household/fields/new.tsx,content,"Lists, hierarchy, density and pa
 R033,settings/household/fields/new.tsx,search,"Search, scope and filters",pending,,
 R033,settings/household/fields/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R033,settings/household/fields/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R033,settings/household/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R033,settings/household/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R033,settings/household/fields/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R033,settings/household/fields/new.tsx,notifications,System notification entry and state,pending,,
 R033,settings/household/fields/new.tsx,media,"Camera, library, files and audio",pending,,
-R033,settings/household/fields/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R033,settings/household/fields/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R034,settings/household/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Household-scoped fields/types/voice explicitly labeled shared by household.,
 R034,settings/household/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"Rows represent configuration destinations, not flat value choices.",
 R034,settings/household/index.tsx,selection,Value selection and current value,pending,,
@@ -840,7 +840,7 @@ R035,settings/index.tsx,notifications,System notification entry and state,not-ap
 R035,settings/index.tsx,media,"Camera, library, files and audio",not-applicable,Root does not request camera/library/files/audio access; category icons only.,
 R035,settings/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Scope query uses scoped server-state hook; SettingsRoute records settings.opened. Native return/background behavior still unverified.,
 R036,settings/inventory/asset-types/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
+R036,settings/inventory/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R036,settings/inventory/asset-types/[resourceId].tsx,selection,Value selection and current value,pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -858,11 +858,11 @@ R036,settings/inventory/asset-types/[resourceId].tsx,content,"Lists, hierarchy, 
 R036,settings/inventory/asset-types/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R036,settings/inventory/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R036,settings/inventory/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R036,settings/inventory/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R036,settings/inventory/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R037,settings/inventory/asset-types/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R037,settings/inventory/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R037,settings/inventory/asset-types/index.tsx,selection,Value selection and current value,pending,,
@@ -888,7 +888,7 @@ R037,settings/inventory/asset-types/index.tsx,notifications,System notification 
 R037,settings/inventory/asset-types/index.tsx,media,"Camera, library, files and audio",pending,,
 R037,settings/inventory/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R038,settings/inventory/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
-R038,settings/inventory/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R038,settings/inventory/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R038,settings/inventory/asset-types/new.tsx,selection,Value selection and current value,pending,,
 R038,settings/inventory/asset-types/new.tsx,modality,Presentation and dismissal,pending,,
 R038,settings/inventory/asset-types/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -906,13 +906,13 @@ R038,settings/inventory/asset-types/new.tsx,content,"Lists, hierarchy, density a
 R038,settings/inventory/asset-types/new.tsx,search,"Search, scope and filters",pending,,
 R038,settings/inventory/asset-types/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R038,settings/inventory/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R038,settings/inventory/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R038,settings/inventory/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R038,settings/inventory/asset-types/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R038,settings/inventory/asset-types/new.tsx,notifications,System notification entry and state,pending,,
 R038,settings/inventory/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
-R038,settings/inventory/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R038,settings/inventory/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R039,settings/inventory/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R039,settings/inventory/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R039,settings/inventory/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -930,11 +930,11 @@ R039,settings/inventory/fields/[resourceId].tsx,content,"Lists, hierarchy, densi
 R039,settings/inventory/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R039,settings/inventory/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R039,settings/inventory/fields/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R040,settings/inventory/fields/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R040,settings/inventory/fields/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R040,settings/inventory/fields/index.tsx,selection,Value selection and current value,pending,,
@@ -960,7 +960,7 @@ R040,settings/inventory/fields/index.tsx,notifications,System notification entry
 R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",pending,,
 R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R041,settings/inventory/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -978,11 +978,11 @@ R041,settings/inventory/fields/new.tsx,content,"Lists, hierarchy, density and pa
 R041,settings/inventory/fields/new.tsx,search,"Search, scope and filters",pending,,
 R041,settings/inventory/fields/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R041,settings/inventory/fields/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R041,settings/inventory/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R041,settings/inventory/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R041,settings/inventory/fields/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R041,settings/inventory/fields/new.tsx,notifications,System notification entry and state,pending,,
 R041,settings/inventory/fields/new.tsx,media,"Camera, library, files and audio",pending,,
-R041,settings/inventory/fields/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R041,settings/inventory/fields/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R042,settings/inventory/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Inventory-scoped sharing/tags/fields/types and personal notification reminders distinguished.,
 R042,settings/inventory/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Rows represent configuration destinations with inventory context.,
 R042,settings/inventory/index.tsx,selection,Value selection and current value,pending,,
@@ -1056,7 +1056,7 @@ R044,settings/inventory/notifications.tsx,notifications,System notification entr
 R044,settings/inventory/notifications.tsx,media,"Camera, library, files and audio",pending,,
 R044,settings/inventory/notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R045,settings/inventory/tags/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
+R045,settings/inventory/tags/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R045,settings/inventory/tags/[resourceId].tsx,selection,Value selection and current value,pending,,
 R045,settings/inventory/tags/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R045,settings/inventory/tags/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1074,11 +1074,11 @@ R045,settings/inventory/tags/[resourceId].tsx,content,"Lists, hierarchy, density
 R045,settings/inventory/tags/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R045,settings/inventory/tags/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R045,settings/inventory/tags/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R045,settings/inventory/tags/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R045,settings/inventory/tags/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R045,settings/inventory/tags/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R046,settings/inventory/tags/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R046,settings/inventory/tags/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R046,settings/inventory/tags/index.tsx,selection,Value selection and current value,pending,,
@@ -1104,7 +1104,7 @@ R046,settings/inventory/tags/index.tsx,notifications,System notification entry a
 R046,settings/inventory/tags/index.tsx,media,"Camera, library, files and audio",pending,,
 R046,settings/inventory/tags/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R047,settings/inventory/tags/new.tsx,task,Task clarity and platform-pattern fit,pending,,
-R047,settings/inventory/tags/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R047,settings/inventory/tags/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R047,settings/inventory/tags/new.tsx,selection,Value selection and current value,pending,,
 R047,settings/inventory/tags/new.tsx,modality,Presentation and dismissal,pending,,
 R047,settings/inventory/tags/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1122,11 +1122,11 @@ R047,settings/inventory/tags/new.tsx,content,"Lists, hierarchy, density and pagi
 R047,settings/inventory/tags/new.tsx,search,"Search, scope and filters",pending,,
 R047,settings/inventory/tags/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R047,settings/inventory/tags/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R047,settings/inventory/tags/new.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R047,settings/inventory/tags/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R047,settings/inventory/tags/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R047,settings/inventory/tags/new.tsx,notifications,System notification entry and state,pending,,
 R047,settings/inventory/tags/new.tsx,media,"Camera, library, files and audio",pending,,
-R047,settings/inventory/tags/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R047,settings/inventory/tags/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R048,settings/sharing.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Sharing form presents email/access, then explicit invitation creation and one-time link actions; native access fix M27.",M27
 R048,settings/sharing.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R048,settings/sharing.tsx,selection,Value selection and current value,source-reviewed,Viewer/Editor now shared in-place SettingsPickerRow; runtime pending (M27).,M27
@@ -2616,7 +2616,7 @@ S109,Settings / inherited definition,notifications,System notification entry and
 S109,Settings / inherited definition,media,"Camera, library, files and audio",pending,,
 S109,Settings / inherited definition,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S110,Settings / dirty editor exit,task,Task clarity and platform-pattern fit,pending,,
-S110,Settings / dirty editor exit,navigation,"Navigation, hierarchy and return",pending,,
+S110,Settings / dirty editor exit,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 S110,Settings / dirty editor exit,selection,Value selection and current value,pending,,
 S110,Settings / dirty editor exit,modality,Presentation and dismissal,pending,,
 S110,Settings / dirty editor exit,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -2634,11 +2634,11 @@ S110,Settings / dirty editor exit,content,"Lists, hierarchy, density and paginat
 S110,Settings / dirty editor exit,search,"Search, scope and filters",pending,,
 S110,Settings / dirty editor exit,loading,"Loading, background refresh and progress",pending,,
 S110,Settings / dirty editor exit,recovery,"Empty, error, denied and retry",pending,,
-S110,Settings / dirty editor exit,editing,"Draft, save, cancel, undo and interruption",pending,,
+S110,Settings / dirty editor exit,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 S110,Settings / dirty editor exit,privacy,"Account scope, data use and permissions",pending,,
 S110,Settings / dirty editor exit,notifications,System notification entry and state,pending,,
 S110,Settings / dirty editor exit,media,"Camera, library, files and audio",pending,,
-S110,Settings / dirty editor exit,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S110,Settings / dirty editor exit,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 S111,Reminders / defaults,task,Task clarity and platform-pattern fit,source-reviewed,Defaults use a switch; type mode uses native picker; timing allows presets and custom numeric entry. Native runtime pending.,
 S111,Reminders / defaults,navigation,"Navigation, hierarchy and return",source-reviewed,Type page groups override and timing; simple mode choice remains in place; timing route supports custom value. Native runtime pending.,
 S111,Reminders / defaults,selection,Value selection and current value,source-reviewed,Current defaults/custom/off mode visible; same-value selection does not save; inheritance restores correctly (6 focused remote tests). Native runtime pending.,
@@ -3359,3 +3359,27 @@ R140,home-return-details.tsx,privacy,"Account scope, data use and permissions",p
 R140,home-return-details.tsx,notifications,System notification entry and state,pending,,
 R140,home-return-details.tsx,media,"Camera, library, files and audio",pending,,
 R140,home-return-details.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S141,Settings / retained customization completion,task,Task clarity and platform-pattern fit,source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
+S141,Settings / retained customization completion,navigation,"Navigation, hierarchy and return",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
+S141,Settings / retained customization completion,selection,Value selection and current value,pending,,
+S141,Settings / retained customization completion,modality,Presentation and dismissal,pending,,
+S141,Settings / retained customization completion,layout,"Safe areas, scroll edges and overlays",pending,,
+S141,Settings / retained customization completion,adaptation,Phone/tablet/window reflow,pending,,
+S141,Settings / retained customization completion,typography,"Dynamic Type, wrapping and legibility",pending,,
+S141,Settings / retained customization completion,appearance,"Light/dark, contrast and materials",pending,,
+S141,Settings / retained customization completion,localization,"Locale, timezone, RTL and long strings",pending,,
+S141,Settings / retained customization completion,imagery,"Icons, photos and missing media",pending,,
+S141,Settings / retained customization completion,targets,Touch target size and reachability,pending,,
+S141,Settings / retained customization completion,gestures,Gestures and explicit alternatives,pending,,
+S141,Settings / retained customization completion,keyboard,"Keyboard, text entry and focus",pending,,
+S141,Settings / retained customization completion,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S141,Settings / retained customization completion,motion,Reduced motion and feedback alternatives,pending,,
+S141,Settings / retained customization completion,content,"Lists, hierarchy, density and pagination",pending,,
+S141,Settings / retained customization completion,search,"Search, scope and filters",pending,,
+S141,Settings / retained customization completion,loading,"Loading, background refresh and progress",pending,,
+S141,Settings / retained customization completion,recovery,"Empty, error, denied and retry",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
+S141,Settings / retained customization completion,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
+S141,Settings / retained customization completion,privacy,"Account scope, data use and permissions",pending,,
+S141,Settings / retained customization completion,notifications,System notification entry and state,pending,,
+S141,Settings / retained customization completion,media,"Camera, library, files and audio",pending,,
+S141,Settings / retained customization completion,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59

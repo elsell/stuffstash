@@ -35,8 +35,10 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).not.toContain('Tag saved');
     expect(screen.allText()).not.toContain('Unsaved changes');
     await screen.run(() => setScreenFocused(true));
-    await screen.changeText(screen.byLabel('Name'), 'Garden tools');
-    await screen.press(screen.byText('Save')?.parent ?? undefined);
+    expect(screen.allText()).toContain('Saved');
+    expect(screen.byLabel('Name')).toBeUndefined();
+    expect(screen.allText()).not.toContain('Save');
+    await screen.press(screen.byLabel('Return to collection'));
     await screen.settle();
     expect(done).toBe(1);
   });
@@ -53,6 +55,9 @@ describe('rendered mobile customization production states', () => {
     await mutation; await screen.settle();
     expect(done).toBe(0);
     expect(screen.allText()).not.toContain('Tag archived');
+    expect(screen.allText()).toContain('Archived');
+    expect(screen.byLabel('Name')).toBeUndefined();
+    expect(screen.allText()).not.toContain('Archive');
   });
 
   it('rejects an archive confirmation accepted after leaving and permits a fresh confirmation', async () => {

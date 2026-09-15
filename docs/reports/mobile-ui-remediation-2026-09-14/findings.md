@@ -342,3 +342,18 @@ Follow-up: the retained editor's pre-existing completed flag suppresses dirty
 tracking after subsequent edits; completed create/lifecycle presentation also
 needs review before the entire customization lifecycle is considered resolved.
 M58 fixes ownership, not that separate completion-state design.
+
+### M59 — Retained completed forms permit misleading repeat editing
+
+After a background completion, the existing completed flag suppressed dirty
+tracking but left form controls visible. The retained screen now shows its typed
+Saved/Archived/Restored/Deleted result and one native Return to collection command.
+Submitted draft and lifecycle controls are removed. Normal focused success still
+returns automatically; failures retain editing/recovery. Resource replacement
+clears the terminal state. This closes the completion-state follow-up under M58.
+
+Three revised regression cases failed baseline. All45 screen/workflow tests,
+TypeScript and structural checks pass remotely; critic found no blocker. This
+protects rendered interactions, not arbitrary externally retained callback closures.
+Surface S141 adds explicit completion-state coverage. Native result adaptation,
+focus and accessibility acceptance remain pending.

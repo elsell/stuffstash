@@ -407,3 +407,14 @@ Local draft, error, permission-refresh, completion and busy state belong to the
 mounted resource/scope lifetime. A late result from a different resource must not
 overwrite, deny or unlock the current editor. A new resource receives an independent
 operation workflow; old operations may settle without affecting its state.
+
+## Retained customization completion state
+
+Normally a successful command returns to the collection. If navigation ownership
+changed while it ran, the retained editor instead shows a terminal inline result
+(Saved, Archived, Restored, or Deleted) and a native Return to collection command.
+Do not keep the submitted form editable or expose repeat save/lifecycle commands:
+that risks duplicate creation and edits hidden by the completed dirty-state flag.
+This is a state of the existing screen, not another modal or navigation step.
+The user can deliberately return when ready. Failed operations keep the existing
+draft and retry behavior; changing resource starts a fresh editor lifecycle.

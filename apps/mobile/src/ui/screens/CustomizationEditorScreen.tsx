@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppSwitchField } from '../components/AppSwitchField';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { isAccessFailure } from '../serverState/isAccessFailure';
@@ -52,7 +53,8 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   const [deniedMessage, setDeniedMessage] = useState("You don’t have permission to change this setting.");
   const [initialSnapshot, setInitialSnapshot] = useState('');
   const [draftDenied, setDraftDenied] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [completion, setCompletion] = useState<'Saved' | 'Archived' | 'Restored' | 'Deleted'>();
+  const completed = completion !== undefined;
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [keyManuallyEdited, setKeyManuallyEdited] = useState(false);
@@ -209,14 +211,20 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   if (!context) return null;
   if (mode === 'create' && !canMutate && !draftDenied) return <DeniedSettingsState message="You don’t have permission to add this setting." />;
 
+  if (completion) return <ScrollView style={settings.styles.shell} contentContainerStyle={settings.styles.content} contentInsetAdjustmentBehavior="automatic">
+    <SettingsSection title={completion} footer="This change is complete. Return to the collection to continue.">
+      <NativeCommandButton label="Return to collection" onPress={onDone} />
+    </SettingsSection>
+  </ScrollView>;
+
   async function save() {
     const owner = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
-    if (!resource || !owner || !context || !valid || (mode === 'edit' && !dirty) || !workflow.beginSave()) return;
+    if (completed || !resource || !owner || !context || !valid || (mode === 'edit' && !dirty) || !workflow.beginSave()) return;
     setSaving(true); setError(undefined); setErrorTitle('Could not save');
     try {
       await saveCustomizationEditor({ context, draft: editorDraft, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, mode, record: record?.kind === 'field' ? record : undefined, resourceId, scope });
       if (resourceOwner.current !== resource) return;
-      setInitialSnapshot(current); setCompleted(true);
+      setInitialSnapshot(current); setCompletion('Saved');
       if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: `${label(kind)} saved` }); onDone(); }
     } catch (cause) { if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not saved.`); }
     finally { workflow.finishSave(); if (resourceOwner.current === resource) setSaving(false); }
@@ -224,7 +232,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
 
   function lifecycleAction(action: 'archive' | 'restore' | 'delete') {
     const owner = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
-    if (!resource || !owner || !context || !resourceId || !workflow.beginLifecycleConfirmation()) return;
+    if (completed || !resource || !owner || !context || !resourceId || !workflow.beginLifecycleConfirmation()) return;
     setLifecycleBusy(true);
     const destructive = action !== 'restore';
     const title = action === 'delete' ? `Delete ${name} permanently?` : `${capitalize(action)} ${name}?`;
@@ -239,7 +247,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
         await runCustomizationLifecycleIntent({ action, context, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, resourceId, scope });
         workflow.finishLifecycle();
         if (resourceOwner.current !== resource) return;
-        setLifecycleBusy(false); setCompleted(true);
+        setLifecycleBusy(false); setCompletion(action === 'archive' ? 'Archived' : action === 'restore' ? 'Restored' : 'Deleted');
         if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: `${label(kind)} ${action === 'archive' ? 'archived' : action === 'restore' ? 'restored' : 'deleted'}` }); onDone(); }
       } catch (cause) {
         if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not changed.`, `Could not ${action}`);
@@ -303,7 +311,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   function clearLoadedRecord(): void {
     setExpirationEnabled(false); setRecord(undefined); setEligibleTypes([]); setName(''); setKey(''); setDescription(''); setColor('');
     setFieldType('text'); setApplicability('all_assets'); setEnumOptions([]); setNewOption(''); setTargetIds([]); setInitialSnapshot(''); setKeyManuallyEdited(false);
-    setAdvanced(false); setNameTouched(false); setDraftDenied(false); setCompleted(false); setError(undefined);
+    setAdvanced(false); setNameTouched(false); setDraftDenied(false); setCompletion(undefined); setError(undefined);
     keyFocusRequestedRef.current = false; workflowRef.current.resetExit(); setExitAuthorized(false);
   }
 }

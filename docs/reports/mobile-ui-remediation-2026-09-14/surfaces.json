@@ -1006,5 +1006,14 @@
     "id": "R140",
     "surface": "home-return-details.tsx",
     "source": "apps/mobile/src/app/home-return-details.tsx"
+  },
+  {
+    "id": "S141",
+    "surface": "Settings / retained customization completion",
+    "source": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "apps/mobile/src/ui/components/NativeCommandButton.ios.tsx"
+    ]
   }
 ]

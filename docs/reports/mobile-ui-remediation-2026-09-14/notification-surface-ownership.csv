@@ -139,3 +139,4 @@ S137,Home return / optional details,No surface-owned notification control; share
 S138,Home return / save pending and recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
 S139,Home return / cancellation and recovery,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
 R140,home-return-details.tsx,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
+S141,Settings / retained customization completion,No surface-owned notification control; shared delivery can interrupt this task,R006/S130 plus this surface lifecycle/editing axes
