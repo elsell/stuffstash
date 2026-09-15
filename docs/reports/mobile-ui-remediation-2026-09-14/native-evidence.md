@@ -885,3 +885,13 @@ History scroll view for both the first and older-page notes. The original hit-te
 diagnostic remains unchanged. Remote structural checks pass; native compilation,
 expansion, pagination and dismissal remain pending. This is harness correction,
 not a claim that M61 is fixed.
+
+
+### TestFlight 0.24.18 (106.1) delivered
+
+Release34939488611 completed successfully at sourceeca1ad7e (PR140).
+Signed iOS job104286538918 reports upload success at07:37:33 UTC.
+Job104294718233 verified the exact v0.24.18 (106.1) TestFlight changelog at
+07:39:56 UTC on September15. Logs: /tmp/release349394-ios.log and
+/tmp/release349394-notes.log. This completes the requested interim release;
+the full audit, unresolved native findings, and PR142 work remain active.

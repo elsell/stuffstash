@@ -46,10 +46,12 @@ TestFlight changelog were verified at05:52:22UTC: **0.24.17(105.1) is delivered*
 history locale, month-calendar presentation and keyboard-ownership corrections.
 It does not certify the full audit or unresolved native footer behavior.
 
-PR140 merged as `eca1ad7e`. Its interim release is running in
+PR140 merged as `eca1ad7e`. Its interim release completed in
 [release34939488611](https://github.com/elsell/stuffstash/actions/runs/34939488611).
 This checkpoint improves onboarding, inventory switching and account/invitation
-recovery. Upload and Apple processing are not yet verified.
+recovery. **0.24.18 (106.1) is delivered.** Upload succeeded at07:37:33 UTC; Apple
+processing and the exact-build TestFlight changelog were verified at07:39:56 UTC
+on September15. The later PR142 Settings changes are not included.
 
 Native run 34937278231 tested merge `6076e824`, whose parents are177c08b6 and
 b8d18f5b. The remaining PR140 commit765aa6cd changes only audit documentation.

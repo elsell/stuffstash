@@ -358,7 +358,8 @@ acceptance is separate from automated evidence.
 ### September 15 interim mobile checkpoint
 
 PR140 merged as eca1ad7e after 1482 remote mobile tests, required CI and cumulative
-review. Release34939488611 is running; TestFlight delivery is not yet verified.
+review. Release34939488611 succeeded: TestFlight0.24.18 (106.1) and its exact-build
+changelog were verified on September15 at07:39:56 UTC.
 Native6076e824 verifies onboarding margin dismissal and switcher recovery, while
 Add typing/loading and other recorded findings remain unresolved. Continue the
 full 141-surface/24-axis audit after this authorized release checkpoint. Detailed
