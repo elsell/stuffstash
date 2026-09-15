@@ -270,3 +270,10 @@ Add and Edit must explain inline tag-name validation consistently: an overlong
 name shows Use a shorter tag name beside its entry, derived from the same resolver
 that controls Add tag. Correction removes the message without clearing unrelated
 draft fields. Keep existing color feedback separate.
+
+Native Add unfinished-tag acceptance must enter a valid asset name, verify Save
+is available, then enter a new tag and verify Save is blocked. Dismiss the
+keyboard, collapse/reopen details and assert retained entry and visible guidance.
+Stage the tag and verify Save becomes available, then clear the synthetic draft
+and close without a production mutation. Scoped close/resume remains covered
+separately by the real-route persistence regression.

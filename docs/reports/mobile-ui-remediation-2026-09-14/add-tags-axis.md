@@ -47,3 +47,11 @@ native acceptance and the separate discovery/overlong-name review remain open.
 M93 now also has an Add correction candidate: resolver-driven overlong-name
 feedback retains the entered value and clears after correction. Eighteen remote
 Add/resolver tests plus type/structural checks passed; native feedback is pending.
+
+Native M96 scenario added against the existing configured-header Add fixture:
+exact asset-name and tag-name entry after keyboard readiness, Save enabled then
+blocked, collapse/reopen retention with visible collapsed guidance, staging, clear
+and close. It performs no Save; context-scoped remount remains proven only by the
+route regression. This scenario uses standard text size; large-text Add/tag checks
+remain outstanding. Structural checks and critic review passed; native execution
+and screenshot inspection are pending.

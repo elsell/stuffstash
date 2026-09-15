@@ -766,6 +766,80 @@ final class FixtureAuditTests: XCTestCase {
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
+  func testAddRetainsUnfinishedTagAcrossDetailsDisclosure() {
+    let open = app.buttons["Audit Add configured header"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        let top = max(bounds.minY, app.navigationBars["Add item"].frame.maxY)
+        return (!requiresHit || element.isHittable) && element.frame.minY >= top && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<18 where !visible() {
+        let above = element.frame.minY < app.navigationBars["Add item"].frame.maxY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+    }
+    func dismissKeyboard() {
+      let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+      XCTAssertTrue(dismiss.isHittable)
+      dismiss.tap()
+      XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    }
+    reveal(name)
+    name.tap()
+    waitForKeyboard()
+    name.typeText("Tent")
+    XCTAssertEqual(name.value as? String, "Tent")
+    dismissKeyboard()
+    let save = app.buttons["Save item"].firstMatch
+    XCTAssertTrue(save.isEnabled)
+    let details = app.buttons["More details"].firstMatch
+    reveal(details)
+    details.tap()
+    let entry = app.textFields["New tag name"].firstMatch
+    reveal(entry)
+    entry.tap()
+    waitForKeyboard()
+    entry.typeText("Camping")
+    XCTAssertEqual(entry.value as? String, "Camping")
+    dismissKeyboard()
+    XCTAssertFalse(save.isEnabled)
+    reveal(details)
+    details.tap()
+    XCTAssertFalse(entry.exists)
+    let guidance = app.staticTexts["Open More details to add or clear the unfinished tag before saving."].firstMatch
+    XCTAssertTrue(guidance.exists)
+    reveal(guidance, requiresHit: false)
+    capture("add-unstaged-tag-collapsed")
+    reveal(details)
+    details.tap()
+    XCTAssertEqual(entry.value as? String, "Camping")
+    let add = app.buttons["Add tag"].firstMatch
+    reveal(add)
+    add.tap()
+    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    XCTAssertTrue(save.isEnabled)
+    capture("add-tag-staged")
+    let clear = app.buttons["Clear draft"].firstMatch
+    reveal(clear)
+    clear.tap()
+    XCTAssertFalse(save.isEnabled)
+    let close = app.buttons["Close Add"].firstMatch
+    XCTAssertTrue(close.isHittable)
+    close.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
     verifyAddDraft(entry: "Audit Add draft")
   }
