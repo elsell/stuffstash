@@ -21,6 +21,35 @@ final class FixtureAuditTests: XCTestCase {
     capture("cold-inventory-dependent-queries")
   }
 
+  func testInventorySwitcherHouseholdRetryAndClose() {
+    let open = app.buttons["Audit inventory switcher"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    open.tap()
+    let change = app.buttons["Switch household"]
+    XCTAssertTrue(change.waitForExistence(timeout: 10))
+    XCTAssertTrue(change.isHittable)
+    capture("inventory-switcher-entry")
+    change.tap()
+    let household = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Workshop household")).firstMatch
+    XCTAssertTrue(household.waitForExistence(timeout: 5))
+    household.tap()
+    let inventory = app.buttons["Switch to inventory Workshop tools"]
+    XCTAssertTrue(inventory.waitForExistence(timeout: 5))
+    inventory.tap()
+    XCTAssertTrue(app.staticTexts["Could not switch inventories. Try again."].waitForExistence(timeout: 5))
+    capture("inventory-switcher-selection-error")
+    XCTAssertTrue(inventory.isEnabled)
+    inventory.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Inventories"])], timeout: 5), .completed)
+    open.tap()
+    let close = app.buttons["Close inventory switcher"]
+    XCTAssertTrue(close.waitForExistence(timeout: 5))
+    close.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Inventories"])], timeout: 5), .completed)
+    capture("inventory-switcher-dismissed")
+  }
+
   private func waitForKeyboard() {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))

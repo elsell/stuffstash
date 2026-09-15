@@ -827,3 +827,15 @@ context test is absent. The initial rsync listed that deleted path and reported
 code23; the follow-up hash check proves all existing changed files transferred.
 No local tests/builds ran. This is regression evidence for the current PR140 batch,
 not native compilation, rendering, or physical device acceptance.
+
+### Inventory switcher native acceptance scenario
+
+A runner-only InventorySwitcherFixture now presents the production screen with
+production sheet detents and preloaded synthetic dashboard data. It exercises
+the native household command, household drilldown, failed selection, retry return
+and Close. Its local port never changes a real inventory. This is deliberately
+warm-cache presentation coverage, not discovery or authorization acceptance.
+Route-isolation tests failed before adding the route and now pass; remote typecheck
+and structural checks pass. Critic found no blockers; its cleanup and dismissal
+wait recommendations were applied. Swift compilation and phone/iPad execution
+remain pending. Fixture scenario count increases to34 including earlier additions.

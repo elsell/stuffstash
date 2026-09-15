@@ -1,3 +1,4 @@
+export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
 export { HomeReturnFixture } from './HomeReturnFixture';
 export { default as HomeReturnDetailsRoute } from '../src/ui/screens/HomeReturnDetailsRouteScreen';
@@ -59,6 +60,7 @@ function FixtureNavigation() {
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
+      <Stack.Screen name="audit-inventory-switcher" options={{ presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.5, 1], sheetCornerRadius: 24, sheetGrabberVisible: true, contentStyle: { backgroundColor: palette.surface } }} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
       <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add-header" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: true, title: 'Add item', contentStyle: { backgroundColor: palette.background } }} />
@@ -86,6 +88,7 @@ export function FixtureMenu() {
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
+    <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />
     <Button title="Audit Home Return" onPress={() => router.push('/audit-home-return' as Href)} />
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />

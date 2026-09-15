@@ -481,3 +481,12 @@ Host belongs below the household heading, not squeezed alongside it in a row.
 Allow the heading to wrap; do not rely on toolbar-style single-line truncation in
 the sheet body. Loading names the inventory task rather than the internal tenant
 concept. Verify native narrow/large-text layout before claiming visual acceptance.
+
+### Native inventory switcher fixture
+
+Add a runner-only fixture using the production switcher screen, its production
+sheet detents and native command adapters. Use a preloaded synthetic dashboard
+for presentation coverage (not cold-query acceptance), two households, and a local
+selection port that rejects once then succeeds. Verify household drilldown,
+selection failure/retry, return to the fixture menu, and explicit Close. Retain
+screenshots. Do not touch real inventory selection or production services.

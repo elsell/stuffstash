@@ -25,6 +25,7 @@ exports = {
     "audit-add-push": "AddAssetFixture",
     "audit-add-header": "AddAssetFixture",
     "audit-inventory-query": "InventoryQueryFixture",
+    "audit-inventory-switcher": "InventorySwitcherFixture",
     "audit-home-return": "HomeReturnFixture",
     "home-return-details": "HomeReturnDetailsRoute",
     "audit-checkout-history": "CheckoutHistoryFixture",
