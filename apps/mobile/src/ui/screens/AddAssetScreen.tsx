@@ -1,3 +1,4 @@
+import { AddAssetNameField } from './AddAssetNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
@@ -127,6 +128,7 @@ function ScopedAddAssetScreen({
   const [customAssetTypeId, setCustomAssetTypeId] = useState<string | undefined>();
   const [expirationValid, setExpirationValid] = useState(true);
   const [expirationRevision, setExpirationRevision] = useState(0);
+  const [nameRevision, setNameRevision] = useState(0);
   const [title, setTitle] = useState(emptyDraft.title);
   const [description, setDescription] = useState(emptyDraft.description);
   const [parentAssetId, setParentAssetId] = useState<string | undefined>(emptyDraft.parentAssetId);
@@ -297,6 +299,7 @@ function ScopedAddAssetScreen({
       setCustomAssetTypeId(undefined);
       setExpirationValid(true);
       setExpirationRevision(value => value + 1);
+      setNameRevision(value => value + 1);
       setTitle('');
       setDescription('');
       setParentAssetId(nextParent?.id);
@@ -482,6 +485,7 @@ function ScopedAddAssetScreen({
     setCustomAssetTypeId(draft.customAssetTypeId);
     setExpirationValid(true);
     setExpirationRevision(value => value + 1);
+    setNameRevision(value => value + 1);
     setTitle(draft.title);
     setDescription(draft.description);
     setParentAssetId(draft.parentAssetId);
@@ -567,7 +571,7 @@ function ScopedAddAssetScreen({
                 />
 
                 <Text style={styles.fieldLabel}>Name</Text>
-                <AppTextInput
+                <AddAssetNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
                   accessibilityLabel="Asset name"
                   editable={!draftBusy}
                   onChangeText={value => editDraft(() => setTitle(value))}

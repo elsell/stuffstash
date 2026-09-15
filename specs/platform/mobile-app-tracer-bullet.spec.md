@@ -511,3 +511,14 @@ as well as native disabled props so a previously opened control cannot alter the
 submitted draft. A failed operation restores editing with the same draft; success
 performs the existing transition. Scope/query refresh remains independent of this
 operation lock. Do not use background loading as a reason to lock the form.
+
+### Add name field text ownership
+
+The iOS Add name field must preserve complete native keyboard editing without
+per-keystroke controlled-value echo. Application draft state still receives edits
+for persistence, validation and submission. Restoring/replacing a draft and clearing
+after successful creation explicitly start a new seeded field lifetime; metadata
+refresh and failed saves do not. Pending save/parent/photo operations keep the field
+noneditable and reject late draft callbacks. Android retains its existing controlled
+field until its own native evidence justifies a different adapter. This correction
+does not change description, parent search, tags or Add sheet presentation.

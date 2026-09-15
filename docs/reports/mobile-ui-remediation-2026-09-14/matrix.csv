@@ -2003,14 +2003,14 @@ S084,Add / main draft,localization,"Locale, timezone, RTL and long strings",pend
 S084,Add / main draft,imagery,"Icons, photos and missing media",pending,,
 S084,Add / main draft,targets,Touch target size and reachability,pending,,
 S084,Add / main draft,gestures,Gestures and explicit alternatives,pending,,
-S084,Add / main draft,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
+S084,Add / main draft,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending; text-entry-axis.md M74 native typing failure/candidate; acceptance pending,M74
 S084,Add / main draft,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S084,Add / main draft,motion,Reduced motion and feedback alternatives,pending,,
 S084,Add / main draft,content,"Lists, hierarchy, density and pagination",pending,,
 S084,Add / main draft,search,"Search, scope and filters",pending,,
 S084,Add / main draft,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
 S084,Add / main draft,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
-S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; text-entry-axis.md M74 native typing failure/candidate; acceptance pending,M21;M74
 S084,Add / main draft,privacy,"Account scope, data use and permissions",pending,,
 S084,Add / main draft,notifications,System notification entry and state,pending,,
 S084,Add / main draft,media,"Camera, library, files and audio",pending,,

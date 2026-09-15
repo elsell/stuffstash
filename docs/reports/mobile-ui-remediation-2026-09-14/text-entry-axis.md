@@ -63,3 +63,30 @@ family; do not mark keyboard cells complete from this inventory.
 
 Critic review caught four omitted direct-wrapper calls; the inventory now includes
 them. The family-level task review already covered their behavior.
+
+## M74 — Add name field native editing candidate
+
+Run349297 phone navigation-stack Add reached the form/header but typed Native draft
+name as Nve draft name (screenshotA008EDF5-CE83-488A-80D8-8BEC399DC00F). The sheet
+comparison failed before its field appeared. Keep these as separate findings.
+
+Only iOS Name now uses a stable initial native value. The application still receives
+edits for persistence/save/validation; restore/explicit clear/successful creation
+advance the field lifetime. Metadata refresh and failed Save retain it. Android
+keeps both its controlled editing and stable field key. Description and search/tag
+fields remain unchanged because their reset semantics need separate review.
+
+Six remote Add behavior checks, TypeScript and structural checks pass. Tests now
+verify submitted/persisted names rather than relying on a controlled value prop;
+restored seed and successful reset are checked separately. Critic found no blocker;
+requested reset coverage and Android key scope were addressed. The unchanged native
+full-string/rejected-save scenario remains the acceptance gate. This is a candidate,
+not a claim that text corruption or Add sheet loading is resolved.
+
+The CSV above is the baseline36-site inventory reviewed at90bc977a and committed at904684a1. This patch replaces its
+Name site with AddAssetNameField (iOS seeded/Android controlled); use this delta when
+reviewing the current tree rather than treating the baseline counts as current.
+
+The added successful-reset case caught a candidate key collision with the expiration
+editor. A name-specific key prefix corrected it; the final run has no duplicate-key
+warnings and all six checks pass. This caught regression is not shipped native evidence.

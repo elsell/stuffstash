@@ -607,3 +607,11 @@ when identity is pending/failed. Two original regressions failed; 27 remote
 settings/cache checks plus typecheck/structural checks pass. Critic requested
 identity cases were added. See [Account/connection audit](account-connection-axis.md)
 for remaining native layout/lifecycle acceptance and unchanged scope boundaries.
+
+### M74 — Add name loses characters during native typing (P1)
+
+Native-observed on phone run349297 navigation-stack comparison. Implemented an iOS
+native-owned Name candidate with explicit restore/reset lifetimes and unchanged
+application draft/save guards. Six remote behavior checks plus typecheck/structural
+checks pass; native full-string acceptance remains pending. Sheet readiness remains
+a separate issue. See [text-entry review](text-entry-axis.md).
