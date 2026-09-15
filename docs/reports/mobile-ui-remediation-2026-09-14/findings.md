@@ -1521,3 +1521,14 @@ directly and places verification error text inside its scroll content. A new
 controlled test reproduces missing in-content recovery before the change and
 verifies the alert, draft and Apply remain available afterward. Native route
 geometry still requires verification.
+
+## M116 — Loading filter sheets lack an explicit Cancel action
+
+P2, source-confirmed at c27b1e7c. Both Browse and Expiration filter routes rendered
+only a progress indicator until choices arrived. Their ready/error states had
+Cancel, but pending users had to rely on native dismissal gestures/platform Back.
+The candidate shares a direct scroll loading body with visible loading text and
+a native Cancel command wired to each route's existing dismissal handler. It does
+not wait for choices or apply any filter. A controlled regression verifies the
+command is usable while the loading body remains mounted. Native sheet dismissal
+and query transport cancellation are not established by that component test.

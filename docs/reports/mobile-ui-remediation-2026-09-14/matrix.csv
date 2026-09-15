@@ -370,13 +370,13 @@ R016,browse-filters.tsx,appearance,"Light/dark, contrast and materials",source-r
 R016,browse-filters.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,imagery,"Icons, photos and missing media",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,targets,Touch target size and reachability,finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
-R016,browse-filters.tsx,gestures,Gestures and explicit alternatives,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
+R016,browse-filters.tsx,gestures,Gestures and explicit alternatives,finding,browse-filters-axis.md; e303e4f7 source; native acceptance pending; M116 pending Cancel candidate; controlled behavior pass; native pending,M116
 R016,browse-filters.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,content,"Lists, hierarchy, density and pagination",finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
 R016,browse-filters.tsx,search,"Search, scope and filters",finding,; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,M114
-R016,browse-filters.tsx,loading,"Loading, background refresh and progress",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
+R016,browse-filters.tsx,loading,"Loading, background refresh and progress",finding,browse-filters-axis.md; e303e4f7 source; native acceptance pending; M116 pending Cancel candidate; controlled behavior pass; native pending,M116
 R016,browse-filters.tsx,recovery,"Empty, error, denied and retry",finding,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,"M32,M114"
 R016,browse-filters.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,privacy,"Account scope, data use and permissions",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
@@ -394,13 +394,13 @@ R017,expiration-filters.tsx,appearance,"Light/dark, contrast and materials",pend
 R017,expiration-filters.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R017,expiration-filters.tsx,imagery,"Icons, photos and missing media",pending,,
 R017,expiration-filters.tsx,targets,Touch target size and reachability,pending,,
-R017,expiration-filters.tsx,gestures,Gestures and explicit alternatives,pending,,
+R017,expiration-filters.tsx,gestures,Gestures and explicit alternatives,finding,; M116 pending Cancel candidate; controlled behavior pass; native pending,M116
 R017,expiration-filters.tsx,keyboard,"Keyboard, text entry and focus",pending,"; M111 shared-consumer review: existing Expiration direct body/measured opaque footer extracted unchanged with Browse; native re-verification pending, no new Expiration defect claimed.",
 R017,expiration-filters.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R017,expiration-filters.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R017,expiration-filters.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R017,expiration-filters.tsx,search,"Search, scope and filters",pending,,
-R017,expiration-filters.tsx,loading,"Loading, background refresh and progress",pending,,
+R017,expiration-filters.tsx,loading,"Loading, background refresh and progress",finding,; M116 pending Cancel candidate; controlled behavior pass; native pending,M116
 R017,expiration-filters.tsx,recovery,"Empty, error, denied and retry",finding,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M32;M81
 R017,expiration-filters.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R017,expiration-filters.tsx,privacy,"Account scope, data use and permissions",pending,,

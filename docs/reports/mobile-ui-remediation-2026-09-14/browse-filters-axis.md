@@ -11,7 +11,7 @@ ranking, the full Expiration workspace or API authorization certification.
 | Task | Short type/status/availability/sort choices stay in place. Tags justify searchable multi-selection. Expiration is a separate date-review task with explicit explanatory context. |
 | Navigation | Internal Back returns to overview; Cancel leaves without applying. Expiration replaces the filter route after verifying scope. M115 binds asynchronous handoff to the focused visit. Native Back/swipe return remains pending. |
 | Selection | Native picker adapters own short exclusive choices; tag rows are independent checkboxes. Draft remains local until Show results or expiration handoff. Controlled selection/reset cases pass. |
-| Modality | Native filter sheet has0.7/full detents and a title. Initial loading only renders progress in source; explicit cancellation during that state needs follow-up, distinct from ready-state footer actions. |
+| Modality | Native filter sheet has0.7/full detents and a title. M116 adds explicit native Cancel to the loading body; actual pending-state dismissal needs native acceptance. |
 | Layout | M111 shared measured opaque footer reserves scrolling clearance. The production ready route had an unconditional outer View, unlike the direct fixture. The follow-up candidate removes that wrapper and puts errors inside the scroll body. Actual native geometry remains pending. |
 | Adaptation | Choices and footer use shared layout; no fixed item count. Long tags, iPad, compact width and keyboard layouts remain pending. |
 | Typography | Shared settings text styles and native picker text are used. Normal-size long names and wrapping remain pending; enlarged-text remediation follows normal-size fixes. |
@@ -19,13 +19,13 @@ ranking, the full Expiration workspace or API authorization certification.
 | Localization | Sorting/filter matching uses locale-aware string operations; labels remain English. RTL, translated labels and selected-count grammar remain pending. |
 | Imagery | No photos are needed for selecting filters. Native picker disclosures/checkmarks and row checkboxes communicate choice. Native icon alignment remains pending. |
 | Targets | Footer commands/native pickers and full choice rows provide actions. M111 last-tag reachability has controlled layout tests; runtime geometry is pending. |
-| Gestures | Ready-state Back/Cancel provides an explicit alternative to sheet dismissal. Search clearing is native. Initial-loading dismissal needs a separate check; no gesture-only acceptance is claimed. |
+| Gestures | Ready-state Back/Cancel provides an explicit alternative to sheet dismissal. Search clearing is native. M116 adds a loading-state Cancel alternative; native reachability remains pending. |
 | Keyboard | Native tag search is integrated-button style; shared footer handles measured keyboard overlap. Search cancel/clear preserves draft. Native focus and tab/sheet keyboard transitions remain pending. |
 | Accessibility | Tag rows expose checkbox state; navigation and commands have labels. M114 empty copy is ordinary section text. Search-result announcement, reading order and native picker traversal remain unverified. |
 | Motion | No custom filter animation is added. Native sheet/search transitions and Reduce Motion require runtime verification. |
 | Content | Tag choices are alphabetically sorted, filtered locally and all rendered. No pagination is implemented for this option list; very large inventories need performance acceptance. |
 | Search | Tag search affects options only, not selected IDs. M114 explains no tags versus no matches. Search or tag-filtered Browse uses relevance and suppresses an ineffective sort picker. |
-| Loading | Tags/scope are loaded before mounting the draft editor. Busy scope verification disables primary application; internal Back cancels it. Spinner-only initial loading still requires explicit-dismissal review. |
+| Loading | Tags/scope are loaded before mounting the draft editor. Busy scope verification disables primary application; internal Back cancels it. M116 replaces spinner-only initial loading with visible progress text and Cancel. |
 | Recovery | Query/scope failures have Retry/Cancel. Verification errors stay with the sheet; M115 suppresses departed feedback. M114 clarifies empty results. Native error placement/retry focus remains pending. |
 | Editing | Reset changes only the draft; Cancel does not apply. Show results captures the draft for verified navigation. Some internal controls remain available during verification; Back cancels pending work. No persistence mutation occurs here. |
 | Privacy | Target carries tenant/inventory/session; tag loading verifies before and after read, and navigation verifies current scope. This is client scope protection, not a substitute for server authorization. Native account-change behavior remains pending. |

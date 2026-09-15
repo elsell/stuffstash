@@ -533,3 +533,9 @@ exports nested identical-label elements with identical bounds, select a stable
 match for that text while retaining full viewport/interaction assertions. Record
 the observed hierarchy and do not classify a selector ambiguity as product failure
 or as a passing interaction.
+
+Browse and Expiration filter sheets must expose a native Cancel command while
+choices load, without waiting for any query to settle. Loading uses visible text
+and progress together. Cancel returns through the existing route cancellation
+handler; it never applies a draft. Keep this loading body directly scrollable and
+reuse existing native commands/settings loading presentation.

@@ -1,6 +1,7 @@
+import { FilterLoadingScreen } from '../ui/components/FilterLoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, ActivityIndicator, Text, View } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import { useAppServices } from '../ui/navigation/AppServicesContext';
 import { useMobileServerStateScope } from '../ui/navigation/MobileServerStateProvider';
 import { mobileQueryKeys } from '../adapters/serverState/MobileQueryClient';
@@ -20,7 +21,7 @@ export default function BrowseFiltersRoute() {
   const scope = useMobileServerStateScope();
   const services = useAppServices();
   const router = useRouter();
-  const { palette, styles } = useSettingsListStyles();
+  const { styles } = useSettingsListStyles();
   const { busy, error, navigate, cancel } = useBrowseFilterNavigation(
     JSON.stringify([scope.scopeId, target.tenantId, target.inventoryId, target.sessionScope]),
     async signal => { verifyBrowseFilterScope(target, scope.scopeId, await scope.loadInventoryScope({ signal })); }
@@ -37,7 +38,7 @@ export default function BrowseFiltersRoute() {
     <SettingsActionRow label="Retry" onPress={() => { void identity.refetch(); void choices.refetch(); }} />
     <SettingsActionRow label="Cancel" onPress={dismiss} />
   </ScrollView>;
-  if (!choices.data || !matches) return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading filters" color={palette.action} /></View>;
+  if (!choices.data || !matches) return <FilterLoadingScreen onCancel={dismiss} />;
   return <BrowseFiltersScreen key={JSON.stringify([scope.scopeId, target.tenantId, target.inventoryId])}
       initial={{ scope: initial.initialScope, lifecycleState: initial.initialLifecycleState, checkoutState: initial.initialCheckoutState, tagIds: initial.initialTagIds, sort: initial.initialSort }}
       query={initial.initialQuery} tags={choices.data} busy={busy} error={error} onCancel={dismiss} onCancelPending={cancel}
