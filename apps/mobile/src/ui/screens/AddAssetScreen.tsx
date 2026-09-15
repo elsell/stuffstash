@@ -142,6 +142,8 @@ function ScopedAddAssetScreen({
     emptyDraft.selectedPhotos
   );
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(emptyDraft.selectedTagIds ?? []);
+  const [inlineTag, setInlineTag] = useState({ name: '', color: '' });
+  const hasUnstagedTag = Boolean(inlineTag.name.trim() || inlineTag.color.trim());
   const [newTags, setNewTags] = useState<readonly CreateAssetTagDraft[]>(emptyDraft.newTags ?? []);
   const [showDetails, setShowDetails] = useState(emptyDraft.showDetails);
   const [lastParent, setLastParent] = useState<ParentSelection | undefined>(emptyDraft.lastParent);
@@ -217,6 +219,7 @@ function ScopedAddAssetScreen({
       selectedPhotos,
       selectedTagIds,
       newTags,
+      inlineTag,
       showDetails,
       lastParent
     });
@@ -232,6 +235,7 @@ function ScopedAddAssetScreen({
     selectedPhotos,
     selectedTagIds,
     newTags,
+    inlineTag,
     showDetails,
     title
   ]);
@@ -265,7 +269,7 @@ function ScopedAddAssetScreen({
   }, []);
 
   async function saveAsset(): Promise<void> {
-    if (!expirationValid || !beginDraftOperation('save')) return;
+    if (hasUnstagedTag || !expirationValid || !beginDraftOperation('save')) return;
     setSaveState({ status: 'saving' });
 
     try {
@@ -319,6 +323,7 @@ function ScopedAddAssetScreen({
       setSelectedPhotos([]);
       setSelectedTagIds([]);
       setNewTags([]);
+      setInlineTag({ name: '', color: '' });
       setShowDetails(false);
       setLastParent(nextParent);
       if (draftContext) {
@@ -501,13 +506,14 @@ function ScopedAddAssetScreen({
     setSelectedPhotos(draft.selectedPhotos);
     setSelectedTagIds(draft.selectedTagIds ?? []);
     setNewTags(draft.newTags ?? []);
+    setInlineTag(draft.inlineTag ?? { name: '', color: '' });
     setShowDetails(draft.showDetails);
     setLastParent(draft.lastParent);
   }
 
   const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left');
   const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
-    disabled: draftBusy || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
+    disabled: draftBusy || hasUnstagedTag || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
     onPress: () => void saveAsset() }]);
   const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: 'Add item',
     ...closeOptions, ...saveOptions }), [draftBusy, closeOptions, saveOptions]);
@@ -645,6 +651,7 @@ function ScopedAddAssetScreen({
                 <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
                   draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
                   onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} />
+                {hasUnstagedTag && !showDetails ? <Text style={styles.parentPromotionText}>Open More details to add or clear the unfinished tag before saving.</Text> : null}
                 {showDetails ? (
                   <View>
                     <AppTextInput
@@ -660,9 +667,9 @@ function ScopedAddAssetScreen({
                     <AssetTagPicker disabled={draftBusy}
                       tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
-                      onChange={ids => editDraft(() => setSelectedTagIds(ids))}
                       newTags={newTags}
-                      onNewTagsChange={tags => editDraft(() => setNewTags(tags))}
+                      entry={inlineTag}
+                      onChange={(ids, tags, entry) => editDraft(() => { setSelectedTagIds(ids); setNewTags(tags); setInlineTag(entry); })}
                     />
                     <Pressable
                       accessibilityRole="button"
@@ -1095,32 +1102,33 @@ function ParentPicker({
 function AssetTagPicker({
   disabled,
   newTags,
-  onNewTagsChange,
+  entry,
   tags,
   selectedTagIds,
   onChange
 }: {
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
-  readonly onNewTagsChange: (tags: readonly CreateAssetTagDraft[]) => void;
+  readonly entry: NonNullable<AddAssetDraft['inlineTag']>;
   readonly tags: readonly AssetTagSummary[];
   readonly selectedTagIds: readonly string[];
-  readonly onChange: (tagIds: readonly string[]) => void;
+  readonly onChange: (tagIds: readonly string[], tags: readonly CreateAssetTagDraft[], entry: NonNullable<AddAssetDraft['inlineTag']>) => void;
 }) {
   const [tagSearch, setTagSearch] = useState('');
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('');
+  const { name: newTagName, color: newTagColor } = entry;
+  function setNewTagName(name: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, name }); }
+  function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
   const selected = new Set(selectedTagIds);
 
   function toggleTag(tagId: string): void {
     if (disabled) return;
     if (selected.has(tagId)) {
-      onChange(selectedTagIds.filter((current) => current !== tagId));
+      onChange(selectedTagIds.filter((current) => current !== tagId), newTags, entry);
       return;
     }
-    onChange([...selectedTagIds, tagId]);
+    onChange([...selectedTagIds, tagId], newTags, entry);
   }
 
   function addNewTag(): void {
@@ -1140,12 +1148,7 @@ function AssetTagPicker({
       selectedTagIds,
       pendingTags: newTags
     });
-    onChange(transition.selectedTagIds);
-    onNewTagsChange(transition.pendingTags);
-    if (transition.shouldClearInputs) {
-      setNewTagName('');
-      setNewTagColor('');
-    }
+    onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
   }
 
   const canAddNewTag = canResolveInlineAssetTag({
@@ -1167,7 +1170,7 @@ function AssetTagPicker({
               disabled={disabled}
               accessibilityRole="button"
               key={`${tag.displayName}-${index.toString()}`}
-              onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+              onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}
               style={[
                 styles.tagOption,
                 colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
@@ -1217,6 +1220,7 @@ function AssetTagPicker({
       </View>
       <TagColorPicker disabled={disabled} palette={colors} value={newTagColor} onChange={setNewTagColor} />
       <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
+      {newTagName.trim() || newTagColor.trim() ? <Text style={styles.parentPromotionText}>Add this tag or clear its name and color before saving.</Text> : null}
     </View>
   );
 }

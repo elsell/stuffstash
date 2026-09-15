@@ -38,3 +38,8 @@ showDetails, and the route/store fields. No device reproduction is claimed. Next
 route-own and persist unfinished entry; guard Save with useful feedback; test
 collapse/reopen, close/resume, clear and staging atomically. Then review Add's
 selection discovery against the general tag contract and exercise native behavior.
+
+M96 now has a correction candidate with route-owned, scoped entry persistence,
+collapse/reopen guidance and guarded Save. Nineteen remote Add tests plus type and
+structural checks passed. This supersedes the local-entry observations above;
+native acceptance and the separate discovery/overlong-name review remain open.

@@ -255,3 +255,13 @@ verify the name remains. Save stays disabled with the Add/clear explanation
 visible. Add tag clears the entry and enables saving the staged change. The
 runner must verify keyboard readiness and exact input, and discard rather than
 write to any real inventory.
+
+Add must keep unfinished inline tag name/color in its existing principal-, tenant-
+and inventory-scoped draft store. Collapsing More details or closing/resuming Add
+must retain the entry. Save remains unavailable with an Add/clear explanation
+until the entry is staged or cleared. Do not replace Add's resume behavior with
+Edit's discard confirmation. Clear draft and successful asset Save reset the
+entry; staging a tag clears it atomically with selection/definition updates.
+
+When Add details is collapsed with unfinished entry, show an adjacent instruction
+to reopen More details and add or clear it, so disabled Save remains explained.

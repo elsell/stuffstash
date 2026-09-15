@@ -1058,3 +1058,13 @@ omission on Save. Clear draft and successful staging must clear the entry
 intentionally. Test name-only/color-only input, unrelated draft changes, and scope
 isolation; verify keyboard, native color callbacks and feedback on device.
 Source review only so far; no implementation or runtime claim. See add-tags-axis.md.
+
+M96 correction candidate: unfinished entry is now route-owned and included in the
+existing scoped Add draft. Disclosure and remount preserve it; native Save and
+its command guard reject omission. Collapsed details has an adjacent reopen
+instruction. Add tag updates selections, staged definitions and cleared entry in
+one callback; Clear draft and successful Save reset it. The regression failed on
+collapse before the fix, then19 remote Add tests, TypeScript and structural checks
+passed. It covers scoped restoration, color storage, clear and Save retention.
+Critic review found no confirmed issue. Native typing/color/layout acceptance is
+still pending; other Add search/validation findings remain separate.
