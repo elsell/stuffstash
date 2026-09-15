@@ -33,7 +33,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,602 mobile tests (262 files), TypeScript and structural checks passed remotely; native geometry and lifecycle acceptance remain open.
+The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,606 mobile tests (264 files), TypeScript and structural checks passed remotely; native geometry and lifecycle acceptance remain open.
 
 The audit remains incomplete. After tab-shell review and M112–M113, the 3384 cells
 comprise 2553 pending, 608 source-reviewed, 182 finding,

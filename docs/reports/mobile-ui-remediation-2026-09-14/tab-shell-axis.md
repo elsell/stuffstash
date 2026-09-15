@@ -43,3 +43,8 @@ required native verification.
 Apple's tab-bar guidance URL was checked during this review, but its HTML required
 JavaScript; no new normative claim is attributed to inaccessible text. Platform
 capability evidence comes from the installed Expo types and implementation.
+
+M113 candidate: both nested stacks now reserve a sibling voice area on unsupported
+platforms through VoiceTabContent. iOS26 keeps its prior direct stack/native
+accessory structure. Real provider/controller behavior and platform rendering
+tests supplement source review; older-iOS/Android native geometry remains open.

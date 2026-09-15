@@ -14,3 +14,10 @@ export const router = {
   replace: (href: unknown) => fakeNavigation.dispatch({ type: 'replace', href }),
   setParams: (params: unknown) => fakeNavigation.dispatch({ type: 'setParams', params })
 };
+
+let pathname = '/';
+const pathnameListeners = new Set<() => void>();
+export function setPathname(value: string) { pathname = value; pathnameListeners.forEach(listener => listener()); }
+export function usePathname() {
+  return useSyncExternalStore(listener => { pathnameListeners.add(listener); return () => { pathnameListeners.delete(listener); }; }, () => pathname);
+}

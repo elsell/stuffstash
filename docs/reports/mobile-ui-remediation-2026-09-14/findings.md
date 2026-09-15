@@ -1476,4 +1476,9 @@ Settings. Keep iOS26's native accessory. The unsupported native extension is a
 concrete reason for a fallback, not permission to replace native tab navigation.
 Acceptance: fresh session entry, loading/error entry, listening/send and review
 return on Android and older iOS, both tabs, keyboard visibility and tab changes;
-verify no duplicate accessory on iOS26. Implementation remains open.
+verify no duplicate accessory on iOS26. Candidate implementation uses
+VoiceTabContent inside both tab destinations, with a reserved sibling action area
+and direct stack rendering on iOS26+. VoiceAccessoryContent shares the existing
+presentation/actions with the native wrapper. Three platform rendering cases and
+a real provider/controller test cover fresh recording, sending, navigation and
+return to Browse. Controlled tests do not prove native tab or keyboard clearance.

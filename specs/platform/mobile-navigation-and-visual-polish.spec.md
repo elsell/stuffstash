@@ -500,3 +500,12 @@ Home and Browse native tab triggers must provide each platform's icon source:
 iOS SF symbols and Android Material symbols through the existing Expo adapter.
 Keep the two labels and destinations unchanged. Verify selected/unselected native
 rendering on Android; TypeScript/source checks do not establish runtime rendering.
+
+For M113, tab destinations on Android and iOS below26 must reserve a persistent
+voice action area beneath their native stack, inside the tab destination. Reuse
+the existing voice presentation and start/send/open commands; do not overlay the
+scroll body, insert another tab, or change Home's header action ordering. The
+existing native tab accessory is unavailable on those platforms, which justifies
+this bounded fallback. On iOS26+, render the stack directly and keep the native
+accessory without a duplicate fallback. Verify bottom-tab clearance and keyboard
+behavior on each supported fallback platform before claiming native acceptance.

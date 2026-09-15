@@ -1,3 +1,5 @@
+import { VoiceTabContent } from '../../../ui/navigation/VoiceTabContent';
+import { VoiceAccessoryContent } from '../../../ui/navigation/VoiceAccessoryContent';
 import { AppNoticeScreenLayout } from '../../../ui/feedback/AppNoticeScreenLayout';
 import { Stack } from 'expo-router';
 import { Platform } from 'react-native';
@@ -6,5 +8,5 @@ import { nativeTabHeaderOptions } from '../../../ui/navigation/NativeTabHeader';
 
 export default function HomeLayout() {
   const palette = useAppearancePalette();
-  return <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ title: 'Home', ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background) }} />;
+  return <VoiceTabContent platform={Platform.OS} version={Platform.Version} accessory={<VoiceAccessoryContent placement="regular" />}><Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ title: 'Home', ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background) }} /></VoiceTabContent>;
 }
