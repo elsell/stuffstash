@@ -12,7 +12,7 @@ export function FooterAppearanceFixture() {
   const [selected, setSelected] = useState(false);
   const [received, setReceived] = useState(false);
   return <View testID="footer-appearance-root" style={{ flex: 1, padding: 20, gap: 12, backgroundColor: palette.surface }}>
-    <ScrollView contentContainerStyle={{ gap: 16 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16 }}>
       <Text accessibilityRole="header" style={{ color: palette.text, fontSize: 20 }}>Footer appearance</Text>
       <Text style={{ color: palette.text }}>Appearance: {resolvedColorScheme}</Text>
       <Button title="Use light appearance" onPress={() => { void setPreference('light'); }} />

@@ -1010,3 +1010,13 @@ When it settles, mode/timing controls reconcile to the latest known saved policy
 even if a parent refresh returns unchanged values. Current-visit failures keep the
 attempted selection and explicit retry/discard. Do not discard edits made after an
 operation unlocks or use a stale callback's captured policy for reconciliation.
+
+### Footer-appearance diagnostic body sizing
+
+The normal-size footer diagnostic must allocate remaining sheet height explicitly
+to its scroll body before auditing native button appearance. Run349725's iPad
+capture shows footer commands but no body controls; its failure is missing body,
+not established dark contrast. Match the explicit flex scroll sizing used by the
+passing footer-layout diagnostic, preserving the same production footer adapter.
+Re-run the native entry/appearance scenario; source layout changes cannot certify
+that the body or contrast is fixed. Preserve the failing capture.

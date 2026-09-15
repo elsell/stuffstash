@@ -1431,9 +1431,19 @@ and seeded-address keyboard readiness. Exact values include “Nve draft name,�
 failed input expectations; product-versus-automation cause remains unresolved.
 Direct color-well opening passed while whole-row opening failed again.
 
-Both footer-appearance tests failed at tested-source line110: the fixture menu's
-“Audit footer appearance” button was not hittable. They did not reach the footer
-or establish its disabled-label contrast. Do not turn that result into a dark-mode
-contrast diagnosis or a claimed appearance fix. Artifact10400441420 contains the
-retained screenshots/xcresult; image inspection is still pending at this checkpoint.
+Both footer-appearance tests failed at tested-source line110, waiting for the
+“Footer appearance” heading after opening the sheet. The inspected normal-size
+[screenshot](evidence/ipad-footer-empty-body-349725.png) and hierarchy show an empty
+sheet body with Move and Cancel present; no heading or appearance controls exist
+in the sheet hierarchy. The menu entry did open the sheet. This does not establish
+dark-mode contrast because the appearance controls were never reached. The
+artifact10400441420 revision.txt confirms the tested merge above. Source line110
+was cross-checked against PR revision36c45c3b. Retain this as body-layout evidence,
+not a completed appearance audit.
 Enlarged-text failures remain recorded without advancing enlarged-text remediation.
+
+The footer diagnostic now gives its ScrollView explicit flex:1, matching the
+passing footer-layout diagnostic's body allocation. This is a diagnostic candidate,
+not a production-sheet or contrast fix. Remote TypeScript/structural checks pass;
+critic found no blocker. The existing native appearance scenario must verify the
+body is available before its contrast results can be used.
