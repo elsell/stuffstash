@@ -12,6 +12,9 @@ Unsubmitted custom-field option text belongs to the editor draft. It participate
 in dirty-exit protection, survives Keep Editing, and must be added or cleared
 before saving an enum field. Explain this beside the option entry. Do not silently
 omit visible option text from a successful save.
+Changing a new field's type preserves dormant enum draft options for switching
+back. Non-enum creation submits an empty options list; hidden enum values must
+not cause a validation error for the newly selected type.
 
 For an existing custom field or asset type, the Details scope label must describe
 the loaded definition's owner. A household definition viewed from inventory

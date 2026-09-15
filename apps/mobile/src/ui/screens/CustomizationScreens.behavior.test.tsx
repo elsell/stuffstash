@@ -21,6 +21,26 @@ beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it('retains dormant enum options while saving only options applicable to the chosen field type', async () => {
+    const calls: unknown[][] = [];
+    const screen = await renderEditor({ kind: 'field', manageFields: managerFake({ create: async (...args: unknown[]) => { calls.push(args); return {}; } }) });
+    await screen.changeText(screen.byLabel('Name'), 'Priority');
+    await screen.press(screen.byLabel('Choose Type. Current value Text'));
+    await screen.press(screen.byLabel('Enum'));
+    await screen.changeText(screen.byLabel('New enum option'), 'high');
+    await screen.press(screen.byLabel('Add option'));
+    await screen.press(screen.byLabel('Choose Type. Current value Enum'));
+    await screen.press(screen.byLabel('Text'));
+    expect(screen.byLabel('New enum option')).toBeUndefined();
+    await screen.press(screen.byLabel('Choose Type. Current value Text'));
+    await screen.press(screen.byLabel('Enum'));
+    expect(screen.byLabel('Remove high')).toBeDefined();
+    await screen.press(screen.byLabel('Choose Type. Current value Enum'));
+    await screen.press(screen.byLabel('Text'));
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toHaveLength(1);
+    expect(calls[0][2]).toMatchObject({ type: 'text', enumOptions: [] });
+  });
   it('protects an unsubmitted field option and requires adding it before Save', async () => {
     const record = { ...field('priority', 'Priority', 'inventory'), type: 'enum' as const, enumOptions: ['high'] };
     const calls: unknown[][] = [];

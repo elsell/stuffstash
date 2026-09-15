@@ -2378,5 +2378,8 @@ P2 source-confirmed in the field editor audit at0065b1f7. Changing field Type fr
 Enum to Text hides the option editor but retains enumOptions. The create command
 passes those to ManageCustomFields, whose validation rejects options on non-enum
 fields. The user sees an enabled Save followed by an avoidable validation failure.
-Preserve dormant option draft for switching back, but submit only values applicable
-to the selected type. Reproduction and fix remain next work; not a native pass.
+Candidate fix preserves dormant option draft for switching back, but submits an
+empty options list for non-enum creation. Mounted regression first reproduced the
+hidden options in the outgoing payload; it now verifies switching-back retention
+and the corrected payload. All77 customization cases, TypeScript and structural
+checks pass on paul; critic found no blockers. Native acceptance remains pending.
