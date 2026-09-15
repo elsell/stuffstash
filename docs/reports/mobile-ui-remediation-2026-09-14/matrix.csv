@@ -360,7 +360,7 @@ R015,assets/index.tsx,notifications,System notification entry and state,pending,
 R015,assets/index.tsx,media,"Camera, library, files and audio",pending,,
 R015,assets/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R016,browse-filters.tsx,task,Task clarity and platform-pattern fit,pending,,
-R016,browse-filters.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R016,browse-filters.tsx,navigation,"Navigation, hierarchy and return",finding,; M115 focused verification; 15focused tests pass; native pending,M115
 R016,browse-filters.tsx,selection,Value selection and current value,pending,,
 R016,browse-filters.tsx,modality,Presentation and dismissal,pending,,
 R016,browse-filters.tsx,layout,"Safe areas, scroll edges and overlays",finding,; M111 user screenshot/source footer overlap; shared opaque measured NativeFilterSheet candidate.13 focused checks pass; long-tag native bounds fixture pending.,M111
@@ -382,7 +382,7 @@ R016,browse-filters.tsx,editing,"Draft, save, cancel, undo and interruption",pen
 R016,browse-filters.tsx,privacy,"Account scope, data use and permissions",pending,,
 R016,browse-filters.tsx,notifications,System notification entry and state,pending,,
 R016,browse-filters.tsx,media,"Camera, library, files and audio",pending,,
-R016,browse-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R016,browse-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M115 focused verification; 15focused tests pass; native pending,M115
 R017,expiration-filters.tsx,task,Task clarity and platform-pattern fit,pending,,
 R017,expiration-filters.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R017,expiration-filters.tsx,selection,Value selection and current value,pending,,

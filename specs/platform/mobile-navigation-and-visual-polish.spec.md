@@ -514,3 +514,9 @@ Browse tag filters must distinguish an inventory without tags from a search with
 no matching tags. Keep the selection draft and Back/Show results available in both
 states. Clearing the native search restores choices without clearing selections;
 an empty result must not look like an unfinished load or remove the user's draft.
+
+Browse filter navigation verification belongs to the focused sheet visit. Losing
+focus aborts the request and releases that visit's busy state; late success or
+failure must not navigate, show an error or unlock a newer request after return.
+Background callbacks cannot start verification while the sheet is unfocused.
+A new focused visit may retry without waiting for an aborted read to settle.

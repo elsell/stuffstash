@@ -1497,3 +1497,18 @@ remotely. Expiration already renders a no-match message and is unchanged. Native
 search focus, message visibility and assistive-technology announcement remain
 unverified; source text assertions do not establish those properties. R016/S072
 recovery and search; implementation ready for native acceptance in the larger batch.
+
+## M115 — Browse filter verification can outlive its focused visit
+
+P2, source-confirmed at00706b0f. useBrowseFilterNavigation aborted on unmount,
+explicit cancellation and scope changes, but not on blur. An outstanding scope
+read could therefore navigate or show an error after leaving the sheet while it
+remained mounted. Two deferred success/failure cases reproduced the missing abort.
+
+The candidate binds presentation to the shared focused-visit owner and aborts on
+blur. Unfocused calls cannot start a read; returning permits a fresh request while
+the abandoned read settles. Its late success/failure cannot navigate, annotate or
+clear the new request's busy state. Existing scope validation is unchanged.
+Fifteen focused filter/navigation tests, TypeScript and structural checks pass
+remotely; code tests cover controlled focus events, not native sheet transitions.
+Native interruption/return remains pending. R016 navigation/lifecycle.

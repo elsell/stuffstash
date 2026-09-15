@@ -1,3 +1,4 @@
+import { resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -37,4 +38,31 @@ it('navigates once when current verification succeeds and exposes a verification
   await h.run(() => controls.navigate(() => navigations++));
   expect(navigations).toBe(1); expect(controls.error).toContain('Reopen Browse filters');
   await h.unmount();
+});
+
+it.each(['success', 'failure'] as const)('ignores departed verification %s without unlocking a new focused request', async outcome => {
+  const h = new MobileRenderHarness(); resetNavigation();
+  let controls!: ReturnType<typeof useBrowseFilterNavigation>;
+  const requests: { signal: AbortSignal; resolve: () => void; reject: () => void }[] = [];
+  let navigations = 0;
+  function Screen() {
+    controls = useBrowseFilterNavigation('one', signal => new Promise<void>((resolve, reject) => requests.push({ signal, resolve, reject: () => reject(new Error('Unavailable')) })));
+    return null;
+  }
+  try {
+    await h.render(<Screen />);
+    let old!: Promise<void>; let current!: Promise<void>;
+    await h.run(() => { old = controls.navigate(() => navigations++); });
+    await h.run(() => setScreenFocused(false));
+    expect(requests[0].signal.aborted).toBe(true);
+    await h.run(() => controls.navigate(() => navigations++));
+    expect(requests).toHaveLength(1);
+    await h.run(() => setScreenFocused(true));
+    await h.run(() => { current = controls.navigate(() => navigations++); });
+    expect(requests).toHaveLength(2);
+    await h.run(async () => { if (outcome === 'success') requests[0].resolve(); else requests[0].reject(); await old; });
+    expect(navigations).toBe(0); expect(controls.error).toBe(''); expect(controls.busy).toBe(true);
+    await h.run(async () => { requests[1].resolve(); await current; });
+    expect(navigations).toBe(1); expect(controls.busy).toBe(false);
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
