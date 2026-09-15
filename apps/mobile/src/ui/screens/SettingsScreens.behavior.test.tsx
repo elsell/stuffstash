@@ -87,7 +87,7 @@ describe('mounted Settings behavior', () => {
     const action = async () => { calls++; throw new Error('Action failed safely.'); };
     const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
     try {
-      await harness.press(harness.byLabel(kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test'));
+      await harness.press(harness.byLabel(kind === 'signOut' ? 'Sign Out' : 'Change Server'));
       expect(latestAlert()?.message).toContain(kind === 'signOut' ? 'This Stuff Stash server will stay saved on your device.' : 'Your Stuff Stash data won’t be deleted.');
       await harness.run(() => pressAlertButton(kind === 'signOut' ? 'Sign Out' : 'Change Server')); await settle(harness);
       expect(calls).toBe(1);
@@ -286,7 +286,7 @@ it('permits confirmed sign out without loading inventory settings', async () => 
   let scopeReads = 0; let signedOut = 0;
   const { harness } = await mount(<AccountSettingsScreen settingsQuery={settingsQuery([], async () => { scopeReads++; throw new Error('offline'); })} onSignOut={async () => { signedOut++; }} />);
   try {
-    await harness.press(harness.byLabel('Sign out john@example.com'));
+    await harness.press(harness.byLabel('Sign Out'));
     await harness.run(() => pressAlertButton('Sign Out'));
     expect(signedOut).toBe(1);
     expect(scopeReads).toBe(0);
@@ -301,7 +301,7 @@ it.each(['pending', 'failed'] as const)('keeps sign out available while identity
   } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://stash.home.test/api', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => { throw new Error('Account must not load inventory settings'); } });
   const { harness } = await mount(<AccountSettingsScreen settingsQuery={query} onSignOut={async () => { signedOut++; }} />);
   try {
-    await harness.press(harness.byLabel('Sign out Current account'));
+    await harness.press(harness.byLabel('Sign Out'));
     await harness.run(() => pressAlertButton('Sign Out'));
     expect(signedOut).toBe(1);
   } finally { await harness.unmount(); }
@@ -514,7 +514,7 @@ it.each(['signOut', 'server'] as const)('rejects an earlier-visit %s confirmatio
   let calls = 0;
   const action = async () => { calls++; throw new Error('Retry this action'); };
   const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
-  const label = kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test';
+  const label = kind === 'signOut' ? 'Sign Out' : 'Change Server';
   const button = kind === 'signOut' ? 'Sign Out' : 'Change Server';
   try {
     await harness.press(harness.byLabel(label));
@@ -538,7 +538,7 @@ it.each(['signOut', 'server'] as const)('suppresses a departed %s failure and un
   const pending = deferred<void>(); let calls = 0;
   const action = () => { calls++; return pending.promise; };
   const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
-  const label = kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test';
+  const label = kind === 'signOut' ? 'Sign Out' : 'Change Server';
   try {
     await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(kind === 'signOut' ? 'Sign Out' : 'Change Server'));
     await harness.run(() => setScreenFocused(false)); await harness.run(() => setScreenFocused(true));
@@ -554,7 +554,7 @@ it.each(['signOut', 'server'] as const)('rejects %s confirmation after settings-
   const action = async () => { calls++; };
   const screen = (query: SettingsQuery) => kind === 'signOut' ? <AccountSettingsScreen settingsQuery={query} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={query} onChangeServer={action} />;
   const { harness, client } = await mount(screen(settingsQuery()));
-  const label = kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test';
+  const label = kind === 'signOut' ? 'Sign Out' : 'Change Server';
   const button = kind === 'signOut' ? 'Sign Out' : 'Change Server';
   try {
     await harness.press(harness.byLabel(label));
@@ -578,9 +578,10 @@ it('describes missing account details honestly and recovers with retry', async (
   try {
     expect(harness.allText()).toContain('Could not load account details. You can retry or sign out.');
     expect(harness.allText()).not.toContain('Some settings could not be refreshed. Previously loaded values are shown.');
-    expect(harness.byLabel('Sign out Current account')).toBeDefined();
+    expect(harness.byLabel('Sign Out')).toBeDefined();
     await harness.press(harness.byLabel('Retry refresh')); await settle(harness);
-    expect(harness.byLabel('Sign out recovered@example.com')).toBeDefined();
+    expect(harness.byLabel('Sign Out')).toBeDefined();
+    expect(harness.allText()).toContain('recovered@example.com');
     expect(harness.allText()).not.toContain('Could not load account details. You can retry or sign out.');
   } finally { await harness.unmount(); }
 });

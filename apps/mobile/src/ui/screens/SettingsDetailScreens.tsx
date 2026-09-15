@@ -8,7 +8,6 @@ import { AppearancePicker } from '../components/AppearancePicker';
 import type { SettingsQuery, SettingsViewModel } from '../../application/settings/SettingsQuery';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import {
-  SettingsActionRow,
   SettingsSection,
   SettingsSeparator,
   SettingsValueRow,
@@ -57,8 +56,7 @@ export function AccountSettingsScreen({
             <SettingsValueRow label="Signed in as" value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
-            <SettingsActionRow
-              accessibilityLabel={`Sign out ${principalLabel}`}
+            <NativeCommandButton
               disabled={working}
               label={working ? 'Signing Out…' : 'Sign Out'}
               onPress={() => confirmSignOut(principalLabel, ownConfirmation(capturePresentation(), signOut))}
@@ -119,8 +117,7 @@ export function ConnectionSettingsScreen({
         <SettingsValueRow label="Address" value={diagnostics.apiBaseUrl} />
       </SettingsSection>
       <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
-        <SettingsActionRow
-          accessibilityLabel={`Change Stuff Stash server from ${serverHostname(diagnostics.apiBaseUrl)}`}
+        <NativeCommandButton
           disabled={working}
           label={working ? 'Changing Server…' : 'Change Server'}
           onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, ownConfirmation(capturePresentation(), changeServer))}

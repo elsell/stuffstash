@@ -1971,3 +1971,12 @@ finding against project policy, not an assertion that Apple prohibits grouped ro
 Implementation and native normal-size verification remain pending.
 
 M141 critic found no confirmed blocker; query/session behavior remains unchanged.
+
+M142 implementation follow-up: Account and Connection now reuse the unchanged
+NativeCommandButton adapter. Native visible labels are also accessible names;
+subject context remains in the value row and confirmation. Pending labels, disabled
+state, one-shot ownership and recovery callbacks are retained. The spec records
+this deliberate naming change instead of adding a nested accessibility wrapper.
+61 settings behavior/server-state tests, TypeScript and structural checks pass on
+paul. Native normal-size geometry and VoiceOver acceptance remain pending.
+Critic found no confirmed issue; native/assistive acceptance remains open.

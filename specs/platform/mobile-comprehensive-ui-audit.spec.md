@@ -1108,3 +1108,10 @@ When no principal has loaded, describe unavailable account details without claim
 cached values are displayed. A failed refresh with retained principal data may
 explain that previous details remain. Retry and sign-out stay available in either
 case; loaded-provider and other retained-settings recovery keeps its existing copy.
+
+Account and Connection commands use NativeCommandButton within their existing
+settings groups. The native command's accessible name matches its visible Sign Out
+or Change Server label (and pending label); the adjacent selectable value row
+continues to identify the account/server, and the confirmation repeats the subject.
+Do not wrap native buttons in a second accessibility control to reproduce the old
+custom row label. Preserve disabled pending behavior, confirmations and retry.
