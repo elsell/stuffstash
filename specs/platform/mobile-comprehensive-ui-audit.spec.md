@@ -499,3 +499,12 @@ its History scroll view before reading geometry, including the older-page note.
 Retain the original hit-testing diagnostic unchanged. This removes ambiguous
 XCTest lookup, not a production accessibility defect; pagination, expansion and
 Close must still execute on the native runtime before acceptance.
+
+### Landscape capture cross-check
+
+The iPad landscape app attachment in run349372 has landscape pixel dimensions
+and EXIF orientation8, while its rendered view disagrees with the recorded window
+and form geometry. Capture XCUIScreen.main alongside the app attachment for named
+landscape checkpoints. Preserve both originals and existing geometry assertions;
+this comparison must not transform screenshots or declare layout verified merely
+because hit-testing passed.

@@ -28,6 +28,12 @@ final class OnboardingAuditTests: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
+    if name.hasPrefix("onboarding-landscape-") {
+      let screen = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+      screen.name = "\(name)-full-screen"
+      screen.lifetime = .keepAlways
+      add(screen)
+    }
     let hierarchy = XCTAttachment(string: app.debugDescription)
     hierarchy.name = "\(name)-hierarchy"
     hierarchy.lifetime = .keepAlways
