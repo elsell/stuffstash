@@ -1609,3 +1609,14 @@ containing that tag. It preserves full row/action/footer bounds and applied-ID
 checks. Fixture preparation passes2 tests remotely; critic found no confirmed
 issue. Corrected native execution remains pending. This is a procedure correction,
 not evidence that the original user defect is accepted.
+
+Phone ordinary multiline comparison in349853 failed before entry, unlike the
+previous run's ordinary-input pass. Final hierarchy8EFAEDF3-1083-4546-9226-97855276E066.txt
+places the input wrapper at y-778 with a zero-frame TextView. Screenshot417810F1-3301-43D4-BA08-A6D0633CFE35.png
+shows the scrolled fixture menu, not the input (retained as
+ evidence/phone-multiline-offscreen-349853.png). This is not evidence of lost keystrokes.
+The diagnostic inserted the field above many menu actions after a lower launcher
+was tapped. Comparison modes now replace the menu with a keyed dedicated scroll
+page and explicit Back; actual fields, keyboard options, ownership and full-speed
+exact-value assertions are unchanged. Remote fixture preparation passes2 tests.
+Native rerun is required to compare entry behavior on the corrected fixture.

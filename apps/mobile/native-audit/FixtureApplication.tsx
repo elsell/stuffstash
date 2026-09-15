@@ -107,6 +107,10 @@ export function FixtureMenu() {
   const [draftPhotos, setDraftPhotos] = useState(false);
   const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
   const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'>();
+  if (inputMode) return <FixturePage key={`input-${inputMode}`}>
+    <InputFixture mode={inputMode} />
+    <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
+  </FixturePage>;
   if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
@@ -133,7 +137,6 @@ export function FixtureMenu() {
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
     <Button title="Audit input without accessory" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('uncontrolled'); }} />
     <Button title="Audit system input" onPress={() => setInputMode('system')} />
-    {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
     <Button title="Audit Add navigation draft" onPress={() => router.push('/audit-add-push' as Href)} />
     <Button title="Audit Add configured header" onPress={() => router.push('/audit-add-header' as Href)} />
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />

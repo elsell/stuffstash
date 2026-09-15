@@ -1066,3 +1066,9 @@ Native tag clearance verification must locate the tag by its accessible identifi
 without assuming checkbox rows have the Button element type. It must scroll the
 sheet containing that tag, not the background route's first scroll view. Preserve
 full-row/footer bounds, action reachability, selection and applied-ID assertions.
+
+Text-entry comparison fixtures must replace the fixture menu with a dedicated
+scroll page when opened. Inserting them earlier in the long menu can leave their
+native field offscreen and confound text-entry evidence with menu scroll position.
+Keep actual controls, ownership modes, keyboard options and exact full-speed
+entry assertions unchanged; preserve an explicit return action.
