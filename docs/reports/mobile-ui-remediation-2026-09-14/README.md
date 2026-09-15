@@ -88,3 +88,9 @@ PR146 merged as `de5d87b0`. Its interim release completed in
 Required checks and final code review passed. This checkpoint includes native form
 actions, Move reflow, suggestion recovery and Edit tag-name feedback. **0.24.21 (109.1) is delivered.** Upload succeeded at11:00:34 UTC; Apple
 processing and exact-build changelog verification succeeded at11:02:58 UTC. All later PR148 audit corrections are excluded.
+
+PR148 validation at a761b0d8: the complete mobile suite passed **1,512 tests across
+258 files** remotely on paul. Changed mobile/script files match the checked
+workspace by SHA-256. This expands the focused behavior evidence; native runs
+remain separate and do not yet cover the latest Add/Edit corrections. No local
+tests or builds were run.
