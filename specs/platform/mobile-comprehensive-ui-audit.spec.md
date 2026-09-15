@@ -257,3 +257,8 @@ all reported issues; any future suppression needs a specific documented false
 positive. Record viewport/device/build scope and do not interpret a visible-state
 audit as coverage of offscreen controls or the complete platform.
 See https://developer.apple.com/documentation/accessibility/performing-accessibility-audits-for-your-app.
+
+The runner-only Add fixture may catch React render errors and display their
+message and component stack as diagnostic UI, so a fixture composition failure
+can be distinguished from an application/native crash. This must remain outside
+production routes and must not replace a failing assertion with success.

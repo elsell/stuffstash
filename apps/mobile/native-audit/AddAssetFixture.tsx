@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
+import { ScrollView, Text } from 'react-native';
 import { router } from 'expo-router';
 import { AddAssetScreen } from '../src/ui/screens/AddAssetScreen';
 import { MobileServerStateProvider } from '../src/ui/navigation/MobileServerStateProvider';
@@ -24,12 +25,26 @@ export function AddAssetFixture() {
   });
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => fixture.context}>
-    <AddAssetScreen inventoryAssetTypesQuery={{ execute: async () => [] }}
+    <AddFixtureErrorBoundary><AddAssetScreen inventoryAssetTypesQuery={{ execute: async () => [] }}
       addAssetContextQuery={fixture.contextQuery} addDraftScopeQuery={fixture.scopeQuery}
       addAssetDraftStore={fixture.draftStore} parentLookupQuery={fixture.parents} photoSelectionQuery={fixture.photos}
       createAssetCommand={{ execute: async input => {
         await new Promise(resolve => setTimeout(resolve, 5000));
         throw new Error(`Rejected draft: ${input.title}`);
-      } }} onDismiss={() => router.back()} />
+      } }} onDismiss={() => router.back()} /></AddFixtureErrorBoundary>
   </MobileServerStateProvider>;
+}
+
+
+class AddFixtureErrorBoundary extends Component<{ children: ReactNode }, { message?: string; componentStack?: string }> {
+  state: { message?: string; componentStack?: string } = {};
+  static getDerivedStateFromError(error: Error) { return { message: error.message }; }
+  componentDidCatch(_error: Error, info: ErrorInfo) { this.setState({ componentStack: info.componentStack ?? undefined }); }
+  render() {
+    if (this.state.message !== undefined) return <ScrollView>
+      <Text accessibilityRole="header">Add fixture render failed</Text>
+      <Text>{this.state.message}</Text><Text>{this.state.componentStack}</Text>
+    </ScrollView>;
+    return this.props.children;
+  }
 }

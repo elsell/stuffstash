@@ -218,7 +218,7 @@ final class FixtureAuditTests: XCTestCase {
 
   func testDraftPhotosRemoveTheChosenAttachmentAndRetainReadOnlyPreviews() {
     openDraftPhotos()
-    let rail = app.scrollViews["voice-plan-photo-previews"]
+    let rail = app.otherElements["voice-plan-photo-previews"].scrollViews.firstMatch
     XCTAssertTrue(rail.exists)
     rail.swipeLeft()
     let last = app.buttons["Remove photo 4"]
