@@ -57,6 +57,11 @@ The [latest completed native follow-up](native-350129-followup.md) records full
 run35012949816 failures and focused color results. Text-entry isolation is running
 at0f378691 in run35029455242; no native fix is claimed from its dispatch.
 
+Combined post-PR150 checkpoint0c26c3bf: all1,703 mobile tests across270 files,
+TypeScript and the mobile structural check pass on paul
+(`/tmp/mobile-batch-0c26c3bf.log`). This includes M153–M155; native acceptance
+remains incomplete. Tests/builds were not run on the local host.
+
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in
 [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
