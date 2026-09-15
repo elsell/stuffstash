@@ -1044,3 +1044,17 @@ Sixty-seven remote action-sheet/edit/expiration tests, TypeScript and structural
 checks pass; critic found no confirmed issue. Native input, color-picker callbacks,
 message placement and discard interaction remain pending. This correction is after
 PR146 and excluded from 0.24.21.
+
+### M96 — Add drops unfinished tag input when details closes
+
+**P1, source-confirmed draft loss.** AssetTagPicker owns newTagName/newTagColor
+locally and is conditionally mounted by showDetails in AddAssetScreen. Collapsing
+More details discards that entry. AddAssetDraftStore persists selected IDs and
+staged definitions but has no unfinished-entry field; Save also omits it.
+
+Correction must route-own and persist unfinished entry within the existing scoped
+draft store, retain it across details collapse and close/resume, and prevent silent
+omission on Save. Clear draft and successful staging must clear the entry
+intentionally. Test name-only/color-only input, unrelated draft changes, and scope
+isolation; verify keyboard, native color callbacks and feedback on device.
+Source review only so far; no implementation or runtime claim. See add-tags-axis.md.
