@@ -534,3 +534,5 @@ Show the error before form fields and scroll it into view after failure; the
 next save or deliberate edit can clear the stale failure. Keep ordinary
 background refresh separate from this recovery. Native acceptance must inspect
 the visible error, retained text and reachable retry/close, not only AX existence.
+
+The same form-owned error rule applies to Add parent creation, camera and photo-library failures. Use the operation-specific heading; cancellation without an error stays silent. Beginning another operation clears stale failure feedback.

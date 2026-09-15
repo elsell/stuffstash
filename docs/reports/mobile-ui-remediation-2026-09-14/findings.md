@@ -749,3 +749,11 @@ it fails against HEAD and passes with the correction. Sixteen remote Add checks,
 TypeScript and structural validation pass on paul (/tmp/add-inline-error-green.log);
 critic found no blockers. Native inset/keyboard visibility and announcement
 acceptance remain pending. The separate Add typing and loading failures are open.
+
+M82 consumer follow-up: Add parent creation, library and camera failures used
+the same root notice. They now share the form-owned error path with accurate
+headings. Starting a new operation clears stale errors; cancellation stays silent.
+Three operation error ownership regressions fail before the correction. Eighteen
+remote Add checks, TypeScript and structural checks pass afterward
+(/tmp/add-operation-error-green.log on paul); critic found no blockers.
+Native camera/library return and announcement checks remain pending.

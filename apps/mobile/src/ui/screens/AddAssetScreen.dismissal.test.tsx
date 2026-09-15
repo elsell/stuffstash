@@ -111,7 +111,7 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
   } finally { await h.unmount(); client.clear(); }
 });
 
-for (const operation of ['parent', 'photo'] as const) {
+for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure'] as const) {
   it(`preserves the draft during pending ${operation} selection and restores editing after failure or cancellation`, async () => {
     const h = new MobileRenderHarness(); const client = createMobileQueryClient();
     const originalPlatform = Platform.OS; Platform.OS = 'android';
@@ -125,7 +125,7 @@ for (const operation of ['parent', 'photo'] as const) {
         addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
         createAssetCommand={{ execute: async () => { submissions++; return new Promise((_resolve, reject) => { finish = () => reject(new Error('Parent unavailable')); }); } }}
         parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
-        photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: () => new Promise(resolve => { finish = () => resolve([]); }), captureFromCamera: async () => [] })}
+        photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: () => new Promise((resolve, reject) => { finish = () => operation === 'library-failure' ? reject(new Error('Library unavailable')) : resolve([]); }), captureFromCamera: () => new Promise((_resolve, reject) => { finish = () => reject(new Error('Camera unavailable')); }) })}
         onDismiss={() => { dismissed++; }} /></AppFeedbackProvider></MobileServerStateProvider>);
       await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
       await h.changeText(h.byLabel('Asset name'), 'Keep this draft');
@@ -137,7 +137,7 @@ for (const operation of ['parent', 'photo'] as const) {
         await h.run(() => { void create!.props.onPress(); });
       } else {
         await h.press(h.all().find(node => node.props.accessibilityHint === 'Choose camera or photo library'));
-        await h.run(() => { void pressAlertButton('Choose from Library'); });
+        await h.run(() => { void pressAlertButton(operation === 'camera-failure' ? 'Take Photo' : 'Choose from Library'); });
       }
       expect(finish).toBeDefined();
       expect(h.byLabel('Asset name')?.props.editable).toBe(false);
@@ -149,6 +149,12 @@ for (const operation of ['parent', 'photo'] as const) {
       expect(h.byLabel('Asset name')?.props.value).toBe('Keep this draft');
       await h.run(() => finish());
       await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+      if (operation !== 'photo') {
+        const message = operation === 'parent' ? 'Parent unavailable' : operation === 'library-failure' ? 'Library unavailable' : 'Camera unavailable';
+        let owner = h.byText(message)?.parent;
+        while (owner && owner.type !== 'ScrollView') owner = owner.parent;
+        expect(owner?.type).toBe('ScrollView');
+      }
       expect(h.byLabel('Asset name')?.props.editable).toBe(true);
       await h.changeText(h.byLabel('Asset name'), 'Recovered draft');
       expect(h.byLabel('Asset name')?.props.value).toBe('Recovered draft');
