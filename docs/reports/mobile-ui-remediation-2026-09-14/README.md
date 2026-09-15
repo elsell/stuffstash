@@ -128,3 +128,12 @@ The [Expiration filter review](expiration-filters-axis.md) covers R017 and S075�
 [Home expiration and recent summaries](home-summary-axis.md) have source review across all24 axes, with destination and native verification limits retained.
 
 Combined checkpoint75923e21: all1,627 tests across267 files, TypeScript and structural checks passed on paul (`/tmp/mobile-batch-75923e21.log`). A checksum comparison of mobile source was clean before this run. The count decreased because three grouped mounted Browse scenarios replaced six tree tests, while one invitation recovery test was added. This checkpoint includes M129–M133; native acceptance remains pending.
+
+
+Combined checkpoint `dcbf1fe0`: **1,647 tests across 268 files**, TypeScript and
+mobile structural checks passed on paul. Mobile source checksum comparison was
+clean before execution; log `/tmp/mobile-batch-dcbf1fe0.log`. This includes the
+M134–M139 follow-ups and preserves all native acceptance gaps. M137 keyboard
+hit-testing remains unresolved. PR150's review body reflects the current batch.
+The active native run34998354801 has passed iPhone onboarding; other jobs were
+still running at this checkpoint and its source predates the newest corrections.
