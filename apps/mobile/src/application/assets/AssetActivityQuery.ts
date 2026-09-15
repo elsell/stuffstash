@@ -1,3 +1,4 @@
+import { formatHistoryTimestamp } from './AssetHistoryTimestamp';
 import { assertReadActive } from '../shared/ReadRequest';
 export type AssetActivityView = 'changes' | 'all';
 export type AssetActivityCategory = 'change' | 'read';
@@ -125,7 +126,7 @@ function toActivityRecordViewModel(entry: AssetActivityEntry): AssetActivityReco
     id: entry.id,
     title: activityTitle(entry),
     summary: activitySummary(entry),
-    occurredAtLabel: formatActivityTime(entry.occurredAt),
+    occurredAtLabel: formatHistoryTimestamp(entry.occurredAt, 'activity'),
     occurredAt: entry.occurredAt,
     actorLabel: entry.principal?.email?.trim() || 'Someone with access',
     sourceLabel: sourceLabel(entry.source)
@@ -186,12 +187,4 @@ function sourceLabel(source: string): string {
     case 'import': return 'Import';
     default: return 'Stuff Stash';
   }
-}
-
-function formatActivityTime(value: string): string {
-  const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) return value;
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-  }).format(new Date(timestamp));
 }

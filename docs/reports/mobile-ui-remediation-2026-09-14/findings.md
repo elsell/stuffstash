@@ -514,3 +514,30 @@ blocker; its duplicate contrast-helper concern was addressed with a shared test
 utility. Android uses the shared component but is not mounted by these tests.
 Native badge placement, text growth and material composition remain pending.
 This fix is after PR136 and is excluded from the interim release cut.
+
+
+### M67 — History ignores device date and clock conventions
+
+Activity, checkout history and exact event details forced en-US while neighboring
+date surfaces used the device locale. The shared AssetHistoryTimestamp formatter
+now uses the runtime locale/local zone and preserves each existing detail level
+and invalid-value fallback. Stored timestamps, ordering and authorization are unchanged.
+
+New explicit British/US/precision/invalid checks were written before the helper
+(the initial red was a missing-module failure, not a baseline behavioral claim).
+Thirteen initial formatter/query checks, eight mounted history checks, TypeScript
+and structural checks pass on paul. A fifth formatter case exercises the omitted
+locale contract; all five pass with LC_ALL and LANG set to en_GB.UTF-8, with the
+actual runtime locale independently verified as en-GB. Critic found no blocker
+and requested this default-locale coverage. Native settings changes, clock
+overrides, long date layout and time-zone acceptance remain pending.
+
+### M68 — Month-only expiration mislabels alternate-calendar periods
+
+Open. A stored Gregorian month is formatted by converting its first day using
+the locale's default calendar; month choices use unrelated synthetic2020 dates.
+For en-US-u-ca-hebrew, stored2028-02 is labeled Shevat5788 and January's choice
+is named Tevet. These periods do not share boundaries, so choosing a displayed
+month can store a different period. Thai year display also differs from the
+canonical numeric year field. Source and remote Intl evidence are recorded in
+localization-axis.md; native propagation and corrected contract remain pending.

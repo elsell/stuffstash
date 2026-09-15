@@ -1,3 +1,4 @@
+import { formatHistoryTimestamp } from '../../application/assets/AssetHistoryTimestamp';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
@@ -146,7 +147,7 @@ export function AssetHistoryDetailRouteScreen({
       </View> : null}
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
-        <Text style={styles.timestamp}>{exactTime(entry.occurredAt)}</Text>
+        <Text style={styles.timestamp}>{formatHistoryTimestamp(entry.occurredAt, 'exact')}</Text>
         <Text style={styles.muted}>{entry.principal?.email?.trim() || entry.principalId || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
       </View>
 
@@ -220,12 +221,6 @@ function sourceLabel(source: string): string {
   if (source === 'conversation' || source === 'voice') return 'Voice';
   if (source === 'import') return 'Import';
   return 'Stuff Stash';
-}
-
-function exactTime(value: string): string {
-  const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) return value;
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'long' }).format(new Date(timestamp));
 }
 
 function createStyles(colors: MobileColorPalette) {

@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `localization-axis.md`: date conventions, month-calendar semantics and directional-layout work.
 - `appearance-axis.md`: shared appearance, materials, contrast evidence and remaining native checks.
 - `text-input-sites.csv` and `text-entry-axis.md`: input ownership, external reset paths, and native acceptance work.
 

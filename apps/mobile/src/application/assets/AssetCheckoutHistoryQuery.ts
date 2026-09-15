@@ -1,3 +1,4 @@
+import { formatHistoryTimestamp } from './AssetHistoryTimestamp';
 export type AssetCheckoutRecord = {
   readonly id: string;
   readonly state: string;
@@ -113,26 +114,11 @@ function labelPrincipal(principalId: string): string {
 }
 
 function labelCheckedOutAt(value: string): string {
-  return `Checked out ${labelTimestamp(value)}`;
+  return `Checked out ${formatHistoryTimestamp(value, 'checkout')}`;
 }
 
 function labelReturnedAt(value: string): string {
-  return `Returned ${labelTimestamp(value)}`;
-}
-
-function labelTimestamp(value: string): string {
-  const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  }).format(new Date(timestamp));
+  return `Returned ${formatHistoryTimestamp(value, 'checkout')}`;
 }
 
 function safeDetails(value: string | undefined): string | undefined {
