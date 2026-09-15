@@ -13,7 +13,9 @@ export function TimeZonePicker({ value, disabled, onChange }: { readonly value: 
     const available = (Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('timeZone') ?? [];
     return [...new Set([value, 'UTC', Intl.DateTimeFormat().resolvedOptions().timeZone, ...available])];
   }, [value]);
-  const matches = zones.filter(zone => readableTimeZone(zone).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).slice(0, 30);
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const matches = zones.filter(zone => readableTimeZone(zone).toLocaleLowerCase().includes(normalizedQuery)
+    || zone.toLocaleLowerCase().includes(normalizedQuery)).slice(0, 30);
   async function select(zone: string) {
     if(disabled || pending.current)return;
     pending.current=true;setSaving(true);setError('');

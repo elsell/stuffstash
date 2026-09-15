@@ -655,3 +655,14 @@ checks now pass, including both inventory form variants, keyboard bypass prevent
 URL validation and existing recovery. TypeScript/structural checks pass on paul
 (/tmp/onboarding-readiness-green.log); critic found no blockers. Native explanation
 layout and keyboard timing remain unverified, including M35 compact-phone reachability.
+
+### M77 — partial time-zone identifiers cannot be found (P2)
+
+The native search advertised city/time-zone lookup but matched only the reversed
+readable label. `America/New` therefore missed available America/New_York, although
+a complete valid identifier could appear through a separate fallback. Search now
+matches both label and identifier, preserving case/outer-whitespace handling.
+No selection is saved by typing. Existing bounded results and valid-zone fallback
+remain unchanged. Mounted regression failed first; eight remote picker/settings
+checks, TypeScript and structural checks pass (/tmp/timezone-search-green.log).
+Critic found no blockers. Native search integration still requires runtime evidence.

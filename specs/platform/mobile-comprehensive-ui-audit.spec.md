@@ -453,3 +453,13 @@ loads older content using that sheet's scroll view, and closes. Continue requiri
 actual hit targets for commands. Geometry is not proof of VoiceOver access,
 contrast or unclipped text rendering. Do not clear M61 merely from the comparison
 passing or remove the old failing scenario without resolving its evidence.
+
+### Time-zone search vocabulary
+
+The reminder time-zone chooser searches both its readable city/region label and
+the underlying IANA identifier, case-insensitively and with outer whitespace
+trimmed. Partial identifiers such as America/New must find America/New_York;
+requiring a complete valid identifier is not sufficient search behavior. Preserve
+the saved choice, native navigation search, empty-result feedback, the bounded
+initial list and explicit valid-zone fallback when the runtime list is unavailable.
+Typing/searching alone never changes the saved time zone.
