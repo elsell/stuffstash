@@ -349,3 +349,13 @@ medium-to-expanded, long choice list, keyboard search and date-page scenarios mu
 verify that content and Apply/Back stay reachable on phone and iPad. If the native
 sheet does not keep the footer above the keyboard, resolve its actual coordinate
 behavior rather than adding a guessed fixed keyboard offset.
+
+## Shared Reduce Motion preference ownership
+
+Custom map, voice-result and notice motion must remain disabled while the native
+preference is pending or unavailable. Subscribe before reading the initial value.
+A live preference event supersedes that initial snapshot, including when the
+snapshot resolves late. Remove subscriptions on unmount and ignore late reads.
+Reuse one UI-level preference hook; keep screen-reader notice timing independent.
+Native runtime tests must verify map navigation, voice rail movement and notice
+entry/dismissal with Reduce Motion, including live preference changes.

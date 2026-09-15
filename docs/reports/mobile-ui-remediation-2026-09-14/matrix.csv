@@ -109,7 +109,7 @@ R005,(tabs)/search/index.tsx,targets,Touch target size and reachability,pending,
 R005,(tabs)/search/index.tsx,gestures,Gestures and explicit alternatives,pending,,
 R005,(tabs)/search/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R005,(tabs)/search/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R005,(tabs)/search/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
+R005,(tabs)/search/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 R005,(tabs)/search/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R005,(tabs)/search/index.tsx,search,"Search, scope and filters",pending,,
 R005,(tabs)/search/index.tsx,loading,"Loading, background refresh and progress",pending,,
@@ -1357,7 +1357,7 @@ R057,voice.tsx,targets,Touch target size and reachability,pending,,
 R057,voice.tsx,gestures,Gestures and explicit alternatives,pending,,
 R057,voice.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R057,voice.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R057,voice.tsx,motion,Reduced motion and feedback alternatives,pending,,
+R057,voice.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 R057,voice.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R057,voice.tsx,search,"Search, scope and filters",pending,,
 R057,voice.tsx,loading,"Loading, background refresh and progress",pending,,
@@ -1621,7 +1621,7 @@ S068,Browse / containment map columns,targets,Touch target size and reachability
 S068,Browse / containment map columns,gestures,Gestures and explicit alternatives,pending,,
 S068,Browse / containment map columns,keyboard,"Keyboard, text entry and focus",pending,,
 S068,Browse / containment map columns,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S068,Browse / containment map columns,motion,Reduced motion and feedback alternatives,pending,,
+S068,Browse / containment map columns,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 S068,Browse / containment map columns,content,"Lists, hierarchy, density and pagination",pending,,
 S068,Browse / containment map columns,search,"Search, scope and filters",pending,,
 S068,Browse / containment map columns,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
@@ -1645,7 +1645,7 @@ S069,Browse / map search path,targets,Touch target size and reachability,pending
 S069,Browse / map search path,gestures,Gestures and explicit alternatives,pending,,
 S069,Browse / map search path,keyboard,"Keyboard, text entry and focus",pending,,
 S069,Browse / map search path,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S069,Browse / map search path,motion,Reduced motion and feedback alternatives,pending,,
+S069,Browse / map search path,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 S069,Browse / map search path,content,"Lists, hierarchy, density and pagination",pending,,
 S069,Browse / map search path,search,"Search, scope and filters",pending,,
 S069,Browse / map search path,loading,"Loading, background refresh and progress",pending,,
@@ -2893,7 +2893,7 @@ S121,Voice / response,targets,Touch target size and reachability,pending,,
 S121,Voice / response,gestures,Gestures and explicit alternatives,pending,,
 S121,Voice / response,keyboard,"Keyboard, text entry and focus",pending,,
 S121,Voice / response,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S121,Voice / response,motion,Reduced motion and feedback alternatives,pending,,
+S121,Voice / response,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
 S121,Voice / response,content,"Lists, hierarchy, density and pagination",pending,,
 S121,Voice / response,search,"Search, scope and filters",pending,,
 S121,Voice / response,loading,"Loading, background refresh and progress",pending,,
@@ -3061,7 +3061,7 @@ S128,System / global notice,targets,Touch target size and reachability,source-re
 S128,System / global notice,gestures,Gestures and explicit alternatives,pending,,
 S128,System / global notice,keyboard,"Keyboard, text entry and focus",pending,,
 S128,System / global notice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
-S128,System / global notice,motion,Reduced motion and feedback alternatives,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12
+S128,System / global notice,motion,Reduced motion and feedback alternatives,source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending",M06;M12;M62
 S128,System / global notice,content,"Lists, hierarchy, density and pagination",pending,,
 S128,System / global notice,search,"Search, scope and filters",pending,,
 S128,System / global notice,loading,"Loading, background refresh and progress",source-reviewed,"248052a6; persistent actionable feedback, assistive preferences, labels/targets, source stacking; 1336 tests/check/structural; runtime pending",M06;M12

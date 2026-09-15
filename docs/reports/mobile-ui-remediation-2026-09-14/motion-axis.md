@@ -18,9 +18,13 @@ not a runtime pass and does not cover all behavior inside native dependencies.
   disabled, but its async initial read can still overwrite a newer live event.
   Read failure already leaves motion disabled.
 
-Next fix: extract the existing notice preference semantics into a shared motion
-hook/adapter and apply it to these consumers, with delayed-read/live-event and
-read-failure tests. Preserve notice screen-reader handling separately. Native
+M62 implements a shared useReducedMotionPreference hook for Map, voice rails and
+notices. Pending/failure stays conservative, live events supersede the initial
+snapshot, and subscriptions/late reads are cleaned up. Notice screen-reader
+handling remains separate. Two Map animation-request cases failed baseline;
+10 focused checks pass after the fix, including read failure and later live
+reenablement. TypeScript/structural checks pass; critic found no blocker. Voice
+rail-specific native timing is not established by the existing entity-link test. Native
 Reduce Motion entry, mid-interaction changes, gesture alternatives and dependency
 animations remain unverified across the141-surface inventory. No cells are marked
 passed or N/A from the source search alone.

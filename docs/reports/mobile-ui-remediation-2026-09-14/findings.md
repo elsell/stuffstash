@@ -385,3 +385,17 @@ Six history behavior/application tests, TypeScript and structural checks pass
 remotely. Critic found no blocker. The unchanged native note-hit-testing failure
 is not yet proven resolved: iPhone/iPad detents, Close, paging and enlarged text
 remain required. This change does not alter query permissions or pagination.
+
+### M62 — Initial Reduce Motion reads override newer preferences
+
+Map started with motion enabled and could overwrite a newer live event with an
+older async snapshot; read rejection was unhandled. Voice rails had the same
+overwrite race. The shared UI motion-preference hook now starts conservatively,
+subscribes before reading, gives live changes precedence, and catches failed reads.
+Notices reuse it while preserving independent screen-reader behavior.
+
+Two rendered Map animation-request tests failed baseline. Ten focused checks pass
+including pending/late/failure preference reads and later live reenablement, plus
+notice behavior and existing voice entity-link coverage. TypeScript and structural
+checks pass; critic found no blocker. Device animation, voice rail timing and
+system-component adaptation remain unverified. See motion-axis.md for scope.

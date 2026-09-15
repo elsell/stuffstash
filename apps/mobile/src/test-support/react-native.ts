@@ -9,6 +9,7 @@ let keyboardVisible = false;
 const keyboardListeners = new Map<string, Set<() => void>>();
 const accessibilityListeners = new Map<string, Set<(enabled: boolean) => void>>();
 let reduceMotionEnabled = false;
+let reducedMotionSnapshot: Promise<boolean> | undefined;
 let screenReaderEnabled = false;
 const announcements: string[] = [];
 let darkerSystemColorsEnabled = false;
@@ -61,7 +62,7 @@ export const TextInput = forwardRef<{ focus(): void }, Record<string, unknown>>(
 });
 export const Alert = { alert(title: string, message?: string, buttons: readonly AlertButton[] = [], options?: AlertRecord['options']) { alerts.push({ title, message, buttons, options }); } };
 export const AccessibilityInfo = {
-  isReduceMotionEnabled: async () => reduceMotionEnabled,
+  isReduceMotionEnabled: async () => reducedMotionSnapshot ?? reduceMotionEnabled,
   isScreenReaderEnabled: async () => screenReaderEnabled,
   announceForAccessibility(message: string) { announcements.push(message); },
   addEventListener(event: string, listener: (enabled: boolean) => void) {
@@ -109,6 +110,7 @@ export const Animated = { Value: AnimatedValue, View: 'AnimatedView', multiply: 
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  reducedMotionSnapshot = undefined;
   reduceMotionEnabled = false;
   screenReaderEnabled = false;
   announcements.length = 0;
@@ -159,3 +161,10 @@ export function setReduceMotionEnabledForTest(enabled: boolean) {
 export function accessibilityAnnouncements() { return [...announcements]; }
 
 export function animationStartCount() { return animationStarts; }
+
+export function holdReduceMotionSnapshotForTest() {
+  let resolve!: (value: boolean) => void;
+  let reject!: (cause: Error) => void;
+  reducedMotionSnapshot = new Promise<boolean>((accept, fail) => { resolve = accept; reject = fail; });
+  return { resolve, reject };
+}
