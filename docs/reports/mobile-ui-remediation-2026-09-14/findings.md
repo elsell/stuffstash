@@ -1889,3 +1889,19 @@ actual hit region and dismiss without clearing `19`, then open the matching
 result and return. Confirm phone, iPad, ordinary inputs and sheet consumers.
 No production change or native closure is claimed. The phone place-search test
 also failed in this run, at a different line; it needs separate screenshot triage.
+
+
+## M138 — Retained item-type confirmation can overwrite newer edits
+
+P2, AssetExpirationEditor type-change confirmation. Source68c4daec guards disabled
+state when opening the alert but not its retained Change type callback. That
+callback can replace a newer draft and clear its date after disabling, asset or
+settings replacement, navigation return or unmount. Seven mounted regression
+cases failed before correction (six obsolete-owner cases and one duplicate apply).
+
+The editor now uses the shared visit owner with the serialized asset/draft/type
+settings/disabled state and consumes a valid acceptance once. Current confirmation
+preserves title, notes and tags while clearing the type-dependent expiration.
+Fifteen focused expiration tests, TypeScript and structural checks pass on paul.
+Critic found no confirmed blocker. Native dialog timing/return verification remains
+pending; this is source and mounted evidence, not native visual acceptance.

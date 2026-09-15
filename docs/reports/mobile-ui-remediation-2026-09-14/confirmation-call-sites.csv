@@ -1,5 +1,5 @@
 source,line,entry,expression,review
-apps/mobile/src/ui/components/AssetExpirationEditor.tsx,31,native alert,"if (expiration) Alert.alert('Change item type?', 'Changing type removes the expiration date from this draft.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Change type', onPress: apply }]);",pending call-site interaction and ownership review
+apps/mobile/src/ui/components/AssetExpirationEditor.tsx,40,native alert,"if (expiration) Alert.alert('Change item type?', 'Changing type removes the expiration date from this draft.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Change type', onPress: apply }]);",M138 source/mounted ownership correction; native dialog acceptance pending
 apps/mobile/src/ui/feedback/AppFeedback.tsx,82,native alert,Alert.alert(,pending call-site interaction and ownership review
 apps/mobile/src/ui/navigation/AppServicesFeedbackGate.tsx,62,shared dialog,showDialog({,pending call-site interaction and ownership review
 apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx,18,shared dialog,"if(!controller.signal.aborted)feedback.showDialog({title:'Notification unavailable',message:error instanceof NotificationFailure?error.message:'This notification could not be opened. Check your notifications inbox and try again.',primaryAction:{label:'OK'}});",pending call-site interaction and ownership review

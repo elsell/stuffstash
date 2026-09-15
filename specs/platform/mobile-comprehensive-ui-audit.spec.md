@@ -1081,3 +1081,10 @@ its fixture uses `Native UI audit` as Back text while production uses `Back`.
 Correct that configuration drift without relaxing the integrated-button assertion.
 This is a controlled fixture correction, not proof that Back width caused the
 placement or that production search has passed native acceptance.
+
+Expiration type-change confirmation belongs to the focused editor visit and the
+exact asset, draft, type definitions and enabled state that opened it. A retained
+confirmation after blur/refocus, replacement, settings refresh, draft change,
+disabling or unmount must not replace current edits or clear their expiration.
+A valid confirmation preserves other draft fields and applies once. Reuse the
+existing presentation-ownership primitive; no new navigation or dialog style.

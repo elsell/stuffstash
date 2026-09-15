@@ -9,6 +9,7 @@ import type { EditDraft } from '../screens/AssetDetailEditPresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing } from '../theme/tokens';
 import { ExpirationField } from './ExpirationField';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 
 export function AssetExpirationEditor({ asset, draft, types, disabled, onChange }: {
   readonly asset: Pick<AssetDetailViewModel, 'id' | 'title' | 'description' | 'customAssetTypeId' | 'expiration'>;
@@ -25,9 +26,17 @@ export function AssetExpirationEditor({ asset, draft, types, disabled, onChange 
   const selectedType = types?.find((type) => type.id === typeId);
   const expiration = draft?.expiration === undefined ? asset.expiration : draft.expiration;
   const base = { title: asset.title, description: asset.description, ...draft };
+  const capturePresentation = useTaskPresentation(undefined, JSON.stringify([asset, draft, types, disabled]));
   function selectType(id?: string) {
     if (disabled || asset.customAssetTypeId || id === typeId) return;
-    const apply = () => { onChange({ ...base, customAssetTypeId: id, expiration: null, expirationValid: true }); setChoosingType(false); };
+    const isCurrent = capturePresentation();
+    let applied = false;
+    const apply = () => {
+      if (!isCurrent() || applied) return;
+      applied = true;
+      onChange({ ...base, customAssetTypeId: id, expiration: null, expirationValid: true });
+      setChoosingType(false);
+    };
     if (expiration) Alert.alert('Change item type?', 'Changing type removes the expiration date from this draft.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Change type', onPress: apply }]);
     else apply();
   }
