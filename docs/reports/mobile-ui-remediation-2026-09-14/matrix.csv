@@ -166,7 +166,7 @@ R007,add.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R007,add.tsx,privacy,"Account scope, data use and permissions",pending,,
 R007,add.tsx,notifications,System notification entry and state,pending,,
 R007,add.tsx,media,"Camera, library, files and audio",pending,,
-R007,add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R007,add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,M46: native349150 iPad launch shows Maximum update depth exceeded in Screen/StackScreen/ScopedAddAssetScreen. Header options update feedback reproduction required. Earlier source checks cannot establish working launch.,M46
 R008,assets/[assetId]/checkouts.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
 R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
 R008,assets/[assetId]/checkouts.tsx,selection,Value selection and current value,pending,,
@@ -2014,7 +2014,7 @@ S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",sourc
 S084,Add / main draft,privacy,"Account scope, data use and permissions",pending,,
 S084,Add / main draft,notifications,System notification entry and state,pending,,
 S084,Add / main draft,media,"Camera, library, files and audio",pending,,
-S084,Add / main draft,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S084,Add / main draft,lifecycle,"Cold/warm start, blur, background and deep link",finding,M46: native349150 iPad launch shows Maximum update depth exceeded in Screen/StackScreen/ScopedAddAssetScreen. Header options update feedback reproduction required. Earlier source checks cannot establish working launch.,M46
 S085,Add / kind choice,task,Task clarity and platform-pattern fit,pending,,
 S085,Add / kind choice,navigation,"Navigation, hierarchy and return",pending,,
 S085,Add / kind choice,selection,Value selection and current value,pending,,

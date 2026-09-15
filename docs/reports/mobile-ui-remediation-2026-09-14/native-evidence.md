@@ -273,3 +273,34 @@ queries and sheet options with synthetic repositories. It checks phone detent
 expansion, body and older-page reachability, and native Close. iPad presentation
 is exercised but its expansion is observational because iPad detents differ.
 No native result is claimed for this scenario yet.
+
+### Run34915099794: completed iPad fixtures
+
+The iPad fixture job104210917159 finishes with 13 of19 scenarios passing.
+Source527287c8, test merge4567b6075856a79fe1fa9bcc2037c57c3e142604.
+Its artifacts establish two useful distinctions:
+
+- **Add render failure (M46):** the new error boundary reports `Maximum update
+  depth exceeded`, with `Screen`, `StackScreen` and `ScopedAddAssetScreen` in the
+  component stack. This is a render/update loop, not merely an undiscovered text
+  field. The [retained screenshot](evidence/add-render-error-ipad-34915099794.png)
+  and hierarchy32D5AC17-DE1F-4E29-AA3E-532D6DF97537.txt expose the message.
+  Source inspection finds Add creating new header-option callbacks each render;
+  pinned Expo Router Screen calls navigation.setOptions whenever options identity
+  changes. This is the next reproduction target, not yet proof that stabilizing
+  options alone fixes the native crash.
+- **Photo read-only timing:** both intended removals and Add callback succeed.
+  The immediate Add-absence assertion fails, but the [retained final screenshot](evidence/draft-photo-readonly-ipad-34915099794.png)
+  and hierarchy93AE14BB-27CF-4DE9-A3E9-E4B6BF00ADE5.txt show exactly two retained
+  images and neither Add nor Remove. The test now waits for this asynchronous
+  transition, retaining all final assertions. The complete scenario still needs
+  a passing native rerun.
+
+Controlled input and full onboarding submission lose characters in this run;
+uncontrolled input passes. Their differences from the preceding run do not
+establish reliable input. Appearance, Browse choice, compact expiration, date
+page, expiration keyboard actions, reminder menu, draft-option removal, photo
+accessibility and isolated direct/nested/footer layouts pass. Actual expiration
+sheet expansion still fails. The old iPad color Close procedure still fails;
+its popover correction is in the next queued candidate, not this source.
+The phone fixture job was still live when this iPad evidence was recorded.

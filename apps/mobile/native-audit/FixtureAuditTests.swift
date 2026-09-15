@@ -279,6 +279,10 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Add photos"].tap()
     XCTAssertTrue(app.staticTexts["Photo add requests: 1"].waitForExistence(timeout: 5))
     app.buttons["Make photos read only"].tap()
+    let readOnly = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !self.app.buttons["Add photos"].exists && !self.app.buttons["Remove photo 1"].exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [readOnly], timeout: 5), .completed)
     XCTAssertFalse(app.buttons["Add photos"].exists)
     XCTAssertFalse(app.buttons["Remove photo 1"].exists)
     XCTAssertTrue(rail.exists)

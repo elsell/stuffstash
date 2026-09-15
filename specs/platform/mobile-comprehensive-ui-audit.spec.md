@@ -276,3 +276,8 @@ adapter. Keep the same URL keyboard, disabled correction/capitalization and XCTe
 whole-string typing. Assert both displayed native value and observed callback
 value. Preserve the production onboarding assertion; a diagnostic comparison
 cannot establish a production fix or justify silently slowing/shortening input.
+
+Native assertions following a React state transition wait for the expected
+accessible state within a bounded timeout. For read-only photo previews, wait for
+Add/Remove disappearance before asserting retained images; do not infer failure
+from an immediate stale snapshot or skip the final-state assertions.
