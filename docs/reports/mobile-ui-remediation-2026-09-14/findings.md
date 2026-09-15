@@ -157,3 +157,20 @@ is absent from the inspected final hierarchy. Do not certify M46/M45 or attribut
 this to production connectivity without query-state evidence. Runner-only query
 metadata diagnostics are the next discrimination step; no cache pre-seeding or
 connectivity override is an acceptable substitute for the acceptance scenario.
+
+### M19 direct-root candidate after native comparisons
+
+ExpirationFiltersScreen now exposes its ScrollView directly to the native sheet;
+the bottom native-action footer is a sibling with measured space reserved in the
+content and scrollbar. This follows the three direct-root variants that passed
+on both devices in run34917318548. Header search presentation is memoized across
+unrelated draft edits. Production route and isolated fixture consumers were
+inspected; neither adds an outer ready-state host container.
+
+Four existing selection/date/menu/tag behavior tests, TypeScript, structural checks
+and two fixture-installer tests pass remotely. The failing native expansion and
+keyboard scenarios remain unchanged, and an overview accessibility audit adds
+hit-region, description, traits, Dynamic Type and clipping checks without suppressions.
+Unsupported pre-iOS17 audit runtimes explicitly skip. Critic found no source blocker.
+This is a new candidate, not a declaration that expansion or keyboard behavior is
+fixed; those native results remain required.

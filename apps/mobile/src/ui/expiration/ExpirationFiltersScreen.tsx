@@ -1,9 +1,9 @@
+import type { SearchBarCommands, SearchBarProps } from 'react-native-screens';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { SearchBarCommands } from 'react-native-screens';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import type { ExpirationFilter } from '../../application/expiration/ExpirationRepository';
 import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, useSettingsListStyles } from '../screens/SettingsList';
@@ -13,17 +13,19 @@ type Choice = { readonly id: string; readonly label: string };
 type Page = 'overview' | 'types' | 'tags' | 'locations' | 'dates';
 export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }: { readonly initial: ExpirationFilter; readonly choices: ExpirationChoices; readonly onApply: (filter: ExpirationFilter) => void; readonly onCancel: () => void }) {
  const [draft, setDraft] = useState(initial); const [page, setPage] = useState<Page>('overview'); const [search, setSearch] = useState('');
+ const [footerHeight, setFooterHeight] = useState(0);
  const { palette } = useSettingsListStyles();
  const rangeError = !!draft.fromDate && !!draft.throughDate && draft.fromDate > draft.throughDate;
  const searchRef = useRef<SearchBarCommands | null>(null);
  const open = (next: Page) => { searchRef.current?.clearText(); setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
  const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
- return <View style={[styles.shell, { backgroundColor: palette.background }]}>
-  <Stack.Screen options={{ headerShown: true, title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
-   headerSearchBarOptions: searchable ? { ref:searchRef, placeholder:`Search ${page}`, placement:'stacked', hideWhenScrolling:false, hideNavigationBar:false, obscureBackground:false, autoCapitalize:'none', onChangeText:event=>setSearch(event.nativeEvent.text), onCancelButtonPress:()=>setSearch('') } : undefined,
-  }} />
-  <ScrollView automaticallyAdjustKeyboardInsets style={styles.shell} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
+ const headerOptions = useMemo(() => ({ headerShown: true, title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
+   headerSearchBarOptions: searchable ? { ref:searchRef, placeholder:`Search ${page}`, placement:'stacked', hideWhenScrolling:false, hideNavigationBar:false, obscureBackground:false, autoCapitalize:'none', onChangeText:event=>setSearch(event.nativeEvent.text), onCancelButtonPress:()=>setSearch('') } satisfies SearchBarProps : undefined,
+  }), [page, searchable]);
+ return <>
+  <Stack.Screen options={headerOptions} />
+  <ScrollView automaticallyAdjustKeyboardInsets style={[styles.shell, { backgroundColor: palette.background }]} contentContainerStyle={{ paddingBottom: footerHeight + 20 }} scrollIndicatorInsets={{ bottom: footerHeight }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
    {page === 'overview' ? <>
     <SettingsSection>
      <SettingsPickerRow label="Kind" accessibilityLabel="Choose item kind" value={draft.kind ?? ''} options={[{value:'',label:'Any kind'},{value:'item',label:'Items'},{value:'container',label:'Containers'},{value:'location',label:'Places'}] as const} onChange={value => setDraft({...draft,kind:value || undefined})} />
@@ -43,12 +45,12 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
    </>}
    {rangeError ? <Text accessibilityRole="alert" style={{ color: palette.text }}>The end date must be on or after the start date.</Text> : null}
   </ScrollView>
-  <SafeAreaView edges={['bottom']} style={{backgroundColor:palette.background}}>
+  <SafeAreaView edges={['bottom']} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)} style={[styles.footerOverlay, { backgroundColor: palette.background }]}>
    <View testID="expiration-filter-footer" style={styles.footer}>
     <NativeSheetActions primaryLabel="Apply filters" primaryAccessibilityLabel="Apply expiration filters" secondaryAccessibilityLabel="Cancel or return to filters" secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'} disabled={rangeError}
       onBack={() => page === 'overview' ? onCancel() : open('overview')} onApply={() => onApply(draft)} />
    </View>
   </SafeAreaView>
- </View>;
+ </>;
 }
-const styles = StyleSheet.create({ shell: { flex: 1 }, content: { paddingBottom: 20 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });
+const styles = StyleSheet.create({ shell: { flex: 1 }, footerOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });

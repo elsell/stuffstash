@@ -130,6 +130,18 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testExpirationOverviewAccessibility() throws {
+    app.buttons["Audit Expiration filters"].tap()
+    XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
+    capture("expiration-overview-accessibility")
+    if #available(iOS 17.0, *) {
+      try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait, .dynamicType, .textClipped])
+    } else {
+      throw XCTSkip("Accessibility auditing requires iOS 17 or later")
+    }
+  }
+
   func testExpirationDatePageKeepsBottomActionsReachable() throws {
     app.buttons["Audit Expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose date range"].waitForExistence(timeout: 5))

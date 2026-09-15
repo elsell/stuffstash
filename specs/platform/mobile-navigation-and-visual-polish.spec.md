@@ -333,3 +333,19 @@ inventory label still updates for inventory/tenant, width, appearance and text
 size changes. Notification badges/commands and Browse's Add permission remain live.
 These are preventive consumer fixes for the Add-discovered update pattern, not
 claims that every consumer has exhibited a native crash.
+
+## Expiration sheet scroll ownership
+
+The expiration filter sheet exposes its ScrollView directly to the native screen
+content wrapper, matching the direct-root layout that survives native detent
+changes. Do not put a generic flex container above it. Keep the native action
+footer as a bottom sibling and measure its actual height to reserve scroll-content
+space, including safe-area and text-size changes. Preserve staged selections,
+search, validation and native keyboard insets. Header presentation options remain
+stable across unrelated draft changes.
+
+This is a candidate for the observed M19 failure, not native acceptance. Existing
+medium-to-expanded, long choice list, keyboard search and date-page scenarios must
+verify that content and Apply/Back stay reachable on phone and iPad. If the native
+sheet does not keep the footer above the keyboard, resolve its actual coordinate
+behavior rather than adding a guessed fixed keyboard offset.
