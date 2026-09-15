@@ -40,19 +40,23 @@ type AppServicesProviderProps = {
 };
 
 export function AppServicesProvider({ children }: AppServicesProviderProps) {
+  const [state, setState] = useState<AppServicesState>({ status: 'loading' });
+  const feedbackScope = state.status === 'ready' ? state.composition.serviceScopeId : 'disconnected';
   return (
-    <AppFeedbackProvider>
-      <AppServicesProviderInner>{children}</AppServicesProviderInner>
+    <AppFeedbackProvider scopeKey={feedbackScope}>
+      <AppServicesProviderInner state={state} setState={setState}>{children}</AppServicesProviderInner>
     </AppFeedbackProvider>
   );
 }
 
-function AppServicesProviderInner({ children }: AppServicesProviderProps) {
+function AppServicesProviderInner({ children, state, setState }: AppServicesProviderProps & {
+  readonly state: AppServicesState;
+  readonly setState: (state: AppServicesState) => void;
+}) {
   const invitationLink = useInventoryInvitationLink();
   const router = useRouter();
   const onboardingCommand = useMemo(() => createOnboardingCommand(), []);
-  const [state, setState] = useState<AppServicesState>({ status: 'loading' });
-  const feedback = useAppFeedback();
+  const { showDialog } = useAppFeedback();
   const authPromptVisibleRef = useRef(false);
 
   const buildComposition = useCallback((profile: ConnectionProfile) => createMobileComposition(profile, {
@@ -66,7 +70,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
         .expireSession({ profile })
         .then((onboardingState) => {
           setState(appServicesStateAfterAuthenticationRequired(onboardingState.profile ?? profile));
-          feedback.showDialog({
+          showDialog({
             title: 'Session expired',
           message: 'Please sign in again to continue using Stuff Stash.',
           primaryAction: {
@@ -82,7 +86,7 @@ function AppServicesProviderInner({ children }: AppServicesProviderProps) {
           setState(appServicesStateAfterAuthenticationRequired(profile));
         });
     }
-  }), [feedback, onboardingCommand]);
+  }), [showDialog, onboardingCommand]);
 
   useEffect(() => {
     let isCurrent = true;

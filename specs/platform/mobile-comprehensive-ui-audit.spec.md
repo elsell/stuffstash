@@ -140,6 +140,16 @@ old timer on replacement.
 
 ## Accessible feedback
 
+Global notices belong to a services context. The app's feedback provider receives
+the current ready composition's service-scope identity, or a disconnected identity
+while loading/onboarding. Changing identity immediately hides old notices and
+invalidates their action callbacks and retained notice publishers, including an
+old publisher used after returning to the same identity. A scope transition must
+not clear a newly published notice from the new context. Unmount also invalidates
+captured actions. Ordinary same-context navigation preserves completion notices
+and View/Undo. Native blocking dialogs remain a separate interaction; this notice
+ownership rule must not restart onboarding or rebuild services when context changes.
+
 Each pending invitation exposes a native contextual actions menu, with a named
 destructive Cancel invitation command instead of an ambiguous X. Cancellation is
 infrequent and irreversible; retain the confirmation naming the recipient before

@@ -66,3 +66,24 @@ reachable without unintended navigation. Preserve separate native captures for
 phone and iPad. Trigger sign-out/server change/session expiry with a persistent
 notice and a delayed callback; old content/actions must not survive into the new
 context. Retain legitimate same-session Add View and Edit Undo behavior.
+
+## M104 implementation candidate
+
+AppServicesProvider now owns the gate state and passes its ready serviceScopeId
+(or disconnected state) into AppFeedbackProvider. A fresh notice-owner token per
+context hides old content during render and invalidates old publishers and action
+callbacks during layout cleanup. Returning to an earlier identity creates a new
+owner; it cannot revive old publishers. Same-context navigation retains notices.
+The passive state cleanup preserves a new notice published by a child's layout
+effect. Native dialogs keep a stable separate callback so the existing services
+initialization dependencies do not change with notice ownership.
+
+Three mounted feedback regressions cover scope transitions, retained old callbacks,
+same-context navigation, unmount and new-owner publication. The first two failed
+before implementation. All 1,538 mobile tests, TypeScript and structural checks
+passed remotely; the layout-effect variant also has a targeted rerun. Existing
+bootstrap tests establish unique serviceScopeIds, but the feedback tests manually
+supply them: they do not execute a real mounted AppServicesProvider sign-out and
+reinitialization. That integration acceptance and native sign-out/server-change
+visibility remain open before treating M104 as verified. The change does not repair
+M103 placement or modify API authentication/authorization.

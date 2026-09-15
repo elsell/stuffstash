@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, AlertButton, Animated, Platform, useWindowDimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
@@ -38,45 +38,60 @@ export type AppFeedbackContextValue = {
 
 type ActiveNotice = ShowAppNoticeInput & {
   readonly id: number;
+  readonly owner: { active: boolean };
 };
 
 const AppFeedbackContext = createContext<AppFeedbackContextValue | null>(null);
 
-export function AppFeedbackProvider({ children }: { readonly children: ReactNode }) {
+export function AppFeedbackProvider({ children, scopeKey = 'app' }: { readonly children: ReactNode; readonly scopeKey?: string }) {
   const [activeNotice, setActiveNotice] = useState<ActiveNotice | null>(null);
   const noticeSequence = useRef(0);
   const insets = useSafeAreaInsets();
+  const noticeOwner = useMemo(() => ({ active: true }), [scopeKey]);
+  useLayoutEffect(() => {
+    noticeOwner.active = true;
+    return () => { noticeOwner.active = false; };
+  }, [noticeOwner]);
+  useEffect(() => {
+    setActiveNotice(current => current?.owner === noticeOwner ? current : null);
+  }, [noticeOwner]);
 
-  const value = useMemo<AppFeedbackContextValue>(() => ({
-    showDialog: (input) => {
-      const buttons: AlertButton[] = [];
-      if (input.secondaryAction) {
-        buttons.push({
-          text: input.secondaryAction.label,
-          style: 'cancel',
-          onPress: input.secondaryAction.onPress
-        });
-      }
+  const showDialog = useCallback((input: ShowAppDialogInput) => {
+    const buttons: AlertButton[] = [];
+    if (input.secondaryAction) {
       buttons.push({
-        text: input.primaryAction.label,
-        style: 'default',
-        onPress: input.primaryAction.onPress
+        text: input.secondaryAction.label,
+        style: 'cancel',
+        onPress: input.secondaryAction.onPress
       });
+    }
+    buttons.push({
+      text: input.primaryAction.label,
+      style: 'default',
+      onPress: input.primaryAction.onPress
+    });
 
-      Alert.alert(
-        input.title,
-        input.message,
-        buttons,
-        { cancelable: input.cancelable ?? false }
-      );
-    },
+    Alert.alert(
+      input.title,
+      input.message,
+      buttons,
+      { cancelable: input.cancelable ?? false }
+    );
+  }, []);
+  const value = useMemo<AppFeedbackContextValue>(() => ({
+    showDialog,
     showNotice: (input) => {
+      if (!noticeOwner.active) return;
       setActiveNotice({
         ...input,
+        action: input.action ? { ...input.action, onPress: () => {
+          if (noticeOwner.active) input.action?.onPress();
+        } } : undefined,
+        owner: noticeOwner,
         id: ++noticeSequence.current
       });
     }
-  }), []);
+  }), [noticeOwner, showDialog]);
 
   const dismissNotice = useCallback((id: number) => {
     setActiveNotice(current => current?.id === id ? null : current);
@@ -85,7 +100,7 @@ export function AppFeedbackProvider({ children }: { readonly children: ReactNode
   return (
     <AppFeedbackContext.Provider value={value}>
       {children}
-      {activeNotice ? (
+      {activeNotice?.owner === noticeOwner ? (
         <AppNotice
           key={activeNotice.id}
           notice={activeNotice}

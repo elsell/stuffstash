@@ -1272,3 +1272,12 @@ Old item/profile text and actions can remain on onboarding or a replacement sess
 This does not prove an API authorization bypass. Add controlled transition/action
 regressions before implementing a service-context ownership boundary; preserve
 same-session completion handoffs. See [global notice review](global-notice-axis.md).
+
+M104 candidate: services state now supplies the provider's notice scope. Owner
+cleanup rejects old publishers and action callbacks across transitions/unmount,
+while same-context View/Undo survives. The new-owner cleanup race is covered by a
+layout-effect publisher test. All 1,538 mobile tests, TypeScript and structural
+checks passed remotely. Critic found no source blocker and requested stronger
+integration evidence: the real mounted services gate must still demonstrate scope
+change without restarting initialization. That and native transition visibility
+remain pending; M104 stays open. See the global-notice appendix for evidence limits.
