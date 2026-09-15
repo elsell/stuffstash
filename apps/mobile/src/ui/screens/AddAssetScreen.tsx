@@ -57,8 +57,7 @@ import {
 } from '../../application/add/PhotoSelectionQuery';
 import { AddAssetContextQuery, type AddAssetContext } from '../../application/add/AddAssetContextQuery';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
-import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
-import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
+import { DraftPhotoPreviewModal } from './DraftPhotoPreviewModal';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -697,7 +696,8 @@ function ScopedAddAssetScreen({
         keyboardHeight={keyboardBar.keyboardHeight}
         visible={keyboardBar.isVisible}
       />
-      <PhotoPreviewModal
+      <DraftPhotoPreviewModal
+        disabled={draftBusy}
         currentIndex={previewPhotoIndex}
         onClose={() => setPreviewPhotoIndex(undefined)}
         onRemovePhoto={removePhoto}
@@ -908,59 +908,6 @@ function PhotoPreviewItem({
   );
 }
 
-function PhotoPreviewModal({
-  currentIndex,
-  onClose,
-  onRemovePhoto,
-  onSetIndex,
-  photos
-}: {
-  readonly currentIndex: number | undefined;
-  readonly onClose: () => void;
-  readonly onRemovePhoto: (photoId: string) => void;
-  readonly onSetIndex: (index: number | undefined) => void;
-  readonly photos: readonly SelectedAssetPhoto[];
-}) {
-  const viewerPhotos = useMemo(() => photos.map(photo => ({
-    id: photo.id,
-    label: photo.fileName,
-    metadataLabel: photoMetadataLabel(photo),
-    uri: photo.uri
-  })), [photos]);
-  function removeCurrentPhoto(photo: FullScreenPhotoViewerPhoto, index: number): void {
-    if (!photo.id) {
-      return;
-    }
-
-    Alert.alert('Remove photo?', 'This removes the photo from this new item draft.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => {
-          onRemovePhoto(photo.id as string);
-          if (photos.length <= 1) {
-            onClose();
-            return;
-          }
-
-          onSetIndex(Math.min(index, photos.length - 2));
-        }
-      }
-    ]);
-  }
-
-  return (
-    <FullScreenPhotoViewer
-      canRemove
-      currentIndex={currentIndex}
-      onClose={onClose}
-      onRemove={removeCurrentPhoto}
-      onSelectIndex={onSetIndex}
-      photos={viewerPhotos}
-    />
-  );
-}
 
 function ParentPicker({
   canCreateParent,

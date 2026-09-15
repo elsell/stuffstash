@@ -1145,3 +1145,13 @@ full-string and observed-value assertions, and require no visible Dismiss keyboa
 command. This compares attachment enabled versus disabled, not the presence of
 the native observer or the entire keyboard controller. Native execution must prove
 the comparison no longer crashes and reaches typing before drawing conclusions.
+
+
+### Draft-photo confirmation ownership
+
+Add's photo removal alert belongs to the visible draft photo selection and current
+navigation visit. A retained confirmation must not remove photos or close/change
+the viewer after selection, collection, close/reopen, navigation, busy-state change, or unmount.
+A current confirmation executes once, retaining the existing next-photo selection
+or closing after removal of the only photo. Reuse the presentation ownership
+mechanism; keep draft-photo presentation separate from the large Add screen.

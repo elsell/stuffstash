@@ -3,7 +3,7 @@ apps/mobile/src/ui/components/AssetExpirationEditor.tsx,40,native alert,"if (exp
 apps/mobile/src/ui/feedback/AppFeedback.tsx,82,native alert,Alert.alert(,pending call-site interaction and ownership review
 apps/mobile/src/ui/navigation/AppServicesFeedbackGate.tsx,62,shared dialog,showDialog({,pending call-site interaction and ownership review
 apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx,18,shared dialog,"if(!controller.signal.aborted)feedback.showDialog({title:'Notification unavailable',message:error instanceof NotificationFailure?error.message:'This notification could not be opened. Check your notifications inbox and try again.',primaryAction:{label:'OK'}});",pending call-site interaction and ownership review
-apps/mobile/src/ui/screens/AddAssetScreen.tsx,935,native alert,"Alert.alert('Remove photo?', 'This removes the photo from this new item draft.', [",pending call-site interaction and ownership review
+apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx,40,native alert,"Alert.alert('Remove photo?', 'This removes the photo from this new item draft.', [",M143 source/mounted ownership correction; native dialog acceptance pending
 apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx,320,shared dialog,feedback.showDialog({,pending call-site interaction and ownership review
 apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx,357,native alert,"Alert.alert(confirmation.title, confirmation.message, [",pending call-site interaction and ownership review
 apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx,107,native alert,"(confirmation, confirm) => Alert.alert(confirmation.title, confirmation.message, [",pending call-site interaction and ownership review

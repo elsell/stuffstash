@@ -1986,3 +1986,24 @@ M111 native follow-up: run349983 iPhone actual54714ab4 passes last-tag scroll,
 selection, Back and Apply. Inspected screenshot/hierarchy retain final row entirely
 above the opaque footer and both contained buttons. See native-evidence.md and
 phone-last-tag-clear-footer-349983 evidence. iPad/dark/keyboard acceptance pending.
+
+
+### M143 — Draft photo removal outlives its selection
+
+P2 source and mounted behavior, S090/R007. Add's native Remove photo alert kept
+callbacks after selection/collection changes, closing and reopening the viewer,
+navigation return, and unmount. It could remove a draft photo and change the viewer
+from an obsolete confirmation; repeated acceptance repeated those effects.
+Seven mounted cases reproduced failure before the ownership guard.
+
+DraftPhotoPreviewModal now owns the confirmation by collection, selected index,
+busy state and focused visit, and accepts it once. Extraction preserves the existing
+viewer and native confirmation. Current removal still selects the next valid index
+or closes after the only photo. Eight confirmation cases and20 existing Add tests
+pass on paul, with TypeScript and structural checks. Native acceptance remains
+pending; this is a behavioral correction, not a claim of visual verification.
+
+M143 critic found no confirmed blocker. Combined remote validation at this change
+passes1663 tests across269 files. Source checksum comparison against paul showed
+no differences before the run. Log: /tmp/mobile-batch-draft-photo.log. Native
+run35003739726 remains in progress and predates this final confirmation change.

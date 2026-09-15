@@ -2138,7 +2138,7 @@ S089,Add / tags select create,lifecycle,"Cold/warm start, blur, background and d
 S090,Add / photo selection,task,Task clarity and platform-pattern fit,pending,,
 S090,Add / photo selection,navigation,"Navigation, hierarchy and return",pending,,
 S090,Add / photo selection,selection,Value selection and current value,pending,,
-S090,Add / photo selection,modality,Presentation and dismissal,pending,,
+S090,Add / photo selection,modality,Presentation and dismissal,finding,; M143 draft-photo confirmation mounted regression/fix; native pending,M143
 S090,Add / photo selection,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
 S090,Add / photo selection,adaptation,Phone/tablet/window reflow,pending,,
 S090,Add / photo selection,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2154,11 +2154,11 @@ S090,Add / photo selection,content,"Lists, hierarchy, density and pagination",pe
 S090,Add / photo selection,search,"Search, scope and filters",pending,,
 S090,Add / photo selection,loading,"Loading, background refresh and progress",pending,,
 S090,Add / photo selection,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
-S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M143 draft-photo confirmation mounted regression/fix; native pending,M21; M143
 S090,Add / photo selection,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S090,Add / photo selection,notifications,System notification entry and state,pending,,
 S090,Add / photo selection,media,"Camera, library, files and audio",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
-S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M143 draft-photo confirmation mounted regression/fix; native pending,M21; M143
 S091,Add / custom fields,task,Task clarity and platform-pattern fit,pending,,
 S091,Add / custom fields,navigation,"Navigation, hierarchy and return",pending,,
 S091,Add / custom fields,selection,Value selection and current value,pending,,

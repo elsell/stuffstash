@@ -574,7 +574,8 @@
     "surface": "Add / photo selection",
     "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
     "sources": [
-      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+      "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx"
     ]
   },
   {
@@ -925,7 +926,8 @@
       "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
       "apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx",
       "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
-      "apps/mobile/src/ui/screens/useProviderEditorExit.ts"
+      "apps/mobile/src/ui/screens/useProviderEditorExit.ts",
+      "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx"
     ]
   },
   {
