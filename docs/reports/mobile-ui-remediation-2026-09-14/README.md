@@ -28,8 +28,8 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The audit remains incomplete. After mapping the run349372 evidence, the 3384 cells
-comprise 2797 pending, 536 source-reviewed, 28 finding,
+The audit remains incomplete. After mapping M81/M82 and run349397 evidence, the 3384 cells
+comprise 2788 pending, 521 source-reviewed, 52 finding,
 19 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
