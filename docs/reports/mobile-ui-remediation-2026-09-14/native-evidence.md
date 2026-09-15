@@ -1882,3 +1882,17 @@ The Bash selection accepts only fixed choices and passes quoted fixed arguments.
 Remote YAML/shell syntax and six actual selection paths passed (both All suites,
 valid focused selection, wrong suite, unknown choice and shell-like invalid input).
 Critic found no confirmed blocker. No live full run is replaced by this diagnosis.
+
+### Focused color-picker diagnosis dispatched
+
+Manual run [35011368960](https://github.com/elsell/stuffstash/actions/runs/35011368960)
+was dispatched at `c8b460c2858e467610e5b48b23d053556930910a` with
+`test_case=color-picker`. It is queued; no native result is claimed. This selects
+two color-picker tests on iPhone and iPad and does not replace full run35010077082
+or constitute full release acceptance. The full run remains active.
+
+Full run35010077082 iPad onboarding job104520009386 completed3 tests with0 failures.
+Actual checkout `7c685ef9daf4e888c76bb0d2cdfd495b50103600` is confirmed in job
+logs (`/tmp/native350100-ipad-onboarding.log`). Fixtures and iPhone onboarding
+remain live; no new screenshot review is claimed. Focused color run35011368960
+now has both device jobs running.
