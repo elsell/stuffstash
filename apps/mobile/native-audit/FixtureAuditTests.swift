@@ -1253,6 +1253,44 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-keyboard-go-submission")
   }
 
+  func testHomeHeaderKeepsAllActionsAboveScrollingContent() {
+    let open = app.buttons["Audit Home header"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    let menu = app.scrollViews.containing(.button, identifier: "Audit Home header").firstMatch
+    for _ in 0..<6 where !open.isHittable { menu.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let add = app.buttons["Add an asset"]
+    let notifications = app.buttons["Notifications, 2 unread"]
+    let profile = app.buttons["Open account and settings"]
+    let selector = app.buttons["Current inventory Main inventory with a long household name, tenant Audit home. Switch inventory"]
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    let actions = [add, notifications, profile]
+    func verifyActions() {
+      for action in actions {
+        XCTAssertTrue(action.isHittable)
+        XCTAssertGreaterThanOrEqual(action.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(action.frame.height, 44)
+        XCTAssertTrue(app.frame.contains(action.frame))
+      }
+      XCTAssertTrue(selector.isHittable)
+      XCTAssertLessThanOrEqual(selector.frame.maxX, add.frame.minX)
+      XCTAssertLessThanOrEqual(add.frame.maxX, notifications.frame.minX)
+      XCTAssertLessThanOrEqual(notifications.frame.maxX, profile.frame.minX)
+    }
+    verifyActions()
+    let headerTop = add.frame.minY
+    let recent = app.staticTexts["Recently changed"]
+    XCTAssertTrue(recent.exists)
+    let contentTop = recent.frame.minY
+    capture("home-header-before-scroll")
+    app.scrollViews.containing(.staticText, identifier: "Recently changed").firstMatch.swipeUp()
+    XCTAssertLessThan(recent.frame.minY, contentTop - 20)
+    verifyActions()
+    XCTAssertEqual(add.frame.minY, headerTop, accuracy: 2)
+    capture("home-header-after-scroll")
+  }
+
   private func openHomeReturn() {
     let open = app.buttons["Audit Home Return"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))

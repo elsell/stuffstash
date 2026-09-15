@@ -11,13 +11,14 @@ export { AssetEditRecoveryFixture, AssetEditTagsFixture } from './AssetEditRecov
 import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
-export { HomeReturnFixture } from './HomeReturnFixture';
+export { HomeReturnFixture, HomeHeaderFixture } from './HomeReturnFixture';
+import { nativeTabHeaderOptions } from '../src/ui/navigation/NativeTabHeader';
 export { default as HomeReturnDetailsRoute } from '../src/ui/screens/HomeReturnDetailsRouteScreen';
 import { Host, TextField } from '@expo/ui/swift-ui';
 import { accessibilityLabel, autocorrectionDisabled, keyboardType, textFieldStyle, textInputAutocapitalization } from '@expo/ui/swift-ui/modifiers';
 import { VoicePlanPhotoDraftStrip } from '../src/ui/screens/VoicePlanPhotoDrafts';
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Button, Image, ScrollView, Text, View } from 'react-native';
+import { Button, Image, Platform, ScrollView, Text, View } from 'react-native';
 import { Stack, useRouter, type Href } from 'expo-router';
 import { AppearancePreferenceController, type AppearancePreference } from '../src/application/settings/AppearancePreference';
 import { AppearanceProvider, useAppearance } from '../src/ui/theme/AppearanceContext';
@@ -69,6 +70,7 @@ function FixtureNavigation() {
   return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerBackTitle: 'Back', headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
+      <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
@@ -129,6 +131,7 @@ export function FixtureMenu() {
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />
     <Button title="Audit Home Return" onPress={() => router.push('/audit-home-return' as Href)} />
+    <Button title="Audit Home header" onPress={() => router.push('/audit-home-header' as Href)} />
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />
     <Button title="Audit medium expiration filters" onPress={() => router.push('/audit-expiration-medium' as Href)} />

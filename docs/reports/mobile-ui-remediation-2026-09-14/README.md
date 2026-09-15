@@ -172,3 +172,7 @@ Provider review reconciliation preserves all3,384 unique inventory/axis pairs:
 1,022 source-reviewed,2,011 pending,289 finding,22 runtime-partial and40
 not-applicable. Critic reviewed the new report and the72 affected matrix rows;
 its stale creation-label correction is included.
+
+[Home action header](home-header-axis.md) reviews S066 across all24 axes and
+identifies why the existing Home Return fixture cannot verify three-action
+visibility or production transparent scroll edges. Those native checks remain open.

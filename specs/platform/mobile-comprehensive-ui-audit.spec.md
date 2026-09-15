@@ -1195,3 +1195,14 @@ Creation labels name the action (Create plus service name). Preserve pending
 labels, disabled navigation during work, single-use confirmation and retry. The
 archive confirmation retains its destructive semantic; no shared adapter changes.
 Native spacing, command sizing and assistive navigation require runtime acceptance.
+
+### Representative Home header acceptance
+
+The native audit must exercise Home with Add, Notifications and Profile together,
+a long inventory name, production header appearance and no root back button.
+Use production Home and expiration content with controlled domain data sufficient
+to scroll. Assert actual content movement, left-to-right action order in the
+English fixture, contained and hittable action bounds, selector separation, and
+stable header position after scrolling. Retain before/after screenshots for visual
+scroll-edge review. Geometry assertions do not prove material transparency or the
+full production tab/accessory composition; retain those acceptance limits.

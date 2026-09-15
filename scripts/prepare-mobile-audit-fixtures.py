@@ -27,6 +27,7 @@ exports = {
     "audit-inventory-query": "InventoryQueryFixture",
     "audit-inventory-switcher": "InventorySwitcherFixture",
     "audit-home-return": "HomeReturnFixture",
+    "audit-home-header": "HomeHeaderFixture",
     "home-return-details": "HomeReturnDetailsRoute",
     "audit-detail-commands": "AssetDetailCommandsFixture",
     "audit-contents-search": "AssetContentsSearchFixture",
