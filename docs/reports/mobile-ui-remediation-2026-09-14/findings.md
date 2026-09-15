@@ -695,3 +695,14 @@ and initial cancellation. Twenty-eight remote command, switcher and inventory
 adapter checks plus TypeScript/structural checks pass on paul
 (/tmp/selection-cache-green.log). Critic found no blockers. Native interrupted
 selection and cache-driven screen transition still require runtime evidence.
+
+### M80 — switcher commands bypass the native adapter (P2)
+
+Switch household/Back and load Retry used custom styled Pressables despite the
+existing NativeCommandButton adapter. They now use that adapter. Its full-width
+Host sits below the wrapping household heading, avoiding a competing horizontal
+width constraint. Loading copy uses inventories rather than internal tenant
+terminology. Selection rows and ownership behavior are unchanged. Five existing
+remote switcher checks, TypeScript and structural checks pass
+(/tmp/switcher-native-commands.log); critic found no blockers. Native narrow,
+large-text and sheet-layout acceptance remains pending.

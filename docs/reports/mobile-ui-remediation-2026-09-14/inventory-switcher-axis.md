@@ -19,8 +19,9 @@ household list returns to inventories when a household is chosen. Empty househol
 have an explicit message. Retry stays in the sheet after load failure; selection
 failure retains the chooser and gives a safe retry message. This review does not
 claim that every custom command or row already uses the best native adapter.
-Switch household/Back and load Retry remain custom commands and should be compared
-with the existing NativeCommandButton adapter in the next control pass.
+M80 replaces Switch household/Back and load Retry with NativeCommandButton.
+The full-width command now sits below the wrapping heading; native acceptance
+remains pending.
 
 ## Ownership and recovery
 
@@ -34,8 +35,7 @@ unchanged and requires its separate boundary evidence.
 
 The UI reads cached dashboard data through the inventory-scoped query adapter.
 Initial loading and failure are distinct from cached content; selection has separate
-busy/error state. Loading copy still says “tenants,” although the product calls
-them households. Correct this vocabulary in the control pass. Background-refetch
+busy/error state. M80 loading copy now says “inventories,” matching the current task. Background-refetch
 failure with retained data has no explicit notice here; evaluate its effect on
 stale membership before treating it as a proven user-facing failure.
 
@@ -44,7 +44,7 @@ stale membership before treating it as a proven user-facing failure.
 Rows expose selected/disabled state and inventory names; labels and metadata are
 separate from the role badge. The body scrolls and uses automatic inset adjustment.
 These properties do not prove correct VoiceOver grouping or native target geometry.
-The household header uses IdentityLabel's single-line default. Long names and
+M80 lets the household heading wrap. Long names and
 large type need visual inspection, particularly beside Switch household and the
 nonshrinking role badge. Existing full-width row targets are not proof that their
 contents fit. Light/dark, contrast, RTL, narrow/iPad windows, reduced transparency,

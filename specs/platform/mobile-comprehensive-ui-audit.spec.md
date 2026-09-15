@@ -472,3 +472,12 @@ or selection-error feedback, even if it remains mounted or regains focus before
 completion. Retain the pending guard until that request settles so a second
 selection cannot overlap it. After settlement, a fresh focused selection works.
 Do not assume blur reverses an inventory selection already accepted by the port.
+
+### Inventory switcher command controls
+
+Use the existing native command adapter for Switch household/Back and load Retry.
+Keep the hierarchical selection behavior and request guards. Its full-width native
+Host belongs below the household heading, not squeezed alongside it in a row.
+Allow the heading to wrap; do not rely on toolbar-style single-line truncation in
+the sheet body. Loading names the inventory task rather than the internal tenant
+concept. Verify native narrow/large-text layout before claiming visual acceptance.
