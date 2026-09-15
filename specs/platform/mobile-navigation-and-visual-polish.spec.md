@@ -584,3 +584,9 @@ while its owning route is focused and search is enabled. Blur must ignore late
 native callbacks without clearing the caller's retained query. Refocus restores
 interaction. This applies to Browse list/map, filter selections, contents and
 timezone search consumers; it does not change each caller's query semantics.
+
+Browse's list search debounce also pauses on route blur. Pending text remains in
+the field and resumes after refocus, using current criteria and route callbacks.
+No hidden debounce may synchronize route parameters or start a new search.
+External route replacements still supersede pending text; immediate List/Map
+switches and explicit filter handoff retain their existing query semantics.

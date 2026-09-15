@@ -1637,3 +1637,15 @@ M122 critic found no confirmed source blocker. Native return must specifically
 check that the field text still agrees with retained results if UIKit clears its
 field during dismissal while the callback is ignored; callback availability alone
 does not establish that consistency.
+
+## M123 — Browse debounce submits after leaving its route
+
+P2, source and mounted-test confirmed atcd0ed36b. A typed query's300ms timer
+survived blur and started its search while hidden. The candidate cancels the
+timer on blur, retains text, and resumes using current submission callbacks on
+return. Hidden scheduling/submission is rejected. Existing List/Map handoff and
+filter-route settling semantics remain covered. Twenty-three focused tests,
+TypeScript and structural checks pass remotely after the reproduced failure.
+This does not cancel previously started query reads or certify native navigation;
+actual focus delivery, returned field text and external route transitions remain
+native acceptance work.
