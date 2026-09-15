@@ -213,6 +213,40 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testAssetRegionRecoveryAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit contents recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let contents = app.buttons["Retry contents"]
+    let photos = app.buttons["Retry photos"]
+    XCTAssertTrue(contents.waitForExistence(timeout: 10))
+    XCTAssertTrue(photos.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts["Nothing here yet"].exists)
+    XCTAssertFalse(app.staticTexts["No photos"].exists)
+    XCTAssertTrue(photos.isHittable)
+    capture("asset-region-errors-accessibility-size")
+    photos.tap()
+    XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["No photos"].firstMatch.waitForExistence(timeout: 5))
+    for _ in 0..<8 where !contents.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(contents.isHittable)
+    XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
+    contents.tap()
+    XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
+    let empty = app.staticTexts["Nothing here yet"].firstMatch
+    XCTAssertTrue(empty.waitForExistence(timeout: 5))
+    capture("asset-region-recovered-accessibility-size")
+    let back = app.navigationBars.buttons.firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testEditMetadataRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

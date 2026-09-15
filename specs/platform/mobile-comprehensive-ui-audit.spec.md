@@ -685,17 +685,25 @@ Do not remove production keyboard controls based only on this source observation
 
 ### Contained-workspace recovery and native-pattern follow-up
 
-The contained-items audit includes the normal detail route and the shared Map
-detail sheet. Unknown contents must not be described as an empty collection.
+The contained-items audit includes the shared detail route reached from Browse
+and Map. Unknown contents must not be described as an empty collection.
 Initial loading and failed loads without data must suppress empty-result claims
 for both contents and photos;
 a failed refresh must preserve any available contents. Contents and photo query
 errors must have persistent region-level status and independent native retry
-commands, rather than requiring a pull gesture or relying on a root notice behind
-a sheet. This does not change repository authorization or query scope.
+commands, rather than requiring a pull gesture or relying on a root notice. This does not change repository authorization or query scope.
 
 The older inline contained-search contract requires a separate spec revision
 before adopting native navigation search. That revision must preserve title/path
 matching, section counts and no-match recovery, address search ownership on both
 entry points, and include native focus/close checks. See M88/M89 and the24-axis
 contained-items report; neither finding is considered fixed by this source review.
+
+
+M89 native acceptance uses the real progressive detail route with controlled first
+failures for contents and photos, followed by independent successful retries.
+The runner verifies absent empty claims before recovery, reachable native retry
+commands at largest accessibility text, independent error removal and Back after
+recovery. Current Map info pushes the ordinary asset route; the fixture must not
+be described as a Map sheet test. Real Map return preservation remains a separate
+acceptance scenario. No fixture mutations or production credentials are used.

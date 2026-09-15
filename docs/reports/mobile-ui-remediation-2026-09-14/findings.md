@@ -891,3 +891,10 @@ before implementation; independent failure/retry and cached-refresh retention
 checks pass.35 remote detail tests, TypeScript and mobile structural checks passed.
 Critic found no blocker. Native sheet placement and announcements remain pending;
 M89 is not closed by this source result. This change is after the PR142 release.
+
+
+M89 route correction: current Map info pushes assetDetailHref rather than a
+sheet. The earlier sheet-occlusion rationale does not apply to that current path;
+false empty claims and lack of persistent local retry are still source-confirmed.
+A runner fixture now exercises the actual shared detail route at largest text,
+with independent contents/photo recovery and Back. Native execution is pending.

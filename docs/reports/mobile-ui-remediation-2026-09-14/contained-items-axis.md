@@ -1,7 +1,7 @@
 # Contained items: source review
 
 Reviewed at 2db6080c on September 15. Surface S102 is shared by the normal
-asset route and the map detail route through AssetDetailRouteScreen. This is
+asset route used by both Browse and Map through AssetDetailRouteScreen. This is
 source evidence, not a native interaction pass.
 
 Current search applies only to locations. Containers return immediate children
@@ -13,7 +13,7 @@ product decision, not an implicit consequence of swapping the control.
 | Task | This is navigation within a known place plus scoped search and spatial commands. Existing custom search and command controls need native-pattern remediation (M88). |
 | Navigation | Child and parent callbacks open asset workspaces; Add preselects the current parent and Move items here opens the placement workflow. Native back/return preservation on both detail entry points remains pending. |
 | Selection | Contents rows navigate; they are not value selectors. This does not certify the downstream parent or move selection surfaces. |
-| Modality | Shared detail is also presented from Map. The native search integration must target that sheet's navigation owner, preserve Close, and avoid changing the underlying map path. Not runtime verified. |
+| Modality | Current Map info calls router.push(assetDetailHref), so the shared detail is a pushed route, not a sheet. Search must use that navigation owner and preserve Back. Map path restoration remains unverified. Older specs still describe a sheet; reconcile that drift before changing presentation. |
 | Layout | Virtualized FlatList owns rows, header and maintenance footer. Insets, overlay occlusion, search expansion and footer reachability remain pending. |
 | Adaptation | Rows use flexible text containers and spatial labels shrink rather than fixed one-line labels. Tablet/window changes remain uninspected. |
 | Typography | Titles and supporting text have no explicit line limit. Largest text and combined action heights still require inspection. |
@@ -28,7 +28,7 @@ product decision, not an implicit consequence of swapping the control.
 | Content | Locations separate spaces and descendant items; containers show immediate children. Query matching preserves headings/counts. Pagination/completeness must be traced through the repository before treating the list as exhaustive. |
 | Search | Existing spec requires an inline field only at20 combined rows. Implementation matches that old requirement, but conflicts with the newer native/search-on-demand direction. NativeNavigationSearch is the existing candidate adapter (M88). |
 | Loading | Core data renders independently of contents and photos. The loading label does not suppress empty contents rows; source permits false empty-state messaging while content is unknown (M89). |
-| Recovery | Contents and photo query failures emit a root notice recommending pull-to-refresh. A map sheet can cover that notice; there is no persistent region-specific retry. Contents can still show empty-state copy after failure (M89). |
+| Recovery | Contents and photo query failures emit a root notice recommending pull-to-refresh. There is no persistent region-specific retry. Contents can still show empty-state copy after failure (M89). |
 | Editing | Spatial commands retain existing create/edit capability decisions and callback navigation. Downstream Add draft/Move commit behavior is outside this source pass. |
 | Privacy | AssetContentsQuery uses core tenant/inventory and permissions when building its view model. Actual repository authorization boundaries were not exercised here. |
 | Notifications | No contained-list-owned notification control. Notification interruption and return to this screen remain pending. |
@@ -47,7 +47,7 @@ A separate search route is unnecessary for this local filter.
 
 Next implementation acceptance: preserve both sections, title/path matching,
 counts, clear/no-match recovery and scoped state; verify navigation search in both
-normal detail and map sheet. Use native spatial commands with primary Add
+detail reached from Browse and Map. Use native spatial commands with primary Add
 prominence and quiet maintenance. For query failure, retain available content,
 replace unknown-data empty claims with persistent inline status and independent
 native Retry contents/Retry photos actions. Test failures and retries through real
@@ -61,3 +61,13 @@ region-specific Retry labels. Two query-fake scenarios cover unknown/failed data
 independent retries and retained contents after a failed refresh.35 remote checks,
 TypeScript and structural validation pass; no native acceptance is claimed.
 The table above records the discovery baseline. M88 remains unimplemented.
+
+
+Route correction: direct inspection of InventoryMapScreen.tsx at the two info
+callbacks and AssetDetailNavigation.ts establishes that current Map detail is
+pushed through assetDetailHref. Earlier references here to a Map detail sheet were
+incorrect inferences from older specs. M89's false-empty and missing inline retry
+findings remain valid; sheet occlusion is not evidence for this production path.
+The new runner fixture verifies the real detail route at largest accessibility
+text with independent recovery, absence of premature empty claims and Back.
+It does not verify actual Map path retention or screen-reader announcements.

@@ -1,3 +1,4 @@
+export { AssetRegionRecoveryFixture } from './AssetRegionRecoveryFixture';
 export { AssetEditRecoveryFixture } from './AssetEditRecoveryFixture';
 import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
@@ -68,6 +69,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add-header" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: true, title: 'Add item', contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
+      <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
@@ -124,6 +126,7 @@ export function FixtureMenu() {
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
     <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />
+    <Button title="Audit contents recovery" onPress={() => router.push('/audit-region-recovery' as Href)} />
     <Text>{result}</Text>
   </FixturePage>;
 }
