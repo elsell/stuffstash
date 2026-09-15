@@ -1283,6 +1283,8 @@ final class FixtureAuditTests: XCTestCase {
     details.tap()
     waitForKeyboard()
     details.typeText("Returned clean")
+    let completeText = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Returned clean"), object: details)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeText], timeout: 5), .completed)
     XCTAssertEqual(details.value as? String, "Returned clean")
     let dismiss = app.buttons["Dismiss keyboard"]
     XCTAssertTrue(dismiss.isHittable)

@@ -1054,3 +1054,10 @@ opaque footer, retaining NativeSheetActions through that shared composition.
 Measure commands against the actual footer region rather than an enclosing root
 View. This removes the diagnostic's nested-scroll difference from working native
 filter layouts; it does not establish button contrast until runtime reaches it.
+
+Run349789's iPad Return-details assertion read a partial value immediately after
+typeText, but its final screenshot and hierarchy both show the complete requested
+value. That journey must wait at most5 seconds for the exact value before failing,
+without retyping, changing keyboard speed, or accepting a prefix. Keep subsequent
+failed-save/retry assertions unchanged. This evidence does not excuse Sharing's
+separately retained truncated email, nor establish Return acceptance before rerun.

@@ -1541,3 +1541,21 @@ assertion is removed. Two remote fixture-preparation tests, TypeScript and mobil
 structural checks pass; native body visibility and dark disabled contrast remain
 unverified. The live run34985387290 predates this diagnostic change. Its iPhone
 and iPad onboarding jobs succeeded while both fixture jobs remained in progress.
+
+### iPad input evidence inspected from run349789
+
+Downloaded the iPad artifact and verified revisionb375d4eae2b07c9014da45ade37f150642000184
+(sourceafb81694). The Return test logged `Returned c` immediately after typeText
+at14:47:37. Its final hierarchyD433D3FE and screenshot6B92BD86 both contain the
+complete `Returned clean`; the field is fully visible above the keyboard. Retained
+[Return capture](evidence/ipad-return-complete-after-assertion-349789.png). This
+supports a bounded exact-value readiness wait, not a product corruption conclusion
+for that sample. The candidate allows5seconds without retyping or slowing entry,
+then retains exact-value and failed-save/retry checks. Native rerun remains pending.
+
+Sharing differs: final hierarchyA731BC13 and screenshot90F2BC37 both still show
+`a@example.invalid` instead of `audit@example.invalid`. The field is visible and
+focused above the keyboard. Retained [Sharing capture](evidence/ipad-sharing-truncated-349789.png).
+This remains an input failure requiring investigation; the Return observation does
+not reclassify it. Two fixture-preparation checks pass remotely for the Return
+wait change; those checks do not compile Swift or validate the native journey.
