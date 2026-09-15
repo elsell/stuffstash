@@ -233,3 +233,11 @@ selected existing tag IDs and pending new-tag definitions change together. A
 normalized match to an existing tag selects that tag without creating another;
 updating pending definitions must not restore the previous selected IDs. Preserve
 all previously selected tags and unrelated draft fields.
+
+Native Edit tag-disclosure acceptance must use isolated inventory choices exceeding
+twelve, preserve an initially selected option outside the first twelve, select
+another hidden option, collapse and confirm both selected states remain exposed.
+At the largest accessibility text size, reveal disclosure and completion controls
+fully within the visible form. Discarding the test draft must return without any
+production mutation. Capture expanded and collapsed states; this supplements the
+route-level Save retention regression.

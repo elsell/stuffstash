@@ -50,3 +50,11 @@ Follow-up candidate after PR146: M94 now has native disclosure commands with
 selected extras retained when collapsed and natural ordering. The remote route
 regression covers expansion, collapse and saved selection. This supersedes the
 unbounded-list source observation above; native layout acceptance remains open.
+
+Runner-only acceptance now covers fourteen choices with Tag 14 initially selected.
+At the largest accessibility text size it reveals native disclosure controls,
+selects Tag 13, collapses, verifies both selections and discards through the
+production route. Captures distinguish expanded and collapsed states. Fixture
+isolation checks, TypeScript and structural checks passed remotely; XCTest
+execution and screenshot inspection remain pending. No Save or native visual
+acceptance is inferred from preparation checks.

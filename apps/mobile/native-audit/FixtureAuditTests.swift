@@ -421,6 +421,62 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
+  func testEditTagDisclosureAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit Edit tags"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    XCTAssertTrue(scroll.waitForExistence(timeout: 10))
+    let cancel = app.buttons["Cancel"].firstMatch
+    func reveal(_ element: XCUIElement) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        return element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<18 where !visible() {
+        let above = element.frame.minY < scroll.frame.minY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+      XCTAssertTrue(cancel.isHittable)
+      XCTAssertGreaterThanOrEqual(cancel.frame.minY, app.frame.minY)
+      XCTAssertLessThanOrEqual(cancel.frame.maxY, app.frame.maxY)
+    }
+    let retained = app.buttons["Tag 14"].firstMatch
+    XCTAssertTrue(retained.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Tag 13"].exists)
+    reveal(retained)
+    XCTAssertTrue(retained.isSelected)
+    let expand = app.buttons["Show all tags"].firstMatch
+    reveal(expand)
+    expand.tap()
+    let extra = app.buttons["Tag 13"].firstMatch
+    XCTAssertTrue(extra.waitForExistence(timeout: 5))
+    reveal(extra)
+    extra.tap()
+    XCTAssertTrue(extra.isSelected)
+    capture("edit-tags-expanded-accessibility-size")
+    let collapse = app.buttons["Show fewer tags"].firstMatch
+    reveal(collapse)
+    collapse.tap()
+    reveal(extra)
+    XCTAssertTrue(extra.isSelected)
+    XCTAssertTrue(retained.isSelected)
+    capture("edit-tags-collapsed-selected-accessibility-size")
+    cancel.tap()
+    let discard = app.alerts.buttons["Discard"]
+    XCTAssertTrue(discard.waitForExistence(timeout: 5))
+    discard.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testEditMetadataRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
