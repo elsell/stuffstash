@@ -2383,3 +2383,15 @@ empty options list for non-enum creation. Mounted regression first reproduced th
 hidden options in the outgoing payload; it now verifies switching-back retention
 and the corrected payload. All77 customization cases, TypeScript and structural
 checks pass on paul; critic found no blockers. Native acceptance remains pending.
+
+### M169 — Return-details error heading is obscured after failed Save
+
+P2 screenshot-confirmed on iPhone17 run35029854251 at
+e8b3d42dccf3f13428fb26bbb1cfd85ea8b0dd9e. In
+[the failed-save capture](phone-return-error-350298.png), the retained note and
+buttons are visible, but the error heading sits partly under the navigation blur.
+Initial presentation is readable. The XCTest asserts error existence and retry,
+not the complete error's position, so its passing outcome does not close this.
+Bring new operation errors into view without discarding the note or permanently
+removing user scrolling. Add an error-visibility assertion; native verification
+must repeat the failed-save/retry sequence. Not implemented yet.

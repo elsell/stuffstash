@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,404
-pending,1,418 source-reviewed,425 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,381
+pending,1,437 source-reviewed,427 finding,24 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -114,6 +114,13 @@ execution is pending; these additions do not close editor acceptance findings.
 across four routes. M167 protects unsubmitted option text; M168 prevents hidden
 enum options from breaking non-enum creation after a type change. All77 focused
 tests and static checks pass remotely. Field-specific native acceptance is open.
+
+[Home return details](home-return-axis.md) has all24 source axes reviewed. Its
+cancel/undo and save-error/retry journeys passed on both devices in run35029854251;
+this is partial native interaction evidence, not full visual or persistence acceptance.
+Screenshot review found a partly obscured failed-save heading (M169), still open.
+The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
+nested diagnostic layout from the direct-scroll structure used by production filters.
 
 Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
 The [latest completed native follow-up](native-350129-followup.md) records full

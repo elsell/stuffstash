@@ -1,0 +1,50 @@
+# Home return details — 24 source axes
+
+R140 atcf05fb1a. Reviewed HomeReturnDetailsRouteScreen, HomeReturnTaskPresentation,
+HomeReturnDetailsSheet, useHomeReturnActions, route registration, checkout spec,
+HomeScreen and presentation tests. This is a production route for the existing
+one-tap Return flow, not a runner-only fixture despite its name.
+
+| Axis | Source evidence and remaining acceptance |
+| --- | --- |
+| Task | Return already completed; the sheet adds optional details or undoes the return. This sequence is explicit in asset-checkout.spec.md. |
+| Navigation | Native titled sheet; task owner stays on Home. Missing task dismisses only when focused, or replaces with Home without a back destination. |
+| Selection | No value picker; note entry and commands only. |
+| Modality | Navigation removal requests owner cancellation/undo; gestures disabled. This is not ordinary form cancellation because the return already happened. Native behavior remains pending. |
+| Layout | Direct ScrollView owns automatic insets and keyboard adjustment; content and action row scroll together. Actual sheet bounds/keyboard reachability require runtime evidence. |
+| Adaptation | Action row wraps with available width. Normal-size phone/tablet checks remain required; enlarged layout is not certified. |
+| Typography | Item title, optional-note label and status/error text. Long title/error wrapping requires native captures. |
+| Appearance | Semantic palette and native command buttons. Sheet dark/light appearance remains unverified. |
+| Localization | English action and recovery copy; freeform note preserved. RTL layout and input unverified. |
+| Imagery | No images or icon-only commands. |
+| Targets | Native commands in flexing wrappers; verify actual hit regions and keyboard overlap on each device. |
+| Gestures | Visible Cancel return/Close and Save; interactive dismissal is disabled to avoid bypassing the owned operation. |
+| Keyboard | Multiline input seeded once per session; native text owns the caret while application draft receives changes. Diagnostic single-line failures elsewhere do not prove this input safe. |
+| Accessibility | Input named Optional return details; errors and access-change text marked alerts. Focus movement, VoiceOver order and command reading remain open. |
+| Motion | Native presentation; no custom timed transitions. Reduced-motion behavior needs runtime review. |
+| Content | Explicitly says the item is already returned after lost access; missing undo ID warns that cancellation is unavailable. Save/Cancel purpose follows the checkout spec. |
+| Search | No search task within this note form. |
+| Loading | Save and undo share a lock, disable entry/actions, and expose Saving/Canceling return labels. Initial return pending belongs to Home. |
+| Recovery | Inline save/undo errors retain the note and permit retry. Failed reconciliation notices are visit-scoped. |
+| Editing | Per-session note seed; pending lock rejects repeated changes. Save reads application draft; native complete-text input remains an acceptance requirement. |
+| Privacy | Current permission gates edits and operations; revocation retains read-only note and allows Close. Server authorization remains a separate boundary. |
+| Notifications | No screen-owned notification action. Interruption/resume behavior needs lifecycle acceptance. |
+| Media | No microphone, camera or upload interaction. |
+| Lifecycle | Mounted/session ownership prevents old callbacks changing a later return editor. Owner disappearance behind another screen waits for focus before dismissing. Late mutation/error and native return need acceptance. |
+
+Existing mounted Home and route tests cover duplicate return, late completion,
+retained failed details, Back routed through undo, access revocation, stale editor
+callbacks and missing-owner recovery. They are included in the 1,734-test full
+checkpoint after M166. No new native pass is inferred from that checkpoint.
+
+Run35029854251 at e8b3d42dccf3f13428fb26bbb1cfd85ea8b0dd9e passed both
+testHomeReturnCancelRestoresCheckout and testHomeReturnDetailsRecoverInsideSheet
+on iPhone17 and iPad mini. These check reachable cancellation/restored checkout,
+complete `Returned clean` text, keyboard dismissal, retained failed-save text,
+retry and sheet dismissal. The synthetic save port does not inspect the submitted
+note, so this is not proof of persisted note contents. Initial and failed-save
+iPhone screenshots were inspected. Initial form and commands are visible. After
+failed Save, the error heading partly sits under the navigation blur (M169).
+The test only checks existence, so its pass does not establish error visibility.
+See [retained error screenshot](phone-return-error-350298.png). Terminal evidence
+adds partial navigation/editing/recovery coverage only.
