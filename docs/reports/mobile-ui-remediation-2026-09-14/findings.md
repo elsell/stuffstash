@@ -666,3 +666,16 @@ No selection is saved by typing. Existing bounded results and valid-zone fallbac
 remain unchanged. Mounted regression failed first; eight remote picker/settings
 checks, TypeScript and structural checks pass (/tmp/timezone-search-green.log).
 Critic found no blockers. Native search integration still requires runtime evidence.
+
+### M78 — inventory switch completion outlives focus (P2)
+
+The switcher canceled pending work on unmount but not blur. A mounted regression
+reproduced Back after focus left and returned during selection. Focus cleanup now
+aborts the request signal; late navigation/error feedback is suppressed. The
+pending guard remains until settlement, after which a fresh focused selection
+works. This does not promise reversal of an inventory choice already persisted by
+the port. Critic caught the complementary blur → settle → refocus ordering leaving rows
+disabled. Its regression failed, then passed after focus entry reconciled busy
+state with the actual pending request. Five remote switcher checks, TypeScript and
+structural checks pass (/tmp/switcher-focus-final.log). Native interruption
+acceptance remains pending.

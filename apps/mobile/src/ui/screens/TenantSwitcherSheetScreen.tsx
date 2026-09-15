@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -34,8 +34,8 @@ export function TenantSwitcherSheetScreen({
   const [selecting, setSelecting] = useState(false);
   const [selectionError, setSelectionError] = useState('');
   const pending = useRef<AbortController | undefined>(undefined);
-  const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; pending.current?.abort(); }; }, []);
+  const focused = useRef(true);
+  useFocusEffect(useCallback(() => { focused.current = true; setSelecting(Boolean(pending.current)); return () => { focused.current = false; pending.current?.abort(); }; }, []));
   const dashboard = useMobileInventoryServerQuery({
     key: mobileQueryKeys.home,
     query: (signal) => dashboardQuery.execute({ signal })
@@ -47,12 +47,12 @@ export function TenantSwitcherSheetScreen({
     setSelecting(true); setSelectionError('');
     try {
       await selectInventoryCommand.execute(inventoryId, { signal: request.signal });
-      if (mounted.current && !request.signal.aborted) router.back();
+      if (focused.current && !request.signal.aborted) router.back();
     } catch {
-      if (mounted.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
+      if (focused.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
     } finally {
       if (pending.current === request) pending.current = undefined;
-      if (mounted.current) setSelecting(false);
+      if (focused.current) setSelecting(false);
     }
   }
 

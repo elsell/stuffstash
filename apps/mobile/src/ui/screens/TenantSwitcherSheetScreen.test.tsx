@@ -3,7 +3,7 @@ import { HomeDashboardQuery, type HomeDashboardViewModel } from '../../applicati
 import { SelectInventoryCommand } from '../../application/home/SelectInventoryCommand';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileRenderHarness } from '../../test-support/render';
-import { dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { TenantSwitcherSheetScreen } from './TenantSwitcherSheetScreen';
 
@@ -61,5 +61,25 @@ it('ignores duplicate switches and never navigates back after the sheet was dism
     await h.unmount();
     await h.run(() => finish()); await h.settle();
     expect(dispatchedActions()).toEqual([]);
+  } finally { await h.unmount(); resetNavigation(); }
+});
+
+it.each([true, false])('recovers after a departed selection with refocus before completion: %s', async returnBeforeCompletion => {
+  resetNavigation(); const h = new MobileRenderHarness(); let finish!: () => void; let calls = 0;
+  const command = new SelectInventoryCommand({ async selectInventory() {
+    calls++; if (calls === 1) await new Promise<void>(resolve => { finish = resolve; });
+  } });
+  try {
+    await h.render(fixture(command));
+    await h.run(() => { void h.byLabel('Switch to inventory Main')?.props.onPress(); });
+    await h.run(() => setScreenFocused(false));
+    if (returnBeforeCompletion) await h.run(() => setScreenFocused(true));
+    await h.run(() => finish()); await h.settle();
+    if (!returnBeforeCompletion) await h.run(() => setScreenFocused(true));
+    expect(dispatchedActions()).toEqual([]);
+    expect(h.byLabel('Switch to inventory Main')?.props.disabled).toBe(false);
+    await h.press(h.byLabel('Switch to inventory Main'));
+    expect(calls).toBe(2);
+    expect(dispatchedActions()).toHaveLength(1);
   } finally { await h.unmount(); resetNavigation(); }
 });

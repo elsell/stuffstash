@@ -463,3 +463,12 @@ requiring a complete valid identifier is not sufficient search behavior. Preserv
 the saved choice, native navigation search, empty-result feedback, the bounded
 initial list and explicit valid-zone fallback when the runtime list is unavailable.
 Typing/searching alone never changes the saved time zone.
+
+### Inventory switcher focus ownership
+
+Selection completion belongs to the switcher's uninterrupted focus session.
+When the sheet loses focus, abort its request signal and suppress late navigation
+or selection-error feedback, even if it remains mounted or regains focus before
+completion. Retain the pending guard until that request settles so a second
+selection cannot overlap it. After settlement, a fresh focused selection works.
+Do not assume blur reverses an inventory selection already accepted by the port.
