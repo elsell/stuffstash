@@ -716,3 +716,9 @@ disabled. Existing Browse/Map/Expiration callers retain enabled behavior by defa
 Native verification must cover header coexistence, expansion, cancellation and
 return, in addition to query-fake tests for filtering and ownership. Spatial
 command modernization remains a separate part of M88.
+
+Native place-search acceptance uses the shared detail route with20 known item
+rows and successful independent queries. Verify the integrated search button,
+scoped field, filtering, native clear, settled full results, keyboard dismissal
+and Back. Check the More actions control before and after search. This fixture
+does not certify Map-path return, all text sizes, or spatial command styling.

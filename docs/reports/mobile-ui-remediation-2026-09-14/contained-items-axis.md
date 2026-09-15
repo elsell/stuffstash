@@ -80,3 +80,10 @@ owner guards and keyed adapter lifetime reject obsolete callbacks. A regression
 reproduced stale callbacks clearing a newer asset query before the guard. Shared
 adapter events after unmount are also ignored. Spatial and maintenance controls
 remain open under M88; search header/keyboard behavior is not native-verified yet.
+
+
+Native search fixture added:20 known items through the real detail query path;
+checks scoped native search, Tool19 filtering, native clear, full results, keyboard
+dismissal and retained More actions/Back. This uses default text size; the separate
+region-recovery scenario uses largest text. Both require actual runner execution,
+and neither alone establishes Map return preservation or whole-surface acceptance.

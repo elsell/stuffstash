@@ -13,6 +13,14 @@ const noMutation = async () => { throw new Error('This audit fixture does not mu
 
 /** Real progressive detail route with isolated, independently failing queries. */
 export function AssetRegionRecoveryFixture() {
+  return <AssetDetailFixture mode="recovery" />;
+}
+
+export function AssetContentsSearchFixture() {
+  return <AssetDetailFixture mode="search" />;
+}
+
+function AssetDetailFixture({ mode }: { readonly mode: 'recovery' | 'search' }) {
   const [fixture] = useState(() => {
     const client = createMobileQueryClient();
     const defaults = client.getDefaultOptions();
@@ -27,11 +35,13 @@ export function AssetRegionRecoveryFixture() {
         permissions: ['view'], revision: 'audit', asset
       }) }),
       contents: new AssetContentsQuery({ getAssetContents: async () => {
-        if (++contentsReads === 1) throw new Error('Audit contents unavailable');
-        return { asset, allAssets: [] };
+        if (++contentsReads === 1 && mode === 'recovery') throw new Error('Audit contents unavailable');
+        return { asset, allAssets: mode === 'search' ? Array.from({ length: 20 }, (_, index) => ({
+          ...asset, id: assetId(`audit-item-${index}`), title: `Tool ${index}`, kind: 'item' as const, parentAssetId: asset.id
+        })) : [] };
       } }),
       photos: new AssetPhotosQuery({ getAssetPhotos: async () => {
-        if (++photoReads === 1) throw new Error('Audit photos unavailable');
+        if (++photoReads === 1 && mode === 'recovery') throw new Error('Audit photos unavailable');
         return [];
       } }),
       selection: new PhotoSelectionQuery({ selectFromLibrary: noMutation, captureFromCamera: noMutation })

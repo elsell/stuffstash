@@ -213,6 +213,46 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testPlaceContentsUseNativeSearchAndKeepNavigation() {
+    let open = app.buttons["Audit place search"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let more = app.buttons["More actions for Audit place"]
+    XCTAssertTrue(more.waitForExistence(timeout: 10))
+    XCTAssertTrue(more.isHittable)
+    let searchButton = app.buttons["Search"].firstMatch
+    XCTAssertTrue(searchButton.waitForExistence(timeout: 10))
+    XCTAssertTrue(searchButton.isHittable)
+    capture("place-search-collapsed")
+    searchButton.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertTrue(field.isHittable)
+    XCTAssertEqual(field.placeholderValue, "Search this place")
+    field.tap()
+    waitForKeyboard()
+    field.typeText("19")
+    XCTAssertEqual(field.value as? String, "19")
+    XCTAssertTrue(app.staticTexts["Tool 19"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.staticTexts["Tool 0"].exists)
+    capture("place-search-filtered")
+    let clear = field.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable)
+    clear.tap()
+    XCTAssertTrue(app.staticTexts["Tool 0"].firstMatch.waitForExistence(timeout: 5))
+    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
+    XCTAssertTrue(cancel.isHittable)
+    cancel.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(more.isHittable)
+    capture("place-search-cleared")
+    let back = app.navigationBars.buttons.firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testAssetRegionRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
