@@ -257,3 +257,19 @@ and in-content footers. Their geometry is recorded for inspection against the
 sheet bounds; a screen-relative bottom assertion was rejected in code review.
 Remote type and structural checks pass. Production filters remain unchanged until
 native evidence supports the replacement structure.
+
+### Run34915099794: completed onboarding jobs, fixtures still running
+
+Source527287c8. The completed phone job104210917195 and iPad job104210916927
+both fail the production onboarding complete-address assertion at line72:
+`h://example.invalid` instead of `https://example.invalid`. The iPad landscape
+scenario passes. M14 remains unresolved; neither native control availability nor
+source checks prove typing is reliable. Fixture jobs were still running when
+these completed job logs were inspected; their outcomes are not inferred here.
+
+The continuation History fixes (9a7c086f,7e84dc8d) are not in this run or interim
+TestFlight0.24.11. Their new checkout-history fixture uses the production screen,
+queries and sheet options with synthetic repositories. It checks phone detent
+expansion, body and older-page reachability, and native Close. iPad presentation
+is exercised but its expansion is observational because iPad detents differ.
+No native result is claimed for this scenario yet.
