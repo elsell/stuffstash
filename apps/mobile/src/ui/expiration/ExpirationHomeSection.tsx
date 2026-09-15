@@ -7,8 +7,8 @@ import { useAppearanceAwarePalette } from '../theme/appearance';
 import { createHomeScreenStyles } from '../screens/HomeScreen.styles';
 
 type HomeData = Awaited<ReturnType<ExpirationWorkspaceQuery['home']>>;
-export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetry }: {
- readonly data?: HomeData; readonly error?: string;
+export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetry, canOpen = true }: {
+ readonly canOpen?: boolean; readonly data?: HomeData; readonly error?: string;
  readonly onOpen: (mode: ExpirationMode) => void;
  readonly onOpenAsset: (id: string) => void;
  readonly onRetry: () => void;
@@ -19,7 +19,7 @@ export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetr
  return <View style={styles.attentionSection}>
   <View style={styles.sectionHeader}>
    <Text accessibilityRole="header" style={styles.sectionTitle}>Expiration</Text>
-   <Pressable accessibilityRole="button" accessibilityLabel="View all expiration dates" style={styles.sectionActionButton} onPress={() => onOpen('all')}><Text style={styles.sectionAction}>See all</Text></Pressable>
+   <Pressable accessibilityRole="button" accessibilityLabel="View all expiration dates" disabled={!canOpen} accessibilityState={{ disabled: !canOpen }} style={styles.sectionActionButton} onPress={() => { if (canOpen) onOpen('all'); }}><Text style={styles.sectionAction}>See all</Text></Pressable>
   </View>
   {error ? <View><Text accessibilityRole="alert" style={styles.stateText}>{error}</Text><Pressable accessibilityRole="button" accessibilityLabel="Retry expiration" onPress={onRetry} style={styles.sectionActionButton}><Text style={styles.sectionAction}>Retry</Text></Pressable></View> : null}
   {!data && !error ? <ActivityIndicator accessibilityLabel="Loading expiration" color={colors.action} /> : null}

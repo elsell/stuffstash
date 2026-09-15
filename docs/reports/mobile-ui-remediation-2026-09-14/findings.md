@@ -1727,3 +1727,13 @@ while scope is unavailable/errored, preserving explicit retry. Verify unresolved
 scope, cached-data scope failure, retry and recovered navigation at the mounted
 entry boundary. No server authorization bypass is claimed; this is client
 presentation/navigation correctness. Not yet corrected.
+
+M128 candidate extracts injected query-driven content from the bootstrap wrapper.
+Usable inventory scope now gates queries, cached presentation and See all. Scope
+failure and its pending retry keep counts hidden; successful recovery restores
+scoped navigation. Mounted regression reproduced empty IDs before correction.
+Critic caught retained ready-row callbacks bypassing the initial render guard;
+committed scope ownership now rejects them, including after unmount, with a
+reproduced/passing failure regression. Three focused tests, TypeScript and mobile
+structural checks pass on paul. Critic found no remaining confirmed blocker.
+Native loading/error/recovery layout and actual inventory switching remain pending.

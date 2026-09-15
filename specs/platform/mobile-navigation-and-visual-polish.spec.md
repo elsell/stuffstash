@@ -618,3 +618,12 @@ provider rollback. Picker error feedback belongs to the latest selection in the
 initiating focused visit. Departed, superseded or hidden callbacks must not show
 an obsolete error or begin another preference save; persistence already started
 may finish and reconcile the application appearance.
+
+### Home expiration scope readiness
+
+Home expiration must not navigate or show cached expiration data until its inventory
+scope is usable. Scope errors hide cached counts/rows until scope recovery succeeds.
+See all is disabled while scope is unresolved or failed. Resource access errors
+also hide cached rows. Scope retry remains distinct from resource retry. Keep the
+query-driven content behind an injected expiration query and navigation callbacks
+so loading, failure and recovery are testable without application bootstrap.
