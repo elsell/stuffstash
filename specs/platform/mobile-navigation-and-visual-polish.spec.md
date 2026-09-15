@@ -300,3 +300,12 @@ reachable numbered Remove command below its preview, rather than an 18-point
 overlaid close target. Photo rails can scroll and commands can grow with text.
 Tag creation uses a native Add tag command below its fields/color choice, avoiding
 an undersized inline action squeezed beside text entry.
+
+### Asset gallery photo command
+
+The gallery keeps one Add photos command below its empty or populated image area.
+Use the shared native command adapter on iOS and Android; the image itself remains
+an inspection action. Hide Add photos when permission or its callback is absent.
+Preserve the selected photo ID, authenticated image headers and numbered image
+accessibility labels. The custom full-screen viewer exception does not extend to
+this simple gallery command.

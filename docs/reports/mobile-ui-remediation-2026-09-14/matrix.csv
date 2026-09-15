@@ -2351,7 +2351,7 @@ S098,Asset / archive restore delete,privacy,"Account scope, data use and permiss
 S098,Asset / archive restore delete,notifications,System notification entry and state,pending,,
 S098,Asset / archive restore delete,media,"Camera, library, files and audio",pending,,
 S098,Asset / archive restore delete,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S099,Asset / photo gallery,task,Task clarity and platform-pattern fit,finding,Custom gallery Add photos command duplicates the available native adapter without a documented limitation.,M43
+S099,Asset / photo gallery,task,Task clarity and platform-pattern fit,source-reviewed,Native Add photos command implemented on continuation branch; eight remote checks and critic pass. Native placement pending; excluded from interim0.24.11.,M43
 S099,Asset / photo gallery,navigation,"Navigation, hierarchy and return",source-reviewed,Gallery opens the selected photo ID; permission/callback absence disables opening. Source review only.,
 S099,Asset / photo gallery,selection,Value selection and current value,source-reviewed,Numbered image buttons identify photo position and open that exact ID. Source review only.,
 S099,Asset / photo gallery,modality,Presentation and dismissal,pending,,

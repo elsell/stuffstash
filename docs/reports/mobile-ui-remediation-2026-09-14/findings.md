@@ -60,7 +60,7 @@
 
 | M42 | Photo viewer permits another removal while deletion is pending | Open; source-confirmed | AssetDetailRouteScreen passes only permission to canRemove, while removePhoto sets pendingAction without a duplicate guard. It also clears whichever photo is selected on completion. Verify duplicate confirmation and switching photos during a delayed removal; guard the command and retain unrelated viewing context. This is continuation work after the interim release candidate |
 
-| M43 | Gallery Add photos uses a custom styled command despite an available native adapter | Open; source-confirmed pattern mismatch | AssetDetailPhotoGallery builds a separate Pressable/Camera/Text control. The already reviewed NativeCommandButton can express this simple action; no gallery-specific platform limitation is documented. Preserve the separate action below imagery and migrate its command without changing the photo viewer modal exception |
+| M43 | Gallery Add photos uses a custom styled command despite an available native adapter | Implemented on continuation branch; native pending | Shared native command preserves permission/callback gating and separate placement below imagery. Eight remote gallery/route tests, typecheck and structural check pass; critic no blockers. Legacy mocked style snapshots replaced with mounted behavior checks; paging and appearance runtime remain pending. Not included in interim0.24.11 |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
