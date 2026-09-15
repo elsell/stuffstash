@@ -1,7 +1,7 @@
 import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
-import { navigationOptions, resetNavigation } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { NativeNavigationSearch } from './NativeNavigationSearch';
 it('uses native search callbacks, submits current event text and clears immediately',async()=>{
  resetNavigation();const h=new MobileRenderHarness();const events:string[]=[];
@@ -19,4 +19,18 @@ it('uses native search callbacks, submits current event text and clears immediat
   await h.run(()=>{search.onChangeText({nativeEvent:{text:'late'}});search.onSearchButtonPress({nativeEvent:{text:'late'}});search.onCancelButtonPress();});
   expect(events).toEqual(['change:new','submit:newest','clear','clear']);
  }finally{await h.unmount()}
+});
+
+it('ignores hidden native callbacks and accepts input again after return', async () => {
+ resetNavigation();setScreenFocused(true);const h=new MobileRenderHarness();const values:string[]=[];
+ try {
+  await h.render(<NativeNavigationSearch query="saved" placeholder="Search" onChange={value=>values.push(value)} onSubmit={value=>values.push(value)} onClear={()=>values.push('clear')} />);
+  const search=(navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void;onSearchButtonPress:(event:{nativeEvent:{text:string}})=>void;onClose:()=>void}}).headerSearchBarOptions;
+  await h.run(()=>setScreenFocused(false));
+  await h.run(()=>{search.onChangeText({nativeEvent:{text:'hidden'}});search.onSearchButtonPress({nativeEvent:{text:'hidden'}});search.onClose();});
+  expect(values).toEqual([]);
+  await h.run(()=>setScreenFocused(true));
+  await h.run(()=>search.onChangeText({nativeEvent:{text:'returned'}}));
+  expect(values).toEqual(['returned']);
+ }finally{await h.unmount();resetNavigation();setScreenFocused(true);}
 });

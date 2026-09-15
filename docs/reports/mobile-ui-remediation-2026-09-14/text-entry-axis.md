@@ -151,3 +151,10 @@ Android retains controlled editing. Application state still drives submission an
 validation. Twenty-two Sharing checks cover reset/retry semantics; the unchanged
 native typing journey remains required. This supersedes the baseline controlled
 classification for this one site, not the other input families.
+
+M122 adds focused-route ownership to shared native search callbacks. Six consumers
+were inspected: list/map Browse, Browse tags, Expiration selections, asset contents
+and timezone choice. Full1,619-test validation passes; this does not establish
+caller debounce/request cancellation or native return behavior. Expiration filter
+selections now use the shared adapter; its results screen retains its separate
+debounced hook with M120 focus handling.

@@ -1617,3 +1617,23 @@ empty native field could accompany retained submission state. The final candidat
 seeds remounted fields from the same-scope draft and gates first-render seeds for
 scope replacement. Both platform cases now cover denial/hide/recovery before retry
 and successful clear. This correction is not shipped native evidence.
+
+## M122 — Shared native search accepts callbacks while hidden
+
+P2, source-confirmed at01df88ac. NativeNavigationSearch only deactivated when
+disabled or unmounted, so a retained hidden route could receive input/submit/close
+and change its caller's query. A mounted regression reproduced all three events.
+The candidate binds active state to route focus and enabled state, ignoring hidden
+callbacks and re-enabling interaction on return. Reviewed consumers: Browse list
+(SearchScreen), InventoryMapScreen, Browse tags, Expiration selections, asset
+contents, and TimeZonePicker. Caller-owned timers/requests are not cancelled by
+this adapter fix and need separate ownership review.
+
+All1,619 tests/265files, TypeScript and structural checks pass remotely in
+/tmp/mobile-shared-search-full.log. Native search text restoration, focus delivery,
+keyboard transitions and each consumer's return behavior remain unverified.
+
+M122 critic found no confirmed source blocker. Native return must specifically
+check that the field text still agrees with retained results if UIKit clears its
+field during dismissal while the callback is ignored; callback availability alone
+does not establish that consistency.

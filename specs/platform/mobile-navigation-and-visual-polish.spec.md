@@ -578,3 +578,9 @@ If an access error temporarily hides the Sharing form, remount its native field
 from the retained same-scope email. Keep that seed stable during subsequent typing.
 A replacement scope must never seed the previous scope's email, including its
 first render before effects settle.
+
+The shared NativeNavigationSearch adapter accepts input, submit and clear only
+while its owning route is focused and search is enabled. Blur must ignore late
+native callbacks without clearing the caller's retained query. Refocus restores
+interaction. This applies to Browse list/map, filter selections, contents and
+timezone search consumers; it does not change each caller's query semantics.
