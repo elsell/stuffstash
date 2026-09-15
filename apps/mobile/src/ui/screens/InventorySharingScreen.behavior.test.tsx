@@ -1,3 +1,4 @@
+import { setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import React from 'react';
 import { pressAlertButton } from '../../test-support/react-native';
@@ -79,8 +80,63 @@ it('chooses access in place and preserves the submitted draft while creation fai
     expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(true);
     await h.changeText(h.byLabel('Invitee email'), 'replacement@example.test');
     await h.run(() => rejectCreate?.(new Error('offline')));
+    expect(h.allText()).toContain('Could not create invitation');
     expect(h.byLabel('Invitee email')?.props.value).toBe('friend@example.test');
     expect(h.byLabel('Invitee email')?.props.editable).toBe(true);
     expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(false);
   } finally { await h.unmount(); client.clear(); }
+});
+
+it.each(['scope', 'leave', 'return'] as const)('does not announce a late creation failure after %s', async departure => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  let rejectCreate: ((error: Error) => void) | undefined;
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [] }),
+    create: async () => new Promise((_resolve, reject) => { rejectCreate = reject; }),
+    cancel: async () => undefined
+  };
+  const view = (selected = scope, show = true) => <MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: selected.inventoryId })}><AppFeedbackProvider>{show && <InventorySharingScreen scope={selected} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} />}</AppFeedbackProvider></MobileServerStateProvider>;
+  try {
+    await h.render(view()); await settle(h);
+    await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
+    await h.press(h.byLabel('Create Invitation'));
+    if (departure === 'scope') await h.render(view({ ...scope, inventoryId: 'other' }));
+    else {
+      await h.run(() => setScreenFocused(false));
+      if (departure === 'return') await h.run(() => setScreenFocused(true));
+      else await h.render(view(scope, false));
+    }
+    await h.run(() => rejectCreate?.(new Error('old inventory unavailable')));
+    expect(h.allText()).not.toContain('Could not create invitation');
+  } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+it.each(['copy', 'share', 'cancel'] as const)('suppresses late %s feedback after leaving and returning', async action => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  let finish: (() => void) | undefined;
+  const delayed = () => new Promise<void>((resolve, reject) => { finish = () => action === 'copy' ? resolve() : reject(new Error('old operation failed')); });
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [item] }),
+    create: async () => ({ ...item, inviteUrl: 'https://example.test/#token=secret' }),
+    cancel: delayed
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: delayed, share: delayed }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h);
+    if (action === 'cancel') {
+      await h.press(h.byLabel('Cancel invitation for old@example.test'));
+      await h.run(() => pressAlertButton('Cancel Invitation'));
+    } else {
+      await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
+      await h.press(h.byLabel('Create Invitation')); await settle(h);
+      const label = action === 'copy' ? 'Copy link' : 'Share invitation';
+      await h.press(h.allByType('Pressable').find(node => node.children.some(child => typeof child === 'object' && child !== null && 'children' in child && child.children.includes(label))));
+    }
+    expect(finish).toBeDefined();
+    await h.run(() => setScreenFocused(false));
+    await h.run(() => setScreenFocused(true));
+    await h.run(() => finish?.());
+    expect(h.allText()).not.toContain('Invitation link copied');
+    expect(h.allText()).not.toContain(`Could not ${action} invitation`);
+  } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
 });

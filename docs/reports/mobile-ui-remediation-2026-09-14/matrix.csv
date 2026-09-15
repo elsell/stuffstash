@@ -1127,9 +1127,9 @@ R047,settings/inventory/tags/new.tsx,privacy,"Account scope, data use and permis
 R047,settings/inventory/tags/new.tsx,notifications,System notification entry and state,pending,,
 R047,settings/inventory/tags/new.tsx,media,"Camera, library, files and audio",pending,,
 R047,settings/inventory/tags/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R048,settings/sharing.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Sharing form presents email/access, then explicit invitation creation and one-time link actions; native access fix M27.",M27
+R048,settings/sharing.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Sharing form presents email/access, then explicit invitation creation and one-time link actions; native access fix M27.; sharing-axis.md: source/controlled-render review; native pending",M27
 R048,settings/sharing.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R048,settings/sharing.tsx,selection,Value selection and current value,source-reviewed,Viewer/Editor now shared in-place SettingsPickerRow; runtime pending (M27).,M27
+R048,settings/sharing.tsx,selection,Value selection and current value,source-reviewed,Viewer/Editor now shared in-place SettingsPickerRow; runtime pending (M27).; sharing-axis.md: source/controlled-render review; native pending,M27
 R048,settings/sharing.tsx,modality,Presentation and dismissal,source-reviewed,Cancellation uses native destructive confirmation naming invitee; link sharing delegates to linkActions port.,
 R048,settings/sharing.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R048,settings/sharing.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -1145,12 +1145,12 @@ R048,settings/sharing.tsx,motion,Reduced motion and feedback alternatives,pendin
 R048,settings/sharing.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Paged invitation list with explicit Load older and repeat-cursor guard; runtime density pending.,
 R048,settings/sharing.tsx,search,"Search, scope and filters",pending,,
 R048,settings/sharing.tsx,loading,"Loading, background refresh and progress",source-reviewed,Explicit usePullRefresh; initial load indicator and separate pending creation/cancellation indicators.,
-R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.,
-R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Pending email/access disabled and guarded; rejected creation retains draft; remote behavior test.,M27
-R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Source and existing tests hide denied cached invitations and keep created secret outside query cache; no new boundary changes.,
+R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.; sharing-axis.md: source/controlled-render review; native pending,M69
+R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Pending email/access disabled and guarded; rejected creation retains draft; remote behavior test.; sharing-axis.md: source/controlled-render review; native pending,M27
+R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Source and existing tests hide denied cached invitations and keep created secret outside query cache; no new boundary changes.; sharing-axis.md: source/controlled-render review; native pending,
 R048,settings/sharing.tsx,notifications,System notification entry and state,pending,,
 R048,settings/sharing.tsx,media,"Camera, library, files and audio",pending,,
-R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; sharing-axis.md: source/controlled-render review; native pending,M05;M69
 R049,settings/voice/[capability].tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Voice stage explains function, selected profile, readiness and recommended repair.",
 R049,settings/voice/[capability].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Profile detail remains separate from value selection; navigation guarded while pending.,M31
 R049,settings/voice/[capability].tsx,selection,Value selection and current value,source-reviewed,"M31 shared native service picker preserves current value, excludes other archived choices, same-value no-op.",M31

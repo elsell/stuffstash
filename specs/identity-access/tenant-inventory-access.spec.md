@@ -309,3 +309,14 @@ Invitation acceptance and inventory-opening actions retain a visible task label
 and stable accessible name during progress, alongside the indicator. Expose busy
 and disabled state; joining and opening must remain distinguishable to assistive
 technology. Failed opening preserves accepted access and offers an explicit retry.
+
+### Mobile sharing feedback ownership
+
+Invitation create/cancel and copy/share feedback belongs to the inventory and
+focused screen session that started the action. After navigation away, unmount,
+or inventory/composition replacement, late success or failure must not announce
+itself on the new screen. Returning to the same route does not revive an old
+feedback session. This presentation rule does not cancel authorized server work,
+change permission enforcement, or suppress normal error recovery in the original
+focused session. Created invitation secrets remain subject to existing scope and
+in-memory lifetime rules.

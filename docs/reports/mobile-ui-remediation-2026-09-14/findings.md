@@ -567,3 +567,11 @@ blocker; its domain wording correction was applied. Shared field/status/card,
 workspace heading, notification and voice-review consumers were inspected.
 Native alternate-calendar settings, digits and larger-text clarification remain
 unverified; this is source/test remediation, not complete localization acceptance.
+
+### M69 — Sharing feedback outlives its initiating screen (P2)
+
+Implemented focused-session/scope ownership for create/cancel/copy/share notices.
+Three failing rendered departure regressions now pass; normal focused failure
+retains the draft and notice. See [Sharing review](sharing-axis.md) for task-fit,
+source evidence, privacy boundaries and pending native acceptance. This is the next
+batch after PR138 and is excluded from release workflow34932422663.
