@@ -1278,3 +1278,8 @@ host mounted and uses its enabled flag. These are diagnostic fixtures, not propo
 product behavior. A fixed `text-entry` workflow selection may run these comparisons
 and the multiline baseline on both devices; full/manual-All/PR acceptance remains
 unchanged. Record failures and their actual build before inferring a root cause.
+
+Definition/tag collection header changes require native search activation, exact
+filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
+collection may exercise the shared screen with real query/policy adapters and a
+controlled repository; this is not production authorization or pagination evidence.

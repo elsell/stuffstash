@@ -671,30 +671,30 @@ R028,settings/household/asset-types/[resourceId].tsx,privacy,"Account scope, dat
 R028,settings/household/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R028,settings/household/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
 R028,settings/household/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R029,settings/household/asset-types/index.tsx,task,Task clarity and platform-pattern fit,pending,,
-R029,settings/household/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R029,settings/household/asset-types/index.tsx,selection,Value selection and current value,pending,,
-R029,settings/household/asset-types/index.tsx,modality,Presentation and dismissal,pending,,
-R029,settings/household/asset-types/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R029,settings/household/asset-types/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R029,settings/household/asset-types/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R029,settings/household/asset-types/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R029,settings/household/asset-types/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R029,settings/household/asset-types/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R029,settings/household/asset-types/index.tsx,targets,Touch target size and reachability,pending,,
-R029,settings/household/asset-types/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R029,settings/household/asset-types/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R029,settings/household/asset-types/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R029,settings/household/asset-types/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R029,settings/household/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R029,settings/household/asset-types/index.tsx,search,"Search, scope and filters",pending,,
-R029,settings/household/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R029,settings/household/asset-types/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R029,settings/household/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R029,settings/household/asset-types/index.tsx,privacy,"Account scope, data use and permissions",pending,,
-R029,settings/household/asset-types/index.tsx,notifications,System notification entry and state,pending,,
-R029,settings/household/asset-types/index.tsx,media,"Camera, library, files and audio",pending,,
-R029,settings/household/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R029,settings/household/asset-types/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R029,settings/household/asset-types/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,modality,Presentation and dismissal,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,layout,"Safe areas, scroll edges and overlays",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R029,settings/household/asset-types/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,targets,Touch target size and reachability,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,search,"Search, scope and filters",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R029,settings/household/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
+R029,settings/household/asset-types/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M32
+R029,settings/household/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R029,settings/household/asset-types/index.tsx,privacy,"Account scope, data use and permissions",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R029,settings/household/asset-types/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R029,settings/household/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R030,settings/household/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R030,settings/household/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R030,settings/household/asset-types/new.tsx,selection,Value selection and current value,pending,,
@@ -743,30 +743,30 @@ R031,settings/household/fields/[resourceId].tsx,privacy,"Account scope, data use
 R031,settings/household/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R031,settings/household/fields/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
 R031,settings/household/fields/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R032,settings/household/fields/index.tsx,task,Task clarity and platform-pattern fit,pending,,
-R032,settings/household/fields/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R032,settings/household/fields/index.tsx,selection,Value selection and current value,pending,,
-R032,settings/household/fields/index.tsx,modality,Presentation and dismissal,pending,,
-R032,settings/household/fields/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R032,settings/household/fields/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R032,settings/household/fields/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R032,settings/household/fields/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R032,settings/household/fields/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R032,settings/household/fields/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R032,settings/household/fields/index.tsx,targets,Touch target size and reachability,pending,,
-R032,settings/household/fields/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R032,settings/household/fields/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R032,settings/household/fields/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R032,settings/household/fields/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R032,settings/household/fields/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R032,settings/household/fields/index.tsx,search,"Search, scope and filters",pending,,
-R032,settings/household/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R032,settings/household/fields/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R032,settings/household/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R032,settings/household/fields/index.tsx,privacy,"Account scope, data use and permissions",pending,,
-R032,settings/household/fields/index.tsx,notifications,System notification entry and state,pending,,
-R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",pending,,
-R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R032,settings/household/fields/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R032,settings/household/fields/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,modality,Presentation and dismissal,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,layout,"Safe areas, scroll edges and overlays",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R032,settings/household/fields/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,targets,Touch target size and reachability,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,search,"Search, scope and filters",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R032,settings/household/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
+R032,settings/household/fields/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M32
+R032,settings/household/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R032,settings/household/fields/index.tsx,privacy,"Account scope, data use and permissions",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R032,settings/household/fields/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R033,settings/household/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
@@ -863,30 +863,30 @@ R036,settings/inventory/asset-types/[resourceId].tsx,privacy,"Account scope, dat
 R036,settings/inventory/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
 R036,settings/inventory/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R037,settings/inventory/asset-types/index.tsx,task,Task clarity and platform-pattern fit,pending,,
-R037,settings/inventory/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R037,settings/inventory/asset-types/index.tsx,selection,Value selection and current value,pending,,
-R037,settings/inventory/asset-types/index.tsx,modality,Presentation and dismissal,pending,,
-R037,settings/inventory/asset-types/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R037,settings/inventory/asset-types/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R037,settings/inventory/asset-types/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R037,settings/inventory/asset-types/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R037,settings/inventory/asset-types/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R037,settings/inventory/asset-types/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R037,settings/inventory/asset-types/index.tsx,targets,Touch target size and reachability,pending,,
-R037,settings/inventory/asset-types/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R037,settings/inventory/asset-types/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R037,settings/inventory/asset-types/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R037,settings/inventory/asset-types/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R037,settings/inventory/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R037,settings/inventory/asset-types/index.tsx,search,"Search, scope and filters",pending,,
-R037,settings/inventory/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R037,settings/inventory/asset-types/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R037,settings/inventory/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R037,settings/inventory/asset-types/index.tsx,privacy,"Account scope, data use and permissions",pending,,
-R037,settings/inventory/asset-types/index.tsx,notifications,System notification entry and state,pending,,
-R037,settings/inventory/asset-types/index.tsx,media,"Camera, library, files and audio",pending,,
-R037,settings/inventory/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R037,settings/inventory/asset-types/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R037,settings/inventory/asset-types/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,modality,Presentation and dismissal,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,layout,"Safe areas, scroll edges and overlays",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R037,settings/inventory/asset-types/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,targets,Touch target size and reachability,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,search,"Search, scope and filters",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R037,settings/inventory/asset-types/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
+R037,settings/inventory/asset-types/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M32
+R037,settings/inventory/asset-types/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R037,settings/inventory/asset-types/index.tsx,privacy,"Account scope, data use and permissions",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R037,settings/inventory/asset-types/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R037,settings/inventory/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R038,settings/inventory/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R038,settings/inventory/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R038,settings/inventory/asset-types/new.tsx,selection,Value selection and current value,pending,,
@@ -935,30 +935,30 @@ R039,settings/inventory/fields/[resourceId].tsx,privacy,"Account scope, data use
 R039,settings/inventory/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R040,settings/inventory/fields/index.tsx,task,Task clarity and platform-pattern fit,pending,,
-R040,settings/inventory/fields/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R040,settings/inventory/fields/index.tsx,selection,Value selection and current value,pending,,
-R040,settings/inventory/fields/index.tsx,modality,Presentation and dismissal,pending,,
-R040,settings/inventory/fields/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R040,settings/inventory/fields/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R040,settings/inventory/fields/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R040,settings/inventory/fields/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R040,settings/inventory/fields/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R040,settings/inventory/fields/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R040,settings/inventory/fields/index.tsx,targets,Touch target size and reachability,pending,,
-R040,settings/inventory/fields/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R040,settings/inventory/fields/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R040,settings/inventory/fields/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R040,settings/inventory/fields/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R040,settings/inventory/fields/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R040,settings/inventory/fields/index.tsx,search,"Search, scope and filters",pending,,
-R040,settings/inventory/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R040,settings/inventory/fields/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R040,settings/inventory/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R040,settings/inventory/fields/index.tsx,privacy,"Account scope, data use and permissions",pending,,
-R040,settings/inventory/fields/index.tsx,notifications,System notification entry and state,pending,,
-R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",pending,,
-R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R040,settings/inventory/fields/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R040,settings/inventory/fields/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,modality,Presentation and dismissal,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,layout,"Safe areas, scroll edges and overlays",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R040,settings/inventory/fields/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,targets,Touch target size and reachability,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,search,"Search, scope and filters",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R040,settings/inventory/fields/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
+R040,settings/inventory/fields/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M32
+R040,settings/inventory/fields/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R040,settings/inventory/fields/index.tsx,privacy,"Account scope, data use and permissions",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R040,settings/inventory/fields/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
@@ -1079,30 +1079,30 @@ R045,settings/inventory/tags/[resourceId].tsx,privacy,"Account scope, data use a
 R045,settings/inventory/tags/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R045,settings/inventory/tags/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
 R045,settings/inventory/tags/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R046,settings/inventory/tags/index.tsx,task,Task clarity and platform-pattern fit,pending,,
-R046,settings/inventory/tags/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R046,settings/inventory/tags/index.tsx,selection,Value selection and current value,pending,,
-R046,settings/inventory/tags/index.tsx,modality,Presentation and dismissal,pending,,
-R046,settings/inventory/tags/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R046,settings/inventory/tags/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R046,settings/inventory/tags/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R046,settings/inventory/tags/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R046,settings/inventory/tags/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R046,settings/inventory/tags/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R046,settings/inventory/tags/index.tsx,targets,Touch target size and reachability,pending,,
-R046,settings/inventory/tags/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R046,settings/inventory/tags/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R046,settings/inventory/tags/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R046,settings/inventory/tags/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R046,settings/inventory/tags/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R046,settings/inventory/tags/index.tsx,search,"Search, scope and filters",pending,,
-R046,settings/inventory/tags/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R046,settings/inventory/tags/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R046,settings/inventory/tags/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R046,settings/inventory/tags/index.tsx,privacy,"Account scope, data use and permissions",pending,,
-R046,settings/inventory/tags/index.tsx,notifications,System notification entry and state,pending,,
-R046,settings/inventory/tags/index.tsx,media,"Camera, library, files and audio",pending,,
-R046,settings/inventory/tags/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R046,settings/inventory/tags/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R046,settings/inventory/tags/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,modality,Presentation and dismissal,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,layout,"Safe areas, scroll edges and overlays",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R046,settings/inventory/tags/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,targets,Touch target size and reachability,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,search,"Search, scope and filters",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
+R046,settings/inventory/tags/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
+R046,settings/inventory/tags/index.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M32
+R046,settings/inventory/tags/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R046,settings/inventory/tags/index.tsx,privacy,"Account scope, data use and permissions",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M157
+R046,settings/inventory/tags/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
+R046,settings/inventory/tags/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R047,settings/inventory/tags/new.tsx,task,Task clarity and platform-pattern fit,pending,,
 R047,settings/inventory/tags/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R047,settings/inventory/tags/new.tsx,selection,Value selection and current value,pending,,

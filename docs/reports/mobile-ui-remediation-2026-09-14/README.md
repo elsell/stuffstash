@@ -46,8 +46,8 @@ The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,816
-pending,1,126 source-reviewed,315 finding,22 runtime-partial and105 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,711
+pending,1,196 source-reviewed,340 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -61,6 +61,12 @@ Combined post-PR150 checkpoint0c26c3bf: all1,703 mobile tests across270 files,
 TypeScript and the mobile structural check pass on paul
 (`/tmp/mobile-batch-0c26c3bf.log`). This includes M153–M155; native acceptance
 remains incomplete. Tests/builds were not run on the local host.
+
+The five definition/tag collection routes now have a full source-axis review in
+[customization-collections-axis.md](customization-collections-axis.md). M156 moves
+search/Add to existing native header adapters; M157 updates Add when edit access
+is revoked. Native acceptance remains pending. The code critic's asynchronous
+filter assertion finding was corrected; no production blocker was identified.
 
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in

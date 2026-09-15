@@ -2241,3 +2241,20 @@ The callback now checks captured focus/resource identity and authorizes only its
 original workflow. Current confirmations still dispatch once. A replacement-resource
 case verifies the new draft remains. Native alert/focus acceptance is pending;
 see [settings-exit-axis.md](settings-exit-axis.md).
+
+### M156 — Settings collections retain custom search/Add chrome
+
+P2 source pattern finding atd458d896, affecting R029/R032/R037/R040/R046.
+The custom permanent input and scroll-content Add diverged from the accepted
+native-header pattern. The shared collection now uses NativeNavigationSearch and
+stable native header actions; lifecycle controls and grouped results remain in
+content. Initial loading/error/denial removes header controls. Native phone/iPad
+acceptance is pending; see customization-collections-axis.md.
+
+### M157 — Cached collection permissions retain Add after revocation
+
+P2 mounted interaction finding discovered during M156. Rows can remain cached while
+the permission query changes; Add used the older context state. The new regression
+reproduced the stale action. Mutation affordances now use the current permission
+snapshot and removed native handlers do nothing. Read-only rows stay visible when
+view permission remains. This is an affordance fix, not a server-authorization change.

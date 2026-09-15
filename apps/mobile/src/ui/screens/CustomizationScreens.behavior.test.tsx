@@ -96,13 +96,35 @@ describe('rendered mobile customization production states', () => {
   it('reconciles a mounted collection from query invalidation without discarding the local search', async () => {
     let rows = [tag('one', 'Tools')]; let reads = 0;
     const screen = await renderCollection({ query: { tags: async () => { reads++; return { items: rows, complete: true }; } } });
-    await screen.changeText(screen.byLabel('Search Tags'), 'Tool');
-    rows = [tag('two', 'Toolboxes')];
+    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'Tool' } }));
+    rows = [tag('two', 'Toolboxes'), tag('three', 'Garden')];
     await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'tag', 'active') }));
     await settleQueries(screen);
     expect(reads).toBe(2);
     expect(screen.allText()).toContain('Toolboxes');
-    expect(screen.byLabel('Search Tags')?.props.value).toBe('Tool');
+    expect(screen.allText()).not.toContain('Garden');
+    expect(screen.allText()).not.toContain('No matches');
+    expect(screen.allByType('TextInput')).toHaveLength(0);
+    await screen.run(() => collectionSearch().onCancelButtonPress());
+    expect(screen.allText()).toContain('Garden');
+  });
+
+  it('removes Add and disables its retained handler when collection edit permission is revoked', async () => {
+    let editable = true; let added = 0;
+    const screen = await renderCollection({
+      contextQuery: { execute: async () => context([], editable ? ['view', 'edit_asset'] : ['view']) },
+      onAdd: () => { added++; }, query: collectionQuery({ tags: [tag('one', 'Tools')] })
+    });
+    const add = screen.byLabel('Add Tag')!;
+    await screen.press(add);
+    expect(added).toBe(1);
+    editable = false;
+    await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.settingsScope('scope', 'tenant-1', 'inventory-1') }));
+    await settleQueries(screen);
+    expect(screen.byLabel('Add Tag')).toBeUndefined();
+    await screen.run(() => add.props.onPress());
+    expect(added).toBe(1);
+    expect(screen.allText()).toContain('Tools');
   });
 
   it('keeps collection access denied when an older definition request completes late', async () => {
@@ -131,7 +153,7 @@ describe('rendered mobile customization production states', () => {
 
   it('aligns collection chrome and editor actions to the shared 16-point content column', async () => {
     const collection = await renderCollection({ query: collectionQuery({ tags: [tag('tag-1', 'Tools')] }) });
-    expect(collection.byLabel('Search Tags')?.props.style).toMatchObject({ minHeight: 44 });
+    expect(collectionSearch()).toMatchObject({ placement: 'integratedButton', placeholder: 'Search tags' });
     expect(collection.allByType('View').some(hasStyle({ marginHorizontal: 16 }))).toBe(true);
 
     const editor = await renderEditor();
@@ -157,7 +179,8 @@ describe('rendered mobile customization production states', () => {
       contextQuery: { execute: async () => allowed }, kind: 'field', scope: 'inventory',
       query: collectionQuery({ fields: [field('tenant-field', 'Shared field', 'tenant'), field('local-field', 'Local field', 'inventory')] })
     });
-    expect(screen.allText()).toEqual(expect.arrayContaining(['From Home', 'Only in Household', 'Shared field', 'Local field', 'Add']));
+    expect(screen.allText()).toEqual(expect.arrayContaining(['From Home', 'Only in Household', 'Shared field', 'Local field']));
+    expect(screen.byLabel('Add Custom field')).toBeDefined();
   });
 
   it('shows inherited inventory detail read-only with an explicit household management action', async () => {
@@ -299,7 +322,7 @@ describe('rendered mobile customization production states', () => {
     await harness?.unmount(); harness = undefined;
     screen = await renderCollection({ query: { tags: async () => ({ items: [tag('tools', 'Tools')], complete: false }) } });
     expect(screen.allText()).toContain('Some settings may be missing');
-    await screen.changeText(screen.byLabel('Search Tags'), 'missing');
+    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'missing' } }));
     expect(screen.allText()).toContain('No matches');
     expect(screen.allText()).toContain('No tags match “missing”.');
   });
@@ -564,6 +587,13 @@ function editorElement(overrides: Record<string, unknown> = {}) {
     manageAssetTypes: inert, manageFields: inert, manageTags: inert, mode: 'create', onDone: () => undefined, query: collectionQuery(), scope: 'inventory', ...overrides
   } as unknown as React.ComponentProps<typeof CustomizationEditorScreen>;
   return withQueries(<AppFeedbackProvider><CustomizationEditorScreen {...props} /></AppFeedbackProvider>);
+}
+
+function collectionSearch() {
+  const options = navigationOptions().filter(value => Object.hasOwn(value as object, 'headerSearchBarOptions')).at(-1) as {
+    headerSearchBarOptions: { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void }
+  };
+  return options?.headerSearchBarOptions;
 }
 
 function collectionQuery(values: { tags?: readonly Record<string, unknown>[]; fields?: readonly Record<string, unknown>[]; assetTypes?: readonly Record<string, unknown>[] } = {}) {

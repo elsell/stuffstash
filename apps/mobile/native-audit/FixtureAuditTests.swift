@@ -1455,6 +1455,38 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
   }
 
+  func testSettingsCollectionUsesNativeSearchAndAdd() {
+    let open = app.buttons["Audit settings collection"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let add = app.buttons["Add Tag"]
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(add.isHittable)
+    add.tap()
+    XCTAssertTrue(app.staticTexts["Add tag requested"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.textFields.count, 0)
+    let search = app.buttons["Search"].firstMatch
+    XCTAssertTrue(search.isHittable)
+    search.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    waitForKeyboard()
+    field.typeText("Tools")
+    XCTAssertEqual(field.value as? String, "Tools")
+    XCTAssertTrue(app.buttons["Tools, No color"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Garden, No color"].waitForNonExistence(timeout: 5))
+    capture("settings-collection-native-search")
+    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
+    XCTAssertTrue(cancel.isHittable)
+    cancel.tap()
+    XCTAssertTrue(field.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Garden, No color"].waitForExistence(timeout: 5))
+    XCTAssertTrue(add.isHittable)
+    capture("settings-collection-native-header")
+  }
+
   func testColorWellTargetOpensSystemPicker() {
     openSettingsControls()
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
