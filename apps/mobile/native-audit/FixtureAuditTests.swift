@@ -329,15 +329,7 @@ final class FixtureAuditTests: XCTestCase {
   func testDirectFooterFullSheetLayout() { verifyFullSheetLayout("direct-footer") }
   func testScrollFooterFullSheetLayout() { verifyFullSheetLayout("scroll-footer") }
 
-  func testCheckoutHistoryRemainsReadableAndDismissibleAfterExpansion() {
-    verifyCheckoutHistory(requireTextHit: true)
-  }
-
   func testCheckoutHistoryTextBoundsPaginationAndDismissal() {
-    verifyCheckoutHistory(requireTextHit: false)
-  }
-
-  private func verifyCheckoutHistory(requireTextHit: Bool) {
     let open = app.buttons["Audit Checkout history"]
     for _ in 0..<7 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -348,11 +340,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
     let historyScroll = app.scrollViews.containing(.staticText, identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
     XCTAssertTrue(historyScroll.exists)
-    let note = requireTextHit
-      ? app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
-      : historyScroll.staticTexts.matching(identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
-    if requireTextHit { XCTAssertTrue(note.isHittable) }
-    else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
+    let note = historyScroll.staticTexts.matching(identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
+    XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar))
     XCTAssertTrue(app.buttons["Close"].isHittable)
     capture("checkout-history-medium")
     let initialTop = bar.frame.minY
@@ -362,26 +351,18 @@ final class FixtureAuditTests: XCTestCase {
       let expanded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in bar.frame.minY < initialTop - 40 }, object: nil)
       XCTAssertEqual(XCTWaiter.wait(for: [expanded], timeout: 5), .completed)
     }
-    if requireTextHit { XCTAssertTrue(note.isHittable) }
-    else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
+    XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar))
     capture("checkout-history-expanded")
     let older = app.buttons["Load older checkouts"]
     for _ in 0..<6 where !older.isHittable {
-      (requireTextHit ? app.scrollViews.firstMatch : historyScroll).swipeUp()
+      historyScroll.swipeUp()
     }
     XCTAssertTrue(older.isHittable)
     older.tap()
-    let loaded = requireTextHit
-      ? app.staticTexts["Older audit checkout"]
-      : historyScroll.staticTexts.matching(identifier: "Older audit checkout").firstMatch
+    let loaded = historyScroll.staticTexts.matching(identifier: "Older audit checkout").firstMatch
     XCTAssertTrue(loaded.waitForExistence(timeout: 5))
-    if requireTextHit {
-      for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
-      XCTAssertTrue(loaded.isHittable)
-    } else {
-      for _ in 0..<4 where !textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar) { historyScroll.swipeUp() }
-      XCTAssertTrue(textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar))
-    }
+    for _ in 0..<4 where !textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar) { historyScroll.swipeUp() }
+    XCTAssertTrue(textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar))
     capture("checkout-history-older-page")
     app.buttons["Close"].tap()
     XCTAssertTrue(open.waitForExistence(timeout: 5))
@@ -523,12 +504,32 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clear.isHittable)
     clear.tap()
     XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
+    let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      field.isHittable || (!field.exists && searchButton.isHittable)
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed)
+    capture("place-search-cleared")
+    if !field.exists {
+      XCTAssertTrue(searchButton.isHittable)
+      searchButton.tap()
+      XCTAssertTrue(field.waitForExistence(timeout: 5))
+    }
+    XCTAssertTrue(field.isHittable)
+    field.tap()
+    waitForKeyboard()
+    field.typeText("19")
+    XCTAssertEqual(field.value as? String, "19")
+    XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Open asset Tool 0. Item"].exists)
     let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
     XCTAssertTrue(cancel.isHittable)
     cancel.tap()
+    XCTAssertTrue(field.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(searchButton.isHittable)
     XCTAssertTrue(more.isHittable)
-    capture("place-search-cleared")
+    capture("place-search-cancelled")
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)
     back.tap()

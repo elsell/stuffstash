@@ -553,9 +553,19 @@ screenshots. Do not touch real inventory selection or production services.
 Run34937278231 exposes nested StaticText wrappers with the same checkout note
 label. The bounds comparison must resolve an explicit first matching note inside
 its History scroll view before reading geometry, including the older-page note.
-Retain the original hit-testing diagnostic unchanged. This removes ambiguous
-XCTest lookup, not a production accessibility defect; pagination, expansion and
-Close must still execute on the native runtime before acceptance.
+Run34965113594's iPad capture confirms the note is visible while the legacy
+StaticText hit-test fails; the scoped bounds/pagination/dismissal case passes.
+Retire that duplicate tappability diagnostic and retain the full bounds-based
+journey. Static text need not be an interactive command. Continue asserting actual
+command hit targets, pagination, expansion and Close on the native runtime.
+
+Native integrated search may collapse after clearing an unfocused search field.
+After clearing, require the full result collection to return. Accept the native
+collapsed state only when the search field is absent and the Search button is
+reachable. Reopen it, enter a fresh query and exercise explicit cancellation while
+focused; require the query field and keyboard to disappear, the full collection
+to return, and native More/Back to remain reachable. Never require an obsolete
+Cancel button after UIKit has already closed search.
 
 ### Landscape capture cross-check
 

@@ -1295,3 +1295,44 @@ The route-isolation regression failed before the fixture export was installed.
 Both preparation checks, mobile TypeScript (including native-audit TSX), and the
 mobile structural check passed remotely. Swift compilation, runtime behavior and
 capture inspection remain pending. No native pass is claimed from these checks.
+
+## Run 34965113594 — iPad normal-size evidence
+
+The iPad fixture job 104367623245 finished with 35/47 tests passing. Actual checkout
+was `969c77370a8253051f484816e9c4169799d494df`, merging `0f338635` into
+`4b5f7f89`. Both onboarding jobs passed; the phone fixture job was still running
+when this evidence was recorded. This revision predates the latest Sharing,
+footer appearance and feedback ownership changes.
+
+Two apparent failures are resolved at the assertion level by inspected captures:
+
+- [Checkout note](evidence/ipad-history-readable-349651.png) is readable inside
+  the sheet, although the legacy duplicate StaticText tappability assertion fails.
+  The scoped text-bounds test passes the complete expansion, pagination and Close
+  journey; its [older page](evidence/ipad-history-pagination-349651.png) is readable.
+  Retire the duplicate interactive-text diagnostic, retaining the bounds test and
+  all actual command hit-target checks. This is not a production accessibility fix.
+- [Cleared place search](evidence/ipad-search-cleared-349651.png) has returned all
+  items and collapsed to the Search icon. The test fails because it demands Cancel
+  after search has already closed. Update the journey to accept that native state,
+  then reopen search and exercise cancellation with an active query. Filtering,
+  clear, keyboard dismissal, More and Back assertions remain mandatory.
+
+The other failures remain unresolved: three Add draft/navigation cases, unfinished
+Add tag entry, controlled and uncontrolled address typing, the no-accessory
+keyboard case, and three enlarged-text recovery cases (Edit metadata, Edit tags,
+Move here). Truncated typed strings are observations, not proof that automation or
+production caused the loss. Normal-size cases take priority. Native command height
+comparison now passes on this iPad revision; it does not certify all consumers.
+
+The corrected assertion journey still needs a new native run. Preparation and
+structural checks do not establish Swift compilation or native success.
+
+Two further normal-size captures narrow the next investigation. The
+[navigation Add field](evidence/ipad-add-keyboard-349651.png) is focused and a
+keyboard is visibly present; its hierarchy identifies `UIKeyboardLayoutStar
+Preview`, while the interactive-key wait fails. This proves neither that typing
+works nor that the app loses focus. The [cold Add sheet](evidence/ipad-add-cold-loading-349651.png)
+remains at Loading inventory: its recorded query snapshot has online/focused true
+but pending/idle queries with zero observers. Keep that cold-start acceptance
+failure open; preloading synthetic data would conceal it rather than fix it.
