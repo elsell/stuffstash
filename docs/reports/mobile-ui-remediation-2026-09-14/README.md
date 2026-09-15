@@ -158,3 +158,17 @@ pending. [Confirmation review](confirmation-review.md) distinguishes reviewed
 callers from still-pending dialogs. Run350037 onboarding passes on both devices;
 phone/iPad keyboard and iPad landscape screenshots have been inspected and retained
 in [native evidence](native-evidence.md). Fixture jobs remain running.
+
+[Provider management](provider-management-axis.md) covers list, creation and detail
+(R052/R054/R055) across all24 axes at5501152d. M146/M148 retain their finding
+status; native command geometry and interaction acceptance remain open.
+
+Combined checkpoint `5501152d`: **1,687 tests across 270 files**, TypeScript and
+mobile structural checks passed on paul. Source checksum comparison was clean
+before execution; log `/tmp/mobile-batch-5501152d.log`. This includes M143–M148.
+No native acceptance status is changed by this validation.
+
+Provider review reconciliation preserves all3,384 unique inventory/axis pairs:
+1,022 source-reviewed,2,011 pending,289 finding,22 runtime-partial and40
+not-applicable. Critic reviewed the new report and the72 affected matrix rows;
+its stale creation-label correction is included.

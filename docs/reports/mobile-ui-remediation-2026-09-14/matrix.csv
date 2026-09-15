@@ -1223,30 +1223,30 @@ R051,settings/voice/profiles/[providerProfileId]/credential.tsx,privacy,"Account
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,notifications,System notification entry and state,pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,media,"Camera, library, files and audio",pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,task,Task clarity and platform-pattern fit,finding,"Provider detail separates read-only configuration, credential/prompt editing, connection test and lifecycle actions.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending",M148
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,selection,Value selection and current value,source-reviewed,Enable/disable is an explicit command; credential/prompt are multi-field editing destinations rather than flat value selectors.,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,modality,Presentation and dismissal,finding,Archive uses native destructive confirmation naming profile and explaining voice unavailability.; M146 mounted provider archive confirmation consumption; native pending,M146
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,targets,Touch target size and reachability,pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Actions name profile, preserve names during progress, shared SettingsActionRow exposes disabled state; VoiceOver runtime pending.",
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,search,"Search, scope and filters",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,"M29 tracks test/lifecycle/archive independently, shows progress only for active action.",M29
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,recovery,"Empty, error, denied and retry",finding,Missing profile/read failure uses retry view; refresh errors preserve prior data; command failures use persistent feedback.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,M29 serializes actions and guards credential/prompt navigation; three operation-failure cases restore actions.; M146 mounted provider archive confirmation consumption; native pending,M29; M146
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,notifications,System notification entry and state,pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,media,"Camera, library, files and audio",pending,,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).; M146 mounted provider archive confirmation consumption; native pending,M105; M146
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,task,Task clarity and platform-pattern fit,finding,"Provider detail separates read-only configuration, credential/prompt editing, connection test and lifecycle actions.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending; provider-management-axis.md; source 5501152d; native acceptance pending",M148
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).; provider-management-axis.md; source 5501152d; native acceptance pending,M105
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,selection,Value selection and current value,source-reviewed,Enable/disable is an explicit command; credential/prompt are multi-field editing destinations rather than flat value selectors.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,modality,Presentation and dismissal,finding,Archive uses native destructive confirmation naming profile and explaining voice unavailability.; M146 mounted provider archive confirmation consumption; native pending; provider-management-axis.md; source 5501152d; native acceptance pending,M146
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,targets,Touch target size and reachability,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,keyboard,"Keyboard, text entry and focus",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Actions name profile, preserve names during progress, shared SettingsActionRow exposes disabled state; VoiceOver runtime pending.; provider-management-axis.md; source 5501152d; native acceptance pending",
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,search,"Search, scope and filters",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,"M29 tracks test/lifecycle/archive independently, shows progress only for active action.; provider-management-axis.md; source 5501152d; native acceptance pending",M29
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,recovery,"Empty, error, denied and retry",finding,Missing profile/read failure uses retry view; refresh errors preserve prior data; command failures use persistent feedback.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending,M81
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,M29 serializes actions and guards credential/prompt navigation; three operation-failure cases restore actions.; M146 mounted provider archive confirmation consumption; native pending; provider-management-axis.md; source 5501152d; native acceptance pending,M29; M146
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,notifications,System notification entry and state,not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,media,"Camera, library, files and audio",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).; M146 mounted provider archive confirmation consumption; native pending; provider-management-axis.md; source 5501152d; native acceptance pending,M105; M146
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Explicit replacement prompt guidance editor explains that existing hidden text is not returned.,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,selection,Value selection and current value,pending,,
@@ -1271,54 +1271,54 @@ R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,privacy,"Account sco
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,notifications,System notification entry and state,pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,media,"Camera, library, files and audio",pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R054,settings/voice/profiles/add.tsx,task,Task clarity and platform-pattern fit,finding,Recommended service actions explicitly create disabled draft and describe credential/test/enable follow-up.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending,M148
-R054,settings/voice/profiles/add.tsx,navigation,"Navigation, hierarchy and return",finding,Successful creation replaces Add route with created profile detail; no extra intermediate confirmation. M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R054,settings/voice/profiles/add.tsx,selection,Value selection and current value,pending,,
-R054,settings/voice/profiles/add.tsx,modality,Presentation and dismissal,pending,,
-R054,settings/voice/profiles/add.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R054,settings/voice/profiles/add.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R054,settings/voice/profiles/add.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R054,settings/voice/profiles/add.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R054,settings/voice/profiles/add.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R054,settings/voice/profiles/add.tsx,imagery,"Icons, photos and missing media",pending,,
-R054,settings/voice/profiles/add.tsx,targets,Touch target size and reachability,pending,,
-R054,settings/voice/profiles/add.tsx,gestures,Gestures and explicit alternatives,pending,,
-R054,settings/voice/profiles/add.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R054,settings/voice/profiles/add.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Each action names Create draft and template; descriptions visible; native reading order pending.,
-R054,settings/voice/profiles/add.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R054,settings/voice/profiles/add.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R054,settings/voice/profiles/add.tsx,search,"Search, scope and filters",pending,,
-R054,settings/voice/profiles/add.tsx,loading,"Loading, background refresh and progress",source-reviewed,Only selected template changes to Creating; all templates disabled and ref guard prevents duplicate creation.,
-R054,settings/voice/profiles/add.tsx,recovery,"Empty, error, denied and retry",finding,Create failure uses feedback and restores choices without navigating.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
-R054,settings/voice/profiles/add.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R054,settings/voice/profiles/add.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Route uses VoiceAdminGuard; profile scope described as tenant-wide; source review does not certify server authorization.,
-R054,settings/voice/profiles/add.tsx,notifications,System notification entry and state,pending,,
-R054,settings/voice/profiles/add.tsx,media,"Camera, library, files and audio",pending,,
-R054,settings/voice/profiles/add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R055,settings/voice/profiles/index.tsx,task,Task clarity and platform-pattern fit,finding,"Provider list exposes profile lifecycle, capability and provider context plus explicit Add action.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending",M148
-R055,settings/voice/profiles/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Profile rows open encoded profile ID; Add opens service selection route.,
-R055,settings/voice/profiles/index.tsx,selection,Value selection and current value,pending,,
-R055,settings/voice/profiles/index.tsx,modality,Presentation and dismissal,pending,,
-R055,settings/voice/profiles/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R055,settings/voice/profiles/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R055,settings/voice/profiles/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R055,settings/voice/profiles/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R055,settings/voice/profiles/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R055,settings/voice/profiles/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R055,settings/voice/profiles/index.tsx,targets,Touch target size and reachability,pending,,
-R055,settings/voice/profiles/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R055,settings/voice/profiles/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R055,settings/voice/profiles/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Profile action name includes display name and lifecycle; native traversal and long names pending.,
-R055,settings/voice/profiles/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R055,settings/voice/profiles/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Profiles sorted by capability/name in query; empty state offers Add; scaling for large lists requires runtime evaluation.,
-R055,settings/voice/profiles/index.tsx,search,"Search, scope and filters",pending,,
-R055,settings/voice/profiles/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R055,settings/voice/profiles/index.tsx,recovery,"Empty, error, denied and retry",finding,ProviderStateView handles initial failure/retry; SettingsRefreshNotice retains visible list on refresh failure.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
-R055,settings/voice/profiles/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R055,settings/voice/profiles/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"VoiceAdminGuard wraps route, tenant-wide scope explained; no secret credentials rendered.",
-R055,settings/voice/profiles/index.tsx,notifications,System notification entry and state,pending,,
-R055,settings/voice/profiles/index.tsx,media,"Camera, library, files and audio",pending,,
-R055,settings/voice/profiles/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R054,settings/voice/profiles/add.tsx,task,Task clarity and platform-pattern fit,finding,Recommended service actions explicitly create disabled draft and describe credential/test/enable follow-up.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending; provider-management-axis.md; source 5501152d; native acceptance pending,M148
+R054,settings/voice/profiles/add.tsx,navigation,"Navigation, hierarchy and return",finding,Successful creation replaces Add route with created profile detail; no extra intermediate confirmation. M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).; provider-management-axis.md; source 5501152d; native acceptance pending,M105
+R054,settings/voice/profiles/add.tsx,selection,Value selection and current value,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,modality,Presentation and dismissal,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,imagery,"Icons, photos and missing media",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,targets,Touch target size and reachability,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,gestures,Gestures and explicit alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,keyboard,"Keyboard, text entry and focus",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Each action names Create and the service; descriptions visible; native reading order pending.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,search,"Search, scope and filters",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,loading,"Loading, background refresh and progress",source-reviewed,Only selected template changes to Creating; all templates disabled and ref guard prevents duplicate creation.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,recovery,"Empty, error, denied and retry",finding,Create failure uses feedback and restores choices without navigating.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending,M81
+R054,settings/voice/profiles/add.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Route uses VoiceAdminGuard; profile scope described as tenant-wide; source review does not certify server authorization.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,notifications,System notification entry and state,not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,media,"Camera, library, files and audio",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R054,settings/voice/profiles/add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).; provider-management-axis.md; source 5501152d; native acceptance pending,M105
+R055,settings/voice/profiles/index.tsx,task,Task clarity and platform-pattern fit,finding,"Provider list exposes profile lifecycle, capability and provider context plus explicit Add action.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending; provider-management-axis.md; source 5501152d; native acceptance pending",M148
+R055,settings/voice/profiles/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Profile rows open encoded profile ID; Add opens service selection route.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,selection,Value selection and current value,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,modality,Presentation and dismissal,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,targets,Touch target size and reachability,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,keyboard,"Keyboard, text entry and focus",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Profile action name includes display name and lifecycle; native traversal and long names pending.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Profiles sorted by capability/name in query; empty state offers Add; scaling for large lists requires runtime evaluation.; provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,search,"Search, scope and filters",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,recovery,"Empty, error, denied and retry",finding,ProviderStateView handles initial failure/retry; SettingsRefreshNotice retains visible list on refresh failure.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending,M81
+R055,settings/voice/profiles/index.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"VoiceAdminGuard wraps route, tenant-wide scope explained; no secret credentials rendered.; provider-management-axis.md; source 5501152d; native acceptance pending",
+R055,settings/voice/profiles/index.tsx,notifications,System notification entry and state,not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,media,"Camera, library, files and audio",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
+R055,settings/voice/profiles/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
 R056,tenant-switcher.tsx,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 R056,tenant-switcher.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 R056,tenant-switcher.tsx,selection,Value selection and current value,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
