@@ -357,3 +357,17 @@ TypeScript and structural checks pass remotely; critic found no blocker. This
 protects rendered interactions, not arbitrary externally retained callback closures.
 Surface S141 adds explicit completion-state coverage. Native result adaptation,
 focus and accessibility acceptance remain pending.
+
+### M60 — iPad Return cancellation falls below the visible sheet
+
+Run34923022927 shows Save at y839–887 and Cancel at y903–951 below the
+visible sheet. The existing native cancellation test fails hit-testing. The
+candidate pairs the native commands in a flexible wrapping row, cancellation
+first, inside the directly rooted scrolling form. Each native host receives its
+own width-constrained wrapper. It reduces separate-row height without imposing
+a fixed form height or removing enlarged-text scrolling.
+
+Twenty-five Home behavior tests, TypeScript and structural checks pass remotely;
+critic found no blocker. Existing iPhone/iPad native cancellation and optional
+details tests remain unchanged and required. Candidate reachability is unverified
+until those tests run; keyboard and enlarged-text acceptance remain open.

@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -30,14 +30,18 @@ export function HomeReturnDetailsSheet({ pendingReturn, canReturn, onCancel, onC
         <AppTextInput accessibilityLabel="Optional return details" multiline editable={canReturn && !busy}
           value={pendingReturn.details} onChangeText={onChangeDetails} textAlignVertical="top"
           style={[styles.input, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.controlBorder }]} />
-        {canReturn ? <NativeCommandButton label={busy ? (pendingReturn.operation === 'undo' ? 'Canceling return...' : 'Saving...') : 'Save'} disabled={busy} onPress={onSave} /> : null}
-        <NativeCommandButton label={canReturn && pendingReturn.undoableOperationId ? 'Cancel return' : 'Close'}
-          disabled={busy} onPress={close} />
+        <View style={styles.actions}>
+          <View style={styles.action}><NativeCommandButton label={canReturn && pendingReturn.undoableOperationId ? 'Cancel return' : 'Close'}
+            disabled={busy} onPress={close} /></View>
+          {canReturn ? <View style={styles.action}><NativeCommandButton label={busy ? (pendingReturn.operation === 'undo' ? 'Canceling return...' : 'Saving...') : 'Save'} disabled={busy} onPress={onSave} /></View> : null}
+        </View>
       </ScrollView>;
 }
 
 const styles = StyleSheet.create({
   content: { padding: 20, gap: 16, flexGrow: 1 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  action: { flexGrow: 1, flexBasis: 120 },
   asset: { fontSize: 17 },
   input: { minHeight: 160, borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 17 }
 });
