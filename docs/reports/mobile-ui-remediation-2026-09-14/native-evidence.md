@@ -467,3 +467,25 @@ installer checks pass; critic found no issue. Swift compile/runtime is pending.
 
 Release0.24.14 signed upload job104237609495 has now started. Delivery, Apple
 processing and exact-build changelog remain unverified.
+
+## September 15 — PR135 release cut and next audit pass
+
+At the user's request, PR135 was merged as50b598ae on September15 at03:35:58UTC.
+Release34925606393 is queued behind release34923402256 (0.24.14, still archiving
+at this checkpoint). PR135 includes M53 native label growth, M54 disabled-choice
+event guards, M55 inbox focus-owned navigation, M56 native recovery/paging commands,
+and the independent iPad drag diagnostic. Required CI checks passed. Native
+acceptance34925100363 remains pending; no runtime certification is implied.
+The existing release workflow publishes and reads back exact-build TestFlight
+notes after Apple processing. Neither this queued release nor0.24.14 is certified
+as delivered at this checkpoint.
+
+The new branch starts at50b598ae. M57 feedback lifetime follows this release cut.
+
+Phone fixture job104235814455 from run34923022927 has completed: Home return
+optional-details recovery and cancellation both pass. Full native address entry
+via button and keyboard Go pass. Remaining failures include History sheet
+reachability, controlled-address comparison, expiration accessibility label, phone
+keyboard footer, and nested/footer comparison layouts. Existing findings remain
+open; comparison failures are distinct from production acceptance. The iPad fixture
+job is still running.
