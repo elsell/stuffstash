@@ -55,3 +55,10 @@ and close. It performs no Save; context-scoped remount remains proven only by th
 route regression. This scenario uses standard text size; large-text Add/tag checks
 remain outstanding. Structural checks and critic review passed; native execution
 and screenshot inspection are pending.
+
+M94 discovery follow-up: Add now uses the same initial twelve naturally ordered
+choices and selected extras as Edit, with native disclosure. Trimmed search
+refines matching choices without removing selections; unmatched queries have
+explicit feedback. The earlier search-only discovery observation is superseded.
+Twenty-six remote Add/Edit tests and type/structural checks passed; native
+interaction acceptance remains pending.

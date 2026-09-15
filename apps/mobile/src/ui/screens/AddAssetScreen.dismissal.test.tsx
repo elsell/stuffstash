@@ -214,7 +214,7 @@ afterEach(() => setNativeHeaderHeight(144));
 
 it('retains unfinished Add tag input through disclosure and scoped draft restoration', async () => {
   const client = createMobileQueryClient(); const store = new InMemoryAddAssetDraftStore('scope');
-  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, displayName: `Tag ${index + 1}` })).reverse() };
   const draftContext = { tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' };
   const saved: unknown[] = [];
   const render = (h: MobileRenderHarness) => h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
@@ -228,6 +228,21 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await render(h); await settle();
     await h.changeText(h.byLabel('Asset name'), 'Tent');
     await h.press(h.byText('More details')?.parent ?? undefined);
+    expect(h.byText('Tag 1')).toBeDefined();
+    expect(h.byText('Tag 13')).toBeUndefined();
+    await h.press(h.byLabel('Show all tags'));
+    await h.press(h.byText('Tag 14')?.parent ?? undefined);
+    await h.press(h.byLabel('Show fewer tags'));
+    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
+    await h.changeText(h.byLabel('Search tags'), '  tag 13  ');
+    expect(h.byText('Tag 13')).toBeDefined();
+    expect(h.byText('Tag 1')).toBeUndefined();
+    expect(h.byText('Tag 14')).toBeDefined();
+    await h.changeText(h.byLabel('Search tags'), 'unknown tag');
+    expect(h.byText('No matching tags')).toBeDefined();
+    expect(h.byText('Tag 14')).toBeDefined();
+    await h.changeText(h.byLabel('Search tags'), '');
+    expect(h.byText('No matching tags')).toBeUndefined();
     const overlongName = 'Camping'.repeat(20);
     await h.changeText(h.byLabel('New tag name'), overlongName);
     expect(h.byText('Use a shorter tag name.')).toBeDefined();

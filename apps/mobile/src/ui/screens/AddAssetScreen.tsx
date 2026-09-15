@@ -1,3 +1,4 @@
+import { tagChoicePresentation } from '../components/TagChoicePresentation';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { AddAssetNameField } from './AddAssetNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -1115,6 +1116,8 @@ function AssetTagPicker({
   readonly onChange: (tagIds: readonly string[], tags: readonly CreateAssetTagDraft[], entry: NonNullable<AddAssetDraft['inlineTag']>) => void;
 }) {
   const [tagSearch, setTagSearch] = useState('');
+  const [showAllTags, setShowAllTags] = useState(false);
+  const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.displayName, expanded: showAllTags, query: tagSearch });
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const { name: newTagName, color: newTagColor } = entry;
@@ -1156,7 +1159,7 @@ function AssetTagPicker({
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.tagPickerTitle}>Tags</Text>
-      <AppTextInput editable={!disabled} accessibilityLabel="Search tags" placeholder="Find a tag" value={tagSearch} onChangeText={setTagSearch} style={styles.input} />
+      <AppTextInput editable={!disabled} accessibilityLabel="Search tags" placeholder="Find a tag" value={tagSearch} onChangeText={value => { if (!disabled) { setTagSearch(value); setShowAllTags(false); } }} style={styles.input} />
       <View style={styles.tagOptions}>
         {newTags.map((tag, index) => {
           const colorStyle = assetTagChipStylePresentation(tag);
@@ -1179,7 +1182,7 @@ function AssetTagPicker({
             </Pressable>
           );
         })}
-        {tags.filter(tag => selectedTagIds.includes(tag.id) || (tagSearch.length > 0 && tag.displayName.toLocaleLowerCase().includes(tagSearch.toLocaleLowerCase()))).map((tag) => {
+        {choices.visibleTags.map((tag) => {
           const isSelected = selected.has(tag.id);
           const colorStyle = assetTagChipStylePresentation(tag);
           return (
@@ -1203,6 +1206,8 @@ function AssetTagPicker({
           );
         })}
       </View>
+      {choices.noMatches ? <Text accessibilityLiveRegion="polite" style={styles.parentPromotionText}>No matching tags</Text> : null}
+      {choices.canDisclose ? <NativeCommandButton label={showAllTags ? 'Show fewer tags' : 'Show all tags'} disabled={disabled} onPress={() => { if (!disabled) setShowAllTags(current => !current); }} /> : null}
       <View style={styles.newTagRow}>
         <AppTextInput editable={!disabled}
           accessibilityLabel="New tag name"

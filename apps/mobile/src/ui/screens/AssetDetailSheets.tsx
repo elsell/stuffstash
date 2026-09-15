@@ -1,3 +1,4 @@
+import { tagChoicePresentation } from '../components/TagChoicePresentation';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
@@ -141,8 +142,6 @@ export function EditAssetSheet({
   );
 }
 
-const initialTagOptionLimit = 12;
-
 function EditTagPicker({
   disabled,
   newTags,
@@ -165,8 +164,7 @@ function EditTagPicker({
   function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
   const selected = new Set(selectedTagIds);
   const [showAllTags, setShowAllTags] = useState(false);
-  const sortedTags = [...tags].sort((left, right) => left.label.localeCompare(right.label, undefined, { numeric: true, sensitivity: 'base' }));
-  const visibleTags = showAllTags ? sortedTags : sortedTags.filter((tag, index) => index < initialTagOptionLimit || selected.has(tag.id));
+  const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.label, expanded: showAllTags });
 
   function toggleTag(tagId: string): void {
     if (disabled) {
@@ -226,7 +224,7 @@ function EditTagPicker({
             </Pressable>
           );
         })}
-        {visibleTags.map((tag) => {
+        {choices.visibleTags.map((tag) => {
           const isSelected = selected.has(tag.id);
           const colorStyle = assetTagChipStylePresentation(tag);
           return (
@@ -251,7 +249,7 @@ function EditTagPicker({
           );
         })}
       </View>
-      {tags.length > initialTagOptionLimit ? <NativeCommandButton
+      {choices.canDisclose ? <NativeCommandButton
         label={showAllTags ? 'Show fewer tags' : 'Show all tags'}
         disabled={disabled}
         onPress={() => { if (!disabled) setShowAllTags(current => !current); }}

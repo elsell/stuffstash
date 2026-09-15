@@ -1081,3 +1081,12 @@ staging and displays Use a shorter tag name beside the field. The regression
 failed before the change, then18 Add/resolver checks, TypeScript and structural
 checks passed remotely. Critic found no confirmed issue. Native feedback and
 announcement remain pending; existing color validation is separate.
+
+M94 shared-consumer follow-up: Add previously hid all unselected tags until a
+query was entered, contrary to the initial-choice disclosure contract. Add/Edit
+now share naturally ordered choice presentation with twelve initial matches and
+retained selected extras. Add trims search, retains selected choices across search
+and shows No matching tags when appropriate. Native disclosure actions remain
+in-place. The Add regression failed before the fix;26 Add/Edit tests, TypeScript
+and structural checks passed remotely. Native discovery/large-text acceptance
+remains pending. This is a project contract, not an Apple numeric requirement.
