@@ -499,3 +499,29 @@ claim that open native audit failures are fixed.
 
 The user-requested PR135 cut, source50b598ae, is now running as34925606393. It
 contains the later M53–M56 fixes; its upload and changelog are not yet verified.
+
+## Run34923022927 — completed iPad fixtures
+
+Job104235814539 completed with24/28 passing. Source703682bb/runner6051bc06.
+Expiration expansion, keyboard actions and accessibility pass on iPad; full native
+address button/Go and Home optional-details recovery also pass. Four failures:
+
+- Add: missing Asset name while the screen remains at Loading inventory. Readiness
+  evidence reports online/focused true and inventory-scope query success, but
+  add-context remains under inventory-pending with zero observers. This narrows
+  the query subscription/ownership investigation; it does not establish a cause.
+- History: note content is visibly present, but its isHittable assertion fails.
+  The asset title also overlaps the navigation bar. Do not replace this with a pass
+  or remove the assertion without investigating native accessibility/geometry.
+- Home Cancel: control exists at y903–951 while the visible sheet ends above it.
+  Screenshot shows Save but not Cancel. This is actual action reachability, not
+  missing return persistence. Optional-details recovery passed separately.
+- Controlled-address comparison still produces h://example.invalid. Production
+  native full-address button/Go scenarios pass; keep comparison evidence separate.
+
+![iPad Return with Cancel below the visible sheet](evidence/ipad-return-cancel-clipped-34923022927.png)
+![iPad History content visible despite hit-testing failure](evidence/ipad-history-visible-34923022927.png)
+![iPad Add waiting for inventory](evidence/ipad-add-loading-34923022927.png)
+
+Run34925606393 published tag0.24.15 at03:51:13UTC. Signed iOS delivery and
+exact-build notes remain pending. No second release was dispatched.
