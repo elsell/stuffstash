@@ -1870,3 +1870,15 @@ run and includes the later operation ownership, item-type recovery, Home header
 scenario and corrected session-notice lookup. Its actual merged checkout must be
 verified from job evidence. It predates the new large-control-size color candidate.
 No live run was canceled or restarted for an observation timeout.
+
+
+## Focused color diagnosis workflow
+
+Manual dispatch can now select color-picker, running the existing direct-open/
+clear and compact-target/activation tests on both devices. PR and default manual
+runs retain both full suites and their original job names. Focused jobs have a
+separate label and selection.txt artifact; they cannot establish full acceptance.
+The Bash selection accepts only fixed choices and passes quoted fixed arguments.
+Remote YAML/shell syntax and six actual selection paths passed (both All suites,
+valid focused selection, wrong suite, unknown choice and shell-like invalid input).
+Critic found no confirmed blocker. No live full run is replaced by this diagnosis.

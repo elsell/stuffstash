@@ -1232,3 +1232,14 @@ scaling its drawing or widening an inactive label. Keep native target-size and
 center-activation assertions; if the framework does not honor this sizing, record
 the failed runtime evidence and investigate the adapter rather than certifying
 the React wrapper's dimensions.
+
+### Focused native diagnosis
+
+Manual native-audit dispatch may select the two color-picker interaction cases
+on both supported simulator devices. This shortens feedback on a changed native
+adapter while a full audit proceeds. The selection is a fixed workflow choice,
+not caller-supplied shell or XCTest arguments. Default/manual All and pull-request
+runs still execute both complete onboarding and fixture suites. Focused runs
+record their selection with revision artifacts and are diagnostic evidence only;
+they never satisfy full-batch native acceptance or release readiness. Keep existing
+live runs and their evidence intact.
