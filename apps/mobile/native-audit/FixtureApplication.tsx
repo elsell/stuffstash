@@ -36,7 +36,7 @@ export { AddAssetFixture } from './AddAssetFixture';
 export { CheckoutHistoryFixture } from './CheckoutHistoryFixture';
 
 // Runner-only composition. No production session, service, or credentials are loaded.
-const ResultContext = createContext({ result: '', setResult: (_value: string) => {} });
+const ResultContext = createContext({ result: '', setResult: (_value: string) => {}, keyboardAccessoryEnabled: true, setKeyboardAccessoryEnabled: (_value: boolean) => {} });
 
 export function FixtureLayout() {
   const [controller] = useState(() => {
@@ -54,9 +54,10 @@ export function FixtureLayout() {
 function FixtureNavigation() {
   const { palette, isHydrated } = useAppearance();
   const [result, setResult] = useState('');
+  const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider><HomeReturnTaskProvider>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider><HomeReturnTaskProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
@@ -73,13 +74,13 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
-    <AppKeyboardAccessory />
+    {keyboardAccessoryEnabled ? <AppKeyboardAccessory /> : null}
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 export function FixtureMenu() {
   const router = useRouter();
-  const { result, setResult } = useContext(ResultContext);
+  const { result, setResult, setKeyboardAccessoryEnabled } = useContext(ResultContext);
   const feedback = useAppFeedback();
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
@@ -106,6 +107,7 @@ export function FixtureMenu() {
     {showDraftOptions ? <DraftOptionsFixture /> : null}
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
+    <Button title="Audit input without accessory" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('uncontrolled'); }} />
     <Button title="Audit system input" onPress={() => setInputMode('system')} />
     {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
     <Button title="Audit Add navigation draft" onPress={() => router.push('/audit-add-push' as Href)} />

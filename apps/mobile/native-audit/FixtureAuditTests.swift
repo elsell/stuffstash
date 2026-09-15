@@ -395,15 +395,20 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Photos remaining: 1"].exists)
   }
 
-  private func verifyAddressEntry(_ mode: String) {
-    app.buttons["Audit \(mode) input"].tap()
+  private func verifyAddressEntry(_ mode: String, withoutAccessory: Bool = false) {
+    let open = app.buttons[withoutAccessory ? "Audit input without accessory" : "Audit \(mode) input"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
     let input = app.textFields["Audit \(mode) address"]
     XCTAssertTrue(input.waitForExistence(timeout: 5))
-    if !input.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    for _ in 0..<8 where !input.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(input.isHittable)
     input.tap()
     waitForKeyboard()
+    if withoutAccessory { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
     input.typeText("https://example.invalid")
-    capture("\(mode)-address-entry")
+    capture("\(mode)-address-entry\(withoutAccessory ? "-without-accessory" : "")")
     XCTAssertEqual(input.value as? String, "https://example.invalid")
     XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
   }
@@ -427,6 +432,8 @@ final class FixtureAuditTests: XCTestCase {
 
   func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }
   func testOrdinaryMultilineTextEntry() { verifyOrdinaryTextEntry("multiline") }
+
+  func testSeededAddressWithoutKeyboardAccessory() { verifyAddressEntry("uncontrolled", withoutAccessory: true) }
 
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }

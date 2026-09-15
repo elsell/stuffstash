@@ -113,3 +113,11 @@ are already seeded. No dependency or system keyboard preference was changed.
 Critic identified the new bottom entries can be farther than one swipe from
 the shared input slot; the test now uses a bounded reachability loop and retains
 the hittable assertion before typing. Both fixture-preparation checks pass.
+
+Run34947056524 iPad: ordinary single-line and multiline comparisons pass, while
+controlled and seeded URL inputs still lose characters. All those RN comparisons
+use the same thin AppTextInput wrapper. This does not establish a wrapper defect.
+The new seeded URL/no-accessory comparison holds input settings and text constant
+and removes only the extender before focus. The keyboard provider remains. Native
+accessory attachment calls reloadInputViews in the pinned library; this is a
+plausible variable to isolate, not a proven cause or reason to remove production UI.

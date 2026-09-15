@@ -670,3 +670,14 @@ on each explicit retry. At the largest accessibility text size, verify both nati
 retry commands and Cancel are reachable, then verify the original asset name after
 recovery. Local behavior tests separately exercise a dirty draft. The fixture must
 remain isolated from production routes and cannot perform a real save.
+
+### Keyboard accessory isolation comparison
+
+The seeded ordinary and URL fixtures both use the same AppTextInput wrapper.
+Their different strings/keyboard settings do not isolate that wrapper. Add a
+runner-only seeded URL comparison that removes AppKeyboardAccessory before focus,
+while retaining the provider, input props, string and typing cadence. Verify the
+accessory is absent. This isolates the extender's presence, not the entire keyboard
+controller; its pinned native implementation reloads input views when attaching
+an accessory, which is a hypothesis to test, not an established cause of lost text.
+Do not remove production keyboard controls based only on this source observation.

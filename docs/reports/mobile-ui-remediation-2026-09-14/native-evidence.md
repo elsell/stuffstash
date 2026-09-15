@@ -940,3 +940,20 @@ These are recorded failures, not newly inferred root causes. Full logs are in
 iPad artifacts are /tmp/native349441-fixtures-ipad. No photo recovery or motion
 patch is included in this checkout. The subsequent run34947056524 was confirmed
 in progress and left running.
+
+### Run34947056524 iPad fixture evidence
+
+The authoritative run is34947056524; checkout3394fcd4eee9c2f3455303ad2476fd9d38578acd
+merges184f850b into eca1ad7e. iPad fixtures completed30/38; one failure was an app
+launch timeout. Both onboarding jobs passed; phone fixtures were still running.
+The ordinary single-line and multiline input scenarios pass, as does photo-removal
+failure recovery across two attempts. The inspected
+[photo error dialog](evidence/ipad-photo-error-dialog-349470.png) is above the viewer
+with visible OK. This establishes iPad modal layering for the fixture, not physical
+media deletion, screen-reader focus, or all photo states.
+The [unavailable image](evidence/ipad-photo-loading-failure-349470.png) remains a
+spinner with Close visible, reproducing M85 before its later recovery patch.
+Add and controlled/seeded URL text-loss assertions still fail. Ordinary and URL
+comparisons share AppTextInput; keyboard configuration, content and presentation
+still differ. No wrapper-only or simulator-only root cause is established.
+Log:/tmp/native349470-fixtures-ipad.log; artifacts:/tmp/native349470-fixtures-ipad.
