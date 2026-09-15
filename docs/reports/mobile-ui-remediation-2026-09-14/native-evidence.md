@@ -315,3 +315,8 @@ input path. The iPad and fixture jobs are still live, including the new native
 SwiftUI input comparison and Add header-loop candidate. Their outcomes must be
 inspected independently when terminal. Job log saved as
 `/tmp/native349173-onboarding-phone.log` on the audit host.
+
+Run34917318548 iPad onboarding job104219118994 also completed failure: expected
+`https://example.invalid`, actual `h://example.invalid`. Its landscape adaptation
+scenario passed. This preserves the distinction between layout and input behavior;
+M14 remains unresolved. Log `/tmp/native349173-onboarding-ipad.log`.

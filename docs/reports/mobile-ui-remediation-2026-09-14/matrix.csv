@@ -1555,7 +1555,7 @@ S065,Home / checked-out return,search,"Search, scope and filters",pending,,
 S065,Home / checked-out return,loading,"Loading, background refresh and progress",pending,,
 S065,Home / checked-out return,recovery,"Empty, error, denied and retry",pending,,
 S065,Home / checked-out return,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
-S065,Home / checked-out return,privacy,"Account scope, data use and permissions",pending,,
+S065,Home / checked-out return,privacy,"Account scope, data use and permissions",source-reviewed,"Home canReturn derives from edit_asset, independent of create/role. Viewer/create-only hidden, edit-only active and stale revocation callback tested. API adversarial checkout suite verifies denied attempts preserve open state; Go1.25.8 pass. Native pending; open-details permission changes tracked under M47.",M49
 S065,Home / checked-out return,notifications,System notification entry and state,pending,,
 S065,Home / checked-out return,media,"Camera, library, files and audio",pending,,
 S065,Home / checked-out return,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
