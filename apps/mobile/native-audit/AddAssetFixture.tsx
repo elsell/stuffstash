@@ -1,3 +1,4 @@
+import { QueryReadinessDiagnostics } from './QueryReadinessDiagnostics';
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { ScrollView, Text } from 'react-native';
 import { router } from 'expo-router';
@@ -32,6 +33,7 @@ export function AddAssetFixture() {
         await new Promise(resolve => setTimeout(resolve, 5000));
         throw new Error(`Rejected draft: ${input.title}`);
       } }} onDismiss={() => router.back()} /></AddFixtureErrorBoundary>
+    <QueryReadinessDiagnostics client={fixture.client} />
   </MobileServerStateProvider>;
 }
 

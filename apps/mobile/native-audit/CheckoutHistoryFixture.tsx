@@ -1,3 +1,4 @@
+import { QueryReadinessDiagnostics } from './QueryReadinessDiagnostics';
 import { useEffect, useState } from 'react';
 import { AssetCheckoutHistorySheetRouteScreen } from '../src/ui/screens/AssetCheckoutHistoryScreen';
 import { MobileServerStateProvider } from '../src/ui/navigation/MobileServerStateProvider';
@@ -27,5 +28,6 @@ export function CheckoutHistoryFixture() {
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => ({ tenantId: 'audit-tenant', inventoryId: 'audit-inventory' })}>
     <AssetCheckoutHistorySheetRouteScreen assetId="audit-ladder" assetCoreQuery={fixture.core} assetCheckoutHistoryQuery={fixture.history} />
+    <QueryReadinessDiagnostics client={fixture.client} />
   </MobileServerStateProvider>;
 }

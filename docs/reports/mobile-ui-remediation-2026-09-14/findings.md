@@ -146,3 +146,14 @@ passes with pinned Go1.25.8 and verifies rejected mutations leave the open check
 intact, alongside existing editor success and adversarial cases. Critic found no
 blocker; its edit-only coverage suggestion was added. Permission changes while
 the optional-details task is already open remain an acceptance case for M47.
+
+### M50 — Native Add and checkout-history fixtures remain loading
+
+Runtime observed, investigating. Run34917318548 iPad final screenshots show stable
+Add chrome with Loading inventory, and checkout history with Loading checkout
+history. Synthetic repositories are expected to resolve immediately, but native
+readiness assertions fail on both devices. The former Add render-loop exception
+is absent from the inspected final hierarchy. Do not certify M46/M45 or attribute
+this to production connectivity without query-state evidence. Runner-only query
+metadata diagnostics are the next discrimination step; no cache pre-seeding or
+connectivity override is an acceptable substitute for the acceptance scenario.

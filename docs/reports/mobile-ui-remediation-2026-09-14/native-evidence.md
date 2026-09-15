@@ -330,3 +330,32 @@ Release source is PR129 merge3cc21557. Logs are
 `/tmp/mobile-audit-02412-upload.log` and `/tmp/mobile-audit-02412-notes.log`.
 This delivery fulfills the interim release request; it does not close native audit
 findings. PR131's shared-header and Home follow-up changes are outside build100.1.
+
+### Run34917318548 completed: decisive comparisons and remaining readiness failures
+
+Source50ebdabb, test merge2381cf86f567d7da97ea6a34bd528107d12f2cb4.
+Phone fixtures passed15/23; iPad passed19/23. Logs are
+`/tmp/native349173-fixtures-phone.log` and `/tmp/native349173-fixtures-ipad.log`.
+Downloaded iPad artifacts: `/tmp/native349173-fixtures-ipad`.
+
+- SwiftUI system URL entry passes on both devices, including native displayed and
+  observed callback values. Controlled React Native entry fails on both; uncontrolled
+  entry passes this run but has failed earlier. This narrows the comparison without
+  proving production onboarding fixed.
+- Draft photo removal/read-only preview and photo accessibility pass on both.
+  Corrected iPad color popover procedure also passes on both.
+- Direct-root sheet, direct-root plus sibling footer, and scroll-contained footer
+  pass on both. Wrapped nested/footer bodies still fail on phone. Actual expiration
+  expansion fails on both; keyboard reachability fails on phone and passes on iPad.
+- Add does not reach its name field. The inspected iPad screenshot now shows a
+  stable native Add header and [Loading inventory](evidence/add-loading-ipad-34917318548.png),
+  not the earlier Maximum update depth exception. The complete Add scenario remains
+  failed; header stability alone is not acceptance.
+- Checkout History does not reach its title/content assertions. The inspected
+  [iPad screenshot](evidence/checkout-history-loading-ipad-34917318548.png) shows
+  Loading checkout history and the fallback Asset title. No expansion/pagination
+  success can be claimed because readiness failed first.
+
+M50 tracks the unresolved Add/History fixture readiness. Runner-only query-state
+inspection will distinguish cache/fetch/subscription state without bypassing the
+production query path. This is not yet proof that production network requests hang.

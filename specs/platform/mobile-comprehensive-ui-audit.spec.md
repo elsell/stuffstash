@@ -281,3 +281,14 @@ Native assertions following a React state transition wait for the expected
 accessible state within a bounded timeout. For read-only photo previews, wait for
 Add/Remove disappearance before asserting retained images; do not infer failure
 from an immediate stale snapshot or skip the final-state assertions.
+
+### Native query readiness diagnostics
+
+The Add and checkout-history native fixtures must expose query readiness when
+synthetic repositories do not reach their expected screen state. Record only
+fixture query keys, status/fetch status, presence of data, observer counts, online
+and focus state. Never expose query data, errors containing arbitrary responses,
+authentication values or production configuration. Keep diagnostics runner-only;
+retain existing readiness and interaction assertions. The diagnostic component
+must not alter connectivity, pre-seed the cache, bypass the scoped query path or
+turn a loading screen into a passing acceptance result.
