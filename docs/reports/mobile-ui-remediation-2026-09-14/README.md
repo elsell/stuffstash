@@ -45,8 +45,8 @@ The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,911
-pending,1,061 source-reviewed,296 finding,22 runtime-partial and94 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,887
+pending,1,082 source-reviewed,297 finding,22 runtime-partial and96 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -186,3 +186,9 @@ visibility or production transparent scroll edges. Those native checks remain op
 [Add item type](add-type-axis.md) covers S088 across24 axes, records M149/M150
 recovery fixes and corrects S085/S091 inventory entries for controls absent from
 Add. Stable surface IDs remain; absent controls are not native passes.
+
+Upload recovery now has a [24-axis source review](upload-retry-axis.md). A mounted
+partial-failure journey uses the real command and confirms failed-only retry
+without reopening the picker or duplicating the successful upload. All40 related
+cases, TypeScript and structural validation pass remotely; native acceptance
+remains open. This is additional focused evidence, not a new full-suite result.

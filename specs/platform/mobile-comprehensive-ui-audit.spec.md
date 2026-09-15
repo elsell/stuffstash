@@ -1243,3 +1243,12 @@ runs still execute both complete onboarding and fixture suites. Focused runs
 record their selection with revision artifacts and are diagnostic evidence only;
 they never satisfy full-batch native acceptance or release readiness. Keep existing
 live runs and their evidence intact.
+
+### Photo upload recovery audit acceptance
+
+S101 must exercise the mounted asset workspace with the real upload command and
+a controlled repository: one selected photo fails while another attaches, Retry
+resubmits only the failed selection without reopening the picker, and successful
+recovery removes retry/progress while preserving the asset. This complements
+command-level partial-failure checks; it does not establish native geometry,
+VoiceOver announcements, or physical camera/library permissions.

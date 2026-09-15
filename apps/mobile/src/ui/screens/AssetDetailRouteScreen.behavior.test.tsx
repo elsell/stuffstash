@@ -9,6 +9,7 @@ import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverS
 import { AssetCoreQuery, type AssetCoreSnapshot } from '../../application/assets/AssetCoreQuery';
 import { AssetContentsQuery, type AssetContentsSnapshot } from '../../application/assets/AssetContentsQuery';
 import { AssetPhotosQuery } from '../../application/assets/AssetPhotosQuery';
+import { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
 import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { assetId, type AssetPhoto } from '../../domain/assets/AssetSummary';
 import { QueryClientInventoryMutationObserver } from '../../adapters/serverState/QueryClientInventoryMutationObserver';
@@ -565,4 +566,44 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('consumes %s conf
     expect(calls).toBe(1);
     expect(dispatchedActions()).toHaveLength(navigationAfterCompletion);
   } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
+});
+
+
+it('retries only failed photos from the workspace without reopening selection', async () => {
+  const attempts: string[] = [];
+  const attached: string[] = [];
+  let selections = 0;
+  const secondPhoto = { ...selectedPhoto, id: 'second', fileName: 'second.jpg', uri: 'file:///second.jpg' };
+  const command = new AddAssetPhotosCommand({ addAssetPhoto: async (target, photo) => {
+    expect(target).toBe('tent');
+    attempts.push(photo.fileName);
+    if (attempts.length === 1) throw new Error('Upload interrupted.');
+    attached.push(photo.fileName);
+  } });
+  const test = setup({
+    addAssetPhotosCommand: command,
+    photoSelectionQuery: new PhotoSelectionQuery({
+      selectFromLibrary: async () => { selections++; return [selectedPhoto, secondPhoto]; },
+      captureFromCamera: async () => []
+    })
+  });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => latestActionSheetCallback()?.(1));
+    await settle(test.harness);
+    expect(test.harness.allText()).toContain('1 of 2 photos added.');
+    expect(test.harness.allText()).toContain('Needs retry');
+    expect(attached).toEqual(['second.jpg']);
+    await test.harness.press(test.harness.byLabel('Retry'));
+    await settle(test.harness);
+    expect(attempts).toEqual(['photo.jpg', 'second.jpg', 'photo.jpg']);
+    expect(attached).toEqual(['second.jpg', 'photo.jpg']);
+    expect(selections).toBe(1);
+    expect(test.harness.byLabel('Retry')).toBeUndefined();
+    expect(test.harness.allText()).not.toContain('Photo uploads');
+    expect(test.harness.allText()).toContain('1 photo added.');
+    expect(test.harness.allText()).toContain('Family tent');
+  } finally { await test.harness.unmount(); }
 });
