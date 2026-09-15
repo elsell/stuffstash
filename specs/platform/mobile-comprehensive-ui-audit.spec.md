@@ -385,3 +385,108 @@ rejected Save, pending commands and Close assertions through both routes. No
 preseeded cache or query bypass is permitted. Compare presentation/entry before
 changing production query behavior; a passing comparison does not clear the
 original failing Add scenario. Generated routes remain isolated from release builds.
+
+### Accessibility issue attribution
+
+Native accessibility audits must retain a per-issue description, optional element
+hierarchy and screenshot when XCTest identifies an issue. A missing element is
+reported as unavailable, not treated as a false positive. The diagnostic handler
+must return false so XCTest continues to report the issue as a failure; it must
+not suppress an audit category. This distinguishes broad audit predictions from
+explicit enlarged-text interaction results and avoids attributing an unidentified
+clipping issue to whichever control was fixed most recently.
+
+### Add sheet header configuration comparison
+
+The native Add audit must compare the existing full-height sheet with the same Add
+fixture in a full-height sheet whose native header is declared visible with its
+known title before presentation. This isolates changing header visibility during
+presentation from the existing card-versus-sheet comparison. Preserve the original
+routes and complete draft/typing/rejected-save assertions. The comparison uses cold
+query state and the same application component; it must not preload resources or
+change production Add presentation. Fixture preparation must remain isolated from
+production routes.
+
+### M20 — full-width onboarding scroll content
+
+Run34932076384 on iPad repeats the outer-margin dismissal failure while the
+inside-column comparison passes. Preserve the centered 600-point form width,
+but apply that constraint to a child form rather than the scroll content itself.
+The scroll content must fill the viewport so blank margins participate in the
+same native scroll/keyboard gesture surface. Keep native keyboard dismissal;
+do not add a competing tap catcher or manual gesture recognizer. Both existing
+native drag cases, phone keyboard reachability, and iPad landscape layout remain
+acceptance gates. The failing native drag is the regression baseline; source
+layout and unit checks alone cannot establish its resolution.
+
+### Onboarding start-over completion ownership
+
+A pending Sign out and start over command may finish its authorized teardown after
+its screen unmounts. Its former screen must not then clear local fields or invoke
+onStartOver/onStateChange callbacks that could replace the new destination. Use
+the same mounted-generation ownership as Connect/Create completion. While the
+initiating screen remains mounted, successful reset still returns to connection;
+failed reset preserves the current form and reports a retryable error. This is a
+UI completion guard, not cancellation of sign-out or profile cleanup.
+
+### Onboarding required-field readiness
+
+Connect/Create is unavailable while a required value is blank or whitespace-only.
+Connection requires a server address; household setup requires both names; first
+inventory requires its name. Show a concise visible explanation of the missing
+value rather than an unexplained disabled action. Keep entered values and enable
+the action as soon as required text is present. URL syntax and server validation
+remain at the application boundary on submission, so malformed nonempty input
+still receives a specific error. Apply readiness to both the primary button and
+keyboard submission; pending operations retain their existing duplicate guard.
+Start over remains available independently of missing names. This uses native
+text entry and an ordinary command state; it does not introduce another screen.
+
+### Checkout-history readability comparison
+
+Keep the existing StaticText hit-testing scenario as a diagnostic. Run349289 iPad
+shows the first checkout note visibly inside the sheet while its StaticText
+isHittable fails; tappability alone is not a readability oracle. Add a comparison
+that checks the complete note bounds inside the sheet scroll viewport below its
+navigation bar, captures screenshots for occlusion/readability review, expands,
+loads older content using that sheet's scroll view, and closes. Continue requiring
+actual hit targets for commands. Geometry is not proof of VoiceOver access,
+contrast or unclipped text rendering. Do not clear M61 merely from the comparison
+passing or remove the old failing scenario without resolving its evidence.
+
+### Time-zone search vocabulary
+
+The reminder time-zone chooser searches both its readable city/region label and
+the underlying IANA identifier, case-insensitively and with outer whitespace
+trimmed. Partial identifiers such as America/New must find America/New_York;
+requiring a complete valid identifier is not sufficient search behavior. Preserve
+the saved choice, native navigation search, empty-result feedback, the bounded
+initial list and explicit valid-zone fallback when the runtime list is unavailable.
+Typing/searching alone never changes the saved time zone.
+
+### Inventory switcher focus ownership
+
+Selection completion belongs to the switcher's uninterrupted focus session.
+When the sheet loses focus, abort its request signal and suppress late navigation
+or selection-error feedback, even if it remains mounted or regains focus before
+completion. Retain the pending guard until that request settles so a second
+selection cannot overlap it. After settlement, a fresh focused selection works.
+Do not assume blur reverses an inventory selection already accepted by the port.
+
+### Inventory switcher command controls
+
+Use the existing native command adapter for Switch household/Back and load Retry.
+Keep the hierarchical selection behavior and request guards. Its full-width native
+Host belongs below the household heading, not squeezed alongside it in a row.
+Allow the heading to wrap; do not rely on toolbar-style single-line truncation in
+the sheet body. Loading names the inventory task rather than the internal tenant
+concept. Verify native narrow/large-text layout before claiming visual acceptance.
+
+### Native inventory switcher fixture
+
+Add a runner-only fixture using the production switcher screen, its production
+sheet detents and native command adapters. Use a preloaded synthetic dashboard
+for presentation coverage (not cold-query acceptance), two households, and a local
+selection port that rejects once then succeeds. Verify household drilldown,
+selection failure/retry, return to the fixture menu, and explicit Close. Retain
+screenshots. Do not touch real inventory selection or production services.

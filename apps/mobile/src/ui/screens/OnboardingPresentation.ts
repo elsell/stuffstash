@@ -24,7 +24,8 @@ export function onboardingError(error: unknown): string {
 export function onboardingStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
     shell: { flex: 1, backgroundColor: colors.background },
-    content: { flexGrow: 1, width: '100%', maxWidth: 600, alignSelf: 'center', padding: spacing.lg },
+    content: { flexGrow: 1, width: '100%' },
+    form: { flexGrow: 1, width: '100%', maxWidth: 600, alignSelf: 'center', padding: spacing.lg },
     brand: { marginBottom: 54 },
     heading: { color: colors.text, fontSize: 30, lineHeight: 36, fontWeight: '700', marginBottom: 28 },
     field: { marginBottom: 22 },

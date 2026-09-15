@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -34,8 +35,8 @@ export function TenantSwitcherSheetScreen({
   const [selecting, setSelecting] = useState(false);
   const [selectionError, setSelectionError] = useState('');
   const pending = useRef<AbortController | undefined>(undefined);
-  const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; pending.current?.abort(); }; }, []);
+  const focused = useRef(true);
+  useFocusEffect(useCallback(() => { focused.current = true; setSelecting(Boolean(pending.current)); return () => { focused.current = false; pending.current?.abort(); }; }, []));
   const dashboard = useMobileInventoryServerQuery({
     key: mobileQueryKeys.home,
     query: (signal) => dashboardQuery.execute({ signal })
@@ -47,12 +48,12 @@ export function TenantSwitcherSheetScreen({
     setSelecting(true); setSelectionError('');
     try {
       await selectInventoryCommand.execute(inventoryId, { signal: request.signal });
-      if (mounted.current && !request.signal.aborted) router.back();
+      if (focused.current && !request.signal.aborted) router.back();
     } catch {
-      if (mounted.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
+      if (focused.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
     } finally {
       if (pending.current === request) pending.current = undefined;
-      if (mounted.current) setSelecting(false);
+      if (focused.current) setSelecting(false);
     }
   }
 
@@ -106,28 +107,14 @@ function TenantSwitcher({
         <View style={styles.contextText}>
           <IdentityLabel
             iconSize="md"
+            numberOfLines={0}
             kind="tenant"
             label={selectedTenant?.name ?? dashboard.tenantName}
             textStyle={styles.sheetTitle}
           />
         </View>
-        <Pressable
-          accessibilityRole="button"
-          disabled={selecting}
-          onPress={() => {
-            if (mode === 'tenants') {
-              setMode('inventories');
-              return;
-            }
-
-            setMode('tenants');
-          }}
-          style={styles.switchButton}
-        >
-          <Text style={styles.switchButtonText}>
-            {mode === 'tenants' ? 'Back' : 'Switch household'}
-          </Text>
-        </Pressable>
+        <NativeCommandButton label={mode === 'tenants' ? 'Back' : 'Switch household'}
+          disabled={selecting} onPress={() => setMode(mode === 'tenants' ? 'inventories' : 'tenants')} />
       </View>
 
       {mode === 'inventories' ? (
@@ -206,7 +193,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading tenants</Text>
+      <Text style={styles.stateText}>Loading inventories</Text>
     </View>
   );
 }
@@ -217,7 +204,7 @@ function ErrorState({ onRetry }: { readonly onRetry: () => void }) {
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
       <Text style={styles.stateText}>Inventories could not be loaded. Try again.</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="Retry inventories" onPress={onRetry} style={styles.switchButton}><Text style={styles.switchButtonText}>Retry</Text></Pressable>
+      <NativeCommandButton label="Retry inventories" onPress={onRetry} />
     </View>
   );
 }
@@ -256,16 +243,13 @@ function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0
   },
   sheetHeader: {
-    alignItems: 'center',
+    alignItems: 'stretch',
     borderBottomColor: colors.border,
     borderBottomWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
+    gap: spacing.sm,
     paddingBottom: spacing.md
   },
   contextText: {
-    flex: 1,
     minWidth: 0
   },
   sheetTitle: {
@@ -274,17 +258,6 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '900',
     letterSpacing: 0,
     lineHeight: 31
-  },
-  switchButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs
-  },
-  switchButtonText: {
-    color: colors.action,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0
   },
   sectionLabel: {
     color: colors.textMuted,

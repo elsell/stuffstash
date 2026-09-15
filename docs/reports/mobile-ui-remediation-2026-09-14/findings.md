@@ -567,3 +567,142 @@ blocker; its domain wording correction was applied. Shared field/status/card,
 workspace heading, notification and voice-review consumers were inspected.
 Native alternate-calendar settings, digits and larger-text clarification remain
 unverified; this is source/test remediation, not complete localization acceptance.
+
+### M69 — Sharing feedback outlives its initiating screen (P2)
+
+Implemented focused-session/scope ownership for create/cancel/copy/share notices.
+Three failing rendered departure regressions now pass; normal focused failure
+retains the draft and notice. See [Sharing review](sharing-axis.md) for task-fit,
+source evidence, privacy boundaries and pending native acceptance. This is the next
+batch after PR138 and is excluded from release workflow34932422663.
+
+### M70 — old invitation recovery replaces a newer invitation (P2)
+
+Implemented request-generation ownership for opening/start-over failures and reset
+of replacement start-over availability. Two regressions failed before correction;
+13 invitation-screen checks, typecheck and structural checks pass remotely. See
+[Sharing and invitation review](sharing-axis.md). Native link replacement and
+route-side navigation effects remain pending; no broad deep-link acceptance claim.
+
+### M71 — failed system initial-link lookup leaves invitation initialization pending (P2)
+
+Implemented rejection readiness, foreground precedence and disposed-subscription
+guards behind the existing native Linking adapter. A mounted fake-source baseline
+reproduced the stall and unhandled rejections. Ten remote hook/domain checks plus
+typecheck/structural checks pass. See [Sharing/invitation audit](sharing-axis.md).
+Native deep-link delivery remains pending; no claim of whole-entrypoint acceptance.
+
+### M72 — stale invitation route completion clears a replacement link (P2)
+
+Implemented focus/reference ownership for clear-and-return navigation after Open
+inventory and Start over. Mounted original-callback regressions failed before the
+fix. Seven route/progress/selection checks plus typecheck/structural checks pass
+remotely. See [invitation audit](sharing-axis.md); native delivery remains pending.
+
+### M73 — unavailable inventory blocks sign-out recovery (P1)
+
+Root Settings loading/error states now keep Account and Connection reachable.
+Account reads only identity and permits confirmed sign-out with a fallback label
+when identity is pending/failed. Two original regressions failed; 27 remote
+settings/cache checks plus typecheck/structural checks pass. Critic requested
+identity cases were added. See [Account/connection audit](account-connection-axis.md)
+for remaining native layout/lifecycle acceptance and unchanged scope boundaries.
+
+### M74 — Add name loses characters during native typing (P1)
+
+Native-observed on phone run349297 navigation-stack comparison. Implemented an iOS
+native-owned Name candidate with explicit restore/reset lifetimes and unchanged
+application draft/save guards. Six remote behavior checks plus typecheck/structural
+checks pass; native full-string acceptance remains pending. Sheet readiness remains
+a separate issue. See [text-entry review](text-entry-axis.md).
+
+### M20 follow-up — preserve readable form and full scroll surface
+
+Repeated iPad evidence distinguishes the failing margin drag from the passing
+inside-form drag (run34932076384). Move the centered600-point constraint into a
+child form and retain full-width scroll content. No custom gesture or manual
+keyboard dismissal is introduced. This is a source candidate, not a verified fix;
+existing phone/iPad keyboard and landscape tests remain the native acceptance gate.
+Remote validation:4 mounted onboarding/invitation checks, TypeScript and mobile
+structural checks pass on paul (/tmp/onboarding-scroll-green.log). Required critic
+found no blocker. No local tests/builds were run; native acceptance remains pending.
+
+### M75 — departed onboarding screen sends reset navigation (P2)
+
+Source and mounted-test confirmed: a pending Sign out and start over completes
+its authorized reset after unmount, then calls onStartOver and onStateChange from
+the departed screen. This can replace the current destination. Connect/Create
+already checks the mounted generation; reset now uses the same ownership check.
+Teardown continues and the focused success path still returns to connection.
+
+The regression failed with both callbacks observed, then passed with sign-out
+completed and no callbacks. Five remote onboarding/invitation checks, TypeScript
+and structural checks pass (/tmp/onboarding-reset-green.log). Critic found no
+blockers. This proves unmount ownership, not native transition rendering or every
+in-place state replacement. Native acceptance and failure recovery remain tracked
+separately; no new authentication or teardown behavior is introduced.
+
+### M76 — setup permits progress with missing required values (P2)
+
+Source interaction gap against the entering-data criterion in onboarding-axis.md:
+Connect/Create was available with blank required values. Primary actions now reflect
+readiness, with a visible explanation naming the missing value. Whitespace stays
+incomplete; nonempty invalid URLs still receive application validation. Keyboard
+submission uses the same guard, and Start over is independent of incomplete names.
+
+Two mounted regressions failed before the change. Eight remote onboarding/invitation
+checks now pass, including both inventory form variants, keyboard bypass prevention,
+URL validation and existing recovery. TypeScript/structural checks pass on paul
+(/tmp/onboarding-readiness-green.log); critic found no blockers. Native explanation
+layout and keyboard timing remain unverified, including M35 compact-phone reachability.
+
+### M77 — partial time-zone identifiers cannot be found (P2)
+
+The native search advertised city/time-zone lookup but matched only the reversed
+readable label. `America/New` therefore missed available America/New_York, although
+a complete valid identifier could appear through a separate fallback. Search now
+matches both label and identifier, preserving case/outer-whitespace handling.
+No selection is saved by typing. Existing bounded results and valid-zone fallback
+remain unchanged. Mounted regression failed first; eight remote picker/settings
+checks, TypeScript and structural checks pass (/tmp/timezone-search-green.log).
+Critic found no blockers. Native search integration still requires runtime evidence.
+
+### M78 — inventory switch completion outlives focus (P2)
+
+The switcher canceled pending work on unmount but not blur. A mounted regression
+reproduced Back after focus left and returned during selection. Focus cleanup now
+aborts the request signal; late navigation/error feedback is suppressed. The
+pending guard remains until settlement, after which a fresh focused selection
+works. This does not promise reversal of an inventory choice already persisted by
+the port. Critic caught the complementary blur → settle → refocus ordering leaving rows
+disabled. Its regression failed, then passed after focus entry reconciled busy
+state with the actual pending request. Five remote switcher checks, TypeScript and
+structural checks pass (/tmp/switcher-focus-final.log). Native interruption
+acceptance remains pending.
+
+### M79 — cancellation skips accepted-selection reconciliation (P2)
+
+SelectInventoryCommand checked cancellation between repository success and its
+composition-scoped selection observer. If acceptance preceded cancellation, the
+chosen inventory could change without notifying the cache to reconcile. The
+observer now runs after repository success; a final cancellation check still
+rejects obsolete caller success. Initially canceled and rejected selections do
+not publish. No authorization rule or API boundary changes.
+
+A port-level regression failed before the correction and now verifies acceptance,
+observer notification and canceled caller outcome. Negative cases cover rejection
+and initial cancellation. Twenty-eight remote command, switcher and inventory
+adapter checks plus TypeScript/structural checks pass on paul
+(/tmp/selection-cache-green.log). Critic found no blockers. Native interrupted
+selection and cache-driven screen transition still require runtime evidence.
+
+### M80 — switcher commands bypass the native adapter (P2)
+
+Switch household/Back and load Retry used custom styled Pressables despite the
+existing NativeCommandButton adapter. They now use that adapter. Its full-width
+Host sits below the wrapping household heading, avoiding a competing horizontal
+width constraint. Loading copy uses inventories rather than internal tenant
+terminology. Selection rows and ownership behavior are unchanged. Five existing
+remote switcher checks, TypeScript and structural checks pass
+(/tmp/switcher-native-commands.log); critic found no blockers. Native narrow,
+large-text and sheet-layout acceptance remains pending.

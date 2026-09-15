@@ -5,7 +5,8 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -61,6 +62,16 @@ export function InventorySharingScreen({
   const workingRef = useRef(false);
   const currentScopeKeyRef = useRef(scopeKey);
   currentScopeKeyRef.current = scopeKey;
+  const feedbackSession = useRef<object | undefined>(undefined);
+  useFocusEffect(useCallback(() => {
+    const session = {}; feedbackSession.current = session;
+    return () => { if (feedbackSession.current === session) feedbackSession.current = undefined; };
+  }, [scopeKey]));
+  function captureFeedbackOwner(): () => boolean {
+    const session = feedbackSession.current;
+    const requestedScope = scopeKey;
+    return () => session !== undefined && feedbackSession.current === session && currentScopeKeyRef.current === requestedScope;
+  }
   const canShare = scope.permissions.includes('share');
   const list = useInfiniteQuery({
     queryKey: mobileQueryKeys.invitations(compositionScopeId, scope.tenantId, scope.inventoryId),
@@ -85,6 +96,7 @@ export function InventorySharingScreen({
     if (workingRef.current) return;
     workingRef.current = true;
     setWorking(true);
+    const ownsFeedback = captureFeedbackOwner();
     const requestedScopeKey = scopeKey;
     try {
       const invitation = await createCommand.execute(scope, { email, relationship });
@@ -93,7 +105,7 @@ export function InventorySharingScreen({
       setCreatedScopeKey(requestedScopeKey);
       setEmail('');
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Could not create invitation', message: readableError(error) });
+      if (ownsFeedback()) feedback.showNotice({ tone: 'error', title: 'Could not create invitation', message: readableError(error) });
     } finally {
       workingRef.current = false;
       setWorking(false);
@@ -102,27 +114,29 @@ export function InventorySharingScreen({
 
   async function performLinkAction(action: 'copy' | 'share'): Promise<void> {
     if (!visibleCreated) return;
+    const ownsFeedback = captureFeedbackOwner();
     try {
       if (action === 'copy') {
         await linkActions.copy(visibleCreated.inviteUrl);
-        feedback.showNotice({ tone: 'success', title: 'Invitation link copied' });
+        if (ownsFeedback()) feedback.showNotice({ tone: 'success', title: 'Invitation link copied' });
       } else {
         await linkActions.share({ link: visibleCreated.inviteUrl, inventoryName: scope.inventoryName });
       }
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: `Could not ${action} invitation`, message: readableError(error) });
+      if (ownsFeedback()) feedback.showNotice({ tone: 'error', title: `Could not ${action} invitation`, message: readableError(error) });
     }
   }
 
   async function cancel(invitation: InventoryInvitationSummary): Promise<void> {
     setCancellingId(invitation.id);
+    const ownsFeedback = captureFeedbackOwner();
     const requestedScopeKey = scopeKey;
     try {
       await cancelCommand.execute(scope, invitation.id);
       if (currentScopeKeyRef.current !== requestedScopeKey) return;
 
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Could not cancel invitation', message: readableError(error) });
+      if (ownsFeedback()) feedback.showNotice({ tone: 'error', title: 'Could not cancel invitation', message: readableError(error) });
     } finally {
       setCancellingId(undefined);
     }

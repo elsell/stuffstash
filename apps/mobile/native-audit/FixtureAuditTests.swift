@@ -21,6 +21,35 @@ final class FixtureAuditTests: XCTestCase {
     capture("cold-inventory-dependent-queries")
   }
 
+  func testInventorySwitcherHouseholdRetryAndClose() {
+    let open = app.buttons["Audit inventory switcher"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    open.tap()
+    let change = app.buttons["Switch household"]
+    XCTAssertTrue(change.waitForExistence(timeout: 10))
+    XCTAssertTrue(change.isHittable)
+    capture("inventory-switcher-entry")
+    change.tap()
+    let household = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Workshop household")).firstMatch
+    XCTAssertTrue(household.waitForExistence(timeout: 5))
+    household.tap()
+    let inventory = app.buttons["Switch to inventory Workshop tools"]
+    XCTAssertTrue(inventory.waitForExistence(timeout: 5))
+    inventory.tap()
+    XCTAssertTrue(app.staticTexts["Could not switch inventories. Try again."].waitForExistence(timeout: 5))
+    capture("inventory-switcher-selection-error")
+    XCTAssertTrue(inventory.isEnabled)
+    inventory.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Inventories"])], timeout: 5), .completed)
+    open.tap()
+    let close = app.buttons["Close inventory switcher"]
+    XCTAssertTrue(close.waitForExistence(timeout: 5))
+    close.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Inventories"])], timeout: 5), .completed)
+    capture("inventory-switcher-dismissed")
+  }
+
   private func waitForKeyboard() {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
@@ -80,6 +109,14 @@ final class FixtureAuditTests: XCTestCase {
   func testScrollFooterFullSheetLayout() { verifyFullSheetLayout("scroll-footer") }
 
   func testCheckoutHistoryRemainsReadableAndDismissibleAfterExpansion() {
+    verifyCheckoutHistory(requireTextHit: true)
+  }
+
+  func testCheckoutHistoryTextBoundsPaginationAndDismissal() {
+    verifyCheckoutHistory(requireTextHit: false)
+  }
+
+  private func verifyCheckoutHistory(requireTextHit: Bool) {
     let open = app.buttons["Audit Checkout history"]
     for _ in 0..<7 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -88,7 +125,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(bar.waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    let note = app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
+    let historyScroll = app.scrollViews.containing(.staticText, identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
+    XCTAssertTrue(historyScroll.exists)
+    if requireTextHit { XCTAssertTrue(note.isHittable) }
+    else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
     XCTAssertTrue(app.buttons["Close"].isHittable)
     capture("checkout-history-medium")
     let initialTop = bar.frame.minY
@@ -98,20 +139,36 @@ final class FixtureAuditTests: XCTestCase {
       let expanded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in bar.frame.minY < initialTop - 40 }, object: nil)
       XCTAssertEqual(XCTWaiter.wait(for: [expanded], timeout: 5), .completed)
     }
-    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    if requireTextHit { XCTAssertTrue(note.isHittable) }
+    else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
     capture("checkout-history-expanded")
     let older = app.buttons["Load older checkouts"]
-    for _ in 0..<6 where !older.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    for _ in 0..<6 where !older.isHittable {
+      (requireTextHit ? app.scrollViews.firstMatch : historyScroll).swipeUp()
+    }
     XCTAssertTrue(older.isHittable)
     older.tap()
     let loaded = app.staticTexts["Older audit checkout"]
     XCTAssertTrue(loaded.waitForExistence(timeout: 5))
-    for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(loaded.isHittable)
+    if requireTextHit {
+      for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(loaded.isHittable)
+    } else {
+      for _ in 0..<4 where !textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar) { historyScroll.swipeUp() }
+      XCTAssertTrue(textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar))
+    }
     capture("checkout-history-older-page")
     app.buttons["Close"].tap()
     XCTAssertTrue(open.waitForExistence(timeout: 5))
     XCTAssertFalse(bar.exists)
+  }
+
+  private func textFitsHistoryViewport(_ text: XCUIElement, scroll: XCUIElement, bar: XCUIElement) -> Bool {
+    guard text.exists else { return false }
+    let frame = text.frame
+    let viewport = scroll.frame.intersection(app.frame)
+    return !frame.isEmpty && !frame.isInfinite && !viewport.isNull
+      && viewport.contains(frame) && frame.minY >= bar.frame.maxY
   }
 
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
@@ -176,13 +233,26 @@ final class FixtureAuditTests: XCTestCase {
     capture("choice-menu-accessibility-size")
   }
 
+  @available(iOS 17.0, *)
+  private func auditAccessibility(_ types: XCUIAccessibilityAuditType) throws {
+    try app.performAccessibilityAudit(for: types) { issue in
+      let element = issue.element?.debugDescription ?? "XCTest did not identify an element"
+      let details = XCTAttachment(string: "\(issue.compactDescription)\n\(issue.detailedDescription)\n\(element)")
+      details.name = "accessibility-issue-element"
+      details.lifetime = .keepAlways
+      self.add(details)
+      self.capture("accessibility-issue")
+      return false
+    }
+  }
+
   func testExpirationOverviewAccessibility() throws {
     app.buttons["Audit Expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
     capture("expiration-overview-accessibility")
     if #available(iOS 17.0, *) {
-      try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait, .dynamicType, .textClipped])
+      try auditAccessibility([.hitRegion, .sufficientElementDescription, .trait, .dynamicType, .textClipped])
     } else {
       throw XCTSkip("Accessibility auditing requires iOS 17 or later")
     }
@@ -266,6 +336,10 @@ final class FixtureAuditTests: XCTestCase {
 
   func testAddDraftInNavigationStack() {
     verifyAddDraft(entry: "Audit Add navigation draft")
+  }
+
+  func testAddDraftWithHeaderConfiguredBeforePresentation() {
+    verifyAddDraft(entry: "Audit Add configured header")
   }
 
   private func verifyAddDraft(entry: String) {
@@ -428,7 +502,7 @@ final class FixtureAuditTests: XCTestCase {
     openDraftPhotos()
     capture("draft-photo-accessibility-before-audit")
     if #available(iOS 17.0, *) {
-      try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait, .contrast, .dynamicType, .textClipped])
+      try auditAccessibility([.hitRegion, .sufficientElementDescription, .trait, .contrast, .dynamicType, .textClipped])
     } else {
       throw XCTSkip("XCTest accessibility audit requires iOS 17")
     }

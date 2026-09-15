@@ -24,7 +24,6 @@ export class SelectInventoryCommand {
     assertReadActive(request.signal);
     const selectedInventoryId = inventoryId(inventoryIdValue);
     await this.inventories.selectInventory(selectedInventoryId, request);
-    assertReadActive(request.signal);
     await this.observer.onInventorySelected();
     assertReadActive(request.signal);
 

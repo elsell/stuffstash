@@ -18,3 +18,15 @@ it('searches readable cities, keeps the saved choice and handles a failed save',
  expect(saved).toEqual(['UTC']);
  }finally{await h.unmount();}
 });
+
+it('finds a saved zone by a partial IANA identifier without saving during search', async () => {
+ resetNavigation(); const h = new MobileRenderHarness(); const saved: string[] = [];
+ try {
+  await h.render(<TimeZonePicker value="America/New_York" onChange={async zone => { saved.push(zone); }} />);
+  const search = navigationOptions().at(-1) as { headerSearchBarOptions: { onChangeText: (e: { nativeEvent: { text: string } }) => void } };
+  await h.run(() => search.headerSearchBarOptions.onChangeText({ nativeEvent: { text: '  aMeRiCa/NeW  ' } }));
+  expect(h.byLabel('New York · America')).toBeDefined();
+  expect(h.allText()).not.toContain('No matching time zones.');
+  expect(saved).toEqual([]);
+ } finally { await h.unmount(); }
+});

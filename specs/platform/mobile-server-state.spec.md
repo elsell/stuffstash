@@ -183,3 +183,22 @@ The mobile test suite and mounted query/discovery regressions must use the actua
 AbortController package resolved by the pinned React Native runtime, not Node's
 richer API.
 The structural hook rejects direct `throwIfAborted` method calls.
+
+### Account and connection recovery without inventory readiness
+
+Root Settings must keep Account and Stuff Stash server destinations reachable while
+selected-inventory settings are loading, denied or unavailable. These recovery
+links do not expose inventory administration. Account's Sign Out command must not
+wait for a selected inventory or a principal-label fetch. Show the principal label
+when available, otherwise Current account; identity-read failure may offer retry
+without replacing Sign Out. Keep native confirmation and the existing authenticated
+session teardown unchanged. Connection recovery remains device-local.
+
+### Accepted inventory selection and cancellation
+
+Once the inventory repository accepts a selection, its selection observer must
+reconcile the composition-scoped cache even if the caller's signal was canceled
+before completion is delivered. Check cancellation before repository work and
+after observer completion to suppress obsolete caller success. Cancellation must
+not leave accepted selection state and cached inventory scope inconsistent.
+Rejected or initially canceled selections must not publish a selection event.

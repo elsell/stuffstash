@@ -270,3 +270,37 @@ it('selects a voice service in place without implying a connection test is runni
     expect(harness.allText()).toContain('Gemini language');
   } finally { await harness.unmount(); client.clear(); }
 });
+
+it('keeps account and connection recovery reachable when inventory settings fail', async () => {
+  const destinations: string[] = [];
+  const { harness } = await mount(<SettingsScreen settingsQuery={settingsQuery([], async () => { throw Object.assign(new Error('inventory removed'), { status: 403 }); })} onNavigate={destination => destinations.push(destination)} />);
+  try {
+    await harness.press(harness.byLabel('Open Account settings'));
+    await harness.press(harness.byLabel('Open Stuff Stash server settings'));
+    expect(destinations).toEqual(['account', 'connection']);
+  } finally { await harness.unmount(); }
+});
+it('permits confirmed sign out without loading inventory settings', async () => {
+  let scopeReads = 0; let signedOut = 0;
+  const { harness } = await mount(<AccountSettingsScreen settingsQuery={settingsQuery([], async () => { scopeReads++; throw new Error('offline'); })} onSignOut={async () => { signedOut++; }} />);
+  try {
+    await harness.press(harness.byLabel('Sign out john@example.com'));
+    await harness.run(() => pressAlertButton('Sign Out'));
+    expect(signedOut).toBe(1);
+    expect(scopeReads).toBe(0);
+  } finally { await harness.unmount(); }
+});
+
+it.each(['pending', 'failed'] as const)('keeps sign out available while identity is %s', async identity => {
+  let signedOut = 0;
+  const query = new SettingsQuery({ getCurrentPrincipal: async () => {
+    if (identity === 'failed') throw new Error('offline');
+    return new Promise(() => undefined);
+  } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://stash.home.test/api', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => { throw new Error('Account must not load inventory settings'); } });
+  const { harness } = await mount(<AccountSettingsScreen settingsQuery={query} onSignOut={async () => { signedOut++; }} />);
+  try {
+    await harness.press(harness.byLabel('Sign out Current account'));
+    await harness.run(() => pressAlertButton('Sign Out'));
+    expect(signedOut).toBe(1);
+  } finally { await harness.unmount(); }
+});

@@ -668,3 +668,174 @@ stronger evidence of missing subscription/commit progress than the screenshot
 alone; it does not prove a repository/network fault. Keep the card comparison
 and original Add acceptance. Complete artifacts are in
 `/tmp/native349289-fixtures-phone` and `/tmp/native349289-fixtures-ipad`.
+
+### September15 — run34929746647 phone onboarding
+
+Job104259682122 completed successfully at05:36UTC. Actual checkoutbabf6765685ead9f93203f92e6bb4f5b5b0a5328,
+verified from checkout log and API parents50b598ae +904684a1. Includes PR136's
+choice-reflow/Add-card comparison code, excludes PR138/PR140 fixes.
+
+`testConnectionHelpAndKeyboardKeepActionsReachable` passed. Two iPad-only tests
+skipped as specified; report this as one applicable pass, not three device checks.
+The named scenario expands/collapses connection help, types the complete URL,
+dismisses the keyboard and checks action reachability. Inspected screenshot
+444921BE-AC43-44E4-ABE2-B05497E632AC.png shows intact https://example.invalid and
+visible Connect and sign in. This does not exercise real sign-in or backend access.
+
+Artifacts: /tmp/native349297-onboarding-phone; log:
+/tmp/native349297-onboarding-phone.log. Manifest contains screenshot/hierarchy pairs.
+Other jobs in this run remain active; no claims about their current outcome.
+
+Phone fixture job104259681981 then completed with22/31 passes and9 failures.
+The same actual sourcebabf6765 is identified by its artifact. New Add card comparison
+reaches the field/header, but typing Native draft name yields Nve draft name.
+The sheet case still fails waiting for Asset name. This separates presentation
+readiness from text-entry corruption; it does not justify replacing the production
+sheet or declaring the query boundary fixed.
+
+Other failures: history StaticText reachability, color row opening (well-target
+comparison remains separate), controlled address h.invalid instead of full URL,
+expiration accessibility clipping despite M53 reflow, keyboard Apply reachability,
+and two layout diagnostics. M19 ownership changes from PR138 are excluded.
+Log /tmp/native349297-fixtures-phone.log; full artifacts requested under
+/tmp/native349297-fixtures-phone. Inspect the clipping hierarchy/screenshot and
+Add comparison before selecting the next implementation. iPad jobs remain active.
+
+### Run349297 phone M53 evidence clarification
+
+`testNativeChoiceLabelAtAccessibilityTextSize` PASSED. Inspected715806B3-B006-4816-AC1E-D013EF4AE529.png
+shows the label/value vertically stacked at the configured accessibility size;
+the test scrolls to Availability and opens its menu. This is positive named
+interaction evidence for M53. It does not clear every large-text layout.
+
+Separately `testExpirationOverviewAccessibility` fails Apple's textClipped audit.
+The normal-size screenshotsC192A94C/95214FA5 do not identify an obvious clipped
+label; issueED0C4A17 says only that text may clip at larger sizes. Therefore the
+previous wording “clipping despite M53 reflow” does not establish that the same
+label remains broken. The issue stays open and is not ignored. Added a per-issue
+XCTest handler to attach its optional element hierarchy/description/screenshot,
+returning false to retain failures. Swift compilation and resulting attribution
+await the next macOS run; no native visual correction is claimed by instrumentation.
+
+API reference: [XCUIAccessibilityAuditIssue](https://developer.apple.com/documentation/xcuiautomation/xcuiaccessibilityauditissue).
+
+### Run349297 iPad fixtures and Add header comparison
+
+Job104259682259 completed27/31 passes,4 failures. Add card reaches text entry but
+keyboard readiness fails with an infinite-frame key (line30), not a measured text
+corruption result on this iPad comparison. The Add sheet fails waiting for Asset
+name (line273). History reachability(line87) and controlled address h://example.invalid
+instead of the full URL(line251) also fail. All other cases, including explicit
+large-text menu and broad expiration accessibility, passed on this iPad run.
+Artifacts downloaded to /tmp/native349297-fixtures-ipad; log suffix.log.
+
+The phone sheet snapshot94B4F2B5 shows successful inventory scope and principal,
+but only inventory-pending resources with zero observers; no scoped Add query was
+created. The card comparison reaches the same application's form. This narrows
+presentation-dependent update timing, not a proven API failure.
+
+Added a runner-only audit-add-header route: same full-height sheet/cold Add fixture,
+with native header visible and titled before presentation. Original sheet/card
+comparisons and complete typing/rejected-save assertions remain. Production Add
+still starts with header hidden; no change is justified until this comparison runs.
+Fixture isolation: one missing-route regression failed before implementation, then
+two preparation checks, TypeScript and structural checks passed remotely. Swift
+compilation and runtime comparison remain pending.
+
+Release checkpoint:0.24.17(105.1) uploaded05:49:31UTC in job104264788967.
+Job104268866634 is still publishing/verifying the changelog; Apple readiness is
+not yet confirmed. This release excludes the current PR140 comparisons/fixes.
+
+Delivery confirmed: release34932422663 completed successfully. Job104268866634
+verified the exact TestFlight changelog for0.24.17(105.1) at05:52:22UTC. The interim
+release request is fulfilled; full audit remediation and native acceptance remain
+active in PR140. Log /tmp/release349324-notes.log.
+
+### Run34932076384 iPad onboarding — M20 gesture region
+
+Job104266735900 completed with two passes and one failure. Actual checkout is
+f4bc4f28fc51de06d5ff3b4db8174b530c0c6c43 (checkout log: merge05a9aeba into5775da93).
+The outer-margin drag still fails keyboard dismissal at line94; the inside-form
+comparison and landscape test pass. Screenshot3CCA6663-54CD-4D30-B5DA-167952AD96B0.png
+shows the intact server URL, visible Connect action, and keyboard remaining open.
+Hierarchy3A3EE291-62A2-4F9A-9E9B-DBECCE66CD93.txt records the full-width scroll view
+(744 points) and centered600-point content. Artifacts and log are in
+/tmp/native349320-onboarding-ipad and /tmp/native349320-onboarding-ipad.log.
+
+This narrows M20 to the gesture region in this configuration; it does not establish
+all-device success or blame XCTest. A candidate moves the width constraint to an
+inner form while making scroll content fill the viewport. Both native cases remain
+unchanged and required; runtime verification of the candidate is pending.
+
+### Run34932076384 iPad fixtures completed
+
+Job104266735811:27/31 pass,4 fail. Checkout log identifies
+f4bc4f28fc51de06d5ff3b4db8174b530c0c6c43, merging05a9aeba into5775da93.
+Log /tmp/native349320-fixtures-ipad.log. Add card receives `N draft name` instead
+of `Native draft name`; sheet misses Name readiness; History StaticText hit check
+fails; controlled-address comparison loses characters. These predate PR140.
+Expiration keyboard actions, overview accessibility, large-text choice, both native
+address submissions (button and Go), Return recovery and sheet diagnostics pass.
+Screenshots for this fixture job remain to inspect; logs do not certify rendering.
+
+History comparison instrumentation now preserves the original failing hit test and
+adds a separate complete-text-bounds/expansion/pagination/Close scenario scoped to
+the sheet scroll view. The inspected349289 iPad screenshot shows visible checkout
+text despite failed hit-testing. The comparison is not a claim that M61 is solved.
+Remote structural check passes; critic found no blockers. Native compilation and
+comparison execution remain pending. No production layout changed in this pass.
+
+### Run349320 iPad screenshot review
+
+The completed download is /tmp/native349320-fixtures-ipad. Inspected the following
+named attachments against the logged test outcomes:
+
+- Expiration keyboard0221E6AF shows Tools search, a matching result, and both Apply
+  and Back fully above the keyboard inside the sheet. The corresponding native
+  interaction passed. This is default-light iPad evidence, not phone acceptance.
+- Add sheet5A26BCEC visibly remains on Loading inventory without its header.
+  Query8B426330 shows scope/principal success, plus scoped add-context/type/parent
+  entries that are pending/idle with zero observers. Unlike the earlier phone
+  snapshot with no scoped entries, these queries exist but have not fetched.
+  This does not establish why observers are absent; retain the pending header
+  configuration comparison rather than changing production query behavior by guess.
+- Add card70E2B336 visibly contains `N draft name`; confirms the text assertion
+  rather than a test-only string mismatch. M74 native-owned draft is not in this
+  source and remains to verify.
+- HistoryF27B98C9 shows the first checkout and return notes below its header.
+  The StaticText hit failure still cannot be interpreted as clipped rendering.
+  Expansion/pagination were not reached; the separate comparison remains needed.
+
+![iPad expiration actions with keyboard](evidence/ipad-expiration-keyboard-349320.png)
+![iPad Add sheet still loading](evidence/ipad-add-loading-349320.png)
+
+### Run349320 phone onboarding completed
+
+Job104266735987 succeeds at actualf4bc4f28 (checkout merge05a9aeba into5775da93).
+One applicable scenario passes: connection help, complete address, keyboard drag
+and action reachability. Two iPad-only scenarios skip. Log
+/tmp/native349320-onboarding-phone.log. This is not three passing phone scenarios
+or verification of the newer onboarding changes in PR140.
+
+### PR140 full remote regression check at e2db766e
+
+On paul, the complete mobile Vitest run passes1477 tests in253 files, followed by
+TypeScript and mobile structural checks. Log /tmp/pr140-full-mobile.log on paul.
+Changed tracked mobile/scripts/spec files relative to177c08b6 match the local
+branch by SHA256 (/tmp/pr140-validation-hashes.txt); the deleted legacy invitation
+context test is absent. The initial rsync listed that deleted path and reported
+code23; the follow-up hash check proves all existing changed files transferred.
+No local tests/builds ran. This is regression evidence for the current PR140 batch,
+not native compilation, rendering, or physical device acceptance.
+
+### Inventory switcher native acceptance scenario
+
+A runner-only InventorySwitcherFixture now presents the production screen with
+production sheet detents and preloaded synthetic dashboard data. It exercises
+the native household command, household drilldown, failed selection, retry return
+and Close. Its local port never changes a real inventory. This is deliberately
+warm-cache presentation coverage, not discovery or authorization acceptance.
+Route-isolation tests failed before adding the route and now pass; remote typecheck
+and structural checks pass. Critic found no blockers; its cleanup and dismissal
+wait recommendations were applied. Swift compilation and phone/iPad execution
+remain pending. Fixture scenario count increases to34 including earlier additions.

@@ -1,64 +1,24 @@
 import * as Linking from 'expo-linking';
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from 'react';
+import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import type { InventoryInvitationReference } from '../../application/invitations/InventoryInvitationRepository';
-import {
-  PendingInventoryInvitation,
-  type PendingInventoryInvitationSnapshot
-} from '../../application/invitations/PendingInventoryInvitation';
+import type { PendingInventoryInvitationSnapshot } from '../../application/invitations/PendingInventoryInvitation';
 import { loadMobileRuntimeConfigSeed } from '../../config/mobileRuntimeConfig';
+import { useInvitationLinkSnapshot, type InvitationLinkSource } from './useInvitationLinkSnapshot';
 
-type InventoryInvitationLinkState = PendingInventoryInvitationSnapshot & {
-  readonly clear: () => void;
+type InventoryInvitationLinkState = PendingInventoryInvitationSnapshot & { readonly clear: () => void };
+const InventoryInvitationLinkContext = createContext<InventoryInvitationLinkState | null>(null);
+const systemLinks: InvitationLinkSource = {
+  getInitialURL: () => Linking.getInitialURL(),
+  subscribe: listener => {
+    const subscription = Linking.addEventListener('url', ({ url }) => listener(url));
+    return () => subscription.remove();
+  }
 };
 
-const InventoryInvitationLinkContext = createContext<InventoryInvitationLinkState | null>(null);
-
 export function InventoryInvitationLinkProvider({ children }: { readonly children: ReactNode }) {
-  const pending = useMemo(() => new PendingInventoryInvitation(), []);
-  const invitationConfig = useMemo(() => loadMobileRuntimeConfigSeed(), []);
-  const [snapshot, setSnapshot] = useState(pending.current());
-
-  const capture = useCallback((url: string | null) => {
-    if (!url || !isInvitationRoute(url)) return;
-    setSnapshot(pending.capture(
-      url,
-      invitationConfig.invitationOrigin,
-      invitationConfig.invitationAllowInsecureLocalHTTP
-    ));
-  }, [invitationConfig, pending]);
-
-  useEffect(() => {
-    let foregroundInvitationCaptured = false;
-    void Linking.getInitialURL().then((url) => {
-      if (foregroundInvitationCaptured) return;
-      if (url && isInvitationRoute(url)) {
-        capture(url);
-        return;
-      }
-      setSnapshot((current) => current.initialized ? current : { invalid: false, initialized: true });
-    });
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      if (!isInvitationRoute(url)) return;
-      foregroundInvitationCaptured = true;
-      capture(url);
-    });
-    return () => subscription.remove();
-  }, [capture]);
-
-  const clear = useCallback(() => setSnapshot(pending.clear()), [pending]);
-  return (
-    <InventoryInvitationLinkContext.Provider value={{ ...snapshot, clear }}>
-      {children}
-    </InventoryInvitationLinkContext.Provider>
-  );
+  const config = useMemo(() => loadMobileRuntimeConfigSeed(), []);
+  const { snapshot, clear } = useInvitationLinkSnapshot(systemLinks, config.invitationOrigin, config.invitationAllowInsecureLocalHTTP);
+  return <InventoryInvitationLinkContext.Provider value={{ ...snapshot, clear }}>{children}</InventoryInvitationLinkContext.Provider>;
 }
 
 export function useInventoryInvitationLink(): InventoryInvitationLinkState {
@@ -73,12 +33,3 @@ export function invitationReferenceFromState(
   return state.reference;
 }
 
-function isInvitationRoute(source: string): boolean {
-  try {
-    const url = new URL(source);
-    return (url.protocol === 'stuffstash:' && url.host === 'invitations') ||
-      url.pathname.replace(/\/$/, '') === '/invitations/accept';
-  } catch {
-    return false;
-  }
-}
