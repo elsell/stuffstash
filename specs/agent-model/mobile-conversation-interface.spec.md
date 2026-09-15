@@ -120,3 +120,9 @@ symbol with the accessible name “Cancel request”; do not squeeze a text labe
 into an icon-sized frame or show an additional disabled Send command. During a
 non-cancellable action-plan commit, preserve its owned progress and expose no
 misleading cancellation action. Native command targets remain at least 48 points.
+
+Draft-photo review presents native Add photos and numbered Remove photo commands.
+Each Remove command identifies and removes only its associated draft attachment;
+other command rows and attachments remain unchanged. Read-only review preserves
+previews and hides editing commands. Keep the explanation that attachments are
+sent after approval. Retry photos uses a comfortably sized native command.

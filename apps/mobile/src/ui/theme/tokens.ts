@@ -115,3 +115,6 @@ export const typography = {
   titleWeight: '800',
   bodyWeight: '400'
 } as const;
+
+/** Shared comfortable target, meeting iOS and Android minimums. */
+export const minimumTouchTargetSize = 48;

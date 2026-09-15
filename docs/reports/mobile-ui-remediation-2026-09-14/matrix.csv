@@ -204,7 +204,7 @@ R009,assets/[assetId]/edit.tsx,imagery,"Icons, photos and missing media",pending
 R009,assets/[assetId]/edit.tsx,targets,Touch target size and reachability,pending,,
 R009,assets/[assetId]/edit.tsx,gestures,Gestures and explicit alternatives,pending,,
 R009,assets/[assetId]/edit.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R009,assets/[assetId]/edit.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R009,assets/[assetId]/edit.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 R009,assets/[assetId]/edit.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R009,assets/[assetId]/edit.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R009,assets/[assetId]/edit.tsx,search,"Search, scope and filters",pending,,
@@ -300,7 +300,7 @@ R013,assets/[assetId]/move-here.tsx,imagery,"Icons, photos and missing media",pe
 R013,assets/[assetId]/move-here.tsx,targets,Touch target size and reachability,pending,,
 R013,assets/[assetId]/move-here.tsx,gestures,Gestures and explicit alternatives,pending,,
 R013,assets/[assetId]/move-here.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R013,assets/[assetId]/move-here.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R013,assets/[assetId]/move-here.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 R013,assets/[assetId]/move-here.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R013,assets/[assetId]/move-here.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R013,assets/[assetId]/move-here.tsx,search,"Search, scope and filters",pending,,
@@ -324,7 +324,7 @@ R014,assets/[assetId]/move.tsx,imagery,"Icons, photos and missing media",pending
 R014,assets/[assetId]/move.tsx,targets,Touch target size and reachability,pending,,
 R014,assets/[assetId]/move.tsx,gestures,Gestures and explicit alternatives,pending,,
 R014,assets/[assetId]/move.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R014,assets/[assetId]/move.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R014,assets/[assetId]/move.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 R014,assets/[assetId]/move.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R014,assets/[assetId]/move.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R014,assets/[assetId]/move.tsx,search,"Search, scope and filters",pending,,
@@ -2121,7 +2121,7 @@ S089,Add / tags select create,typography,"Dynamic Type, wrapping and legibility"
 S089,Add / tags select create,appearance,"Light/dark, contrast and materials",pending,,
 S089,Add / tags select create,localization,"Locale, timezone, RTL and long strings",pending,,
 S089,Add / tags select create,imagery,"Icons, photos and missing media",pending,,
-S089,Add / tags select create,targets,Touch target size and reachability,pending,,
+S089,Add / tags select create,targets,Touch target size and reachability,source-reviewed,Tag choices use48point minimum; tag/photo actions use native command buttons. Twenty focused remote tests/check/structural and critic pass. Native enlarged text/rail/hit areas pending.,M40
 S089,Add / tags select create,gestures,Gestures and explicit alternatives,pending,,
 S089,Add / tags select create,keyboard,"Keyboard, text entry and focus",pending,,
 S089,Add / tags select create,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -2937,7 +2937,7 @@ S123,Voice / plan progress recovery,typography,"Dynamic Type, wrapping and legib
 S123,Voice / plan progress recovery,appearance,"Light/dark, contrast and materials",pending,,
 S123,Voice / plan progress recovery,localization,"Locale, timezone, RTL and long strings",pending,,
 S123,Voice / plan progress recovery,imagery,"Icons, photos and missing media",pending,,
-S123,Voice / plan progress recovery,targets,Touch target size and reachability,pending,,
+S123,Voice / plan progress recovery,targets,Touch target size and reachability,source-reviewed,Tag choices use48point minimum; tag/photo actions use native command buttons. Twenty focused remote tests/check/structural and critic pass. Native enlarged text/rail/hit areas pending.,M40
 S123,Voice / plan progress recovery,gestures,Gestures and explicit alternatives,pending,,
 S123,Voice / plan progress recovery,keyboard,"Keyboard, text entry and focus",pending,,
 S123,Voice / plan progress recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"VoicePlanProgress distinguishes saving/uploading/attached/failure counts, exposes progress role/value and polite updates. Runtime announcement/reflow pending.",
@@ -3177,7 +3177,7 @@ S133,Asset Edit / tag selection and creation,typography,"Dynamic Type, wrapping 
 S133,Asset Edit / tag selection and creation,appearance,"Light/dark, contrast and materials",pending,,
 S133,Asset Edit / tag selection and creation,localization,"Locale, timezone, RTL and long strings",pending,,
 S133,Asset Edit / tag selection and creation,imagery,"Icons, photos and missing media",pending,,
-S133,Asset Edit / tag selection and creation,targets,Touch target size and reachability,pending,,
+S133,Asset Edit / tag selection and creation,targets,Touch target size and reachability,source-reviewed,Tag choices use48point minimum; tag/photo actions use native command buttons. Twenty focused remote tests/check/structural and critic pass. Native enlarged text/rail/hit areas pending.,M40
 S133,Asset Edit / tag selection and creation,gestures,Gestures and explicit alternatives,pending,,
 S133,Asset Edit / tag selection and creation,keyboard,"Keyboard, text entry and focus",pending,,
 S133,Asset Edit / tag selection and creation,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -3204,7 +3204,7 @@ S134,Asset Move / destination search and selection,imagery,"Icons, photos and mi
 S134,Asset Move / destination search and selection,targets,Touch target size and reachability,pending,,
 S134,Asset Move / destination search and selection,gestures,Gestures and explicit alternatives,pending,,
 S134,Asset Move / destination search and selection,keyboard,"Keyboard, text entry and focus",pending,,
-S134,Asset Move / destination search and selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S134,Asset Move / destination search and selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 S134,Asset Move / destination search and selection,motion,Reduced motion and feedback alternatives,pending,,
 S134,Asset Move / destination search and selection,content,"Lists, hierarchy, density and pagination",pending,,
 S134,Asset Move / destination search and selection,search,"Search, scope and filters",pending,,
@@ -3252,7 +3252,7 @@ S136,Asset Move here / asset search and selection,imagery,"Icons, photos and mis
 S136,Asset Move here / asset search and selection,targets,Touch target size and reachability,pending,,
 S136,Asset Move here / asset search and selection,gestures,Gestures and explicit alternatives,pending,,
 S136,Asset Move here / asset search and selection,keyboard,"Keyboard, text entry and focus",pending,,
-S136,Asset Move here / asset search and selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S136,Asset Move here / asset search and selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 S136,Asset Move here / asset search and selection,motion,Reduced motion and feedback alternatives,pending,,
 S136,Asset Move here / asset search and selection,content,"Lists, hierarchy, density and pagination",pending,,
 S136,Asset Move here / asset search and selection,search,"Search, scope and filters",pending,,

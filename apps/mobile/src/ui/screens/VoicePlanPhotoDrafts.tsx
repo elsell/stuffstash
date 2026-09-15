@@ -1,8 +1,7 @@
-import { ImagePlus, X } from 'lucide-react-native';
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import {
   Alert,
   Image,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -49,38 +48,22 @@ export function VoicePlanPhotoDraftStrip({
   const styles = createStyles(palette);
   return (
     <View style={styles.planPhotoStrip}>
-      {!readOnly ? <Pressable
-        accessibilityLabel="Stage draft photos for this planned item"
-        accessibilityRole="button"
-        onPress={() => onAddPhotos(commandKey)}
-        style={styles.planPhotoAddButton}
-      >
-        <ImagePlus color={palette.accentStrong} size={17} strokeWidth={2.4} />
-        <Text style={styles.planPhotoAddText}>
-          {photos.length > 0 ? 'Stage more' : 'Stage photos'}
-        </Text>
-      </Pressable> : null}
+      {!readOnly ? <NativeCommandButton label="Add photos" onPress={() => onAddPhotos(commandKey)} /> : null}
       {photos.length > 0 ? (
         <ScrollView
           horizontal
           contentContainerStyle={styles.planPhotoPreviewList}
           showsHorizontalScrollIndicator={false}
         >
-          {photos.map((photo) => (
+          {photos.map((photo, index) => (
             <View key={photo.id} style={styles.planPhotoPreviewFrame}>
               <Image
                 accessibilityIgnoresInvertColors
                 source={{ uri: photo.uri }}
                 style={styles.planPhotoPreview}
               />
-              {!readOnly ? <Pressable
-                accessibilityLabel="Remove draft photo"
-                accessibilityRole="button"
-                onPress={() => onRemovePhoto(commandKey, photo.id)}
-                style={styles.planPhotoRemoveButton}
-              >
-                <X color={palette.surface} size={11} strokeWidth={3} />
-              </Pressable> : null}
+              {!readOnly ? <NativeCommandButton label={`Remove photo ${index + 1}`}
+                onPress={() => onRemovePhoto(commandKey, photo.id)} /> : null}
             </View>
           ))}
           <Text style={styles.planPhotoCount}>{photos.length.toString()}</Text>
@@ -95,23 +78,6 @@ export function VoicePlanPhotoDraftStrip({
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
-  planPhotoAddButton: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    minHeight: 34,
-    paddingHorizontal: spacing.sm
-  },
-  planPhotoAddText: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '900'
-  },
   planPhotoCount: {
     alignSelf: 'center',
     color: colors.textMuted,
@@ -131,31 +97,17 @@ function createStyles(colors: MobileColorPalette) {
   planPhotoPreview: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.sm,
-    height: 34,
-    width: 34
+    height: 72,
+    width: 96
   },
   planPhotoPreviewFrame: {
-    height: 38,
-    justifyContent: 'flex-end',
-    width: 38
+    alignItems: 'center',
+    width: 120
   },
   planPhotoPreviewList: {
     alignItems: 'center',
     gap: spacing.xs,
     paddingRight: spacing.sm
-  },
-  planPhotoRemoveButton: {
-    alignItems: 'center',
-    backgroundColor: colors.text,
-    borderColor: colors.surface,
-    borderRadius: 9,
-    borderWidth: 1,
-    height: 18,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 18
   },
   planPhotoStrip: {
     alignItems: 'center',

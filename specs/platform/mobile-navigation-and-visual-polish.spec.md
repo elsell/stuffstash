@@ -286,3 +286,17 @@ and expose their disabled state to assistive technology.
 The pending sheet lock also prevents system Back/navigation removal. Successful
 submission explicitly permits its own return navigation; unavoidable teardown
 still suppresses late navigation and alerts.
+
+Asset Edit and Move text inputs expose stable accessible names matching their
+visible purpose: Asset name, Description, Put in, and Find item, box, or place.
+A preceding Text label alone does not label a native text field. Retain input
+names while fields contain values and while submission disables editing.
+
+The shared mobile minimum touch target is 48 logical points, covering both
+platforms. Add/Edit tag choices and inline tag-creation controls use that minimum
+without overlapping hit regions. Preserve tag selection and creation behavior.
+Voice photo controls use native command buttons; each draft photo has a separately
+reachable numbered Remove command below its preview, rather than an 18-point
+overlaid close target. Photo rails can scroll and commands can grow with text.
+Tag creation uses a native Add tag command below its fields/color choice, avoiding
+an undersized inline action squeezed beside text entry.

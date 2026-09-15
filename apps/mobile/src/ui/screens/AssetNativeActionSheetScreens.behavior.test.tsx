@@ -21,7 +21,7 @@ it('opens Edit before tags load and preserves a dirty draft after background cor
       <AssetEditSheetRouteScreen inventoryAssetTypesQuery={{ execute: async () => [] }} assetId="asset" assetCoreQuery={query} inventoryAssetTagsQuery={{ execute: () => new Promise(() => undefined) }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
-    const name = harness.allByType('TextInput').find((input) => input.props.value === 'Tent');
+    const name = harness.byLabel('Asset name');
     expect(name).toBeDefined();
     await harness.changeText(name, 'My draft');
     title = 'Changed remotely';
@@ -42,7 +42,7 @@ it('keeps a Move draft mounted when background refresh discovers a different par
         createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => [] }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
-    await harness.changeText(harness.allByType('TextInput').find((input) => input.props.placeholder === 'Search places, boxes, shelves'), 'My destination');
+    await harness.changeText(harness.byLabel('Put in'), 'My destination');
     parent = 'new-parent';
     await harness.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(harness);
     expect(harness.allByType('TextInput').some((input) => input.props.value === 'My destination')).toBe(true);
@@ -103,7 +103,7 @@ it.each(['move', 'move-here'] as const)('freezes %s submission and restores its 
       {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    const input = h.allByType('TextInput')[0];
+    const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
     await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
     await h.press(candidateRow ?? undefined);

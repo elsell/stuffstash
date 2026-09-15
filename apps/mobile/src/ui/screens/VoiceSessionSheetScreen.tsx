@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { shouldConfirmNewConversation } from '../navigation/VoiceConversationHistory';
 import { voiceConversationReferences } from './VoiceConversationReferences';
@@ -433,14 +434,7 @@ function VoiceSessionSheet({
                 {actionPlan.status === 'executed' ? (
                   <View style={styles.actionPlanStatusGroup}>
                     {state.realtime?.photoAttachmentStatus?.canRetry ? (
-                      <Pressable
-                        accessibilityLabel="Retry attaching voice photos"
-                        accessibilityRole="button"
-                        onPress={() => onRetryPhotos(actionPlan.planId)}
-                        style={styles.retryPhotosButton}
-                      >
-                        <Text style={styles.retryPhotosButtonText}>Retry photos</Text>
-                      </Pressable>
+                      <NativeCommandButton label="Retry photos" onPress={() => onRetryPhotos(actionPlan.planId)} />
                     ) : null}
                   </View>
                 ) : null}
@@ -1098,20 +1092,6 @@ function createStyles(colors: MobileColorPalette) {
     color: colors.textMuted,
     fontSize: 14,
     fontWeight: '800'
-  },
-  retryPhotosButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    justifyContent: 'center',
-    minHeight: 34,
-    paddingHorizontal: spacing.md
-  },
-  retryPhotosButtonText: {
-    color: colors.accentStrong,
-    fontSize: 12,
-    fontWeight: '900'
   },
   recoveryButton: {
     alignItems: 'center',

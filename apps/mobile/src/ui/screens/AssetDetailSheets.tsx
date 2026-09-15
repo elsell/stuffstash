@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
@@ -45,7 +46,7 @@ import {
   MovePlacementPreview
 } from './AssetDetailMovePresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
-import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type MoveDraft = {
   readonly query: string;
@@ -98,6 +99,7 @@ export function EditAssetSheet({
         </View>
         <Text style={styles.inputLabel}>Name</Text>
         <AppTextInput
+          accessibilityLabel="Asset name"
           autoCapitalize="sentences"
           editable={!isSaving}
           onChangeText={(title) => onChange({ ...draft, title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -106,6 +108,7 @@ export function EditAssetSheet({
         />
         <Text style={styles.inputLabel}>Description</Text>
         <AppTextInput
+          accessibilityLabel="Description"
           editable={!isSaving}
           multiline
           onChangeText={(description) => onChange({ ...draft, title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -267,16 +270,9 @@ function EditTagPicker({
           style={[styles.input, styles.newTagColorInput]}
           value={newTagColor}
         />
-        <Pressable
-          accessibilityRole="button"
-          disabled={disabled || !canAddNewTag}
-          onPress={addNewTag}
-          style={[styles.newTagButton, disabled || !canAddNewTag ? styles.disabledAction : null]}
-        >
-          <Text style={styles.newTagButtonText}>Add</Text>
-        </Pressable>
       </View>
       <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
+      <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
     </View>
   );
 }
@@ -327,6 +323,7 @@ export function MoveAssetSheet({
       {placement ? <PlacementPanel preview={placement} /> : null}
       <Text style={styles.inputLabel}>Put in</Text>
       <AppTextInput
+        accessibilityLabel="Put in"
         autoCapitalize="sentences"
         editable={!isSaving}
         onChangeText={onChangeQuery}
@@ -414,6 +411,7 @@ export function MoveThingsHereSheet({
       <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
       <Text style={styles.inputLabel}>Find item, box, or place</Text>
       <AppTextInput
+        accessibilityLabel="Find item, box, or place"
         autoCapitalize="sentences"
         editable={!isSaving}
         onChangeText={onChangeQuery}
@@ -638,7 +636,8 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.xs,
     maxWidth: '100%',
-    minHeight: 34,
+    minHeight: minimumTouchTargetSize,
+    minWidth: minimumTouchTargetSize,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6
   },
@@ -663,27 +662,14 @@ function createStyles(colors: MobileColorPalette) {
   },
   newTagNameInput: {
     flex: 1,
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     minWidth: 0
   },
   newTagColorInput: {
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     width: 96
   },
-  newTagButton: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 40,
-    paddingHorizontal: spacing.sm
-  },
-  newTagButtonText: {
-    color: colors.onAction,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
+
   sheetActions: {
     flexDirection: 'row',
     gap: spacing.sm,

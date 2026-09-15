@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
@@ -55,7 +56,7 @@ import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
 import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
 import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
 import { useAppFeedback } from '../feedback/AppFeedback';
-import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import {
   assertSelectableParent,
@@ -1192,16 +1193,9 @@ function AssetTagPicker({
           style={[styles.input, styles.newTagNameInput]}
           value={newTagName}
         />
-        <Pressable
-          accessibilityRole="button"
-          disabled={disabled || !canAddNewTag}
-          onPress={addNewTag}
-          style={[styles.newTagButton, !canAddNewTag ? styles.disabledButton : null]}
-        >
-          <Text style={styles.newTagButtonText}>Add</Text>
-        </Pressable>
       </View>
       <TagColorPicker disabled={disabled} palette={colors} value={newTagColor} onChange={setNewTagColor} />
+      <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
     </View>
   );
 }
@@ -1642,7 +1636,8 @@ function createStyles(colors: MobileColorPalette) {
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.xs,
-    minHeight: 34,
+    minHeight: minimumTouchTargetSize,
+    minWidth: minimumTouchTargetSize,
     maxWidth: '100%',
     paddingHorizontal: spacing.sm,
     paddingVertical: 6
@@ -1669,32 +1664,19 @@ function createStyles(colors: MobileColorPalette) {
   },
   newTagNameInput: {
     flex: 1,
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     minWidth: 0
   },
   newTagColorInput: {
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     width: 96
   },
-  newTagButton: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 40,
-    paddingHorizontal: spacing.sm
-  },
-  newTagButtonText: {
-    color: colors.onAction,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
+
   clearDraftButton: {
     alignItems: 'center',
     alignSelf: 'center',
     justifyContent: 'center',
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     paddingHorizontal: spacing.md
   },
   clearDraftText: {
