@@ -1692,3 +1692,13 @@ and never starts the pull indicator. The regression failed before correction;
 Critic caught the initially omitted focused-start guard; it is now restored and
 tested. No remaining confirmed source blocker. Native recovery/command geometry
 remains pending.
+
+M125 candidate displays inline no-match guidance or matched title/placement,
+scoped to the searched query and map snapshot. Changed/cleared query, unavailable
+or refreshed data and deliberate navigation suppress stale outcomes. The mounted
+case failed before correction;9 focused Map tests, TypeScript and structural
+checks pass remotely. Critic also caught a retained pan cancellation callback
+recording an older query. Stable cancellation now reads the current query; a
+regression reproduced the old blur/refocus rerun and passes after correction.
+Critic reports no remaining confirmed blocker. Native outcome layout, announcements
+and gesture/return behavior remain pending.

@@ -136,6 +136,9 @@ export function InventoryMapScreen({
       : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
   const [localQuery, setLocalQuery] = useState('');
+  const [searchOutcome, setSearchOutcome] = useState<{
+    readonly query: string; readonly map: InventoryMapViewModel; readonly message: string;
+  }>();
   const query = searchQuery ?? localQuery;
   const setQuery = onChangeSearchQuery ?? setLocalQuery;
   const reduceMotionEnabled = useReducedMotionPreference();
@@ -359,7 +362,7 @@ export function InventoryMapScreen({
   }
 
   function selectBranch(asset: InventoryMapAssetViewModel): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     if (!map) {
       return;
     }
@@ -376,7 +379,7 @@ export function InventoryMapScreen({
   }
 
   function beginBranchSwipe(asset: InventoryMapAssetViewModel, dragX: number): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     if (!map || !asset.canContainAssets || activeBranchSwipe.current?.assetId === asset.id) {
       return;
     }
@@ -449,7 +452,7 @@ export function InventoryMapScreen({
   }
 
   function openBreadcrumb(level: number): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     const nextPath = pathForBreadcrumbLevel(openPath, level);
     setOpenPath(nextPath);
     setHighlightedAssetId(preserveInventoryMapHighlightForPath(nextPath, highlightedAssetId));
@@ -457,17 +460,20 @@ export function InventoryMapScreen({
   }
 
   function submitSearch(text = query): void {
-    if (!text.trim()) { setHighlightedAssetId(undefined); return; }
+    if (!text.trim()) { setSearchOutcome(undefined); setHighlightedAssetId(undefined); return; }
     if (!map) {
       return;
     }
 
     const match = findInventoryMapSearchMatch(map, text);
     if (!match) {
+      setSearchOutcome({ query: text.trim(), map, message: 'No matching items. Try another name, kind or location.' });
       setHighlightedAssetId(undefined);
       return;
     }
 
+    const asset = assetsById.get(match.assetId);
+    setSearchOutcome(asset ? { query: text.trim(), map, message: `Found ${asset.title} · ${asset.placementLabel}` } : undefined);
     setOpenPath(match.openPath);
     setHighlightedAssetId(match.assetId);
     setPendingScrollLevel(match.openPath.length);
@@ -475,14 +481,19 @@ export function InventoryMapScreen({
 
   const mapSearch = useInventoryMapSearch(query, !!map, submitSearch);
 
-  function clearSearch(): void {
+  function cancelMapSearch(): void {
     mapSearch.cancel();
+    setSearchOutcome(undefined);
+  }
+
+  function clearSearch(): void {
+    cancelMapSearch();
     setQuery('');
     setHighlightedAssetId(undefined);
   }
 
   function openAddHere(asset: InventoryMapAssetViewModel): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     router.push({
       pathname: '/add',
       params: addHereRouteParams({
@@ -504,7 +515,7 @@ export function InventoryMapScreen({
           dy: gestureState.dy
         }),
       onPanResponderGrant: () => {
-        mapSearch.cancel();
+        cancelMapSearch();
         mapOffset.stopAnimation();
         mapPanStartOffset.current = mapOffsetValue.current;
       },
@@ -541,7 +552,7 @@ export function InventoryMapScreen({
 
   return (
     <View style={styles.shell}>
-      <BrowseAddHeader canAdd={canAdd} onAdd={() => { mapSearch.cancel(); onAdd(); }} />
+      <BrowseAddHeader canAdd={canAdd} onAdd={() => { cancelMapSearch(); onAdd(); }} />
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.titleBlock}>
@@ -556,6 +567,9 @@ export function InventoryMapScreen({
           />
         </View>
         <NativeNavigationSearch query={query} placeholder="Find and expand path" onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
+        {state.status === 'ready' && searchOutcome && searchOutcome.map === map && searchOutcome.query === query.trim() ? (
+          <Text accessibilityLiveRegion="polite" style={styles.searchStatus}>{searchOutcome.message}</Text>
+        ) : null}
         {state.status === 'ready' ? (
           <>
             <ScrollView
@@ -630,7 +644,7 @@ export function InventoryMapScreen({
                 onAddHere={openAddHere}
                 onBranchSwipeFinish={finishBranchSwipe}
                 onBranchSwipeProgress={driveBranchSwipeScroll}
-                onOpenInfo={(asset) => { mapSearch.cancel(); router.push(assetDetailHref(asset.id)); }}
+                onOpenInfo={(asset) => { cancelMapSearch(); router.push(assetDetailHref(asset.id)); }}
                 onPressAsset={selectBranch}
                 onRefresh={refreshMap}
                 openPath={openPath}

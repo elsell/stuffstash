@@ -6,7 +6,8 @@ export function useInventoryMapSearch(query:string,ready:boolean,onSearch:(text:
  const focused=useRef(false);
  const completed=useRef<string|undefined>(undefined);
  const callback=useRef(onSearch);callback.current=onSearch;
- function cancel(){clearTimeout(timer.current);timer.current=undefined;completed.current=query;}
+ const currentQuery=useRef(query);currentQuery.current=query;
+ const cancel=useCallback(()=>{clearTimeout(timer.current);timer.current=undefined;completed.current=currentQuery.current;},[]);
  function submit(text:string){if(!focused.current)return;clearTimeout(timer.current);timer.current=undefined;if(!ready){completed.current=undefined;return;}completed.current=text;callback.current(text);}
  useFocusEffect(useCallback(()=>{
   focused.current=true;

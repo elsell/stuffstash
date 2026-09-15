@@ -97,3 +97,20 @@ it('disables Map retry while pending and restores results without a pull indicat
     expect(h.allByType('RefreshControl').every(node => node.props.refreshing === false)).toBe(true);
   } finally { await h.unmount(); }
 });
+
+it('explains unsuccessful path search and clears stale feedback when criteria change', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async () => mapSnapshot });
+  const render = (text: string) => h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    <AppFeedbackProvider><InventoryMapScreen searchQuery={text} canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} selectedSurface="map" onAdd={() => undefined} onChangeSurface={() => undefined} /></AppFeedbackProvider>
+  </MobileServerStateProvider>);
+  try {
+    await render('missing'); await h.run(() => new Promise(resolve => setTimeout(resolve, 350)));
+    expect(h.allText().join(' ')).toContain('No matching items');
+    expect(h.allText()).toContain('Tent');
+    await render('Tent'); expect(h.allText().join(' ')).not.toContain('No matching items');
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 350)));
+    expect(h.allText().join(' ')).toContain('Found Tent');
+    await render(''); expect(h.allText().join(' ')).not.toContain('Found Tent');
+  } finally { await h.unmount(); }
+});

@@ -70,6 +70,7 @@ export function createStyles(colors: MobileColorPalette) {
     fontWeight: '900',
     letterSpacing: 0
   },
+  searchStatus: { color: colors.textMuted, fontSize: 14, lineHeight: 20, paddingVertical: spacing.xs },
   overviewText: {
     color: colors.textMuted,
     fontSize: 11,

@@ -602,3 +602,11 @@ path that the user already superseded by navigating the map.
   resource retry is pending. It must not start the pull-to-refresh indicator.
 - Empty-container Add uses the shared native command adapter, preserving the
   view model's existing create/edit permission gate and destination context.
+
+### Map search outcome
+
+- Completed path search shows an inline result status: matched asset and placement,
+  or “No matching items” with a suggestion to try another name, kind or location.
+- No match preserves the current branch. Clear, changed query, refreshed data or
+  deliberate map navigation removes the previous outcome. Search status must not
+  display for data that is loading or unavailable.
