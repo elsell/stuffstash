@@ -625,3 +625,46 @@ Release0.24.16 was published at04:55:50UTC from5775da93 in
 release34930161409. Signed iOS job104258185620 is running; TestFlight availability
 and exact-build changelog verification are still pending. The new capture and
 M66 badge work are excluded from that release.
+
+
+### Native34928904228 — Return recovery passes; footer ownership unresolved
+
+Completed revision a6238cee60c3771a67c9af50361b231bd76fecb5 is the merge of
+50b598ae and0ac998ca (verified GitHub commit parents). It includes M19 measured
+footer, M61 history scroll and M65 native Return-note editing, but excludes the
+new M53 vertical choice reflow, Add card comparison and post-PR136 fixes.
+
+Phone fixtures:22/30 pass. Failures: Add loading; History note hit-testing; color
+row opening (well-target comparison passes); controlled-keyboard readiness with
+an infinite key frame; expiration AX clipping; expiration keyboard footer hit;
+nested/footer diagnostic variants. iPad fixtures:27/30 pass; Add loading, History
+note hit and controlled address corruption (`hs://example.invalid`) fail.
+Onboarding phone passes; iPad2/3 pass (inside-column dismissal and landscape pass;
+original outside-column keyboard drag fails). Logs are saved under
+`/tmp/native349289-{fixtures-phone,fixtures-ipad,onboarding-ipad}.log`.
+
+Both Home Return Cancel and full note typing, failed-save retention and retry
+completion pass on phone and iPad. This is named native acceptance of those
+scenarios, not every Home lifecycle or input field.
+
+Inspected phone footer screenshot AC5DB9FB and hierarchy4EC71707: buttons are
+visible above the keyboard, but SwiftUI Host bounds start y429 while Apply's
+button bounds start y371 (height54), outside its parent. M19 is not resolved by
+measured placement alone. Pinned ExpoUI55.0.17 exposes Host.ignoreSafeArea='keyboard'
+(set on mount); investigate single ownership of keyboard avoidance for the
+measured expiration footer. Browse also consumes NativeSheetActions but does not
+use the same measured container, so do not blindly change both consumers.
+
+Inspected iPad history screenshot5A422FFE and hierarchy9A1DDE29: title, first
+checkout note and return note are visible below the native header. Query data
+is ready. StaticText's isHittable still fails despite visible in-bounds text;
+retain the finding pending an appropriate accessibility/readability check rather
+than guessing another inset change.
+
+Unlike349270, this run saved complete Add query diagnostics before the new capture
+hardening. Phone C1FB85C1 shows scope/principal success but no scoped add-context
+query; iPad77D94F55 shows all queries pending/idle with zero observers. This is
+stronger evidence of missing subscription/commit progress than the screenshot
+alone; it does not prove a repository/network fault. Keep the card comparison
+and original Add acceptance. Complete artifacts are in
+`/tmp/native349289-fixtures-phone` and `/tmp/native349289-fixtures-ipad`.
