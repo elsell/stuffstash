@@ -598,6 +598,11 @@ that failure cannot be classified as query loading alone.
 
 ### Home return command reachability
 
+When saving or undoing a Home return fails, reveal the complete inline error
+below native navigation after it lays out, preserving the note and retry controls.
+Account for the native header inset. Reveal once per displayed failure so normal
+scrolling and keyboard changes do not repeatedly pull the user back to the error.
+
 Optional return details use the existing native command adapter for Cancel return
 and Save in one compact row, with cancellation first and save last. Each command
 gets available width; narrow layouts may wrap instead of clipping labels. Keep

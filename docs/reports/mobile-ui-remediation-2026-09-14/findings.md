@@ -2392,6 +2392,14 @@ e8b3d42dccf3f13428fb26bbb1cfd85ea8b0dd9e. In
 buttons are visible, but the error heading sits partly under the navigation blur.
 Initial presentation is readable. The XCTest asserts error existence and retry,
 not the complete error's position, so its passing outcome does not close this.
-Bring new operation errors into view without discarding the note or permanently
-removing user scrolling. Add an error-visibility assertion; native verification
-must repeat the failed-save/retry sequence. Not implemented yet.
+Candidate fix reveals each mounted operation error after layout using the native
+header inset; repeat layouts do not reset user scrolling. The native-owned note
+is retained. The mounted regression failed before implementation and now verifies
+one reveal and unchanged retry details. All31 Home/presentation tests, TypeScript
+and structural checks pass on paul. XCTest now checks the complete error frame
+below navigation, rather than existence alone. Native verification must repeat
+the failed-save/retry sequence before this finding closes.
+Review identified pinned React Native's scroll-offset clamping: iOS also needs
+scrollToOverflowEnabled, as already used by Add. This was added after a failing
+regression assertion. The final full remote suite passes1,736 tests/271 files,
+TypeScript and structural checks. This does not replace the pending native rerun.

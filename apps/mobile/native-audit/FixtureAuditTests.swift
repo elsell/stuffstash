@@ -1341,6 +1341,15 @@ final class FixtureAuditTests: XCTestCase {
     save.tap()
     XCTAssertTrue(app.staticTexts["Return details error"].waitForExistence(timeout: 5))
     XCTAssertEqual(details.value as? String, "Returned clean")
+    let error = app.staticTexts["Return details error"]
+    let errorVisible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let rect = error.frame
+      let header = self.app.navigationBars["Return details"].frame
+      return error.exists && rect.height > 0 && rect.minY >= header.maxY &&
+        rect.maxY <= self.app.frame.maxY && rect.minX >= self.app.frame.minX && rect.maxX <= self.app.frame.maxX
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [errorVisible], timeout: 5), .completed,
+      "The complete failure message must be visible below the native header")
     capture("home-return-save-error-retained")
     XCTAssertTrue(save.isHittable)
     save.tap()

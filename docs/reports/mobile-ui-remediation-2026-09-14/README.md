@@ -119,6 +119,11 @@ tests and static checks pass remotely. Field-specific native acceptance is open.
 cancel/undo and save-error/retry journeys passed on both devices in run35029854251;
 this is partial native interaction evidence, not full visual or persistence acceptance.
 Screenshot review found a partly obscured failed-save heading (M169), still open.
+Its reveal-on-error candidate passes31 focused tests and static checks; a stronger
+native geometry assertion is added, with native rerun pending.
+The combined M169 checkpoint passes1,736 tests across271 files, TypeScript and
+mobile structural checks on paul, including the review correction for iOS offset
+clamping. This remains source validation; native acceptance is not claimed.
 The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
 nested diagnostic layout from the direct-scroll structure used by production filters.
 

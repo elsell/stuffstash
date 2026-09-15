@@ -14,6 +14,7 @@ import { HomeReturnTaskProvider, useHomeReturnTask } from '../navigation/HomeRet
 import HomeReturnDetailsRoute from '../../app/home-return-details';
 import { router } from 'expo-router';
 import { HomeScreen } from './HomeScreen';
+import { scrollCommandsForTest } from '../../test-support/react-native';
 
 function ReturnRouteHost() { return useHomeReturnTask() ? <HomeReturnDetailsRoute /> : null; }
 
@@ -212,6 +213,12 @@ describe('Home interactions through mounted components', () => {
     expect(h.byLabel('Optional return details')).toBeDefined();
     expect(h.byText('Could not save return details')).toBeDefined();
     expect(h.byLabel('Return details error')).toBeDefined();
+    const previousScrolls = scrollCommandsForTest().length;
+    expect(h.allByType('ScrollView').some(view => view.props.scrollToOverflowEnabled === true)).toBe(true);
+    await h.run(() => h.byLabel('Return details error')?.parent?.props.onLayout?.());
+    expect(scrollCommandsForTest().slice(previousScrolls)).toEqual([{ y: -144, animated: false }]);
+    await h.run(() => h.byLabel('Return details error')?.parent?.props.onLayout?.());
+    expect(scrollCommandsForTest()).toHaveLength(previousScrolls + 1);
     updateDetails = async () => ({ id: 'checkout-one', assetId: checkedOut.id });
     await h.run(save); await settle();
     expect(updates).toEqual(['All accessories included', 'All accessories included']);
