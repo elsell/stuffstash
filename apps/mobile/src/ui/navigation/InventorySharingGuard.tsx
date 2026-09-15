@@ -1,5 +1,6 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import type { InventorySharingScope } from '../../application/sharing/InventorySharing';
 import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { useSettingsListStyles } from '../screens/SettingsList';
@@ -38,9 +39,7 @@ export function InventorySharingGuard({
           ? `You don’t have permission to manage invitations for ${decision.inventoryName}.`
           : decision.message}
       </Text>
-      <Pressable accessibilityRole="button" onPress={() => void load()} style={styles.retryButton}>
-        <Text style={styles.retryText}>{unavailable ? 'Check Again' : 'Retry'}</Text>
-      </Pressable>
+      <NativeCommandButton label={unavailable ? 'Check Again' : 'Retry'} onPress={() => void load()} />
     </ScrollView>
   );
 }

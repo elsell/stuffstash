@@ -1,5 +1,6 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { useSettingsListStyles } from '../screens/SettingsList';
 import {
@@ -81,14 +82,7 @@ export function VoiceAdminGuard({
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
       <Text accessibilityRole="header" style={styles.errorTitle}>{presentation.title}</Text>
       <Text style={styles.errorMessage}>{presentation.message}</Text>
-      <Pressable
-        accessibilityLabel={presentation.retryLabel}
-        accessibilityRole="button"
-        onPress={() => void load()}
-        style={styles.retryButton}
-      >
-        <Text style={styles.retryText}>{presentation.retryLabel}</Text>
-      </Pressable>
+      <NativeCommandButton label={presentation.retryLabel} onPress={() => void load()} />
     </ScrollView>
   );
 }

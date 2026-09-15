@@ -69,17 +69,6 @@ export function createSettingsScreenStyles(
     errorContainer: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: settingsLayoutMetrics.horizontalInset, paddingVertical: spacing.lg },
     errorTitle: { color: colors.text, fontSize: 22, fontWeight: '700', textAlign: 'center' },
     errorMessage: { color: colors.textMuted, fontSize: 16, marginTop: spacing.sm, textAlign: 'center' },
-    retryButton: {
-      alignItems: 'center',
-      alignSelf: 'center',
-      backgroundColor: colors.action,
-      borderRadius: radius.md,
-      justifyContent: 'center',
-      marginTop: spacing.md,
-      minHeight: 44,
-      paddingHorizontal: spacing.lg
-    },
-    retryText: { color: colors.onAction, fontSize: 16, fontWeight: '600' },
     dangerText: { color: colors.danger, fontSize: 17 },
     actionText: { color: colors.action, fontSize: 17 },
     valueText: { color: colors.text, fontSize: 17 },

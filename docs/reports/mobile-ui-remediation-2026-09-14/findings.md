@@ -757,3 +757,13 @@ Three operation error ownership regressions fail before the correction. Eighteen
 remote Add checks, TypeScript and structural checks pass afterward
 (/tmp/add-operation-error-green.log on paul); critic found no blockers.
 Native camera/library return and announcement checks remain pending.
+
+M81 remaining shared-style consumers: expiration filter Retry/Cancel, notification
+settings Retry, Sharing/Voice guard recovery, invitation Retry and pagination now
+use native commands. Authorization decisions and request callbacks are unchanged.
+The shared custom retry styles are now unused and removed. Twenty-six remote
+guard, Sharing and notification checks plus TypeScript/structural checks pass
+(/tmp/settings-last-retry.log). Critic caught missing pagination progress copy;
+an adjacent Loading older invitations status now preserves feedback while the
+native command retains its stable label. The nine Sharing checks and static
+checks passed again after that correction. Native recovery layout remains pending.

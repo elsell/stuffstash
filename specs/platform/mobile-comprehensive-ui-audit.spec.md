@@ -554,3 +554,12 @@ comparisons. Use identical full-string entry and verify native text plus the
 application-observed value. Do not replace failing product scenarios, disable
 autocorrection in production, slow typing to obtain a pass, or equate URL-field
 success with general text-entry acceptance. Native execution is required.
+
+### Remaining Settings recovery consumers
+
+Expiration filter loading recovery, notification settings recovery, Sharing and
+Voice permission-check recovery, invitation retry and invitation pagination must
+use the shared native command adapter in their existing vertical containers.
+Preserve access decisions, retry destinations, cancellation and pagination
+disabling. This is a presentation change, not a change to access policy. Remove
+shared custom retry styling only after every consumer has migrated.
