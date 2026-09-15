@@ -52,7 +52,7 @@ export function AccountSettingsScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-      <SettingsRefreshNotice visible={principal.isError} onRetry={async () => { await principal.refetch(); }} />
+      <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : 'Could not load account details. You can retry or sign out.'} onRetry={async () => { await principal.refetch(); }} />
           <SettingsSection footer="Signing out keeps this server on your device so you can sign in again quickly.">
             <SettingsValueRow label="Signed in as" value={principalLabel} />
           </SettingsSection>

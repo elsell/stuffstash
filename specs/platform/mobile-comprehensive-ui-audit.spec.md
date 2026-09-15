@@ -1102,3 +1102,9 @@ a session-changing action. A confirmation may start its command once. If a
 started command fails after departure, it must release its pending lock without
 publishing an error into the new visit. Current-visit failures remain retryable.
 This does not change session termination, persistence or authorization behavior.
+
+Account identity recovery must distinguish initial failure from failed refresh.
+When no principal has loaded, describe unavailable account details without claiming
+cached values are displayed. A failed refresh with retained principal data may
+explain that previous details remain. Retry and sign-out stay available in either
+case; loaded-provider and other retained-settings recovery keeps its existing copy.

@@ -1949,3 +1949,25 @@ Critic found no blocker and identified replacement coverage as a useful addition
 Two added query-replacement cases pass while preserving current acceptance (55
 settings tests total). Direct principal/server-value changes remain source-covered;
 native acceptance remains pending.
+
+## M141 — Initial Account read failure claims retained details
+
+P2, R024 recovery. At570b804c initial principal failure displays the shared refresh
+notice's claim that previously loaded values are shown. No values have loaded.
+Account now supplies explicit unavailable-details text only when principal data
+is absent. Other consumers and retained principal refresh keep existing copy.
+A mounted failing-first retry journey now passes; sign-out stays available.
+61 settings tests, TypeScript and structural checks pass on paul. Native pending.
+
+## M142 — Account and Connection command rows bypass native adapter
+
+P2 platform-pattern review, R024/R026. SettingsActionRow implements Sign Out and
+Change Server with custom Pressable/Text styling although these are commands and
+the project has NativeCommandButton. The repository requires actual native adapters
+unless a concrete limitation is documented. No limitation was identified in these
+callers. Review shared consumers before migration; preserve accessibility labels,
+pending state, confirmation semantics and current-visit retry. This is a source
+finding against project policy, not an assertion that Apple prohibits grouped rows.
+Implementation and native normal-size verification remain pending.
+
+M141 critic found no confirmed blocker; query/session behavior remains unchanged.

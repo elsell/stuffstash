@@ -146,3 +146,5 @@ unresolved native behavior, not pass promotions. Existing evidence is retained.
 Coverage is still141 surfaces ×24 axes:984 source-reviewed,2086 pending,268 finding,
 18 runtime-partial and28 not-applicable. Unique surface/axis pairs match the
 inventory exactly. The many pending cells remain work, not implied compliance.
+
+`account-connection-axis.md` reviews R024/R026 across all24 axes. M141 corrects initial identity recovery copy; M142 records custom command rows awaiting native-adapter correction. Source review does not close runtime cells.

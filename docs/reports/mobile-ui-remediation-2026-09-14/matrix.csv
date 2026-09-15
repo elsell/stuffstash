@@ -551,30 +551,30 @@ R023,settings/about.tsx,privacy,"Account scope, data use and permissions",source
 R023,settings/about.tsx,notifications,System notification entry and state,pending,,
 R023,settings/about.tsx,media,"Camera, library, files and audio",pending,,
 R023,settings/about.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R024,settings/account.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shows signed-in identity and explicit sign-out; explains saved server retention.; account-connection-axis.md source/controlled recovery; native pending,
-R024,settings/account.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; account-connection-axis.md source/controlled recovery; native pending,M73
-R024,settings/account.tsx,selection,Value selection and current value,pending,,
-R024,settings/account.tsx,modality,Presentation and dismissal,finding,Native confirmation names account and explains sign-in consequence; cancel provided.; 3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M140
-R024,settings/account.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R024,settings/account.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R024,settings/account.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R024,settings/account.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R024,settings/account.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R024,settings/account.tsx,imagery,"Icons, photos and missing media",pending,,
-R024,settings/account.tsx,targets,Touch target size and reachability,pending,,
-R024,settings/account.tsx,gestures,Gestures and explicit alternatives,pending,,
-R024,settings/account.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R024,settings/account.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R024,settings/account.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R024,settings/account.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R024,settings/account.tsx,search,"Search, scope and filters",pending,,
-R024,settings/account.tsx,loading,"Loading, background refresh and progress",source-reviewed,Pending sign-out label and ref guard; failed command restores action.; account-connection-axis.md source/controlled recovery; native pending,M73
-R024,settings/account.tsx,recovery,"Empty, error, denied and retry",finding,Failure uses feedback; settings load failure is scrollable with Retry; refresh error preserves content.; account-connection-axis.md source/controlled recovery; native pending; 3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M73; M140
-R024,settings/account.tsx,editing,"Draft, save, cancel, undo and interruption",finding,3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M140
-R024,settings/account.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Identity and saved-server consequences visible before command; no auth boundary changed.; account-connection-axis.md source/controlled recovery; native pending,
-R024,settings/account.tsx,notifications,System notification entry and state,pending,,
-R024,settings/account.tsx,media,"Camera, library, files and audio",pending,,
-R024,settings/account.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.,M140
+R024,settings/account.tsx,task,Task clarity and platform-pattern fit,finding,Shows signed-in identity and explicit sign-out; explains saved server retention.; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,M142
+R024,settings/account.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,M73
+R024,settings/account.tsx,selection,Value selection and current value,source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,modality,Presentation and dismissal,finding,Native confirmation names account and explains sign-in consequence; cancel provided.; 3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M140
+R024,settings/account.tsx,layout,"Safe areas, scroll edges and overlays",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,adaptation,Phone/tablet/window reflow,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,typography,"Dynamic Type, wrapping and legibility",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,appearance,"Light/dark, contrast and materials",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,localization,"Locale, timezone, RTL and long strings",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,imagery,"Icons, photos and missing media",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,targets,Touch target size and reachability,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,gestures,Gestures and explicit alternatives,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,keyboard,"Keyboard, text entry and focus",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,motion,Reduced motion and feedback alternatives,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,search,"Search, scope and filters",source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,loading,"Loading, background refresh and progress",source-reviewed,Pending sign-out label and ref guard; failed command restores action.; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,M73
+R024,settings/account.tsx,recovery,"Empty, error, denied and retry",finding,Failure uses feedback; settings load failure is scrollable with Retry; refresh error preserves content.; account-connection-axis.md source/controlled recovery; native pending; 3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M73; M140; M141
+R024,settings/account.tsx,editing,"Draft, save, cancel, undo and interruption",finding,3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M140
+R024,settings/account.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Identity and saved-server consequences visible before command; no auth boundary changed.; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,notifications,System notification entry and state,source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,media,"Camera, library, files and audio",source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R024,settings/account.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,3e8e5e11 sign-out confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M140
 R025,settings/appearance.tsx,task,Task clarity and platform-pattern fit,source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
 R025,settings/appearance.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
 R025,settings/appearance.tsx,selection,Value selection and current value,source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
@@ -599,30 +599,30 @@ R025,settings/appearance.tsx,privacy,"Account scope, data use and permissions",s
 R025,settings/appearance.tsx,notifications,System notification entry and state,source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
 R025,settings/appearance.tsx,media,"Camera, library, files and audio",source-reviewed,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,
 R025,settings/appearance.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,appearance-settings-axis.md; source55fb2cd9; native acceptance pending,M127
-R026,settings/connection.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Current server host/address shown separately from Change Server command.; account-connection-axis.md source/controlled recovery; native pending,
-R026,settings/connection.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; account-connection-axis.md source/controlled recovery; native pending,
-R026,settings/connection.tsx,selection,Value selection and current value,pending,,
-R026,settings/connection.tsx,modality,Presentation and dismissal,finding,"Native confirmation explains sign-out, forgotten selection and retained remote data.; 3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.",M140
-R026,settings/connection.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R026,settings/connection.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R026,settings/connection.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R026,settings/connection.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R026,settings/connection.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R026,settings/connection.tsx,imagery,"Icons, photos and missing media",pending,,
-R026,settings/connection.tsx,targets,Touch target size and reachability,pending,,
-R026,settings/connection.tsx,gestures,Gestures and explicit alternatives,pending,,
-R026,settings/connection.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R026,settings/connection.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R026,settings/connection.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R026,settings/connection.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R026,settings/connection.tsx,search,"Search, scope and filters",pending,,
-R026,settings/connection.tsx,loading,"Loading, background refresh and progress",source-reviewed,Pending command disables action and ref prevents duplicate execution.; account-connection-axis.md source/controlled recovery; native pending,
-R026,settings/connection.tsx,recovery,"Empty, error, denied and retry",finding,Change-server failure shows feedback and restores action.; account-connection-axis.md source/controlled recovery; native pending; 3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.,M140
-R026,settings/connection.tsx,editing,"Draft, save, cancel, undo and interruption",finding,3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.,M140
-R026,settings/connection.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Server destination and data consequences visible; no destructive remote action implied.; account-connection-axis.md source/controlled recovery; native pending,
-R026,settings/connection.tsx,notifications,System notification entry and state,pending,,
-R026,settings/connection.tsx,media,"Camera, library, files and audio",pending,,
-R026,settings/connection.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.,M140
+R026,settings/connection.tsx,task,Task clarity and platform-pattern fit,finding,Current server host/address shown separately from Change Server command.; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,M142
+R026,settings/connection.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,selection,Value selection and current value,source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,modality,Presentation and dismissal,finding,"Native confirmation explains sign-out, forgotten selection and retained remote data.; 3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending",M140
+R026,settings/connection.tsx,layout,"Safe areas, scroll edges and overlays",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,adaptation,Phone/tablet/window reflow,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,typography,"Dynamic Type, wrapping and legibility",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,appearance,"Light/dark, contrast and materials",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,localization,"Locale, timezone, RTL and long strings",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,imagery,"Icons, photos and missing media",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,targets,Touch target size and reachability,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,gestures,Gestures and explicit alternatives,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,keyboard,"Keyboard, text entry and focus",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,motion,Reduced motion and feedback alternatives,pending,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,search,"Search, scope and filters",source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,loading,"Loading, background refresh and progress",source-reviewed,Pending command disables action and ref prevents duplicate execution.; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,recovery,"Empty, error, denied and retry",finding,Change-server failure shows feedback and restores action.; account-connection-axis.md source/controlled recovery; native pending; 3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M140
+R026,settings/connection.tsx,editing,"Draft, save, cancel, undo and interruption",finding,3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M140
+R026,settings/connection.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Server destination and data consequences visible; no destructive remote action implied.; account-connection-axis.md source/controlled recovery; native pending; account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,notifications,System notification entry and state,source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,media,"Camera, library, files and audio",source-reviewed,account-connection-axis.md; source570b804c plus M141; native pending,
+R026,settings/connection.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,3e8e5e11 server-change confirmation and late-error ownership;55 settings tests; native pending.; account-connection-axis.md; source570b804c plus M141; native pending,M140
 R027,settings/diagnostics.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Diagnostics groups connection, identity and version as read-only values.; account-connection-axis.md About/Diagnostics source inspection; native and configured-data acceptance pending",
 R027,settings/diagnostics.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R027,settings/diagnostics.tsx,selection,Value selection and current value,source-reviewed,account-connection-axis.md About/Diagnostics source inspection; native and configured-data acceptance pending,

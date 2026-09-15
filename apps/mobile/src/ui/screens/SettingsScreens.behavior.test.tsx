@@ -567,3 +567,20 @@ it.each(['signOut', 'server'] as const)('rejects %s confirmation after settings-
     expect(calls).toBe(1);
   } finally { await harness.unmount(); }
 });
+
+it('describes missing account details honestly and recovers with retry', async () => {
+  let reads = 0;
+  const query = new SettingsQuery({ getCurrentPrincipal: async () => {
+    if (++reads === 1) throw new Error('offline');
+    return { id: 'principal', email: 'recovered@example.com' };
+  } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://stash.home.test/api', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => { throw new Error('Account must not load inventory'); } });
+  const { harness } = await mount(<AccountSettingsScreen settingsQuery={query} onSignOut={async () => {}} />);
+  try {
+    expect(harness.allText()).toContain('Could not load account details. You can retry or sign out.');
+    expect(harness.allText()).not.toContain('Some settings could not be refreshed. Previously loaded values are shown.');
+    expect(harness.byLabel('Sign out Current account')).toBeDefined();
+    await harness.press(harness.byLabel('Retry refresh')); await settle(harness);
+    expect(harness.byLabel('Sign out recovered@example.com')).toBeDefined();
+    expect(harness.allText()).not.toContain('Could not load account details. You can retry or sign out.');
+  } finally { await harness.unmount(); }
+});
