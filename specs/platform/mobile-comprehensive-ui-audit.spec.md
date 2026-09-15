@@ -625,3 +625,21 @@ The dependency exposes an optional error renderer so Stuff Stash can reuse its
 native command-button adapter. Restore viewer chrome when the current photo fails;
 background/preloaded photo failures must not interrupt another photo's zoom state.
 Keep image source objects stable across unrelated wrapper rerenders.
+
+### Add error reveal beneath native chrome
+
+Run34944106312 shows the inline error heading partly covered by the Add navigation
+bar after programmatic scrolling. Reveal the form's top using the measured native
+header height on iOS, rather than content offset zero. Keep automatic safe-area
+adjustment and allow that bounded negative programmatic offset; the pinned RN
+Fabric scrollTo implementation otherwise clamps it using raw contentInset rather
+than UIKit's adjustedContentInset. Android retains offset zero. Do not add fixed
+header padding or a guessed navigation-bar height. The native rejection scenario
+must assert the complete error heading below the navigation bar and inside the
+sheet, in addition to retained text and reachable actions. Source tests verify the
+scroll command against changing header measurements; native geometry is separate.
+
+References: React Native ScrollView scrollToOverflowEnabled and
+contentInsetAdjustmentBehavior (https://reactnative.dev/docs/scrollview), and
+UIKit adjustedContentInset
+(https://developer.apple.com/documentation/uikit/uiscrollview/adjustedcontentinset).

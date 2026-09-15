@@ -436,6 +436,12 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(name.value as? String, "Native draft name")
     XCTAssertTrue(save.isEnabled)
     XCTAssertTrue(close.isEnabled)
+    let errorHeading = app.staticTexts["Could not save asset"].firstMatch
+    XCTAssertTrue(errorHeading.waitForExistence(timeout: 5))
+    let navigationBar = app.navigationBars["Add item"]
+    XCTAssertGreaterThanOrEqual(errorHeading.frame.minY, navigationBar.frame.maxY,
+      "The entire error heading must remain below the native navigation bar")
+    XCTAssertLessThanOrEqual(errorHeading.frame.maxY, rejected.frame.minY)
     capture("add-rejected-draft-retained")
     close.tap()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 5))

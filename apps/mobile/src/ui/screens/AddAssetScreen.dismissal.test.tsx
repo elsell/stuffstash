@@ -1,7 +1,9 @@
+import { scrollCommandsForTest } from '../../test-support/react-native';
+import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import React from 'react';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
 import { Platform, pressAlertButton } from '../../test-support/react-native';
-import { expect, it } from 'vitest';
+import { afterEach, expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
@@ -104,6 +106,15 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
     let ancestor = failure?.parent;
     while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;
     expect(ancestor?.type).toBe('ScrollView');
+    const revealError = failure?.parent?.props.onLayout;
+    expect(revealError).toBeTypeOf('function');
+    await h.run(() => setNativeHeaderHeight(72));
+    await h.run(() => h.byText('Save unavailable')?.parent?.props.onLayout());
+    expect(scrollCommandsForTest().at(-1)).toEqual({ y: -72, animated: false });
+    await h.run(() => setNativeHeaderHeight(96));
+    await h.run(() => h.byText('Save unavailable')?.parent?.props.onLayout());
+    expect(scrollCommandsForTest().at(-1)).toEqual({ y: -96, animated: false });
+    expect(ancestor?.props.scrollToOverflowEnabled).toBe(true);
     expect(h.byLabel('Asset name')?.props.editable).toBe(true);
     expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })?.title).toBe('Submitted name');
     await h.changeText(h.byLabel('Asset name'), 'Retry name');
@@ -197,3 +208,5 @@ it('settles navigation updates while header actions use the latest Add draft', a
     expect(dismissed).toBe(1);
   } finally { await h.unmount(); client.clear(); resetNavigation(); }
 });
+
+afterEach(() => setNativeHeaderHeight(144));

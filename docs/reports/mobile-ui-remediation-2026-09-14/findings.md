@@ -828,3 +828,14 @@ active photo restores viewer chrome on failure. Both caller projections are stab
 across unrelated updates. Eleven focused checks, eighteen Add checks, TypeScript,
 structural validation, and an iOS Metro export passed remotely. This is not native
 visual acceptance; M85 remains open pending the runner scenario and inspection.
+
+M82 header-reveal follow-up: the iPad screenshot in run349441 shows the error
+heading under the navigation bar, despite a readable message. Add now requests
+the measured negative iOS header offset when revealing an error; RN's bounded
+programmatic-overflow option permits the automatically inset position. Android
+keeps zero. The existing draft-recovery regression failed at the old zero offset
+and now passes for two header measurements. The native scenario additionally
+requires the entire heading below the navigation bar. Native acceptance is pending.
+The broader remote check of the changed shared ScrollView fake passed all1495
+mobile tests across257 files; TypeScript and structural checks also passed.
+This validates source behavior, not iOS geometry.

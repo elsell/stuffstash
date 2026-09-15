@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { AddAssetNameField } from './AddAssetNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
@@ -123,6 +124,7 @@ function ScopedAddAssetScreen({
   const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
   const formScrollRef = useRef<ScrollView>(null);
+  const navigationHeaderHeight = useHeaderHeight();
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [draftContext, setDraftContext] = useState<AddAssetDraftContext | undefined>();
   const [expiration, setExpiration] = useState<AssetExpiration | undefined>();
@@ -517,6 +519,7 @@ function ScopedAddAssetScreen({
         ref={formScrollRef}
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"
+        scrollToOverflowEnabled={Platform.OS === 'ios'}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: safeAreaInsets.bottom + spacing.lg }
@@ -526,7 +529,7 @@ function ScopedAddAssetScreen({
         keyboardShouldPersistTaps="handled"
       >
         {saveState.status === 'saving' ? <ActivityIndicator accessibilityLabel="Saving item" color={colors.action} /> : null}
-        {saveState.status === 'error' ? <View accessibilityLiveRegion="assertive" onLayout={() => formScrollRef.current?.scrollTo({ y: 0, animated: false })}>
+        {saveState.status === 'error' ? <View accessibilityLiveRegion="assertive" onLayout={() => formScrollRef.current?.scrollTo({ y: Platform.OS === 'ios' ? -navigationHeaderHeight : 0, animated: false })}>
           <Text accessibilityRole="header" style={styles.errorText}>{saveState.title}</Text>
           <Text style={styles.errorText}>{saveState.message}</Text>
         </View> : null}

@@ -74,7 +74,15 @@ export const ActionSheetIOS = {
 };
 export const Text = 'Text';
 export const Pressable = 'Pressable';
-export const ScrollView = 'ScrollView';
+const scrollCommands: { y?: number; x?: number; animated?: boolean }[] = [];
+export const ScrollView = forwardRef((props: Record<string, unknown>, ref) => {
+  useImperativeHandle(ref, () => ({
+    scrollTo: (options: { y?: number; x?: number; animated?: boolean }) => { scrollCommands.push(options); },
+    scrollToEnd: (options: { animated?: boolean }) => { scrollCommands.push(options); }
+  }), []);
+  return createElement('ScrollView', props, props.children as ReactNode);
+});
+export function scrollCommandsForTest() { return [...scrollCommands]; }
 export const KeyboardAvoidingView = 'KeyboardAvoidingView';
 export const ActivityIndicator = 'ActivityIndicator';
 export const Modal = 'Modal';
@@ -156,6 +164,7 @@ export const Animated = { ValueXY: AnimatedValueXY, Value: AnimatedValue, View: 
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  scrollCommands.length = 0;
   imageSizeRequests.length = 0;
   reducedMotionSnapshot = undefined;
   reduceMotionEnabled = false;
