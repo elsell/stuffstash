@@ -1720,3 +1720,23 @@ Add, Sharing and uncontrolled address typing still lost characters. Those passes
 do not establish a typing root cause or eliminate existing failures. Sheet notice
 and phone place-search failures predate their latest candidate corrections.
 Large-text-only failures remain deferred until normal-size findings are addressed.
+
+
+### Add failure before typing, run349983 phone
+
+Inspected Add rejected-save journey final screenshot shows only Loading inventory,
+not an editable name. Retained evidence: phone-add-idle-inventory-349983.png and
+safe query snapshot .json. At actual54714ab4 the diagnostic reports online/focused
+true with pending idle zero-observer queries, including inventory-scope. The test
+failed waiting for Asset name, before entering text. This differs from the other
+Add typing failures and must not be classified as character loss.
+
+A new mounted StrictMode test checks production MobileServerStateProvider with an
+active inventory consumer: data loads, the resource retains one observer, and
+actual unmount empties the cache. All8 provider tests pass without a production
+change. This does not reproduce the native failure or establish its cause; no
+speculative cleanup change is made. Native fixture-specific lifecycle/subscription
+investigation remains needed.
+TypeScript and structural checks also pass on paul. Critic found no confirmed issue;
+the existing acquisition test independently establishes that the harness replays
+effects. The native diagnosis remains open.

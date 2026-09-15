@@ -1123,3 +1123,10 @@ At normal text size verify visible command bounds, native Cancel without mutatio
 first-confirmation error with retry enabled, second confirmation returning to the
 menu, and Back reachability. This provides control/recovery evidence, not proof of
 real authentication-provider/session teardown or VoiceOver operation.
+
+Query-provider lifecycle acceptance must include effect replay with mounted query
+consumers, not only measurement collectors. A replayed setup/cleanup/setup must
+leave active observers attached and reads usable, while actual replacement and
+unmount still cancel and clear the departed client. Native run349983 Add remained
+Loading inventory with idle zero-observer queries; effect replay is a hypothesis
+to test, not an established cause of that native capture.
