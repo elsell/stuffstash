@@ -1530,3 +1530,14 @@ successfully. Log on paul: /tmp/mobile-batch-current-full.log. This is source/te
 evidence, not native acceptance. Native run34985387290 remained in progress on
 its earlier source8f1ec146 and cannot validate the later M117 changes. PR150's
 description now includes the combined filter fixes and this validation scope.
+
+### Footer diagnostic follow-up after run349789
+
+The retained phone capture still shows no body controls after explicit flex sizing.
+The next candidate uses the shared NativeFilterSheet direct scroll body rather
+than a nested ScrollView under a root View. It retains shipping NativeSheetActions
+and checks command bounds within the measured footer region. No appearance
+assertion is removed. Two remote fixture-preparation tests, TypeScript and mobile
+structural checks pass; native body visibility and dark disabled contrast remain
+unverified. The live run34985387290 predates this diagnostic change. Its iPhone
+and iPad onboarding jobs succeeded while both fixture jobs remained in progress.

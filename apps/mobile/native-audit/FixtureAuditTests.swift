@@ -207,9 +207,13 @@ final class FixtureAuditTests: XCTestCase {
     open.tap()
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForExistence(timeout: 10))
     let form = app.scrollViews.containing(.staticText, identifier: "Footer appearance").firstMatch
+    let root = app.otherElements["footer-appearance-actions"].firstMatch
+    XCTAssertTrue(root.exists)
     func reveal(_ element: XCUIElement) {
       for _ in 0..<18 {
-        let bounds = form.frame.intersection(app.frame)
+        let visible = form.frame.intersection(app.frame)
+        let bounds = CGRect(x: visible.minX, y: visible.minY, width: visible.width,
+          height: max(0, min(visible.maxY, root.frame.minY) - visible.minY))
         if element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY { return }
         let above = element.frame.minY < bounds.minY
         form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
@@ -217,10 +221,14 @@ final class FixtureAuditTests: XCTestCase {
       }
       XCTFail("Footer diagnostic control must be fully visible")
     }
-    let root = app.otherElements["footer-appearance-root"].firstMatch
-    XCTAssertTrue(root.exists)
     func footerVisible() {
-      let bounds = root.frame.intersection(app.frame)
+      let sheetBounds = form.frame.intersection(app.frame)
+      XCTAssertFalse(sheetBounds.isEmpty)
+      XCTAssertGreaterThanOrEqual(root.frame.minY, sheetBounds.minY)
+      XCTAssertLessThanOrEqual(root.frame.maxY, sheetBounds.maxY)
+      XCTAssertGreaterThanOrEqual(root.frame.minX, sheetBounds.minX)
+      XCTAssertLessThanOrEqual(root.frame.maxX, sheetBounds.maxX)
+      let bounds = root.frame.intersection(sheetBounds)
       XCTAssertFalse(bounds.isEmpty)
       for label in ["Move", "Cancel"] {
         let button = app.buttons[label].firstMatch

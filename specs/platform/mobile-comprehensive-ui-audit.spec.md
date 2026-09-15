@@ -1047,3 +1047,10 @@ The Expiration native search journey must open the integrated Search button befo
 typing, record its collapsed state, and assert the full entered query and filtered
 choices alongside existing keyboard/footer reachability. Do not retain the old
 assumption that the search field is permanently visible after M117.
+
+Run349789 still rendered no footer-diagnostic body after explicit flex sizing.
+The next diagnostic uses NativeFilterSheet's direct scroll body and measured
+opaque footer, retaining NativeSheetActions through that shared composition.
+Measure commands against the actual footer region rather than an enclosing root
+View. This removes the diagnostic's nested-scroll difference from working native
+filter layouts; it does not establish button contrast until runtime reaches it.
