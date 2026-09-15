@@ -947,3 +947,14 @@ native alert. Confirmations are single-use and owned by the focused keyed form.
 Successful save disarms removal protection before invoking the return callback.
 A late confirmation or save from a replaced form/visit cannot leave the new task.
 Secrets remain transient and successful replacement clears the submitted value.
+
+## Provider editor native acceptance fixtures
+
+Runner-only provider fixtures must render the production credential and prompt
+screens through real application commands and controlled repository ports. Use
+synthetic replacement input only; do not load a session or contact a provider.
+The first replacement fails locally and the next succeeds. Native journeys at
+normal text size must verify disabled empty Save, typing, Back/Keep Editing,
+retained input after failure, retry and successful navigation. A separate dirty
+Discard journey must verify return without saving. Keep phone/iPad keyboard,
+header and navigation evidence distinct from fixture installation or type checks.

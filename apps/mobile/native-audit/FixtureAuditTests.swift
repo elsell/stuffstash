@@ -12,6 +12,62 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  private func verifyProviderEditor(_ kind: String, discard: Bool = false) {
+    let open = app.buttons["Audit Provider \(kind)"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Provider editor"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let save = header.buttons[kind == "prompt" ? "Save Guidance" : "Save Credential"]
+    XCTAssertTrue(save.waitForExistence(timeout: 5)); XCTAssertFalse(save.isEnabled)
+    let field = kind == "prompt" ? app.textViews["New prompt guidance"] : app.secureTextFields["API key"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5)); XCTAssertTrue(field.isHittable)
+    field.tap(); waitForKeyboard(); field.typeText("Synthetic replacement")
+    XCTAssertTrue(save.isEnabled); XCTAssertTrue(save.isHittable)
+    if kind == "prompt" { XCTAssertEqual(field.value as? String, "Synthetic replacement") }
+    capture("provider-\(kind)-draft")
+    let back = header.buttons["BackButton"].firstMatch
+    XCTAssertTrue(back.isHittable); back.tap()
+    let alert = app.alerts["Discard changes?"]
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    if discard {
+      alert.buttons["Discard"].tap()
+    } else {
+      alert.buttons["Keep Editing"].tap()
+      XCTAssertTrue(field.exists); XCTAssertTrue(save.isEnabled)
+      save.tap()
+      let error = app.staticTexts["Audit replacement unavailable. Try again."]
+      XCTAssertTrue(error.waitForExistence(timeout: 5))
+      XCTAssertTrue(header.exists); XCTAssertTrue(save.isEnabled)
+      if kind == "prompt" { XCTAssertEqual(field.value as? String, "Synthetic replacement") }
+      if app.keyboards.firstMatch.exists {
+        let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+        XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
+      }
+      let form = app.scrollViews.containing(.staticText, identifier: "Audit replacement unavailable. Try again.").firstMatch
+      XCTAssertTrue(form.exists)
+      func errorVisible() -> Bool {
+        let bounds = form.frame.intersection(app.frame)
+        let rect = error.frame
+        return rect.height > 0 && rect.minY >= max(bounds.minY, header.frame.maxY) &&
+          rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
+      }
+      for _ in 0..<8 where !errorVisible() {
+        if error.frame.minY < header.frame.maxY { form.swipeDown() } else { form.swipeUp() }
+      }
+      XCTAssertTrue(errorVisible()); XCTAssertTrue(save.isHittable); XCTAssertTrue(back.isHittable)
+      capture("provider-\(kind)-failed-save")
+      save.tap()
+    }
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.alerts["Discard changes?"].exists)
+  }
+
+  func testProviderCredentialNativeSaveRecovery() { verifyProviderEditor("credential") }
+  func testProviderPromptNativeSaveRecovery() { verifyProviderEditor("prompt") }
+  func testProviderPromptNativeDiscard() { verifyProviderEditor("prompt", discard: true) }
+
   func testSharingRecoveryKeepsHeaderAndCommandsReachable() {
     let open = app.buttons["Audit Sharing"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

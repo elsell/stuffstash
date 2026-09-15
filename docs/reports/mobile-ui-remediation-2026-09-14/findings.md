@@ -235,7 +235,7 @@ Run34919776387 failed opening the system color picker on phone and iPad, after a
 earlier pass. The inspected iPad screenshot shows no presented picker. This is an
 observed acceptance failure, not yet a proven implementation defect: the native
 accessible row spans its label and trailing well, so a separate well-target probe
-is pending. Preserve both results and do not certify row activation from a well tap.
+passed on both phone and iPad in run34965113594. The inspected phone capture shows the system picker open. Preserve the failed row result: well activation does not certify row-center activation or VoiceOver activation. M51 remains open.
 
 ### M45 initial native header configuration
 

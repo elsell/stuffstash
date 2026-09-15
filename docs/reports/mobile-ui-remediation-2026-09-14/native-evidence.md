@@ -1367,3 +1367,19 @@ route variants, not proof that every production sheet has the same failure.
 The [color journey](evidence/phone-color-unopened-349651.png) ends on the settings
 controls with the color picker closed. Opening failed in this journey; distinguish
 the row hit target from the actual color-well target before changing the adapter.
+
+The independent color-well probe passed on phone and iPad in the same run. The
+[inspected phone capture](evidence/phone-color-well-open-349651.png) shows the actual
+system picker open. This narrows M51 to activation targeting/semantics; preserve
+the row-center failure and do not infer VoiceOver behavior from the coordinate tap.
+
+## Provider editor normal-size journey coverage
+
+Runner-only routes now mount production credential/prompt editors through real
+application commands and a controlled repository. Three journeys cover native
+Save readiness, keyboard entry, Keep Editing, retained draft/local failure, retry,
+successful Back and explicit Discard. Failure evidence must be fully within the
+form viewport below navigation after keyboard dismissal, with Save/Back reachable.
+Installer tests failed before adding the route, then both passed. TypeScript and
+structural checks passed on paul. Swift compilation and native execution remain
+pending; these journeys are not runtime evidence yet.
