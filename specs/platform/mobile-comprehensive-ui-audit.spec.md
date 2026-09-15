@@ -958,3 +958,18 @@ normal text size must verify disabled empty Save, typing, Back/Keep Editing,
 retained input after failure, retry and successful navigation. A separate dirty
 Discard journey must verify return without saving. Keep phone/iPad keyboard,
 header and navigation evidence distinct from fixture installation or type checks.
+
+## Shared notice native placement regression
+
+A runner-only notice fixture must use the production AppFeedbackProvider and real
+native navigation, both pushed and presented as a full-height sheet. Show a
+persistent synthetic notice with an action and retain its screenshot/hierarchy.
+The notice's full bounds must be below the native navigation bar and within the
+visible application bounds; Back, notice action and dismissal remain reachable.
+Executing the action must update a visible fixture result exactly once. These
+checks intentionally expose M103 before a placement repair. Do not add a guessed
+header offset or replace the nonmodal handoff with an alert to satisfy the test.
+The sheet fixture supplies a native Close action; the pushed screen uses Back.
+Measure the full animated notice using a stable test identifier without changing
+its accessibility grouping, and compare with the active content viewport rather
+than the entire iPad window. Wait for presentation geometry before asserting bounds.

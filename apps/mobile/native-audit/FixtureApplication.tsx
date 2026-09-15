@@ -1,3 +1,4 @@
+export { NoticePlacementFixture } from './NoticePlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
@@ -77,6 +78,8 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
+      <Stack.Screen name="audit-notice" options={{ title: 'Notice placement' }} />
+      <Stack.Screen name="audit-notice-sheet" options={{ title: 'Notice placement', presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-provider-editor" options={{ title: 'Provider editor' }} />
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
@@ -108,6 +111,8 @@ export function FixtureMenu() {
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
+    <Button title="Audit Notice push" onPress={() => router.push('/audit-notice' as Href)} />
+    <Button title="Audit Notice sheet" onPress={() => router.push('/audit-notice-sheet' as Href)} />
     <Button title="Audit Provider credential" onPress={() => router.push('/audit-provider-editor?kind=credential' as Href)} />
     <Button title="Audit Provider prompt" onPress={() => router.push('/audit-provider-editor?kind=prompt' as Href)} />
     <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />

@@ -12,6 +12,48 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  private func verifyNoticePlacement(_ presentation: String) {
+    let open = app.buttons["Audit Notice \(presentation)"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Notice placement"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    app.buttons["Show placement notice"].tap()
+    let dismiss = app.buttons["Audit notice. A retained action must leave navigation reachable. Dismiss message"]
+    let action = app.buttons["Complete audit action"]
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    XCTAssertTrue(action.waitForExistence(timeout: 5))
+    let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
+    let content = app.scrollViews["notice-placement-content"]
+    XCTAssertTrue(notice.exists); XCTAssertTrue(content.exists)
+    func belowNavigation(_ control: XCUIElement) -> Bool {
+      let bounds = content.frame.intersection(app.frame)
+      let rect = control.frame
+      return rect.height > 0 && rect.minY >= max(bounds.minY, header.frame.maxY) &&
+        rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
+    }
+    let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      belowNavigation(notice) && belowNavigation(dismiss) && belowNavigation(action)
+    }, object: nil)
+    let placement = XCTWaiter.wait(for: [settled], timeout: 5)
+    capture("notice-\(presentation)-placement")
+    XCTAssertEqual(placement, .completed, "Full notice must fit in the active screen below navigation")
+    XCTAssertTrue(dismiss.isHittable); XCTAssertTrue(action.isHittable)
+    let back = presentation == "sheet" ? header.buttons["Close notice fixture"] : header.buttons["BackButton"].firstMatch
+    XCTAssertTrue(back.isHittable)
+    action.tap()
+    XCTAssertTrue(app.staticTexts["Notice actions completed: 1"].waitForExistence(timeout: 5))
+    app.buttons["Show placement notice"].tap()
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: dismiss)], timeout: 5), .completed)
+    XCTAssertTrue(app.staticTexts["Notice actions completed: 1"].exists)
+    XCTAssertTrue(back.isHittable); back.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+  }
+
+  func testNoticeKeepsPushedNavigationReachable() { verifyNoticePlacement("push") }
+  func testNoticeKeepsSheetNavigationReachable() { verifyNoticePlacement("sheet") }
+
   private func verifyProviderEditor(_ kind: String, discard: Bool = false) {
     let open = app.buttons["Audit Provider \(kind)"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

@@ -1383,3 +1383,18 @@ form viewport below navigation after keyboard dismissal, with Save/Back reachabl
 Installer tests failed before adding the route, then both passed. TypeScript and
 structural checks passed on paul. Swift compilation and native execution remain
 pending; these journeys are not runtime evidence yet.
+
+## Shared notice placement regression candidate
+
+Two normal-size journeys now exercise the production notice presenter in a pushed
+screen and a full-height native sheet. They require the complete animated notice
+and action inside the actual content viewport below navigation, then exercise the
+action, non-action dismissal, and native Back/Close. The sheet has an explicit
+native Close; iPad acceptance uses sheet content bounds, not only window bounds.
+A stable test identifier adds measurement without changing production layout.
+
+The installer regression failed for the missing routes, then both installer
+tests passed; eight feedback behavior tests, TypeScript and structural checks
+also passed remotely on paul. Critic review found no remaining confirmed issue.
+Swift/native execution is pending. M103 remains uncorrected: these regressions
+provide an acceptance target for a future geometry-aware placement repair.

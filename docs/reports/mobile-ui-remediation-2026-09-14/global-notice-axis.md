@@ -96,3 +96,13 @@ M104 as verified. The change does not repair M103 placement or modify API
 permissions.
 
 M106 removes the two provider-editor failure publications in favor of field-local recovery; the current inventory contains 36 production sites. Native acceptance remains pending.
+
+M103 now has focused native push/sheet regression journeys. Their whole-notice
+bounds and native Back/Close assertions are pending execution. This preparation
+does not claim a placement fix. Apple's [feedback guidance](https://developer.apple.com/design/human-interface-guidelines/feedback)
+favors feedback integrated into the interface; its [alerts guidance](https://developer.apple.com/design/human-interface-guidelines/alerts)
+helps distinguish interruptions from nonmodal status. React Navigation's
+[native stack documentation](https://reactnavigation.org/docs/native-stack-navigator/)
+distinguishes transparent headers that overlap content, so one root safe-area
+offset cannot serve every presentation. These sources inform the candidate
+design; they do not establish a specific implementation as correct.

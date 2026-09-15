@@ -241,6 +241,7 @@ function AppNotice({
       style={[styles.noticeLayer, { top: topOffset }]}
     >
       <Animated.View
+        testID="app-notice-container"
         accessibilityLabel={presentation.accessibilityLabel}
         {...panResponder.panHandlers}
         style={[
