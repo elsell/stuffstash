@@ -816,3 +816,14 @@ One applicable scenario passes: connection help, complete address, keyboard drag
 and action reachability. Two iPad-only scenarios skip. Log
 /tmp/native349320-onboarding-phone.log. This is not three passing phone scenarios
 or verification of the newer onboarding changes in PR140.
+
+### PR140 full remote regression check at e2db766e
+
+On paul, the complete mobile Vitest run passes1477 tests in253 files, followed by
+TypeScript and mobile structural checks. Log /tmp/pr140-full-mobile.log on paul.
+Changed tracked mobile/scripts/spec files relative to177c08b6 match the local
+branch by SHA256 (/tmp/pr140-validation-hashes.txt); the deleted legacy invitation
+context test is absent. The initial rsync listed that deleted path and reported
+code23; the follow-up hash check proves all existing changed files transferred.
+No local tests/builds ran. This is regression evidence for the current PR140 batch,
+not native compilation, rendering, or physical device acceptance.
