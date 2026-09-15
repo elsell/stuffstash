@@ -409,3 +409,8 @@ by default, container only for the measured expiration footer. Other safe areas
 remain active. Browse's unmeasured footer retains its existing native behavior.
 Verify actual button hit-testing and navigation after keyboard entry; screenshots
 or host props alone do not prove the correction.
+
+The Edit asset form's body title must scroll with its metadata feedback and fields.
+Do not reserve a fixed, scaling title above a small sheet scroll viewport. Keep
+completion actions available separately, and verify actual large-text sheet
+geometry on phone and iPad.

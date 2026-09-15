@@ -228,6 +228,7 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
     const formScroll = harness.allByType('ScrollView').find(node =>
       node.queryAll(child => child.props.accessibilityLabel === 'Asset name').length > 0);
     expect(formScroll).toBeDefined();
+    expect(formScroll?.queryAll(child => child.children.join('') === 'Edit asset').length).toBeGreaterThan(0);
     for (const label of ['Retry asset types', 'Retry tags']) {
       expect(formScroll?.queryAll(child => child.props.accessibilityLabel === label).length).toBeGreaterThan(0);
     }

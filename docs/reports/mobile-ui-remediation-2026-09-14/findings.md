@@ -1068,3 +1068,9 @@ collapse before the fix, then19 remote Add tests, TypeScript and structural chec
 passed. It covers scoped restoration, color storage, clear and Save retention.
 Critic review found no confirmed issue. Native typing/color/layout acceptance is
 still pending; other Add search/validation findings remain separate.
+
+M87 follow-up after iPad349548 inspection: the Edit title moves into the form
+scroll with metadata and fields, retaining separate completion actions. Its
+containment regression failed before the change. Actual enlarged-text scrolling,
+button measurement and footer reachability remain pending on the corrected build.
+See native-evidence.md for the old119-point viewport and search-selector findings.

@@ -90,8 +90,8 @@ export function EditAssetSheet({
   const canSave = canSaveEditAsset(asset, draft) && !isSaving;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
-      <Text style={styles.sheetTitle}>Edit asset</Text>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        <Text style={styles.sheetTitle}>Edit asset</Text>
         {metadataRecovery}
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
