@@ -379,3 +379,17 @@ configured-origin boundary. Copy/share is an explicit user action. API errors,
 including unauthenticated or unauthorized responses, cannot yield a usable link.
 Tests must exercise the generated HTTP client and mobile adapter with adversarial
 response bodies/statuses as well as the legitimate general-build creation path.
+
+When a successful creation response identifies the requested tenant/inventory but
+its one-time URL fails validation, the adapter reports a typed link-unavailable
+outcome without retaining the rejected URL. The command invalidates safe invitation
+metadata for that scope before propagating this outcome. Transport failures and
+cross-scope metadata do not establish creation and retain ordinary failure handling.
+Sharing presents creation errors inline in the form, retaining email/access and
+header visibility. Link-unavailable feedback explains that an invitation was
+created and asks the user to cancel it before trying again; it never exposes or
+copies the rejected URL. Feedback belongs to the focused scope, clears on a new
+attempt or scope change, and cannot appear from a late completion after departure.
+Starting another invitation creation clears the previous one-time result from the
+form, so an older invitation's Copy/Share actions cannot appear as recovery for
+the new attempt. The one-time-link explanation must state this lifetime explicitly.

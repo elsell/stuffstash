@@ -1,3 +1,4 @@
+import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { StuffStashClient } from '@stuff-stash/api-client';
 import { describe, expect, it } from 'vitest';
 import type { CreatedInventoryAccessInvitation, InventoryAccessInvitation, Page } from '@stuff-stash/api-client';
@@ -48,7 +49,7 @@ describe('ApiInventoryInvitationManagementRepository', () => {
       cancelInventoryAccessInvitation: async () => undefined
     }, trustedInvitationOrigin);
     await expect(repository.create(scope, { email: 'friend@example.com', relationship: 'viewer' }))
-      .rejects.toThrow('Stuff Stash did not return the one-time invitation link.');
+      .rejects.toBeInstanceOf(InventoryInvitationLinkUnavailableError);
   });
 
   it('scopes create and cancel calls to the selected inventory', async () => {
@@ -95,7 +96,7 @@ describe('ApiInventoryInvitationManagementRepository', () => {
       cancelInventoryAccessInvitation: async () => undefined
     }, trustedInvitationOrigin);
     await expect(repository.create(scope, { email: 'friend@example.com', relationship: 'viewer' }))
-      .rejects.toThrow('Stuff Stash did not return the one-time invitation link.');
+      .rejects.not.toBeInstanceOf(InventoryInvitationLinkUnavailableError);
   });
 
   it('rejects repeated pagination cursors instead of looping forever', async () => {

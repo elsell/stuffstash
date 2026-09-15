@@ -43,6 +43,14 @@ export interface InvitationLinkActions {
   share(input: { readonly link: string; readonly inventoryName: string }): Promise<void>;
 }
 
+/** The server confirmed scope metadata, but its one-time link could not be used. */
+export class InventoryInvitationLinkUnavailableError extends Error {
+  constructor() {
+    super('Stuff Stash did not return the one-time invitation link.');
+    this.name = 'InventoryInvitationLinkUnavailableError';
+  }
+}
+
 export class InventorySharingPermissionError extends Error {
   constructor() {
     super('You do not have permission to manage invitations for this inventory.');
@@ -71,7 +79,13 @@ export class CreateInventoryInvitationCommand {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error('Enter a valid email address.');
     }
-    const result = await this.invitations.create(scope, { email, relationship: input.relationship });
+    let result: CreatedInventoryInvitation;
+    try {
+      result = await this.invitations.create(scope, { email, relationship: input.relationship });
+    } catch (error) {
+      if (error instanceof InventoryInvitationLinkUnavailableError) this.observer.onInvitationsChanged(scope);
+      throw error;
+    }
     this.observer.onInvitationsChanged(scope);
     return result;
   }

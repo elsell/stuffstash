@@ -1,3 +1,4 @@
+import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -55,6 +56,7 @@ export function InventorySharingScreen({
   const compositionScopeId = useMobileServerStateScopeId();
   const scopeKey = `${compositionScopeId}:${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
   const [email, setEmail] = useState('');
+  const [creationError, setCreationError] = useState<{ title: string; message: string }>();
   const [relationship, setRelationship] = useState<InventoryInvitationRelationship>('viewer');
   const [created, setCreated] = useState<CreatedInventoryInvitation>();
   const [createdScopeKey, setCreatedScopeKey] = useState<string>();
@@ -66,6 +68,7 @@ export function InventorySharingScreen({
   const feedbackSession = useRef<object | undefined>(undefined);
   useFocusEffect(useCallback(() => {
     const session = {}; feedbackSession.current = session;
+    setCreationError(undefined);
     return () => { if (feedbackSession.current === session) feedbackSession.current = undefined; };
   }, [scopeKey]));
   function captureFeedbackOwner(): () => boolean {
@@ -97,6 +100,9 @@ export function InventorySharingScreen({
     if (workingRef.current) return;
     workingRef.current = true;
     setWorking(true);
+    setCreationError(undefined);
+    setCreated(undefined);
+    setCreatedScopeKey(undefined);
     const ownsFeedback = captureFeedbackOwner();
     const requestedScopeKey = scopeKey;
     try {
@@ -106,7 +112,9 @@ export function InventorySharingScreen({
       setCreatedScopeKey(requestedScopeKey);
       setEmail('');
     } catch (error) {
-      if (ownsFeedback()) feedback.showNotice({ tone: 'error', title: 'Could not create invitation', message: readableError(error) });
+      if (ownsFeedback()) setCreationError(error instanceof InventoryInvitationLinkUnavailableError
+        ? { title: 'Invitation created, link unavailable', message: 'Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.' }
+        : { title: 'Could not create invitation', message: readableError(error) });
     } finally {
       workingRef.current = false;
       setWorking(false);
@@ -172,6 +180,10 @@ export function InventorySharingScreen({
       <SettingsRefreshNotice visible={list.isRefetchError || list.isFetchNextPageError} onRetry={async () => { await (list.isFetchNextPageError ? list.fetchNextPage({ cancelRefetch: false }) : list.refetch({ cancelRefetch: false })); }} />
       <SettingsSection title="New Invitation">
         <View style={styles.form}>
+          {creationError ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
+            <Text style={styles.successTitle}>{creationError.title}</Text>
+            <Text style={settingsStyles.errorMessage}>{creationError.message}</Text>
+          </View> : null}
           <Text style={styles.label}>Email</Text>
           <AppTextInput
             autoCapitalize="none"
@@ -204,7 +216,7 @@ export function InventorySharingScreen({
 
       {visibleCreated ? (
         <SettingsSection
-          footer="This complete link cannot be recovered after you leave this screen. Copy or share it now."
+          footer="Copy or share this link before leaving this screen or creating another invitation. It cannot be recovered later."
           title="Invitation Link"
         >
           <View style={styles.oneTimeLink}>

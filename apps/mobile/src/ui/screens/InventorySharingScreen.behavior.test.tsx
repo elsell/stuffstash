@@ -1,3 +1,4 @@
+import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import React from 'react';
@@ -139,4 +140,31 @@ it.each(['copy', 'share', 'cancel'] as const)('suppresses late %s feedback after
     expect(h.allText()).not.toContain('Invitation link copied');
     expect(h.allText()).not.toContain(`Could not ${action} invitation`);
   } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+
+it('refreshes safe metadata and shows link-unavailable recovery inside the sharing form', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creations = 0;
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: creations === 2 ? [{ ...item, id: 'second', email: 'second@example.test' }, item] : creations ? [item] : [] }),
+    create: async () => { if (++creations === 1) return { ...item, inviteUrl: 'https://example.test/#token=previous' }; throw new InventoryInvitationLinkUnavailableError(); }, cancel: async () => undefined
+  };
+  const observer = new QueryClientInvitationMutationObserver(client, 'scope');
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository, observer)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => { throw new Error('Must not copy'); }, share: async () => { throw new Error('Must not share'); } }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h); await h.changeText(h.byLabel('Invitee email'), 'first@example.test');
+    await h.press(h.byLabel('Create Invitation')); await settle(h);
+    expect(h.byLabel('Complete invitation link')).toBeDefined();
+    await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
+    await h.press(h.byLabel('Create Invitation')); await settle(h);
+    const recovery = h.byText('Invitation created, link unavailable');
+    expect(recovery).toBeDefined();
+    let parent = recovery?.parent;
+    while (parent && parent.type !== 'ScrollView') parent = parent.parent;
+    expect(parent).toBeDefined();
+    expect(h.allText()).toContain('second@example.test');
+    expect(h.byLabel('Invitee email')?.props.value).toBe('friend@example.test');
+    expect(h.byLabel('Complete invitation link')).toBeUndefined();
+    expect(h.allText()).not.toContain('Could not create invitation');
+  } finally { await h.unmount(); client.clear(); }
 });

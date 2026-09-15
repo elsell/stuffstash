@@ -1152,7 +1152,23 @@ navigation area. Source also refreshes invitations only after the creation respo
 passes link validation, so a rejected link can leave the list stale after server
 creation. Preserve the email draft and validation boundary, refresh safe metadata
 when mutation succeeded, and explain an unavailable link separately from failed
-creation. Banner placement needs shared-consumer inspection. Unfixed.
+creation. The candidate moves creation failure feedback into the current form, outside the
+overlay system. A typed link-unavailable outcome is emitted only after a successful
+response matches tenant/inventory metadata. It invalidates safe list data and
+explains that the invitation was created but its link cannot be used; the user can
+cancel it before retrying. Rejected URLs never enter the error. Email/access are
+retained, and feedback is cleared on focus/scope change or another attempt. Late
+failures still require the captured focused scope.
+
+The new route regression failed before implementation and now verifies list refresh,
+inline scroll ancestry, draft retention and absence of a usable link. It covers
+success A followed by unavailable link B, with distinct B metadata proving refresh.
+A review-discovered stale A link is cleared when a new attempt starts; the link
+lifetime explanation now says this explicitly. Thirty-four
+sharing tests, TypeScript and structural checks passed remotely. Native inline
+feedback visibility/announcement remains pending. Other overlay uses, including
+copy/share/cancel feedback, still need shared-consumer positioning review; this
+change does not certify the global banner layout.
 
 ### M100 — Move has unreadable disabled action and excessive summary chrome
 
