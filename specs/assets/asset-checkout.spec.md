@@ -552,3 +552,40 @@ Return callback must stop after the current permission projection is revoked.
 The API remains authoritative; rejection of unauthorized Return attempts must leave
 the open checkout intact. Existing editor return/undo and adversarial missing,
 malformed, viewer and cross-scope boundary cases remain part of validation.
+
+### Home optional return-details presentation
+
+Present this bounded task in a platform-native form sheet owned by the existing
+inventory-scoped Home workflow. It does not navigate to another product destination.
+Use the existing native-stack form-sheet presentation. An app-tree-scoped UI
+presentation context carries the current editor into the route while Home retains
+its inventory-scoped operation owner. Do not put undo credentials or callbacks into
+route parameters or a module-global registry. The route carries no independently
+executable command and closes when its owner clears or unmounts. The editor route
+owns focus during presentation, while Home owns initial Return focus.
+
+The sheet names the asset and labels its optional details input persistently.
+Scrollable content accommodates keyboard and enlarged text; Save and Cancel return
+use existing platform command controls. Disable editing and both commands while a
+save or undo is pending. Disable native swipe dismissal because cancellation must
+first complete an asynchronous undo and may fail; Android Back requests the same
+cancel action. Preserve the editor and draft if undo/save fails. Without an undo
+operation, Close leaves the completed return intact.
+
+If edit permission is revoked while the sheet is open, retain the draft visibly,
+explain that the return has already completed, and offer Close without another
+mutation. Reject stale Save/Cancel callbacks after permission loss. Scope teardown
+removes the sheet without sending a new command to a different inventory.
+Native acceptance must cover actual modal focus, phone/tablet layout, long details,
+keyboard dismissal, disabled pending commands, failed undo recovery and permission
+loss. Source rendering tests alone cannot close this finding.
+
+A completed or torn-down editor only dismisses its own focused route. If another
+screen is above it, remove its task content immediately and defer navigation until
+the stale route regains focus. Bind every editor callback to a unique return-editor
+session, so retained callbacks cannot affect a later return of the same checkout.
+Save/undo failures appear within the sheet, rather than only in Home's feedback
+layer beneath it. The navigation fake must remove stale prevent-remove handlers
+on unmount, matching the native navigation lifecycle.
+An entry without an owned task performs no mutation and returns to Home when the
+navigation stack has no back destination.

@@ -30,11 +30,16 @@ export const fakeNavigation = {
 export function installPreventRemove(enabled: boolean, callback: PreventCallback) {
   active = enabled;
   preventCallback = callback;
+  return () => { if (preventCallback === callback) { active = false; preventCallback = undefined; } };
 }
 export function attemptNavigation(action: PreventedAction) { fakeNavigation.dispatch(action); }
 export function dispatchedActions() { return [...dispatched]; }
 export function navigationOptions() { return [...options]; }
 export function resetNavigation() { active = false; preventCallback = undefined; dispatching = false; dispatched.length = 0; options.length = 0; }
+
+let canGoBack = true;
+export function setCanGoBack(value: boolean) { canGoBack = value; }
+export function getCanGoBack() { return canGoBack; }
 
 let screenFocused = true;
 const focusListeners = new Set<() => void>();

@@ -1,7 +1,9 @@
 import { type ReactNode } from 'react';
-import { useHomeReturnActions, type PendingHomeReturn } from './useHomeReturnActions';
+import { useHomeReturnActions } from './useHomeReturnActions';
 import { router } from 'expo-router';
 import { usePullRefresh } from '../serverState/usePullRefresh';
+import { useHomeReturnTaskPresentation } from '../navigation/HomeReturnTaskPresentation';
+import { HomeReturnDetailsSheet } from './HomeReturnDetailsSheet';
 import { HomeNavigationHeader } from './HomeNavigationHeader';
 import type { NativeHeaderAction } from '../components/NativeHeaderActions.types';
 import {
@@ -20,7 +22,7 @@ import {
 } from '../../application/home/HomeDashboardQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { AssetCard } from '../components/AssetCard';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { assetDetailHref } from './AssetDetailNavigation';
@@ -171,7 +173,20 @@ function DashboardHeader({
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
-  const { returningAssetId, pendingReturn, returnAsset, isReturnDisabled, saveReturnDetails, cancelReturn, changeDetails } = useHomeReturnActions(assetCheckoutCommand, onDashboardChanged, dashboard.checkedOutAssets, dashboard.canReturn);
+  const { returningAssetId, pendingReturn, returnAsset, isReturnDisabled, saveReturnDetails, cancelReturn, closeReturn, changeDetails, setEditorFocused } = useHomeReturnActions(assetCheckoutCommand, onDashboardChanged, dashboard.checkedOutAssets, dashboard.canReturn);
+
+  useHomeReturnTaskPresentation(pendingReturn ? {
+    content: <HomeReturnDetailsSheet
+        canReturn={dashboard.canReturn}
+        onClose={closeReturn}
+        pendingReturn={pendingReturn}
+        onCancel={() => void cancelReturn()}
+        onChangeDetails={changeDetails}
+        onSave={() => void saveReturnDetails()}
+      />,
+    requestClose: () => { if (dashboard.canReturn) void cancelReturn(); else closeReturn(); },
+    focusChanged: setEditorFocused
+  } : undefined);
 
   return (
     <View>
@@ -239,69 +254,7 @@ function DashboardHeader({
           </View>
         </View>
       ) : null}
-      <ReturnDetailsSheet
-        pendingReturn={pendingReturn}
-        onCancel={() => void cancelReturn()}
-        onChangeDetails={changeDetails}
-        onSave={() => void saveReturnDetails()}
-      />
-    </View>
-  );
-}
 
-function ReturnDetailsSheet({
-  pendingReturn,
-  onCancel,
-  onChangeDetails,
-  onSave
-}: {
-  readonly pendingReturn: PendingHomeReturn | undefined;
-  readonly onCancel: () => void;
-  readonly onChangeDetails: (details: string) => void;
-  readonly onSave: () => void;
-}) {
-  const colors = useAppearanceAwarePalette();
-  const styles = createHomeScreenStyles(colors);
-  return (
-    pendingReturn ? (
-      <View style={styles.returnSheet}>
-        <View style={styles.returnSheetHeader}>
-          <Text style={styles.returnSheetTitle}>Return details</Text>
-          <Text style={styles.returnSheetSubtitle} numberOfLines={2}>
-            {pendingReturn?.asset.title}
-          </Text>
-        </View>
-        <AppTextInput
-          multiline
-          editable={!pendingReturn?.isSaving}
-          onChangeText={onChangeDetails}
-          placeholder="Optional details"
-          placeholderTextColor={colors.textMuted}
-          style={styles.returnDetailsInput}
-          textAlignVertical="top"
-          value={pendingReturn?.details ?? ''}
-        />
-        <View style={styles.returnSheetActions}>
-          <Pressable
-            accessibilityRole="button"
-            disabled={pendingReturn?.isSaving}
-            onPress={onCancel}
-            style={[styles.returnSheetButton, styles.returnSheetCancelButton]}
-          >
-            <Text style={styles.returnSheetCancelText}>
-              {pendingReturn?.undoableOperationId ? 'Cancel return' : 'Close'}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={pendingReturn?.isSaving}
-            onPress={onSave}
-            style={[styles.returnSheetButton, styles.returnSheetSaveButton]}
-          >
-            <Text style={styles.returnSheetSaveText}>{pendingReturn?.isSaving ? 'Saving...' : 'Save'}</Text>
-          </Pressable>
-        </View>
-      </View>
-    ) : null
+    </View>
   );
 }

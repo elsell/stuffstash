@@ -1,4 +1,4 @@
-import { fakeNavigation, getScreenFocused, subscribeScreenFocus } from './navigation';
+import { fakeNavigation, getCanGoBack, getScreenFocused, subscribeScreenFocus } from './navigation';
 import { createElement, Fragment, useEffect, useSyncExternalStore } from 'react';
 export function useNavigation() { return fakeNavigation; }
 export const Stack = { Screen: ({ options }: { options?: { headerRight?: () => import('react').ReactNode; headerLeft?: () => import('react').ReactNode } }) => { useEffect(() => { fakeNavigation.setOptions(options); }, [options]); return createElement(Fragment, null, options?.headerLeft?.(), options?.headerRight?.()); } };
@@ -7,6 +7,7 @@ export function useFocusEffect(effect: () => void | (() => void)) {
   useEffect(() => focused ? effect() : undefined, [effect, focused]);
 }
 export const router = {
+  canGoBack: getCanGoBack,
   push: (href: unknown) => fakeNavigation.dispatch({ type: 'push', href }),
   navigate: (href: unknown) => fakeNavigation.dispatch({ type: 'navigate', href }),
   back: () => fakeNavigation.dispatch({ type: 'back' }),

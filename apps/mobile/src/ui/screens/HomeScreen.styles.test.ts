@@ -1,10 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { darkPalette, lightPalette } from '../theme/tokens';
 import { createHomeScreenStyles } from './HomeScreen.styles';
-
-vi.mock('react-native', () => ({
-  StyleSheet: { create: (styles: unknown) => styles }
-}));
 
 describe('createHomeScreenStyles', () => {
   it('resolves semantic surfaces and text for light and dark appearances', () => {
@@ -15,7 +11,6 @@ describe('createHomeScreenStyles', () => {
     expect(darkStyles.shell.backgroundColor).toBe(darkPalette.background);
     expect('backgroundColor' in darkStyles.contextControl).toBe(false);
     expect(darkStyles.contextInventory.color).toBe(darkPalette.text);
-    expect(darkStyles.returnSheetSaveText.color).toBe(darkPalette.onAction);
   });
 
   it('uses compact borderless navigation controls with Apple-sized touch targets', () => {

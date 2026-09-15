@@ -31,7 +31,7 @@ close the effort after only fixing the original ten audit examples.
 
 
 The UI design skill now chooses platform patterns before components. Remediation
-continues after PRs127 and129, with 139 surfaces and 24 axes tracked individually. The
+continues after PRs127 and129, with 140 surfaces and 24 axes tracked individually. The
 interim release validation passed 1,374 mobile tests; source checks are not native
 acceptance. Native macOS runner fixtures have verified
 selected menu, date and feedback scenarios, but expiration sheet expansion and
@@ -44,10 +44,12 @@ publish release notes, and continue remediation after delivery.
 TestFlight **0.24.11 (99.1)** uploaded successfully and its exact-build changelog
 was verified on September 15 at 00:53 UTC in release34913014534. Continue the audit
 after PR129, merged for v0.24.12 in release34917914704. Build100.1 uploaded successfully at01:55:59UTC and Apple processing/exact-build
-changelog verification succeeded at01:58:20UTC. The separate continuation branch includes
-shared-header stabilization and Home Return ownership; native return-sheet
-presentation remains open; viewer Return action visibility is now source-fixed
-and awaiting native acceptance in draft PR131.
+changelog verification succeeded at01:58:20UTC. PR131 merged as8b1fe7b8 and release34920497945 is archiving the next interim build;
+upload and exact-build changelog verification remain pending. PR132 continues with
+the iOS system-address candidate and a native-stack Home return-details sheet.
+The sheet retains inventory ownership, permission-loss recovery and session-bound
+commands. Source checks do not certify native presentation; phone/iPad fixtures,
+query-readiness failures and remaining surface/axis cells still require work.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

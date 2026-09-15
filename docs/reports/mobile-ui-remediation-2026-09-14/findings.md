@@ -196,3 +196,26 @@ TypeScript, mobile structural checks and two fixture-installer safety tests pass
 the old RN dismissal path. Critic re-review found no remaining confirmed blocker.
 These tests cover source behavior and wiring; the SwiftUI adapter still needs its
 native run and must not inherit the generic renderer's test coverage claim.
+
+### M47 native-route implementation candidate
+
+The inline editor has been replaced with the existing native-stack form-sheet
+presentation. An app-tree UI context carries the editor into its route while the
+inventory-keyed Home hook retains command ownership. A direct React Native Modal
+candidate was rejected by the structural check and removed before finalization.
+The native route includes its title, persistent input label, platform command
+buttons, local failure feedback and permission-loss recovery. It retains the
+native keyboard dismissal path and scrollable content.
+
+Critic findings corrected before native testing: explicitly show the native header;
+defer dismissal while another route is above this sheet; bind callbacks to their
+originating editor session. Tests exercise Back/undo, failed-save retry, permission
+revocation, a second return editor, focused/background completion and missing-task
+entry. The navigation fake now cleans up removed guards. Obsolete inline styles
+were removed. Native full-Home fixtures cover cancel restoration and failed-save
+recovery with keyboard entry; actual native acceptance is still pending.
+
+Final remote source validation passed 1,404 tests across 247 files, TypeScript and
+mobile structural checks (`/tmp/home-return-full-final.log` on paul), plus both
+fixture-installer safety tests. Native fixture source is not native execution;
+large text, long details, modal focus and dismissal remain acceptance work.
