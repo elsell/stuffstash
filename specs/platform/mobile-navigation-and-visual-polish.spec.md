@@ -627,3 +627,7 @@ See all is disabled while scope is unresolved or failed. Resource access errors
 also hide cached rows. Scope retry remains distinct from resource retry. Keep the
 query-driven content behind an injected expiration query and navigation callbacks
 so loading, failure and recovery are testable without application bootstrap.
+
+Asset detail load errors use the shared native command adapter for Retry asset.
+Non-retryable failures expose no retry command. Error content remains scrollable,
+with flexible height and wrapping explanation, beneath the native navigation bar.

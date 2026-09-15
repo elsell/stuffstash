@@ -1737,3 +1737,14 @@ committed scope ownership now rejects them, including after unmount, with a
 reproduced/passing failure regression. Three focused tests, TypeScript and mobile
 structural checks pass on paul. Critic found no remaining confirmed blocker.
 Native loading/error/recovery layout and actual inventory switching remain pending.
+
+## M129 — Asset load recovery still uses a custom command
+
+P2 platform consistency, source-confirmed at801eb1e6. AssetDetailRouteErrorState
+used a hand-styled Pressable. It now uses NativeCommandButton labeled Retry asset,
+preserving canRetry and the flexible scrollable explanation. Both asset route
+wrappers share this screen. A mounted test replaces legacy mocked tree invocation
+and covers retry execution, non-retryable absence and scroll content. It failed
+before correction; the focused test, TypeScript and structural checks pass on
+paul. Critic found no confirmed blocker. Actual native spacing/wrapping remains
+pending and is not implied by the mounted test.

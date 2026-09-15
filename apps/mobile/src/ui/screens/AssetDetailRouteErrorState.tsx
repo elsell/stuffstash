@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 
@@ -23,9 +24,7 @@ export function AssetDetailRouteErrorState({
       <Text accessibilityRole="header" style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {canRetry ? (
-        <Pressable accessibilityRole="button" onPress={onRetry} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </Pressable>
+        <NativeCommandButton label="Retry asset" onPress={onRetry} />
       ) : null}
     </ScrollView>
   );
@@ -53,21 +52,5 @@ function createStyles(palette: MobileColorPalette) {
       marginTop: spacing.md,
       textAlign: 'center'
     },
-    retryButton: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: spacing.lg,
-      minHeight: 44,
-      minWidth: 88,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm
-    },
-    retryButtonText: {
-      color: palette.action,
-      flexShrink: 1,
-      fontSize: 17,
-      fontWeight: '600',
-      textAlign: 'center'
-    }
   });
 }
