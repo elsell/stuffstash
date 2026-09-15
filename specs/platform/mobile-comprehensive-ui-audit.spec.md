@@ -823,3 +823,12 @@ outside this scroll region. Do not cap the results to280points while surrounding
 text remains fixed; available space must adapt to sheet height, keyboard and text
 size. Keep one keyboard-avoidance owner and preserve search/selection behavior.
 Source containment tests verify ownership; native checks verify actual reachability.
+
+### Edit tag-name validation
+
+When inline tag resolution rejects a name as too long, explain how to recover
+next to the name field instead of only disabling Add tag. Use concise user copy
+without exposing byte-count implementation details. Keep the typed value, color,
+selected tags and asset draft; clear the message when the name is valid. Use the
+existing application resolver as the validation authority. Empty untouched input
+does not need an error. Existing color validation remains with the color picker.

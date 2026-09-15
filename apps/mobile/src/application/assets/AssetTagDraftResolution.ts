@@ -67,7 +67,10 @@ export function canResolveInlineAssetTag(input: {
   readonly activeTags: readonly ActiveAssetTagReference[];
   readonly pendingTags: readonly CreateAssetTagDraft[];
 }): boolean {
-  const resolution = resolveInlineAssetTag(input);
+  return canApplyInlineAssetTagResolution(resolveInlineAssetTag(input));
+}
+
+export function canApplyInlineAssetTagResolution(resolution: InlineAssetTagResolution): boolean {
   return resolution.status === 'select_existing'
     || resolution.status === 'duplicate_pending'
     || resolution.status === 'create';

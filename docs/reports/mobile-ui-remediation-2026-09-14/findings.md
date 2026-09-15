@@ -996,3 +996,14 @@ change because query entry was outside the scrolling region;14 action-sheet
 tests, TypeScript and structural checks passed remotely. Critic review requires
 full query visibility before native typing, now reflected in the journey. Native
 footer/keyboard reachability remains pending; no visual closure is claimed.
+
+### M93 — Edit tag-name rejection has no explanation
+
+Source-confirmed P2, S133 recovery. Names over the resolver's limit disabled
+Add tag without feedback. The candidate adds Use a shorter tag name beside the
+entry controls using the existing resolver status; it preserves the typed value
+and draft and clears after correction. Native color validation remains separate.
+The regression failed before the change;24 resolver/action-sheet tests, TypeScript
+and structural checks passed on paul. VoiceOver announcement and large-text
+placement remain unverified. Long selected-tag truncation is a separate pending
+review, not fixed by this validation message.

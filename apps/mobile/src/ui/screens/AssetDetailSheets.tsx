@@ -19,7 +19,7 @@ import type { AssetTagOptionViewModel } from '../../application/assets/Inventory
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
   applyInlineAssetTagResolution,
-  canResolveInlineAssetTag,
+  canApplyInlineAssetTagResolution,
   type CreateAssetTagDraft,
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
@@ -174,14 +174,8 @@ function EditTagPicker({
     if (disabled || displayName.length === 0) {
       return;
     }
-    const resolution = resolveInlineAssetTag({
-      displayName,
-      color: newTagColor,
-      activeTags: tags,
-      pendingTags: newTags
-    });
     const transition = applyInlineAssetTagResolution({
-      resolution,
+      resolution: tagResolution,
       selectedTagIds,
       pendingTags: newTags
     });
@@ -192,12 +186,13 @@ function EditTagPicker({
     }
   }
 
-  const canAddNewTag = canResolveInlineAssetTag({
+  const tagResolution = resolveInlineAssetTag({
     displayName: newTagName,
     color: newTagColor,
     activeTags: tags,
     pendingTags: newTags
   });
+  const canAddNewTag = canApplyInlineAssetTagResolution(tagResolution);
 
   return (
     <View style={styles.tagPicker}>
@@ -271,6 +266,7 @@ function EditTagPicker({
           value={newTagColor}
         />
       </View>
+      {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
       <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
       <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
     </View>

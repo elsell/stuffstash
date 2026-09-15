@@ -299,3 +299,28 @@ it('waits for known Move suggestions before offering destination creation', asyn
     expect(h.byLabel('Put in')?.props.value).toBe('New room');
   } finally { await h.unmount(); }
 });
+
+it('explains an overlong Edit tag name and preserves the asset draft through correction', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    const longName = 'Camping equipment '.repeat(8);
+    await h.changeText(h.byLabel('New tag name'), longName);
+    expect(h.byText('Use a shorter tag name.')).toBeDefined();
+    expect(h.byLabel('New tag name')?.props.value).toBe(longName);
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe(longName);
+    await h.changeText(h.byLabel('New tag name'), 'Camping');
+    expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    await h.press(h.byLabel('Add tag')); await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Keep me', newTags: [{ displayName: 'Camping' }] })]);
+  } finally { await h.unmount(); }
+});
