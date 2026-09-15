@@ -43,3 +43,13 @@ obsolete or duplicate completions. Its URI-only JavaScript cache was removed.
 Two regression tests failed against the previous dependency and pass against the
 patch on the remote validation host. This does not yet add visible Retry/error
 controls; M85 remains open until image-decode handling and native acceptance pass.
+
+The subsequent M85 candidate adds the visible failure renderer through the pinned
+dependency's optional ErrorComponent. Stuff Stash supplies its native command-button
+adapter; no extra route or modal is introduced. The shared loading hook makes
+errors terminal until Retry and rejects obsolete events. The active failed photo
+restores the viewer chrome. Review caught inline projections in both callers that
+defeated memoization; those are now stable, with a real AssetPhotoViewerSheet
+regression failing before the caller fix and passing afterward. Eleven focused
+checks, eighteen Add checks, TypeScript and structural validation passed remotely.
+An iOS Metro export validates bundling, not layout or native behavior.

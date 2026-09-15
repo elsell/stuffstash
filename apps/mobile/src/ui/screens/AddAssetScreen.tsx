@@ -906,6 +906,12 @@ function PhotoPreviewModal({
   readonly onSetIndex: (index: number | undefined) => void;
   readonly photos: readonly SelectedAssetPhoto[];
 }) {
+  const viewerPhotos = useMemo(() => photos.map(photo => ({
+    id: photo.id,
+    label: photo.fileName,
+    metadataLabel: photoMetadataLabel(photo),
+    uri: photo.uri
+  })), [photos]);
   function removeCurrentPhoto(photo: FullScreenPhotoViewerPhoto, index: number): void {
     if (!photo.id) {
       return;
@@ -936,12 +942,7 @@ function PhotoPreviewModal({
       onClose={onClose}
       onRemove={removeCurrentPhoto}
       onSelectIndex={onSetIndex}
-      photos={photos.map((photo) => ({
-        id: photo.id,
-        label: photo.fileName,
-        metadataLabel: photoMetadataLabel(photo),
-        uri: photo.uri
-      }))}
+      photos={viewerPhotos}
     />
   );
 }

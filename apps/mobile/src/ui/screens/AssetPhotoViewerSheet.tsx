@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Alert } from 'react-native';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
 import {
@@ -28,6 +29,7 @@ export function AssetPhotoViewerSheet({
   readonly onSelectPhoto: (photoId: string) => void;
   readonly photos: readonly AssetPhotoViewModel[];
 }) {
+  const viewerPhotos = useMemo(() => photos.map(assetPhotoToFullScreenPhoto), [photos]);
   const selectedIndex = selectedAssetPhotoViewerIndex(photos, model);
 
   if (selectedIndex === undefined) {
@@ -61,7 +63,7 @@ export function AssetPhotoViewerSheet({
           onSelectPhoto(nextModel.photo.id);
         }
       }}
-      photos={photos.map(assetPhotoToFullScreenPhoto)}
+      photos={viewerPhotos}
       {...(canRemove ? { onRemove: removePhoto } : {})}
     />
   );

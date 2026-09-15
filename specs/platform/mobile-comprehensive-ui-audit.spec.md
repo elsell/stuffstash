@@ -612,3 +612,16 @@ request; obsolete completions cannot affect the active photo. Remove its URI-onl
 JavaScript dimensions cache so a changed source/header context cannot inherit a
 previous request's result. Native image caching remains the platform's concern.
 This internal lifecycle repair alone does not establish visible error/retry UI.
+
+Both platform image items must share attempt ownership for dimension and decode
+completion. A decode error is terminal for that attempt even if a late load event
+arrives. Retry remounts the native image and restarts dimensions without modifying
+the source URI or headers. The failure replaces the image's zoom/gesture surface
+with a centered, readable message and native Retry button; the viewer's existing
+Close and photo navigation stay outside this replacement. Do not add another
+screen, confirmation, or automatic retry loop for this recoverable read failure.
+
+The dependency exposes an optional error renderer so Stuff Stash can reuse its
+native command-button adapter. Restore viewer chrome when the current photo fails;
+background/preloaded photo failures must not interrupt another photo's zoom state.
+Keep image source objects stable across unrelated wrapper rerenders.

@@ -820,3 +820,11 @@ tracks pending children and stop operations; the regression verifies settled
 positions, stable values across rerenders and cleanup on unmount. Twenty-five
 focused viewer, route, Map and feedback checks pass, along with TypeScript and
 structural checks. This still does not establish native timing or zoom behavior.
+
+M85 candidate repair now handles both dimensions and native decode errors, presents
+Photo unavailable with the existing native Retry command, and remounts the image
+for a fresh attempt. Late events cannot replace the current attempt; only the
+active photo restores viewer chrome on failure. Both caller projections are stable
+across unrelated updates. Eleven focused checks, eighteen Add checks, TypeScript,
+structural validation, and an iOS Metro export passed remotely. This is not native
+visual acceptance; M85 remains open pending the runner scenario and inspection.
