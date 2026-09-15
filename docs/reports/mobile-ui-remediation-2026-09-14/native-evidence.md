@@ -359,3 +359,45 @@ Downloaded iPad artifacts: `/tmp/native349173-fixtures-ipad`.
 M50 tracks the unresolved Add/History fixture readiness. Runner-only query-state
 inspection will distinguish cache/fetch/subscription state without bypassing the
 production query path. This is not yet proof that production network requests hang.
+
+## Run34919776387 — completed native checkpoint
+
+Candidate709abc1f (runner merge5d5fd318) predates the M19 direct-root change, M14
+system onboarding field and M47 return sheet. Phone fixtures passed15/23; iPad
+fixtures passed17/23. Both devices still failed Add readiness, History header
+readiness, controlled URL entry, expiration expansion and color-row opening.
+Phone additionally failed expiration keyboard actions and both wrapped-layout
+diagnostics. iPad additionally failed full onboarding command submission.
+
+Both devices passed system and uncontrolled input comparisons, direct-root and
+direct-root/sibling-footer diagnostics, scroll-footer layout, menus, compact
+expiration selection, date-page footer, draft photo actions/accessibility and
+actionable feedback. These are scenario passes, not whole-surface certification.
+
+Production phone onboarding lost characters (`h://example.invalid`); portrait
+keyboard coverage failed and landscape was correctly skipped. iPad portrait failed
+keyboard existence after typing; its supported landscape scenario passed.
+
+Inspected iPad History screenshot411673A8 shows loaded records but no navigation
+header. Thus its title-readiness failure cannot be reduced to query loading. Add
+screenshotABB3BE71 still shows Loading inventory. The safe query diagnostic exists
+but debugDescription truncates its value; only online=true is readable. Explicit
+AX-value attachments are needed before interpreting focus/query/fetch states.
+
+![Loaded History without native header](evidence/history-loaded-no-header-ipad-34919776387.png)
+
+Color screenshot87D1734B shows the unchanged parent after tapping the native row.
+Its hierarchy0712C39C exposes a704×36point color-picker button spanning label and
+trailing well. A new independent well-target experiment will distinguish this
+from failure of the picker itself; the original row-activation assertion remains.
+
+![Color row did not open the picker](evidence/color-row-no-picker-ipad-34919776387.png)
+
+## Interim release 0.24.13 (101.1)
+
+Release34920497945 completed successfully from merged PR131 (8b1fe7b8).
+Signed upload job104229066004 reported success at02:42:13UTC September15.
+Job104232577094 verified Apple processing and the exact-build changelog at02:44:35UTC.
+This delivers the requested current-fixes milestone; it excludes PR132's subsequent
+onboarding, native Home return sheet and History header candidates. The full audit
+remains active, with native failures and unreviewed cells retained.

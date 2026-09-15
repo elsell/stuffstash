@@ -219,3 +219,19 @@ Final remote source validation passed 1,404 tests across 247 files, TypeScript a
 mobile structural checks (`/tmp/home-return-full-final.log` on paul), plus both
 fixture-installer safety tests. Native fixture source is not native execution;
 large text, long details, modal focus and dismissal remain acceptance work.
+
+### M51 — Native color-row activation is not reliable in the audit
+
+Run34919776387 failed opening the system color picker on phone and iPad, after an
+earlier pass. The inspected iPad screenshot shows no presented picker. This is an
+observed acceptance failure, not yet a proven implementation defect: the native
+accessible row spans its label and trailing well, so a separate well-target probe
+is pending. Preserve both results and do not certify row activation from a well tap.
+
+### M45 initial native header configuration
+
+The same run loaded iPad checkout records but left the native header absent. The
+shared sheet initially hid that header while the mounted screen requested it.
+The candidate now shows the title/header from the initial sheet configuration,
+matching the screen. Existing Close and expansion assertions remain the native
+acceptance gate; M45 is not closed by this source change.

@@ -168,9 +168,9 @@ R007,add.tsx,notifications,System notification entry and state,pending,,
 R007,add.tsx,media,"Camera, library, files and audio",pending,,
 R007,add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,M46: native349150 iPad launch shows Maximum update depth exceeded in Screen/StackScreen/ScopedAddAssetScreen. Header options update feedback reproduction required. Earlier source checks cannot establish working launch.,M46
 R008,assets/[assetId]/checkouts.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
-R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
+R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",runtime-partial,"Native349197 iPad screenshot shows loaded records but no native header. Initial sheet header/title now matches mounted screen; source checks pass, native Close/expansion acceptance pending. Add readiness remains M50; History is not purely a loading diagnosis.",M45
 R008,assets/[assetId]/checkouts.tsx,selection,Value selection and current value,pending,,
-R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
+R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,runtime-partial,"Native349197 iPad screenshot shows loaded records but no native header. Initial sheet header/title now matches mounted screen; source checks pass, native Close/expansion acceptance pending. Add readiness remains M50; History is not purely a loading diagnosis.",M45
 R008,assets/[assetId]/checkouts.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R008,assets/[assetId]/checkouts.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R008,assets/[assetId]/checkouts.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -184,7 +184,7 @@ R008,assets/[assetId]/checkouts.tsx,accessibility,"VoiceOver/TalkBack names, rol
 R008,assets/[assetId]/checkouts.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R008,assets/[assetId]/checkouts.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Checkout history renders timeline records with checkout/return details and explicit cursor load. Existing mounted test preserves rows through continuation failure then loads next page. Full loaded history uses ScrollView: large-data performance remains unverified.,
 R008,assets/[assetId]/checkouts.tsx,search,"Search, scope and filters",pending,,
-R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
+R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",runtime-partial,"Native349197 iPad screenshot shows loaded records but no native header. Initial sheet header/title now matches mounted screen; source checks pass, native Close/expansion acceptance pending. Add readiness remains M50; History is not purely a loading diagnosis.",M45
 R008,assets/[assetId]/checkouts.tsx,recovery,"Empty, error, denied and retry",pending,,
 R008,assets/[assetId]/checkouts.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R008,assets/[assetId]/checkouts.tsx,privacy,"Account scope, data use and permissions",pending,,
@@ -2569,7 +2569,7 @@ S107,Settings / enum options,media,"Camera, library, files and audio",pending,,
 S107,Settings / enum options,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S108,Settings / tag color,task,Task clarity and platform-pattern fit,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,navigation,"Navigation, hierarchy and return",pending,,
-S108,Settings / tag color,selection,Value selection and current value,runtime-partial,"34912595714 phone native color open/close/Green/Clear passed. iPad opens popover; outside-dismissal procedure corrected, runtime pending. Other cases unverified.",M23
+S108,Settings / tag color,selection,Value selection and current value,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
 S108,Settings / tag color,modality,Presentation and dismissal,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,layout,"Safe areas, scroll edges and overlays",pending,,
 S108,Settings / tag color,adaptation,Phone/tablet/window reflow,pending,,
@@ -2577,8 +2577,8 @@ S108,Settings / tag color,typography,"Dynamic Type, wrapping and legibility",pen
 S108,Settings / tag color,appearance,"Light/dark, contrast and materials",pending,,
 S108,Settings / tag color,localization,"Locale, timezone, RTL and long strings",pending,,
 S108,Settings / tag color,imagery,"Icons, photos and missing media",pending,,
-S108,Settings / tag color,targets,Touch target size and reachability,pending,,
-S108,Settings / tag color,gestures,Gestures and explicit alternatives,pending,,
+S108,Settings / tag color,targets,Touch target size and reachability,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
+S108,Settings / tag color,gestures,Gestures and explicit alternatives,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
 S108,Settings / tag color,keyboard,"Keyboard, text entry and focus",pending,,
 S108,Settings / tag color,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S108,Settings / tag color,motion,Reduced motion and feedback alternatives,pending,,

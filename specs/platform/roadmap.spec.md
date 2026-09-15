@@ -44,8 +44,9 @@ publish release notes, and continue remediation after delivery.
 TestFlight **0.24.11 (99.1)** uploaded successfully and its exact-build changelog
 was verified on September 15 at 00:53 UTC in release34913014534. Continue the audit
 after PR129, merged for v0.24.12 in release34917914704. Build100.1 uploaded successfully at01:55:59UTC and Apple processing/exact-build
-changelog verification succeeded at01:58:20UTC. PR131 merged as8b1fe7b8 and release34920497945 is archiving the next interim build;
-upload and exact-build changelog verification remain pending. PR132 continues with
+changelog verification succeeded at01:58:20UTC. PR131 merged as8b1fe7b8 and release34920497945 delivered TestFlight0.24.13(101.1).
+Upload succeeded at02:42:13UTC; Apple processing and the exact-build changelog were
+verified at02:44:35UTC on September15. PR132 continues with
 the iOS system-address candidate and a native-stack Home return-details sheet.
 The sheet retains inventory ownership, permission-loss recovery and session-bound
 commands. Source checks do not certify native presentation; phone/iPad fixtures,
