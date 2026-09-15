@@ -2975,54 +2975,54 @@ S124,Voice / provider readiness,privacy,"Account scope, data use and permissions
 S124,Voice / provider readiness,notifications,System notification entry and state,pending,,
 S124,Voice / provider readiness,media,"Camera, library, files and audio",pending,,
 S124,Voice / provider readiness,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
-S125,Voice / credential editor,task,Task clarity and platform-pattern fit,pending,,
-S125,Voice / credential editor,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-S125,Voice / credential editor,selection,Value selection and current value,pending,,
-S125,Voice / credential editor,modality,Presentation and dismissal,pending,,
-S125,Voice / credential editor,layout,"Safe areas, scroll edges and overlays",pending,,
-S125,Voice / credential editor,adaptation,Phone/tablet/window reflow,pending,,
-S125,Voice / credential editor,typography,"Dynamic Type, wrapping and legibility",pending,,
-S125,Voice / credential editor,appearance,"Light/dark, contrast and materials",pending,,
-S125,Voice / credential editor,localization,"Locale, timezone, RTL and long strings",pending,,
-S125,Voice / credential editor,imagery,"Icons, photos and missing media",pending,,
-S125,Voice / credential editor,targets,Touch target size and reachability,pending,,
-S125,Voice / credential editor,gestures,Gestures and explicit alternatives,pending,,
-S125,Voice / credential editor,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
-S125,Voice / credential editor,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S125,Voice / credential editor,motion,Reduced motion and feedback alternatives,pending,,
-S125,Voice / credential editor,content,"Lists, hierarchy, density and pagination",pending,,
-S125,Voice / credential editor,search,"Search, scope and filters",pending,,
-S125,Voice / credential editor,loading,"Loading, background refresh and progress",pending,,
-S125,Voice / credential editor,recovery,"Empty, error, denied and retry",pending,,
-S125,Voice / credential editor,editing,"Draft, save, cancel, undo and interruption",pending,,
-S125,Voice / credential editor,privacy,"Account scope, data use and permissions",pending,,
-S125,Voice / credential editor,notifications,System notification entry and state,pending,,
-S125,Voice / credential editor,media,"Camera, library, files and audio",pending,,
-S125,Voice / credential editor,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-S126,Voice / prompt editor,task,Task clarity and platform-pattern fit,pending,,
-S126,Voice / prompt editor,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-S126,Voice / prompt editor,selection,Value selection and current value,pending,,
-S126,Voice / prompt editor,modality,Presentation and dismissal,pending,,
-S126,Voice / prompt editor,layout,"Safe areas, scroll edges and overlays",pending,,
-S126,Voice / prompt editor,adaptation,Phone/tablet/window reflow,pending,,
-S126,Voice / prompt editor,typography,"Dynamic Type, wrapping and legibility",pending,,
-S126,Voice / prompt editor,appearance,"Light/dark, contrast and materials",pending,,
-S126,Voice / prompt editor,localization,"Locale, timezone, RTL and long strings",pending,,
-S126,Voice / prompt editor,imagery,"Icons, photos and missing media",pending,,
-S126,Voice / prompt editor,targets,Touch target size and reachability,pending,,
-S126,Voice / prompt editor,gestures,Gestures and explicit alternatives,pending,,
-S126,Voice / prompt editor,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
-S126,Voice / prompt editor,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S126,Voice / prompt editor,motion,Reduced motion and feedback alternatives,pending,,
-S126,Voice / prompt editor,content,"Lists, hierarchy, density and pagination",pending,,
-S126,Voice / prompt editor,search,"Search, scope and filters",pending,,
-S126,Voice / prompt editor,loading,"Loading, background refresh and progress",pending,,
-S126,Voice / prompt editor,recovery,"Empty, error, denied and retry",pending,,
-S126,Voice / prompt editor,editing,"Draft, save, cancel, undo and interruption",pending,,
-S126,Voice / prompt editor,privacy,"Account scope, data use and permissions",pending,,
-S126,Voice / prompt editor,notifications,System notification entry and state,pending,,
-S126,Voice / prompt editor,media,"Camera, library, files and audio",pending,,
-S126,Voice / prompt editor,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
+S125,Voice / credential editor,task,Task clarity and platform-pattern fit,finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S125,Voice / credential editor,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md). All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M105;M107
+S125,Voice / credential editor,selection,Value selection and current value,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,modality,Presentation and dismissal,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,layout,"Safe areas, scroll edges and overlays",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S125,Voice / credential editor,adaptation,Phone/tablet/window reflow,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,typography,"Dynamic Type, wrapping and legibility",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,appearance,"Light/dark, contrast and materials",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,localization,"Locale, timezone, RTL and long strings",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,imagery,"Icons, photos and missing media",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,targets,Touch target size and reachability,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,gestures,Gestures and explicit alternatives,finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M107
+S125,Voice / credential editor,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,motion,Reduced motion and feedback alternatives,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,content,"Lists, hierarchy, density and pagination",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,search,"Search, scope and filters",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,loading,"Loading, background refresh and progress",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,recovery,"Empty, error, denied and retry",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S125,Voice / credential editor,editing,"Draft, save, cancel, undo and interruption",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M107
+S125,Voice / credential editor,privacy,"Account scope, data use and permissions",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,notifications,System notification entry and state,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,media,"Camera, library, files and audio",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S125,Voice / credential editor,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md). All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M105;M107
+S126,Voice / prompt editor,task,Task clarity and platform-pattern fit,finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S126,Voice / prompt editor,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md). All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M105;M107
+S126,Voice / prompt editor,selection,Value selection and current value,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,modality,Presentation and dismissal,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,layout,"Safe areas, scroll edges and overlays",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S126,Voice / prompt editor,adaptation,Phone/tablet/window reflow,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,typography,"Dynamic Type, wrapping and legibility",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,appearance,"Light/dark, contrast and materials",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,localization,"Locale, timezone, RTL and long strings",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,imagery,"Icons, photos and missing media",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,targets,Touch target size and reachability,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,gestures,Gestures and explicit alternatives,finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M107
+S126,Voice / prompt editor,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,motion,Reduced motion and feedback alternatives,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,content,"Lists, hierarchy, density and pagination",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,search,"Search, scope and filters",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,loading,"Loading, background refresh and progress",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,recovery,"Empty, error, denied and retry",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S126,Voice / prompt editor,editing,"Draft, save, cancel, undo and interruption",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M107
+S126,Voice / prompt editor,privacy,"Account scope, data use and permissions",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,notifications,System notification entry and state,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,media,"Camera, library, files and audio",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
+S126,Voice / prompt editor,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md). All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M105;M107
 S127,System / keyboard accessory,task,Task clarity and platform-pattern fit,pending,,
 S127,System / keyboard accessory,navigation,"Navigation, hierarchy and return",pending,,
 S127,System / keyboard accessory,selection,Value selection and current value,pending,,

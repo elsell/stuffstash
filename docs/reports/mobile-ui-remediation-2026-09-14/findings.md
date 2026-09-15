@@ -1336,3 +1336,25 @@ files, TypeScript and the mobile structural check pass remotely. This includes t
 services gate, provider/editor lifecycle and earlier Sharing changes. Critic found
 no remaining source blocker for this pass. This is source/runtime-harness evidence,
 not native acceptance or complete audit coverage.
+
+### M106 — Provider editor commands and recovery bypass native form patterns
+
+P2, credential/prompt editors. At da14195c, both forms use bespoke Pressable
+Cancel/Save controls despite existing native adapters. Save is disabled only while
+saving: blank/whitespace credential or prompt is still offered, then application
+validation rejects it into a global notice. API failure also uses the global
+notice rather than the field context. This is source-confirmed; no current native
+editor placement is claimed. Use native Save, field readiness, local recovery and
+retained drafts; preserve empty-input server ADC. See
+[all-axis editor review](provider-editors-axis.md). Implementation is still pending.
+
+### M107 — Provider editor navigation can discard an unsaved replacement
+
+P1, credential/prompt editors. Local values live in keyed forms; route Cancel and
+success both go Back, and there is no usePreventRemove or equivalent dirty-draft
+contract. Back/Cancel can remove entered replacement text; native Back is also not
+covered by the local buttons' saving state. Add a task-owned dirty/pending removal
+policy with a native discard decision and single authorized successful exit.
+Do not persist secrets to solve accidental navigation. M105 fixes departed
+completion ownership, not draft protection. Native gesture/removal acceptance and
+implementation remain open; see the editor review.

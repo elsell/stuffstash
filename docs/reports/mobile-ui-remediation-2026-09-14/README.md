@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `provider-editors-axis.md`: all24 axes for credential/prompt editing, native commands and draft protection.
 - `add-tags-axis.md`: tag discovery, scoped draft preservation and all24 review axes.
 - `edit-tags-axis.md`: all 24 axes for tag selection, draft creation and remaining native acceptance.
 - `contained-items-axis.md`: scoped search, shared detail controls, unknown-data states and all24 review axes.
@@ -31,9 +32,9 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The audit remains incomplete. After the provider completion review and M105 mapping, the 3384 cells
-comprise 2679 pending, 547 source-reviewed, 130 finding,
-20 runtime-partial and 8 not-applicable.
+The audit remains incomplete. After the all-axis provider-editor review and M106/M107 mapping, the 3384 cells
+comprise 2653 pending, 553 source-reviewed, 140 finding,
+20 runtime-partial and 18 not-applicable.
 The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
 38-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
