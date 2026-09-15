@@ -1223,7 +1223,7 @@ R051,settings/voice/profiles/[providerProfileId]/credential.tsx,privacy,"Account
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,notifications,System notification entry and state,pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,media,"Camera, library, files and audio",pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Provider detail separates read-only configuration, credential/prompt editing, connection test and lifecycle actions.",
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,task,Task clarity and platform-pattern fit,finding,"Provider detail separates read-only configuration, credential/prompt editing, connection test and lifecycle actions.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending",M148
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,selection,Value selection and current value,source-reviewed,Enable/disable is an explicit command; credential/prompt are multi-field editing destinations rather than flat value selectors.,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,modality,Presentation and dismissal,finding,Archive uses native destructive confirmation naming profile and explaining voice unavailability.; M146 mounted provider archive confirmation consumption; native pending,M146
@@ -1271,7 +1271,7 @@ R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,privacy,"Account sco
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,notifications,System notification entry and state,pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,media,"Camera, library, files and audio",pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R054,settings/voice/profiles/add.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Recommended service actions explicitly create disabled draft and describe credential/test/enable follow-up.,
+R054,settings/voice/profiles/add.tsx,task,Task clarity and platform-pattern fit,finding,Recommended service actions explicitly create disabled draft and describe credential/test/enable follow-up.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending,M148
 R054,settings/voice/profiles/add.tsx,navigation,"Navigation, hierarchy and return",finding,Successful creation replaces Add route with created profile detail; no extra intermediate confirmation. M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
 R054,settings/voice/profiles/add.tsx,selection,Value selection and current value,pending,,
 R054,settings/voice/profiles/add.tsx,modality,Presentation and dismissal,pending,,
@@ -1295,7 +1295,7 @@ R054,settings/voice/profiles/add.tsx,privacy,"Account scope, data use and permis
 R054,settings/voice/profiles/add.tsx,notifications,System notification entry and state,pending,,
 R054,settings/voice/profiles/add.tsx,media,"Camera, library, files and audio",pending,,
 R054,settings/voice/profiles/add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
-R055,settings/voice/profiles/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Provider list exposes profile lifecycle, capability and provider context plus explicit Add action.",
+R055,settings/voice/profiles/index.tsx,task,Task clarity and platform-pattern fit,finding,"Provider list exposes profile lifecycle, capability and provider context plus explicit Add action.; M148 native command/navigation task fit correction; mounted behavior preserved; native geometry pending",M148
 R055,settings/voice/profiles/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Profile rows open encoded profile ID; Add opens service selection route.,
 R055,settings/voice/profiles/index.tsx,selection,Value selection and current value,pending,,
 R055,settings/voice/profiles/index.tsx,modality,Presentation and dismissal,pending,,

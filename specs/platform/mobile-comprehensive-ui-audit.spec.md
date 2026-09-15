@@ -1181,3 +1181,17 @@ visit. A mounted sheet that lost focus and returned must not receive a stale
 completion notice, navigation, error alert or destination/draft replacement.
 Background work may settle normally; unlock the still-mounted form afterward so
 the current visit can continue. Preserve current-visit success, failure and retry.
+
+
+### Provider profile task controls
+
+Provider list Add Profile and detail Replace Credential/Prompt Guidance open
+substantial editor destinations and must use the existing settings navigation row
+with disclosure, rather than a command row. Creating a recommended draft, testing
+a connection, enabling/disabling and opening Archive confirmation are commands
+and must reuse NativeCommandButton. Accessible command names match their visible
+labels; the profile heading and archive confirmation carry subject context.
+Creation labels name the action (Create plus service name). Preserve pending
+labels, disabled navigation during work, single-use confirmation and retry. The
+archive confirmation retains its destructive semantic; no shared adapter changes.
+Native spacing, command sizing and assistive navigation require runtime acceptance.

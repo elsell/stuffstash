@@ -213,7 +213,7 @@ function deferred<T>() { let resolve!: (value: T) => void; let reject!: (error: 
   repository.pendingAction = new Promise((_resolve, reject) => { rejectAction = reject; });
   const { harness, client } = await mount(<ProviderProfileDetailScreen profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => {}} onEditPrompt={() => {}} />);
   try {
-    const label = operation === 'test' ? 'Test connection for Gemini language' : operation === 'enable' ? 'enable Gemini language' : 'Archive Gemini language';
+    const label = operation === 'test' ? 'Test Connection' : operation === 'enable' ? 'Enable Profile' : 'Archive Profile';
     await harness.press(harness.byLabel(label));
     if (operation === 'archive') await harness.run(() => pressAlertButton('Archive'));
     expect(harness.allText()).toContain(operation === 'test' ? 'Testing…' : operation === 'enable' ? 'Updating…' : 'Archiving…');
@@ -328,8 +328,8 @@ it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => 
   try {
     if (kind === 'credential' || kind === 'prompt') await harness.changeText(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance'), 'private draft');
     const button = kind === 'credential' || kind === 'prompt' ? harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance')
-      : kind === 'create' ? harness.all().find(node => String(node.props.accessibilityLabel ?? '').startsWith('Create draft '))
-      : harness.byLabel('enable Gemini language');
+      : kind === 'create' ? harness.all().find(node => String(node.props.accessibilityLabel ?? '').startsWith('Create '))
+      : harness.byLabel('Enable Profile');
     await harness.press(button);
     await harness.run(() => setScreenFocused(false));
     await harness.run(() => setScreenFocused(true));
@@ -351,7 +351,7 @@ it('rejects an archive confirmation retained from a previous focus session', asy
   const repository = new FakeProviderRepository();
   const { harness, client } = await mount(<ProviderProfileDetailScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />);
   try {
-    await harness.press(harness.byLabel('Archive Gemini language'));
+    await harness.press(harness.byLabel('Archive Profile'));
     const confirm = latestAlert()?.buttons?.find(button => button.text === 'Archive')?.onPress;
     expect(confirm).toBeDefined();
     await harness.run(() => setScreenFocused(false));
@@ -592,7 +592,7 @@ it('consumes failed provider archive confirmation while permitting a freshly con
   const pending = deferred<ProviderProfileSummary>(); repository.pendingAction = pending.promise;
   const { harness, client } = await mount(<ProviderProfileDetailScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />);
   try {
-    await harness.press(harness.byLabel('Archive Gemini language'));
+    await harness.press(harness.byLabel('Archive Profile'));
     const confirm = latestAlert()?.buttons.find(button => button.text === 'Archive')?.onPress;
     expect(confirm).toBeTypeOf('function');
     await harness.run(() => confirm?.());
@@ -601,7 +601,7 @@ it('consumes failed provider archive confirmation while permitting a freshly con
     repository.pendingAction = undefined;
     await harness.run(() => confirm?.()); await settle(harness);
     expect(repository.lifecycleCalls).toHaveLength(1);
-    await harness.press(harness.byLabel('Archive Gemini language'));
+    await harness.press(harness.byLabel('Archive Profile'));
     await harness.run(() => pressAlertButton('Archive')); await settle(harness);
     expect(repository.lifecycleCalls).toHaveLength(2);
   } finally { await harness.unmount(); client.clear(); }

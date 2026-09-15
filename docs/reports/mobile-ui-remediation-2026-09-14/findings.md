@@ -2081,3 +2081,23 @@ created destination is not inserted. All31 Edit/Move cases, TypeScript and struc
 checks pass on paul. Critic confirmed the added assertions cover those branches.
 This closes the per-branch mounted success coverage gap above; native lifecycle
 acceptance remains open.
+
+
+### M148 — Provider screens blur navigation and command controls
+
+P2 source pattern finding, R052/R054/R055. Provider screens used the same custom
+action row for editor navigation and mutations despite existing task-specific
+adapters. Add Profile, Replace Credential and Prompt Guidance now disclose their
+editor destinations with SettingsNavigationRow. Create recommended draft, Test,
+Enable/Disable and Archive reuse unchanged NativeCommandButton. Creation labels
+name the action; native command accessible names match visible labels. Subject
+context remains in the profile heading and Archive alert, whose destructive
+semantic is unchanged. This follows project native-adapter policy; it is not a
+claim that Apple prohibits all command rows.
+
+Three pending-operation cases failed against the new accessible names before
+migration. All57 settings behavior tests now pass, preserving retry, navigation
+locks, confirmation ownership and late-result behavior. TypeScript and structural
+checks pass on paul. Native spacing, targets and assistive acceptance remain open.
+
+M148 critic found no confirmed regression; native acceptance remains pending.
