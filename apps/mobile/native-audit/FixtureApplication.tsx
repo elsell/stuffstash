@@ -1,3 +1,4 @@
+import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
 export { HomeReturnFixture } from './HomeReturnFixture';
@@ -82,7 +83,9 @@ export function FixtureMenu() {
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState(false);
   const [draftPhotos, setDraftPhotos] = useState(false);
+  const [photoRecovery, setPhotoRecovery] = useState(false);
   const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'>();
+  if (photoRecovery) return <PhotoRecoveryFixture onBack={() => setPhotoRecovery(false)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
@@ -114,6 +117,7 @@ export function FixtureMenu() {
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
     <Button title="Audit plain input" onPress={() => setInputMode('plain')} />
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
+    <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery(true)} />
     <Text>{result}</Text>
   </FixturePage>;
 }

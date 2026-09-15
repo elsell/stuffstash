@@ -2379,7 +2379,7 @@ S100,Asset / full screen viewer,task,Task clarity and platform-pattern fit,sourc
 S100,Asset / full screen viewer,navigation,"Navigation, hierarchy and return",source-reviewed,Explicit Close/Previous/Next plus swipe-to-close; boundary controls disabled. Native gesture/focus restoration pending.,
 S100,Asset / full screen viewer,selection,Value selection and current value,source-reviewed,Selected index resolves by photo ID and invalid indexes do not present the viewer. Source review only.,
 S100,Asset / full screen viewer,modality,Presentation and dismissal,pending,,
-S100,Asset / full screen viewer,layout,"Safe areas, scroll edges and overlays",source-reviewed,Bottom toolbar accounts for safe-bottom inset; full-screen and enlarged-text runtime pending.,
+S100,Asset / full screen viewer,layout,"Safe areas, scroll edges and overlays",finding,"Bottom toolbar accounts for safe-bottom inset; full-screen and enlarged-text runtime pending.; M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md)",M83
 S100,Asset / full screen viewer,adaptation,Phone/tablet/window reflow,pending,,
 S100,Asset / full screen viewer,typography,"Dynamic Type, wrapping and legibility",pending,,
 S100,Asset / full screen viewer,appearance,"Light/dark, contrast and materials",source-reviewed,Neutral dark viewer canvas intentionally preserves image appearance; native contrast review pending.,
@@ -2393,7 +2393,7 @@ S100,Asset / full screen viewer,motion,Reduced motion and feedback alternatives,
 S100,Asset / full screen viewer,content,"Lists, hierarchy, density and pagination",pending,,
 S100,Asset / full screen viewer,search,"Search, scope and filters",pending,,
 S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.,M42
-S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",pending,,
+S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",finding,"M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md)",M83
 S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.,M42
 S100,Asset / full screen viewer,privacy,"Account scope, data use and permissions",source-reviewed,Authorized image headers retained; Remove is permission-gated and system confirmation precedes command. No boundary changes.,
 S100,Asset / full screen viewer,notifications,System notification entry and state,pending,,

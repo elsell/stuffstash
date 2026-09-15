@@ -782,3 +782,10 @@ fails before correction and checks acknowledgment does not retry. Sixty-one
 remote asset/photo checks, TypeScript and structural checks pass
 (/tmp/photo-removal-alert-green.log); critic found no blockers. Native viewer/alert
 layering, VoiceOver focus return and retry remain required acceptance evidence.
+
+M83 native scenario added: the real photo viewer and native feedback adapter are
+composed with a synthetic failure. XCTest checks confirmation, reachable failure
+alert/OK, two attempts, preserved viewer controls and closing to the retained
+photo count. Captures must be inspected after execution. This verifies modal
+presentation, not production deletion or authorization. Remote structural and
+two fixture-preparation checks pass; critic found no blockers. Native pending.

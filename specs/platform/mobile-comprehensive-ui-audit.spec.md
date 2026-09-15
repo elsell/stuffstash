@@ -573,3 +573,9 @@ confirmed destructive request did not succeed. Retain the photo and enable retry
 after completion; acknowledgment must not perform another removal. Suppress
 late failures after the route's operation owner is gone. No authorization or
 removal service boundary changes. Native modal layering remains an acceptance gate.
+
+Native photo-recovery coverage must compose the real AssetPhotoViewerSheet and
+AppFeedback native dialog adapter with a synthetic rejected removal. Verify the
+confirmation, failure alert, acknowledgment, retained viewer and retry controls,
+then close. This fixture establishes modal layering only; production command
+ownership and authorization remain covered by their separate boundary tests.

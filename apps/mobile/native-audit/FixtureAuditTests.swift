@@ -317,6 +317,34 @@ final class FixtureAuditTests: XCTestCase {
     capture("enum-draft-option-removed")
   }
 
+  func testPhotoRemovalFailureAppearsAboveViewer() {
+    let open = app.buttons["Audit photo removal recovery"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let remove = app.buttons["Remove photo"]
+    XCTAssertTrue(remove.waitForExistence(timeout: 5))
+    for attempt in 1...2 {
+      XCTAssertTrue(remove.isHittable)
+      remove.tap()
+      let confirmation = app.alerts["Remove photo?"]
+      XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+      confirmation.buttons["Remove"].tap()
+      let failure = app.alerts["Could not remove photo"]
+      XCTAssertTrue(failure.waitForExistence(timeout: 5))
+      XCTAssertTrue(failure.buttons["OK"].isHittable)
+      capture("photo-removal-failure-\(attempt)")
+      failure.buttons["OK"].tap()
+      XCTAssertTrue(failure.waitForNonExistence(timeout: 5))
+      XCTAssertTrue(remove.isEnabled)
+      XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
+    }
+    capture("photo-retained-after-retry")
+    app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.staticTexts["Removal attempts: 2"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Photos remaining: 1"].exists)
+  }
+
   private func verifyAddressEntry(_ mode: String) {
     app.buttons["Audit \(mode) input"].tap()
     let input = app.textFields["Audit \(mode) address"]
