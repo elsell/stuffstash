@@ -125,9 +125,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(bar.waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
-    let note = app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
     let historyScroll = app.scrollViews.containing(.staticText, identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
     XCTAssertTrue(historyScroll.exists)
+    let note = requireTextHit
+      ? app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
+      : historyScroll.staticTexts.matching(identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
     if requireTextHit { XCTAssertTrue(note.isHittable) }
     else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
     XCTAssertTrue(app.buttons["Close"].isHittable)
@@ -148,7 +150,9 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(older.isHittable)
     older.tap()
-    let loaded = app.staticTexts["Older audit checkout"]
+    let loaded = requireTextHit
+      ? app.staticTexts["Older audit checkout"]
+      : historyScroll.staticTexts.matching(identifier: "Older audit checkout").firstMatch
     XCTAssertTrue(loaded.waitForExistence(timeout: 5))
     if requireTextHit {
       for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }

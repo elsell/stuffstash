@@ -490,3 +490,12 @@ for presentation coverage (not cold-query acceptance), two households, and a loc
 selection port that rejects once then succeeds. Verify household drilldown,
 selection failure/retry, return to the fixture menu, and explicit Close. Retain
 screenshots. Do not touch real inventory selection or production services.
+
+### History comparison query resolution
+
+Run34937278231 exposes nested StaticText wrappers with the same checkout note
+label. The bounds comparison must resolve an explicit first matching note inside
+its History scroll view before reading geometry, including the older-page note.
+Retain the original hit-testing diagnostic unchanged. This removes ambiguous
+XCTest lookup, not a production accessibility defect; pagination, expansion and
+Close must still execute on the native runtime before acceptance.

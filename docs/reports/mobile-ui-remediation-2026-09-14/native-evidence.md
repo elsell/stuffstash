@@ -876,3 +876,12 @@ Artifacts are under /tmp/native349372-{onboarding,fixtures}-{phone,ipad}; job lo
 use the same prefixes. Cumulative critic found no confirmed new production
 regression relative to the pre-PR140 evidence. This is an authorized interim
 release with unresolved findings, not native audit completion.
+
+### History comparison lookup correction
+
+The run349372 failure tree identifies nested parent/child StaticText nodes carrying
+the same checkout note. The comparison now resolves firstMatch within its scoped
+History scroll view for both the first and older-page notes. The original hit-test
+diagnostic remains unchanged. Remote structural checks pass; native compilation,
+expansion, pagination and dismissal remain pending. This is harness correction,
+not a claim that M61 is fixed.
