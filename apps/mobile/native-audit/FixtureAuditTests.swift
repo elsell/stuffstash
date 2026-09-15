@@ -12,6 +12,44 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testMoveHereRecoveryAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit Move here recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let query = app.textFields["Find item, box, or place"]
+    XCTAssertTrue(query.waitForExistence(timeout: 10))
+    XCTAssertTrue(query.isHittable)
+    query.tap()
+    waitForKeyboard()
+    query.typeText("Tent")
+    XCTAssertEqual(query.value as? String, "Tent")
+    let dismiss = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismiss.isHittable)
+    dismiss.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    let retry = app.buttons["Retry suggestions"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts["No movable matches"].exists)
+    let results = app.scrollViews.containing(.button, identifier: "Retry suggestions").firstMatch
+    XCTAssertTrue(results.exists)
+    for _ in 0..<8 where !retry.isHittable { results.swipeUp() }
+    XCTAssertTrue(retry.isHittable)
+    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    capture("move-here-suggestions-error")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Audit tent"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertEqual(query.value as? String, "Tent")
+    capture("move-here-suggestions-recovered")
+    app.buttons["Cancel"].firstMatch.tap()
+    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable)
+  }
+
   func testCommandHeightComparisonAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

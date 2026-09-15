@@ -1,3 +1,4 @@
+export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
 export { AssetEditRecoveryFixture } from './AssetEditRecoveryFixture';
@@ -74,6 +75,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
+      <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
@@ -130,6 +132,7 @@ export function FixtureMenu() {
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
+    <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
     <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />
     <Button title="Audit contents recovery" onPress={() => router.push('/audit-region-recovery' as Href)} />
     <Button title="Audit place search" onPress={() => router.push('/audit-contents-search' as Href)} />

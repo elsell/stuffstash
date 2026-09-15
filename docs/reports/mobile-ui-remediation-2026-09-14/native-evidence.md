@@ -1036,3 +1036,24 @@ comparison control and retry. Preparation tests (2), TypeScript and structural
 checks pass on paul. Native execution and visual comparison remain pending;
 production NativeCommandButton is unchanged. Diagnostic completion alone must not
 be reported as label-layout acceptance.
+
+## Move-here recovery native preparation
+
+The runner now mounts the actual Move-here route with first-lookup failure per
+query and a known movable candidate after retry. Largest-text acceptance enters
+Tent, checks native field retention, dismisses the keyboard, retries within
+results, waits for Audit tent and returns through Cancel. No mutation is performed.
+Preparation tests (2), TypeScript and structural checks pass on paul; native
+execution remains pending. It does not establish selection/commit behavior.
+
+## Phone run34952117013: 31/41
+
+Actual checkout26f91e4ba3274e0ff47cd92f39d6a06bc0dda9a7 includes the initial
+PR144 recovery fixture (314ac3e8). testAssetRegionRecoveryAtAccessibilityTextSize
+passed: independent photos/contents retries settle to known empty states and Back
+remains available. Screenshot inspection is pending. Ten other scenarios failed:
+three Add cases, original History hit check, controlled URL entry, Edit metadata
+reachability, expiration accessibility, footer/nested-sheet checks and the
+no-accessory keyboard-readiness comparison. Both onboarding jobs passed; iPad
+fixtures remain running. No overall native acceptance is claimed, and this build
+precedes PR144 search/commands and PR146 changes.

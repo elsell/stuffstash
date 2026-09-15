@@ -32,6 +32,7 @@ exports = {
     "audit-contents-search": "AssetContentsSearchFixture",
     "audit-region-recovery": "AssetRegionRecoveryFixture",
     "audit-command-height": "CommandHeightFixture",
+    "audit-move-here-recovery": "MoveHereRecoveryFixture",
     "audit-edit-recovery": "AssetEditRecoveryFixture",
     "audit-checkout-history": "CheckoutHistoryFixture",
     "audit-browse": "BrowseFilterFixture",

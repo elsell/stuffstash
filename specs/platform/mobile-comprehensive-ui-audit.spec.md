@@ -790,3 +790,11 @@ without changing filter forms where an invalid primary still permits dismissal.
 Guard callbacks as well as platform disabled state. Keep native primary emphasis,
 content-driven heights and full-width stacked actions. Verify footer reachability
 at narrow/large-text sizes; stacking is not proof the whole sheet fits.
+
+A runner-only Move-here recovery fixture fails the first lookup for each search
+query, then returns one known movable asset after explicit retry. Exercise the
+production sheet at largest accessibility text: enter a query, observe the local
+error without an empty-match claim, retry to the actual candidate, retain the
+query and dismiss through Cancel. No move is performed. Require scrolling rather
+than assuming every result fits; failure to reach controls remains an audit
+finding, not a reason to reduce the text size.
