@@ -825,7 +825,8 @@
     "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
-      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {
@@ -834,7 +835,8 @@
     "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
-      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {
@@ -852,7 +854,8 @@
     "source": "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
     "sources": [
       "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
-      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx"
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {
@@ -927,7 +930,8 @@
       "apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx",
       "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
       "apps/mobile/src/ui/screens/useProviderEditorExit.ts",
-      "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx"
+      "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {

@@ -56,7 +56,11 @@ User and assistant message text supports native selection and copy. The native t
 composer continues to support paste. A clearly labelled New conversation control is
 always available in the sheet header; resetting clears local history/drafts and cancels
 active capture/transport. Pending or executing writes require a native confirmation
-before discarding the conversation view; reset never implies an undo.
+before discarding the conversation view; reset never implies an undo. A confirmation
+belongs to the current visit, plan/status, staged photos and command edits. If any
+of those change, an old acceptance must not clear the newer conversation. Accept a
+current confirmation once; ordinary level-meter updates must not invalidate it.
+Keep the existing immediate reset for conversations without pending work.
 
 Connection failures preserve the latest transcript, answer, proposed commands, edits,
 and staged photos. An interrupted review stays visible with an explicit connection

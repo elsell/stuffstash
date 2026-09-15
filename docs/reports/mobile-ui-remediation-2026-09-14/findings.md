@@ -2007,3 +2007,23 @@ M143 critic found no confirmed blocker. Combined remote validation at this chang
 passes1663 tests across269 files. Source checksum comparison against paul showed
 no differences before the run. Log: /tmp/mobile-batch-draft-photo.log. Native
 run35003739726 remains in progress and predates this final confirmation change.
+
+
+### M144 — New-conversation confirmation can reset newer work
+
+P2 source/mounted finding, Voice processing and plan editing. The reset alert
+retained onReset directly, allowing acceptance after navigation or newer edits,
+photo drafts and plan/status changes. Seven mounted cases failed before correction.
+The extracted useNewConversation preserves the native alert and immediate reset
+policy, owns acceptance by meaningful conversation state and visit, and accepts
+once. Meter-only updates keep the confirmation valid.
+
+Nine focused cases include replacement plan with unchanged status/drafts, as
+requested by critic, plus status, photos, edits, visit, unmount, meter, current and
+empty paths. Existing presentation/history/navigation tests are retained. Native
+confirmation timing remains pending. No controller or API behavior changed.
+
+M144 verification: nine focused cases pass on paul; the17 existing presentation,
+history and navigation tests also pass. TypeScript and structural checks pass.
+Critic found no confirmed blocker, and its additional plan-identity coverage is
+now included.

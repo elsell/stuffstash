@@ -2858,7 +2858,7 @@ S119,Voice / recording,lifecycle,"Cold/warm start, blur, background and deep lin
 S120,Voice / processing,task,Task clarity and platform-pattern fit,pending,,
 S120,Voice / processing,navigation,"Navigation, hierarchy and return",pending,,
 S120,Voice / processing,selection,Value selection and current value,pending,,
-S120,Voice / processing,modality,Presentation and dismissal,pending,,
+S120,Voice / processing,modality,Presentation and dismissal,finding,; M144 mounted reset confirmation ownership; native pending,M144
 S120,Voice / processing,layout,"Safe areas, scroll edges and overlays",pending,,
 S120,Voice / processing,adaptation,Phone/tablet/window reflow,pending,,
 S120,Voice / processing,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2874,11 +2874,11 @@ S120,Voice / processing,content,"Lists, hierarchy, density and pagination",pendi
 S120,Voice / processing,search,"Search, scope and filters",pending,,
 S120,Voice / processing,loading,"Loading, background refresh and progress",pending,,
 S120,Voice / processing,recovery,"Empty, error, denied and retry",pending,,
-S120,Voice / processing,editing,"Draft, save, cancel, undo and interruption",pending,,
+S120,Voice / processing,editing,"Draft, save, cancel, undo and interruption",finding,; M144 mounted reset confirmation ownership; native pending,M144
 S120,Voice / processing,privacy,"Account scope, data use and permissions",pending,,
 S120,Voice / processing,notifications,System notification entry and state,pending,,
 S120,Voice / processing,media,"Camera, library, files and audio",pending,,
-S120,Voice / processing,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S120,Voice / processing,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M144 mounted reset confirmation ownership; native pending,M144
 S121,Voice / response,task,Task clarity and platform-pattern fit,pending,,
 S121,Voice / response,navigation,"Navigation, hierarchy and return",pending,,
 S121,Voice / response,selection,Value selection and current value,pending,,
@@ -2906,7 +2906,7 @@ S121,Voice / response,lifecycle,"Cold/warm start, blur, background and deep link
 S122,Voice / plan approval edits,task,Task clarity and platform-pattern fit,pending,,
 S122,Voice / plan approval edits,navigation,"Navigation, hierarchy and return",pending,,
 S122,Voice / plan approval edits,selection,Value selection and current value,pending,,
-S122,Voice / plan approval edits,modality,Presentation and dismissal,pending,,
+S122,Voice / plan approval edits,modality,Presentation and dismissal,finding,; M144 mounted reset confirmation ownership; native pending,M144
 S122,Voice / plan approval edits,layout,"Safe areas, scroll edges and overlays",pending,,
 S122,Voice / plan approval edits,adaptation,Phone/tablet/window reflow,pending,,
 S122,Voice / plan approval edits,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -2922,11 +2922,11 @@ S122,Voice / plan approval edits,content,"Lists, hierarchy, density and paginati
 S122,Voice / plan approval edits,search,"Search, scope and filters",pending,,
 S122,Voice / plan approval edits,loading,"Loading, background refresh and progress",pending,,
 S122,Voice / plan approval edits,recovery,"Empty, error, denied and retry",pending,,
-S122,Voice / plan approval edits,editing,"Draft, save, cancel, undo and interruption",pending,,
+S122,Voice / plan approval edits,editing,"Draft, save, cancel, undo and interruption",finding,; M144 mounted reset confirmation ownership; native pending,M144
 S122,Voice / plan approval edits,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S122,Voice / plan approval edits,notifications,System notification entry and state,pending,,
 S122,Voice / plan approval edits,media,"Camera, library, files and audio",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
-S122,Voice / plan approval edits,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S122,Voice / plan approval edits,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M144 mounted reset confirmation ownership; native pending,M144
 S123,Voice / plan progress recovery,task,Task clarity and platform-pattern fit,pending,,
 S123,Voice / plan progress recovery,navigation,"Navigation, hierarchy and return",pending,,
 S123,Voice / plan progress recovery,selection,Value selection and current value,pending,,
