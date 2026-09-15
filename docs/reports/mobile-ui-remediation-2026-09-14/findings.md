@@ -934,3 +934,13 @@ overlap adjacent messages; their reported native button frame is46.1points despi
 a two-line large label. Do not treat hittability as proof of label layout. Repair
 scroll ownership and investigate hosted-label measurement before closing M87;
 keep existing native assertions. See phone-edit-errors-large-text-349502.png.
+
+M87 scroll-ownership candidate: Edit metadata recovery now renders inside its
+form ScrollView rather than above the form. Cancel/Save retain their existing
+fixed action region. A regression first failed on the old layout and now passes
+while preserving independent retries and dirty names (12 action-sheet tests,
+TypeScript and structural checks on paul). Native acceptance scrolls each retry
+fully into view and checks Cancel throughout; native execution remains pending.
+The hosted native-label overlap remains under investigation, so M87 stays open.
+Adjacent Move/Move here candidate status is still outside their forms and needs
+its own large-text review; this Edit-only change does not certify those layouts.

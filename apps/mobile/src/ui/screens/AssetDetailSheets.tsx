@@ -2,7 +2,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -66,6 +66,7 @@ export function EditAssetSheet({
   asset,
   assetTypes,
   assetTags,
+  metadataRecovery,
   draft,
   isSaving,
   onChange,
@@ -75,6 +76,7 @@ export function EditAssetSheet({
   readonly asset: AssetDetailViewModel;
   readonly assetTypes?: readonly CustomAssetTypeDefinition[];
   readonly assetTags: readonly AssetTagOptionViewModel[];
+  readonly metadataRecovery?: ReactNode;
   readonly draft: EditDraft | undefined;
   readonly isSaving: boolean;
   readonly onChange: (draft: EditDraft) => void;
@@ -88,6 +90,7 @@ export function EditAssetSheet({
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <Text style={styles.sheetTitle}>Edit asset</Text>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.editScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        {metadataRecovery}
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
           <Text style={styles.readOnlyContextValue}>

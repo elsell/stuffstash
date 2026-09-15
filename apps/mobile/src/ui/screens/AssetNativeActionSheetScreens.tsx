@@ -155,20 +155,20 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
 
   return (
     <NativeSheetFrame title="Edit asset" busy={isSaving} dismissible={false}>
-      {types.isError ? <InlineQueryError message="Asset types could not be loaded." retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
-      {tags.isError ? <InlineQueryError message="Tags could not be loaded." retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
-      {(
-        <EditAssetSheet
-          asset={asset}
-          assetTypes={types.data}
-          assetTags={tags.data ?? []}
-          draft={draft}
-          isSaving={isSaving}
-          onChange={next => operation.change(() => setDraft(next))}
-          onClose={close}
-          onSave={() => void save()}
-        />
-      )}
+      <EditAssetSheet
+        metadataRecovery={<>
+          {types.isError ? <InlineQueryError message="Asset types could not be loaded." retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
+          {tags.isError ? <InlineQueryError message="Tags could not be loaded." retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
+        </>}
+        asset={asset}
+        assetTypes={types.data}
+        assetTags={tags.data ?? []}
+        draft={draft}
+        isSaving={isSaving}
+        onChange={next => operation.change(() => setDraft(next))}
+        onClose={close}
+        onSave={() => void save()}
+      />
     </NativeSheetFrame>
   );
 }

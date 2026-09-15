@@ -746,3 +746,16 @@ element before reading its frame. RN can expose the same rejected-body text on
 nested parent/child StaticText nodes; ambiguity is an instrumentation error, not
 proof that the error layout failed. Keep the heading-below-navigation and
 heading-before-body geometry assertions after resolving the first matching node.
+
+M87 native follow-up: supplementary Edit metadata errors and their retry commands
+belong inside the same scrolling form as the editable fields. They must not
+consume fixed space above that form or displace its persistent Cancel/Save actions.
+Preserve independent retries and the dirty draft. Scroll containment is a source
+regression check; native largest-text acceptance must still verify label geometry,
+scroll reachability and dismissal. Moving content alone does not establish a fix
+for overlapping hosted native labels.
+
+Edit native acceptance may scroll each retry into full view before tapping; it
+must not require all metadata to fit simultaneously at accessibility text sizes.
+Require the complete retry frame inside the visible form, and Cancel hittable
+before and after scrolling/retry. Capture each region for label-overlap review.

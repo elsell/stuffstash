@@ -341,21 +341,39 @@ final class FixtureAuditTests: XCTestCase {
     let tags = app.buttons["Retry tags"]
     XCTAssertTrue(types.waitForExistence(timeout: 10))
     XCTAssertTrue(tags.waitForExistence(timeout: 10))
-    XCTAssertTrue(types.isHittable)
-    XCTAssertTrue(tags.isHittable)
+    let cancel = app.buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.isHittable)
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func reveal(_ element: XCUIElement) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        return element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<12 where !visible() {
+        let above = element.frame.minY < scroll.frame.minY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+      XCTAssertTrue(cancel.isHittable)
+    }
+    reveal(types)
     let message = app.staticTexts["Asset types could not be loaded."].firstMatch
     XCTAssertGreaterThan(message.frame.height, 30)
-    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
-    capture("edit-metadata-errors-accessibility-size")
+    capture("edit-metadata-types-accessibility-size")
+    reveal(tags)
+    capture("edit-metadata-tags-accessibility-size")
     tags.tap()
     XCTAssertTrue(tags.waitForNonExistence(timeout: 5))
-    XCTAssertTrue(types.isHittable)
+    reveal(types)
     types.tap()
     XCTAssertTrue(types.waitForNonExistence(timeout: 5))
     let name = app.textFields["Asset name"]
     XCTAssertTrue(name.waitForExistence(timeout: 5))
     XCTAssertEqual(name.value as? String, "Audit tent")
-    XCTAssertTrue(name.isHittable)
+    reveal(name)
     XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     capture("edit-metadata-recovered")
   }
