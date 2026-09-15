@@ -1520,3 +1520,13 @@ Enlarged-text failures remain deferred behind normal-text work.
 Two fixture-preparation checks, TypeScript and structural checks validate the
 selector change remotely; Swift execution remains pending. No result here closes
 the full native audit or authorizes a claim of current-build device acceptance.
+
+### Combined source validation at 62895a06
+
+The remote validation host passed all1,613 tests across265files, TypeScript and
+mobile structural checks. A checksum comparison of mobile/src found only an
+unsynced import consolidation; that file was synced and the full checks rerun
+successfully. Log on paul: /tmp/mobile-batch-current-full.log. This is source/test
+evidence, not native acceptance. Native run34985387290 remained in progress on
+its earlier source8f1ec146 and cannot validate the later M117 changes. PR150's
+description now includes the combined filter fixes and this validation scope.
