@@ -330,3 +330,18 @@ color well using the captured native element bounds. The iPad run34919776387
 hierarchy exposes one 704-by-36-point button spanning label and well, while its
 screenshot shows the well at the trailing edge. Do not infer a successful picker
 from a tap or replace the failed row-activation result with the comparison's result.
+
+## Native choice-label text adaptation
+
+The shared iOS menu picker must preserve the full visible field label when
+Dynamic Type or a narrow available width requires wrapping. Keep the native
+LabeledContent/Picker interaction and allow the label's intrinsic vertical size
+to increase; do not shrink the text, truncate it, or hide the label to make room.
+This applies to every shared picker consumer, including filter Availability,
+settings, customization fields and reminder mode.
+
+Apple's Typography guidance recommends adapting layout for larger text, including
+stacking where needed: https://developer.apple.com/design/human-interface-guidelines/typography.
+Run34920888328's phone accessibility audit identifies Availability as potentially
+clipped at larger sizes. Preserve that failing native audit and add an explicit
+accessibility-size label/menu scenario; source tests cannot verify text layout.

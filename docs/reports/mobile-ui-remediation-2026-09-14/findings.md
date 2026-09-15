@@ -15,12 +15,12 @@
 | M11 | Newly selected custom-field applicability targets cannot be removed before saving | Implemented; runtime pending | Saved targets stay immutable; draft checkbox choices can be deselected, including safe unavailable-draft removal; create/edit/scoped-name tests, 37 focused tests/check/structural green; critic found no further blocker |
 | M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Implemented; native pending | Scoped Retry in both routed lists and legacy unrouted LocationsScreen; repeat-failure and scope-recovery tests; full1349/check/structural green; critic found no blocker |
-| M14 | Native onboarding run shows a shortened typed server address | Unresolved; candidate under test | Run34905451368 loses characters in both controlled and uncontrolled phone fixtures, disproving controlled state as a sufficient cause. Keyboard readiness and full displayed/submitted address assertions must precede any fixed claim. Current onboarding candidate remains unverified |
+| M14 | Native onboarding run shows a shortened typed server address | Named native scenarios pass; broad acceptance pending | Run34920888328 system-address button and Go submission pass on phone/iPad; production phone onboarding passes. Production iPad launch failed before UI assertions. Older input comparison failures remain distinct from the new adapter |
 | M15 | Unsaved enum options cannot be removed before saving | Implemented; native rerun pending | Saved/draft distinction with native Remove command; 43 focused tests/check/structural green, critic found no blockers; native removal fixture added |
 | M16 | Customization controls remain editable while Save is pending | Implemented; runtime pending | Pending-save inputs stay visible/disabled; open picker guarded; 53 focused tests including all editor kinds and failed-save recovery, check/structural green; critic found no blocker |
 | M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Implemented; native rerun pending | Centered 600-point form column and adjacent action; typecheck/structural green, critic found no blockers; iPad landscape fixture added, enlarged text still pending |
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
-| M19 | Expiration filter sheet renders no body content | Candidate failed native expansion | Run34905451368 initially exposes medium-detent rows but loses the body after expansion on both devices; phone search keyboard also hides actions. Native footer/layout integration remains unresolved. Calendar scenario separately used an incorrect dismissal tap |
+| M19 | Expiration filter sheet loses body/actions during native presentation | Expansion passes; phone keyboard actions unresolved | Run34920888328 direct-root candidate survives expansion on phone and iPad. Search keyboard action reachability passes on iPad but fails on phone. Large-text label finding tracked separately as M53 |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
 | M21 | Add fields can change while the submitted item is being saved | Implemented; source tests pass; native pending | Exclusive save/parent/photo operation ownership guards draft edits, duplicate submission and dismissal. Five remote tests cover save failure, parent failure and photo cancellation with draft retention and editing recovery; native verification remains pending |
 | M22 | Appearance uses navigation for three flat choices | Implemented; native menu scenario passes both devices | Settings now uses the shared native menu; older route reuses it. Immediate selection and storage-failure rollback are preserved; native menu rendering remains pending |
@@ -250,3 +250,22 @@ normalized option addition, duplicate handling and draft clearing. Eight shared
 control and37 consumer behavior tests, TypeScript and mobile structural checks
 pass remotely. Household/inventory create/edit share this consumer. Native layout,
 keyboard, large text and assistive-technology acceptance remain pending.
+
+### M53 — Native choice label can clip at accessibility text sizes
+
+Run34920888328's phone accessibility audit flags the Availability label in the
+Expiration overview. The source uses a string-label LabeledContent; the candidate
+now uses its supported native Text label slot with unconstrained vertical size.
+This preserves the menu/value interaction and allows the host to grow with text.
+
+Shared consumers inspected: Browse/Expiration filters; Appearance; custom field
+Type/Applies to; expiration Month; type reminder mode; voice Service; invitation
+Access; and Move destination Kind. Selection values, disabled guards and callbacks
+are unchanged. No Android presentation change.
+
+Nine remote picker/filter behavior tests, TypeScript and structural checks pass;
+two native-fixture installer tests pass. Existing failing AX scenario is preserved
+and a separate largest-accessibility-text scenario opens the native menu after
+locating the visible label. Critic found no blocker but correctly notes that its
+height check is only a coarse enlarged-text check: screenshots and the AX audit
+remain required to establish no clipping. Native outcome remains pending.

@@ -1685,7 +1685,7 @@ S071,Browse / filter overview,selection,Value selection and current value,runtim
 S071,Browse / filter overview,modality,Presentation and dismissal,pending,,
 S071,Browse / filter overview,layout,"Safe areas, scroll edges and overlays",pending,,
 S071,Browse / filter overview,adaptation,Phone/tablet/window reflow,pending,,
-S071,Browse / filter overview,typography,"Dynamic Type, wrapping and legibility",pending,,
+S071,Browse / filter overview,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S071,Browse / filter overview,appearance,"Light/dark, contrast and materials",pending,,
 S071,Browse / filter overview,localization,"Locale, timezone, RTL and long strings",pending,,
 S071,Browse / filter overview,imagery,"Icons, photos and missing media",pending,,
@@ -1781,7 +1781,7 @@ S075,Expiration / filter overview,selection,Value selection and current value,so
 S075,Expiration / filter overview,modality,Presentation and dismissal,pending,,
 S075,Expiration / filter overview,layout,"Safe areas, scroll edges and overlays",finding,Run34907820613/source a01407dc: native expansion still loses expiration filter body on both iPhone17 and iPad mini. Diagnostic variants running in34909419413.,M19
 S075,Expiration / filter overview,adaptation,Phone/tablet/window reflow,pending,,
-S075,Expiration / filter overview,typography,"Dynamic Type, wrapping and legibility",pending,,
+S075,Expiration / filter overview,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S075,Expiration / filter overview,appearance,"Light/dark, contrast and materials",pending,,
 S075,Expiration / filter overview,localization,"Locale, timezone, RTL and long strings",pending,,
 S075,Expiration / filter overview,imagery,"Icons, photos and missing media",pending,,
@@ -2213,7 +2213,7 @@ S093,Add / expiration month year,selection,Value selection and current value,pen
 S093,Add / expiration month year,modality,Presentation and dismissal,pending,,
 S093,Add / expiration month year,layout,"Safe areas, scroll edges and overlays",pending,,
 S093,Add / expiration month year,adaptation,Phone/tablet/window reflow,pending,,
-S093,Add / expiration month year,typography,"Dynamic Type, wrapping and legibility",pending,,
+S093,Add / expiration month year,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S093,Add / expiration month year,appearance,"Light/dark, contrast and materials",pending,,
 S093,Add / expiration month year,localization,"Locale, timezone, RTL and long strings",pending,,
 S093,Add / expiration month year,imagery,"Icons, photos and missing media",pending,,
@@ -2477,7 +2477,7 @@ S104,Settings / appearance selection,selection,Value selection and current value
 S104,Settings / appearance selection,modality,Presentation and dismissal,pending,,
 S104,Settings / appearance selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S104,Settings / appearance selection,adaptation,Phone/tablet/window reflow,pending,,
-S104,Settings / appearance selection,typography,"Dynamic Type, wrapping and legibility",pending,,
+S104,Settings / appearance selection,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S104,Settings / appearance selection,appearance,"Light/dark, contrast and materials",pending,,
 S104,Settings / appearance selection,localization,"Locale, timezone, RTL and long strings",pending,,
 S104,Settings / appearance selection,imagery,"Icons, photos and missing media",pending,,
@@ -2501,7 +2501,7 @@ S105,Settings / field type choice,selection,Value selection and current value,so
 S105,Settings / field type choice,modality,Presentation and dismissal,pending,,
 S105,Settings / field type choice,layout,"Safe areas, scroll edges and overlays",pending,,
 S105,Settings / field type choice,adaptation,Phone/tablet/window reflow,pending,,
-S105,Settings / field type choice,typography,"Dynamic Type, wrapping and legibility",pending,,
+S105,Settings / field type choice,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S105,Settings / field type choice,appearance,"Light/dark, contrast and materials",pending,,
 S105,Settings / field type choice,localization,"Locale, timezone, RTL and long strings",pending,,
 S105,Settings / field type choice,imagery,"Icons, photos and missing media",pending,,
@@ -2525,7 +2525,7 @@ S106,Settings / field applicability,selection,Value selection and current value,
 S106,Settings / field applicability,modality,Presentation and dismissal,pending,,
 S106,Settings / field applicability,layout,"Safe areas, scroll edges and overlays",pending,,
 S106,Settings / field applicability,adaptation,Phone/tablet/window reflow,pending,,
-S106,Settings / field applicability,typography,"Dynamic Type, wrapping and legibility",pending,,
+S106,Settings / field applicability,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S106,Settings / field applicability,appearance,"Light/dark, contrast and materials",pending,,
 S106,Settings / field applicability,localization,"Locale, timezone, RTL and long strings",pending,,
 S106,Settings / field applicability,imagery,"Icons, photos and missing media",pending,,
@@ -2669,7 +2669,7 @@ S112,Reminders / type override,selection,Value selection and current value,sourc
 S112,Reminders / type override,modality,Presentation and dismissal,pending,,
 S112,Reminders / type override,layout,"Safe areas, scroll edges and overlays",pending,,
 S112,Reminders / type override,adaptation,Phone/tablet/window reflow,pending,,
-S112,Reminders / type override,typography,"Dynamic Type, wrapping and legibility",pending,,
+S112,Reminders / type override,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S112,Reminders / type override,appearance,"Light/dark, contrast and materials",pending,,
 S112,Reminders / type override,localization,"Locale, timezone, RTL and long strings",pending,,
 S112,Reminders / type override,imagery,"Icons, photos and missing media",pending,,
@@ -2957,7 +2957,7 @@ S124,Voice / provider readiness,selection,Value selection and current value,pend
 S124,Voice / provider readiness,modality,Presentation and dismissal,pending,,
 S124,Voice / provider readiness,layout,"Safe areas, scroll edges and overlays",pending,,
 S124,Voice / provider readiness,adaptation,Phone/tablet/window reflow,pending,,
-S124,Voice / provider readiness,typography,"Dynamic Type, wrapping and legibility",pending,,
+S124,Voice / provider readiness,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S124,Voice / provider readiness,appearance,"Light/dark, contrast and materials",pending,,
 S124,Voice / provider readiness,localization,"Locale, timezone, RTL and long strings",pending,,
 S124,Voice / provider readiness,imagery,"Icons, photos and missing media",pending,,
@@ -3221,7 +3221,7 @@ S135,Asset Move / destination creation,selection,Value selection and current val
 S135,Asset Move / destination creation,modality,Presentation and dismissal,pending,,
 S135,Asset Move / destination creation,layout,"Safe areas, scroll edges and overlays",pending,,
 S135,Asset Move / destination creation,adaptation,Phone/tablet/window reflow,pending,,
-S135,Asset Move / destination creation,typography,"Dynamic Type, wrapping and legibility",pending,,
+S135,Asset Move / destination creation,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S135,Asset Move / destination creation,appearance,"Light/dark, contrast and materials",pending,,
 S135,Asset Move / destination creation,localization,"Locale, timezone, RTL and long strings",pending,,
 S135,Asset Move / destination creation,imagery,"Icons, photos and missing media",pending,,
