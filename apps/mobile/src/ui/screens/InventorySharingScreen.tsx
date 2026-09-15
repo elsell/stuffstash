@@ -8,10 +8,11 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
+  Platform,
   Alert,
   RefreshControl,
   ScrollView,
@@ -53,6 +54,8 @@ export function InventorySharingScreen({
   const compositionScopeId = useMobileServerStateScopeId();
   const scopeKey = `${compositionScopeId}:${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
   const [email, setEmail] = useState('');
+  const emailScope = useRef(scopeKey);
+  const [emailRevision, setEmailRevision] = useState(0);
   const [creationError, setCreationError] = useState<{ title: string; message: string }>();
   const [linkFeedback, setLinkFeedback] = useState<{ title: string; message?: string }>();
   const [cancellationErrors, setCancellationErrors] = useState<Record<string, string>>({});
@@ -101,6 +104,7 @@ export function InventorySharingScreen({
     setCreated(undefined);
     setCreatedScopeKey(undefined);
     setEmail('');
+    emailScope.current = scopeKey;
     setRelationship('viewer');
   }, [scopeKey]);
 
@@ -123,6 +127,7 @@ export function InventorySharingScreen({
       setCreated(invitation);
       setCreatedScopeKey(requestedScopeKey);
       setEmail('');
+      setEmailRevision(value => value + 1);
     } catch (error) {
       if (ownsFeedback()) setCreationError(error instanceof InventoryInvitationLinkUnavailableError
         ? { title: 'Invitation created, link unavailable', message: 'Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.' }
@@ -226,7 +231,8 @@ export function InventorySharingScreen({
             <Text style={settingsStyles.errorMessage}>{creationError.message}</Text>
           </View> : null}
           <Text style={styles.label}>Email</Text>
-          <AppTextInput
+          <InvitationEmailInput
+            key={Platform.OS === 'ios' ? `${scopeKey}:${emailRevision}` : scopeKey}
             autoCapitalize="none"
             autoComplete="email"
             accessibilityLabel="Invitee email"
@@ -236,7 +242,7 @@ export function InventorySharingScreen({
             placeholder="friend@example.com"
             placeholderTextColor={palette.textMuted}
             style={styles.input}
-            value={email}
+            email={emailScope.current === scopeKey ? email : ''}
           />
           <SettingsPickerRow label="Access" accessibilityLabel="Choose invitation access" value={relationship}
             options={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }] as const}
@@ -350,4 +356,9 @@ function createStyles(colors: MobileColorPalette) {
     invitationEmail: { color: colors.text, fontSize: 16, fontWeight: '600' },
     invitationMetadata: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 2 }
   });
+}
+
+function InvitationEmailInput({ email, ...props }: Omit<ComponentProps<typeof AppTextInput>, 'value' | 'defaultValue'> & { readonly email: string }) {
+  const seed = useRef(email);
+  return <AppTextInput {...props} {...(Platform.OS === 'ios' ? { defaultValue: seed.current } : { value: email })} />;
 }

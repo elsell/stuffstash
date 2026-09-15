@@ -566,3 +566,15 @@ route updates and ignores hidden native search callbacks. Retain unsubmitted tex
 for return; when focus resumes, restart its debounce unless an external route
 query replaced it. Explicit filter/item navigation still flushes while focused.
 Unmount cancels pending work. Do not update a departed route from late input.
+
+Sharing email entry on iOS uses native-owned text initialized empty, avoiding
+controlled value feedback during typing. Retain application draft updates for
+validation and submission. Remount the native field only on scope change or
+successful creation; failure and metadata refresh preserve its lifetime. Android
+retains controlled text. Verify complete fast entry, failure retry, successful
+clear and scope replacement natively; source tests only establish reset contracts.
+
+If an access error temporarily hides the Sharing form, remount its native field
+from the retained same-scope email. Keep that seed stable during subsequent typing.
+A replacement scope must never seed the previous scope's email, including its
+first render before effects settle.

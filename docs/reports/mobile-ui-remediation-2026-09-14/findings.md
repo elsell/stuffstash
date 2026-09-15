@@ -1595,3 +1595,25 @@ unchanged. Eight focused checks, TypeScript and structural checks passed remotel
 the strengthened focus test also covers the timer alone and external replacement.
 Code review found no confirmed blockers. Native focus/text restoration and actual
 route transitions remain pending. R018/S074 search/lifecycle.
+
+## M121 — Sharing iOS email typing candidate after native truncation
+
+P2, native-observed in run349789 atb375d4: final iPad email remained
+`a@example.invalid` after typing `audit@example.invalid`. The field was visible
+and focused. The candidate removes per-keystroke controlled value feedback only
+for iOS Sharing email, using a mount-stable native seed. Scope changes and
+successful creation replace its lifetime; failed creation/metadata reads retain
+it. Android stays controlled and does not remount after success.
+
+A source regression first failed on the native-owned contract. Twenty-two Sharing
+tests, TypeScript and structural checks pass remotely, covering identical retry
+submission, native field retention, successful clear and scope replacement on
+both platforms. This is a candidate, not proof that controlled feedback caused
+the native truncation or that it is fixed. The existing full-speed native email
+and creation-recovery journey is unchanged and must pass on iPhone/iPad.
+
+M121 review caught a candidate mismatch after a403 temporarily hid the form: an
+empty native field could accompany retained submission state. The final candidate
+seeds remounted fields from the same-scope draft and gates first-render seeds for
+scope replacement. Both platform cases now cover denial/hide/recovery before retry
+and successful clear. This correction is not shipped native evidence.

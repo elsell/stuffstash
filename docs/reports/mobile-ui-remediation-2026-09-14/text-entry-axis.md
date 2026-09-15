@@ -142,3 +142,12 @@ Both fixture-preparation checks, mobile TypeScript and structural checks pass on
 paul. Critic found no blocker. The reveal helper checks vertical containment and
 hittability for these full-width fixture inputs; it is not a general horizontal
 clipping validator. Swift compilation and native interaction remain pending.
+
+### Sharing email candidate M121
+
+The iPad349789 capture retains a truncated email. Sharing now uses a mount-stable native
+seed on iOS with lifetime reset for successful creation or scope change, while
+Android retains controlled editing. Application state still drives submission and
+validation. Twenty-two Sharing checks cover reset/retry semantics; the unchanged
+native typing journey remains required. This supersedes the baseline controlled
+classification for this one site, not the other input families.

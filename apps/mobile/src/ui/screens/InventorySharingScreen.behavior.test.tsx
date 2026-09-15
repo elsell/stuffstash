@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
@@ -76,6 +77,7 @@ it('chooses access in place and preserves the submitted draft while creation fai
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(h);
+    const emailField = h.byLabel('Invitee email');
     await h.press(h.byLabel('Choose invitation access'));
     await h.press(h.byLabel('Editor'));
     await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
@@ -86,7 +88,7 @@ it('chooses access in place and preserves the submitted draft while creation fai
     await h.changeText(h.byLabel('Invitee email'), 'replacement@example.test');
     await h.run(() => rejectCreate?.(new Error('offline')));
     expect(h.allText()).toContain('Could not create invitation');
-    expect(h.byLabel('Invitee email')?.props.value).toBe('friend@example.test');
+    expect(h.byLabel('Invitee email')).toBe(emailField);
     expect(h.byLabel('Invitee email')?.props.editable).toBe(true);
     expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(false);
   } finally { await h.unmount(); client.clear(); }
@@ -159,6 +161,7 @@ it('refreshes safe metadata and shows link-unavailable recovery inside the shari
     await settle(h); await h.changeText(h.byLabel('Invitee email'), 'first@example.test');
     await h.press(h.byLabel('Create Invitation')); await settle(h);
     expect(h.byLabel('Complete invitation link')).toBeDefined();
+    const emailField = h.byLabel('Invitee email');
     await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
     await h.press(h.byLabel('Create Invitation')); await settle(h);
     const recovery = h.byText('Invitation created, link unavailable');
@@ -167,7 +170,7 @@ it('refreshes safe metadata and shows link-unavailable recovery inside the shari
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
     expect(parent?.type).toBe('ScrollView');
     expect(h.allText()).toContain('second@example.test');
-    expect(h.byLabel('Invitee email')?.props.value).toBe('friend@example.test');
+    expect(h.byLabel('Invitee email')).toBe(emailField);
     expect(h.byLabel('Complete invitation link')).toBeUndefined();
     expect(h.allText()).not.toContain('Could not create invitation');
   } finally { await h.unmount(); client.clear(); }
@@ -318,4 +321,30 @@ it.each(['leave', 'return'] as const)('does not start a cancellation from an old
     await h.run(() => pressAlertButton('Cancel Invitation'));
     expect(cancellations).toBe(0);
   } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+it.each(['ios','android'] as const)('preserves %s email draft and resets after success or scope replacement', async platform => {
+ const h=new MobileRenderHarness(); const client=createMobileQueryClient(); const original=Platform.OS; Object.assign(Platform,{OS:platform});
+ const submitted:string[]=[]; let fail=true; let denied=false;
+ const repository:InventoryInvitationManagementRepository={list:async()=>{if(denied)throw Object.assign(new Error('denied'),{status:403});return {items:[]};},cancel:async()=>{},create:async(_scope,input)=>{submitted.push(input.email);if(fail)throw new Error('offline');return {...item,email:input.email,inviteUrl:'https://example.test/invite'};}};
+ const view=(selected=scope)=><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:selected.inventoryId})}><AppFeedbackProvider><InventorySharingScreen scope={selected} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{copy:async()=>{},share:async()=>{}}} /></AppFeedbackProvider></MobileServerStateProvider>;
+ try {
+  await h.render(view());await settle(h);const field=h.byLabel('Invitee email');
+  expect(field?.props.value).toBe(platform === 'ios' ? undefined : '');
+  expect(field?.props.defaultValue).toBe(platform === 'ios' ? '' : undefined);
+  await h.changeText(field,'audit@example.invalid');await h.press(h.byLabel('Create Invitation'));await settle(h);
+  expect(h.byLabel('Invitee email')).toBe(field);
+  denied=true;await h.run(()=>client.invalidateQueries({queryKey:mobileQueryKeys.invitations('scope','tenant','inventory')}));await settle(h);
+  expect(h.byLabel('Invitee email')).toBeUndefined();
+  denied=false;await h.run(()=>client.invalidateQueries({queryKey:mobileQueryKeys.invitations('scope','tenant','inventory')}));await settle(h);
+  const recovered=h.byLabel('Invitee email');
+  expect(platform === 'ios' ? recovered?.props.defaultValue : recovered?.props.value).toBe('audit@example.invalid');
+  fail=false;await h.press(h.byLabel('Create Invitation'));await settle(h);
+  expect(submitted).toEqual(['audit@example.invalid','audit@example.invalid']);
+  const cleared=h.byLabel('Invitee email');
+  if(platform === 'ios')expect(cleared).not.toBe(recovered);else expect(cleared).toBe(recovered);
+  expect(platform === 'ios' ? cleared?.props.defaultValue : cleared?.props.value).toBe('');
+  await h.changeText(cleared,'draft@example.invalid');await h.render(view({...scope,inventoryId:'other'}));await settle(h);
+  expect(h.byLabel('Invitee email')).not.toBe(cleared);expect(platform === 'ios' ? h.byLabel('Invitee email')?.props.defaultValue : h.byLabel('Invitee email')?.props.value).toBe('');
+ }finally{await h.unmount();client.clear();Object.assign(Platform,{OS:original});}
 });
