@@ -957,3 +957,12 @@ Add and controlled/seeded URL text-loss assertions still fail. Ordinary and URL
 comparisons share AppTextInput; keyboard configuration, content and presentation
 still differ. No wrapper-only or simulator-only root cause is established.
 Log:/tmp/native349470-fixtures-ipad.log; artifacts:/tmp/native349470-fixtures-ipad.
+
+## Interim TestFlight 0.24.19 (107.1)
+
+Release workflow34950874885 completed successfully from2db6080c (PR142).
+Signed upload job104324058901 reported Upload succeeded at09:35:55UTC on
+September15. Apple processing and exact changelog verification completed in
+job104329510980 at09:38:48UTC: Verified TestFlight changelog for v0.24.19 (107.1).
+This is delivery evidence, not whole-app native acceptance. Subsequent PR144
+asset-detail recovery, search and command changes are excluded from this build.
