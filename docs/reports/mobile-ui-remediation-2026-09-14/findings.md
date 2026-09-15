@@ -1759,3 +1759,14 @@ expiration28 tests plus Add/Home styles15 tests pass remotely, with TypeScript
 and structural checks. Critic found no confirmed blocker. Native spacing and
 reachability remain pending; this bounded adapter migration introduces no new
 recovery semantics or claim of full screen acceptance.
+
+## M131 — Browse inline and photo recovery use custom commands
+
+P2 platform consistency at09c3506b. BrowseHeader's inline retry and AssetDetailView's
+failed-photo retry now use NativeCommandButton. Eligibility, callbacks and Retry
+labels remain unchanged. Browse explanation and command stack vertically so the
+full-width native host does not compress its error text. Unused custom styles are
+removed. Sixty-two existing Browse/asset behavior and view tests, TypeScript and
+structural checks pass remotely. Critic found no confirmed blocker. Native spacing,
+contrast and reachability remain pending. No new photo persistence semantics are
+introduced by this adapter change.
