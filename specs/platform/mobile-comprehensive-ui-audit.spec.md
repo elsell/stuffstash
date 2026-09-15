@@ -353,3 +353,12 @@ if the native menu was already open when the parent locked editing. Native visua
 disabling is not a substitute for guarding the callback boundary. When editing
 resumes, valid selection events must be delivered normally. This preserves the
 parent's draft during pending saves; it does not change application authorization.
+
+## iPad onboarding drag diagnosis
+
+Run34923022927 reaches native iPad portrait UI, preserves the full address, and
+leaves Connect visible, but the left-margin downward drag does not dismiss the
+keyboard. Retain this scenario. Add an independent drag inside the centered form
+column to distinguish gesture-region behavior from a general dismissal failure.
+Record both outcomes and screenshots; a passing comparison does not erase the
+original failure or certify all onboarding keyboard behavior.

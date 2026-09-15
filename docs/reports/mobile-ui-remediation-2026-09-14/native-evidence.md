@@ -446,3 +446,24 @@ PR132 merged as308764060802bcfa5c9b34f99aa2c0b80c381c86 after required checks pa
 is running. It includes the onboarding address, Home return details, initial History
 header and field-editor command fixes. Upload, Apple processing and exact-build
 changelog are not yet verified. The audit continues on a separate branch.
+
+## Run34923022927 — production onboarding checkpoint
+
+PR132 source703682bb, runner merge6051bc06. Phone onboarding passes the full
+help/address/drag/draft-preservation scenario. iPad landscape passes; portrait
+preserves the complete address but fails the downward-drag dismissal assertion.
+This is an actual UI failure, unlike the previous iPad launch timeout.
+
+The inspected iPad final screenshot shows the complete address, visible Connect
+command, and keyboard still open. Hierarchy reports the scroll view at0,32 with
+size744×761; the form field begins atx96. The existing drag starts atx8, inside
+the scroll frame but outside the centered form column. This geometry is a
+hypothesis for diagnosis, not a proven cause. A separate iPad comparison reuses
+the entire original helper and changes only x to the field center; the original
+case is preserved. Native results must establish both outcomes. Two fixture
+installer checks pass; critic found no issue. Swift compile/runtime is pending.
+
+![iPad keyboard remains after the left-margin drag](evidence/onboarding-ipad-keyboard-34923022927.png)
+
+Release0.24.14 signed upload job104237609495 has now started. Delivery, Apple
+processing and exact-build changelog remain unverified.

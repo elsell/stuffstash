@@ -49,7 +49,16 @@ final class OnboardingAuditTests: XCTestCase {
     capture("onboarding-landscape-action")
   }
 
+  func testIPadKeyboardDismissalFromInsideFormColumn() throws {
+    try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Comparison targets the centered iPad form")
+    verifyConnectionHelpAndKeyboard(formColumnDrag: true)
+  }
+
   func testConnectionHelpAndKeyboardKeepActionsReachable() throws {
+    verifyConnectionHelpAndKeyboard(formColumnDrag: false)
+  }
+
+  private func verifyConnectionHelpAndKeyboard(formColumnDrag: Bool) {
     let address = app.textFields["Server address"]
     XCTAssertTrue(address.waitForExistence(timeout: 30))
     XCTAssertTrue(address.isHittable)
@@ -74,8 +83,11 @@ final class OnboardingAuditTests: XCTestCase {
     let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
     let scroll = app.scrollViews.firstMatch
     XCTAssertTrue(scroll.exists)
-    let startPoint = CGPoint(x: scroll.frame.minX + 8, y: min(scroll.frame.maxY, app.keyboards.firstMatch.frame.minY) - 80)
+    let startPoint = CGPoint(x: formColumnDrag ? address.frame.midX : scroll.frame.minX + 8, y: min(scroll.frame.maxY, app.keyboards.firstMatch.frame.minY) - 80)
     XCTAssertTrue(scroll.frame.contains(startPoint), "Dismissal drag must begin inside the scroll surface")
+    if formColumnDrag {
+      XCTAssertGreaterThan(startPoint.y, app.buttons["Connect and sign in"].frame.maxY, "Comparison drag must begin in blank content, not on a command")
+    }
     let start = origin.withOffset(CGVector(dx: startPoint.x, dy: startPoint.y))
     let end = origin.withOffset(CGVector(dx: startPoint.x, dy: min(app.frame.maxY - 24, startPoint.y + 300)))
     start.press(forDuration: 0.1, thenDragTo: end)
