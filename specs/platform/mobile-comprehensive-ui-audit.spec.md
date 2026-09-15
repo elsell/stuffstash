@@ -269,3 +269,10 @@ a direct scroll view with a sibling overlaid footer, and a direct scroll view wi
 an in-content footer. Both must retain visible rows and reachable bottom actions
 on phone and tablet. A successful isolated layout still requires production
 expansion, keyboard and long-list verification.
+
+For repeated character loss, compare the existing controlled/uncontrolled React
+Native input fixtures with a SwiftUI TextField from the already-pinned Expo UI
+adapter. Keep the same URL keyboard, disabled correction/capitalization and XCTest
+whole-string typing. Assert both displayed native value and observed callback
+value. Preserve the production onboarding assertion; a diagnostic comparison
+cannot establish a production fix or justify silently slowing/shortening input.

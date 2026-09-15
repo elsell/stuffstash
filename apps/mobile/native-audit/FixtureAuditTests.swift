@@ -195,10 +195,12 @@ final class FixtureAuditTests: XCTestCase {
     input.typeText("https://example.invalid")
     capture("\(mode)-address-entry")
     XCTAssertEqual(input.value as? String, "https://example.invalid")
+    XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
   }
 
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
+  func testSystemAddressEntry() { verifyAddressEntry("system") }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
     let open = app.buttons["Audit Add draft"]
