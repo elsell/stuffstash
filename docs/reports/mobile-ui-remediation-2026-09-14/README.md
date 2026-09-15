@@ -76,8 +76,13 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,332
-pending,1,476 source-reviewed,437 finding,24 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,308
+pending,1,497 source-reviewed,440 finding,24 runtime-partial and115 not-applicable.
+
+[Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
+identifies capture starting after cancellation during native permission/preparation;
+existing readiness coverage does not test that boundary. All88 related recorder,
+controller, composer and lifecycle tests pass remotely, without proving M172 fixed.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.

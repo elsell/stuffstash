@@ -2082,7 +2082,6 @@ checks pass on paul. Critic confirmed the added assertions cover those branches.
 This closes the per-branch mounted success coverage gap above; native lifecycle
 acceptance remains open.
 
-
 ### M148 — Provider screens blur navigation and command controls
 
 P2 source pattern finding, R052/R054/R055. Provider screens used the same custom
@@ -2434,3 +2433,19 @@ Tests reproduced three late-navigation failures before correction and a retained
 callback failure during review. All four now pass on paul with TypeScript and
 structural checks. Code critic found no remaining blockers. Native transition
 acceptance remains open.
+
+### M172 — Pending native recorder startup can outlive capture cancellation
+
+P2 source-confirmed at3f601d5d. RealtimeVoiceSessionController.pauseMedia only calls
+recorder.cancel when recordingStarted is true. ExpoVoiceAudioRecorderCore.start
+awaits permission, audio mode and preparation before calling record; it has no
+startup cancellation check. Leaving during those waits therefore allows record()
+before the controller notices its obsolete generation and cancels. This is a
+brief unintended capture, not evidence that audio is sent or capture persists.
+The existing test named permission readiness delays the provider readiness port,
+before recorder.start, and does not cover native permission/preparation.
+
+Make startup cancellation reach the native adapter before capture begins, retaining
+fresh-start behavior and preventing an obsolete start from cancelling a new one.
+Acceptance needs delayed permission/mode/preparation fakes, fresh restart and
+normal stop/cancel, plus native permission dismissal/return. Correction remains open.
