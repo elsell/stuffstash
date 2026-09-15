@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `onboarding-axis.md`: prerequisite task fit, editing/recovery and remaining native gates.
 - `localization-axis.md`: date conventions, month-calendar semantics and directional-layout work.
 - `appearance-axis.md`: shared appearance, materials, contrast evidence and remaining native checks.
 - `text-input-sites.csv` and `text-entry-axis.md`: input ownership, external reset paths, and native acceptance work.
@@ -26,8 +27,8 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The audit remains incomplete. At revision120f5e8e, the 3384 cells comprise 2900
-pending, 438 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicable.
+The audit remains incomplete. After the onboarding source review based on45e37013, the 3384 cells comprise 2868
+pending, 470 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
 
