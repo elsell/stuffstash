@@ -131,7 +131,7 @@ function ThemedApp() {
         />
         <Stack.Screen name="assets/[assetId]/history/index" options={{ title: 'History' }} />
         <Stack.Screen name="assets/[assetId]/history/[activityId]" options={{ title: 'History detail' }} />
-        <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, gestureEnabled: false }} />
+        <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
         <Stack.Screen
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}

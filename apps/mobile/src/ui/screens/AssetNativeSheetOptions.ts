@@ -2,7 +2,8 @@ import { colors, type MobileColorPalette } from '../theme/tokens';
 
 type AssetNativeSheetOptions = {
   readonly contentStyle: { readonly backgroundColor: string };
-  readonly headerShown: false;
+  readonly headerShown: boolean;
+  readonly title?: string;
   readonly presentation: 'formSheet';
   readonly gestureEnabled?: boolean;
   readonly sheetAllowedDetents: number[];
@@ -50,6 +51,8 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
     } satisfies AssetNativeSheetOptions,
     checkoutHistory: {
       ...baseOptions,
+      headerShown: true,
+      title: 'Checkout history',
       sheetAllowedDetents: [0.58, 0.92]
     } satisfies AssetNativeSheetOptions
   };

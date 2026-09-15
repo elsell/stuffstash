@@ -55,7 +55,7 @@ function FixtureNavigation() {
   return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider><HomeReturnTaskProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
-      <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, gestureEnabled: false }} />
+      <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />

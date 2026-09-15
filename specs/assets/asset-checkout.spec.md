@@ -589,3 +589,9 @@ layer beneath it. The navigation fake must remove stale prevent-remove handlers
 on unmount, matching the native navigation lifecycle.
 An entry without an owned task performs no mutation and returns to Home when the
 navigation stack has no back destination.
+
+Checkout history's initial native-stack options must show its header and title,
+matching the mounted route's Close action and title configuration. Do not begin
+with a hidden-header contract and rely on a later child option update to reveal
+essential navigation. Run34919776387 loaded iPad records without a visible header;
+that failure cannot be classified as query loading alone.
