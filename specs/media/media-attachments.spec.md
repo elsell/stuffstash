@@ -323,3 +323,13 @@ selection and camera denial separately on native devices before claiming runtime
 acceptance. Expo image-picker55.0.20 documents library permission only for iOS10;
 our supported OS versions use the system picker. See
 [Expo ImagePicker](https://docs.expo.dev/versions/latest/sdk/imagepicker/).
+
+### Asset attachment task ownership
+
+Asset-detail photo selection, upload, retry, and removal share one pending task
+for their current asset. Repeated source callbacks cannot start duplicate uploads.
+If the route unmounts or changes asset before selection completes, discard the
+selection and do not start an upload. Already-started uploads may finish for their
+original asset, but their progress, result, error, and cleanup cannot mutate the
+replacement screen. Failed photo drafts belong to that asset and reset on change.
+Native chooser dismissal and cancellation retain the current asset context.

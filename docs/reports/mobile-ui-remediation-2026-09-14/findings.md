@@ -421,3 +421,23 @@ cancel without error, and deny/allow camera from Add, attachments and voice on
 supported iOS/Android; confirm no unexpected permission prompt and that selected
 image content reaches the intended draft. Adapter tests do not prove native prompts.
 This finding covers selection permission only, not all photo lifecycle behavior.
+
+### M64 — Asset photo operations outlive their asset context
+
+Source/behavior-confirmed, P2. Asset-detail selection started uploads even after
+asset change or route teardown. Duplicate source callbacks could launch duplicate
+uploads; upload progress, failure, retry drafts and cleanup lacked the ownership
+guard already used by removal. Three rendered regression cases failed before
+implementation. Selection, upload, retry and removal now share one asset-owned
+pending scope. A stale picker cannot start an upload; already-started commands
+finish for their original asset without writing to the replacement view. Failed
+photo drafts reset on asset change.
+
+A fourth case exercises an old upload finishing while a new asset upload remains
+pending, including progress and final status. Remote test/type/structural evidence
+is in `/tmp/photo-ownership-red.log` and `/tmp/photo-ownership-green.log` on paul.
+All 65 selected checks, TypeScript and structural checks pass; critic found no
+confirmed blockers.
+Native chooser interruption/dismissal remains unverified. Route focus without
+unmount and other mutation flows are separate lifecycle review work, not cleared
+by these checks.

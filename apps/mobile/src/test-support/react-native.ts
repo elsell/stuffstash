@@ -48,7 +48,13 @@ export function setAppStateForTest(state: string) {
   AppState.currentState = state;
   for (const listener of appStateListeners) listener(state);
 }
-export const ActionSheetIOS = { showActionSheetWithOptions() {} };
+let actionSheetCallback: ((index: number) => void) | undefined;
+export function latestActionSheetCallback() { return actionSheetCallback; }
+export const ActionSheetIOS = {
+  showActionSheetWithOptions(_options: unknown, callback: (index: number) => void) {
+    actionSheetCallback = callback;
+  }
+};
 export const Text = 'Text';
 export const Pressable = 'Pressable';
 export const ScrollView = 'ScrollView';

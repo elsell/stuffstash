@@ -11,7 +11,7 @@ import { AssetPhotosQuery } from '../../application/assets/AssetPhotosQuery';
 import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { assetId, type AssetPhoto } from '../../domain/assets/AssetSummary';
 import { QueryClientInventoryMutationObserver } from '../../adapters/serverState/QueryClientInventoryMutationObserver';
-import { latestAlert } from '../../test-support/react-native';
+import { latestAlert, latestActionSheetCallback } from '../../test-support/react-native';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
 
 function deferred<T>() {
@@ -205,5 +205,90 @@ it('does not let a previous asset removal settle the new asset operation', async
     await test.harness.run(() => newRemoval.resolve({ message: 'New photo removed' }));
     await settle(test.harness);
     expect(test.harness.byType('ImageViewing')).toBeUndefined();
+  } finally { await test.harness.unmount(); }
+});
+
+
+const selectedPhoto = {
+  id: 'selection', uri: 'file:///photo.jpg', fileName: 'photo.jpg',
+  contentType: 'image/jpeg' as const, contentBase64: 'ZmFrZQ==', sizeBytes: 4
+};
+
+it.each(['asset change', 'route teardown'])('discards pending selection after %s', async destination => {
+  const selection = deferred<readonly typeof selectedPhoto[]>();
+  const uploads: string[] = [];
+  const test = setup({
+    photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: () => selection.promise, captureFromCamera: async () => [] }),
+    addAssetPhotosCommand: { execute: async input => {
+      uploads.push(input.assetId);
+      return { attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'Uploaded', canRetry: false };
+    } }
+  });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => latestActionSheetCallback()?.(1));
+    if (destination === 'asset change') test.changeAsset('other'); else test.hide();
+    await test.render();
+    await test.harness.run(() => selection.resolve([selectedPhoto]));
+    await settle(test.harness);
+    expect(uploads).toEqual([]);
+  } finally { await test.harness.unmount(); }
+});
+
+it('rejects duplicate source callbacks and hides old upload failures after changing asset', async () => {
+  const upload = deferred<never>(); let calls = 0;
+  const test = setup({
+    photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: async () => [selectedPhoto], captureFromCamera: async () => [] }),
+    addAssetPhotosCommand: { execute: () => { calls++; return upload.promise; } }
+  });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    const choose = latestActionSheetCallback();
+    await test.harness.run(() => { choose?.(1); choose?.(1); });
+    expect(calls).toBe(1);
+    test.changeAsset('other'); await test.render(); await settle(test.harness);
+    await test.harness.run(() => upload.reject(new Error('Old upload failed')));
+    await settle(test.harness);
+    expect(test.harness.allText()).not.toContain('Old upload failed');
+    expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+  } finally { await test.harness.unmount(); }
+});
+
+
+it('keeps the new asset upload pending when the previous upload finishes', async () => {
+  type UploadResult = Awaited<ReturnType<React.ComponentProps<typeof AssetDetailRouteScreen>['addAssetPhotosCommand']['execute']>>;
+  const oldUpload = deferred<UploadResult>(); const newUpload = deferred<UploadResult>();
+  const calls: string[] = [];
+  const test = setup({
+    photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: async () => [selectedPhoto], captureFromCamera: async () => [] }),
+    addAssetPhotosCommand: { execute: async input => {
+      calls.push(input.assetId);
+      const result = await (input.assetId === 'tent' ? oldUpload.promise : newUpload.promise);
+      input.onPhotoProgress?.({ index: 0, fileName: 'old-name.jpg', status: 'attached' });
+      return result;
+    } }
+  });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => latestActionSheetCallback()?.(1));
+    test.changeAsset('other'); await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => latestActionSheetCallback()?.(1));
+    expect(calls).toEqual(['tent', 'other']);
+    await test.harness.run(() => oldUpload.resolve({ attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'Old upload complete', canRetry: false }));
+    await settle(test.harness);
+    expect(test.harness.allText()).not.toContain('Old upload complete');
+    expect(test.harness.allText()).not.toContain('old-name.jpg');
+    expect(test.harness.allText()).toContain('Updating photos...');
+    await test.harness.run(() => newUpload.resolve({ attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'New upload complete', canRetry: false }));
+    await settle(test.harness);
+    expect(test.harness.allText()).toContain('New upload complete');
+    expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
   } finally { await test.harness.unmount(); }
 });
