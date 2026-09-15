@@ -654,3 +654,7 @@ with busy semantics. Opening failure keeps the accepted-access explanation and
 re-enables Open without accepting again. Start-over also shows named pending
 feedback. Secondary dismissal and account-switch commands remain native; preserve
 existing invitation reference generation guards and command eligibility.
+
+Expiration entry rejects input callbacks while disabled, including year text events
+that arrive after a save begins. The displayed draft and published expiration must
+remain unchanged through the pending interval; re-enabling permits normal editing.

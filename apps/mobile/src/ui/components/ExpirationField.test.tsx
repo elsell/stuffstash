@@ -86,3 +86,21 @@ it('ignores a native date change arriving after the editor becomes disabled', as
     expect(changes).toEqual([]);
   } finally { await harness.unmount(); }
 });
+
+it('ignores a year event delivered while disabled and retains the draft after re-enabling', async () => {
+  const h = new MobileRenderHarness(); const changes: unknown[] = [];
+  const form = (disabled: boolean) => <ExpirationField disabled={disabled}
+    initialValue={{ date: '2028-02', precision: 'month' }} initialPickerDate={new Date(2028, 0, 1)}
+    onChange={(value, valid) => changes.push({ value, valid })} />;
+  try {
+    await h.render(form(false));
+    await h.press(h.byLabel('Expiration'));
+    await h.render(form(true));
+    await h.changeText(h.byLabel('Expiration year'), '2030');
+    expect(changes).toEqual([]);
+    await h.render(form(false));
+    expect(h.byLabel('Expiration year')?.props.value).toBe('2028');
+    await h.changeText(h.byLabel('Expiration year'), '2029');
+    expect(changes).toEqual([{ value: { date: '2029-02', precision: 'month' }, valid: true }]);
+  } finally { await h.unmount(); }
+});

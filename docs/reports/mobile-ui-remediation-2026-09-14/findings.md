@@ -1804,3 +1804,15 @@ its initial missing-label RED is wiring evidence, not a runtime accessibility
 finding. All17 focused invitation/route tests, TypeScript and structural checks
 pass on paul; the3 progress cases also verify start-over status. Critic found no
 confirmed blockers. Native spacing, announcements and reachability remain pending.
+
+## M134 — Disabled expiration year still accepts a text callback
+
+P2, source/mounted-confirmed atcd6f6556, S093. A year event delivered to the disabled
+render changes its local year and publishes expiration, unlike the already guarded
+date callback. The year handler now rejects disabled events. The regression failed
+before the correction and verifies unchanged publication/local draft plus resumed
+editing. Shared Add/Edit consumers were inspected. All10 focused expiration tests,
+TypeScript and structural checks pass on paul. Critic found no confirmed issue.
+This covers callbacks delivered to the disabled render, not arbitrary retained
+closures or proof of native event timing. Native keyboard and pending-save behavior
+remain unverified. See expiration-entry-axis.md for the full field review.
