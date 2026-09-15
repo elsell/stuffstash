@@ -524,3 +524,13 @@ and voice setup load retries. Refresh access still rechecks permission through i
 existing application flow and retains the read-only draft. The shared refresh
 notice also serves Sharing, customization, provider lists/editors, scoped Settings
 and voice setup; inspect those vertical placements and preserve their behavior.
+
+### Add save errors remain in the presented form
+
+A failed Add save must show a persistent, announced error inside the Add form,
+retain the draft and restore Save and Close. Do not rely on the root notice
+overlay for a failure in a native sheet: it can render behind that sheet.
+Show the error before form fields and scroll it into view after failure; the
+next save or deliberate edit can clear the stale failure. Keep ordinary
+background refresh separate from this recovery. Native acceptance must inspect
+the visible error, retained text and reachable retry/close, not only AX existence.

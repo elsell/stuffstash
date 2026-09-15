@@ -731,3 +731,21 @@ All 115 tests across five Settings, customization, provider and Sharing suites
 pass on paul, followed by TypeScript and structural checks
 (`/tmp/settings-retry-consumers.log`, `/tmp/settings-retry-consumers-check.log`).
 The critic found no remaining blockers. Native layout acceptance remains pending.
+
+### M82 — Add save error is behind the native sheet (P1)
+
+Run 34939793483, actual checkout 17c9a1c94fa38092ac965c9eccfb9b33051c0c1f,
+iPhone configured-header comparison retained and submitted Native draft name.
+The final hierarchy B690DF46-1CAF-4374-AD62-85028EC65E52.txt contains the root
+notice, but inspected screenshot 3CBE115A-6EBB-46A7-8737-CACC78FE931F.png shows
+no error in the presented sheet. The test also queried StaticText while the old
+notice grouped its message; existence alone would not prove visibility.
+
+Save failures now persist inside the Add form, scroll into view on layout, and
+announce through iOS accessibility or Android live region. Draft edits and the
+next save clear stale failure state. The draft and retry/close lifecycle remain.
+An ownership regression asserts that the error is inside the form scroll view;
+it fails against HEAD and passes with the correction. Sixteen remote Add checks,
+TypeScript and structural validation pass on paul (/tmp/add-inline-error-green.log);
+critic found no blockers. Native inset/keyboard visibility and announcement
+acceptance remain pending. The separate Add typing and loading failures are open.

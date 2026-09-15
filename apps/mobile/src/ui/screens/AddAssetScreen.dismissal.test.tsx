@@ -97,6 +97,13 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
     expect(dismissed).toBe(0);
     await h.run(() => rejectSave(new Error('Save unavailable')));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+    expect(h.byText('Could not save asset')).toBeDefined();
+    const failure = h.byText('Save unavailable');
+    expect(failure).toBeDefined();
+    // Feedback must belong to the presented form, not the root overlay.
+    let ancestor = failure?.parent;
+    while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;
+    expect(ancestor?.type).toBe('ScrollView');
     expect(h.byLabel('Asset name')?.props.editable).toBe(true);
     expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })?.title).toBe('Submitted name');
     await h.changeText(h.byLabel('Asset name'), 'Retry name');

@@ -12,6 +12,7 @@ import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   Image,
@@ -156,7 +157,11 @@ function ScopedAddAssetScreen({
     return true;
   }
   function endDraftOperation() { draftOperation.current = null; setDraftBusy(false); }
-  function editDraft(change: () => void) { if (!draftOperation.current) change(); }
+  function editDraft(change: () => void) {
+    if (draftOperation.current) return;
+    if (saveState.status === 'error') setSaveState({ status: 'idle' });
+    change();
+  }
 
   const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
@@ -330,9 +335,9 @@ function ScopedAddAssetScreen({
       });
     } catch (error) {
       const message = readableError(error, 'Could not save asset.');
-      setSaveState({ status: 'idle' });
+      setSaveState({ status: 'error', message });
+      if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(`Could not save asset. ${message}`);
       await refreshDashboardAfterTagCreation(newTags);
-      feedback.showNotice({ tone: 'error', title: 'Could not save asset', message });
     } finally { endDraftOperation(); }
   }
 
@@ -520,6 +525,10 @@ function ScopedAddAssetScreen({
         keyboardShouldPersistTaps="handled"
       >
         {saveState.status === 'saving' ? <ActivityIndicator accessibilityLabel="Saving item" color={colors.action} /> : null}
+        {saveState.status === 'error' ? <View accessibilityLiveRegion="assertive" onLayout={() => formScrollRef.current?.scrollTo({ y: 0, animated: false })}>
+          <Text accessibilityRole="header" style={styles.errorText}>Could not save asset</Text>
+          <Text style={styles.errorText}>{saveState.message}</Text>
+        </View> : null}
         {loadState.status === 'loading' ? (
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} />
