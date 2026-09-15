@@ -1456,4 +1456,48 @@ final class FixtureAuditTests: XCTestCase {
     retry.tap()
     XCTAssertTrue(app.staticTexts["Audit retry completed"].waitForExistence(timeout: 5))
   }
+
+  func testAccountNativeCommandCancelAndRecovery() { verifySessionSettings("Account", command: "Sign Out") }
+  func testConnectionNativeCommandCancelAndRecovery() { verifySessionSettings("Connection", command: "Change Server") }
+
+  private func verifySessionSettings(_ kind: String, command: String) {
+    let open = app.buttons["Audit \(kind)"]
+    for _ in 0..<15 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars[kind]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let action = app.buttons[command].firstMatch
+    XCTAssertTrue(action.waitForExistence(timeout: 10))
+    XCTAssertTrue(action.isHittable)
+    XCTAssertGreaterThanOrEqual(action.frame.height, 44)
+    XCTAssertGreaterThanOrEqual(action.frame.minY, header.frame.maxY)
+    XCTAssertLessThanOrEqual(action.frame.maxY, app.frame.maxY)
+    capture("session-\(kind)-command")
+    action.tap()
+    let alert = app.alerts.firstMatch
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons["Cancel"].tap()
+    XCTAssertTrue(alert.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(action.isEnabled)
+    action.tap(); XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons[command].tap()
+    let failure = app.staticTexts["Audit session action unavailable. Try again."]
+    XCTAssertTrue(failure.waitForExistence(timeout: 5))
+    XCTAssertTrue(action.isEnabled); XCTAssertTrue(action.isHittable)
+    XCTAssertTrue(header.buttons.element(boundBy: 0).isHittable)
+    let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
+    XCTAssertTrue(notice.exists)
+    let placement = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let rect = notice.frame
+      return rect.height > 0 && rect.minY >= header.frame.maxY && rect.maxY <= self.app.frame.maxY &&
+        rect.minX >= self.app.frame.minX && rect.maxX <= self.app.frame.maxX
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [placement], timeout: 5), .completed, "Entire failure notice must remain visible below navigation")
+    capture("session-\(kind)-recovery")
+    action.tap(); XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons[command].tap()
+    XCTAssertTrue(header.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].exists)
+  }
+
 }

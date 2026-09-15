@@ -1115,3 +1115,11 @@ or Change Server label (and pending label); the adjacent selectable value row
 continues to identify the account/server, and the confirmation repeats the subject.
 Do not wrap native buttons in a second accessibility control to reproduce the old
 custom row label. Preserve disabled pending behavior, confirmations and retry.
+
+Runner-only Account/Connection acceptance composes the production settings screens
+with fake principal/diagnostic ports and a session action that rejects once, then
+returns to the fixture menu. It must never sign out or change a real server.
+At normal text size verify visible command bounds, native Cancel without mutation,
+first-confirmation error with retry enabled, second confirmation returning to the
+menu, and Back reachability. This provides control/recovery evidence, not proof of
+real authentication-provider/session teardown or VoiceOver operation.

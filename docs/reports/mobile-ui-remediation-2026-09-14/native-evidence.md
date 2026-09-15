@@ -1684,3 +1684,19 @@ Downloaded artifact revision.txt verifies54714ab4ec7a700316a81baabbd5d01048b15e5
 Full downloaded evidence is `/tmp/native349983-ipad-onboarding`; job log is
 `/tmp/native349983-ipad-onboarding.log`. This run predates subsequent corrections;
 no current-batch native pass is claimed.
+
+### Account/Connection command acceptance added after68a1a56c
+
+Two runner-only fixtures compose production AccountSettingsScreen and
+ConnectionSettingsScreen with controlled query ports. Their session callbacks
+reject the first accepted action and return to the fixture menu on the second;
+no real sign-out/server mutation occurs. XCTest requires44-point button height,
+visible bounds below navigation, Cancel, first-error recovery, enabled retry and
+return to the menu. These tests preserve session/auth integration as a separate
+gate rather than presenting fixture success as proof of real session teardown.
+Two fixture-preparation tests, TypeScript and structural checks pass remotely.
+Native Swift compilation and execution remain pending; this adds acceptance
+coverage, not native pass evidence.
+Critic identified that message existence alone did not verify visible recovery.
+The new journeys now require the entire notice container within the app viewport
+below navigation before the recovery capture. Native execution is still pending.

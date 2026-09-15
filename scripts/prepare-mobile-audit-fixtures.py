@@ -35,6 +35,8 @@ exports = {
     "audit-notice": "NoticePlacementFixture",
     "audit-notice-sheet": "NoticePlacementFixture",
     "audit-provider-editor": "ProviderEditorFixture",
+    "audit-account": "AccountConnectionFixture",
+    "audit-connection": "AccountConnectionFixture",
     "audit-sharing": "InventorySharingFixture",
     "audit-footer-appearance": "FooterAppearanceFixture",
     "audit-move-here-recovery": "MoveHereRecoveryFixture",

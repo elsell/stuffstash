@@ -1,6 +1,7 @@
 import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
 export { NoticePlacementFixture } from './NoticePlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
+export { AccountConnectionFixture } from './AccountConnectionFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
@@ -82,6 +83,8 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-notice" options={{ title: 'Notice placement' }} />
       <Stack.Screen name="audit-notice-sheet" options={{ title: 'Notice placement', presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-provider-editor" options={{ title: 'Provider editor' }} />
+      <Stack.Screen name="audit-account" options={{ title: 'Account' }} />
+      <Stack.Screen name="audit-connection" options={{ title: 'Connection' }} />
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
@@ -120,6 +123,8 @@ export function FixtureMenu() {
     <Button title="Audit Notice sheet" onPress={() => router.push('/audit-notice-sheet' as Href)} />
     <Button title="Audit Provider credential" onPress={() => router.push('/audit-provider-editor?kind=credential' as Href)} />
     <Button title="Audit Provider prompt" onPress={() => router.push('/audit-provider-editor?kind=prompt' as Href)} />
+    <Button title="Audit Account" onPress={() => router.push('/audit-account' as Href)} />
+    <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
     <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />
