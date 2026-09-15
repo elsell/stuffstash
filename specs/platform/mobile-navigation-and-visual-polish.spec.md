@@ -398,3 +398,14 @@ the parent command names the applied count for assistive technology.
 
 This correction does not establish native target, Dynamic Type, badge placement
 or material acceptance; those require rendered checks on the affected clients.
+
+### Single keyboard-avoidance owner for measured sheet actions
+
+When the expiration filter container measures and applies keyboard overlap,
+its hosted SwiftUI actions must ignore the keyboard safe-area region. Otherwise
+SwiftUI can move the buttons outside the React Native host's hit-test bounds.
+NativeSheetActions exposes a fixed-per-mount keyboard-avoidance owner: native
+by default, container only for the measured expiration footer. Other safe areas
+remain active. Browse's unmeasured footer retains its existing native behavior.
+Verify actual button hit-testing and navigation after keyboard entry; screenshots
+or host props alone do not prove the correction.

@@ -11,9 +11,9 @@ function ActionLabel({ children }: { readonly children: string }) {
   </HStack>;
 }
 
-export function NativeSheetActions({ primaryLabel, primaryAccessibilityLabel = primaryLabel, secondaryLabel, secondaryAccessibilityLabel = secondaryLabel, disabled, onApply, onBack }: NativeSheetActionsProps) {
+export function NativeSheetActions({ keyboardAvoidance = 'native', primaryLabel, primaryAccessibilityLabel = primaryLabel, secondaryLabel, secondaryAccessibilityLabel = secondaryLabel, disabled, onApply, onBack }: NativeSheetActionsProps) {
   // React Native proposes the width; SwiftUI measures only the resulting height.
-  return <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+  return <Host ignoreSafeArea={keyboardAvoidance === 'container' ? 'keyboard' : undefined} matchContents={{ vertical: true }} style={{ width: '100%' }}>
     <VStack spacing={8}>
       <Button onPress={() => { if (!disabled) onApply(); }} modifiers={[
         buttonStyle('borderedProminent'), controlSize('large'), nativeDisabled(disabled),

@@ -541,3 +541,18 @@ is named Tevet. These periods do not share boundaries, so choosing a displayed
 month can store a different period. Thai year display also differs from the
 canonical numeric year field. Source and remote Intl evidence are recorded in
 localization-axis.md; native propagation and corrected contract remain pending.
+
+
+### M19 follow-up — one keyboard-avoidance owner
+
+After native349289 placed the visible Apply button outside its Host bounds,
+NativeSheetActions gains a fixed keyboard-avoidance owner. Only the measured
+expiration footer selects container ownership, which disables the SwiftUI Host's
+keyboard safe area; Browse keeps the native default. Other safe areas remain.
+
+One ownership contract case failed before the change; seven action/filter cases,
+TypeScript and structural checks pass on paul. Critic found no source blocker.
+These verify configuration and callbacks, not native hit-testing. The hierarchy
+also shows a possible62-point boundary/keyboard coordinate discrepancy; that
+remains unresolved. The original Apply/Back native hit/navigation assertion stays
+the acceptance gate. M19 remains open and no full keyboard fix is claimed.
