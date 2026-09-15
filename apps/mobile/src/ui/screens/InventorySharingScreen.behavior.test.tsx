@@ -161,10 +161,78 @@ it('refreshes safe metadata and shows link-unavailable recovery inside the shari
     expect(recovery).toBeDefined();
     let parent = recovery?.parent;
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
-    expect(parent).toBeDefined();
+    expect(parent?.type).toBe('ScrollView');
     expect(h.allText()).toContain('second@example.test');
     expect(h.byLabel('Invitee email')?.props.value).toBe('friend@example.test');
     expect(h.byLabel('Complete invitation link')).toBeUndefined();
     expect(h.allText()).not.toContain('Could not create invitation');
+  } finally { await h.unmount(); client.clear(); }
+});
+
+it.each(['copy', 'share', 'cancel'] as const)('keeps %s recovery beside its task and clears it on retry', async action => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let fail = true;
+  const operation = async () => { if (fail) throw new Error('Try this action again'); };
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [item] }),
+    create: async () => ({ ...item, inviteUrl: 'https://example.test/#token=secret' }), cancel: operation
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: operation, share: operation }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h);
+    if (action !== 'cancel') {
+      await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
+      await h.press(h.byLabel('Create Invitation')); await settle(h);
+    }
+    const perform = async () => {
+      if (action === 'cancel') {
+        await h.press(h.byLabel('Cancel invitation for old@example.test'));
+        await h.run(() => pressAlertButton('Cancel Invitation'));
+      } else {
+        const label = action === 'copy' ? 'Copy link' : 'Share invitation';
+        await h.press(h.allByType('Pressable').find(node => node.children.some(child => typeof child === 'object' && child !== null && 'children' in child && child.children.includes(label))));
+      }
+      await settle(h);
+    };
+    await perform();
+    const recovery = h.byText(`Could not ${action} invitation`);
+    expect(recovery).toBeDefined();
+    let parent = recovery?.parent;
+    while (parent && parent.type !== 'ScrollView') parent = parent.parent;
+    expect(parent?.type, 'task feedback must scroll with the form, outside the navigation overlay').toBe('ScrollView');
+    if (action !== 'cancel') expect(h.byLabel('Complete invitation link')).toBeDefined();
+    else expect(h.byLabel('Cancel invitation for old@example.test')).toBeDefined();
+    fail = false; await perform();
+    expect(h.byText(`Could not ${action} invitation`)).toBeUndefined();
+    if (action === 'copy') {
+      const copied = h.byText('Invitation link copied');
+      expect(copied).toBeDefined();
+      let ancestor = copied?.parent;
+      while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;
+      expect(ancestor?.type).toBe('ScrollView');
+    }
+  } finally { await h.unmount(); client.clear(); }
+});
+
+it.each(['success', 'failure'] as const)('does not attach delayed link %s feedback to a replacement invitation', async outcome => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let finishCopy: (() => void) | undefined;
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [] }),
+    create: async (_scope, input) => ({ ...item, id: input.email, email: input.email, inviteUrl: `https://example.test/#token=${input.email}` }),
+    cancel: async () => undefined
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: () => new Promise((resolve, reject) => { finishCopy = () => outcome === 'success' ? resolve() : reject(new Error('First link failed')); }), share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h);
+    await h.changeText(h.byLabel('Invitee email'), 'first@example.test');
+    await h.press(h.byLabel('Create Invitation')); await settle(h);
+    await h.press(h.allByType('Pressable').find(node => node.children.some(child => typeof child === 'object' && child !== null && 'children' in child && child.children.includes('Copy link'))));
+    expect(finishCopy).toBeDefined();
+    await h.changeText(h.byLabel('Invitee email'), 'second@example.test');
+    await h.press(h.byLabel('Create Invitation')); await settle(h);
+    await h.run(() => finishCopy?.());
+    expect(h.allText()).not.toContain('Invitation link copied');
+    expect(h.allText()).not.toContain('Could not copy invitation');
+    expect(h.allText()).not.toContain('First link failed');
+    expect(h.byLabel('Complete invitation link')?.children.join('')).toContain('second@example.test');
   } finally { await h.unmount(); client.clear(); }
 });

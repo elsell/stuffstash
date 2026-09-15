@@ -30,7 +30,6 @@ import type {
   InventorySharingScope,
   ListInventoryInvitationsQuery
 } from '../../application/sharing/InventorySharing';
-import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { SettingsSection, useSettingsListStyles } from './SettingsList';
@@ -49,7 +48,6 @@ export function InventorySharingScreen({
   readonly listQuery: ListInventoryInvitationsQuery;
   readonly scope: InventorySharingScope;
 }) {
-  const feedback = useAppFeedback();
   const palette = useAppearancePalette();
   const { styles: settingsStyles } = useSettingsListStyles();
   const styles = createStyles(palette);
@@ -57,6 +55,9 @@ export function InventorySharingScreen({
   const scopeKey = `${compositionScopeId}:${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
   const [email, setEmail] = useState('');
   const [creationError, setCreationError] = useState<{ title: string; message: string }>();
+  const [linkFeedback, setLinkFeedback] = useState<{ title: string; message?: string }>();
+  const [cancellationErrors, setCancellationErrors] = useState<Record<string, string>>({});
+  const linkOperation = useRef(0);
   const [relationship, setRelationship] = useState<InventoryInvitationRelationship>('viewer');
   const [created, setCreated] = useState<CreatedInventoryInvitation>();
   const [createdScopeKey, setCreatedScopeKey] = useState<string>();
@@ -69,6 +70,9 @@ export function InventorySharingScreen({
   useFocusEffect(useCallback(() => {
     const session = {}; feedbackSession.current = session;
     setCreationError(undefined);
+    setLinkFeedback(undefined);
+    setCancellationErrors({});
+    linkOperation.current += 1;
     return () => { if (feedbackSession.current === session) feedbackSession.current = undefined; };
   }, [scopeKey]));
   function captureFeedbackOwner(): () => boolean {
@@ -101,6 +105,8 @@ export function InventorySharingScreen({
     workingRef.current = true;
     setWorking(true);
     setCreationError(undefined);
+    setLinkFeedback(undefined);
+    linkOperation.current += 1;
     setCreated(undefined);
     setCreatedScopeKey(undefined);
     const ownsFeedback = captureFeedbackOwner();
@@ -124,20 +130,26 @@ export function InventorySharingScreen({
   async function performLinkAction(action: 'copy' | 'share'): Promise<void> {
     if (!visibleCreated) return;
     const ownsFeedback = captureFeedbackOwner();
+    const operation = ++linkOperation.current;
+    setLinkFeedback(undefined);
+    const ownsLinkFeedback = () => ownsFeedback() && linkOperation.current === operation;
     try {
       if (action === 'copy') {
         await linkActions.copy(visibleCreated.inviteUrl);
-        if (ownsFeedback()) feedback.showNotice({ tone: 'success', title: 'Invitation link copied' });
+        if (ownsLinkFeedback()) setLinkFeedback({ title: 'Invitation link copied' });
       } else {
         await linkActions.share({ link: visibleCreated.inviteUrl, inventoryName: scope.inventoryName });
       }
     } catch (error) {
-      if (ownsFeedback()) feedback.showNotice({ tone: 'error', title: `Could not ${action} invitation`, message: readableError(error) });
+      if (ownsLinkFeedback()) setLinkFeedback({ title: `Could not ${action} invitation`, message: readableError(error) });
     }
   }
 
   async function cancel(invitation: InventoryInvitationSummary): Promise<void> {
     setCancellingId(invitation.id);
+    setCancellationErrors(current => {
+      const next = { ...current }; delete next[invitation.id]; return next;
+    });
     const ownsFeedback = captureFeedbackOwner();
     const requestedScopeKey = scopeKey;
     try {
@@ -145,7 +157,7 @@ export function InventorySharingScreen({
       if (currentScopeKeyRef.current !== requestedScopeKey) return;
 
     } catch (error) {
-      if (ownsFeedback()) feedback.showNotice({ tone: 'error', title: 'Could not cancel invitation', message: readableError(error) });
+      if (ownsFeedback()) setCancellationErrors(current => ({ ...current, [invitation.id]: readableError(error) }));
     } finally {
       setCancellingId(undefined);
     }
@@ -231,6 +243,10 @@ export function InventorySharingScreen({
               <LinkButton icon={<Copy color={palette.action} size={18} />} label="Copy link" onPress={() => void performLinkAction('copy')} />
               <LinkButton icon={<Send color={palette.action} size={18} />} label="Share invitation" onPress={() => void performLinkAction('share')} />
             </View>
+            {linkFeedback ? <View accessibilityLiveRegion="polite" accessibilityRole={linkFeedback.message ? 'alert' : undefined}>
+              <Text style={styles.successTitle}>{linkFeedback.title}</Text>
+              {linkFeedback.message ? <Text style={settingsStyles.errorMessage}>{linkFeedback.message}</Text> : null}
+            </View> : null}
           </View>
         </SettingsSection>
       ) : null}
@@ -247,6 +263,10 @@ export function InventorySharingScreen({
                 <Text style={styles.invitationMetadata}>
                   {titleCase(invitation.relationship)} · {statusLabel(invitation)} · Expires {formatDate(invitation.expiresAt)}
                 </Text>
+                {cancellationErrors[invitation.id] ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
+                  <Text style={styles.successTitle}>Could not cancel invitation</Text>
+                  <Text style={settingsStyles.errorMessage}>{cancellationErrors[invitation.id]}</Text>
+                </View> : null}
               </View>
               {invitation.status === 'pending' && !invitation.isExpired ? (
                 <Pressable

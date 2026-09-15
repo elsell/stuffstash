@@ -140,6 +140,16 @@ old timer on replacement.
 
 ## Accessible feedback
 
+Sharing's link copy result and link copy/share failures belong beside the current
+one-time link, inside its scroll content. Cancellation failures belong beside the
+affected invitation with its retry command retained. These task-owned messages
+must not cover native navigation with a global banner. Clear link feedback when
+another link action or invitation creation begins; clear cancellation feedback
+when that cancellation is retried. Clear both on focus/scope change, and reject
+late results from a previous focused session or replaced link. Keep the system
+share sheet and destructive cancellation confirmation. Other global notice
+consumers require their own positioning review; this does not certify them.
+
 Global notices with actions, warnings or errors remain until dismissed or replaced.
 Plain informational/success notices may expire after the normal display interval,
 but remain while a screen reader is enabled. Read accessibility preferences

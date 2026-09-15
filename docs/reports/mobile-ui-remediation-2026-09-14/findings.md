@@ -1167,8 +1167,15 @@ A review-discovered stale A link is cleared when a new attempt starts; the link
 lifetime explanation now says this explicitly. Thirty-four
 sharing tests, TypeScript and structural checks passed remotely. Native inline
 feedback visibility/announcement remains pending. Other overlay uses, including
-copy/share/cancel feedback, still need shared-consumer positioning review; this
-change does not certify the global banner layout.
+copy/share/cancel feedback, were reviewed in a follow-up: link status and failures
+now appear beside the one-time link, and cancellation failures beside their row.
+Retries clear their old message; focus/scope changes clear task feedback. A link
+operation generation also rejects delayed results after another action or new
+creation. Five added regression cases cover local placement/retry and old-link
+success/failure after replacement. The earlier creation ancestry assertion now
+checks the actual ScrollView type, rather than accepting a null ancestor. Native
+visibility and announcements still need verification. Other screens using global
+banners remain outside this fix; it does not certify global banner layout.
 
 ### M100 — Move has unreadable disabled action and excessive summary chrome
 
