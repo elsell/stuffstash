@@ -102,7 +102,7 @@ R005,(tabs)/search/index.tsx,modality,Presentation and dismissal,pending,,
 R005,(tabs)/search/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R005,(tabs)/search/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R005,(tabs)/search/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R005,(tabs)/search/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
+R005,(tabs)/search/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,appearance-axis.md: refinement badge contrast partial review; native composition/placement pending,M66
 R005,(tabs)/search/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R005,(tabs)/search/index.tsx,imagery,"Icons, photos and missing media",pending,,
 R005,(tabs)/search/index.tsx,targets,Touch target size and reachability,pending,,
@@ -175,7 +175,7 @@ R008,assets/[assetId]/checkouts.tsx,layout,"Safe areas, scroll edges and overlay
 R008,assets/[assetId]/checkouts.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R008,assets/[assetId]/checkouts.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R008,assets/[assetId]/checkouts.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R008,assets/[assetId]/checkouts.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
+R008,assets/[assetId]/checkouts.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: M67 date-formatting partial review; native locale/clock/layout pending,M67
 R008,assets/[assetId]/checkouts.tsx,imagery,"Icons, photos and missing media",pending,,
 R008,assets/[assetId]/checkouts.tsx,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 R008,assets/[assetId]/checkouts.tsx,gestures,Gestures and explicit alternatives,pending,,
@@ -223,7 +223,7 @@ R010,assets/[assetId]/history/[activityId].tsx,layout,"Safe areas, scroll edges 
 R010,assets/[assetId]/history/[activityId].tsx,adaptation,Phone/tablet/window reflow,pending,,
 R010,assets/[assetId]/history/[activityId].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,appearance,"Light/dark, contrast and materials",pending,,
-R010,assets/[assetId]/history/[activityId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
+R010,assets/[assetId]/history/[activityId].tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: M67 date-formatting partial review; native locale/clock/layout pending,M67
 R010,assets/[assetId]/history/[activityId].tsx,imagery,"Icons, photos and missing media",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 R010,assets/[assetId]/history/[activityId].tsx,gestures,Gestures and explicit alternatives,pending,,
@@ -247,7 +247,7 @@ R011,assets/[assetId]/history/index.tsx,layout,"Safe areas, scroll edges and ove
 R011,assets/[assetId]/history/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R011,assets/[assetId]/history/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R011,assets/[assetId]/history/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R011,assets/[assetId]/history/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
+R011,assets/[assetId]/history/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: M67 date-formatting partial review; native locale/clock/layout pending,M67
 R011,assets/[assetId]/history/index.tsx,imagery,"Icons, photos and missing media",pending,,
 R011,assets/[assetId]/history/index.tsx,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 R011,assets/[assetId]/history/index.tsx,gestures,Gestures and explicit alternatives,pending,,
@@ -415,7 +415,7 @@ R018,expiration.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R018,expiration.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R018,expiration.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R018,expiration.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
+R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending,M68
 R018,expiration.tsx,imagery,"Icons, photos and missing media",pending,,
 R018,expiration.tsx,targets,Touch target size and reachability,pending,,
 R018,expiration.tsx,gestures,Gestures and explicit alternatives,pending,,
@@ -1590,7 +1590,7 @@ S067,Browse / list grid,modality,Presentation and dismissal,pending,,
 S067,Browse / list grid,layout,"Safe areas, scroll edges and overlays",pending,,
 S067,Browse / list grid,adaptation,Phone/tablet/window reflow,pending,,
 S067,Browse / list grid,typography,"Dynamic Type, wrapping and legibility",pending,,
-S067,Browse / list grid,appearance,"Light/dark, contrast and materials",pending,,
+S067,Browse / list grid,appearance,"Light/dark, contrast and materials",source-reviewed,appearance-axis.md: refinement badge contrast partial review; native composition/placement pending,M66
 S067,Browse / list grid,localization,"Locale, timezone, RTL and long strings",pending,,
 S067,Browse / list grid,imagery,"Icons, photos and missing media",pending,,
 S067,Browse / list grid,targets,Touch target size and reachability,pending,,
@@ -1614,7 +1614,7 @@ S068,Browse / containment map columns,modality,Presentation and dismissal,pendin
 S068,Browse / containment map columns,layout,"Safe areas, scroll edges and overlays",pending,,
 S068,Browse / containment map columns,adaptation,Phone/tablet/window reflow,pending,,
 S068,Browse / containment map columns,typography,"Dynamic Type, wrapping and legibility",pending,,
-S068,Browse / containment map columns,appearance,"Light/dark, contrast and materials",pending,,
+S068,Browse / containment map columns,appearance,"Light/dark, contrast and materials",source-reviewed,appearance-axis.md: refinement badge contrast partial review; native composition/placement pending,M66
 S068,Browse / containment map columns,localization,"Locale, timezone, RTL and long strings",pending,,
 S068,Browse / containment map columns,imagery,"Icons, photos and missing media",pending,,
 S068,Browse / containment map columns,targets,Touch target size and reachability,pending,,
@@ -2215,7 +2215,7 @@ S093,Add / expiration month year,layout,"Safe areas, scroll edges and overlays",
 S093,Add / expiration month year,adaptation,Phone/tablet/window reflow,pending,,
 S093,Add / expiration month year,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S093,Add / expiration month year,appearance,"Light/dark, contrast and materials",pending,,
-S093,Add / expiration month year,localization,"Locale, timezone, RTL and long strings",pending,,
+S093,Add / expiration month year,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending,M68
 S093,Add / expiration month year,imagery,"Icons, photos and missing media",pending,,
 S093,Add / expiration month year,targets,Touch target size and reachability,pending,,
 S093,Add / expiration month year,gestures,Gestures and explicit alternatives,pending,,

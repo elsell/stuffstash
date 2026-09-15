@@ -357,3 +357,14 @@ History and Revert change. Read-only history rows still navigate to substantial
 details; the two-value Show menu remains an in-place native choice. Reversal keeps
 its native confirmation and explicit pending label with disabled submission.
 Technical details remain an inline disclosure, not another navigation destination.
+
+### Mobile history date presentation
+
+Activity, checkout/return history and exact event details must format timestamps
+using the device locale and local time zone, matching neighboring mobile date
+surfaces. Do not force US month/day order or a twelve-hour clock. Keep each
+surface's existing level of detail: activity is brief, checkout includes the
+year, and event details include seconds and zone. A shared asset-history
+formatter owns these presentation choices. Invalid transport values remain
+visible as the original value rather than crashing the history surface.
+This changes no stored timestamps, ordering, pagination or authorization.

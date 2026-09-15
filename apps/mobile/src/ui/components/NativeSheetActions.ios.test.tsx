@@ -6,6 +6,7 @@ it('gives native sheet actions the full proposed width and content-driven height
  const h=new MobileRenderHarness();const actions:string[]=[];
  try{
   await h.render(<NativeSheetActions primaryLabel="Apply filters" secondaryLabel="Cancel" disabled={false} onApply={()=>actions.push('apply')} onBack={()=>actions.push('cancel')} />);
+  expect(h.byType('SwiftUIHost')?.props.ignoreSafeArea).toBeUndefined();
   expect(h.byType('SwiftUIHost')?.props.matchContents).toEqual({vertical:true});
   expect(h.byType('SwiftUIHost')?.props.style).toMatchObject({width:'100%'});
   const buttons=h.allByType('SwiftUIButton');expect(buttons).toHaveLength(2);
@@ -29,4 +30,13 @@ it('disables Apply for an invalid range while keeping Back available', async () 
   } finally {
     await h.unmount();
   }
+});
+
+it('lets a measured container own keyboard avoidance without moving hosted controls again', async () => {
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(<NativeSheetActions primaryLabel="Apply" secondaryLabel="Back" disabled={false}
+      keyboardAvoidance="container" onApply={() => {}} onBack={() => {}} />);
+    expect(h.byType('SwiftUIHost')?.props.ignoreSafeArea).toBe('keyboard');
+  } finally { await h.unmount(); }
 });

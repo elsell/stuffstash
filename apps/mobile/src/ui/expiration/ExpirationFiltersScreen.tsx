@@ -51,7 +51,7 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
   <View ref={boundaryRef} collapsable={false} pointerEvents="none" onLayout={keyboard.measure} style={styles.bottomBoundary} />
   <SafeAreaView edges={keyboard.bottomInset > 0 ? [] : ['bottom']} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)} style={[styles.footerOverlay, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>
    <View testID="expiration-filter-footer" style={styles.footer}>
-    <NativeSheetActions primaryLabel="Apply filters" primaryAccessibilityLabel="Apply expiration filters" secondaryAccessibilityLabel="Cancel or return to filters" secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'} disabled={rangeError}
+    <NativeSheetActions keyboardAvoidance="container" primaryLabel="Apply filters" primaryAccessibilityLabel="Apply expiration filters" secondaryAccessibilityLabel="Cancel or return to filters" secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'} disabled={rangeError}
       onBack={() => page === 'overview' ? onCancel() : open('overview')} onApply={() => onApply(draft)} />
    </View>
   </SafeAreaView>

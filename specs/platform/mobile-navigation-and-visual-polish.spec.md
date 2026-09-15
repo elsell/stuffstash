@@ -385,3 +385,27 @@ cap or custom menu is introduced. This applies to all NativeChoicePicker consume
 (filters, appearance, customization, expiration month, invitations, move and voice
 settings). Recheck landscape/narrow layouts and all accessibility sizes on native.
 See [Apple Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/).
+
+### Refinement count badge contrast
+
+The small count badge on a refinement command must use a paired semantic
+foreground/background with at least 4.5:1 text contrast in light, dark and
+increased-contrast appearances. Use the existing `onAction`/`action` pair;
+`accent` is not a text-bearing background token. iOS, Android and fallback
+refinement controls share badge presentation so their contrast and count
+formatting cannot drift. The count remains supplementary visual information:
+the parent command names the applied count for assistive technology.
+
+This correction does not establish native target, Dynamic Type, badge placement
+or material acceptance; those require rendered checks on the affected clients.
+
+### Single keyboard-avoidance owner for measured sheet actions
+
+When the expiration filter container measures and applies keyboard overlap,
+its hosted SwiftUI actions must ignore the keyboard safe-area region. Otherwise
+SwiftUI can move the buttons outside the React Native host's hit-test bounds.
+NativeSheetActions exposes a fixed-per-mount keyboard-avoidance owner: native
+by default, container only for the measured expiration footer. Other safe areas
+remain active. Browse's unmeasured footer retains its existing native behavior.
+Verify actual button hit-testing and navigation after keyboard entry; screenshots
+or host props alone do not prove the correction.

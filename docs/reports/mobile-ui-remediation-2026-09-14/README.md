@@ -11,6 +11,8 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `localization-axis.md`: date conventions, month-calendar semantics and directional-layout work.
+- `appearance-axis.md`: shared appearance, materials, contrast evidence and remaining native checks.
 - `text-input-sites.csv` and `text-entry-axis.md`: input ownership, external reset paths, and native acceptance work.
 
 Runtime availability: macOS GitHub runners build and launch the genuine application
@@ -40,3 +42,13 @@ Latest delivered checkpoint: **0.24.13 (101.1)**, verified at02:44:35 UTC
 September15 in release34920497945. The next current-fixes release from PR132
 (source30876406) is running in release34923402256; delivery is pending.
 Audit remediation continues on `codex/mobile-audit-after-132`.
+
+Current release cut: PR136 merged at **5775da93** on September15 at04:47UTC.
+[Release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409)
+is in progress; upload and Apple processing are not yet confirmed. Continued
+audit changes on `codex/mobile-audit-after-136` are excluded from that build.
+
+Latest delivered release: **0.24.16 (104.1)** from5775da93.
+Apple processing and exact-build TestFlight changelog verified at05:10:25UTC
+September15 in [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
+Post-PR136 badge, history-locale and keyboard-ownership changes are excluded.

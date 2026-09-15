@@ -497,3 +497,73 @@ its hit-testing/menu-open checks and the original accessibility audit. All nativ
 reflow, ordinary-size regression, and medium-category clipping outcomes remain
 pending; M53 is not cleared. Critic found no confirmed blocker and emphasized
 that vertical placement alone does not prove long-value fit.
+
+
+### M66 — Refinement count badges lose text contrast
+
+The iOS, Android and fallback refinement buttons repeated white badge text on
+`palette.accent`. Rendered foreground/background measurements were 3.39:1 in
+light and 2.22:1 in dark, below the 4.5:1 target for small text. Users have more
+difficulty reading the applied filter count. This is a source/numerical finding,
+not a screenshot-derived native geometry finding.
+
+The shared RefinementCountBadge now uses the semantic action/onAction pair.
+Eight new rendered checks failed before the change; all 39 selected badge/token
+checks, TypeScript and mobile structural checks pass on paul. Critic found no
+blocker; its duplicate contrast-helper concern was addressed with a shared test
+utility. Android uses the shared component but is not mounted by these tests.
+Native badge placement, text growth and material composition remain pending.
+This fix is after PR136 and is excluded from the interim release cut.
+
+
+### M67 — History ignores device date and clock conventions
+
+Activity, checkout history and exact event details forced en-US while neighboring
+date surfaces used the device locale. The shared AssetHistoryTimestamp formatter
+now uses the runtime locale/local zone and preserves each existing detail level
+and invalid-value fallback. Stored timestamps, ordering and authorization are unchanged.
+
+New explicit British/US/precision/invalid checks were written before the helper
+(the initial red was a missing-module failure, not a baseline behavioral claim).
+Thirteen initial formatter/query checks, eight mounted history checks, TypeScript
+and structural checks pass on paul. A fifth formatter case exercises the omitted
+locale contract; all five pass with LC_ALL and LANG set to en_GB.UTF-8, with the
+actual runtime locale independently verified as en-GB. Critic found no blocker
+and requested this default-locale coverage. Native settings changes, clock
+overrides, long date layout and time-zone acceptance remain pending.
+
+### M68 — Month-only expiration mislabels alternate-calendar periods
+
+Open. A stored Gregorian month is formatted by converting its first day using
+the locale's default calendar; month choices use unrelated synthetic2020 dates.
+For en-US-u-ca-hebrew, stored2028-02 is labeled Shevat5788 and January's choice
+is named Tevet. These periods do not share boundaries, so choosing a displayed
+month can store a different period. Thai year display also differs from the
+canonical numeric year field. Source and remote Intl evidence are recorded in
+localization-axis.md; native propagation and corrected contract remain pending.
+
+
+### M19 follow-up — one keyboard-avoidance owner
+
+After native349289 placed the visible Apply button outside its Host bounds,
+NativeSheetActions gains a fixed keyboard-avoidance owner. Only the measured
+expiration footer selects container ownership, which disables the SwiftUI Host's
+keyboard safe area; Browse keeps the native default. Other safe areas remain.
+
+One ownership contract case failed before the change; seven action/filter cases,
+TypeScript and structural checks pass on paul. Critic found no source blocker.
+These verify configuration and callbacks, not native hit-testing. The hierarchy
+also shows a possible62-point boundary/keyboard coordinate discrepancy; that
+remains unresolved. The original Apply/Back native hit/navigation assertion stays
+the acceptance gate. M19 remains open and no full keyboard fix is claimed.
+
+
+M68 implemented follow-up: localized Gregorian month choices and month-only
+summary formatting share the stored period's calendar, with a clarification for
+alternate-calendar locales. Exact-day labels/controls and storage are unchanged.
+One baseline label test failed;14 selected checks, TypeScript and structural
+checks pass on paul (`/tmp/month-calendar-green.log`). Critic found no implementation
+blocker; its domain wording correction was applied. Shared field/status/card,
+workspace heading, notification and voice-review consumers were inspected.
+Native alternate-calendar settings, digits and larger-text clarification remain
+unverified; this is source/test remediation, not complete localization acceptance.
