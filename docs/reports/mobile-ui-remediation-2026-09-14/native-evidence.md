@@ -750,3 +750,19 @@ Delivery confirmed: release34932422663 completed successfully. Job104268866634
 verified the exact TestFlight changelog for0.24.17(105.1) at05:52:22UTC. The interim
 release request is fulfilled; full audit remediation and native acceptance remain
 active in PR140. Log /tmp/release349324-notes.log.
+
+### Run34932076384 iPad onboarding — M20 gesture region
+
+Job104266735900 completed with two passes and one failure. Actual checkout is
+f4bc4f28fc51de06d5ff3b4db8174b530c0c6c43 (checkout log: merge05a9aeba into5775da93).
+The outer-margin drag still fails keyboard dismissal at line94; the inside-form
+comparison and landscape test pass. Screenshot3CCA6663-54CD-4D30-B5DA-167952AD96B0.png
+shows the intact server URL, visible Connect action, and keyboard remaining open.
+Hierarchy3A3EE291-62A2-4F9A-9E9B-DBECCE66CD93.txt records the full-width scroll view
+(744 points) and centered600-point content. Artifacts and log are in
+/tmp/native349320-onboarding-ipad and /tmp/native349320-onboarding-ipad.log.
+
+This narrows M20 to the gesture region in this configuration; it does not establish
+all-device success or blame XCTest. A candidate moves the width constraint to an
+inner form while making scroll content fill the viewport. Both native cases remain
+unchanged and required; runtime verification of the candidate is pending.

@@ -113,34 +113,36 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   return <SafeAreaView style={styles.shell} edges={['top', 'left', 'right', 'bottom']}>
     <KeyboardAvoidingView style={styles.shell} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <View style={styles.brand}><BrandMark showWordmark /></View>
-        <Text ref={heading} accessibilityRole="header" style={styles.heading}>{title}</Text>
-        {invitationPending ? <View style={styles.notice}><Text style={styles.body}>Your invitation is waiting. Sign in to review it.</Text></View> : null}
-        {connection ? <>
-          {input('Server address', apiBaseUrl, setApiBaseUrl, 'https://stash.example.com', true)}
-          <Pressable accessibilityRole="button" accessibilityLabel="Need help connecting?"
-            accessibilityState={{ expanded: helpVisible }} onPress={() => setHelpVisible(value => !value)} style={styles.helpAction}>
-            <Text style={styles.helpLink}>Need help connecting?</Text>
-          </Pressable>
-          {helpVisible ? <View style={styles.help}><Text style={styles.body}>
-            Enter your Stuff Stash server’s full address, including a port or path if needed.
-            {'\n\n'}You’ll need a running Stuff Stash server to connect. If you’re joining someone else’s inventory, ask them for its server address.
-          </Text></View> : null}
-        </> : <>
-          {household ? input('Household name', householdName, setHouseholdName, 'e.g. Maple Street household') : null}
-          {input(household ? 'First inventory' : 'Inventory name', inventoryName, setInventoryName, 'e.g. Home Inventory')}
-        </>}
-        {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
-        <View style={styles.footer}>
-          {connection ? <Text style={styles.note}>Your browser will open for sign-in, then bring you back here.</Text> : null}
-          <Pressable accessibilityRole="button" accessibilityLabel={actionLabel} accessibilityState={{ disabled: submitting, busy: submitting }}
-            disabled={submitting} onPress={proceed} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, submitting && styles.buttonDisabled]}>
-            {submitting ? <ActivityIndicator accessibilityLabel="Setup in progress" color={colors.onAction} /> : <Text style={styles.buttonText}>{actionLabel}</Text>}
-          </Pressable>
-          {!connection ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over" disabled={submitting}
-            onPress={startOver} style={({ pressed }) => [styles.button, styles.ghost, pressed && styles.ghostPressed, submitting && styles.buttonDisabled]}>
-            <Text style={[styles.buttonText, styles.ghostText]}>Sign out and start over</Text>
-          </Pressable> : null}
+        <View style={styles.form}>
+          <View style={styles.brand}><BrandMark showWordmark /></View>
+          <Text ref={heading} accessibilityRole="header" style={styles.heading}>{title}</Text>
+          {invitationPending ? <View style={styles.notice}><Text style={styles.body}>Your invitation is waiting. Sign in to review it.</Text></View> : null}
+          {connection ? <>
+            {input('Server address', apiBaseUrl, setApiBaseUrl, 'https://stash.example.com', true)}
+            <Pressable accessibilityRole="button" accessibilityLabel="Need help connecting?"
+              accessibilityState={{ expanded: helpVisible }} onPress={() => setHelpVisible(value => !value)} style={styles.helpAction}>
+              <Text style={styles.helpLink}>Need help connecting?</Text>
+            </Pressable>
+            {helpVisible ? <View style={styles.help}><Text style={styles.body}>
+              Enter your Stuff Stash server’s full address, including a port or path if needed.
+              {'\n\n'}You’ll need a running Stuff Stash server to connect. If you’re joining someone else’s inventory, ask them for its server address.
+            </Text></View> : null}
+          </> : <>
+            {household ? input('Household name', householdName, setHouseholdName, 'e.g. Maple Street household') : null}
+            {input(household ? 'First inventory' : 'Inventory name', inventoryName, setInventoryName, 'e.g. Home Inventory')}
+          </>}
+          {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
+          <View style={styles.footer}>
+            {connection ? <Text style={styles.note}>Your browser will open for sign-in, then bring you back here.</Text> : null}
+            <Pressable accessibilityRole="button" accessibilityLabel={actionLabel} accessibilityState={{ disabled: submitting, busy: submitting }}
+              disabled={submitting} onPress={proceed} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, submitting && styles.buttonDisabled]}>
+              {submitting ? <ActivityIndicator accessibilityLabel="Setup in progress" color={colors.onAction} /> : <Text style={styles.buttonText}>{actionLabel}</Text>}
+            </Pressable>
+            {!connection ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over" disabled={submitting}
+              onPress={startOver} style={({ pressed }) => [styles.button, styles.ghost, pressed && styles.ghostPressed, submitting && styles.buttonDisabled]}>
+              <Text style={[styles.buttonText, styles.ghostText]}>Sign out and start over</Text>
+            </Pressable> : null}
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

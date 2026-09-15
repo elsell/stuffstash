@@ -406,3 +406,15 @@ routes and complete draft/typing/rejected-save assertions. The comparison uses c
 query state and the same application component; it must not preload resources or
 change production Add presentation. Fixture preparation must remain isolated from
 production routes.
+
+### M20 — full-width onboarding scroll content
+
+Run34932076384 on iPad repeats the outer-margin dismissal failure while the
+inside-column comparison passes. Preserve the centered 600-point form width,
+but apply that constraint to a child form rather than the scroll content itself.
+The scroll content must fill the viewport so blank margins participate in the
+same native scroll/keyboard gesture surface. Keep native keyboard dismissal;
+do not add a competing tap catcher or manual gesture recognizer. Both existing
+native drag cases, phone keyboard reachability, and iPad landscape layout remain
+acceptance gates. The failing native drag is the regression baseline; source
+layout and unit checks alone cannot establish its resolution.

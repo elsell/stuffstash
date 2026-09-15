@@ -615,3 +615,14 @@ native-owned Name candidate with explicit restore/reset lifetimes and unchanged
 application draft/save guards. Six remote behavior checks plus typecheck/structural
 checks pass; native full-string acceptance remains pending. Sheet readiness remains
 a separate issue. See [text-entry review](text-entry-axis.md).
+
+### M20 follow-up — preserve readable form and full scroll surface
+
+Repeated iPad evidence distinguishes the failing margin drag from the passing
+inside-form drag (run34932076384). Move the centered600-point constraint into a
+child form and retain full-width scroll content. No custom gesture or manual
+keyboard dismissal is introduced. This is a source candidate, not a verified fix;
+existing phone/iPad keyboard and landscape tests remain the native acceptance gate.
+Remote validation:4 mounted onboarding/invitation checks, TypeScript and mobile
+structural checks pass on paul (/tmp/onboarding-scroll-green.log). Required critic
+found no blocker. No local tests/builds were run; native acceptance remains pending.
