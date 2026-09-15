@@ -2410,7 +2410,11 @@ P2 source-confirmed at6edc7e85. VoiceConversationExchange paints Previous/Next a
 Retry photos as text Pressables; VoiceSessionSheetScreen paints Approve/Cancel
 decision buttons. They issue commands rather than select values or navigate to
 settings. The composer already uses native controls, so the surrounding command
-styling is inconsistent. Migrate through existing native command adapters while
-preserving disabled boundaries, plan IDs, pending locks and reduced-motion rail
-navigation. Keep card/link navigation separate. Source finding only; correction
-and native layout acceptance remain open.
+styling is inconsistent. Candidate now uses NativeCommandButton for rail and photo
+retry, and NativeSheetActions for approval/cancellation. Rail bounds/count are in a
+small presentation component; position retention and reduced-motion scrolling stay
+in the parent. Plan IDs and pending-decision presentation are unchanged. All46
+focused rail/presentation/composer/lifecycle tests, TypeScript and structural checks
+pass on paul; code critic found no blockers. Native review actions are taller than
+the former custom row: short windows, keyboard and reading order need acceptance.
+Native layout verification remains open; this is not a full conversation audit.

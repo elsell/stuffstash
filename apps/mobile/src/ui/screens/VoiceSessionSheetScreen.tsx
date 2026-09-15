@@ -1,5 +1,6 @@
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { NativeSheetActions } from '../components/NativeSheetActions';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { useNewConversation } from './useNewConversation';
 import { voiceConversationReferences } from './VoiceConversationReferences';
@@ -511,26 +512,11 @@ function VoiceSessionSheet({
               bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
             ]}>
               {bottomAction.kind === 'review_decision' ? (
-                <View style={styles.reviewActionGroup}>
-                  <Pressable
-                    accessibilityLabel="Cancel voice change"
-                    accessibilityRole="button"
-                    onPress={() => onCancelActionPlan(bottomAction.planId)}
-                    style={styles.cancelPlanButton}
-                  >
-                    <X color={palette.textMuted} size={17} strokeWidth={2.4} />
-                    <Text style={styles.cancelPlanButtonText}>Cancel</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityLabel="Approve voice change"
-                    accessibilityRole="button"
-                    onPress={() => onApproveActionPlan(bottomAction.planId)}
-                    style={styles.approvePlanButton}
-                  >
-                    <Check color={palette.onAction} size={18} strokeWidth={2.6} />
-                    <Text style={styles.approvePlanButtonText}>Approve</Text>
-                  </Pressable>
-                </View>
+                <NativeSheetActions primaryLabel="Approve" primaryAccessibilityLabel="Approve voice change"
+                  secondaryLabel="Cancel" secondaryAccessibilityLabel="Cancel voice change"
+                  keyboardAvoidance="container" disabled={false}
+                  onApply={() => onApproveActionPlan(bottomAction.planId)}
+                  onBack={() => onCancelActionPlan(bottomAction.planId)} />
               ) : <VoiceConversationComposer onMic={onSessionMic} />}
 
             </View>
@@ -911,40 +897,6 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '800',
     lineHeight: 22
   },
-  approvePlanButton: {
-    alignItems: 'center',
-    backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  approvePlanButtonText: {
-    color: colors.onAction,
-    fontSize: 14,
-    fontWeight: '900'
-  },
-  cancelPlanButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  cancelPlanButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '900'
-  },
   cancelSessionButton: {
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -1116,10 +1068,6 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.md
-  },
-  reviewActionGroup: {
-    flexDirection: 'row',
-    gap: spacing.sm
   },
   reviewBottomActionContent: {
     alignItems: 'stretch',

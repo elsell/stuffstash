@@ -128,6 +128,8 @@ clamping. This remains source validation; native acceptance is not claimed.
 The [typed composer](conversation-composer-axis.md) has all24 source axes reviewed;
 its native controls and pending request behavior are distinct from recording and
 plan approval acceptance. M170 tracks remaining custom response/decision commands.
+M170's native command migration passes46 focused tests and static checks. Review
+keeps the taller native decision area flagged for keyboard/short-window acceptance.
 The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
 nested diagnostic layout from the direct-scroll structure used by production filters.
 

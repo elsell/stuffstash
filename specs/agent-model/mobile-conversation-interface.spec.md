@@ -52,6 +52,11 @@ Shared asset breadcrumbs initially scroll to their most specific ancestor, inclu
 on layout/width or path changes, while allowing manual scrolling to earlier ancestors.
 Preview row cards use equal inset padding and top-aligned thumbnails. Previous/Next
 card controls animate to the selected card; passive restoration remains unanimated.
+Previous/Next and historical photo retry use the shared native command adapter.
+Keep the position count between flexible command columns and disable movement at
+the ends. Plan Approve/Cancel use native sheet actions with explicit accessible
+names and the existing pending-decision ownership; they must not introduce a
+second submission path or change the plan being approved.
 User and assistant message text supports native selection and copy. The native text
 composer continues to support paste. A clearly labelled New conversation control is
 always available in the sheet header; resetting clears local history/drafts and cancels
