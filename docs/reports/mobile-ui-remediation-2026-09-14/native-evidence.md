@@ -1559,3 +1559,12 @@ focused above the keyboard. Retained [Sharing capture](evidence/ipad-sharing-tru
 This remains an input failure requiring investigation; the Return observation does
 not reclassify it. Two fixture-preparation checks pass remotely for the Return
 wait change; those checks do not compile Swift or validate the native journey.
+
+### Combined validation at cd245a20
+
+All1,618 mobile tests across265 files, TypeScript and mobile structural checks
+passed on paul. Checksum comparison of mobile/src against the validation tree
+reported no differences before execution. Remote log: /tmp/mobile-batch-cd245a20.log.
+This includes M118–M121 candidates, not their native acceptance. Run34985387290
+remained active on the earlier8f1ec146 source; onboarding succeeded on both devices
+and fixture jobs remained in progress. No new TestFlight release is claimed.

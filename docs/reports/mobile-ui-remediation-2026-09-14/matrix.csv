@@ -1139,14 +1139,14 @@ R048,settings/sharing.tsx,localization,"Locale, timezone, RTL and long strings",
 R048,settings/sharing.tsx,imagery,"Icons, photos and missing media",pending,,
 R048,settings/sharing.tsx,targets,Touch target size and reachability,source-reviewed,Source minima 44 for cancel/link and 48 for creation/email; physical reachability and enlarged text unverified.,
 R048,settings/sharing.tsx,gestures,Gestures and explicit alternatives,pending,,
-R048,settings/sharing.tsx,keyboard,"Keyboard, text entry and focus",pending,,
+R048,settings/sharing.tsx,keyboard,"Keyboard, text entry and focus",finding,; M121 native-owned iOS email candidate; same-scope denial recovery/reset tested; native typing pending,M121
 R048,settings/sharing.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R048,settings/sharing.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R048,settings/sharing.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Paged invitation list with explicit Load older and repeat-cursor guard; runtime density pending.,
 R048,settings/sharing.tsx,search,"Search, scope and filters",pending,,
 R048,settings/sharing.tsx,loading,"Loading, background refresh and progress",finding,"Explicit usePullRefresh; initial load indicator and separate pending creation/cancellation indicators.; M101: native Create/Copy/Share candidate, link-operation lock with failure/replacement checks; normal-text native rendering pending.; M102: native cancellation menu with independent scoped pending locks and one-shot focused confirmation; native acceptance pending.",M101;M102
 R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",finding,"Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.; sharing-axis.md: source/controlled-render review; native pending; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md) User screenshots and source follow-up: M98,M99 in findings.md; native acceptance pending.",M69;M81;M98;M99
-R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Pending email/access disabled and guarded; rejected creation retains draft; remote behavior test.; sharing-axis.md: source/controlled-render review; native pending,M27
+R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",finding,Pending email/access disabled and guarded; rejected creation retains draft; remote behavior test.; sharing-axis.md: source/controlled-render review; native pending; M121 native-owned iOS email candidate; same-scope denial recovery/reset tested; native typing pending,M27; M121
 R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",finding,Source and existing tests hide denied cached invitations and keep created secret outside query cache; no new boundary changes.; sharing-axis.md: source/controlled-render review; native pending User screenshots and source follow-up: M98 in findings.md; native acceptance pending.,M98
 R048,settings/sharing.tsx,notifications,System notification entry and state,pending,,
 R048,settings/sharing.tsx,media,"Camera, library, files and audio",pending,,
