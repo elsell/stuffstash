@@ -95,6 +95,8 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinarySingleLineTextEntry'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryMultilineTextEntry'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryControlledTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledTextEntryWithoutAssistance'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledTextEntryWithoutAccessory'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryTextEntryWithoutAssistance'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryTextEntryWithoutAccessory'
               )

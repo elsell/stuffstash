@@ -103,7 +103,8 @@ function FixtureNavigation() {
 }
 
 type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'
-  | 'plain-controlled' | 'plain-no-assistance' | 'plain-no-accessory';
+  | 'plain-controlled' | 'plain-no-assistance' | 'plain-no-accessory'
+  | 'plain-controlled-no-assistance' | 'plain-controlled-no-accessory';
 
 export { CustomizationCollectionFixture } from './CustomizationCollectionFixture';
 
@@ -162,6 +163,8 @@ export function FixtureMenu() {
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
     <Button title="Audit plain input" onPress={() => setInputMode('plain')} />
     <Button title="Audit plain-controlled input" onPress={() => setInputMode('plain-controlled')} />
+    <Button title="Audit plain-controlled-no-assistance input" onPress={() => setInputMode('plain-controlled-no-assistance')} />
+    <Button title="Audit plain-controlled-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-controlled-no-accessory'); }} />
     <Button title="Audit plain-no-assistance input" onPress={() => setInputMode('plain-no-assistance')} />
     <Button title="Audit plain-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-no-accessory'); }} />
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
@@ -216,8 +219,8 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
   const [value, setValue] = useState('');
   if (mode.startsWith('plain') || mode === 'multiline') return <View>
     <AppTextInput accessibilityLabel={`Audit ${mode} text`} multiline={mode === 'multiline'}
-      {...(mode === 'plain-controlled' ? { value } : { defaultValue: '' })}
-      {...(mode === 'plain-no-assistance' ? { autoCorrect: false, spellCheck: false, smartInsertDelete: false } : {})}
+      {...(mode.startsWith('plain-controlled') ? { value } : { defaultValue: '' })}
+      {...(mode.endsWith('no-assistance') ? { autoCorrect: false, spellCheck: false, smartInsertDelete: false } : {})}
       onChangeText={setValue} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
     <Text>{`Observed ${mode} input: ${value}`}</Text>
   </View>;

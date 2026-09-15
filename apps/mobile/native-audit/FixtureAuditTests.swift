@@ -1076,7 +1076,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(input.isHittable)
     input.tap()
     waitForKeyboard()
-    if mode == "plain-no-accessory" { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
+    if mode.hasSuffix("no-accessory") { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
     input.typeText("Native draft name")
     capture("\(mode)-ordinary-text-entry")
     XCTAssertEqual(input.value as? String, "Native draft name")
@@ -1086,6 +1086,8 @@ final class FixtureAuditTests: XCTestCase {
   func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }
   func testOrdinaryMultilineTextEntry() { verifyOrdinaryTextEntry("multiline") }
   func testOrdinaryControlledTextEntry() { verifyOrdinaryTextEntry("plain-controlled") }
+  func testControlledTextEntryWithoutAssistance() { verifyOrdinaryTextEntry("plain-controlled-no-assistance") }
+  func testControlledTextEntryWithoutAccessory() { verifyOrdinaryTextEntry("plain-controlled-no-accessory") }
   func testOrdinaryTextEntryWithoutAssistance() { verifyOrdinaryTextEntry("plain-no-assistance") }
   func testOrdinaryTextEntryWithoutAccessory() { verifyOrdinaryTextEntry("plain-no-accessory") }
 
