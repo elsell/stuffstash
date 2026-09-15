@@ -15,7 +15,7 @@ export type RecordedVoiceAudio = {
 };
 
 export interface VoiceAudioRecorder {
-  start(): Promise<void>;
+  start(options?: { readonly signal?: AbortSignal }): Promise<void>;
   stop(): Promise<RecordedVoiceAudio>;
   cancel(): Promise<void>;
   recordingLevel(): number;
@@ -290,6 +290,8 @@ export class RealtimeVoiceSessionController {
   private photoLifetime = 0;
   private reviewDecisionPlanId: string | null = null;
   private captureGeneration = 0;
+  private captureStartup: Promise<void> = Promise.resolve();
+  private captureAbortController: AbortController | null = null;
   private currentContext: { readonly tenantId: TenantId; readonly inventoryId: InventoryId; readonly tenantName: string; readonly inventoryName: string } | null = null;
   private recordingStarted = false;
   private lastResponseKind: VoiceAssistantResponseKind | undefined;
@@ -310,6 +312,7 @@ export class RealtimeVoiceSessionController {
   ) {}
 
   async start(): Promise<VoiceRealtimeState> {
+    this.captureAbortController?.abort();
     const captureGeneration = ++this.captureGeneration;
     this.playbackSuspended = false;
     this.transport.close?.();
@@ -321,9 +324,8 @@ export class RealtimeVoiceSessionController {
     this.currentContext = context;
     await this.player.stop();
     if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) throw new VoiceRealtimeCancelledError();
-    await this.recorder.start();
-    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
-    this.recordingStarted = true;
+    await this.startCapture(() => !this.isSessionGenerationCancelled(generation) && captureGeneration === this.captureGeneration);
+    if (this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration) throw new VoiceRealtimeCancelledError();
     return {
       status: 'listening',
       tenantName: context.tenantName,
@@ -332,6 +334,38 @@ export class RealtimeVoiceSessionController {
       recordingLevel: this.recordingLevel(),
       debugEvents: []
     };
+  }
+
+  private async startCapture(isCurrent: () => boolean): Promise<void> {
+    const cancellation = new AbortController();
+    this.captureAbortController = cancellation;
+    const obsolete = () => cancellation.signal.aborted || !isCurrent();
+    const startup = this.captureStartup.then(async () => {
+      if (obsolete()) throw new VoiceRealtimeCancelledError();
+      try {
+        await this.recorder.start({ signal: cancellation.signal });
+      } catch (error) {
+        if (obsolete()) throw new VoiceRealtimeCancelledError();
+        throw error;
+      }
+      if (obsolete()) {
+        await this.recorder.cancel();
+        throw new VoiceRealtimeCancelledError();
+      }
+      this.recordingStarted = true;
+    });
+    // A later startup waits for obsolete native preparation and cleanup to settle.
+    this.captureStartup = startup.then(() => undefined, () => undefined);
+    await startup;
+  }
+
+  private cancelCapture(): Promise<void> {
+    this.captureAbortController?.abort();
+    if (!this.recordingStarted) return Promise.resolve();
+    this.recordingStarted = false;
+    const cleanup = this.captureStartup.then(() => this.recorder.cancel());
+    this.captureStartup = cleanup.then(() => undefined, () => undefined);
+    return cleanup;
   }
 
   recordingLevel(): number {
@@ -403,10 +437,7 @@ export class RealtimeVoiceSessionController {
   async pauseMedia(): Promise<void> {
     this.captureGeneration++;
     this.playbackSuspended = true;
-    if (this.recordingStarted) {
-      await this.recorder.cancel();
-      this.recordingStarted = false;
-    }
+    await this.cancelCapture();
     await this.player.stop();
   }
 
@@ -455,6 +486,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async startFollowUp(): Promise<VoiceRealtimeState> {
+    this.captureAbortController?.abort();
     const captureGeneration = ++this.captureGeneration;
     this.playbackSuspended = false;
     if (!this.transport.canSendFollowUpAudio()) {
@@ -467,9 +499,8 @@ export class RealtimeVoiceSessionController {
     this.currentContext = context;
     await this.player.stop();
     if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) throw new VoiceRealtimeCancelledError();
-    await this.recorder.start();
-    if ((this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration)) { await this.recorder.cancel(); throw new VoiceRealtimeCancelledError(); }
-    this.recordingStarted = true;
+    await this.startCapture(() => !this.isSessionGenerationCancelled(generation) && captureGeneration === this.captureGeneration);
+    if (this.isSessionGenerationCancelled(generation) || captureGeneration !== this.captureGeneration) throw new VoiceRealtimeCancelledError();
     return {
       status: 'listening',
       tenantName: context.tenantName,
@@ -535,6 +566,7 @@ export class RealtimeVoiceSessionController {
   }
 
   async dispose(): Promise<void> {
+    const captureCleanup = this.cancelCapture();
     this.photoLifetime++;
     this.reviewDecisionPlanId = null;
     this.transport.close?.();
@@ -544,23 +576,19 @@ export class RealtimeVoiceSessionController {
     this.pendingPhotoDraftsByPlanId.clear();
     this.pendingPhotoRetriesByPlanId.clear();
     this.currentContext = null;
-    const wasRecording = this.recordingStarted;
-    this.recordingStarted = false;
-    if (wasRecording) await this.recorder.cancel();
+    await captureCleanup;
     await this.player.stop();
   }
 
   async cancel(): Promise<VoiceRealtimeState> {
+    const captureCleanup = this.cancelCapture();
     this.pendingPhotoDraftsByPlanId.clear();
     this.cancelledThroughSessionGeneration = Math.max(
       this.cancelledThroughSessionGeneration,
       this.activeSessionGeneration
     );
     const context = this.currentContext ?? (await this.selectedInventoryContext());
-    if (this.recordingStarted) {
-      this.recordingStarted = false;
-      await this.recorder.cancel();
-    }
+    await captureCleanup;
     this.activeRunAbortController?.abort();
     this.activeFollowUpAbortController?.abort();
     await this.player.stop();

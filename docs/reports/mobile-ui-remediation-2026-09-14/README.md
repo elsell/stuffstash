@@ -81,8 +81,14 @@ pending,1,497 source-reviewed,440 finding,24 runtime-partial and115 not-applicab
 
 [Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
 identifies capture starting after cancellation during native permission/preparation;
-existing readiness coverage does not test that boundary. All88 related recorder,
-controller, composer and lifecycle tests pass remotely, without proving M172 fixed.
+existing readiness coverage did not test that boundary. The candidate adds native
+startup cancellation and serialized cancellation cleanup, with12 regressions and
+98 focused recorder/controller cases passing remotely. Review is complete; physical
+permission/interruption acceptance remains pending.
+
+Combined M172 checkpoint: all1,753 mobile tests across273 files, TypeScript and
+mobile structural checks pass on paul after the final review correction. This
+does not establish native microphone, permission or interruption behavior.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.

@@ -27,10 +27,10 @@ dialogs and audio interruption behavior are not established by this review.
 | Loading | Duplicate startup is guarded by requestPending; stage remains unchanged while startup awaits. A visible startup indication is an unverified usability risk. |
 | Recovery | Denied permission throws readable error and typing remains available. No dedicated Settings recovery action was found for microphone denial; actual permanent-denial flow needs review. |
 | Editing | Composer text is retained separately; no waveform trimming or audio editor is specified. |
-| Privacy | Permission precedes capture; cancelled audio is deleted without reading. M172: cancellation during native startup does not prevent record() from being reached. |
+| Privacy | Permission precedes capture; cancelled audio is deleted without reading. M172 candidate checks cancellation before capture across permission/mode/preparation. |
 | Notifications | No recording-owned notifications; interruptions need physical-device acceptance. |
 | Media | MP4 capture, measured levels and temporary-file cleanup use injected native ports. Route/audio interruption and competing audio remain physical checks. |
-| Lifecycle | Controller generation guards stale completion; it only cancels after native start resolves. M172 identifies the gap at the permission/preparation boundary; readiness tests do not cover it. |
+| Lifecycle | M172 candidate aborts native startup and serializes cancellation cleanup before a fresh recording. Mounted/adapter evidence is distinct from physical permission/interruption acceptance. |
 
 The Apple [privacy guidance](https://developer.apple.com/design/human-interface-guidelines/privacy)
 is a relevant review lens, but its current HTML returned only a JavaScript shell.
@@ -38,5 +38,8 @@ The attempted recording-audio topic could not be retrieved. No detailed Apple
 requirement is inferred from those unavailable pages. M172 follows the project's
 explicit cancel-capture behavior and inspected implementation.
 
-All88 related recorder/controller/composer/lifecycle tests pass on paul. They do
-not cover delayed native permission/preparation cancellation; M172 remains open.
+The baseline88 recorder/controller/composer/lifecycle tests passed on paul before
+M172. Its candidate adds12 native-boundary/controller cases, including initial and
+follow-up starts and cleanup overlapping fresh recording. All98 focused recorder/
+controller tests and static checks pass; code critic reviewed the correction.
+Physical permission/preparation timing and interruptions still require acceptance.

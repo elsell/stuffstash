@@ -2448,4 +2448,13 @@ before recorder.start, and does not cover native permission/preparation.
 Make startup cancellation reach the native adapter before capture begins, retaining
 fresh-start behavior and preventing an obsolete start from cancelling a new one.
 Acceptance needs delayed permission/mode/preparation fakes, fresh restart and
-normal stop/cancel, plus native permission dismissal/return. Correction remains open.
+normal stop/cancel, plus native permission dismissal/return. The candidate passes
+an AbortSignal through the recorder port and checks cancellation before capture at
+each native startup boundary. Prepared resources are stopped/deleted and audio
+mode restored. Controller startup and cancellation cleanup share a queue; old
+cleanup cannot disable a fresh recording. Nine startup cases cover the three native
+boundaries plus initial/follow-up pause/cancel/disposal. Three additional delayed
+active-cleanup cases reproduced a review finding and now pass. All98 focused
+recorder/controller tests, TypeScript and structural checks pass on paul. Critic
+found no remaining blockers in this change. Native permission/interruption
+acceptance remains open; no physical microphone verification is claimed.
