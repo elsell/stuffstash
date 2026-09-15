@@ -973,3 +973,23 @@ The sheet fixture supplies a native Close action; the pushed screen uses Back.
 Measure the full animated notice using a stable test identifier without changing
 its accessibility grouping, and compare with the active content viewport rather
 than the entire iPad window. Wait for presentation geometry before asserting bounds.
+
+## Notice presentation in the active screen
+
+Keep notice data and action ownership in the service-scoped provider, but render
+ready-app notices in the focused leaf screen's native content layer. Root and
+nested navigation containers must not create duplicate presenters. Preserve the
+screen's existing direct scroll child: add the presenter as a sibling rather than
+introducing a flex wrapper that changes native sheet measurement. Header overlap
+must follow the navigator's actual measured header height when transparent;
+ordinary headers already reserve their content area. Headerless screens use safe
+area insets. Disconnected onboarding retains its root presenter. Do not guess a
+constant navigation height or move domain action ownership to individual routes.
+Mounted acceptance must prove one presenter, background hiding, surviving
+same-service navigation and action ownership, and live measured-header updates.
+Native push/sheet regressions and Home/Browse transparent-header captures remain
+required before claiming M103 closed.
+Notice lifetime and accessibility announcement are shared with its data: changing
+focused presenters must not restart expiry or reannounce the same notice. Entry
+animation occurs on its first presentation only. Actionable/warning/error notices
+and screen-reader feedback retain their existing persistence policy.

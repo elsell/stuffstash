@@ -1,3 +1,4 @@
+import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
 export { NoticePlacementFixture } from './NoticePlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
@@ -64,8 +65,8 @@ function FixtureNavigation() {
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider><HomeReturnTaskProvider>
-    <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
+    <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />

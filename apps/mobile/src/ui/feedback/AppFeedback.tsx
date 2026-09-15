@@ -1,3 +1,4 @@
+import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, AlertButton, Animated, Platform, useWindowDimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,12 +39,19 @@ export type AppFeedbackContextValue = {
 
 type ActiveNotice = ShowAppNoticeInput & {
   readonly id: number;
+  readonly presentation: { entered: boolean };
   readonly owner: { active: boolean };
 };
 
 const AppFeedbackContext = createContext<AppFeedbackContextValue | null>(null);
+const AppNoticeContext = createContext<{
+  readonly notice: ActiveNotice | null;
+  readonly placement: 'root' | 'screen';
+  readonly dismiss: (id: number) => void;
+} | null>(null);
 
-export function AppFeedbackProvider({ children, scopeKey = 'app' }: { readonly children: ReactNode; readonly scopeKey?: string }) {
+
+export function AppFeedbackProvider({ children, scopeKey = 'app', noticePlacement = 'root' }: { readonly children: ReactNode; readonly scopeKey?: string; readonly noticePlacement?: 'root' | 'screen' }) {
   const [activeNotice, setActiveNotice] = useState<ActiveNotice | null>(null);
   const noticeSequence = useRef(0);
   const insets = useSafeAreaInsets();
@@ -88,7 +96,8 @@ export function AppFeedbackProvider({ children, scopeKey = 'app' }: { readonly c
           if (noticeOwner.active) input.action?.onPress();
         } } : undefined,
         owner: noticeOwner,
-        id: ++noticeSequence.current
+        id: ++noticeSequence.current,
+        presentation: { entered: false }
       });
     }
   }), [noticeOwner, showDialog]);
@@ -99,8 +108,10 @@ export function AppFeedbackProvider({ children, scopeKey = 'app' }: { readonly c
 
   return (
     <AppFeedbackContext.Provider value={value}>
+      <AppNoticeContext.Provider value={{ notice: activeNotice?.owner === noticeOwner ? activeNotice : null, placement: noticePlacement, dismiss: dismissNotice }}>
       {children}
-      {activeNotice?.owner === noticeOwner ? (
+      {activeNotice?.owner === noticeOwner ? <NoticeLifetime key={`lifetime-${activeNotice.id}`} notice={activeNotice} onDismiss={dismissNotice} /> : null}
+      {noticePlacement === 'root' && activeNotice?.owner === noticeOwner ? (
         <AppNotice
           key={activeNotice.id}
           notice={activeNotice}
@@ -108,8 +119,16 @@ export function AppFeedbackProvider({ children, scopeKey = 'app' }: { readonly c
           onDismiss={dismissNotice}
         />
       ) : null}
+      </AppNoticeContext.Provider>
     </AppFeedbackContext.Provider>
   );
+}
+
+/** A route owns placement, while the provider retains service-scoped action ownership. */
+export function AppNoticePresenter({ topOffset }: { readonly topOffset: number }) {
+  const state = useContext(AppNoticeContext);
+  if (!state || state.placement !== 'screen' || !state.notice) return null;
+  return <AppNotice key={state.notice.id} notice={state.notice} topOffset={topOffset} onDismiss={state.dismiss} />;
 }
 
 export function useAppFeedback(): AppFeedbackContextValue {
@@ -118,6 +137,22 @@ export function useAppFeedback(): AppFeedbackContextValue {
     throw new Error('App feedback is not available.');
   }
   return feedback;
+}
+
+/** Remains mounted through route focus changes, unlike individual native presenters. */
+function NoticeLifetime({ notice, onDismiss }: { readonly notice: ActiveNotice; readonly onDismiss: (id: number) => void }) {
+  const { screenReader } = useNoticeAccessibility();
+  const palette = useAppearancePalette();
+  const presentation = buildAppNoticePresentation({ ...notice, actionLabel: notice.action?.label }, palette);
+  useEffect(() => {
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(presentation.accessibilityLabel);
+  }, [presentation.accessibilityLabel]);
+  useEffect(() => {
+    if (screenReader || presentation.durationMs === null) return;
+    const timeout = setTimeout(() => onDismiss(notice.id), presentation.durationMs);
+    return () => clearTimeout(timeout);
+  }, [notice.id, onDismiss, presentation.durationMs, screenReader]);
+  return null;
 }
 
 function AppNotice({
@@ -131,10 +166,11 @@ function AppNotice({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  const { reduceMotion, screenReader } = useNoticeAccessibility();
+  const reduceMotion = useReducedMotionPreference();
+  const animateEntry = useRef(!notice.presentation.entered).current;
   const { fontScale } = useWindowDimensions();
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(-120)).current;
+  const opacity = useRef(new Animated.Value(animateEntry ? 0 : 1)).current;
+  const translateY = useRef(new Animated.Value(animateEntry ? -120 : 0)).current;
   const isDismissingRef = useRef(false);
   const presentation = buildAppNoticePresentation({
     actionLabel: notice.action?.label,
@@ -172,7 +208,8 @@ function AppNotice({
   }, [notice.id, onDismiss, opacity, reduceMotion, translateY]);
 
   useEffect(() => {
-    if (reduceMotion) {
+    notice.presentation.entered = true;
+    if (reduceMotion || !animateEntry) {
       opacity.stopAnimation();
       translateY.stopAnimation();
       opacity.setValue(1);
@@ -194,22 +231,7 @@ function AppNotice({
     ]);
     animation.start();
     return () => animation.stop();
-  }, [opacity, reduceMotion, translateY]);
-
-  useEffect(() => {
-    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(presentation.accessibilityLabel);
-  }, [presentation.accessibilityLabel]);
-
-  useEffect(() => {
-    if (screenReader || presentation.durationMs === null) return;
-    const timeout = setTimeout(() => {
-      dismissWithAnimation();
-    }, presentation.durationMs);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [dismissWithAnimation, presentation.durationMs, screenReader]);
+  }, [animateEntry, notice.presentation, opacity, reduceMotion, translateY]);
 
   const restorePosition = useCallback(() => {
     if (reduceMotion) { translateY.setValue(0); return; }
@@ -235,6 +257,7 @@ function AppNotice({
 
   return (
     <View
+      testID="app-notice-layer"
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
       pointerEvents="box-none"

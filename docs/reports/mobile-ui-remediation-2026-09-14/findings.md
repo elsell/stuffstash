@@ -1270,7 +1270,7 @@ active-header geometry. Sharing's local-feedback fix does not repair the other
 call-site inventory. A correction must preserve cross-navigation View/Undo while
 keeping notice actions and native chrome reachable; a guessed header offset or
 blanket alert replacement is insufficient. Current-build native placement remains
-unverified. No implementation is claimed in this audit pass.
+unverified. A screen-scoped presentation candidate is now implemented; see the global notice review for source evidence and remaining native gates.
 
 ### M104 — Global notice content/actions survive service transitions
 

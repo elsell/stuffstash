@@ -32,6 +32,8 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
+The latest candidate moves shared notice presentation into focused native screens while preserving service ownership and lifetime. All 1,573 mobile tests (260 files), TypeScript and structural checks passed remotely; native geometry acceptance remains open.
+
 The audit remains incomplete. After the all-axis provider-editor review and M106/M107 mapping, the 3384 cells
 comprise 2653 pending, 553 source-reviewed, 140 finding,
 20 runtime-partial and 18 not-applicable.

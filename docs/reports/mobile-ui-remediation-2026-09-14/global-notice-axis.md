@@ -106,3 +106,27 @@ helps distinguish interruptions from nonmodal status. React Navigation's
 distinguishes transparent headers that overlap content, so one root safe-area
 offset cannot serve every presentation. These sources inform the candidate
 design; they do not establish a specific implementation as correct.
+
+## M103 active-screen placement candidate
+
+Notice data, action ownership, expiry and one-time announcement stay in the shared
+service-scoped provider. Ready-app native stacks render through a focused leaf
+presenter; the root tab container delegates to Home/Browse stacks. Presenters are
+siblings of existing scroll content, avoiding the extra flex wrapper implicated
+by sheet diagnostics. Transparent headers use the navigator's measured height,
+regular-header content uses its reserved area, and headerless content uses safe
+area insets. Onboarding retains root presentation outside the ready-app stack.
+
+Mounted regressions cover a single presenter, focus handoff, live header-height
+changes, retained Undo, and disconnected-root/ready-screen transitions through
+sign-out, expiry and reconnection. Review caught restarted plain-notice expiry
+and repeated announcement/entry animation on handoff; a failing regression now
+passes after keeping lifetime shared. Rehosting preserves the original deadline.
+All 1,573 mobile tests across 260 files, TypeScript and mobile structural checks
+passed on paul (`/tmp/pr150-notice-full.log`). Critic re-review found no remaining
+confirmed source blocker.
+
+This is not native geometry proof. Push/sheet containment, native header context,
+Home/Browse transparent-header behavior, keyboard coexistence, direct-scroll
+compatibility and Android live-region behavior remain runtime acceptance. M103
+stays open; do not call every notice consumer visually verified from mounted tests.

@@ -1,3 +1,4 @@
+import { AppNoticeScreenLayout } from '../ui/feedback/AppNoticeScreenLayout';
 import { HomeReturnTaskProvider } from '../ui/navigation/HomeReturnTaskPresentation';
 import { PushNotificationNavigation } from '../ui/navigation/PushNotificationNavigation';
 import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
@@ -41,6 +42,7 @@ function ThemedApp() {
     <AppServicesProvider><HomeReturnTaskProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
+        screenLayout={AppNoticeScreenLayout}
         screenOptions={{
           contentStyle: { backgroundColor: palette.background },
           headerBackTitle: 'Back',

@@ -29,14 +29,15 @@ export type AppServicesGateController<C extends AppServicesGateComposition> = {
 };
 
 type GateProps<C extends AppServicesGateComposition> = {
+  readonly readyNoticePlacement?: 'root' | 'screen';
   readonly runtime: AppServicesGateRuntime<C>;
   readonly children: (controller: AppServicesGateController<C>) => ReactNode;
 };
 
-export function AppServicesFeedbackGate<C extends AppServicesGateComposition>({ runtime, children }: GateProps<C>) {
+export function AppServicesFeedbackGate<C extends AppServicesGateComposition>({ runtime, children, readyNoticePlacement = 'root' }: GateProps<C>) {
   const [state, setState] = useState<AppServicesGateState<C>>({ status: 'loading' });
   const feedbackScope = state.status === 'ready' ? state.composition.serviceScopeId : 'disconnected';
-  return <AppFeedbackProvider scopeKey={feedbackScope}>
+  return <AppFeedbackProvider scopeKey={feedbackScope} noticePlacement={state.status === 'ready' ? readyNoticePlacement : 'root'}>
     <ServicesController runtime={runtime} state={state} setState={setState}>{children}</ServicesController>
   </AppFeedbackProvider>;
 }

@@ -40,7 +40,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       createMobileComposition(profile, { onAuthenticationRequired })
   }), [onboardingCommand]);
   return (
-    <AppServicesFeedbackGate runtime={runtime}>
+    <AppServicesFeedbackGate runtime={runtime} readyNoticePlacement="screen">
       {controller => <AppServicesContent controller={controller} onboardingCommand={onboardingCommand}>{children}</AppServicesContent>}
     </AppServicesFeedbackGate>
   );

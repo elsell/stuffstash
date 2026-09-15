@@ -1,3 +1,4 @@
+import { AppNoticeScreenLayout } from '../feedback/AppNoticeScreenLayout';
 import { Text } from 'react-native';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -29,10 +30,12 @@ it.each(['sign-out', 'server-change', 'expiry'] as const)('invalidates notices t
   };
   function Probe({ controller }: { controller: AppServicesGateController<AppServicesGateComposition> }) {
     gate = controller; feedback = useAppFeedback();
-    return <Text>{controller.state.status}</Text>;
+    return controller.state.status === 'ready'
+      ? <AppNoticeScreenLayout route={{ name: 'details' }} options={{}}><Text>ready</Text></AppNoticeScreenLayout>
+      : <Text>{controller.state.status}</Text>;
   }
   try {
-    await h.render(<AppServicesFeedbackGate runtime={runtime}>{controller => <Probe controller={controller} />}</AppServicesFeedbackGate>);
+    await h.render(<AppServicesFeedbackGate runtime={runtime} readyNoticePlacement="screen">{controller => <Probe controller={controller} />}</AppServicesFeedbackGate>);
     await h.settle(); expect(gate.state.status).toBe('ready');
     expect(starts).toBe(1); expect(builds).toBe(1);
     const oldPublisher = feedback;
@@ -50,7 +53,11 @@ it.each(['sign-out', 'server-change', 'expiry'] as const)('invalidates notices t
     expect(starts).toBe(1); expect(builds).toBe(1);
     expect(disconnects).toBe(transition === 'expiry' ? 0 : 1);
     if (gate.state.status === 'onboarding') expect(gate.state.onboardingState.step).toBe(transition === 'server-change' ? 'instance' : 'signIn');
+    await h.run(() => feedback.showNotice({ tone: 'info', title: 'Current connection guidance' }));
+    expect(h.byText('Current connection guidance')).toBeDefined();
+    expect(h.all().filter(node => node.props.testID === 'app-notice-container')).toHaveLength(1);
     await h.run(() => gate.complete(profile));
+    expect(h.byText('Current connection guidance')).toBeUndefined();
     expect(gate.state.status).toBe('ready'); expect(starts).toBe(1); expect(builds).toBe(2);
     await h.run(() => feedback.showNotice({ tone: 'success', title: 'New session item', action: { label: 'View new item', onPress: () => { actions++; } } }));
     await h.press(h.byLabel('View new item')); expect(actions).toBe(1);
