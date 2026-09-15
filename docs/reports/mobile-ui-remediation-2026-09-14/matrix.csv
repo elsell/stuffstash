@@ -3186,7 +3186,7 @@ S133,Asset Edit / tag selection and creation,content,"Lists, hierarchy, density 
 S133,Asset Edit / tag selection and creation,search,"Search, scope and filters",pending,,
 S133,Asset Edit / tag selection and creation,loading,"Loading, background refresh and progress",pending,,
 S133,Asset Edit / tag selection and creation,recovery,"Empty, error, denied and retry",pending,,
-S133,Asset Edit / tag selection and creation,editing,"Draft, save, cancel, undo and interruption",pending,,
+S133,Asset Edit / tag selection and creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Atomic tag draft callback preserves selected IDs and pending definitions. Rendered regression selects normalized existing tag and saves unchanged description. Native interaction pending.,M41
 S133,Asset Edit / tag selection and creation,privacy,"Account scope, data use and permissions",pending,,
 S133,Asset Edit / tag selection and creation,notifications,System notification entry and state,pending,,
 S133,Asset Edit / tag selection and creation,media,"Camera, library, files and audio",pending,,

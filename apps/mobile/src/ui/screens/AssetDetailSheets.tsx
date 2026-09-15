@@ -121,8 +121,7 @@ export function EditAssetSheet({
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
           newTags={draft?.newTags ?? []}
-          onChange={(tagIds) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags: draft?.newTags ?? [] })}
-          onNewTagsChange={(newTags) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags })}
+          onChange={(tagIds, newTags) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags })}
         />
       </ScrollView>
       <SheetActions
@@ -140,14 +139,12 @@ function EditTagPicker({
   disabled,
   newTags,
   onChange,
-  onNewTagsChange,
   selectedTagIds,
   tags
 }: {
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
-  readonly onChange: (tagIds: readonly string[]) => void;
-  readonly onNewTagsChange: (tags: readonly CreateAssetTagDraft[]) => void;
+  readonly onChange: (tagIds: readonly string[], newTags: readonly CreateAssetTagDraft[]) => void;
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {
@@ -162,10 +159,10 @@ function EditTagPicker({
       return;
     }
     if (selected.has(tagId)) {
-      onChange(selectedTagIds.filter((current) => current !== tagId));
+      onChange(selectedTagIds.filter((current) => current !== tagId), newTags);
       return;
     }
-    onChange([...selectedTagIds, tagId]);
+    onChange([...selectedTagIds, tagId], newTags);
   }
 
   function addNewTag(): void {
@@ -184,8 +181,7 @@ function EditTagPicker({
       selectedTagIds,
       pendingTags: newTags
     });
-    onChange(transition.selectedTagIds);
-    onNewTagsChange(transition.pendingTags);
+    onChange(transition.selectedTagIds, transition.pendingTags);
     if (transition.shouldClearInputs) {
       setNewTagName('');
       setNewTagColor('');
@@ -211,7 +207,7 @@ function EditTagPicker({
               accessibilityState={{ disabled, selected: true }}
               disabled={disabled}
               key={`${tag.displayName}-${index.toString()}`}
-              onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+              onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index))}
               style={[
                 styles.tagOption,
                 colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,

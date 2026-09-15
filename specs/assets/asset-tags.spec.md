@@ -225,3 +225,9 @@ color panel or confirming a second project-owned Done/Cancel pair. Clearing
 remains explicit and opening the picker must not replace an absent color.
 Android and runtimes without the native picker retain the documented accessible
 spectrum/hex fallback with its local draft. Disabled editors reject late changes.
+
+The mobile Edit tag picker applies inline tag resolution as one draft update:
+selected existing tag IDs and pending new-tag definitions change together. A
+normalized match to an existing tag selects that tag without creating another;
+updating pending definitions must not restore the previous selected IDs. Preserve
+all previously selected tags and unrelated draft fields.

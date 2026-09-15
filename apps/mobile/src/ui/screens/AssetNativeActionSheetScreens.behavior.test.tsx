@@ -187,3 +187,23 @@ it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft
     }
   } finally { if (!unmounted) await h.unmount(); resetNavigation(); }
 });
+
+it('keeps an existing tag selected when inline tag resolution updates the Edit draft', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Tent', description: 'Keep this description', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
+        inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('New tag name'), '  CAMPING  ');
+    await h.press(h.byLabel('Add tag'));
+    const save = h.byText('Save')?.parent;
+    expect(save?.props.disabled).toBe(false);
+    await h.press(save ?? undefined);
+    expect(saved).toEqual([expect.objectContaining({ tagIds: ['camping'], newTags: [], description: 'Keep this description' })]);
+  } finally { await h.unmount(); }
+});

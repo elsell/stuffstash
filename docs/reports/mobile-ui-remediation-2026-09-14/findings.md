@@ -56,6 +56,8 @@
 
 | M40 | Tag and voice photo actions have undersized touch targets | Implemented; native pending | Shared48point minimum for tag choices/fields; native Add tag, photo Add/numberedRemove and Retry commands replace small targets. Photo previews and separate commands scroll in a rail. Twenty remote tests/check/structural pass; critic no blocker. Enlarged text and hit areas pending native verification |
 
+| M41 | Edit tag resolution overwrites selected IDs with a second draft update | Implemented; native pending | One atomic tag callback updates selected IDs and pending definitions together. Regression reproduced normalized existing-tag selection disappearing; fix preserves selection through Save and unrelated description. Focused remote tests/check/structural pass; critic no blockers |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
